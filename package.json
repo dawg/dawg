@@ -20,6 +20,7 @@
     "tone": "^0.12.80",
     "vue": "^2.5.17",
     "vue-awesome": "^3.1.2",
+    "vue-draggable-resizable": "^1.7.1",
     "vue-konva": "^1.0.6",
     "vue-router": "^3.0.1",
     "vue-shortkey": "^3.1.6",
