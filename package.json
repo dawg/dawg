@@ -10,7 +10,10 @@
     "build:storybook": "vue-cli-service build:storybook -c config/storybook",
     "test:unit": "vue-cli-service test:unit",
     "test:e2e": "vue-cli-service test:e2e",
-    "pages": "npm run build:storybook && git add . && git commit -m 'github pages' && git push"
+    "pages": "npm run build:storybook && git add . && git commit -m 'github pages' && git push",
+    "build:electron": "vue-cli-service build:electron",
+    "serve:electron": "vue-cli-service serve:electron",
+    "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
     "konva": "^2.3.0",
@@ -38,10 +41,11 @@
     "electron": "^2.0.2",
     "node-sass": "^4.9.0",
     "sass-loader": "^7.0.1",
+    "vue-cli-plugin-electron-builder": "^1.0.0-rc.3",
     "vue-cli-plugin-storybook": "0.4.3",
     "vue-template-compiler": "^2.5.17"
   },
-  "main": "./dist/vue-terminal.common.js",
+  "main": "dist_electron/bundled/background.js",
   "keywords": [
     "vue",
     "terminal",
