@@ -35,7 +35,7 @@ storiesOf(Key.name, module)
     data() {
       return { synth };
     },
-    template: '<key note="C#4" :synth="synth">',
+    template: '<key note="C#4" :synth="synth"/>',
     components: { Key },
   }));
 
@@ -153,8 +153,8 @@ const notes = [{
 
 storiesOf(Sequencer.name, module)
   .add('Standard', () => ({
-    template: '<sequencer :note-width="20" :note-height="16" v-model="notes"/>',
-    data: () => ({ notes: [] }),
+    template: '<sequencer :note-width="20" :note-height="16" v-model="notes" :measures.sync="measures"/>',
+    data: () => ({ notes: [], measures: 1 }),
     components: { Sequencer },
   }))
   .add('Playable', () => ({

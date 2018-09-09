@@ -30,11 +30,9 @@ export default {
       return `vue-tabs-component.cache.${window.location.host}${window.location.pathname}`;
     },
   },
-  created() {
-    this.tabs = this.$children;
-  },
 
   mounted() {
+    this.tabs = [...this.$children];
     const previousSelectedTabHash = expiringStorage.get(this.storageKey);
 
     if (this.findTab(previousSelectedTabHash)) {
@@ -84,6 +82,7 @@ export default {
 
   .tabs-component-tabs
     border: 0
+    padding: 0
     align-items: stretch
     display: flex
     justify-content: flex-start

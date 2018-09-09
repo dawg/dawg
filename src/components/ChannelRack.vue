@@ -1,7 +1,7 @@
 <template>
   <v-list dense style="padding: 0">
     <template v-for="(instrument, index) in instruments">
-      <v-list-tile @click="undefined" :key="instrument">
+      <v-list-tile @click="clicked" :key="instrument">
         <v-list-tile-content>
           <v-list-tile-title>{{ instrument }}</v-list-tile-title>
         </v-list-tile-content>
@@ -9,7 +9,7 @@
           <dot-button @click="handle(instrument)"></dot-button>
         </v-list-tile-action>
       </v-list-tile>
-      <v-divider :key="instrument" v-if="index !== instruments.length - 1"></v-divider>
+      <v-divider :key="`divider-${instrument}`" v-if="index !== instruments.length - 1"></v-divider>
     </template>
   </v-list>
 </template>
@@ -34,6 +34,7 @@ export default {
         this.disabled.add(instrument);
       }
     },
+    clicked() {},
   },
 };
 </script>
