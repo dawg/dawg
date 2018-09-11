@@ -1,18 +1,16 @@
 # Vuesic
 > A DAW for the 21st century!
 
-## Project setup
+## Envrionment Setup
+1. Install [nvm](https://github.com/creationix/nvm#install-script)
+1. Install [node and npm using nvm](https://github.com/creationix/nvm#install-script)
+1. Install dependencies: `npm i`
 ```
-# install dependencies
-npm i
-
 # development
-npm run serve
-npm run serve:storybook
+npm run serve:electron
+npm run serve:storybook  # or
 
-# build github pages
-npm run build:storybook
-
-# build application
-npm run build
+# building
+npm run build:electron
+npm run build:storybook  # or
 ```
