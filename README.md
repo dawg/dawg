@@ -3,7 +3,7 @@
 
 ## Envrionment Setup
 1. Install [nvm](https://github.com/creationix/nvm#install-script)
-1. Install [node and npm using nvm](https://github.com/creationix/nvm#install-script)
+1. Install [node and npm using nvm](https://github.com/creationix/nvm#usage)
 1. Install dependencies: `npm i`
 ```
 # development
