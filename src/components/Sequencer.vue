@@ -1,7 +1,7 @@
 <template>
   <v-stage :config="canvasConfig">
     <v-layer>
-      <div v-for="(note, row) in notes" :key="note.value">
+      <div v-for="(note, row) in noteValues" :key="note.value">
         <template v-for="col in totalSixteenths">
           <v-rect
               :key="col"
@@ -17,7 +17,8 @@
       </template>
     </v-layer>
     <v-layer>
-      <template v-for="(note, i) in value">
+      <template v-for="(note, i) in notes">
+        <!--suppress JSUnresolvedVariable -->
         <note
             :key="i"
             :height="noteHeight"
@@ -27,7 +28,8 @@
             @contextmenu="(e) => remove(e, i)"
             @mousedown="addListeners($event, note)"
             @input="changeDefault"
-            v-model="note.length"></note>
+            v-model="note.length"
+        ></note>
       </template>
     </v-layer>
   </v-stage>
@@ -35,8 +37,15 @@
 
 <script>
 import { draggable, px } from '@/mixins';
-import { notes, range, BLACK, WHITE, replace, DefaultDict } from '@/utils';
+import { notes, range, BLACK, WHITE, DefaultDict } from '@/utils';
 import Note from '@/components/Note.vue';
+
+let noteValues = [];
+// eslint-disable-next-line array-callback-return
+[4, 5].map((octave) => {
+  notes.map(note => noteValues.push({ ...note, value: note.value + octave }));
+});
+noteValues = noteValues.reverse();
 
 export default {
   name: 'Sequencer',
@@ -47,11 +56,11 @@ export default {
     noteWidth: { type: Number, required: true },
     width: Number,
     height: Number,
-    value: Array,
     blackColor: { type: String, default: '#21252b' },
     whiteColor: { type: String, default: '#282c34' },
     defaultLength: { type: Number, default: 1 },
     measures: { type: Number, required: true },
+    notes: { type: Array, default: () => [] },
   },
   data() {
     return {
@@ -61,14 +70,15 @@ export default {
       lookup: new DefaultDict(new DefaultDict(Array)),
       cursor: 'move',
       default: null,
-      octaves: [4, 5],
       farthest: [],
+      movingNote: null,
+      noteValues,
     };
   },
   computed: {
     canvasConfig() {
       return {
-        height: this.height || this.notes.length * this.noteHeight,
+        height: this.height || noteValues.length * this.noteHeight,
         width: this.width || this.totalSixteenths * this.noteWidth,
       };
     },
@@ -79,23 +89,15 @@ export default {
       // we always render 1 extra measure
       return (this.measures + 1) * this.quarters * this.sixteenths;
     },
-    notes() {
-      const n = [];
-      // eslint-disable-next-line array-callback-return
-      this.octaves.map((octave) => {
-        notes.map(note => n.push({ ...note, value: note.value + octave }));
-      });
-      return n.reverse();
-    },
   },
   methods: {
     range,
     add(row, col) {
       const noteBar = {
-        length: this.default, row, col, index: this.value.length, ...this.compute(row, col),
+        length: this.default, row, col, index: this.notes.length, ...this.compute(row, col),
       };
       this.lookup[row][col] = noteBar;
-      this.$emit('input', [...this.value, noteBar]);
+      this.notes.push(noteBar);
       this.$emit('added', noteBar);
       this.checkMeasure(col);
     },
@@ -115,41 +117,51 @@ export default {
       else strokeWidth = 0.4;
 
       const start = [col * this.noteWidth, 0];
-      const end = [col * this.noteWidth, (this.notes.length) * this.noteHeight];
+      const end = [col * this.noteWidth, (noteValues.length) * this.noteHeight];
       return {
         points: [...start, ...end],
         strokeWidth,
         stroke: '#000',
       };
     },
-    move(e, note) {
+    onMouseUp() {
+      const { row, col, note } = this.movingNote;
+      const newNote = this.lookup[row][col];
+      this.$emit('moved', { newTime: newNote.time, oldTime: note.time, note: newNote.note });
+      this.movingNote = null;
+    },
+    move(e, note) { // TODO remove note
       const row = Math.floor(e.clientY / this.noteHeight);
       const col = Math.floor(e.clientX / this.noteWidth);
 
-      const oldNote = this.lookup[note.row][note.col];
+      if (!this.movingNote) this.movingNote = { row, col, note }; // TODO this
+
+      const oldNote = this.notes[note.index];
+      if (row === oldNote.row && col === oldNote.col) return;
+
       const newNote = {
         ...oldNote, row, col, ...this.compute(row, col),
       };
 
       this.lookup[row][col] = newNote;
 
-      this.$emit('input', replace(this.value, oldNote.index, newNote));
-      this.$emit('added', newNote);
+      console.log(0);
+      this.$set(this.notes, oldNote.index, newNote);
     },
     remove(e, i) {
       e.preventDefault();
 
-      const toRemove = this.value[i];
-      const value = replace(this.value, i);
-      // eslint-disable-next-line array-callback-return,no-param-reassign
-      value.slice(0, i).map((note) => { note.index -= 1; });
+      const toRemove = this.notes[i];
+
+      this.notes.splice(i, 1);
+
+      for (let j = 0; j < i; j += 1) this.notes.index -= 1;
 
       // TODO XXX !!!
-      if (this.farthest.length || toRemove.col === this.farthest[this.farthest.length - 1]) {
-        this.farthest.splice();
-      }
+      // if (this.farthest.length || toRemove.col === this.farthest[this.farthest.length - 1]) {
+      //   this.farthest.splice();
+      // }
 
-      this.$emit('input', value);
       this.$emit('removed', toRemove);
     },
     changeDefault(length) {
@@ -161,7 +173,7 @@ export default {
       const quarters = rem % this.quarters; const bars = Math.floor(rem / this.quarters);
       const time = `${bars}:${quarters}:${sixteenths}`;
       return {
-        x: col * this.noteWidth, y: row * this.noteHeight, time, note: this.notes[row].value,
+        x: col * this.noteWidth, y: row * this.noteHeight, time, note: noteValues[row].value,
       };
     },
     checkMeasure(col) {
@@ -177,8 +189,7 @@ export default {
   mounted() {
     this.default = this.defaultLength;
     // eslint-disable-next-line array-callback-return
-    this.value.map((note) => {
-      console.log(note);
+    this.notes.map((note) => {
       this.$emit('added', note);
       this.checkMeasure(note.col);
     });

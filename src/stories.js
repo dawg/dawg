@@ -165,7 +165,9 @@ storiesOf(Sequencer.name, module)
                     :measures.sync="measures"
                     @added="added"
                     @removed="removed"
-                    v-model="notes"/>
+                    @moved="moved"
+                    :notes="notes"
+                ></sequencer>
                 <play-pause @play="play" @stop="stop"/>
                 <span style="display: block">{{ processed }}</span>
               </div>
@@ -194,9 +196,12 @@ storiesOf(Sequencer.name, module)
       added(note) {
         this.part.add(note.time, note.note);
       },
+      moved({ newTime, oldTime, note }) {
+        this.part.remove(oldTime);
+        this.part.add(newTime, note);
+      },
       removed(note) {
-        console.log(this.part.at(note.time));
-        // this.part.remove(note.time)
+        this.part.remove(note.time);
       },
     },
     mounted() {
