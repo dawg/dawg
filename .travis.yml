@@ -6,3 +6,6 @@ install:
   - npm install
 script:
   - npm run test:unit
+branch:
+  - master
+  - develop
