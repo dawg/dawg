@@ -1,5 +1,5 @@
 <template>
-  <note-sequencer></note-sequencer>
+  <div></div>
 </template>
 
 <script>

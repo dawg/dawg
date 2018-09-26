@@ -92,8 +92,13 @@ export const draggable = {
       this.previous = { x: e.clientX, y: e.clientY };
       this.mousemoveListner = event => this.startMove(event, ...args);
       window.addEventListener('mousemove', this.mousemoveListner);
-      window.addEventListener('mouseup', this.removeListeners);
+      window.addEventListener('mouseup', this.mouseup);
     },
+    mouseup(e) {
+      this.onMouseUp(e);
+      this.removeListeners(e);
+    },
+    onMouseUp() {},
     removeListeners(e) {
       if (this.disabled) return;
 
@@ -102,7 +107,7 @@ export const draggable = {
       this.previous = null;
       this.moving = null;
       window.removeEventListener('mousemove', this.mousemoveListner);
-      window.removeEventListener('mouseup', this.removeListeners);
+      window.removeEventListener('mouseup', this.mouseup);
       this.mousemoveListner = null;
       this.afterHover();
     },

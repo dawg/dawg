@@ -32,7 +32,7 @@ export default {
   components: { TimeDisplay, Bpm },
   data() {
     return {
-      title: 'Proton',
+      title: 'Vuesic',
       time: {
         min: 0,
         sec: 0,

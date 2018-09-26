@@ -19,7 +19,7 @@ const tree = {
 };
 
 export default {
-  name: 'Proton',
+  name: 'App',
   components: { Drawer, Toolbar },
   data: () => ({
     children: tree,
