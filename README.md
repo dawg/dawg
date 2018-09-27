@@ -13,4 +13,7 @@ npm run serve:storybook  # or
 # building
 npm run build:electron
 npm run build:storybook  # or
+
+# testing
+npm run test:unit
 ```
