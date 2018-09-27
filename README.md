@@ -17,4 +17,5 @@ npm run build:storybook  # or
 
 # testing
 npm run test:unit
+npm run test:e2e  # or
 ```
