@@ -4,6 +4,7 @@
       <file-explorer
           v-for="(children, label) in projects"
           :key="label"
+          :label="label"
           :children="children"
       ></file-explorer>
     </v-list>

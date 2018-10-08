@@ -18,6 +18,7 @@
     </v-layer>
     <v-layer>
       <template v-for="(note, i) in value">
+        <!--suppress JSUnresolvedVariable -->
         <note
             :key="i"
             :height="noteHeight"
@@ -27,7 +28,8 @@
             @contextmenu="(e) => remove(e, i)"
             @mousedown="addListeners($event, note)"
             @input="changeDefault"
-            v-model="note.length"></note>
+            v-model="note.length"
+        ></note>
       </template>
     </v-layer>
   </v-stage>

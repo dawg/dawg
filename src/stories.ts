@@ -67,7 +67,8 @@ storiesOf(Sequencer.name, module)
                     :measures.sync="measures"
                     @added="added"
                     @removed="removed"
-                    v-model="notes"/>
+                    v-model="notes"
+                ></sequencer>
                 <play-pause @play="play" @stop="stop"/>
                 <span style="display: block">{{ processed }}</span>
               </div>
@@ -102,6 +103,10 @@ storiesOf(Sequencer.name, module)
       added(note) {
         // @ts-ignore
         this.part.add(note.time, note.note);
+      },
+      moved({ newTime, oldTime, note }) {
+        this.part.remove(oldTime);
+        this.part.add(newTime, note);
       },
       removed(note) {
         // @ts-ignore
