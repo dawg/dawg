@@ -1,19 +1,22 @@
-/* eslint-disable import/no-extraneous-dependencies,global-require */
+'use strict';
 
 import { app, protocol, BrowserWindow } from 'electron';
 import * as path from 'path';
 import { format as formatUrl } from 'url';
-import { createProtocol, installVueDevtools } from 'vue-cli-plugin-electron-builder/lib';
-
+import {
+  createProtocol,
+  installVueDevtools,
+} from 'vue-cli-plugin-electron-builder/lib';
 const isDevelopment = process.env.NODE_ENV !== 'production';
 if (isDevelopment) {
   // Don't load any native (external) modules until the following line is run:
-  // noinspection JSUnresolvedVariable,NpmUsedModulesInstalled
+
+  // tslint:disable-next-line:no-var-requires
   require('module').globalPaths.push(process.env.NODE_MODULES_PATH);
 }
 
 // global reference to mainWindow (necessary to prevent window from being garbage collected)
-let mainWindow;
+let mainWindow: any;
 
 // Standard scheme must be registered before the app is ready
 protocol.registerStandardSchemes(['app'], { secure: true });
@@ -22,16 +25,18 @@ function createMainWindow() {
 
   if (isDevelopment) {
     // Load the url of the dev server if in development mode
-    window.loadURL(process.env.WEBPACK_DEV_SERVER_URL);
-    if (!process.env.IS_TEST) window.webContents.openDevTools();
+    window.loadURL(process.env.WEBPACK_DEV_SERVER_URL as string);
+    if (!process.env.IS_TEST) { window.webContents.openDevTools(); }
   } else {
     createProtocol('app');
     //   Load the index.html when not in development
-    window.loadURL(formatUrl({
-      pathname: path.join(__dirname, 'index.html'),
-      protocol: 'file',
-      slashes: true,
-    }));
+    window.loadURL(
+      formatUrl({
+        pathname: path.join(__dirname, 'index.html'),
+        protocol: 'file',
+        slashes: true,
+      }),
+    );
   }
 
   window.on('closed', () => {
@@ -45,7 +50,6 @@ function createMainWindow() {
     });
   });
 
-  // noinspection JSValidateTypes
   return window;
 }
 

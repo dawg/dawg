@@ -2,12 +2,12 @@ export const BLACK = 'black';
 
 export const WHITE = 'white';
 
-export const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].map(note => ({
+export const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].map((note) => ({
   value: note,
   color: note.endsWith('#') ? BLACK : WHITE,
 }));
 
-export const range = (a, b = 0, interval = 1) => {
+export const range = (a: number, b = 0, interval = 1) => {
   let start;
   let end;
   if (a > b) {
@@ -34,22 +34,19 @@ export const TREE = {
   },
 };
 
-export const replace = (array, i, item) => {
-  if (item) {
-    return [...array.slice(0, i), item, ...array.slice(i + 1, array.length)];
-  }
-  return [...array.slice(0, i), ...array.slice(i + 1, array.length)];
-};
+interface Class {
+  new (): any;
+}
+
 
 export class DefaultDict {
-  constructor(O) {
+  constructor(O: Class) {
     return new Proxy({}, {
-      get: (target, name) => {
+      get: (target: any, name: string) => {
         if (name in target) {
           return target[name];
         }
-        // eslint-disable-next-line no-param-reassign
-        target[name] = typeof O === 'function' ? new O().valueOf() : O;
+        target[name] = new O();
         return target[name];
       },
     });

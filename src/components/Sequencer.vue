@@ -33,157 +33,192 @@
   </v-stage>
 </template>
 
-<script>
-import { draggable, px } from '@/mixins';
-import { notes, range, BLACK, WHITE, replace, DefaultDict } from '@/utils';
+<script lang="ts">
+import { Component, Prop, Mixins } from 'vue-property-decorator';
+import { Draggable, PX } from '@/mixins';
+import { FactoryDictionary } from 'typescript-collections';
+import { notes, range, BLACK, WHITE } from '@/utils';
 import Note from '@/components/Note.vue';
 
-export default {
-  name: 'Sequencer',
+interface Lookup {
+  [key: string]: NoteInfo;
+}
+
+interface Colors {
+  [key: string]: string;
+}
+
+interface NoteInfo {
+  row: number;
+  col: number;
+  index: number;
+  value: string;
+  length: number;
+}
+
+interface BasicNoteInfo {
+  value: string;
+  color: string;
+}
+
+@Component({
   components: { Note },
-  mixins: [px, draggable],
-  props: {
-    noteHeight: { type: Number, required: true },
-    noteWidth: { type: Number, required: true },
-    width: Number,
-    height: Number,
-    value: Array,
-    blackColor: { type: String, default: '#21252b' },
-    whiteColor: { type: String, default: '#282c34' },
-    defaultLength: { type: Number, default: 1 },
-    measures: { type: Number, required: true },
-  },
-  data() {
+})
+export default class Sequencer extends Mixins(Draggable, PX) {
+  @Prop({ type: Number, required: true }) public noteHeight!: number;
+  @Prop({ type: Number, required: true }) public noteWidth!: number;
+  @Prop(Number) public width!: number;
+  @Prop(Number) public height!: number;
+  @Prop(Array) public value!: any[];
+  @Prop({ type: String, default: '#21252b' }) public blackColor!: string;
+  @Prop({ type: String, default: '#282c34' }) public whiteColor!: string;
+  @Prop({ type: Number, default: 1 }) public defaultLength!: number;
+  @Prop({ type: Number, required: true }) public measures!: number;
+
+  public lineColor = '#000';
+  public quarters = 4;
+  public sixteenths = 4;
+  public lookup: Lookup = {};
+  public cursor = 'move';
+  public default = this.defaultLength;
+  public octaves = [4, 5];
+  public farthest = [];
+
+  get canvasConfig() {
     return {
-      lineColor: '#000',
-      quarters: 4,
-      sixteenths: 4,
-      lookup: new DefaultDict(new DefaultDict(Array)),
-      cursor: 'move',
-      default: null,
-      octaves: [4, 5],
-      farthest: [],
+      height: this.height || this.notes.length * this.noteHeight,
+      width: this.width || this.totalSixteenths * this.noteWidth,
     };
-  },
-  computed: {
-    canvasConfig() {
-      return {
-        height: this.height || this.notes.length * this.noteHeight,
-        width: this.width || this.totalSixteenths * this.noteWidth,
-      };
-    },
-    colorLookup() {
-      return { [BLACK]: this.blackColor, [WHITE]: this.whiteColor };
-    },
-    totalSixteenths() {
-      // we always render 1 extra measure
-      return (this.measures + 1) * this.quarters * this.sixteenths;
-    },
-    notes() {
-      const n = [];
-      // eslint-disable-next-line array-callback-return
-      this.octaves.map((octave) => {
-        notes.map(note => n.push({ ...note, value: note.value + octave }));
-      });
-      return n.reverse();
-    },
-  },
-  methods: {
-    range,
-    add(row, col) {
-      const noteBar = {
-        length: this.default, row, col, index: this.value.length, ...this.compute(row, col),
-      };
-      this.lookup[row][col] = noteBar;
-      this.$emit('input', [...this.value, noteBar]);
-      this.$emit('added', noteBar);
-      this.checkMeasure(col);
-    },
-    rectConfig(row, col, color) {
-      return {
-        height: this.noteHeight,
-        width: this.noteWidth,
-        fill: this.colorLookup[color],
-        x: col * this.noteWidth,
-        y: row * this.noteHeight,
-      };
-    },
-    borderConfig(col) {
-      let strokeWidth;
-      if (col % (this.quarters * this.sixteenths) === 0) strokeWidth = 2.4;
-      else if (col % this.sixteenths === 0) strokeWidth = 1.5;
-      else strokeWidth = 0.4;
+  }
+  get colorLookup(): Colors {
+    return { [BLACK]: this.blackColor, [WHITE]: this.whiteColor };
+  }
+  get totalSixteenths() {
+    // we always render 1 extra measure
+    return (this.measures + 1) * this.quarters * this.sixteenths;
+  }
+  get notes() {
+    const n: BasicNoteInfo[] = [];
+    this.octaves.map((octave) => {
+      notes.map((note) => n.push({
+        color: note.color,
+        value: note.value + octave,
+      }));
+    });
+    return n.reverse();
+  }
 
-      const start = [col * this.noteWidth, 0];
-      const end = [col * this.noteWidth, (this.notes.length) * this.noteHeight];
-      return {
-        points: [...start, ...end],
-        strokeWidth,
-        stroke: '#000',
-      };
-    },
-    move(e, note) {
-      const row = Math.floor(e.clientY / this.noteHeight);
-      const col = Math.floor(e.clientX / this.noteWidth);
+  public add(row: number, col: number) {
+    const noteBar = {
+      length: this.default,
+      row,
+      col,
+      index: this.value.length,
+      ...this.compute(row, col),
+    };
 
-      const oldNote = this.lookup[note.row][note.col];
-      const newNote = {
-        ...oldNote, row, col, ...this.compute(row, col),
-      };
+    this.lookup[`${row}-${col}`] = noteBar;
+    this.$emit('input', [...this.value, noteBar]);
+    this.$emit('added', noteBar);
+    this.checkMeasure(col);
+  }
+  public rectConfig(row: number, col: number, color: string) {
+    return {
+      height: this.noteHeight,
+      width: this.noteWidth,
+      fill: this.colorLookup[color],
+      x: col * this.noteWidth,
+      y: row * this.noteHeight,
+    };
+  }
+  public borderConfig(col: number) {
+    let strokeWidth;
+    if (col % (this.quarters * this.sixteenths) === 0) {
+      strokeWidth = 2.4;
+    } else if (col % this.sixteenths === 0) {
+      strokeWidth = 1.5;
+    } else {
+      strokeWidth = 0.4;
+    }
 
-      this.lookup[row][col] = newNote;
+    const start = [col * this.noteWidth, 0];
+    const end = [col * this.noteWidth, (this.notes.length) * this.noteHeight];
+    return {
+      points: [...start, ...end],
+      strokeWidth,
+      stroke: '#000',
+    };
+  }
+  public move(e: MouseEvent, note: NoteInfo) {
+    const row = Math.floor(e.clientY / this.noteHeight);
+    const col = Math.floor(e.clientX / this.noteWidth);
 
-      this.$emit('input', replace(this.value, oldNote.index, newNote));
-      this.$emit('added', newNote);
-    },
-    remove(e, i) {
-      e.preventDefault();
+    const oldNote = this.get(note.row, note.col);
+    const newNote = {
+      ...oldNote, row, col, ...this.compute(row, col),
+    };
 
-      const toRemove = this.value[i];
-      const value = replace(this.value, i);
-      // eslint-disable-next-line array-callback-return,no-param-reassign
-      value.slice(0, i).map((note) => { note.index -= 1; });
+    this.set(row, col, newNote);
 
-      // TODO XXX !!!
-      if (this.farthest.length || toRemove.col === this.farthest[this.farthest.length - 1]) {
-        this.farthest.splice();
+    this.$set(this.value, oldNote.index, newNote);
+    this.$emit('input', this.value);
+    this.$emit('added', newNote);
+  }
+  public get(row: number, col: number) {
+    return this.lookup[`${row}-${col}`];
+  }
+  public set(row: number, col: number, value: NoteInfo) {
+    this.lookup[`${row}-${col}`] = value;
+  }
+  public remove(e: MouseEvent, i: number) {
+    e.preventDefault();
+
+    const toRemove = this.value[i];
+    this.$delete(this.value, i);
+    this.value.slice(0, i).map((note) => { note.index -= 1; });
+
+    // TODO XXX !!!
+    // if (this.farthest.length || toRemove.col === this.farthest[this.farthest.length - 1]) {
+    //   this.farthest.splice();
+    // }
+
+    this.$emit('input', this.value);
+    this.$emit('removed', toRemove);
+  }
+  public changeDefault(length: number) {
+    this.default = length;
+  }
+  public compute(row: number, col: number) {
+    let rem = col;
+    const sixteenths = rem % this.sixteenths; rem = Math.floor(rem / this.sixteenths);
+    const quarters = rem % this.quarters; const bars = Math.floor(rem / this.quarters);
+    const time = `${bars}:${quarters}:${sixteenths}`;
+    return {
+      x: col * this.noteWidth,
+      y: row * this.noteHeight,
+      time,
+      value: this.notes[row].value,
+    };
+  }
+  public checkMeasure(col: number) {
+    let measureValue = col / (this.quarters * this.sixteenths);
+    if (measureValue === this.measures) { this.$emit('update:measures', measureValue + 1); } else {
+      measureValue = Math.ceil(measureValue);
+      if (measureValue > this.measures) {
+        this.$emit('update:measures', measureValue);
+      } else if (measureValue < this.measures) {
+        this.$emit('update:measures', measureValue);
       }
+    }
+  }
 
-      this.$emit('input', value);
-      this.$emit('removed', toRemove);
-    },
-    changeDefault(length) {
-      this.default = length;
-    },
-    compute(row, col) {
-      let rem = col;
-      const sixteenths = rem % this.sixteenths; rem = Math.floor(rem / this.sixteenths);
-      const quarters = rem % this.quarters; const bars = Math.floor(rem / this.quarters);
-      const time = `${bars}:${quarters}:${sixteenths}`;
-      return {
-        x: col * this.noteWidth, y: row * this.noteHeight, time, note: this.notes[row].value,
-      };
-    },
-    checkMeasure(col) {
-      let measureValue = col / (this.quarters * this.sixteenths);
-      if (measureValue === this.measures) this.$emit('update:measures', measureValue + 1);
-      else {
-        measureValue = Math.ceil(measureValue);
-        if (measureValue > this.measures) this.$emit('update:measures', measureValue);
-        else if (measureValue < this.measures) this.$emit('update:measures', measureValue);
-      }
-    },
-  },
-  mounted() {
-    this.default = this.defaultLength;
-    // eslint-disable-next-line array-callback-return
+  public mounted() {
     this.value.map((note) => {
-      console.log(note);
       this.$emit('added', note);
       this.checkMeasure(note.col);
     });
-  },
-};
+  }
+}
 </script>
 
 <style scoped lang="sass">

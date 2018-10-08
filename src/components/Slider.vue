@@ -16,59 +16,57 @@
   </svg>
 </template>
 
-<script>
-import { draggable } from '@/mixins';
+<script lang="ts">
+import { Component, Prop, Mixins } from 'vue-property-decorator';
+import { Draggable } from '@/mixins';
 
-export default {
-  name: 'Slider',
-  props: {
-    height: { type: Number, default: 150 },
-    width: { type: Number, default: 6 },
-    right: { type: Number, default: 0 },
-    left: { type: Number, default: 0 },
-    value: { type: Number, default: 0 },
-  },
-  mixins: [draggable],
-  data() {
-    return {
-      style: { x: `${this.width + 2}px` },
-      bg: '#ddd',
-      fg: '#3cb7d8',
-      cursor: 'pointer',
-    };
-  },
-  computed: {
-    points() {
-      const width = 8;
-      const height = 16;
+@Component
+export default class Slider extends Mixins(Draggable) {
+  @Prop({ type: Number, default: 150 }) public height!: number;
+  @Prop({ type: Number, default: 6 }) public width!: number;
+  @Prop({ type: Number, default: 0 }) public right!: number;
+  @Prop({ type: Number, default: 0 }) public left!: number;
+  @Prop({ type: Number, default: 0 }) public value!: number;
+  public style = { x: `${this.width + 2}px` };
+  public bg = '#ddd';
+  public fg = '#3cb7d8';
+  public cursor = 'pointer';
 
-      const left = (2 * this.width) + 6;
-      const right = left + width;
+  public $refs!: {
+    drag: HTMLElement,
+    svg: HTMLElement,
+  };
 
-      return `${left},${this.position} ${right},${this.position - (height / 2)} ${right},${this.position + (height / 2)}`;
-    },
-    position() {
-      return this.height - ((this.height * this.value) / 100);
-    },
-    rightHeight() {
-      return this.right * (this.height / 100);
-    },
-    leftHeight() {
-      return this.left * (this.height / 100);
-    },
-  },
-  methods: {
-    move(e) {
-      let volume = ((this.$refs.svg.clientTop + this.height) - e.offsetY);
-      volume *= 100 / this.height;
-      volume = Math.max(Math.min(volume, 100), 0);
-      this.$emit('input', volume);
-    },
-    getPosition(level) {
-      return this.height - level;
-    },
-  },
-};
+  get points() {
+    const width = 8;
+    const height = 16;
+
+    const left = (2 * this.width) + 6;
+    const right = left + width;
+
+    return `${left},${this.position} ${right},${this.position - (height / 2)} ${right},${this.position + (height / 2)}`;
+  }
+  get position() {
+    return this.height - ((this.height * this.value) / 100);
+  }
+  get rightHeight() {
+    return this.right * (this.height / 100);
+  }
+  get leftHeight() {
+    return this.left * (this.height / 100);
+  }
+
+  public move(e: MouseEvent) {
+    let volume = ((this.$refs.svg.clientTop + this.height) - e.offsetY);
+    volume *= 100 / this.height;
+    volume = Math.max(Math.min(volume, 100), 0);
+    this.$emit('input', volume);
+  }
+
+  public getPosition(level: number) {
+    return this.height - level;
+  }
+}
 </script>
 
 <style scoped lang="sass">

@@ -2,48 +2,45 @@
   <div :class="keyClass" :style="keyStyle" @mousedown="play"></div>
 </template>
 
-<script>
-import { px } from '@/mixins';
+<script lang="ts">
+import { Component, Mixins, Prop } from 'vue-property-decorator';
+import Tone from 'tone';
+
+import { PX } from '@/mixins';
 import { BLACK, WHITE } from '@/utils';
 
-export default {
-  name: 'Key',
-  mixins: [px],
-  props: {
-    note: { type: String, required: true },
-    synth: { type: Object, required: true },
-    h: { type: Number, default: 44 },
-    w: { type: Number, default: 250 },
-    widthProportion: { type: Number, default: 0.55 },
-    heightProportion: { type: Number, default: 0.50 },
-    borderConfig: { type: Boolean, default: false },
-  },
-  computed: {
-    color() {
-      return this.note.includes('#') ? BLACK : WHITE;
-    },
-    keyClass() {
-      return `key--${this.color}`;
-    },
-    keyStyle() {
-      if (this.color === BLACK) {
-        return {
-          transform: `translate(0, -${(this.h * this.heightProportion) / 2}px)`,
-          ...this.hw(this.h * this.heightProportion, this.w * this.widthProportion),
-        };
-      }
+@Component
+export default class Key extends Mixins(PX) {
+  @Prop(String) public note!: string;
+  @Prop({type: Tone.Synth, required: true}) public synth!: Tone.Synth;
+  @Prop({type: Number, default: 44}) public h!: number;
+  @Prop({type: Number, default: 250}) public w!: number;
+  @Prop({type: Number, default: 0.55}) public widthProportion!: number;
+  @Prop({type: Number, default: 0.50}) public heightProportion!: number;
+  @Prop({type: Boolean, default: false}) public borderConfig!: boolean;
+
+  get color() {
+    return this.note.includes('#') ? BLACK : WHITE;
+  }
+  get keyClass() {
+    return `key--${this.color}`;
+  }
+  get keyStyle() {
+    if (this.color === BLACK) {
       return {
-        borderBottom: this.borderConfig ? 'solid 1px #b9b9b9' : '',
-        ...this.hw(this.h, this.w),
+        transform: `translate(0, -${(this.h * this.heightProportion) / 2}px)`,
+        ...this.hw(this.h * this.heightProportion, this.w * this.widthProportion),
       };
-    },
-  },
-  methods: {
-    play() {
-      this.synth.triggerAttackRelease(this.note, '8n');
-    },
-  },
-};
+    }
+    return {
+      borderBottom: this.borderConfig ? 'solid 1px #b9b9b9' : '',
+      ...this.hw(this.h, this.w),
+    };
+  }
+  public play() {
+    this.synth.triggerAttackRelease(this.note, '8n');
+  }
+}
 </script>
 
 <style scoped lang="sass">

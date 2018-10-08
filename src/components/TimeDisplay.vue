@@ -7,20 +7,21 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'TimeDisplay',
-  props: { time: Object },
-  methods: {
-    formatNumberLength(num, length) {
-      let r = `${num}`;
-      while (r.length < length) {
-        r = `0${r}`;
-      }
-      return r;
-    },
-  },
-};
+<script lang="ts">
+import Vue from 'vue';
+import { Component, Prop } from 'vue-property-decorator';
+
+@Component
+export default class TimeDisplay extends Vue {
+  @Prop(Object) public time!: object;
+  public formatNumberLength(num: number, length: number) {
+    let r = `${num}`;
+    while (r.length < length) {
+      r = `0${r}`;
+    }
+    return r;
+  }
+}
 </script>
 
 <style scoped lang="sass">

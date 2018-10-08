@@ -10,55 +10,47 @@
   </v-navigation-drawer>
 </template>
 
-<script>
-// eslint-disable-next-line import/no-extraneous-dependencies
+<script lang="ts">
+import { Component, Vue } from 'vue-property-decorator';
 import { ipcRenderer } from 'electron';
 import FileExplorer from '@/components/FileExplorer.vue';
+import fs from 'fs';
+import path from 'path';
 
-const fs = require('fs');
-const path = require('path');
+interface Tree {
+  [key: string]: Tree;
+}
 
-export default {
-  name: 'Drawer',
-  components: { FileExplorer },
-  data() {
-    return {
-      drawer: true,
-      folders: ['/home/jacob/Downloads'],
-    };
-  },
-  computed: {
-    projects() {
-      return this.folders.reduce((tree, folder) => {
-        // eslint-disable-next-line no-param-reassign
-        tree[path.basename(folder)] = this.computeTree(folder); return tree;
-      }, {});
-    },
-  },
-  methods: {
-    computeTree(dir, tree = {}) {
-      // eslint-disable-next-line array-callback-return
-      fs.readdirSync(dir).map((item) => {
-        // eslint-disable-next-line no-param-reassign
-        tree[item] = {};
-        const p = path.join(dir, item);
-        if (fs.statSync(p).isDirectory()) {
-          this.computeTree(p, tree[item]);
-        }
-      });
-      return tree;
-    },
-    addFolder(_, folder) {
-      this.folders.push(folder[0]); // Folder is always an array of length 1
-    },
-  },
-  mounted() {
+@Component({components: {FileExplorer}})
+export default class Drawer extends Vue {
+  public drawer = true;
+  public folders = ['/home/jacob/Downloads'];
+  get projects() {
+    const tree: Tree = {};
+    return this.folders.forEach((folder) => {
+      tree[path.basename(folder)] = this.computeTree(folder);
+    });
+  }
+  public computeTree(dir: string, tree: Tree = {}) {
+    fs.readdirSync(dir).map((item) => {
+      tree[item] = {};
+      const p = path.join(dir, item);
+      if (fs.statSync(p).isDirectory()) {
+        this.computeTree(p, tree[item]);
+      }
+    });
+    return tree;
+  }
+  public addFolder(_: any, [folder]: [string]) {
+    this.folders.push(folder); // Folder is always an array of length 1
+  }
+  public mounted() {
     ipcRenderer.on('folder', this.addFolder);
-  },
-  destroyed() {
+  }
+  public destroyed() {
     ipcRenderer.removeListener('folder', this.addFolder);
-  },
-};
+  }
+}
 </script>
 
 <style scoped>

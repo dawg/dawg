@@ -10,7 +10,8 @@
   </v-app>
 </template>
 
-<script>
+<script lang="ts">
+import { Component, Vue } from 'vue-property-decorator';
 import Toolbar from '@/components/Toolbar.vue';
 import Drawer from '@/components/Drawer.vue';
 
@@ -18,11 +19,10 @@ const tree = {
   label: 'root',
 };
 
-export default {
-  name: 'Proton',
+@Component({
   components: { Drawer, Toolbar },
-  data: () => ({
-    children: tree,
-  }),
-};
+})
+export default class App extends Vue {
+  public children = tree;
+}
 </script>

@@ -14,24 +14,24 @@
   </div>
 </template>
 
-<script>
-import * as expiringStorage from '../expiringStorage';
+<script lang="ts">
+import Vue from 'vue';
+import { Component, Prop } from 'vue-property-decorator';
+import * as expiringStorage from '@/expiringStorage';
+import Tab from '@/components/Tab.vue';
 
-export default {
-  name: 'Tabs',
-  props: { cacheLifetime: { default: 5 } },
+@Component({
+  components: { Tab },
+})
+export default class Tabs extends Vue {
+  @Prop({ type: Number, default: 5 }) public cacheLifetime!: number;
+  public tabs: Tab[] = [];
+  public $children: Tab[] = [];
 
-  data: () => ({
-    tabs: [],
-  }),
-
-  computed: {
-    storageKey() {
-      return `vue-tabs-component.cache.${window.location.host}${window.location.pathname}`;
-    },
-  },
-
-  mounted() {
+  get storageKey() {
+    return `vue-tabs-component.cache.${window.location.host}${window.location.pathname}`;
+  }
+  public mounted() {
     this.tabs = [...this.$children];
     const previousSelectedTabHash = expiringStorage.get(this.storageKey);
 
@@ -40,41 +40,36 @@ export default {
     } else if (this.tabs.length) {
       this.selectTab(this.tabs[0].hash);
     }
-  },
+  }
+  public findTab(hash: string) {
+    return this.tabs.find((tab) => tab.hash === hash);
+  }
 
-  methods: {
-    findTab(hash) {
-      return this.tabs.find(tab => tab.hash === hash);
-    },
+  public selectTab(selectedTabHash: string, event?: MouseEvent) {
+    if (event) {
+      event.preventDefault();
+    }
 
-    selectTab(selectedTabHash, event) {
-      if (event) {
-        event.preventDefault();
-      }
+    const selectedTab = this.findTab(selectedTabHash);
+    if (!selectedTab) {
+      return;
+    }
 
-      const selectedTab = this.findTab(selectedTabHash);
-      if (!selectedTab) {
-        return;
-      }
+    this.tabs.map((tab) => {
+      tab.isActive = (tab.hash === selectedTab.hash);
+    });
 
-      // eslint-disable-next-line array-callback-return
-      this.tabs.map((tab) => {
-        // eslint-disable-next-line
-        tab.isActive = (tab.hash === selectedTab.hash);
-      });
+    this.$emit('changed', { tab: selectedTab });
 
-      this.$emit('changed', { tab: selectedTab });
-
-      expiringStorage.set(this.storageKey, selectedTab.hash, this.cacheLifetime);
-    },
-    close(i) {
-      this.tabs[i].isActive = false;
-      const tab = this.tabs[i + 1] || this.tabs[i - 1] || {};
-      this.tabs.splice(i, 1);
-      this.selectTab(tab.hash);
-    },
-  },
-};
+    expiringStorage.set(this.storageKey, selectedTab.hash, this.cacheLifetime);
+  }
+  public close(i: number) {
+    this.tabs[i].isActive = false;
+    const tab = this.tabs[i + 1] || this.tabs[i - 1] || {};
+    this.tabs.splice(i, 1);
+    this.selectTab(tab.hash);
+  }
+}
 </script>
 
 <style lang="sass" scoped>

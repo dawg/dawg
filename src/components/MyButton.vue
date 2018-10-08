@@ -4,16 +4,15 @@
   </button>
 </template>
 
-<script>
-export default {
-  name: 'my-button',
+<script lang="ts">
+import { Component, Vue } from 'vue-property-decorator';
 
-  methods: {
-    onClick() {
-      this.$emit('click');
-    },
-  },
-};
+@Component
+export default class MyButton extends Vue {
+  public onClick() {
+    this.$emit('click');
+  }
+}
 </script>
 
 <style>

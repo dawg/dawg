@@ -1,6 +1,6 @@
 <template>
-  <vue-draggable-resizable
-      v-show="isOpen"
+  <vue-dra;ggable-resizable
+  ;    v-show="isOpen"
       :drag-handle="'.toolbar'"
       :x="200"
       :y="200"
