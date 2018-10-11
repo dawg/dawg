@@ -105,7 +105,9 @@ storiesOf(Sequencer.name, module)
         this.part.add(note.time, note.note);
       },
       moved({ newTime, oldTime, note }) {
+        // @ts-ignore
         this.part.remove(oldTime);
+        // @ts-ignore
         this.part.add(newTime, note);
       },
       removed(note) {
