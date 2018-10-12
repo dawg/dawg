@@ -4,28 +4,24 @@
   </v-btn>
 </template>
 
-<script>
-export default {
-  name: 'DotButton',
-  data() {
-    return {
-      active: true,
-    };
-  },
-  methods: {
-    handleClick() {
-      this.active = !this.active;
-      this.$emit('click');
-    },
-  },
-  computed: {
-    color() {
-      if (this.active) {
-        return '#00ff51';
-      }
+<script lang="ts">
+import { Component, Vue } from 'vue-property-decorator';
 
-      return null;
-    },
-  },
-};
+@Component
+export default class DotButton extends Vue {
+  public active = true;
+
+  public handleClick() {
+    this.active = !this.active;
+    this.$emit('click');
+  }
+
+  get color() {
+    if (this.active) {
+      return '#00ff51';
+    }
+
+    return null;
+  }
+}
 </script>

@@ -23,26 +23,25 @@
   </v-toolbar>
 </template>
 
-<script>
+<script lang="ts">
+import Vue from 'vue';
+import { Component, Prop } from 'vue-property-decorator';
 import Bpm from '@/components/Bpm.vue';
 import TimeDisplay from '@/components/TimeDisplay.vue';
 
-export default {
-  name: 'Toolbar',
-  components: { TimeDisplay, Bpm },
-  data() {
-    return {
-      title: 'Vuesic',
-      time: {
-        min: 0,
-        sec: 0,
-        milli: 0,
-      },
-      bpm: 120,
-      playing: false,
-    };
-  },
-};
+@Component({
+  components: {TimeDisplay, Bpm},
+})
+export default class Toolbar extends Vue {
+  public title = 'Vuesic';
+  public time = {
+    mine: 0,
+    sec: 0,
+    milli: 0,
+  };
+  public bpm = 120;
+  public playing = false;
+}
 </script>
 
 <style scoped lang="sass">

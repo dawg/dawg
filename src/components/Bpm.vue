@@ -5,19 +5,17 @@
   </div>
 </template>
 
-<script>
-import { draggable } from '../mixins';
+<script lang="ts">
+import { Component, Prop, Mixins } from 'vue-property-decorator';
+import { Draggable } from '../mixins';
 
-export default {
-  name: 'Bpm',
-  props: ['value'],
-  mixins: [draggable],
-  methods: {
-    move(e, { changeY }) {
-      this.$emit('input', this.value - changeY);
-    },
-  },
-};
+@Component
+export default class Bpm extends Mixins(Draggable) {
+  @Prop(Number) public value!: any;
+  public move(e: Event, { changeY }: { changeY: number }) {
+    this.$emit('input', this.value - changeY);
+  }
+}
 </script>
 
 <style scoped lang="sass">
