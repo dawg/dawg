@@ -2,3 +2,23 @@
 
 body
     font-family: system-ui, sans-serif
+
+// $map: (key1: value1, key2: value2, key3: value3);
+
+// $map: (
+//   'keyone': 'value',
+//   'keytwo': 'value',
+//   'keythree': 'value'
+// );
+
+$theme: (primary: #1976D2, secondary: #424242, accent: #82B1FF, error: #FF5252, info: #2196F3, success: #4CAF50, warning: #FFC107);
+
+@each $name, $color in $theme
+    .#{$name}
+        background: $color
+
+    .#{$name}-darken
+        background: darken( $color, 10% )
+    
+    .#{$name}-lighten
+        background: lighten( $color, 10% )
