@@ -306,6 +306,16 @@ storiesOf(ColorBlock.name, module)
     components: { ColorBlock },
     data: () => ({
       groups: Array.from(Object.values(STYLES)),
-      types: ['', '-darken', '-lighten'],
+      types: [
+        '',
+        '-darken-1',
+        '-darken-2',
+        '-darken-3',
+        '-darken-4',
+        '-lighten-1',
+        '-lighten-2',
+        '-lighten-3',
+        '-lighten-4',
+      ],
     }),
   }));
