@@ -330,15 +330,34 @@ storiesOf(Notifications.name, module)
   .add('Standard', () => ({
     template: `
     <div>
-      <v-btn @click="click">CLICK</v-btn>
+      <div>
+        <v-btn @click="info" class="info">INFO</v-btn>
+        <v-btn @click="success" class="success">SUCCESS</v-btn>
+      </div>
+      <div>
+        <v-btn @click="warning" class="warning">WARNING</v-btn>
+        <v-btn @click="error" class="error">ERROR</v-btn>
+      </div>
       <notifications></notifications>
     </div>
     `,
     components: { Notifications },
     methods: {
-      click() {
+      info() {
         // @ts-ignore
-        this.$notify.info('lkasdjflksdjf', {detail: 'Hello World!'});
+        this.$notify.info('Information', {detail: 'Here is some info!'});
+      },
+      success() {
+        // @ts-ignore
+        this.$notify.success('Success', {detail: 'Something went well!'});
+      },
+      warning() {
+        // @ts-ignore
+        this.$notify.warning('Warning', {detail: 'This is bad!'});
+      },
+      error() {
+        // @ts-ignore
+        this.$notify.error('Error', {detail: 'Something is probably broken!'});
       },
     },
   }));
