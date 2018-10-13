@@ -7,7 +7,7 @@ import Key from '@/components/Key.vue';
 import Sequencer from '@/components/Sequencer.vue';
 import Piano from '@/components/Piano.vue';
 import Toolbar from '@/components/Toolbar.vue';
-import FileExplorer from '@/components/FileExplorer.vue';
+import Tree from '@/components/Tree.vue';
 import ChannelRack from '@/components/ChannelRack.vue';
 import Knob from '@/components/Knob.vue';
 import Mixer from '@/components/Mixer.vue';
@@ -15,6 +15,7 @@ import Slider from '@/components/Slider.vue';
 import Note from '@/components/Note.vue';
 import Bpm from '@/components/Bpm.vue';
 import TimeDisplay from '@/components/TimeDisplay.vue';
+import NavigationDrawer from '@/components/NavigationDrawer.vue';
 import PlayPause from '@/components/PlayPause.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
@@ -156,16 +157,16 @@ storiesOf(Toolbar.name, module)
     components: { Toolbar },
   }));
 
-storiesOf(FileExplorer.name, module)
+storiesOf(Tree.name, module)
   .add('Standard', () => ({
     template: `
     <v-app dark>
       <v-list dense style="max-width: 300px; height: 100%">
-        <file-explorer :children="children.root" label="root"></file-explorer>
+        <tree :children="children.root" label="root"></tree>
       </v-list>
     </v-app>
     `,
-    components: { FileExplorer },
+    components: { Tree },
     data() {
       return {
         children: TREE,
@@ -360,4 +361,11 @@ storiesOf(Notifications.name, module)
         this.$notify.error('Error', {detail: 'Something is probably broken!'});
       },
     },
+  }));
+
+
+storiesOf(NavigationDrawer.name, module)
+  .add('Standard', () => ({
+    template: '<navigation-drawer></navigation-drawer>',
+    components: {NavigationDrawer},
   }));

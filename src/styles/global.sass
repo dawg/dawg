@@ -11,7 +11,7 @@ body
 //   'keythree': 'value'
 // );
 
-$theme: (primary: #1976D2, secondary: #424242, accent: #82B1FF, error: #d13b2e, info: #007bff, success: #2ba143, warning: #ad7c0b);
+$theme: (primary: #1976D2, secondary: #21242B, accent: #82B1FF, error: #d13b2e, info: #007bff, success: #2ba143, warning: #ad7c0b);
 $one: 8%
 $two: 13%
 $three: 21%
@@ -55,7 +55,7 @@ $four: 34%
         color: lighten( $color, $one )
 
     .#{$name}-lighten-2
-        background: lighten( $color, $two )
+        background: lighten( $color, $two )!important // TODO(jacob)
 
     .#{$name}-lighten-2--text
         color: lighten( $color, $two )
