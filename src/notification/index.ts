@@ -23,7 +23,7 @@ const Notify = {
 
     const info = (message: string, params?: Params) => {
         params = params || {};
-        events.$emit('add', {message, params})
+        events.$emit('add', {message, params, type: "error"})
     };
 
     const name = args.name ? args.name : 'notify'

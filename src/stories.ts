@@ -338,7 +338,7 @@ storiesOf(Notifications.name, module)
     methods: {
       click() {
         // @ts-ignore
-        this.$notify.info('lkasdjflksdjf');
+        this.$notify.info('lkasdjflksdjf', {detail:"Hello World!"});
       },
     },
   }));

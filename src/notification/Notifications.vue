@@ -23,16 +23,21 @@
           :class="notifyClass(item)"
           @click="destroy(item)"
         >
-          <div
-            v-if="item.title"
-            class="notification-title"
-            v-html="item.title"
-          >
+          <div :class="notifyIconClass(item)">
+            <icon name="info-circle"></icon>
           </div>
-          <div
-            class="notification-content"
-            v-html="item.text"
-          >
+          <div :class="notifyBodyClass(item)">
+            <div
+                    v-if="item.title"
+                    class="notification-title"
+                    v-html="item.title"
+            >
+            </div>
+            <div
+                    class="notification-content"
+                    v-html="item.text"
+            >
+            </div>
           </div>
         </div>
       </slot>
@@ -136,7 +141,7 @@ const Component = {
 
     duration: {
       type: Number,
-      default: 3000
+      default: 30000
     },
 
     delay: {
@@ -202,14 +207,14 @@ const Component = {
         ? event.speed
         : this.speed;
 
-      let { message, params} = event;
+      let { message, params, type} = event;
       let { detail, dismissible} = params;
 
       const item = {
         id: Id(),
         title: message,
         text: detail,
-        type: "info",
+        type,
         state: STATE.IDLE,
         speed,
         length: duration + 2 * speed,
@@ -217,7 +222,7 @@ const Component = {
 
       if (duration >= 0) {
         item.timer = setTimeout(() => {
-          this.destroy(item)
+          //this.destroy(item)
         }, item.length)
       }
 
@@ -250,8 +255,23 @@ const Component = {
       return [
         'notification',
         this.classes,
-        item.type
+        `${item.type}-darken-4--text`
+
       ]
+    },
+
+    notifyIconClass (item) {
+        return [
+            'icon',
+            item.type
+        ]
+    },
+
+    notifyBodyClass (item) {
+        return [
+            'notification-body',
+            `${item.type}-lighten-4`
+        ]
     },
 
     notifyWrapperStyle (item) {
@@ -292,39 +312,22 @@ export default Component
 }
 
 .notification {
-  display: block;
+  display: flex;
   box-sizing: border-box;
-  background: white;
   text-align: left;
 }
 
 .notification-title {
-  font-weight: 600;
+  padding: 5px;
+  font-weight: bold;
 }
 
 .vue-notification {
   font-size: 12px;
-  padding: 10px;
-  margin: 0 5px 5px;
-
-  color: white;
-  background: #44A4FC;
-  border-left: 5px solid #187FE7;
-}
-
-.vue-notification.warn {
-  background: #ffb648;
-  border-left-color: #f48a06;
-}
-
-.vue-notification.error {
-  background: #E54D42;
-  border-left-color: #B82E24;
-}
-
-.vue-notification.success {
-  background: #68CD86;
-  border-left-color: #42A85F;
+  margin: 2px 10px;
+  border-radius: 3px;
+  overflow: hidden;
+  width: 20em;
 }
 
 .vn-fade-enter-active, .vn-fade-leave-active, .vn-fade-move  {
@@ -335,4 +338,19 @@ export default Component
   opacity: 0;
 }
 
+.icon {
+  padding: 5px;
+  padding-top: 10px;
+  color: rgba(255,255,255,0.85);
+}
+
+.notification-body {
+  width: 100%;
+  padding: 5px;
+}
+
+.notification-content {
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 5px;
+}
 </style>
