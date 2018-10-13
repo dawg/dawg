@@ -14,27 +14,26 @@
   </v-list>
 </template>
 
-<script>
+<script lang="ts">
+import Vue from 'vue';
+import { Component, Prop } from 'vue-property-decorator';
 import DotButton from '@/components/DotButton.vue';
 
-export default {
-  name: 'ChannelRack',
+@Component({
   components: { DotButton },
-  props: { instruments: { type: Array, required: true } },
-  data() {
-    return {
-      disabled: new Set(),
-    };
-  },
-  methods: {
-    handle(instrument) {
-      if (instrument in this.disabled) {
-        this.disabled.remove(instrument);
-      } else {
-        this.disabled.add(instrument);
-      }
-    },
-    clicked() {},
-  },
-};
+})
+export default class ChannelRack extends Vue {
+  @Prop({ type: Array, required: true }) public instruments!: string[];
+  public disabled = new Set<string>();
+  public handle(instrument: string) {
+    if (instrument in this.disabled) {
+      this.disabled.delete(instrument);
+    } else {
+      this.disabled.add(instrument);
+    }
+  }
+  public clicked() {
+    this.$emit('click');
+  }
+}
 </script>

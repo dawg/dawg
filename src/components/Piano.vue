@@ -11,29 +11,27 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import Vue from 'vue';
 import Tone from 'tone';
-import Key from '@/components/Key.vue';
+import { Component, Prop } from 'vue-property-decorator';
 import { notes } from '@/utils';
+import Key from '@/components/Key.vue';
 
 const synth = new Tone.Synth().toMaster();
 
-export default {
-  name: 'Piano',
-  components: { Key },
-  data() {
-    return { synth };
-  },
-  props: {
-    octave: { default: 4, type: Number },
-    borderBottom: { type: Boolean, default: false },
-  },
-  computed: {
-    notes() {
-      return notes.map(n => `${n.value}${this.octave}`).reverse();
-    },
-  },
-};
+@Component({
+  components: {Key},
+})
+export default class Piano extends Vue {
+  @Prop({default: 4}) public octave!: number;
+  @Prop({default: false}) public borderBottom!: boolean;
+  public synth = synth;
+
+  get notes() {
+    return notes.map((n) => `${n.value}${this.octave}`).reverse();
+  }
+}
 </script>
 
 <style scoped lang="sass">

@@ -18,24 +18,21 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import Vue from 'vue';
+import { Component, Prop } from 'vue-property-decorator';
 import Knob from '@/components/Knob.vue';
 
-export default {
-  name: 'Mixer',
+@Component({
   components: { Knob },
-  props: { channels: { type: Number, default: 10 } },
-  data() {
-    return {
-      pan: Array(this.channels).fill(0),
-    };
-  },
-  methods: {
-    range(i) {
-      return Array.from(Array(i).keys());
-    },
-  },
-};
+})
+export default class Mixer extends Vue {
+  @Prop({ type: Number, default: 10  }) public channels!: number;
+  public pan = Array(this.channels).fill(0);
+  public range(i: number) {
+    return Array.from(Array(i).keys());
+  }
+}
 </script>
 
 <style scoped lang="sass">
@@ -45,6 +42,7 @@ export default {
 
   ul
     list-style: none
+    padding-left: 0
 
   .color
     background-color: #44b3ff

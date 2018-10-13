@@ -1,5 +1,11 @@
-export const get = (key) => {
-  const cached = JSON.parse(localStorage.getItem(key));
+export const get = (key: string) => {
+  const item = localStorage.getItem(key);
+
+  if (item === null) {
+    return null;
+  }
+
+  const cached = JSON.parse(item);
 
   if (!cached) {
     return null;
@@ -15,7 +21,7 @@ export const get = (key) => {
   return cached.value;
 };
 
-export const set = (key, value, lifeTimeInMinutes) => {
+export const set = (key: string, value: any, lifeTimeInMinutes: number) => {
   const currentTime = new Date().getTime();
 
   const expires = new Date(currentTime + (lifeTimeInMinutes * 60000));
