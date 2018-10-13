@@ -1,160 +1,86 @@
 <template>
-<div
-  class="notifications"
-  :style="styles"
->
-  <transition-group name="vn-fade">
-    <div
-      v-for="item in list"
-      v-if="item.state != 2"
-      class="notification-wrapper"
-      :style="notifyWrapperStyle(item)"
-      :key="item.id"
-      :data-id="item.id"
-    >
-      <slot
-        name="body"
-        :class="[classes, item.type]"
-        :item="item"
-        :close="() => destroy(item)"
+  <div class="notifications" :style="styles">
+    <transition-group name="vn-fade">
+      <div
+        v-for="item in list"
+        :class="notifyClass(item)"
+        :style="notifyWrapperStyle(item)"
+        :key="item.id"
+        @click="destroy(item)"
       >
-        <!-- Default slot template -->
-        <div
-          :class="notifyClass(item)"
-          @click="destroy(item)"
-        >
-          <div :class="notifyIconClass(item)">
-            <icon name="info-circle"></icon>
-          </div>
-          <div :class="notifyBodyClass(item)">
-            <div
-                    v-if="item.title"
-                    class="notification-title"
-                    v-html="item.title"
-            >
-            </div>
-            <div
-                    class="notification-content"
-                    v-html="item.text"
-            >
-            </div>
-          </div>
+        <div :class="notifyIconClass(item)">
+          <icon name="info-circle"></icon>
         </div>
-      </slot>
-    </div>
-  </transition-group>
-</div>
+        <div :class="notifyBodyClass(item)">
+          <div
+            v-if="item.title"
+            class="notification-title"
+            v-html="item.title"
+          ></div>
+          <div
+            class="notification-content"
+            v-html="item.text"
+          ></div>
+        </div>
+      </div>
+    </transition-group>
+  </div>
 </template>
 <script lang="ts">
 
-import { events, Notification, Params }              from './events'
-import { Vue, Component, Prop} from 'vue-property-decorator'
+import { events, Notification, Params } from './events';
+import { Vue, Component, Prop} from 'vue-property-decorator';
 
 const directions = {
   x: ['left', 'center', 'right'],
-  y: ['top', 'bottom']
+  y: ['top', 'bottom'],
 };
 
-/**
-  */
-export const Id = (i => () => i++)(0);
+export const Id = ((i) => () => i++)(0);
 
-/**
-  * Splits space/tab separated string into array and cleans empty string items.
-  */
-export const split = (value: string) => {
-  return value.split(/\s+/gi).filter(v => v)
-};
-
-/**
-  * Cleanes and transforms string of format "x y" into object {x, y}. 
-  * Possible combinations:
-  *   x - left, center, right
-  *   y - top, bottom
-  */
-export const listToDirection = (value: string[]) => {
-  let x = '';
-  let y = '';
-
-  value.forEach(v => {
-    if (directions.y.indexOf(v) !== -1) {
-      y = v
-    }
-    if (directions.x.indexOf(v) !== -1) {
-      x = v
-    }
-  });
-
-  return { x, y }
-};
-
-enum STATE{
-  IDLE,
-  DESTROYED
-};
 
 interface NotificationItem {
-  state: STATE;
   type: string;
-  speed: number;
   id: number;
 }
 
 @Component
 export default class Notifications extends Vue {
-  @Prop({type: Number, default: 300}) width!: number;
-
-  @Prop({type: Boolean, default: false}) reverse!: boolean;
-
-  @Prop({type: String, default: 'vue-notification'}) classes!: string;
-
-  @Prop({type: Number, default: 300}) speed!: number;
+  @Prop({type: Number, default: 300}) public width!: number;
+  @Prop({type: Boolean, default: false}) public reverse!: boolean;
   /* Todo */
-  @Prop({type: Number, default: 0}) cooldown!: number;
+  @Prop({type: Number, default: 5000}) public duration!: number;
+  @Prop({type: Number, default: 0}) public delay!: number;
+  @Prop({type: Number, default: Infinity}) public max!: number;
+  @Prop(Boolean) public bottom!: number;
+  @Prop(Boolean) public left!: number;
 
-  @Prop({type: Number, default: 5000}) duration!: number;
+  public list: NotificationItem[] = [];
+  public speed = 300;
+  public timers: {[s: string]: NodeJS.Timer} = {};
 
-  @Prop({type: Number, default: 0}) delay!: number;
-
-  @Prop({type: Number, default: Infinity}) max!: number;
-
-  @Prop({type: [Array], default: () => ['top', 'right']}) position!: string[]; 
-
-  list: NotificationItem[] = [];
-  timers: any = {};
-
-  mounted () {
+  public mounted() {
     events.$on('add', this.addItem);
   }
 
-  get styles () {
-    const { x, y } = listToDirection(this.position);
+  get styles() {
+    const x = this.left ? 'left' : 'right';
+    const y = this.bottom ? 'bottom' : 'top';
 
-    let styles = {
+    return {
       width: this.width,
-      [y]: '0px'
+      [y]: '0',
+      [x]: '0',
     };
-
-    if (x === 'center') {
-      styles['left'] = `calc(50% - ${this.width/2}px)`
-    } else {
-      styles[x] = '0px'
-    }
-
-    return styles
   }
 
-  get active () {
-    return this.list.filter(v => v.state !== STATE.DESTROYED)
+  get botToTop() {
+    return this.styles.hasOwnProperty('bottom');
   }
 
-  get botToTop () {
-    return this.styles.hasOwnProperty('bottom')
-  }
+  public addItem(event: Notification) {
 
-  addItem (event: Notification) {
-
-    // TODO: Need to put this back 
+    // TODO: Need to put this back
     // if (event.clean || event.clear) {
     //   this.destroyAll();
     //   return
@@ -164,33 +90,26 @@ export default class Notifications extends Vue {
     //   ? event.duration
     //   : this.duration;
 
-    // const speed = typeof event.speed === 'number'
-    //   ? event.speed
-    //   : this.speed;
-
     const duration = this.duration;
-    const speed = this.speed;
 
-    let { message, params, type} = event;
-    let { detail, dismissible} = params;
+    const { message, params, type} = event;
+    const { detail, dismissible} = params;
 
     const item = {
       id: Id(),
       title: message,
       text: detail,
       type,
-      state: STATE.IDLE,
-      speed,
-      length: duration + 2 * speed,
+      length: duration + 2 * this.speed,
     };
 
     if (duration >= 0) {
       this.timers[item.id] = setTimeout(() => {
-        this.destroy(item)
-      }, item.length)
+        this.destroy(item);
+      }, item.length);
     }
 
-    let direction = this.reverse
+    const direction = this.reverse
       ? !this.botToTop
       : this.botToTop;
 
@@ -199,63 +118,56 @@ export default class Notifications extends Vue {
     if (direction) {
       this.list.push(item);
 
-      if (this.active.length > this.max) {
-        indexToDestroy = 0
+      if (this.list.length > this.max) {
+        indexToDestroy = 0;
       }
     } else {
       this.list.unshift(item);
 
-      if (this.active.length > this.max) {
-        indexToDestroy = this.active.length - 1
+      if (this.list.length > this.max) {
+        indexToDestroy = this.list.length - 1;
       }
     }
 
     if (indexToDestroy !== -1) {
-      this.destroy(this.active[indexToDestroy])
+      this.destroy(this.list[indexToDestroy]);
     }
   }
 
-  notifyClass (item: NotificationItem) {
+  public notifyClass(item: NotificationItem) {
     return [
       'notification',
-      this.classes,
-      `${item.type}-darken-4--text`
-
-    ]
+      `${item.type}-darken-4--text`,
+    ];
   }
 
-  notifyIconClass (item: NotificationItem) {
-      return [
-          'icon',
-          item.type
-      ]
+  public notifyIconClass(item: NotificationItem) {
+    return [
+      'icon',
+      item.type,
+    ];
   }
 
-  notifyBodyClass (item: NotificationItem) {
-      return [
-          'notification-body',
-          `${item.type}-lighten-4`
-      ]
+  public notifyBodyClass(item: NotificationItem) {
+    return [
+      'notification-body',
+      `${item.type}-lighten-4`,
+    ];
   }
 
-  notifyWrapperStyle (item: NotificationItem) {
-    return {transition: `all ${item.speed}ms`}
+  public notifyWrapperStyle(item: NotificationItem) {
+    return {transition: `all ${this.speed}ms`};
   }
 
-  destroy (item: NotificationItem) {
+  public destroy(item: NotificationItem) {
     clearTimeout(this.timers[item.id]);
-    item.state = STATE.DESTROYED;
-    this.clean()
+    Vue.delete(this.list, this.list.indexOf(item));
   }
 
-  destroyAll () {
-    this.active.forEach(this.destroy)
+  public destroyAll() {
+    this.list.forEach(this.destroy);
   }
-
-  clean () {
-    this.list = this.list.filter(v => v.state !== STATE.DESTROYED)
-  }
-};
+}
 
 </script>
 <style>
@@ -265,31 +177,25 @@ export default class Notifications extends Vue {
   z-index: 5000;
 }
 
-.notification-wrapper {
+.notification {
   display: block;
   overflow: hidden;
   width: 100%;
   margin: 0;
   padding: 0;
-}
-
-.notification {
   display: flex;
   box-sizing: border-box;
   text-align: left;
-}
-
-.notification-title {
-  padding: 5px;
-  font-weight: bold;
-}
-
-.vue-notification {
   font-size: 12px;
   margin: 2px 10px;
   border-radius: 3px;
   overflow: hidden;
   width: 20em;
+}
+
+.notification-title {
+  padding: 5px;
+  font-weight: bold;
 }
 
 .vn-fade-enter-active, .vn-fade-leave-active, .vn-fade-move  {
