@@ -10,4 +10,5 @@ export interface Notification {
 message: string;
 params: Params;
 type: string;
+icon: string;
 }

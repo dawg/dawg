@@ -9,7 +9,7 @@
         @click="destroy(item)"
       >
         <div :class="notifyIconClass(item)">
-          <icon name="info-circle"></icon>
+          <icon :name="item.icon"></icon>
         </div>
         <div :class="notifyBodyClass(item)">
           <div
@@ -42,6 +42,7 @@ export const Id = ((i) => () => i++)(0);
 interface NotificationItem {
   type: string;
   id: number;
+  icon: string;
 }
 
 @Component
@@ -92,13 +93,14 @@ export default class Notifications extends Vue {
 
     const duration = this.duration;
 
-    const { message, params, type} = event;
+    const { message, params, type, icon} = event;
     const { detail, dismissible} = params;
 
     const item = {
       id: Id(),
       title: message,
       text: detail,
+      icon,
       type,
       length: duration + 2 * this.speed,
     };
