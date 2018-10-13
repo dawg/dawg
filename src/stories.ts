@@ -21,6 +21,11 @@ import Tab from '@/components/Tab.vue';
 import ColorBlock from '@/components/ColorBlock.vue';
 import { TREE, STYLES } from '@/utils';
 import stillDre from '@/assets/still-dre';
+import notification from '@/notification';
+import Notifications from '@/notification/Notifications.vue';
+import Vue from 'vue';
+
+Vue.use(notification);
 
 const synth = new Tone.Synth().toMaster();
 
@@ -318,4 +323,22 @@ storiesOf(ColorBlock.name, module)
         '-lighten-4',
       ],
     }),
+  }));
+
+
+storiesOf(Notifications.name, module)
+  .add('Standard', () => ({
+    template: `
+    <div>
+      <v-btn @click="click">CLICK</v-btn>
+      <notifications></notifications>
+    </div>
+    `,
+    components: { Notifications },
+    methods: {
+      click() {
+        // @ts-ignore
+        this.$notify('lkasdjflksdjf');
+      },
+    },
   }));

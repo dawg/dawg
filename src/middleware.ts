@@ -14,4 +14,8 @@ const middleware = () => {
   Vue.use(VueKonva);
 };
 
+const a = {
+  installed: false,
+};
+
 export default middleware;
