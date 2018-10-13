@@ -12,6 +12,11 @@ body
 // );
 
 $theme: (primary: #1976D2, secondary: #424242, accent: #82B1FF, error: #d13b2e, info: #2ba143, success: #4CAF50, warning: #ad7c0b);
+$one: 8%
+$two: 13%
+$three: 21%
+$four: 34%
+
 
 @each $name, $color in $theme
     .#{$name}
@@ -21,49 +26,49 @@ $theme: (primary: #1976D2, secondary: #424242, accent: #82B1FF, error: #d13b2e, 
         color: $color
 
     .#{$name}-darken-1
-        background: darken( $color, 5% )
+        background: darken( $color, $one )
 
     .#{$name}-darken-1--text
-        color: darken( $color, 5% )
+        color: darken( $color, $one )
     
     .#{$name}-darken-2
-        background: darken( $color, 10% )
+        background: darken( $color, $two )
 
     .#{$name}-darken-2--text
-        color: darken( $color, 10% )
+        color: darken( $color, $two )
 
     .#{$name}-darken-3
-        background: darken( $color, 15% )
+        background: darken( $color, $three )
 
     .#{$name}-darken-3--text
-        color: darken( $color, 15% )
+        color: darken( $color, $three )
     
     .#{$name}-darken-4
-        background: darken( $color, 20% )
+        background: darken( $color, $four )
 
     .#{$name}-darken-4--text
-        color: darken( $color, 20% )
+        color: darken( $color, $four )
     
     .#{$name}-lighten-1
-        background: lighten( $color, 5% )
+        background: lighten( $color, $one )
 
     .#{$name}-lighten-1--text
-        color: lighten( $color, 5% )
+        color: lighten( $color, $one )
 
     .#{$name}-lighten-2
-        background: lighten( $color, 10% )
+        background: lighten( $color, $two )
 
     .#{$name}-lighten-2--text
-        color: lighten( $color, 10% )
+        color: lighten( $color, $two )
 
     .#{$name}-lighten-3
-        background: lighten( $color, 15% )
+        background: lighten( $color, $three )
 
     .#{$name}-lighten-3--text
-        color: lighten( $color, 15% )
+        color: lighten( $color, $three )
 
     .#{$name}-lighten-4
-        background: lighten( $color, 20% )
+        background: lighten( $color, $four )
 
     .#{$name}-lighten-4--text
-        color: lighten( $color, 20% )
+        color: lighten( $color, $four )
