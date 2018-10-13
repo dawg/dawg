@@ -3,13 +3,7 @@
   class="notifications"
   :style="styles"
 >
-  <component
-    :is="componentName"
-    :name="animationName"
-    @enter="enter"
-    @leave="leave"
-    @after-leave="clean"
-  >
+  <transition-group name="vn-fade">
     <div
       v-for="item in list"
       v-if="item.state != 2"
@@ -43,17 +37,64 @@
         </div>
       </slot>
     </div>
-  </component>
+  </transition-group>
 </div>
 </template>
 <script>
 import plugin                         from './index'
 import { events }                     from './events'
-import { Id, split, listToDirection } from './util'
-import defaults                       from './defaults'
-import VelocityGroup                  from './VelocityGroup.vue'
-import CssGroup                       from './CssGroup.vue'
-import parseNumericValue              from './parser'
+
+const defaults = {
+  position: ['top', 'right'],
+  cssAnimation: 'vn-fade',
+}
+
+const directions = {
+  x: ['left', 'center', 'right'],
+  y: ['top', 'bottom']
+}
+
+/**
+  * Sequential ID generator
+  */
+export const Id = (i => () => i++)(0)
+
+/**
+  * Splits space/tab separated string into array and cleans empty string items.
+  */
+export const split = (value) => {
+  if (typeof value !== 'string') {
+    return []
+  }
+
+  return value.split(/\s+/gi).filter(v => v)
+}
+
+/**
+  * Cleanes and transforms string of format "x y" into object {x, y}. 
+  * Possible combinations:
+  *   x - left, center, right
+  *   y - top, bottom
+  */
+export const listToDirection = (value) => {
+  if (typeof value === 'string') {
+    value = split(value)
+  }
+
+  let x = null
+  let y = null
+
+  value.forEach(v => {
+    if (directions.y.indexOf(v) !== -1) {
+      y = v
+    }
+    if (directions.x.indexOf(v) !== -1) {
+      x = v
+    }
+  })
+
+  return { x, y }
+}
 
 const STATE = {
   IDLE: 0,
@@ -62,10 +103,6 @@ const STATE = {
 
 const Component = {
   name: 'Notifications',
-  components: {
-    VelocityGroup,
-    CssGroup
-  },
   props: {
     group: {
       type: String,
@@ -73,7 +110,7 @@ const Component = {
     },
 
     width: {
-      type: [Number, String],
+      type: Number,
       default: 300
     },
 
@@ -92,26 +129,6 @@ const Component = {
     classes: {
       type: String,
       default: 'vue-notification'
-    },
-
-    animationType: {
-      type: String,
-      default: 'css',
-      validator (value) {
-        return value === 'css' || value === 'velocity'
-      }
-    },
-
-    animation: {
-      type: Object,
-      default () {
-        return defaults.velocityAnimation
-      }
-    },
-
-    animationName: {
-      type: String,
-      default: defaults.cssAnimation
     },
 
     speed: {
@@ -149,26 +166,11 @@ const Component = {
     events.$on('add', this.addItem);
   },
   computed: {
-    actualWidth () {
-      return parseNumericValue(this.width)
-    },
-    /**
-      * isVelocityAnimation
-      */
-    isVA () {
-      return this.animationType === 'velocity'
-    },
-
-    componentName () {
-      return this.isVA
-        ? 'VelocityGroup'
-        : 'CssGroup'
-    },
 
     styles () {
       const { x, y } = listToDirection(this.position)
-      const width = this.actualWidth.value
-      const suffix = this.actualWidth.type
+      const width = this.width.value
+      const suffix = this.width.type
 
       let styles = {
         width: width + suffix,
@@ -266,11 +268,7 @@ const Component = {
     },
 
     notifyWrapperStyle (item) {
-      return this.isVA
-        ? null
-        : {
-            transition: `all ${item.speed}ms`
-          }
+      return {transition: `all ${item.speed}ms`}
     },
 
     destroy (item) {
@@ -284,32 +282,6 @@ const Component = {
 
     destroyAll () {
       this.active.forEach(this.destroy)
-    },
-
-    getAnimation (index, el) {
-      const animation = this.animation[index]
-
-      return typeof animation === 'function'
-        ? animation.call(this, el)
-        : animation
-    },
-
-    enter ({ el, complete }) {
-      const animation = this.getAnimation('enter', el)
-
-      this.velocity(el, animation, {
-        duration: this.speed,
-        complete
-      })
-    },
-
-    leave ({ el, complete }) {
-      let animation = this.getAnimation('leave', el)
-
-      this.velocity(el, animation, {
-        duration: this.speed,
-        complete
-      })
     },
 
     clean () {
