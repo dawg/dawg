@@ -40,24 +40,22 @@
   </transition-group>
 </div>
 </template>
-<script>
-import plugin                         from './index'
+<script lang="ts">
 import { events }                     from './events'
 
 const defaults = {
   position: ['top', 'right'],
   cssAnimation: 'vn-fade',
-}
+};
 
 const directions = {
   x: ['left', 'center', 'right'],
   y: ['top', 'bottom']
-}
+};
 
 /**
-  * Sequential ID generator
   */
-export const Id = (i => () => i++)(0)
+export const Id = (i => () => i++)(0);
 
 /**
   * Splits space/tab separated string into array and cleans empty string items.
@@ -68,7 +66,7 @@ export const split = (value) => {
   }
 
   return value.split(/\s+/gi).filter(v => v)
-}
+};
 
 /**
   * Cleanes and transforms string of format "x y" into object {x, y}. 
@@ -81,8 +79,8 @@ export const listToDirection = (value) => {
     value = split(value)
   }
 
-  let x = null
-  let y = null
+  let x = null;
+  let y = null;
 
   value.forEach(v => {
     if (directions.y.indexOf(v) !== -1) {
@@ -91,24 +89,19 @@ export const listToDirection = (value) => {
     if (directions.x.indexOf(v) !== -1) {
       x = v
     }
-  })
+  });
 
   return { x, y }
-}
+};
 
 const STATE = {
   IDLE: 0,
   DESTROYED: 2
-}
+};
 
 const Component = {
   name: 'Notifications',
   props: {
-    group: {
-      type: String,
-      default: ''
-    },
-
     width: {
       type: Number,
       default: 300
@@ -159,7 +152,6 @@ const Component = {
   data () {
     return {
       list: [],
-      velocity: plugin.params.velocity
     }
   },
   mounted () {
@@ -168,14 +160,14 @@ const Component = {
   computed: {
 
     styles () {
-      const { x, y } = listToDirection(this.position)
-      const width = this.width.value
-      const suffix = this.width.type
+      const { x, y } = listToDirection(this.position);
+      const width = this.width.value;
+      const suffix = this.width.type;
 
       let styles = {
         width: width + suffix,
         [y]: '0px'
-      }
+      };
 
       if (x === 'center') {
         styles['left'] = `calc(50% - ${width/2}${suffix})`
@@ -196,37 +188,32 @@ const Component = {
   },
   methods: {
     addItem (event) {
-      event.group = event.group || ''
-
-      if (this.group !== event.group) {
-        return
-      }
 
       if (event.clean || event.clear) {
-        this.destroyAll()
+        this.destroyAll();
         return
       }
 
       const duration = typeof event.duration === 'number'
         ? event.duration
-        : this.duration
+        : this.duration;
 
       const speed = typeof event.speed === 'number'
         ? event.speed
-        : this.speed
+        : this.speed;
 
-      let { title, text, type, data } = event
+      let { message, params} = event;
+      let { detail, dismissible} = params;
 
       const item = {
         id: Id(),
-        title,
-        text,
-        type,
+        title: message,
+        text: detail,
+        type: "info",
         state: STATE.IDLE,
         speed,
         length: duration + 2 * speed,
-        data
-      }
+      };
 
       if (duration >= 0) {
         item.timer = setTimeout(() => {
@@ -236,18 +223,18 @@ const Component = {
 
       let direction = this.reverse
         ? !this.botToTop
-        : this.botToTop
+        : this.botToTop;
 
-      let indexToDestroy = -1
+      let indexToDestroy = -1;
 
       if (direction) {
-        this.list.push(item)
+        this.list.push(item);
 
         if (this.active.length > this.max) {
           indexToDestroy = 0
         }
       } else {
-        this.list.unshift(item)
+        this.list.unshift(item);
 
         if (this.active.length > this.max) {
           indexToDestroy = this.active.length - 1
@@ -272,12 +259,9 @@ const Component = {
     },
 
     destroy (item) {
-      clearTimeout(item.timer)
-      item.state = STATE.DESTROYED
-
-      if (!this.isVA) {
-        this.clean()
-      }
+      clearTimeout(item.timer);
+      item.state = STATE.DESTROYED;
+      this.clean()
     },
 
     destroyAll () {
@@ -288,7 +272,7 @@ const Component = {
       this.list = this.list.filter(v => v.state !== STATE.DESTROYED)
     }
   }
-}
+};
 
 export default Component
 </script>
