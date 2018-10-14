@@ -4,7 +4,7 @@
       <li v-for="(tab, i) in tabs"
           :key="i" :class="{ 'is-active': tab.isActive }"
           class="tabs-component-tab">
-        <span @click="selectTab(tab.hash, $event)" class="text">{{ tab.name }}</span>
+        <span @click="selectTab(tab.name, $event)" class="text">{{ tab.name }}</span>
         <v-icon size="13px" class="close-icon" @click="close(i)">close</v-icon>
       </li>
     </ul>
@@ -17,57 +17,44 @@
 <script lang="ts">
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import * as expiringStorage from '@/expiringStorage';
+import { makeLookup } from '@/utils';
 import Tab from '@/components/Tab.vue';
 
-@Component({
-  components: { Tab },
-})
+@Component({components: { Tab }})
 export default class Tabs extends Vue {
-  @Prop({ type: Number, default: 5 }) public cacheLifetime!: number;
   public tabs: Tab[] = [];
-  public $children: Tab[] = [];
 
-  get storageKey() {
-    return `vue-tabs-component.cache.${window.location.host}${window.location.pathname}`;
+  get firstTab() {
+    return this.tabs[0] || {};
+  }
+  get tabLookup() {
+    return makeLookup(this.tabs, (tab) => tab.name);
   }
   public mounted() {
-    this.tabs = [...this.$children];
-    const previousSelectedTabHash = expiringStorage.get(this.storageKey);
-
-    if (this.findTab(previousSelectedTabHash)) {
-      this.selectTab(previousSelectedTabHash);
-    } else if (this.tabs.length) {
-      this.selectTab(this.tabs[0].hash);
-    }
+    this.tabs = [...this.$children as Tab[]];
+    this.selectTab(this.firstTab.name);
   }
-  public findTab(hash: string) {
-    return this.tabs.find((tab) => tab.hash === hash);
-  }
-
-  public selectTab(selectedTabHash: string, event?: MouseEvent) {
-    if (event) {
+  public selectTab(name?: string, event?: MouseEvent) {
+    if (event !== undefined) {
       event.preventDefault();
     }
 
-    const selectedTab = this.findTab(selectedTabHash);
-    if (!selectedTab) {
+    if (name === undefined) {
       return;
     }
 
-    this.tabs.map((tab) => {
-      tab.isActive = (tab.hash === selectedTab.hash);
+    const selectedTab = this.tabLookup[name];
+    this.tabs.forEach((tab) => {
+      tab.isActive = (tab.name === selectedTab.name);
     });
 
-    this.$emit('changed', { tab: selectedTab });
-
-    expiringStorage.set(this.storageKey, selectedTab.hash, this.cacheLifetime);
+    this.$emit('changed', selectedTab);
   }
   public close(i: number) {
     this.tabs[i].isActive = false;
     const tab = this.tabs[i + 1] || this.tabs[i - 1] || {};
     this.tabs.splice(i, 1);
-    this.selectTab(tab.hash);
+    this.selectTab(tab.name);
   }
 }
 </script>

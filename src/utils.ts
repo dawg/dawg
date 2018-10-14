@@ -18,6 +18,14 @@ interface StyleOptions {
   text?: boolean;
 }
 
+export const makeLookup = <T>(items: T[], getter: (item: T) => string) => {
+  const lookup: {[key: string]: T} = {};
+  items.forEach((item) => {
+    lookup[getter(item)] = item;
+  });
+  return lookup;
+};
+
 export const makeStyle = (type: StyleType, options?: StyleOptions) => {
   options = options || {};
 

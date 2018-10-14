@@ -15,7 +15,7 @@ import Slider from '@/components/Slider.vue';
 import Note from '@/components/Note.vue';
 import Bpm from '@/components/Bpm.vue';
 import TimeDisplay from '@/components/TimeDisplay.vue';
-import NavigationDrawer from '@/components/NavigationDrawer.vue';
+import ActivityBar from '@/components/ActivityBar.vue';
 import PlayPause from '@/components/PlayPause.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
@@ -364,8 +364,8 @@ storiesOf(Notifications.name, module)
   }));
 
 
-storiesOf(NavigationDrawer.name, module)
+storiesOf(ActivityBar.name, module)
   .add('Standard', () => ({
-    template: '<navigation-drawer></navigation-drawer>',
-    components: {NavigationDrawer},
+    template: '<activity-bar></activity-bar>',
+    components: { ActivityBar },
   }));
