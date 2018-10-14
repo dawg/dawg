@@ -17,6 +17,11 @@ $two: 13%
 $three: 21%
 $four: 34%
 
+.center--vertial
+    display: flex
+    flex-direction: column
+    justify-content: center
+
 @each $name, $color in $theme
     .#{$name}
         background: $color!important

@@ -1,8 +1,19 @@
 <template>
-  <v-toolbar app>
-    <v-btn icon><icon scale="2" name="circle-notch"></icon></v-btn>
-    <h1>{{ title }}</h1>
+  <v-toolbar 
+    class="secondary" 
+    :height="height" 
+    :style="`padding-left: ${offset}px; border-bottom: 1px solid`"
+  >
+    <v-btn icon><ico fa scale="2">circle-notch</ico></v-btn>
+    <h1 class="white--text">{{ title }}</h1>
     <div style="border-left: 1px solid #fff; height:60%; margin: 20px"></div>
+    
+
+    <time-display :time="time"></time-display>
+    <bpm v-model="bpm"></bpm>
+
+    <v-spacer></v-spacer>
+
     <v-btn
         icon
         style="margin: 0"
@@ -10,15 +21,9 @@
         @shortkey="playing = !playing"
         @click="playing = !playing"
     >
-      <icon :name="playing ? 'pause-circle' : 'play-circle'" scale="1.4">
-      </icon></v-btn>
-    <v-btn icon style="margin: 0"><icon name="stop-circle" scale="1.4"></icon></v-btn>
-
-    <time-display :time="time"></time-display>
-    <bpm v-model="bpm"></bpm>
-
-    <v-spacer></v-spacer>
-    <v-btn icon><icon scale="1.3" name="user"></icon></v-btn>
+      <ico fa>{{ playing ? 'pause' : 'play' }}</ico>
+    </v-btn>
+    <v-btn icon style="margin: 0"><ico fa>stop</ico></v-btn>
 
   </v-toolbar>
 </template>
@@ -33,6 +38,8 @@ import TimeDisplay from '@/components/TimeDisplay.vue';
   components: {TimeDisplay, Bpm},
 })
 export default class Toolbar extends Vue {
+  @Prop(Number) public height!: number;
+  @Prop(Number) public offset!: number;
   public title = 'Vuesic';
   public time = {
     mine: 0,

@@ -25,29 +25,22 @@
       </v-list>
     </v-navigation-drawer>
 
-    <div>
-      <v-navigation-drawer 
-        fixed 
-        permanent 
-        class="secondary"
-        :style="`left: ${activityBarWidth}px`"
-        :width="sidePanelWidth"
+    <aside 
+      class="aside secondary"
+      :style="`left: ${activityBarWidth}px; width: ${sidePanelWidth}`"
+    >
+      
+      <div 
+        class="title center--vertial white--text"
+        :style="`height: ${titleHeight + 1}px`"
       >
-        <v-list class="pt-0" dense>
-          
-          <v-list-tile>
-            <v-list-tile-content>
-            </v-list-tile-content>
-              <v-list-tile-title class="white--text title" style="margin: 10px">{{ title }}</v-list-tile-title>
-          </v-list-tile>
-
-          <base-tabs ref="tabs" @changed="changed">
-            <slot></slot>
-          </base-tabs>
-       
-        </v-list>
-      </v-navigation-drawer>
-    </div>
+        <div>{{ title }}</div>
+      </div>
+      <base-tabs ref="tabs" @changed="changed">
+        <slot></slot>
+      </base-tabs>
+      
+    </aside>
 
   </div>
 </template>
@@ -60,7 +53,8 @@ import BaseTabs from '@/components/BaseTabs.vue';
 @Component({ components: {SideBar, BaseTabs} })
 export default class ActivityBar extends Vue {
   @Prop({ type: Number, default: 60 }) public activityBarWidth!: number;
-  @Prop({ type: Number, default: 60 }) public sidePanelWidth!: number;
+  @Prop({ type: Number, default: 300 }) public sidePanelWidth!: number;
+  @Prop({ type: Number, required: true }) public titleHeight!: number;
 
   public drawer = true;
   public mini = true;
@@ -82,4 +76,15 @@ export default class ActivityBar extends Vue {
 </script>
 
 <style scoped lang="sass">
+.aside
+  height: 100%
+  width: 300px
+  position: fixed
+  z-index: 3
+  border-right: 1px solid
+
+.title
+  font-size: 15px !important
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3)
+  padding: 0 20px
 </style>

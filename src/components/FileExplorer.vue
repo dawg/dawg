@@ -1,14 +1,12 @@
 <template>
-  <v-navigation-drawer fixed clipped permanent app>
-    <v-list dense>
-      <tree
-          v-for="(children, label) in projects"
-          :key="label"
-          :label="label"
-          :children="children"
-      ></tree>
-    </v-list>
-  </v-navigation-drawer>
+  <div>
+    <tree
+        v-for="(children, label) in projects"
+        :key="label"
+        :label="label"
+        :children="children"
+    ></tree>
+  </div>
 </template>
 
 <script lang="ts">
@@ -29,9 +27,10 @@ export default class Drawer extends Vue {
   public folders = [path.join(os.homedir(), 'Downloads')];
   get projects() {
     const tree: FileTree = {};
-    return this.folders.forEach((folder) => {
+    this.folders.forEach((folder) => {
       tree[path.basename(folder)] = this.computeFileTree(folder);
     });
+    return tree;
   }
   public computeFileTree(dir: string, tree: FileTree = {}) {
     fs.readdirSync(dir).map((item) => {
