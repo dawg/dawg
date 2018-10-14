@@ -3,18 +3,16 @@
     
     <v-navigation-drawer 
       fixed 
-      clipped 
       permanent 
-      app
       mini-variant
       class="secondary-lighten-2"
-      :mini-variant-width="width"
+      :mini-variant-width="activityBarWidth"
     >
       <v-list dense style="height: 100%; display: flex; flex-direction: column">
         <v-list-tile
           v-for="item in items"
-          :key="item.title"
-          @click="click"
+          :key="item.name"
+          @click="click(item, $event)"
         >
           <v-icon medium color="white">{{ item.icon }}</v-icon>
         </v-list-tile>
@@ -28,25 +26,24 @@
     </v-navigation-drawer>
 
     <div>
-      <h2>{{ title }}</h2>
-
       <v-navigation-drawer 
         fixed 
-        clipped 
         permanent 
-        app
         class="secondary"
-        :style="`left: ${width}px`"
+        :style="`left: ${activityBarWidth}px`"
+        :width="sidePanelWidth"
       >
         <v-list class="pt-0" dense>
           
           <v-list-tile>
             <v-list-tile-content>
-              <v-list-tile-title class="white--text" style="margin: 10px">{{ title }}</v-list-tile-title>
             </v-list-tile-content>
+              <v-list-tile-title class="white--text title" style="margin: 10px">{{ title }}</v-list-tile-title>
           </v-list-tile>
 
-          <slot></slot>
+          <base-tabs ref="tabs" @changed="changed">
+            <slot></slot>
+          </base-tabs>
        
         </v-list>
       </v-navigation-drawer>
@@ -56,23 +53,30 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Mixins } from 'vue-property-decorator';
-import { TabParent } from '@/mixins/tabParent';
+import { Component, Prop, Vue } from 'vue-property-decorator';
+import SideBar from '@/components/SideBar.vue';
+import BaseTabs from '@/components/BaseTabs.vue';
 
-@Component
-export default class ActivityBar extends Mixins(TabParent) {
+@Component({ components: {SideBar, BaseTabs} })
+export default class ActivityBar extends Vue {
+  @Prop({ type: Number, default: 60 }) public activityBarWidth!: number;
+  @Prop({ type: Number, default: 60 }) public sidePanelWidth!: number;
+
   public drawer = true;
-  public items = [
-    { title: 'EXPLORER', icon: 'folder' },
-    { title: 'SYNTHESIZERS', icon: 'playlist_add' },
-    { title: 'SYNTHESIZER', icon: 'queue_music' },
-    { title: 'SEARCH', icon: 'search' },
-  ];
   public mini = true;
   public right = null;
-  public width = 60;
-  public click() {
-    //
+  public title = '';
+  public tabs?: BaseTabs;
+  public items: SideBar[] = [];
+  public click(tab: SideBar, $event: MouseEvent) {
+    this.tabs!.selectTab(tab.name, $event);
+  }
+  public mounted() {
+    this.tabs = this.$refs.tabs as BaseTabs;
+    this.items = this.tabs.$children as SideBar[];
+  }
+  public changed(tab: SideBar) {
+    this.title = tab.name;
   }
 }
 </script>

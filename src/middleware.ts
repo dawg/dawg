@@ -8,7 +8,7 @@ import 'vue-awesome/icons';
 import '@/styles/global.sass';
 
 const middleware = () => {
-  Vue.use(Vuetify);
+  Vue.use(Vuetify, {theme: false});
   Vue.component('icon', Icon);
   Vue.use(VueShortkey);
   Vue.use(VueKonva);

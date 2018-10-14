@@ -1,5 +1,5 @@
 <template>
-  <v-toolbar fixed app clipped-left>
+  <v-toolbar app>
     <v-btn icon><icon scale="2" name="circle-notch"></icon></v-btn>
     <h1>{{ title }}</h1>
     <div style="border-left: 1px solid #fff; height:60%; margin: 20px"></div>

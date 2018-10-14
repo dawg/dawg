@@ -24,6 +24,7 @@ import { TREE, StyleType, range, makeStyle } from '@/utils';
 import stillDre from '@/assets/still-dre';
 import notification from '@/notification';
 import Notifications from '@/notification/Notifications.vue';
+import SideBar from '@/components/SideBar.vue';
 import Vue from 'vue';
 
 Vue.use(notification);
@@ -366,6 +367,23 @@ storiesOf(Notifications.name, module)
 
 storiesOf(ActivityBar.name, module)
   .add('Standard', () => ({
-    template: '<activity-bar></activity-bar>',
-    components: { ActivityBar },
+    template: `
+    <activity-bar>
+      <side-bar
+        v-for="item in items"
+        :key="item.title"
+        :name="item.title"
+        :icon="item.icon"
+      ></side-bar>
+    </activity-bar>
+    `,
+    data: () => ({
+      items: [
+        { title: 'EXPLORER', icon: 'folder' },
+        { title: 'SYNTHESIZERS', icon: 'playlist_add' },
+        { title: 'SYNTHESIZER', icon: 'queue_music' },
+        { title: 'SEARCH', icon: 'search' },
+      ],
+    }),
+    components: { ActivityBar, SideBar },
   }));
