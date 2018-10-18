@@ -21,6 +21,9 @@ import Tab from '@/components/Tab.vue';
 import ColorBlock from '@/components/ColorBlock.vue';
 import { TREE, STYLES } from '@/utils';
 import stillDre from '@/assets/still-dre';
+import Foot from '@/components/Foot.vue';
+
+
 
 const synth = new Tone.Synth().toMaster();
 
@@ -290,6 +293,7 @@ storiesOf(PlayPause.name, module)
     },
   }));
 
+
 storiesOf(ColorBlock.name, module)
   .add('Example', () => ({
     template:  `<color-block color="primary"></color-block>`,
@@ -319,3 +323,12 @@ storiesOf(ColorBlock.name, module)
       ],
     }),
   }));
+
+  storiesOf(Foot.name, module)
+  .add('Standard', () => ({
+    template: `
+    <foot></foot>
+    `,
+    components: { Foot },
+  }));
+

@@ -15,7 +15,7 @@ $theme: (primary: #1976D2, secondary: #424242, accent: #82B1FF, error: #d13b2e, 
 
 @each $name, $color in $theme
     .#{$name}
-        background: $color
+        background: $color!important
 
     .#{$name}-darken-1
         background: darken( $color, 5% )
