@@ -18,7 +18,8 @@ import TimeDisplay from '@/components/TimeDisplay.vue';
 import PlayPause from '@/components/PlayPause.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
-import { TREE } from '@/utils';
+import ColorBlock from '@/components/ColorBlock.vue';
+import { TREE, STYLES } from '@/utils';
 import stillDre from '@/assets/still-dre';
 
 const synth = new Tone.Synth().toMaster();
@@ -287,4 +288,34 @@ storiesOf(PlayPause.name, module)
         this.text = text;
       },
     },
+  }));
+
+storiesOf(ColorBlock.name, module)
+  .add('Example', () => ({
+    template:  `<color-block color="primary"></color-block>`,
+    components: { ColorBlock },
+  }))
+  .add('Theme', () => ({
+    template: `
+    <div>
+      <div v-for="group in groups" :key="group">
+        <color-block v-for="type in types" :color="group + type"></color-block>
+      </div>
+    </div>
+    `,
+    components: { ColorBlock },
+    data: () => ({
+      groups: Array.from(Object.values(STYLES)),
+      types: [
+        '',
+        '-darken-1',
+        '-darken-2',
+        '-darken-3',
+        '-darken-4',
+        '-lighten-1',
+        '-lighten-2',
+        '-lighten-3',
+        '-lighten-4',
+      ],
+    }),
   }));
