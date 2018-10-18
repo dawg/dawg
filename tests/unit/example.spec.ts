@@ -1,9 +1,7 @@
 import { shallowMount } from '@vue/test-utils';
 import Bpm from '@/components/Bpm.vue';
 import Foot from '@/components/Foot.vue';
-import middleware from '@/middleware';
 
-middleware();
 
 describe('Bpm.vue', () => {
   it('renders props.msg when passed', () => {
