@@ -2,6 +2,16 @@ export const BLACK = 'black';
 
 export const WHITE = 'white';
 
+export const STYLES = {
+  PRIMARY: 'primary',
+  SECONDARY: 'secondary',
+  ACCENT: 'accent',
+  ERROR: 'error',
+  INFO: 'info',
+  SUCCESS: 'success',
+  WARNING: 'warning',
+};
+
 export const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].map((note) => ({
   value: note,
   color: note.endsWith('#') ? BLACK : WHITE,

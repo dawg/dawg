@@ -2,3 +2,41 @@
 
 body
     font-family: system-ui, sans-serif
+
+// $map: (key1: value1, key2: value2, key3: value3);
+
+// $map: (
+//   'keyone': 'value',
+//   'keytwo': 'value',
+//   'keythree': 'value'
+// );
+
+$theme: (primary: #1976D2, secondary: #424242, accent: #82B1FF, error: #d13b2e, info: #2ba143, success: #4CAF50, warning: #f6d179);
+
+@each $name, $color in $theme
+    .#{$name}
+        background: $color!important
+
+    .#{$name}-darken-1
+        background: darken( $color, 5% )
+    
+    .#{$name}-darken-2
+        background: darken( $color, 10% )
+
+    .#{$name}-darken-3
+        background: darken( $color, 15% )
+    
+    .#{$name}-darken-4
+        background: darken( $color, 20% )
+    
+    .#{$name}-lighten-1
+        background: lighten( $color, 5% )
+
+    .#{$name}-lighten-2
+        background: lighten( $color, 10% )
+
+    .#{$name}-lighten-3
+        background: lighten( $color, 15% )
+
+    .#{$name}-lighten-4
+        background: lighten( $color, 20% )
