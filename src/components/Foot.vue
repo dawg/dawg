@@ -1,6 +1,6 @@
 <template>
-  <v-footer class="primary" :height="height" app>
-    <div class="position white--text">Vuesic &copy; {{ new Date().getFullYear() }}</div>
+  <v-footer class="primary" :style="style" :height="height" app>
+    <span class="position white--text">Vuesic &copy; {{ new Date().getFullYear() }}</span>
   </v-footer>
 </template>
 
@@ -9,7 +9,12 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 
 @Component
 export default class Foot extends Vue {
-  @Prop({type: [String, Number], default: 22}) public height!: string | number;
+  @Prop({ type: [String, Number], default: 22}) public height!: string | number;
+  get style() {
+    return {
+      minHeight: `${this.height}px`,
+    };
+  }
 }
 </script>
 
@@ -17,4 +22,5 @@ export default class Foot extends Vue {
 .position
   text-align: center
   width : 100%
+  font-size: 12px
 </style>

@@ -1,43 +1,59 @@
 <template>
-  <div style="display: contents">
-    <v-list-tile @click="showChildren = !showChildren">
-      <v-list-tile-action style="min-width: 40px">
-        <v-icon :style="indent">{{ isLeaf ? 'audiotrack' : 'folder' }}</v-icon>
-      </v-list-tile-action>
-      <v-list-tile-content>
-        <v-list-tile-title :style="indent">{{ label }}</v-list-tile-title>
-      </v-list-tile-content>
-    </v-list-tile>
-    <file-explorer
-        v-if="showChildren"
-        v-for="folder in folders"
-        :key="folder"
-        :label="folder"
-        :children="children[folder]"
-        :depth="depth + 1">
-    </file-explorer>
+  <div>
+    <tree
+        v-for="(children, label) in projects"
+        :key="label"
+        :label="label"
+        :children="children"
+    ></tree>
   </div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
+import { Component, Vue } from 'vue-property-decorator';
+import { ipcRenderer } from 'electron';
+import Tree from '@/components/Tree.vue';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 
-@Component
-export default class FileExplorer extends Vue {
-  @Prop({type: Object, required: true}) public children!: object;
-  @Prop({type: String, required: true}) public label!: string;
-  @Prop({type: Number, default: 0}) public depth!: number;
-  public showChildren = false;
+interface FileTree {
+  [key: string]: FileTree;
+}
 
-  get indent() {
-    return { transform: `translate(${this.depth * 10}px)` };
+@Component({components: {Tree}})
+export default class Drawer extends Vue {
+  public drawer = true;
+  public folders = [path.join(os.homedir(), 'Downloads')];
+  get projects() {
+    const tree: FileTree = {};
+    this.folders.forEach((folder) => {
+      tree[path.basename(folder)] = this.computeFileTree(folder);
+    });
+    return tree;
   }
-  get isLeaf() {
-    return this.folders.length === 0;
+  public computeFileTree(dir: string, tree: FileTree = {}) {
+    fs.readdirSync(dir).map((item) => {
+      tree[item] = {};
+      const p = path.join(dir, item);
+      if (fs.statSync(p).isDirectory()) {
+        this.computeFileTree(p, tree[item]);
+      }
+    });
+    return tree;
   }
-  get folders() {
-    return Object.keys(this.children);
+  public addFolder(_: any, [folder]: [string]) {
+    this.folders.push(folder); // Folder is always an array of length 1
+  }
+  public mounted() {
+    ipcRenderer.on('folder', this.addFolder);
+  }
+  public destroyed() {
+    ipcRenderer.removeListener('folder', this.addFolder);
   }
 }
 </script>
+
+<style scoped>
+
+</style>

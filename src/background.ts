@@ -1,6 +1,7 @@
 'use strict';
 
-import { app, protocol, BrowserWindow } from 'electron';
+import { app, protocol, BrowserWindow, dialog, shell, Menu } from 'electron';
+import menu from 'electron-context-menu';
 import * as path from 'path';
 import { format as formatUrl } from 'url';
 import {
@@ -52,6 +53,66 @@ function createMainWindow() {
 
   return window;
 }
+
+const setMainMenu = () => {
+  const template: Electron.MenuItemConstructorOptions[] = [
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'Save',
+          accelerator: 'CmdOrCtrl+S',
+          click() {
+            //
+          },
+        },
+        {
+          label: 'Add Folder to Project',
+          click() {
+            const folder = dialog.showOpenDialog({properties: ['openDirectory']}); // We only ever get one folder
+            mainWindow.webContents.send('folder', folder);
+          },
+        },
+      ],
+    },
+    {
+      label: 'Edit',
+      submenu: [
+        {role: 'undo'},
+        {role: 'redo'},
+        {type: 'separator'},
+        {role: 'cut'},
+        {role: 'copy'},
+        {role: 'paste'},
+        {role: 'pasteandmatchstyle'},
+        {role: 'delete'},
+        {role: 'selectall'},
+      ],
+    },
+    {
+      role: 'help',
+      submenu: [
+        {
+          label: 'Learn More',
+          click() { shell.openExternal('https://github.com/vuesic/vuesic'); },
+        },
+      ],
+    },
+  ];
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+};
+
+menu({
+  labels: {
+    cut: 'Configured Cut',
+    copy: 'Configured Copy',
+    paste: 'Configured Paste',
+    save: 'Configured Save Image',
+    copyLink: 'Configured Copy Link',
+    copyImageAddress: 'Configured Copy Image Address',
+    inspect: 'Configured Inspect',
+  },
+});
 
 // quit application when all windows are closed
 app.on('window-all-closed', () => {

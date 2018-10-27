@@ -3,68 +3,7 @@
 body
     font-family: system-ui, sans-serif
 
-// $map: (key1: value1, key2: value2, key3: value3);
-
-// $map: (
-//   'keyone': 'value',
-//   'keytwo': 'value',
-//   'keythree': 'value'
-// );
-
-$theme: (primary: #1976D2, secondary: #424242, accent: #82B1FF, error: #d13b2e, info: #007bff, success: #2ba143, warning: #ad7c0b);
-$one: 8%
-$two: 13%
-$three: 21%
-$four: 34%
-
-@each $name, $color in $theme
-    .#{$name}
-        background: $color!important
-
-    .#{$name}-darken-1
-        background: darken( $color, $one )
-
-    .#{$name}-darken-1--text
-        color: darken( $color, $one )
-    
-    .#{$name}-darken-2
-        background: darken( $color, $two )
-
-    .#{$name}-darken-2--text
-        color: darken( $color, $two )
-
-    .#{$name}-darken-3
-        background: darken( $color, $three )
-
-    .#{$name}-darken-3--text
-        color: darken( $color, $three )
-    
-    .#{$name}-darken-4
-        background: darken( $color, $four )
-
-    .#{$name}-darken-4--text
-        color: darken( $color, $four )
-    
-    .#{$name}-lighten-1
-        background: lighten( $color, $one )
-
-    .#{$name}-lighten-1--text
-        color: lighten( $color, $one )
-
-    .#{$name}-lighten-2
-        background: lighten( $color, $two )
-
-    .#{$name}-lighten-2--text
-        color: lighten( $color, $two )
-
-    .#{$name}-lighten-3
-        background: lighten( $color, $three )
-
-    .#{$name}-lighten-3--text
-        color: lighten( $color, $three )
-
-    .#{$name}-lighten-4
-        background: lighten( $color, $four )
-
-    .#{$name}-lighten-4--text
-        color: lighten( $color, $four )
+.center--vertial
+    display: flex
+    flex-direction: column
+    justify-content: center
