@@ -1,9 +1,19 @@
 declare module 'tone' {
-    export class Synth {
-        triggerAttackRelease(note: string, length: string, time?: string): void;
-        toMaster(): Synth;
-    }
 
+    export const Master: AudioNode;
+    
+    export class AudioNode { 
+        constructor(context?: any);
+        connect(unit: AudioNode, outputNum?: number, inputNum?: number): this;
+        disconnect(unit: AudioNode): this;
+        toMaster(): this;
+    }
+    
+    export class Synth extends AudioNode {
+        constructor(options?: any) ;
+        triggerAttackRelease(note: string, length: string, time?: string): void;
+    }
+    
     interface SynthClass {
         new (): Synth;
     }
@@ -27,4 +37,13 @@ declare module 'tone' {
     export class Part {
         constructor(callback: (time: string, chord: string) => ({}))
     }
+
+    export class OmniOscillator {
+        constructor(frequency: string, type: string);
+    }
+
+    export class Panner extends AudioNode {
+        constructor(initialPan?: number);
+    }
+
 }

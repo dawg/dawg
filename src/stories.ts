@@ -26,6 +26,8 @@ import Foot from '@/components/Foot.vue';
 import notification from '@/notification';
 import Notifications from '@/notification/Notifications.vue';
 import SideBar from '@/components/SideBar.vue';
+import Synth from '@/components/Synth.vue';
+
 import Vue from 'vue';
 
 Vue.use(notification);
@@ -109,17 +111,17 @@ storiesOf(Sequencer.name, module)
       callback(time: string, chord: string) {
         piano.triggerAttackRelease(chord, '8n', time);
       },
-      added(note) {
+      added(note: object) {
         // @ts-ignore
         this.part.add(note.time, note.note);
       },
-      moved({ newTime, oldTime, note }) {
+      moved({ newTime, oldTime, note }: {newTime: string, oldTime: string, note: string}) {
         // @ts-ignore
         this.part.remove(oldTime);
         // @ts-ignore
         this.part.add(newTime, note);
       },
-      removed(note) {
+      removed(note: object) {
         // @ts-ignore
         // tslint:disable-next-line:no-console
         console.log(this.part.at(note.time));
@@ -290,7 +292,7 @@ storiesOf(PlayPause.name, module)
     data: () => ({ text: 'stopped' }),
     components: { PlayPause },
     methods: {
-      click(text) {
+      click(text: string) {
         action(text)();
         // @ts-ignore
         this.text = text;
@@ -398,3 +400,54 @@ storiesOf(Foot.name, module)
     components: { Foot },
   }));
 
+const oscillator = {type: 'fatsawtooth', spread: 30};
+const envelope = {
+  attack: 0.005 ,
+  decay: 0.1 ,
+  sustain: 0.3 ,
+  release: 1,
+  };
+
+const panner = new Tone.Panner().toMaster();
+const synthesizer = new Tone.Synth({oscillator, envelope}).connect(panner);
+
+storiesOf(Synth.name, module)
+  .add('Standard', () => ({
+    data: () => ({
+      synthesizer,
+      panner,
+      mute: true,
+    }),
+    template: `
+    <v-app>
+      <div>
+        <synth
+          :type.sync="synthesizer.oscillator.type"
+          :volume.sync="synthesizer.volume.value"
+          :panning.sync="panner.pan.value"
+          :mute="mute"
+          @update:mute="muter"
+        ></synth>
+      </div>
+      <div>
+        <v-btn @click="playme">playme</v-btn>
+      </div>
+    </v-app>
+    `,
+    methods: {
+      muter(value: boolean) {
+        // @ts-ignore
+        this.mute = value;
+        if (!value) {
+          panner.disconnect(Tone.Master);
+        } else {
+          panner.toMaster();
+        }
+      },
+      playme() {
+        // @ts-ignore
+        this.synthesizer.triggerAttackRelease('C5', '8n');
+      },
+    },
+    components: { Synth },
+  }));
