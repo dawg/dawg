@@ -1,27 +1,19 @@
 <template>
-  <v-btn icon @click="handleClick">
-    <icon name="circle" scale="0.4" :color="color"></icon>
+  <v-btn icon @click="thing">
+    <icon name="circle" scale="0.4" :class="{'primary--text': value}"></icon>
   </v-btn>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
+import { Component, Vue, Prop } from 'vue-property-decorator';
 
 @Component
 export default class DotButton extends Vue {
-  public active = true;
+  @Prop({type: Boolean, required: true}) public value!: boolean;
 
-  public handleClick() {
-    this.active = !this.active;
-    this.$emit('click');
-  }
-
-  get color() {
-    if (this.active) {
-      return '#00ff51';
-    }
-
-    return null;
+  public thing() {
+    console.log(this.value);
+    this.$emit('input', !this.value);
   }
 }
 </script>
