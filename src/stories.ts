@@ -19,11 +19,14 @@ import PlayPause from '@/components/PlayPause.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
 import ColorBlock from '@/components/ColorBlock.vue';
-import { TREE, STYLES } from '@/utils';
+import { TREE, StyleType, range, makeStyle } from '@/utils';
 import stillDre from '@/assets/still-dre';
+import notification from '@/notification';
+import Notifications from '@/notification/Notifications.vue';
 import Foot from '@/components/Foot.vue';
+import Vue from 'vue';
 
-
+Vue.use(notification);
 
 const synth = new Tone.Synth().toMaster();
 
@@ -302,26 +305,63 @@ storiesOf(ColorBlock.name, module)
   .add('Theme', () => ({
     template: `
     <div>
-      <div v-for="group in groups" :key="group">
-        <color-block v-for="type in types" :color="group + type"></color-block>
-      </div>
+      <color-block v-for="color in colors" :key="color" :color="color"></color-block>
     </div>
     `,
     components: { ColorBlock },
-    data: () => ({
-      groups: Array.from(Object.values(STYLES)),
-      types: [
-        '',
-        '-darken-1',
-        '-darken-2',
-        '-darken-3',
-        '-darken-4',
-        '-lighten-1',
-        '-lighten-2',
-        '-lighten-3',
-        '-lighten-4',
-      ],
-    }),
+    computed: {
+      colors(): string[] {
+        const colors: string[] = [];
+        Object.keys(StyleType).forEach((value: string) => {
+          const type = StyleType[value as keyof typeof StyleType];
+          colors.push(makeStyle(type));
+          range(4).forEach((i) => {
+            colors.push(makeStyle(type, {darken: i + 1}));
+          });
+          range(4).forEach((i) => {
+            colors.push(makeStyle(type, {lighten: i + 1}));
+          });
+        });
+        return colors;
+      },
+    },
+  }));
+
+
+storiesOf(Notifications.name, module)
+  .add('Standard', () => ({
+    template: `
+    <div>
+      <div>
+        <v-btn @click="info" class="info">INFO</v-btn>
+        <v-btn @click="success" class="success">SUCCESS</v-btn>
+      </div>
+      <div>
+        <v-btn @click="warning" class="warning">WARNING</v-btn>
+        <v-btn @click="error" class="error">ERROR</v-btn>
+      </div>
+      <notifications></notifications>
+    </div>
+    `,
+    components: { Notifications },
+    methods: {
+      info() {
+        // @ts-ignore
+        this.$notify.info('Information', {detail: 'Here is some info!'});
+      },
+      success() {
+        // @ts-ignore
+        this.$notify.success('Success', {detail: 'Something went well!'});
+      },
+      warning() {
+        // @ts-ignore
+        this.$notify.warning('Warning', {detail: 'This is bad!'});
+      },
+      error() {
+        // @ts-ignore
+        this.$notify.error('Error', {detail: 'Something is probably broken!'});
+      },
+    },
   }));
 
   storiesOf(Foot.name, module)

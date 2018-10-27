@@ -40,7 +40,7 @@ export default class ColorBlock extends Vue {
 <style lang="scss" scoped>
 .color-block {
   height: 40px;
-  width: 200px;
+  width: 220px;
   display: flex;
   justify-content: space-between;
   padding: 0 10px;
