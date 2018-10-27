@@ -111,17 +111,17 @@ storiesOf(Sequencer.name, module)
       callback(time: string, chord: string) {
         piano.triggerAttackRelease(chord, '8n', time);
       },
-      added(note) {
+      added(note: object) {
         // @ts-ignore
         this.part.add(note.time, note.note);
       },
-      moved({ newTime, oldTime, note }) {
+      moved({ newTime, oldTime, note }: {newTime: string, oldTime: string, note: string}) {
         // @ts-ignore
         this.part.remove(oldTime);
         // @ts-ignore
         this.part.add(newTime, note);
       },
-      removed(note) {
+      removed(note: object) {
         // @ts-ignore
         // tslint:disable-next-line:no-console
         console.log(this.part.at(note.time));
@@ -292,7 +292,7 @@ storiesOf(PlayPause.name, module)
     data: () => ({ text: 'stopped' }),
     components: { PlayPause },
     methods: {
-      click(text) {
+      click(text: string) {
         action(text)();
         // @ts-ignore
         this.text = text;
@@ -435,7 +435,7 @@ storiesOf(Synth.name, module)
     </v-app>
     `,
     methods: {
-      muter(value) {
+      muter(value: boolean) {
         // @ts-ignore
         this.mute = value;
         if (!value) {
