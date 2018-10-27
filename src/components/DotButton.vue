@@ -12,7 +12,6 @@ export default class DotButton extends Vue {
   @Prop({type: Boolean, required: true}) public value!: boolean;
 
   public thing() {
-    console.log(this.value);
     this.$emit('input', !this.value);
   }
 }

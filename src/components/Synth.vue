@@ -5,8 +5,8 @@
       @input="$emit('update:mute', $event)"
     ></dot-button>
     <v-select
-      dense
       class="synth-dropdown"
+      dense
       dark
       :items="types"
       :value="type"
