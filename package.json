@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@types/tinycolor2": "^1.4.1",
+    "electron-context-menu": "^0.10.0",
     "konva": "^2.3.0",
     "tinycolor2": "^1.4.1",
     "tone": "^0.12.80",

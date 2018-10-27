@@ -18,6 +18,14 @@ interface StyleOptions {
   text?: boolean;
 }
 
+export const makeLookup = <T>(items: T[], getter: (item: T) => string) => {
+  const lookup: {[key: string]: T} = {};
+  items.forEach((item) => {
+    lookup[getter(item)] = item;
+  });
+  return lookup;
+};
+
 export const makeStyle = (type: StyleType, options?: StyleOptions) => {
   options = options || {};
 
@@ -80,22 +88,3 @@ export const TREE = {
     'item 3': {},
   },
 };
-
-interface Class {
-  new (): any;
-}
-
-
-export class DefaultDict {
-  constructor(O: Class) {
-    return new Proxy({}, {
-      get: (target: any, name: string) => {
-        if (name in target) {
-          return target[name];
-        }
-        target[name] = new O();
-        return target[name];
-      },
-    });
-  }
-}

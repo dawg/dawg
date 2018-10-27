@@ -7,7 +7,7 @@ import Key from '@/components/Key.vue';
 import Sequencer from '@/components/Sequencer.vue';
 import Piano from '@/components/Piano.vue';
 import Toolbar from '@/components/Toolbar.vue';
-import FileExplorer from '@/components/FileExplorer.vue';
+import Tree from '@/components/Tree.vue';
 import ChannelRack from '@/components/ChannelRack.vue';
 import Knob from '@/components/Knob.vue';
 import Mixer from '@/components/Mixer.vue';
@@ -15,15 +15,17 @@ import Slider from '@/components/Slider.vue';
 import Note from '@/components/Note.vue';
 import Bpm from '@/components/Bpm.vue';
 import TimeDisplay from '@/components/TimeDisplay.vue';
+import ActivityBar from '@/components/ActivityBar.vue';
 import PlayPause from '@/components/PlayPause.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
 import ColorBlock from '@/components/ColorBlock.vue';
 import { TREE, StyleType, range, makeStyle } from '@/utils';
 import stillDre from '@/assets/still-dre';
+import Foot from '@/components/Foot.vue';
 import notification from '@/notification';
 import Notifications from '@/notification/Notifications.vue';
-import Foot from '@/components/Foot.vue';
+import SideBar from '@/components/SideBar.vue';
 import Vue from 'vue';
 
 Vue.use(notification);
@@ -157,16 +159,16 @@ storiesOf(Toolbar.name, module)
     components: { Toolbar },
   }));
 
-storiesOf(FileExplorer.name, module)
+storiesOf(Tree.name, module)
   .add('Standard', () => ({
     template: `
     <v-app dark>
       <v-list dense style="max-width: 300px; height: 100%">
-        <file-explorer :children="children.root" label="root"></file-explorer>
+        <tree :children="children.root" label="root"></tree>
       </v-list>
     </v-app>
     `,
-    components: { FileExplorer },
+    components: { Tree },
     data() {
       return {
         children: TREE,
@@ -364,7 +366,31 @@ storiesOf(Notifications.name, module)
     },
   }));
 
-  storiesOf(Foot.name, module)
+
+storiesOf(ActivityBar.name, module)
+  .add('Standard', () => ({
+    template: `
+    <activity-bar>
+      <side-bar
+        v-for="item in items"
+        :key="item.title"
+        :name="item.title"
+        :icon="item.icon"
+      ></side-bar>
+    </activity-bar>
+    `,
+    data: () => ({
+      items: [
+        { title: 'EXPLORER', icon: 'folder' },
+        { title: 'SYNTHESIZERS', icon: 'playlist_add' },
+        { title: 'SYNTHESIZER', icon: 'queue_music' },
+        { title: 'SEARCH', icon: 'search' },
+      ],
+    }),
+    components: { ActivityBar, SideBar },
+  }));
+
+storiesOf(Foot.name, module)
   .add('Standard', () => ({
     template: `
     <foot></foot>
