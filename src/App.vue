@@ -33,18 +33,20 @@
       </tab>
     </tabs>
 
+    <!-- <p>asdklfjasdklfjdsaklfjsldak</p> -->
+    <v-footer class="test"></v-footer>
     <foot></foot>
-  
+
   </v-app>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
+import { Component, Vue, Watch } from 'vue-property-decorator';
 import Toolbar from '@/components/Toolbar.vue';
 import SideBar from '@/components/SideBar.vue';
 import ActivityBar from '@/components/ActivityBar.vue';
-import FileExplorer from '@/components/Foot.vue';
-import Foot from '@/components/FileExplorer.vue';
+import Foot from '@/components/Foot.vue';
+import FileExplorer from '@/components/FileExplorer.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
 
@@ -55,6 +57,7 @@ export default class App extends Vue {
   public toolbarHeight = 64;
   public activityBarWidth = 60;
   public sidePanelWidth = 300;
+  public node?: Element;
   get totalWidth() {
     return this.activityBarWidth + this.sidePanelWidth;
   }

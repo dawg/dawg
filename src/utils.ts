@@ -88,22 +88,3 @@ export const TREE = {
     'item 3': {},
   },
 };
-
-interface Class {
-  new (): any;
-}
-
-
-export class DefaultDict {
-  constructor(O: Class) {
-    return new Proxy({}, {
-      get: (target: any, name: string) => {
-        if (name in target) {
-          return target[name];
-        }
-        target[name] = new O();
-        return target[name];
-      },
-    });
-  }
-}
