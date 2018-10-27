@@ -23,6 +23,7 @@ import { TREE, StyleType, range, makeStyle } from '@/utils';
 import stillDre from '@/assets/still-dre';
 import notification from '@/notification';
 import Notifications from '@/notification/Notifications.vue';
+import Foot from '@/components/Foot.vue';
 import Vue from 'vue';
 
 Vue.use(notification);
@@ -295,6 +296,7 @@ storiesOf(PlayPause.name, module)
     },
   }));
 
+
 storiesOf(ColorBlock.name, module)
   .add('Example', () => ({
     template:  `<color-block color="primary"></color-block>`,
@@ -361,3 +363,12 @@ storiesOf(Notifications.name, module)
       },
     },
   }));
+
+  storiesOf(Foot.name, module)
+  .add('Standard', () => ({
+    template: `
+    <foot></foot>
+    `,
+    components: { Foot },
+  }));
+
