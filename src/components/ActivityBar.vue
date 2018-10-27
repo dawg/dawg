@@ -1,12 +1,13 @@
 <template>
   <div>
     
-    <v-navigation-drawer 
+    <v-navigation-drawer
       fixed 
       permanent 
       mini-variant
       class="secondary-lighten-2"
       :mini-variant-width="activityBarWidth"
+      :style="style"
     >
       <v-list dense style="height: 100%; display: flex; flex-direction: column">
         <v-list-tile
@@ -27,10 +28,10 @@
 
     <aside 
       class="aside secondary"
-      :style="`left: ${activityBarWidth}px; width: ${sidePanelWidth}`"
+      :style="asideStyle"
     >
       
-      <div 
+      <div
         class="title center--vertial white--text"
         :style="`height: ${titleHeight + 1}px`"
       >
@@ -55,6 +56,7 @@ export default class ActivityBar extends Vue {
   @Prop({ type: Number, default: 60 }) public activityBarWidth!: number;
   @Prop({ type: Number, default: 300 }) public sidePanelWidth!: number;
   @Prop({ type: Number, required: true }) public titleHeight!: number;
+  @Prop({ type: Number, default: 0 }) public paddingBottom!: number;
 
   public drawer = true;
   public mini = true;
@@ -71,6 +73,18 @@ export default class ActivityBar extends Vue {
   }
   public changed(tab: SideBar) {
     this.title = tab.name;
+  }
+  get style() {
+    return {
+      'padding-bottom': `${this.paddingBottom}px`,
+    };
+  }
+  get asideStyle() {
+    return {
+      ...this.style,
+      left: `${this.activityBarWidth}px`,
+      width: `${this.sidePanelWidth}px`,
+    };
   }
 }
 </script>

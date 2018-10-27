@@ -4,6 +4,7 @@
       :activity-bar-width="activityBarWidth" 
       :side-panel-width="sidePanelWidth"
       :title-height="toolbarHeight"
+      :padding-bottom="footerHeight"
     >
       <side-bar name="EXPLORER" icon="folder">
         <file-explorer></file-explorer>
@@ -33,10 +34,7 @@
       </tab>
     </tabs>
 
-    <!-- <p>asdklfjasdklfjdsaklfjsldak</p> -->
-    <v-footer class="test"></v-footer>
-    <foot></foot>
-
+    <foot :height="footerHeight"></foot>
   </v-app>
 </template>
 
@@ -57,9 +55,20 @@ export default class App extends Vue {
   public toolbarHeight = 64;
   public activityBarWidth = 60;
   public sidePanelWidth = 300;
+  public footerHeight = 20;
   public node?: Element;
+  public height = window.innerHeight;
   get totalWidth() {
     return this.activityBarWidth + this.sidePanelWidth;
+  }
+  public mounted() {
+    window.addEventListener('resize', this.handleResize);
+  }
+  public handleResize() {
+    this.height = window.innerHeight;
+  }
+  public destroyed() {
+    window.removeEventListener('resize', this.handleResize);
   }
 }
 </script>
