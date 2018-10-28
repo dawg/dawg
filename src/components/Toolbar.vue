@@ -1,6 +1,6 @@
 <template>
   <v-toolbar 
-    class="secondary" 
+    class="secondary toolbar" 
     :height="height" 
     :style="`padding-left: ${offset}px; border-bottom: 1px solid`"
   >
@@ -70,4 +70,7 @@ export default class Toolbar extends Vue {
 
   .small-text
     font-size: .5em
+
+  .toolbar
+    box-shadow: none
 </style>

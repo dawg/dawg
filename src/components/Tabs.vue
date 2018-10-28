@@ -1,12 +1,13 @@
 <template>
-  <div>
+  <div class="secondary">
     <ul class="tabs-component-tabs">
       <li v-for="(tab, i) in tabs"
           :key="i" :class="{ 'is-active': tab.isActive }"
           class="tabs-component-tab">
-        <span @click="selectTab(tab.name, $event)" class="text">{{ tab.name }}</span>
+        <span @click="selectTab(tab.name, $event)" class="text white--text">{{ tab.name }}</span>
         <v-icon size="13px" class="close-icon" @click="close(i)">close</v-icon>
       </li>
+      <li class="tabs-component-tab remainder"></li>
     </ul>
     <div class="tabs-component-panels">
       <slot/>
@@ -15,52 +16,15 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
-import { makeLookup } from '@/utils';
-import Tab from '@/components/Tab.vue';
+import { Component } from 'vue-property-decorator';
+import BaseTabs from '@/components/BaseTabs.vue';
 
-@Component({components: { Tab }})
-export default class Tabs extends Vue {
-  public tabs: Tab[] = [];
-
-  get firstTab() {
-    return this.tabs[0] || {};
-  }
-  get tabLookup() {
-    return makeLookup(this.tabs, (tab) => tab.name);
-  }
-  public mounted() {
-    this.tabs = [...this.$children as Tab[]];
-    this.selectTab(this.firstTab.name);
-  }
-  public selectTab(name?: string, event?: MouseEvent) {
-    if (event !== undefined) {
-      event.preventDefault();
-    }
-
-    if (name === undefined) {
-      return;
-    }
-
-    const selectedTab = this.tabLookup[name];
-    this.tabs.forEach((tab) => {
-      tab.isActive = (tab.name === selectedTab.name);
-    });
-
-    this.$emit('changed', selectedTab);
-  }
-  public close(i: number) {
-    this.tabs[i].isActive = false;
-    const tab = this.tabs[i + 1] || this.tabs[i - 1] || {};
-    this.tabs.splice(i, 1);
-    this.selectTab(tab.name);
-  }
-}
+@Component
+export default class Tabs extends BaseTabs { }
 </script>
 
 <style lang="sass" scoped>
-  $border: #ddd
+  $border: #111
 
   .tabs-component-tabs
     border: 0
@@ -68,7 +32,6 @@ export default class Tabs extends Vue {
     align-items: stretch
     display: flex
     justify-content: flex-start
-    box-shadow: inset 0 -1px 0 $border
 
   .tabs-component-tab
     position: relative
@@ -76,7 +39,6 @@ export default class Tabs extends Vue {
     font-size: 14px
     font-weight: 600
     list-style: none
-    background-color: #fff
     width: 150px
     text-align: center
     border-left: 1px solid $border
@@ -104,6 +66,9 @@ export default class Tabs extends Vue {
       transform: scale(1)
       transition-duration: .16s
 
+  .remainder
+    flex-grow: 1
+    border-left: none
 
   .text
     align-items: center
@@ -115,7 +80,6 @@ export default class Tabs extends Vue {
       cursor: default
 
   .tabs-component-panels
-    background-color: #fff
     box-shadow: 0 0 10px rgba(0, 0, 0, .05)
     padding: 4em 2em
 

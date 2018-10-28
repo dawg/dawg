@@ -16,7 +16,7 @@
 
     <toolbar :offset="totalWidth" :height="toolbarHeight"></toolbar>
     
-    <tabs :style="`padding-left: ${totalWidth}px`">
+    <tabs :style="`padding-left: ${totalWidth}px; height: 600px`">
       <tab name="Playlist 1">
         This is the content of the first tab
       </tab>
@@ -34,6 +34,18 @@
       </tab>
     </tabs>
 
+    <panels :style="`padding-left: ${totalWidth}px; height: 100%; border-top: 1px solid #111`">
+      <panel name="Mixer">
+        <div></div>
+      </panel>
+      <panel name="Piano Roll">
+        <div></div>
+      </panel>
+      <panel name="Sample">
+        <div></div>
+      </panel>
+    </panels>
+
     <foot :height="footerHeight"></foot>
   </v-app>
 </template>
@@ -47,9 +59,21 @@ import Foot from '@/components/Foot.vue';
 import FileExplorer from '@/components/FileExplorer.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
+import Panels from '@/components/Panels.vue';
+import Panel from '@/components/Panel.vue';
 
 @Component({
-  components: { ActivityBar, SideBar, Toolbar, FileExplorer, Tabs, Tab, Foot },
+  components: {
+    ActivityBar,
+    SideBar,
+    Toolbar,
+    FileExplorer,
+    Tabs,
+    Tab,
+    Foot,
+    Panels,
+    Panel,
+  },
 })
 export default class App extends Vue {
   public toolbarHeight = 64;
