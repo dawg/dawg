@@ -15,7 +15,6 @@
     "build:storybook": "vue-cli-service build:storybook -c config/storybook"
   },
   "dependencies": {
-    "@types/tinycolor2": "^1.4.1",
     "electron-context-menu": "^0.10.0",
     "konva": "^2.3.0",
     "tinycolor2": "^1.4.1",
@@ -38,6 +37,8 @@
     "@types/jest": "^23.1.4",
     "@types/storybook__addon-actions": "^3.4.1",
     "@types/storybook__vue": "^3.3.0",
+    "@types/tinycolor2": "^1.4.1",
+    "@types/webaudioapi": "0.0.27",
     "@vue/cli-plugin-babel": "^3.0.1",
     "@vue/cli-plugin-e2e-cypress": "^3.0.1",
     "@vue/cli-plugin-typescript": "^3.0.1",

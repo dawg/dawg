@@ -56,13 +56,7 @@ storiesOf(Key.name, module)
     components: { Key },
   }));
 
-const piano = new Tone.PolySynth(4, Tone.Synth, {
-    volume: -8,
-    oscillator: {
-      partials: [1, 2, 1],
-    },
-    portamento: 0.05,
-}).toMaster();
+const piano = new Tone.PolySynth(4, Tone.Synth).toMaster();
 
 storiesOf(Sequencer.name, module)
   .add('Standard', () => ({
