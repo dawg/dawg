@@ -18,19 +18,19 @@
     
     <tabs :style="`padding-left: ${totalWidth}px; height: 600px`">
       <tab name="Playlist 1">
-        This is the content of the first tab
+        <div></div>
       </tab>
       <tab name="Sequence 1">
-        This is the content of the second tab
+        <div></div>
       </tab>
       <tab name="Sequence 2" :is-disabled="true">
-        This content will be unavailable while :is-disabled prop set to true
+        <div></div>
       </tab>
       <tab name="Sequence 4">
-          The fragment that is appended to the url can be customized
+          <div></div>
       </tab>
       <tab name="Master">
-          A prefix and a suffix can be added
+          <div></div>
       </tab>
     </tabs>
 

@@ -5,7 +5,7 @@
           :key="i" :class="{ 'is-active': tab.isActive }"
           class="tabs-component-tab">
         <span @click="selectTab(tab.name, $event)" class="text white--text">{{ tab.name }}</span>
-        <v-icon size="13px" class="close-icon" @click="close(i)">close</v-icon>
+        <v-icon size="13px" class="close-icon" color="white" @click="close(i)">close</v-icon>
       </li>
       <li class="tabs-component-tab remainder"></li>
     </ul>

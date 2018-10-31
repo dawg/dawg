@@ -27,6 +27,8 @@ import notification from '@/notification';
 import Notifications from '@/notification/Notifications.vue';
 import SideBar from '@/components/SideBar.vue';
 import Synth from '@/components/Synth.vue';
+import SplitArea from '@/modules/split/SplitArea.vue';
+import Split from '@/modules/split/Split.vue';
 
 import Vue from 'vue';
 
@@ -444,4 +446,23 @@ storiesOf(Synth.name, module)
       },
     },
     components: { Synth },
+  }));
+
+
+storiesOf(Split.name, module)
+  .add('Standard', () => ({
+    template: `
+    <split style="height: 500px;">
+        <split-area :size="33" :minSize="100">
+            panel left
+        </split-area>
+        <split-area :size="33" :minSize="100">
+            panel center
+        </split-area>
+        <split-area :size="33" :minSize="300">
+            panel right
+        </split-area>
+    </split>
+    `,
+    components: { Split, SplitArea },
   }));
