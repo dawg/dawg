@@ -1,5 +1,5 @@
 <template>
-  <v-footer class="primary" :style="style" :height="height" app>
+  <v-footer class="primary footer" :style="style" :height="height" app>
     <span class="position white--text">Vuesic &copy; {{ new Date().getFullYear() }}</span>
   </v-footer>
 </template>
@@ -23,4 +23,7 @@ export default class Foot extends Vue {
   text-align: center
   width : 100%
   font-size: 12px
+
+.footer
+  position: unset
 </style>

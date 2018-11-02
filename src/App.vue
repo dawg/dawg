@@ -1,51 +1,65 @@
 <template>
-  <v-app>
-    <activity-bar 
-      :activity-bar-width="activityBarWidth" 
-      :side-panel-width="sidePanelWidth"
-      :title-height="toolbarHeight"
-      :padding-bottom="footerHeight"
-    >
-      <side-bar name="EXPLORER" icon="folder">
-        <file-explorer></file-explorer>
-      </side-bar>
-      <side-bar name="SYNTHESIZERS" icon="playlist_add"></side-bar>
-      <side-bar name="SYNTHESIZER" icon="queue_music"></side-bar>
-      <side-bar name="SEARCH" icon="search"></side-bar>
-    </activity-bar>
+  <v-app class="app">
+    <split style="flex: 1; display: flex">
+      <split-area>
+        <activity-bar 
+          :activity-bar-width="activityBarWidth" 
+          :side-panel-width="sidePanelWidth"
+          :title-height="toolbarHeight"
+          style="height: 100%"
+        >
+          <side-bar name="EXPLORER" icon="folder">
+            <file-explorer></file-explorer>
+          </side-bar>
+          <side-bar name="SYNTHESIZERS" icon="playlist_add"></side-bar>
+          <side-bar name="AUDIO FILES" icon="queue_music"></side-bar>
+          <side-bar name="SEARCH" icon="search"></side-bar>
+        </activity-bar>
+      </split-area>
 
-    <toolbar :offset="totalWidth" :height="toolbarHeight"></toolbar>
-    
-    <tabs :style="`padding-left: ${totalWidth}px; height: 600px`">
-      <tab name="Playlist 1">
-        <div></div>
-      </tab>
-      <tab name="Sequence 1">
-        <div></div>
-      </tab>
-      <tab name="Sequence 2" :is-disabled="true">
-        <div></div>
-      </tab>
-      <tab name="Sequence 4">
-          <div></div>
-      </tab>
-      <tab name="Master">
-          <div></div>
-      </tab>
-    </tabs>
+      <split-area>
+        <split direction="vertical">
+          <toolbar :height="toolbarHeight" style="padding-right: 26px"></toolbar>
 
-    <panels :style="`padding-left: ${totalWidth}px; height: 100%; border-top: 1px solid #111`">
-      <panel name="Mixer">
-        <div></div>
-      </panel>
-      <panel name="Piano Roll">
-        <div></div>
-      </panel>
-      <panel name="Sample">
-        <div></div>
-      </panel>
-    </panels>
-
+          <split-area grow>
+            <split direction="vertical">
+              <split-area grow>
+                <tabs :style="`height: 100%`">
+                  <tab name="Playlist 1">
+                    <div></div>
+                  </tab>
+                  <tab name="Sequence 1">
+                    <div></div>
+                  </tab>
+                  <tab name="Sequence 2" :is-disabled="true">
+                    <div></div>
+                  </tab>
+                  <tab name="Sequence 4">
+                      <div></div>
+                  </tab>
+                  <tab name="Master">
+                      <div></div>
+                  </tab>
+                </tabs>
+              </split-area>
+              <split-area grow>
+                <panels :style="`height: 100%; border-top: 1px solid #111`">
+                  <panel name="Mixer">
+                    <div></div>
+                  </panel>
+                  <panel name="Piano Roll">
+                    <div></div>
+                  </panel>
+                  <panel name="Sample">
+                    <div></div>
+                  </panel>
+                </panels>
+              </split-area>
+            </split>
+          </split-area>
+        </split>
+      </split-area>
+    </split>
     <foot :height="footerHeight"></foot>
   </v-app>
 </template>
@@ -61,6 +75,8 @@ import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
 import Panels from '@/components/Panels.vue';
 import Panel from '@/components/Panel.vue';
+import Split from '@/modules/split/Split.vue';
+import SplitArea from '@/modules/split/SplitArea.vue';
 
 @Component({
   components: {
@@ -73,6 +89,8 @@ import Panel from '@/components/Panel.vue';
     Foot,
     Panels,
     Panel,
+    Split,
+    SplitArea,
   },
 })
 export default class App extends Vue {
@@ -100,3 +118,10 @@ export default class App extends Vue {
 <style lang="sass">
 @import '~@/styles/global'
 </style>
+
+<style lang="sass" scoped>
+.app
+  display: flex
+  flex-direction: column
+</style>
+

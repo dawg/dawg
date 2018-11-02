@@ -1,7 +1,7 @@
 <template>
-    <div :class="classes" style="">
-        <slot></slot>
-    </div>
+  <div :class="classes" :style="style">
+    <slot></slot>
+  </div>
 </template>
 
 <script lang="ts">
@@ -12,9 +12,17 @@ import { Parent } from '@/modules/split/types';
 export default class SplitArea extends Vue {
   @Prop({type: Number, default: 50}) public size!: string;
   @Prop({type: Number, default: 100}) public minSize!: string;
+  @Prop(Boolean) public grow!: boolean;
   public $parent!: Parent;
-  get classes() {
-    return `split split-` + this.$parent.direction;
+  public get classes() {
+    return `split-` + this.$parent.direction;
+  }
+  public get style() {
+    if (this.grow) {
+      return {
+        flex: '1',
+      };
+    }
   }
   @Watch('size')
   public onSizeChange() {

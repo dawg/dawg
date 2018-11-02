@@ -465,4 +465,17 @@ storiesOf(Split.name, module)
     </split>
     `,
     components: { Split, SplitArea },
+  }))
+  .add('Large Gutter Size', () => ({
+    template: `
+    <split style="height: 500px;" :gutter-size="20" direction="vertical">
+        <split-area>
+            top
+        </split-area>
+        <split-area>
+            bottom
+        </split-area>
+    </split>
+    `,
+    components: { Split, SplitArea },
   }));

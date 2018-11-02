@@ -1,8 +1,7 @@
 <template>
-  <div>
+  <div style="display: flex">
     
     <v-navigation-drawer
-      fixed 
       permanent 
       mini-variant
       class="secondary-lighten-2"
@@ -93,7 +92,6 @@ export default class ActivityBar extends Vue {
 .aside
   height: 100%
   width: 300px
-  position: fixed
   z-index: 3
   border-right: 1px solid
 
