@@ -49,14 +49,14 @@ export default class Split extends Vue {
     if (this.parentAxes === 'width') {
       return {
         height: '100%',
-        width: '5px',
-        marginLeft: 5 / -2,
+        width: '6px',
+        marginLeft: `${6 / -2}px`,
       };
     } else {
       return {
         width: '100%',
-        height: '5px',
-        marginTop: 5 / -2,
+        height: '6px',
+        marginTop: `${6 / -2}px`,
       };
     }
   }
@@ -155,7 +155,6 @@ export default class Split extends Vue {
   position: absolute
   left: 0
   top: 0
-  height: 5px
   width: 100%
   z-index: 999
 

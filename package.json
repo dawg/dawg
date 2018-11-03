@@ -25,12 +25,12 @@
     "vue-class-component": "^6.0.0",
     "vue-draggable-resizable": "^1.7.1",
     "vue-konva": "^1.0.6",
+    "vue-perfect-scrollbar": "^0.1.0",
     "vue-property-decorator": "^7.0.0",
     "vue-router": "^3.0.1",
     "vue-shortkey": "^3.1.6",
     "vuetify": "^1.2.3",
-    "vuex": "^3.0.1",
-    "split.js": "^1.3.5"
+    "vuex": "^3.0.1"
   },
   "devDependencies": {
     "@storybook/addon-actions": "4.0.0-alpha.20",
