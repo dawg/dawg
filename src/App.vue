@@ -1,7 +1,7 @@
 <template>
-  <v-app class="app">
-    <split style="flex: 1; display: flex">
-      <split-area>
+  <v-app class="app" style="height: 100vh">
+    <split direction="horizontal" grow resizable>
+      <split>
         <activity-bar 
           :activity-bar-width="activityBarWidth" 
           :side-panel-width="sidePanelWidth"
@@ -15,50 +15,46 @@
           <side-bar name="AUDIO FILES" icon="queue_music"></side-bar>
           <side-bar name="SEARCH" icon="search"></side-bar>
         </activity-bar>
-      </split-area>
+      </split>
 
-      <split-area>
-        <split direction="vertical">
-          <toolbar :height="toolbarHeight" style="padding-right: 26px"></toolbar>
+      <split direction="vertical" grow>
+        <toolbar :height="toolbarHeight" style="padding-right: 26px"></toolbar>
 
-          <split-area grow>
-            <split direction="vertical">
-              <split-area grow>
-                <tabs :style="`height: 100%`">
-                  <tab name="Playlist 1">
+          <split direction="vertical" grow resizable>
+            <split>
+              <tabs :style="`height: 100%`">
+                <tab name="Playlist 1">
+                  <div></div>
+                </tab>
+                <tab name="Sequence 1">
+                  <div></div>
+                </tab>
+                <tab name="Sequence 2" :is-disabled="true">
+                  <div></div>
+                </tab>
+                <tab name="Sequence 4">
                     <div></div>
-                  </tab>
-                  <tab name="Sequence 1">
+                </tab>
+                <tab name="Master">
                     <div></div>
-                  </tab>
-                  <tab name="Sequence 2" :is-disabled="true">
-                    <div></div>
-                  </tab>
-                  <tab name="Sequence 4">
-                      <div></div>
-                  </tab>
-                  <tab name="Master">
-                      <div></div>
-                  </tab>
-                </tabs>
-              </split-area>
-              <split-area grow>
-                <panels :style="`height: 100%; border-top: 1px solid #111`">
-                  <panel name="Mixer">
-                    <div></div>
-                  </panel>
-                  <panel name="Piano Roll">
-                    <div></div>
-                  </panel>
-                  <panel name="Sample">
-                    <div></div>
-                  </panel>
-                </panels>
-              </split-area>
+                </tab>
+              </tabs>
             </split>
-          </split-area>
-        </split>
-      </split-area>
+            <split>
+              <panels :style="`height: 100%; border-top: 1px solid #111`">
+                <panel name="Mixer">
+                  <div></div>
+                </panel>
+                <panel name="Piano Roll">
+                  <div></div>
+                </panel>
+                <panel name="Sample">
+                  <div></div>
+                </panel>
+              </panels>
+            </split>
+          </split>
+      </split>
     </split>
     <foot :height="footerHeight"></foot>
   </v-app>
@@ -76,7 +72,6 @@ import Tab from '@/components/Tab.vue';
 import Panels from '@/components/Panels.vue';
 import Panel from '@/components/Panel.vue';
 import Split from '@/modules/split/Split.vue';
-import SplitArea from '@/modules/split/SplitArea.vue';
 
 @Component({
   components: {
@@ -90,7 +85,6 @@ import SplitArea from '@/modules/split/SplitArea.vue';
     Panels,
     Panel,
     Split,
-    SplitArea,
   },
 })
 export default class App extends Vue {

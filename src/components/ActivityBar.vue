@@ -25,22 +25,19 @@
       </v-list>
     </v-navigation-drawer>
 
-    <aside 
-      class="aside secondary"
-      :style="asideStyle"
-    >
+    <div class="aside secondary" style="display: flex; flex-direction: column">
       
       <div
         class="title center--vertial white--text"
-        :style="`height: ${titleHeight + 1}px`"
+        :style="`min-height: ${titleHeight + 1}px`"
       >
         <div>{{ title }}</div>
       </div>
-      <base-tabs ref="tabs" @changed="changed">
+      <base-tabs ref="tabs" @changed="changed" style="overflow: auto">
         <slot></slot>
       </base-tabs>
       
-    </aside>
+    </div>
 
   </div>
 </template>
@@ -75,14 +72,7 @@ export default class ActivityBar extends Vue {
   }
   get style() {
     return {
-      'padding-bottom': `${this.paddingBottom}px`,
-    };
-  }
-  get asideStyle() {
-    return {
-      ...this.style,
-      left: `${this.activityBarWidth}px`,
-      width: `${this.sidePanelWidth}px`,
+      minWidth: `${this.activityBarWidth}px`,
     };
   }
 }
@@ -91,7 +81,7 @@ export default class ActivityBar extends Vue {
 <style scoped lang="sass">
 .aside
   height: 100%
-  width: 300px
+  width: 100%
   z-index: 3
   border-right: 1px solid
 

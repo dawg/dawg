@@ -21,7 +21,7 @@ interface FileTree {
   [key: string]: FileTree;
 }
 
-@Component({components: {Tree}})
+@Component({components: { Tree }})
 export default class Drawer extends Vue {
   public drawer = true;
   public folders = [path.join(os.homedir(), 'Downloads')];

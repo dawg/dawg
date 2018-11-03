@@ -81,7 +81,6 @@ export default class Tabs extends BaseTabs { }
 
   .tabs-component-panels
     box-shadow: 0 0 10px rgba(0, 0, 0, .05)
-    padding: 4em 2em
 
   .close-icon
     top: 0.75em
