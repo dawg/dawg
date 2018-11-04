@@ -1,6 +1,6 @@
 <template>
   <div class="split" :style="style">
-    <div v-if="gutter" class="gutter" @mousedown="mousedown" :style="gutterStyle"></div>
+    <div class="gutter" ref="drag" :style="gutterStyle"></div>
     <slot></slot>
   </div>
 </template>
@@ -12,7 +12,7 @@ import { Draggable } from '@/mixins';
 export type Direction = 'horizontal' | 'vertical';
 
 @Component
-export default class Split extends Vue {
+export default class Split extends Mixins(Draggable) {
   @Prop(String) public direction?: Direction;
   @Prop(Boolean) public grow!: boolean;
   @Prop(Boolean) public resizable!: boolean;
@@ -42,7 +42,9 @@ export default class Split extends Vue {
     return style;
   }
   public get gutterStyle() {
-    if (!this.parentAxes) {
+    // We want the gutter to exist so that we can attach event listners
+    // However, we don't want all gutters to actually show.
+    if (!this.gutter) {
       return {};
     }
 
@@ -61,6 +63,12 @@ export default class Split extends Vue {
     }
   }
   public mounted() {
+    if (this.parentAxes === 'width') {
+      this.cursor = 'ew-resize';
+    } else {
+      this.cursor = 'ns-resize';
+    }
+
     if (!this.resizable) { return; }
     this.$children.slice(1).forEach((child) => child.gutter = true);
     this.$children.map((child, i) => {
@@ -81,15 +89,13 @@ export default class Split extends Vue {
       split.$el.style[this.axes] = percentage + '%';
     });
   }
-  public mousedown(e: MouseEvent) {
-    window.addEventListener('mousemove', this.mousemove);
-    window.addEventListener('mouseup', this.mouseup);
-    document.documentElement.style.cursor = 'ns-resize';
-    this.position = this.$parent.direction === 'horizontal' ? e.pageX : e.pageY;
-  }
-  public mousemove(e: MouseEvent) {
-    const current = this.$parent.direction === 'horizontal' ? e.pageX : e.pageY;
-    const px = current - this.position;
+  public move(e: MouseEvent, { changeY, changeX }: { changeY: number, changeX: number }) {
+    let px;
+    if (this.$parent.direction === 'horizontal') {
+      px = changeX;
+    } else {
+      px = changeY;
+    }
 
     let inFront: Split[];
     let behind: Split[];
@@ -118,11 +124,6 @@ export default class Split extends Vue {
     this.calculatePositions(this.before, px);
     this.calculatePositions(this.after, -px);
     this.position += px;
-  }
-  public mouseup(e: MouseEvent) {
-    document.documentElement.style.cursor = 'auto';
-    window.removeEventListener('mousemove', this.mousemove);
-    window.removeEventListener('mouseup', this.mouseup);
   }
   public get parentAxes() {
     return this.$parent.direction === 'horizontal' ? 'width' : 'height';
@@ -157,9 +158,6 @@ export default class Split extends Vue {
   top: 0
   width: 100%
   z-index: 999
-
-  &:hover
-    cursor: ns-resize
 
 .split
   position: relative
