@@ -1,12 +1,10 @@
 <template>
-  <div>
+  <div style="display: flex">
     
     <v-navigation-drawer
-      fixed 
       permanent 
       mini-variant
       class="secondary-lighten-2"
-      :mini-variant-width="activityBarWidth"
       :style="style"
     >
       <v-list dense style="height: 100%; display: flex; flex-direction: column">
@@ -26,22 +24,21 @@
       </v-list>
     </v-navigation-drawer>
 
-    <aside 
-      class="aside secondary"
-      :style="asideStyle"
-    >
+    <div class="aside secondary" style="display: flex; flex-direction: column">
       
       <div
         class="title center--vertial white--text"
-        :style="`height: ${titleHeight + 1}px`"
+        :style="`min-height: ${titleHeight + 1}px`"
       >
         <div>{{ title }}</div>
       </div>
-      <base-tabs ref="tabs" @changed="changed">
-        <slot></slot>
-      </base-tabs>
+      <vue-perfect-scrollbar class="scrollbar">
+        <base-tabs ref="tabs" @changed="changed">
+          <slot></slot>
+        </base-tabs>
+      </vue-perfect-scrollbar>
       
-    </aside>
+    </div>
 
   </div>
 </template>
@@ -50,8 +47,9 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import SideBar from '@/components/SideBar.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
+import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 
-@Component({ components: {SideBar, BaseTabs} })
+@Component({ components: { SideBar, BaseTabs, VuePerfectScrollbar } })
 export default class ActivityBar extends Vue {
   @Prop({ type: Number, default: 60 }) public activityBarWidth!: number;
   @Prop({ type: Number, default: 300 }) public sidePanelWidth!: number;
@@ -76,14 +74,7 @@ export default class ActivityBar extends Vue {
   }
   get style() {
     return {
-      'padding-bottom': `${this.paddingBottom}px`,
-    };
-  }
-  get asideStyle() {
-    return {
-      ...this.style,
-      left: `${this.activityBarWidth}px`,
-      width: `${this.sidePanelWidth}px`,
+      flex: `0 0 ${this.activityBarWidth}px`,
     };
   }
 }
@@ -92,8 +83,7 @@ export default class ActivityBar extends Vue {
 <style scoped lang="sass">
 .aside
   height: 100%
-  width: 300px
-  position: fixed
+  width: 100%
   z-index: 3
   border-right: 1px solid
 
@@ -101,4 +91,7 @@ export default class ActivityBar extends Vue {
   font-size: 15px !important
   border-bottom: 1px solid rgba(0, 0, 0, 0.3)
   padding: 0 20px
+
+.scrollbar >>> .ps__scrollbar-y-rail
+  background-color: transparent
 </style>

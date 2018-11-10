@@ -27,6 +27,7 @@ import notification from '@/notification';
 import Notifications from '@/notification/Notifications.vue';
 import SideBar from '@/components/SideBar.vue';
 import Synth from '@/components/Synth.vue';
+import Split from '@/modules/split/Split.vue';
 
 import Vue from 'vue';
 
@@ -444,4 +445,23 @@ storiesOf(Synth.name, module)
       },
     },
     components: { Synth },
+  }));
+
+
+storiesOf(Split.name, module)
+  .add('Horizontal', () => ({
+    template: `
+    <split direction="horizontal" resizable>
+        <split :min-size="100">
+            panel left
+        </split>
+        <split :min-size="100">
+            panel center
+        </split>
+        <split :min-size="300">
+            panel right
+        </split>
+    </split>
+    `,
+    components: { Split },
   }));

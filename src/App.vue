@@ -1,39 +1,61 @@
 <template>
-  <v-app>
-    <activity-bar 
-      :activity-bar-width="activityBarWidth" 
-      :side-panel-width="sidePanelWidth"
-      :title-height="toolbarHeight"
-      :padding-bottom="footerHeight"
-    >
-      <side-bar name="EXPLORER" icon="folder">
-        <file-explorer></file-explorer>
-      </side-bar>
-      <side-bar name="SYNTHESIZERS" icon="playlist_add"></side-bar>
-      <side-bar name="SYNTHESIZER" icon="queue_music"></side-bar>
-      <side-bar name="SEARCH" icon="search"></side-bar>
-    </activity-bar>
+  <v-app class="app" style="height: 100vh">
+    <split direction="horizontal" grow resizable>
+      <split :initial="350" collapsible :min-size="200">
+        <activity-bar 
+          :activity-bar-width="activityBarWidth" 
+          :side-panel-width="sidePanelWidth"
+          :title-height="toolbarHeight"
+          style="height: 100%"
+        >
+          <side-bar name="EXPLORER" icon="folder">
+            <file-explorer></file-explorer>
+          </side-bar>
+          <side-bar name="SYNTHESIZERS" icon="playlist_add"></side-bar>
+          <side-bar name="AUDIO FILES" icon="queue_music"></side-bar>
+          <side-bar name="SEARCH" icon="search"></side-bar>
+        </activity-bar>
+      </split>
 
-    <toolbar :offset="totalWidth" :height="toolbarHeight"></toolbar>
-    
-    <tabs :style="`padding-left: ${totalWidth}px`">
-      <tab name="Playlist 1">
-        This is the content of the first tab
-      </tab>
-      <tab name="Sequence 1">
-        This is the content of the second tab
-      </tab>
-      <tab name="Sequence 2" :is-disabled="true">
-        This content will be unavailable while :is-disabled prop set to true
-      </tab>
-      <tab name="Sequence 4">
-          The fragment that is appended to the url can be customized
-      </tab>
-      <tab name="Master">
-          A prefix and a suffix can be added
-      </tab>
-    </tabs>
+      <split direction="vertical" grow>
+        <toolbar :height="toolbarHeight" style="padding-right: 26px"></toolbar>
 
+          <split direction="vertical" grow resizable>
+            <split>
+              <tabs :style="`height: 100%`">
+                <tab name="Playlist 1">
+                  <div></div>
+                </tab>
+                <tab name="Sequence 1">
+                  <div></div>
+                </tab>
+                <tab name="Sequence 2" :is-disabled="true">
+                  <div></div>
+                </tab>
+                <tab name="Sequence 4">
+                    <div></div>
+                </tab>
+                <tab name="Master">
+                    <div></div>
+                </tab>
+              </tabs>
+            </split>
+            <split>
+              <panels :style="`height: 100%; border-top: 1px solid #111`">
+                <panel name="Mixer">
+                  <div></div>
+                </panel>
+                <panel name="Piano Roll">
+                  <div></div>
+                </panel>
+                <panel name="Sample">
+                  <div></div>
+                </panel>
+              </panels>
+            </split>
+          </split>
+      </split>
+    </split>
     <foot :height="footerHeight"></foot>
   </v-app>
 </template>
@@ -47,9 +69,23 @@ import Foot from '@/components/Foot.vue';
 import FileExplorer from '@/components/FileExplorer.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
+import Panels from '@/components/Panels.vue';
+import Panel from '@/components/Panel.vue';
+import Split from '@/modules/split/Split.vue';
 
 @Component({
-  components: { ActivityBar, SideBar, Toolbar, FileExplorer, Tabs, Tab, Foot },
+  components: {
+    ActivityBar,
+    SideBar,
+    Toolbar,
+    FileExplorer,
+    Tabs,
+    Tab,
+    Foot,
+    Panels,
+    Panel,
+    Split,
+  },
 })
 export default class App extends Vue {
   public toolbarHeight = 64;
@@ -76,3 +112,10 @@ export default class App extends Vue {
 <style lang="sass">
 @import '~@/styles/global'
 </style>
+
+<style lang="sass" scoped>
+.app
+  display: flex
+  flex-direction: column
+</style>
+

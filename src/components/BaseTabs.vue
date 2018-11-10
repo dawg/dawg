@@ -25,11 +25,11 @@ export default class Tabs extends Vue {
     this.selectTab(this.firstTab.name);
   }
   public selectTab(name?: string, event?: MouseEvent) {
-    if (event !== undefined) {
+    if (event) {
       event.preventDefault();
     }
 
-    if (name === undefined) {
+    if (!name) {
       return;
     }
 
