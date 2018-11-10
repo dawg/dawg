@@ -74,8 +74,7 @@ export default class ActivityBar extends Vue {
   }
   get style() {
     return {
-      minWidth: `${this.activityBarWidth}px`,
-      maxWidth: `${this.activityBarWidth}px`,
+      flex: `0 0 ${this.activityBarWidth}px`,
     };
   }
 }

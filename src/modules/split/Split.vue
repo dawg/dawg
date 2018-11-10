@@ -134,27 +134,24 @@ export default class Split extends Mixins(Draggable) {
       behind = this.after;
     }
 
-    let pxInFront = 0;
+    let pxBehind = 0;
     const atMax = (split: Split) => {
-      pxBehind += split.minSize - split.childSize!;
+      pxBehind += split.maxSize - split.childSize!;
     };
 
-    let pxBehind = 0;
+    let pxInFront = 0;
     const atMin = (split: Split) => {
       pxInFront += split.childSize! - split.minSize;
     };
 
     behind.forEach(atMax);
     inFront.forEach(atMin);
-    console.log(pxBehind, pxInFront);
-    const atLimit = (inFront.length && !pxInFront) || (behind.length && !pxBehind);
-    if (atLimit) {
-      return;
-    }
 
-    // TODO Calculate capacity!
-    this.calculatePositions(this.before, px);
-    this.calculatePositions(this.after, -px);
+    const sign = Math.sign(px);
+    px = Math.min(pxBehind, pxInFront, Math.abs(px)) * sign;
+
+    this.calculatePositions(this.before, px, px);
+    this.calculatePositions(this.after, -px, px);
     this.position += px;
   }
   public get parentAxes() {
@@ -169,7 +166,7 @@ export default class Split extends Mixins(Draggable) {
     }
     return direction === 'horizontal' ? 'width' : 'height';
   }
-  public calculatePositions(splits: Split[], px: number) {
+  public calculatePositions(splits: Split[], px: number, max: number) {
     for (const split of splits) {
       if (px === 0) { break; }
 
