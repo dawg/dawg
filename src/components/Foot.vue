@@ -1,7 +1,7 @@
 <template>
-  <v-footer class="primary footer" :style="style" :height="height" app>
-    <span class="position white--text">Vuesic &copy; {{ new Date().getFullYear() }}</span>
-  </v-footer>
+  <div class="primary footer position white--text" :style="style">
+    Vuesic &copy; {{ new Date().getFullYear() }}
+  </div>
 </template>
 
 <script lang="ts">
@@ -13,6 +13,8 @@ export default class Foot extends Vue {
   get style() {
     return {
       minHeight: `${this.height}px`,
+      height: `${this.height}px`,
+      lineHeight: `${this.height}px`,
     };
   }
 }
@@ -20,10 +22,10 @@ export default class Foot extends Vue {
 
 <style lang="sass" scoped>
 .position
-  text-align: center
   width : 100%
   font-size: 12px
 
 .footer
+  text-align: center
   position: unset
 </style>

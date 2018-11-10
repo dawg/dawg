@@ -20,6 +20,8 @@ export default class Split extends Mixins(Draggable) {
   @Prop({type: Number, default: 10}) public minSize!: number;
   @Prop({type: Number, default: Infinity}) public maxSize!: number;
   @Prop(Number) public initial?: number;
+  @Prop({type: Number, default: 6}) public gutterSize!: number;
+
   public $children!: Split[];
   public $parent!: Split;
 
@@ -31,6 +33,7 @@ export default class Split extends Mixins(Draggable) {
   public after: Split[] = [];
   public childSize?: number;
   public position: number = 0;
+  public parentAxes: 'width' | 'height' = 'height';
 
   public get style() {
     const style: {[k: string]: any} = {};
@@ -57,18 +60,20 @@ export default class Split extends Mixins(Draggable) {
     if (this.parentAxes === 'width') {
       return {
         height: '100%',
-        width: '6px',
-        marginLeft: `${6 / -2}px`,
+        width: `${this.gutterSize}px`,
+        marginLeft: `${-this.gutterSize / 2}px`,
       };
     } else {
       return {
         width: '100%',
-        height: '6px',
-        marginTop: `${6 / -2}px`,
+        height: `${this.gutterSize}px`,
+        marginTop: `${-this.gutterSize / 2}px`,
       };
     }
   }
   public mounted() {
+    this.parentAxes = this.$parent.direction === 'horizontal' ? 'width' : 'height';
+
     if (this.parentAxes === 'width') {
       this.cursor = 'ew-resize';
     } else {
@@ -92,7 +97,7 @@ export default class Split extends Mixins(Draggable) {
 
     let remaining = this.size;
     let free = 0;
-    let set = 0;
+    let set = 0; // # of elements set to an inital value
     this.$children.forEach((split) => {
       if (!split.initial) {
         free += 1;
@@ -135,17 +140,14 @@ export default class Split extends Mixins(Draggable) {
     }
 
     let pxBehind = 0;
-    const atMax = (split: Split) => {
+    behind.forEach((split: Split) => {
       pxBehind += split.maxSize - split.childSize!;
-    };
+    });
 
     let pxInFront = 0;
-    const atMin = (split: Split) => {
+    inFront.forEach((split: Split) => {
       pxInFront += split.childSize! - split.minSize;
-    };
-
-    behind.forEach(atMax);
-    inFront.forEach(atMin);
+    });
 
     const sign = Math.sign(px);
     px = Math.min(pxBehind, pxInFront, Math.abs(px)) * sign;
@@ -153,9 +155,6 @@ export default class Split extends Mixins(Draggable) {
     this.calculatePositions(this.before, px, px);
     this.calculatePositions(this.after, -px, px);
     this.position += px;
-  }
-  public get parentAxes() {
-    return this.$parent.direction === 'horizontal' ? 'width' : 'height';
   }
   public get axes() {
     let direction;
