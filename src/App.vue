@@ -1,7 +1,7 @@
 <template>
   <v-app class="app" style="height: 100vh">
     <split direction="horizontal" grow resizable>
-      <split>
+      <split :initial="350" collapsible :min-size="200">
         <activity-bar 
           :activity-bar-width="activityBarWidth" 
           :side-panel-width="sidePanelWidth"

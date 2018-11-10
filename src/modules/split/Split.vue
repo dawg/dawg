@@ -15,17 +15,23 @@ export type Direction = 'horizontal' | 'vertical';
 export default class Split extends Mixins(Draggable) {
   @Prop(String) public direction?: Direction;
   @Prop(Boolean) public grow!: boolean;
+  @Prop(Boolean) public collapsible!: boolean;
   @Prop(Boolean) public resizable!: boolean;
   @Prop({type: Number, default: 10}) public minSize!: number;
   @Prop({type: Number, default: Infinity}) public maxSize!: number;
+  @Prop(Number) public initial?: number;
   public $children!: Split[];
   public $parent!: Split;
+
+  // We set some of the defaults here so we can view them in vue-devtools
+  // If no defaults are set, we do not see them...
   public gutter = false;
   public size: number = 0;
   public before: Split[] = [];
   public after: Split[] = [];
   public childSize?: number;
   public position: number = 0;
+
   public get style() {
     const style: {[k: string]: any} = {};
     if (this.grow) {
@@ -73,7 +79,9 @@ export default class Split extends Mixins(Draggable) {
     this.$children.slice(1).forEach((child) => child.gutter = true);
     this.$children.map((child, i) => {
       child.before = this.$children.slice(0, i).reverse();
-      child.after = this.$children.slice(i); // Includes $children[i]
+      // After includes $children[i].
+      // This makes sense if you think about it since the gutter is on the left/top of the element!
+      child.after = this.$children.slice(i);
     });
 
     if (this.direction === 'horizontal') {
@@ -82,9 +90,25 @@ export default class Split extends Mixins(Draggable) {
       this.size = this.$el.clientHeight;
     }
 
-    const percentage = 100 / this.$children.length;
+    let remaining = this.size;
+    let free = 0;
+    let set = 0;
     this.$children.forEach((split) => {
-      const size = split.$el.getBoundingClientRect()[this.axes];
+      if (!split.initial) {
+        free += 1;
+        return;
+      }
+      set += 1;
+      remaining -= split.initial;
+    });
+
+    if (!remaining && !free) {
+      throw new Error(`${remaining} remains and there is no freedom to adjust elements`);
+    }
+
+    const remainingPercentage = (remaining / this.size) * 100 / free;
+    this.$children.forEach((split) => {
+      const percentage = ((split.initial || 0) / this.size) * 100 || remainingPercentage;
       split.childSize = percentage / 100 * this.size;
       split.$el.style[this.axes] = percentage + '%';
     });
@@ -97,8 +121,11 @@ export default class Split extends Mixins(Draggable) {
       px = changeY;
     }
 
+    if (!px) { return; }
+
     let inFront: Split[];
     let behind: Split[];
+
     if (px > 0) {
       inFront = this.after;
       behind = this.before;
@@ -107,15 +134,20 @@ export default class Split extends Mixins(Draggable) {
       behind = this.after;
     }
 
+    let pxInFront = 0;
     const atMax = (split: Split) => {
-      return split.$el.getBoundingClientRect()[this.axes] >= split.maxSize;
+      pxBehind += split.minSize - split.childSize!;
     };
 
+    let pxBehind = 0;
     const atMin = (split: Split) => {
-      return split.$el.getBoundingClientRect()[this.axes] <= split.minSize;
+      pxInFront += split.childSize! - split.minSize;
     };
 
-    const atLimit = (inFront.length && inFront.every(atMin)) || (behind.length && behind.every(atMax));
+    behind.forEach(atMax);
+    inFront.forEach(atMin);
+    console.log(pxBehind, pxInFront);
+    const atLimit = (inFront.length && !pxInFront) || (behind.length && !pxBehind);
     if (atLimit) {
       return;
     }
