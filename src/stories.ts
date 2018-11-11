@@ -61,7 +61,9 @@ const piano = new Tone.PolySynth(4, Tone.Synth).toMaster();
 
 storiesOf(Sequencer.name, module)
   .add('Standard', () => ({
-    template: '<sequencer :note-width="20" :note-height="16" v-model="notes" :measures.sync="measures"/>',
+    template: `
+    <sequencer :note-width="20" :note-height="16" v-model="notes" :measures.sync="measures"/>
+    `,
     data: () => ({ notes: [], measures: 1 }),
     components: { Sequencer },
   }))

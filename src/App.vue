@@ -46,7 +46,7 @@
                   <div></div>
                 </panel>
                 <panel name="Piano Roll">
-                  <div></div>
+                  <piano-roll></piano-roll>
                 </panel>
                 <panel name="Sample">
                   <div></div>
@@ -72,6 +72,7 @@ import Tab from '@/components/Tab.vue';
 import Panels from '@/components/Panels.vue';
 import Panel from '@/components/Panel.vue';
 import Split from '@/modules/split/Split.vue';
+import PianoRoll from '@/components/PianoRoll.vue';
 
 @Component({
   components: {
@@ -85,6 +86,7 @@ import Split from '@/modules/split/Split.vue';
     Panels,
     Panel,
     Split,
+    PianoRoll,
   },
 })
 export default class App extends Vue {

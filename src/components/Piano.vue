@@ -36,7 +36,6 @@ export default class Piano extends Vue {
 
 <style scoped lang="sass">
   .octave
-    width: 250px
     box-shadow: 0 0 40px -5px rgba(0,0,0,0.4)
     display: inline-block
 </style>
