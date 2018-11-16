@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="base-tabs">
     <slot></slot>
   </div>
 </template>

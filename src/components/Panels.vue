@@ -45,33 +45,5 @@ export default class Panels extends Vue {
 </script>
 
 <style lang="sass" scoped>
-.tabs-headers
-  align-items: stretch
-  display: flex
-  padding: 0
 
-.tabs-header
-    position: relative
-    color: #999
-    font-size: 14px
-    font-weight: 600
-    list-style: none
-    text-align: center
-    padding: .75em 1em
-
-    &.is-active
-      color: #000
-      box-shadow: unset
-      
-      & .text
-        border-bottom: 1px solid
-
-.text
-  align-items: center
-  text-decoration: none
-  display: inline-block
-  padding: 0 2px
-
-  &:hover
-    cursor: default
 </style>

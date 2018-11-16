@@ -75,18 +75,32 @@
           </tabs>
         </split>
 
-        <split>
-          <panels :style="`border-top: 1px solid #111`">
-            <panel name="Mixer">
-              <div></div>
-            </panel>
-            <panel name="Piano Roll">
-              <piano-roll></piano-roll>
-            </panel>
-            <panel name="Sample">
-              <div></div>
-            </panel>
-          </panels>
+        <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`">
+          <split :initial="55" fixed>
+            <ul class="tabs-headers" style="height: 55px">
+              <li
+                v-for="(tab, i) in panels"
+                :key="i" 
+                :class="{ 'is-active': tab.isActive }"
+                class="tabs-header"
+              >
+                <div @click="selectPanel(tab.name, $event)" class="text white--text">{{ tab.name }}</div>
+              </li>
+            </ul>
+          </split>
+          <split>
+            <base-tabs class="tabs-panels secondary" ref="panels" style="height: auto">
+              <panel name="Mixer">
+                <div></div>
+              </panel>
+              <panel name="Piano Roll">
+                <piano-roll></piano-roll>
+              </panel>
+              <panel name="Sample">
+                <div></div>
+              </panel>
+            </base-tabs>
+          </split>
         </split>
 
       </split>
@@ -103,7 +117,6 @@ import Foot from '@/components/Foot.vue';
 import FileExplorer from '@/components/FileExplorer.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
-import Panels from '@/components/Panels.vue';
 import Panel from '@/components/Panel.vue';
 import Split from '@/modules/split/Split.vue';
 import PianoRoll from '@/components/PianoRoll.vue';
@@ -118,7 +131,6 @@ import VuePerfectScrollbar from 'vue-perfect-scrollbar';
     Tabs,
     Tab,
     Foot,
-    Panels,
     Panel,
     Split,
     PianoRoll,
@@ -134,6 +146,7 @@ export default class App extends Vue {
   public node?: Element;
   public height = window.innerHeight;
   public title = '';
+  public panelsTabs: BaseTabs | null = null;
 
   public tabs?: BaseTabs;
   public items: SideBar[] = [];
@@ -141,6 +154,7 @@ export default class App extends Vue {
   public mounted() {
     this.tabs = this.$refs.tabs as BaseTabs;
     this.items = this.tabs.$children as SideBar[];
+    this.panelsTabs = this.$refs.panels as BaseTabs;
     window.addEventListener('resize', this.handleResize);
   }
 
@@ -164,6 +178,16 @@ export default class App extends Vue {
   }
   public destroyed() {
     window.removeEventListener('resize', this.handleResize);
+  }
+  public selectPanel(name: string, e: MouseEvent) {
+    this.panelsTabs!.selectTab(name, e);
+  }
+  get panels() {
+    if (this.panelsTabs) {
+      return this.panelsTabs.tabs;
+    } else {
+      return [];
+    }
   }
 }
 </script>
@@ -190,5 +214,36 @@ export default class App extends Vue {
 
 .scrollbar >>> .ps__scrollbar-y-rail
   background-color: transparent
+
+
+.tabs-headers
+  align-items: stretch
+  display: flex
+  padding: 0
+
+.tabs-header
+    position: relative
+    color: #999
+    font-size: 14px
+    font-weight: 600
+    list-style: none
+    text-align: center
+    padding: .75em 1em
+
+    &.is-active
+      color: #000
+      box-shadow: unset
+      
+      & .text
+        border-bottom: 1px solid
+
+.text
+  align-items: center
+  text-decoration: none
+  display: inline-block
+  padding: 0 2px
+
+  &:hover
+    cursor: default
 </style>
 
