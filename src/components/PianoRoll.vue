@@ -1,6 +1,12 @@
 <template>
   <div class="piano-roll">
-    <piano></piano>
+    <div class="pianos">
+      <piano
+        v-for="octave in octaves"
+        :key="octave"
+        :octave="octave"
+      ></piano>
+    </div>
     <sequencer 
       :note-width="noteWidth" 
       :note-height="noteHeight" 
@@ -20,10 +26,15 @@ export default class PianoRoll extends Vue {
   public noteWidth = 20;
   public noteHeight = 16;
   public notes = [];
+  public octaves = [4, 5];
 }
 </script>
 
 <style lang="sass" scoped>
 .piano-roll
   display: flex
+
+.pianos
+  display: flex
+  flex-direction: column
 </style>

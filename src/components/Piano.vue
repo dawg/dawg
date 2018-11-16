@@ -2,11 +2,12 @@
   <div class="octave-container">
     <div class="octave">
       <key
-          v-for="(note, index) in notes"
-          :key="note"
-          :note="note"
-          :synth="synth"
-          :border="borderBottom || index !== notes.length - 1"/>
+        v-for="(note, index) in notes"
+        :key="note"
+        :note="note"
+        :synth="synth"
+        :border="borderBottom || index !== notes.length - 1"
+      ></key>
     </div>
   </div>
 </template>
@@ -24,8 +25,8 @@ const synth = new Tone.Synth().toMaster();
   components: {Key},
 })
 export default class Piano extends Vue {
-  @Prop({default: 4}) public octave!: number;
-  @Prop({default: false}) public borderBottom!: boolean;
+  @Prop({type: Number, default: 4}) public octave!: number;
+  @Prop(Boolean) public borderBottom!: boolean;
   public synth = synth;
 
   get notes() {
