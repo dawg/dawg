@@ -77,7 +77,7 @@
 
         <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`">
           <split :initial="55" fixed>
-            <ul class="tabs-headers" style="height: 55px">
+            <ul class="tabs-headers">
               <li
                 v-for="(tab, i) in panels"
                 :key="i" 
@@ -89,7 +89,7 @@
             </ul>
           </split>
           <split>
-            <base-tabs class="tabs-panels secondary" ref="panels" style="height: auto">
+            <base-tabs class="tabs-panels secondary" ref="panels">
               <panel name="Mixer">
                 <div></div>
               </panel>
