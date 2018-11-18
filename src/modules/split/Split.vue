@@ -135,35 +135,52 @@ export default class Split extends Mixins(Draggable) {
     if (!this.direction) { return; }
     // console.log('onResize', px);
 
-    let previous: number;
-    let current: number;
-    if (this.direction === 'horizontal') {
-      previous = this.width;
-    } else {
-      previous = this.height;
-    }
+    // if (px === undefined) {
+    //   current = this.getSize();
+    //   px = current - previous;
+    // } else {
+    //   current = previous + px;
+    // }
 
-    if (px === undefined) {
-      current = this.getSize();
-      px = current - previous;
-    } else {
-      current = previous + px;
-    }
-
+    const { height, width } = this.getSize();
+    const pxX = width - this.width;
+    const pxY = height - this.height;
 
     // const before = this.children.map((child) => child.size);
-    console.log(this.direction, previous, current, px, this.$el);
-    this.calculatePositions(this.childrenReversed, px);
+    console.log(
+      this.direction,
+      `\nHeight: ${this.height} -> ${height}`,
+      `\nWidth: ${this.width} -> ${width}`,
+      px,
+      this.$el,
+    );
+
+    if (this.direction === 'horizontal') {
+      this.calculatePositions(this.childrenReversed, pxX);
+      this.childrenReversed.forEach((child) => {
+        if (!child.direction) {
+          child.height = height;
+        }
+      });
+    } else {
+      this.calculatePositions(this.childrenReversed, pxY);
+      this.childrenReversed.forEach((child) => {
+        if (!child.direction) {
+          child.width = width;
+        }
+      });
+    }
     // const after = this.children.map((child) => child.size);
     // const amounts = _.zip(before, after).map(([bef, aft]) => aft - bef);
 
-    if (this.direction === 'horizontal') {
-      this.width = current;
-    } else {
-      this.height = current;
-    }
+    this.width = width;
+    this.height = height;
 
-    // _.zip(this.children, amounts).forEach(([child, amount]) => child.onResize(amount));
+    this.children.forEach((child) => {
+      if (child.direction) {
+        child.onResize();
+      }
+    });
   }
   public move(e: MouseEvent, { changeY, changeX }: { changeY: number, changeX: number }) {
     let px;
@@ -249,25 +266,27 @@ export default class Split extends Mixins(Draggable) {
     return px;
   }
   public getSize() {
-    if (this.direction === 'horizontal') {
-      if (this.parent) {
-        return this.parent.width;
-      } else {
-        return window.innerWidth;
-      }
+    if (this.parent) {
+      return {
+        width: this.parent.width,
+        height: this.parent.height,
+      };
     } else {
-      if (this.parent) {
-        return this.parent.width;
-      } else {
-        return window.innerHeight;
-      }
+      return {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      };
     }
   }
   public init() {
     if (!this.direction) { return; }
 
-    console.log('Initializing', this.$el);
-    let remaining = this.getSize();
+    let remaining: number;
+    if (this.direction === 'horizontal') {
+      remaining = this.width;
+    } else {
+      remaining = this.height;
+    }
 
     const numNotSet = this.children.filter((child) => !child.initial).length;
     this.children.forEach((split) => {
@@ -287,7 +306,9 @@ export default class Split extends Mixins(Draggable) {
       }
     });
 
+
     const size = remaining / numNotSet;
+    console.log('Initializing', this.$el, remaining, numNotSet, size);
     this.children.forEach((split) => {
       if (!split.initial) {
         if (this.direction === 'horizontal') {
