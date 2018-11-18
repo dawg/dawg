@@ -53,7 +53,10 @@
         <split direction="vertical" grow resizable>
 
           <split :initial="toolbarHeight" fixed>
-            <toolbar :height="toolbarHeight" style="padding-right: 26px"></toolbar>
+            <toolbar 
+              :height="toolbarHeight" 
+              style="padding-right: 26px; border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
+            ></toolbar>
           </split>
 
           <split>

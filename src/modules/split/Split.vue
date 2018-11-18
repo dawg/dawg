@@ -98,8 +98,10 @@ export default class Split extends Mixins(Draggable) {
     const pxX = width - this.width;
     const pxY = height - this.height;
 
-    this.doResize(this.childrenReversed, pxX, 'horizontal');
-    this.doResize(this.childrenReversed, pxY, 'vertical');
+    let pxRemaining = this.doResize(this.childrenReversed, pxX, false, 'horizontal');
+    this.doResize(this.childrenReversed, pxRemaining, true, 'horizontal');
+    pxRemaining = this.doResize(this.childrenReversed, pxY, false, 'vertical');
+    this.doResize(this.childrenReversed, pxRemaining, true, 'vertical');
     this.width = width;
     this.height = height;
 
@@ -206,11 +208,11 @@ export default class Split extends Mixins(Draggable) {
   public calculatePositions(splits: Split[], px: number, direction: Direction) {
     // First resize but don't include children that have keep flag
     // Then resize again but include the children with a keep flag
-    const pxRemaining = this.doResize(splits, px, direction);
-    // this.doResize(splits, pxRemaining, true, direction);
+    const pxRemaining = this.doResize(splits, px, false, direction);
+    this.doResize(splits, pxRemaining, true, direction);
   }
-  public doResize(splits: Split[], px: number, direction: Direction) {
-    if (splits.length === 0) { return; }
+  public doResize(splits: Split[], px: number, includeKeep: boolean, direction: Direction) {
+    if (splits.length === 0) { return px; }
     const child = splits[0];
     const parent = child.parent!;
     const myDirection = parent.direction!;
@@ -219,19 +221,19 @@ export default class Split extends Mixins(Draggable) {
       for (const split of splits) {
         if (px === 0) { break; }
         if (split.fixed) { continue; }
-        // if (split.keep && !includeKeep) { continue; }
+        if (split.keep && !includeKeep) { continue; }
 
         const size = split.childSize;
         const newSize = Math.max(split.minSize, Math.min(size + px, split.maxSize));
         const diff = newSize - size;
-        this.doResize(split.childrenReversed, diff, direction);
+        this.doResize(split.childrenReversed, diff, includeKeep, direction);
         split.setChildSize(newSize);
         console.log('Changing', split.$el, 'by', newSize - size, 'from', size, 'to', newSize);
         px -= diff;
       }
     } else {
       for (const split of splits) {
-        this.doResize(split.childrenReversed, px, direction);
+        this.doResize(split.childrenReversed, px, includeKeep, direction);
         if (direction === 'horizontal') {
           const newSize = split.width + px;
           console.log('Changing width of ', split.$el, 'by', px, 'from', split.width, 'to', newSize);
@@ -242,6 +244,7 @@ export default class Split extends Mixins(Draggable) {
           split.height = split.height + px;
         }
       }
+      px = 0;
     }
 
     return px;
