@@ -91,18 +91,8 @@ export default class Split extends Mixins(Draggable) {
     window.removeEventListener('resize', this.onResizeEvent);
   }
 
-
   public onResizeEvent() {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    const pxX = width - this.width;
-    const pxY = height - this.height;
-
-    this.doResize(this.childrenReversed, pxX, 'horizontal');
-    this.doResize(this.childrenReversed, pxY, 'vertical');
-    this.width = width;
-    this.height = height;
-
+    this.onResize();
   }
 
   public get style() {
@@ -140,6 +130,58 @@ export default class Split extends Mixins(Draggable) {
     return this.children.slice().reverse();
   }
 
+  public onResize(px?: number) {
+    // We don't resize elements that don't have a direction.
+    if (!this.direction) { return; }
+    // console.log('onResize', px);
+
+    // if (px === undefined) {
+    //   current = this.getSize();
+    //   px = current - previous;
+    // } else {
+    //   current = previous + px;
+    // }
+
+    const { height, width } = this.getSize();
+    const pxX = width - this.width;
+    const pxY = height - this.height;
+
+    // const before = this.children.map((child) => child.size);
+    console.log(
+      this.direction,
+      `\nHeight: ${this.height} -> ${height}`,
+      `\nWidth: ${this.width} -> ${width}`,
+      px,
+      this.$el,
+    );
+
+    if (this.direction === 'horizontal') {
+      this.calculatePositions(this.childrenReversed, pxX);
+      this.childrenReversed.forEach((child) => {
+        if (!child.direction) {
+          child.height = height;
+        }
+      });
+    } else {
+      this.calculatePositions(this.childrenReversed, pxY);
+      this.childrenReversed.forEach((child) => {
+        if (!child.direction) {
+          child.width = width;
+        }
+      });
+    }
+    // const after = this.children.map((child) => child.size);
+    // const amounts = _.zip(before, after).map(([bef, aft]) => aft - bef);
+
+    this.width = width;
+    this.height = height;
+
+    // this.children.forEach((child) => {
+    //   if (child.direction) {
+    //     child.onResize();
+    //   }
+    // });
+  }
   public move(e: MouseEvent, { changeY, changeX }: { changeY: number, changeX: number }) {
     let px;
     if (this.parent!.direction === 'horizontal') {
@@ -206,50 +248,44 @@ export default class Split extends Mixins(Draggable) {
   public calculatePositions(splits: Split[], px: number, direction: Direction) {
     // First resize but don't include children that have keep flag
     // Then resize again but include the children with a keep flag
-    const pxRemaining = this.doResize(splits, px, direction);
-    // this.doResize(splits, pxRemaining, true, direction);
+    const pxLeft = this.doResize(splits, { px, includeKeep: false, direction });
+    this.doResize(splits, { px: pxLeft, includeKeep: true, direction });
   }
-  public doResize(splits: Split[], px: number, direction: Direction) {
-    if (splits.length === 0) { return; }
-    const child = splits[0];
-    const parent = child.parent!;
-    const myDirection = parent.direction!;
+  public doResize(
+    splits: Split[],
+    { includeKeep, px, direction }: { includeKeep: boolean, px: number, direction: Direction },
+  ) {
+    for (const split of splits) {
+      if (px === 0) { break; }
+      if (split.fixed) { continue; }
+      if (split.keep && !includeKeep) { continue; }
 
-    if (myDirection === direction) {
-      for (const split of splits) {
-        if (px === 0) { break; }
-        if (split.fixed) { continue; }
-        // if (split.keep && !includeKeep) { continue; }
-
-        const size = split.childSize;
-        const newSize = Math.max(split.minSize, Math.min(size + px, split.maxSize));
-        const diff = newSize - size;
-        this.doResize(split.childrenReversed, diff, direction);
-        split.setChildSize(newSize);
-        console.log('Changing', split.$el, 'by', newSize - size, 'from', size, 'to', newSize);
-        px -= diff;
-      }
-    } else {
-      for (const split of splits) {
-        this.doResize(split.childrenReversed, px, direction);
-        if (direction === 'horizontal') {
-          const newSize = split.width + px;
-          console.log('Changing width of ', split.$el, 'by', px, 'from', split.width, 'to', newSize);
-          split.width = split.width + px;
-        } else {
-          const newSize = split.height + px;
-          console.log('Changing height of ', split.$el, 'by', px, 'from', split.height, 'to', newSize);
-          split.height = split.height + px;
-        }
-      }
+      const size = split.childSize;
+      const newSize = Math.max(split.minSize, Math.min(size + px, split.maxSize));
+      split.anotherResize(newSize, direction);
+      split.setChildSize(newSize);
+      console.log('Changing', split.$el, 'by', newSize - size, 'from', size, 'to', newSize);
+      px -= newSize - size;
     }
-
     return px;
   }
-  // public anotherResize(size: number, direction: Direction) {
-  //   const px = size - this.childSize;
-  //   this.calculatePositions(this.childrenReversed, px, direction);
-  // }
+  public anotherResize(size: number, direction: Direction) {
+    const px = size - this.childSize;
+    this.calculatePositions(this.childrenReversed, px, direction);
+  }
+  public getSize() {
+    if (this.parent) {
+      return {
+        width: this.parent.width,
+        height: this.parent.height,
+      };
+    } else {
+      return {
+        width: window.innerWidth,
+        height: window.innerHeight,
+      };
+    }
+  }
   public init() {
     if (!this.direction) { return; }
 
@@ -295,6 +331,23 @@ export default class Split extends Mixins(Draggable) {
       split.init();
     });
   }
+
+  // @Watch('size')
+  // public onSizeChange() {
+  //   if (!this.parent) { return; }
+
+  //   if (!this.parent.axes) {
+  //     throw new Error('Parent axes was not defined. Something went wrong!');
+  //   }
+
+  //   if (this.parent.axes === 'width') {
+  //     this.width = this.size;
+  //   } else {
+  //     this.height = this.size;
+  //   }
+
+  //   this.$el.style[this.parent.axes] = this.size + 'px';
+  // }
 
   @Watch('height')
   public onHeightChange() {
