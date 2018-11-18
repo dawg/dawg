@@ -1,111 +1,113 @@
 <template>
   <v-app class="app" style="height: 100vh">
-    <split direction="horizontal" grow resizable>
-      <split :initial="65" fixed>
-        <v-navigation-drawer
-          permanent
-          mini-variant
-          class="secondary-lighten-2"
-          :style="style"
-        >
-          <v-list dense style="height: 100%; display: flex; flex-direction: column">
-            <v-list-tile
-              v-for="item in items"
-              :key="item.name"
-              @click="click(item, $event)"
-            >
-              <v-icon medium color="white">{{ item.icon }}</v-icon>
-            </v-list-tile>
-
-            <div style="flex-grow: 1"></div>
-
-            <v-list-tile @click="click">
-              <v-icon medium color="white">settings</v-icon>
-            </v-list-tile>
-          </v-list>
-        </v-navigation-drawer>
-      </split>
-
-      <split :initial="250" collapsible :min-size="100">
-        <div class="aside secondary" style="display: flex; flex-direction: column">
-          
-          <div
-            class="title center--vertial white--text"
-            :style="`min-height: ${toolbarHeight + 1}px`"
+    <split direction="vertical">
+      <split direction="horizontal" grow resizable>
+        <split :initial="65" fixed>
+          <v-navigation-drawer
+            permanent
+            mini-variant
+            class="secondary-lighten-2"
+            :style="style"
           >
-            <div>{{ title }}</div>
-          </div>
-          <vue-perfect-scrollbar class="scrollbar">
-            <base-tabs ref="tabs" @changed="changed">
-              <side-bar name="EXPLORER" icon="folder">
-                <file-explorer></file-explorer>
-              </side-bar>
-              <side-bar name="SYNTHESIZERS" icon="playlist_add"></side-bar>
-              <side-bar name="AUDIO FILES" icon="queue_music"></side-bar>
-              <side-bar name="SEARCH" icon="search"></side-bar>
-            </base-tabs>
-          </vue-perfect-scrollbar>
-          
-        </div>
-      </split>
-
-      <split direction="vertical" grow resizable>
-
-        <split :initial="toolbarHeight" fixed>
-          <toolbar :height="toolbarHeight" style="padding-right: 26px"></toolbar>
-        </split>
-
-        <split>
-          <tabs :style="`height: 100%`">
-            <tab name="Playlist 1">
-              <div></div>
-            </tab>
-            <tab name="Sequence 1">
-              <div></div>
-            </tab>
-            <tab name="Sequence 2" :is-disabled="true">
-              <div></div>
-            </tab>
-            <tab name="Sequence 4">
-                <div></div>
-            </tab>
-            <tab name="Master">
-                <div></div>
-            </tab>
-          </tabs>
-        </split>
-
-        <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`">
-          <split :initial="55" fixed>
-            <ul class="tabs-headers">
-              <li
-                v-for="(tab, i) in panels"
-                :key="i" 
-                :class="{ 'is-active': tab.isActive }"
-                class="tabs-header"
+            <v-list dense style="height: 100%; display: flex; flex-direction: column">
+              <v-list-tile
+                v-for="item in items"
+                :key="item.name"
+                @click="click(item, $event)"
               >
-                <div @click="selectPanel(tab.name, $event)" class="text white--text">{{ tab.name }}</div>
-              </li>
-            </ul>
-          </split>
-          <split>
-            <base-tabs class="tabs-panels secondary" ref="panels">
-              <panel name="Mixer">
-                <div></div>
-              </panel>
-              <panel name="Piano Roll">
-                <piano-roll></piano-roll>
-              </panel>
-              <panel name="Sample">
-                <div></div>
-              </panel>
-            </base-tabs>
-          </split>
+                <v-icon medium color="white">{{ item.icon }}</v-icon>
+              </v-list-tile>
+
+              <div style="flex-grow: 1"></div>
+
+              <v-list-tile @click="click">
+                <v-icon medium color="white">settings</v-icon>
+              </v-list-tile>
+            </v-list>
+          </v-navigation-drawer>
         </split>
 
+        <split :initial="250" collapsible :min-size="100">
+          <div class="aside secondary" style="display: flex; flex-direction: column">
+            
+            <div
+              class="title center--vertial white--text"
+              :style="`min-height: ${toolbarHeight + 1}px`"
+            >
+              <div>{{ title }}</div>
+            </div>
+            <vue-perfect-scrollbar class="scrollbar">
+              <base-tabs ref="tabs" @changed="changed">
+                <side-bar name="EXPLORER" icon="folder">
+                  <file-explorer></file-explorer>
+                </side-bar>
+                <side-bar name="SYNTHESIZERS" icon="playlist_add"></side-bar>
+                <side-bar name="AUDIO FILES" icon="queue_music"></side-bar>
+                <side-bar name="SEARCH" icon="search"></side-bar>
+              </base-tabs>
+            </vue-perfect-scrollbar>
+            
+          </div>
+        </split>
+
+        <split direction="vertical" grow resizable>
+
+          <split :initial="toolbarHeight" fixed>
+            <toolbar :height="toolbarHeight" style="padding-right: 26px"></toolbar>
+          </split>
+
+          <split>
+            <tabs :style="`height: 100%`">
+              <tab name="Playlist 1">
+                <div></div>
+              </tab>
+              <tab name="Sequence 1">
+                <div></div>
+              </tab>
+              <tab name="Sequence 2" :is-disabled="true">
+                <div></div>
+              </tab>
+              <tab name="Sequence 4">
+                  <div></div>
+              </tab>
+              <tab name="Master">
+                  <div></div>
+              </tab>
+            </tabs>
+          </split>
+
+          <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`" keep>
+            <split :initial="55" fixed>
+              <ul class="tabs-headers">
+                <li
+                  v-for="(tab, i) in panels"
+                  :key="i" 
+                  :class="{ 'is-active': tab.isActive }"
+                  class="tabs-header"
+                >
+                  <div @click="selectPanel(tab.name, $event)" class="text white--text">{{ tab.name }}</div>
+                </li>
+              </ul>
+            </split>
+            <split>
+              <base-tabs class="tabs-panels secondary" ref="panels">
+                <panel name="Mixer">
+                  <div></div>
+                </panel>
+                <panel name="Piano Roll">
+                  <piano-roll></piano-roll>
+                </panel>
+                <panel name="Sample">
+                  <div></div>
+                </panel>
+              </base-tabs>
+            </split>
+          </split>
+
+        </split>
       </split>
+      <split :initial="footerHeight" fixed><foot :height="footerHeight"></foot></split>
     </split>
-    <foot :height="footerHeight"></foot>
   </v-app>
 </template>
 
