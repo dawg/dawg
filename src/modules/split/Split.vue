@@ -29,14 +29,14 @@ export default class Split extends Mixins(Draggable) {
   @Prop(String) public direction?: Direction;
   @Prop(Boolean) public keep!: boolean;
   @Prop(Boolean) public fixed!: boolean;
-  @Prop(Boolean) public collapsible!: boolean;
+  @Prop(Boolean) public collapsible!: boolean; // TODO
   @Prop({type: Number, default: 10}) public minSize!: number;
   @Prop({type: Number, default: Infinity}) public maxSize!: number;
   @Prop(Number) public initial?: number;
   @Prop({type: Number, default: 6}) public gutterSize!: number;
 
   public children!: Split[];
-  public parent?: Split;
+  public parent: Split | null = null; // giving initial null makes parent reactive!
 
   // We set some of the defaults here so we can view them in vue-devtools
   // If no defaults are set, we do not see them...
@@ -186,12 +186,11 @@ export default class Split extends Mixins(Draggable) {
         if (split.fixed) { continue; }
         if (split.keep && !includeKeep) { continue; }
 
-        const size = split.size;
-        const newSize = Math.max(split.minSize, Math.min(size + px, split.maxSize));
-        const diff = newSize - size;
+        const newSize = Math.max(split.minSize, Math.min(split.size + px, split.maxSize));
+        const diff = newSize - split.size;
         this.doResize(split.childrenReversed, diff, includeKeep, direction);
         split.setSize(newSize);
-        this.$log.debug('Changing', split.$el, 'by', newSize - size, 'from', size, 'to', newSize);
+        this.$log.debug('Changing', split.$el, 'by', diff, 'from', split.size, 'to', newSize);
         px -= diff;
       }
     } else {
