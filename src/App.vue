@@ -7,7 +7,6 @@
             permanent
             mini-variant
             class="secondary-lighten-2"
-            :style="style"
           >
             <v-list dense style="height: 100%; display: flex; flex-direction: column">
               <v-list-tile
@@ -109,7 +108,7 @@
 
         </split>
       </split>
-      <split :initial="footerHeight" fixed><foot :height="footerHeight"></foot></split>
+      <split :initial="20" fixed><foot :height="20"></foot></split>
     </split>
   </v-app>
 </template>
@@ -145,9 +144,6 @@ import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 })
 export default class App extends Vue {
   public toolbarHeight = 64;
-  public activityBarWidth = 60;
-  public sidePanelWidth = 300;
-  public footerHeight = 20;
   public node?: Element;
   public height = window.innerHeight;
   public title = '';
@@ -160,13 +156,6 @@ export default class App extends Vue {
     this.tabs = this.$refs.tabs as BaseTabs;
     this.items = this.tabs.$children as SideBar[];
     this.panelsTabs = this.$refs.panels as BaseTabs;
-    window.addEventListener('resize', this.handleResize);
-  }
-
-  get style() {
-    return {
-      flex: `0 0 ${this.activityBarWidth}px`,
-    };
   }
 
   public click(tab: SideBar, $event: MouseEvent) {
@@ -174,15 +163,6 @@ export default class App extends Vue {
   }
   public changed(tab: SideBar) {
     this.title = tab.name;
-  }
-  get totalWidth() {
-    return this.activityBarWidth + this.sidePanelWidth;
-  }
-  public handleResize() {
-    this.height = window.innerHeight;
-  }
-  public destroyed() {
-    window.removeEventListener('resize', this.handleResize);
   }
   public selectPanel(name: string, e: MouseEvent) {
     this.panelsTabs!.selectTab(name, e);
