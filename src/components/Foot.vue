@@ -12,8 +12,6 @@ export default class Foot extends Vue {
   @Prop({ type: [String, Number], default: 22}) public height!: string | number;
   get style() {
     return {
-      minHeight: `${this.height}px`,
-      height: `${this.height}px`,
       lineHeight: `${this.height}px`,
     };
   }
@@ -21,11 +19,10 @@ export default class Foot extends Vue {
 </script>
 
 <style lang="sass" scoped>
-.position
-  width : 100%
-  font-size: 12px
-
 .footer
+  width: 100%
+  font-size: 12px
+  height: 100%
   text-align: center
   position: unset
 </style>

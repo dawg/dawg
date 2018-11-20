@@ -2,11 +2,11 @@ import Vue from 'vue';
 import App from './App.vue';
 import router from './router';
 import store from './store';
-import middlware from '@/middleware';
+import middleware from '@/middleware';
 
 Vue.config.productionTip = false;
 
-middlware();
+middleware();
 
 new Vue({
   router,
