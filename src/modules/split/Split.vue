@@ -1,5 +1,5 @@
 <template>
-  <div class="split" :style="style">
+  <div class="split" :class="{resizable: direction, [direction]: true}">
     <div 
       class="gutter"  
       v-if="gutter"
@@ -19,10 +19,14 @@ import { Draggable } from '@/mixins';
 
 export type Direction = 'horizontal' | 'vertical';
 
+const isSplit = (vue: Vue) => {
+  // @ts-ignore
+  return vue.constructor.options.name === Split.name;
+};
+
 @Component
 export default class Split extends Mixins(Draggable) {
   @Prop(String) public direction?: Direction;
-  @Prop(Boolean) public grow!: boolean;
   @Prop(Boolean) public keep!: boolean;
   @Prop(Boolean) public fixed!: boolean;
   @Prop(Boolean) public collapsible!: boolean;
@@ -37,17 +41,12 @@ export default class Split extends Mixins(Draggable) {
   // We set some of the defaults here so we can view them in vue-devtools
   // If no defaults are set, we do not see them...
   public gutter = false;
-  public before: Split[] = [];  // Splits before gutter
-  public after: Split[] = []; // Splits after gutter (including this Split)
+  public before: Split[] = []; // Splits before gutter (left / top)
+  public after: Split[] = []; // Splits after gutter (right / bottom)
   public height: number = 0;
   public width: number = 0;
 
   public mounted() {
-    const isSplit = (vue: Vue) => {
-      // @ts-ignore
-      return vue.constructor.options.name === Split.name;
-    };
-
     if (isSplit(this.$parent)) {
       this.parent = this.$parent as Split;
 
@@ -66,14 +65,12 @@ export default class Split extends Mixins(Draggable) {
       child.after = this.children.slice(i);
     });
 
+    // There will never be a gutter for the first element
     this.children.slice(1).forEach((child, i) => {
-      child.gutter = !this.children[i].fixed && !this.children[i + 1].fixed;
+      child.gutter = !this.children[i].fixed && !child.fixed;
     });
 
-    if (!this.isRoot) {
-      return;
-    }
-
+    if (!this.isRoot) { return; }
     this.height = window.innerHeight;
     this.width = window.innerWidth;
 
@@ -82,45 +79,20 @@ export default class Split extends Mixins(Draggable) {
   }
 
   public destroyed() {
-    if (!this.isRoot) {
-      return;
-    }
-
+    if (!this.isRoot) { return; }
     window.removeEventListener('resize', this.onResizeEvent);
   }
 
-
   public onResizeEvent() {
-    const width = window.innerWidth;
-    const height = window.innerHeight;
-    const pxX = width - this.width;
-    const pxY = height - this.height;
-
-
-    this.calculatePositions(this.childrenReversed, pxX, 'horizontal');
-    this.calculatePositions(this.childrenReversed, pxY, 'vertical');
-    this.width = width;
-    this.height = height;
+    this.calculatePositions([this], window.innerWidth - this.width, 'horizontal');
+    this.calculatePositions([this], window.innerHeight - this.height, 'vertical');
   }
 
-  public get style() {
-    const style: {[k: string]: any} = {};
-    if (this.grow) {
-      style.flex = '1';
-    }
-
-    if (this.direction) {
-      style.display = 'flex';
-      if (this.direction === 'vertical') {
-        style.flexDirection = 'column';
-      }
-    }
-
-    return style;
-  }
   public get gutterStyle() {
+    if (!this.parent) { return; }
+
     // The margin makes sure the gutter is centered on the line
-    if (this.parent!.axes === 'width') {
+    if (this.parent.direction === 'horizontal') {
       return {
         height: '100%',
         width: `${this.gutterSize}px`,
@@ -134,6 +106,7 @@ export default class Split extends Mixins(Draggable) {
       };
     }
   }
+
   get childrenReversed() {
     return this.children.slice().reverse();
   }
@@ -148,52 +121,46 @@ export default class Split extends Mixins(Draggable) {
 
     if (!px) { return; }
 
-    let inFront: Split[];
-    let behind: Split[];
-
-    if (px > 0) {
-      inFront = this.after;
-      behind = this.before;
-    } else {
-      inFront = this.before;
-      behind = this.after;
-    }
+    const inFront = px > 0 ? this.after : this.before; // The splits in front of the movement
+    const behind = px > 0 ? this.before : this.after; // The splits in behind of the movement
 
     let pxBehind = 0;
-    behind.forEach((split: Split) => {
-      if (split.fixed) { return; }
-      pxBehind += split.maxSize - split.childSize;
-    });
+    for (const split of behind) {
+      if (split.fixed) { continue; }
+      pxBehind += split.maxSize - split.size;
+    }
 
     let pxInFront = 0;
-    inFront.forEach((split: Split) => {
-      if (split.fixed) { return; }
-      pxInFront += split.childSize - split.minSize;
-    });
+    for (const split of inFront) {
+      if (split.fixed) { continue; }
+      pxInFront += split.size - split.minSize;
+    }
 
-    const sign = Math.sign(px);
-    px = Math.min(pxBehind, pxInFront, Math.abs(px)) * sign;
-
+    px = Math.min(pxBehind, pxInFront, Math.abs(px)) * Math.sign(px);
     this.calculatePositions(this.before, px, this.parent!.direction!);
     this.calculatePositions(this.after, -px, this.parent!.direction!);
   }
+
   public get isRoot() {
     return !this.parent;
   }
-  public get childSize() {
+
+  public get size() {
     if (this.parent!.direction === 'horizontal') {
       return this.width;
     } else {
       return this.height;
     }
   }
-  public setChildSize(size: number) {
+
+  public setSize(size: number) {
     if (this.parent!.direction === 'horizontal') {
       this.width = size;
     } else {
       this.height = size;
     }
   }
+
   public get axes() {
     if (!this.direction) {
       return null;
@@ -201,30 +168,30 @@ export default class Split extends Mixins(Draggable) {
 
     return this.direction === 'horizontal' ? 'width' : 'height';
   }
+
   public calculatePositions(splits: Split[], px: number, direction: Direction) {
     // First resize but don't include children that have keep flag
     // Then resize again but include the children with a keep flag
     const pxRemaining = this.doResize(splits, px, false, direction);
     this.doResize(splits, pxRemaining, true, direction);
   }
+
   public doResize(splits: Split[], px: number, includeKeep: boolean, direction: Direction) {
     if (splits.length === 0) { return px; }
-    const child = splits[0];
-    const parent = child.parent!;
-    const myDirection = parent.direction!;
+    const child = splits[0]; // all children have the same parent
 
-    if (myDirection === direction) {
+    if (child.parent && child.parent.direction === direction) {
       for (const split of splits) {
         if (px === 0) { break; }
         if (split.fixed) { continue; }
         if (split.keep && !includeKeep) { continue; }
 
-        const size = split.childSize;
+        const size = split.size;
         const newSize = Math.max(split.minSize, Math.min(size + px, split.maxSize));
         const diff = newSize - size;
         this.doResize(split.childrenReversed, diff, includeKeep, direction);
-        split.setChildSize(newSize);
-        this.$log.info('Changing', split.$el, 'by', newSize - size, 'from', size, 'to', newSize);
+        split.setSize(newSize);
+        this.$log.debug('Changing', split.$el, 'by', newSize - size, 'from', size, 'to', newSize);
         px -= diff;
       }
     } else {
@@ -232,11 +199,11 @@ export default class Split extends Mixins(Draggable) {
         this.doResize(split.childrenReversed, px, includeKeep, direction);
         if (direction === 'horizontal') {
           const newSize = split.width + px;
-          this.$log.info('Changing width of ', split.$el, 'by', px, 'from', split.width, 'to', newSize);
+          this.$log.debug('Changing width of ', split.$el, 'by', px, 'from', split.width, 'to', newSize);
           split.width = split.width + px;
         } else {
           const newSize = split.height + px;
-          this.$log.info('Changing height of ', split.$el, 'by', px, 'from', split.height, 'to', newSize);
+          this.$log.debug('Changing height of ', split.$el, 'by', px, 'from', split.height, 'to', newSize);
           split.height = split.height + px;
         }
       }
@@ -245,17 +212,11 @@ export default class Split extends Mixins(Draggable) {
 
     return px;
   }
+
   public init() {
     if (!this.direction) { return; }
 
-    let remaining: number;
-    if (this.direction === 'horizontal') {
-      remaining = this.width;
-    } else {
-      remaining = this.height;
-    }
-
-    const numNotSet = this.children.filter((child) => !child.initial).length;
+    let remaining = this.direction === 'horizontal' ? this.width : this.height;
     this.children.forEach((split) => {
       if (this.direction === 'horizontal') {
         split.height = this.height;
@@ -264,30 +225,16 @@ export default class Split extends Mixins(Draggable) {
       }
 
       if (split.initial) {
-        if (this.direction === 'horizontal') {
-          split.width = split.initial;
-        } else {
-          split.height = split.initial;
-        }
+        split.setSize(split.initial);
         remaining -= split.initial;
       }
     });
 
-    const size = remaining / numNotSet;
-    this.$log.info('Initializing', this.$el, remaining, numNotSet, size);
-    this.children.forEach((split) => {
-      if (!split.initial) {
-        if (this.direction === 'horizontal') {
-          split.width = size;
-        } else {
-          split.height = size;
-        }
-      }
-    });
-
-    this.children.forEach((split) => {
-      split.init();
-    });
+    const notInitialized = this.children.filter((child) => !child.initial);
+    const size = remaining / notInitialized.length;
+    this.$log.debug('Initializing', this.$el, remaining, notInitialized.length, size);
+    notInitialized.forEach((split) => { split.setSize(size); });
+    this.children.forEach((split) => { split.init(); });
   }
 
   @Watch('height')
@@ -312,4 +259,10 @@ export default class Split extends Mixins(Draggable) {
 
 .split
   position: relative
+
+.resizable
+  display: flex
+
+.vertical
+  flex-direction: column
 </style>

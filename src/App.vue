@@ -1,7 +1,7 @@
 <template>
   <v-app class="app" style="height: 100vh">
     <split direction="vertical">
-      <split direction="horizontal" grow resizable>
+      <split direction="horizontal" resizable>
         <split :initial="65" fixed>
           <v-navigation-drawer
             permanent
@@ -50,7 +50,7 @@
           </div>
         </split>
 
-        <split direction="vertical" grow resizable>
+        <split direction="vertical" resizable>
 
           <split :initial="toolbarHeight" fixed>
             <toolbar 
