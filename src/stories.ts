@@ -15,7 +15,6 @@ import Slider from '@/components/Slider.vue';
 import Note from '@/components/Note.vue';
 import Bpm from '@/components/Bpm.vue';
 import TimeDisplay from '@/components/TimeDisplay.vue';
-import ActivityBar from '@/components/ActivityBar.vue';
 import PlayPause from '@/components/PlayPause.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
@@ -25,7 +24,6 @@ import stillDre from '@/assets/still-dre';
 import Foot from '@/components/Foot.vue';
 import notification from '@/notification';
 import Notifications from '@/notification/Notifications.vue';
-import SideBar from '@/components/SideBar.vue';
 import Synth from '@/components/Synth.vue';
 import Split from '@/modules/split/Split.vue';
 
@@ -57,7 +55,7 @@ storiesOf(Key.name, module)
     components: { Key },
   }));
 
-const piano = new Tone.Synth().toMaster();
+const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
 
 storiesOf(Sequencer.name, module)
   .add('Standard', () => ({
@@ -105,10 +103,8 @@ storiesOf(Sequencer.name, module)
       stop() {
         Tone.Transport.stop();
       },
-      callback(time: string, chord: string[]) {
-        chord.forEach((note) => {
-          piano.triggerAttackRelease(note, '8n', time);
-        });
+      callback(time: string, note: string) {
+        piano.triggerAttackRelease(note, '8n', time);
       },
       added(note: object) {
         // @ts-ignore
@@ -367,29 +363,6 @@ storiesOf(Notifications.name, module)
     },
   }));
 
-
-storiesOf(ActivityBar.name, module)
-  .add('Standard', () => ({
-    template: `
-    <activity-bar>
-      <side-bar
-        v-for="item in items"
-        :key="item.title"
-        :name="item.title"
-        :icon="item.icon"
-      ></side-bar>
-    </activity-bar>
-    `,
-    data: () => ({
-      items: [
-        { title: 'EXPLORER', icon: 'folder' },
-        { title: 'SYNTHESIZERS', icon: 'playlist_add' },
-        { title: 'SYNTHESIZER', icon: 'queue_music' },
-        { title: 'SEARCH', icon: 'search' },
-      ],
-    }),
-    components: { ActivityBar, SideBar },
-  }));
 
 storiesOf(Foot.name, module)
   .add('Standard', () => ({
