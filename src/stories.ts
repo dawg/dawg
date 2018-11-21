@@ -57,7 +57,7 @@ storiesOf(Key.name, module)
     components: { Key },
   }));
 
-const piano = new Tone.PolySynth(4, Tone.Synth).toMaster();
+const piano = new Tone.Synth().toMaster();
 
 storiesOf(Sequencer.name, module)
   .add('Standard', () => ({
@@ -105,8 +105,10 @@ storiesOf(Sequencer.name, module)
       stop() {
         Tone.Transport.stop();
       },
-      callback(time: string, chord: string) {
-        piano.triggerAttackRelease(chord, '8n', time);
+      callback(time: string, chord: string[]) {
+        chord.forEach((note) => {
+          piano.triggerAttackRelease(note, '8n', time);
+        });
       },
       added(note: object) {
         // @ts-ignore

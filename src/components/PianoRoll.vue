@@ -7,7 +7,7 @@
         :octave="octave"
       ></piano>
     </div>
-    <sequencer 
+    <sequencer
       :note-width="noteWidth" 
       :note-height="noteHeight" 
       :measures="1"
@@ -33,6 +33,9 @@ export default class PianoRoll extends Vue {
 <style lang="sass" scoped>
 .piano-roll
   display: flex
+  border-top: 1px solid #111
+  height: 100%
+  overflow-y: scroll
 
 .pianos
   display: flex

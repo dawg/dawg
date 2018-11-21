@@ -1,13 +1,18 @@
 <template>
   <div class="octave-container">
     <div class="octave">
-      <key
+      <div
         v-for="(note, index) in notes"
         :key="note"
-        :note="note"
-        :synth="synth"
-        :border="borderBottom || index !== notes.length - 1"
-      ></key>
+        class="note-wrapper"
+      >
+        <key
+          :note="note"
+          :synth="synth"
+          :style="style(note, index)"
+          :border="borderBottom || index !== notes.length - 1"
+        ></key>
+      </div>
     </div>
   </div>
 </template>
@@ -16,13 +21,13 @@
 import Vue from 'vue';
 import Tone from 'tone';
 import { Component, Prop } from 'vue-property-decorator';
-import { notes } from '@/utils';
+import { notes, Note } from '@/utils';
 import Key from '@/components/Key.vue';
 
 const synth = new Tone.Synth().toMaster();
 
 @Component({
-  components: {Key},
+  components: { Key },
 })
 export default class Piano extends Vue {
   @Prop({type: Number, default: 4}) public octave!: number;
@@ -32,11 +37,15 @@ export default class Piano extends Vue {
   get notes() {
     return notes.map((n) => `${n.value}${this.octave}`).reverse();
   }
+  public style(note: Note, index: number) {
+    return {
+
+    };
+  }
 }
 </script>
 
 <style scoped lang="sass">
-  .octave
-    box-shadow: 0 0 40px -5px rgba(0,0,0,0.4)
-    display: inline-block
+.note-wrapper
+  position: relative
 </style>

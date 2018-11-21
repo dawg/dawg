@@ -156,6 +156,7 @@ export default class App extends Vue {
     this.tabs = this.$refs.tabs as BaseTabs;
     this.items = this.tabs.$children as SideBar[];
     this.panelsTabs = this.$refs.panels as BaseTabs;
+    this.panelsTabs.selectTab(localStorage.getItem('panel'));
   }
 
   public click(tab: SideBar, $event: MouseEvent) {
@@ -165,6 +166,7 @@ export default class App extends Vue {
     this.title = tab.name;
   }
   public selectPanel(name: string, e: MouseEvent) {
+    localStorage.setItem('panel', name);
     this.panelsTabs!.selectTab(name, e);
   }
   get panels() {
