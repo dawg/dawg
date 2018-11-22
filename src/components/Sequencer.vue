@@ -1,5 +1,5 @@
 <template>
-  <v-stage :config="canvasConfig">
+  <v-stage :config="canvasConfig" ref="stage">
     <v-layer>
       <div v-for="(note, row) in notes" :key="note.value">
         <template v-for="col in totalSixteenths">
@@ -23,6 +23,7 @@
             :key="i"
             :height="noteHeight"
             :width="noteWidth"
+            :stage="stage"
             :x="note.x"
             :y="note.y"
             @contextmenu="(e) => remove(e, i)"
@@ -41,6 +42,8 @@ import { Draggable, PX } from '@/mixins';
 import { FactoryDictionary } from 'typescript-collections';
 import { notes, range, BLACK, WHITE } from '@/utils';
 import Note from '@/components/Note.vue';
+import { NoteInfo } from '@/types'; 
+import { Stage } from 'konva';
 
 interface Lookup {
   [key: string]: NoteInfo;
@@ -48,14 +51,6 @@ interface Lookup {
 
 interface Colors {
   [key: string]: string;
-}
-
-interface NoteInfo {
-  row: number;
-  col: number;
-  index: number;
-  value: string;
-  length: number;
 }
 
 interface BasicNoteInfo {
@@ -85,6 +80,7 @@ export default class Sequencer extends Mixins(Draggable, PX) {
   public default = this.defaultLength;
   public octaves = [4, 5];
   public farthest = [];
+  public stage: HTMLElement | null = null;
 
   get canvasConfig() {
     return {
@@ -215,6 +211,8 @@ export default class Sequencer extends Mixins(Draggable, PX) {
   }
 
   public mounted() {
+    const stage = this.$refs.stage.getStage();
+    this.stage = stage;
     this.value.map((note) => {
       this.$emit('added', note);
       this.checkMeasure(note.col);

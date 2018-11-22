@@ -35,7 +35,7 @@ declare module 'tone' {
     noGC(): Tone;
     normalize(input: number, inputMin: number, inputMax: number): number;
     notationToSeconds(notation: string, bpm?: number, timeSignature?: number): number;
-    noteToFrequency(note: string): number;
+    ToFrequency(note: string): number;
     noteToMidi(note: string): number;
     now(): number;
     optionsObject(values: Array<any>, keys: Array<string>, defaults?:Object): Object;
@@ -62,8 +62,8 @@ declare module 'tone' {
   }
 
   class AmplitudeEnvelope extends Envelope {
-      constructor(attack?: any, decay?: Time, sustain?: number, release?:Time); //TODO: Change 'any' to 'Time | Object'
-      dispose(): this;
+    constructor(attack?: any, decay?: Time, sustain?: number, release?:Time); //TODO: Change 'any' to 'Time | Object'
+    dispose(): this;
   }
 
   class AMSynth extends Monophonic {
@@ -596,6 +596,17 @@ declare module 'tone' {
       dispose(): this;
   }
 
+  type TransportTime = number; // TODO
+  class Part<T> extends Event {
+    constructor(callback?: (time: string, value: T) => void, events?: Event[])
+    start(time: TransportTime, offset?: Time): void
+    loop: boolean
+    humanize: boolean
+    loopEnd: Time
+    add(time: Time, value: T): void // TODO
+    remove(time: Time, value: T): void // TODO
+  }
+
   class Phaser extends StereoEffect {
       constructor(rate?: any, depth?: number, baseFrequency?: number); //TODO: change 'any' to 'number | Object'
       baseFrequency: number;
@@ -802,10 +813,10 @@ declare module 'tone' {
     constructor(options?: any) // TODO fix any
   }
 
-  class Time{}
+  type Time = string | number; // TODO
 
-  class Transport extends Tone {
-      static bpm: Signal;
+  class TransportClass extends Tone {
+      bpm: Signal;
       loop: boolean;
       loopEnd: Time;
       loopStart: Time;
@@ -827,15 +838,18 @@ declare module 'tone' {
       setLoopPoints(startPosition: Time, endPosition: Time): Transport;
       setTimeline(callback: (e: any)=>any, timeout: Time): number;
       setTimeout(callback: (e: any)=>any, time: Time): number;
-      static start(time?: Time, offset?: Time): Transport;
-      static stop(time?: Time): Transport;
+      start(time?: Time, offset?: Time): Transport;
+      stop(time?: Time): Transport;
+      pause(time?: Time): Transport;
       syncSignal(signal: Signal, ratio?: number): Transport;
       syncSource(source: Source, delay: Time): Transport;
       unsyncSignal(signal: Signal): Transport;
       unsyncSource(source: Source): Transport;
   }
 
-  class TransportState {}
+  var Transport: TransportClass;
+
+  type TransportState = 'started' | 'stopped' | 'stopped';
 
   class WaveShaper extends SignalBase {
       constructor(mapping: any, bufferLen?: number); //TODO: change 'any' to 'Function | Array | number'

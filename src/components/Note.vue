@@ -15,10 +15,12 @@
 import { VRect } from 'vue-konva';
 import { Draggable } from '@/mixins';
 import { Mixins, Prop, Component } from 'vue-property-decorator';
+import { Stage } from 'konva';
 
 @Component
 export default class Note extends Mixins(Draggable) {
   @Prop({ type: Number, required: true }) public height!: number;
+  @Prop({ type: Object, required: true }) public stage!: Stage;
   @Prop({ type: Number, required: true }) public width!: number;
   @Prop({ type: Number, default: 8 }) public borderWidth!: number;
   @Prop({ type: Number, default: 12 }) public fontSize!: number;
@@ -67,9 +69,10 @@ export default class Note extends Mixins(Draggable) {
       fill: this.textColor,
     };
   }
-  public move(e: MouseEvent, ...extra: any[]) {
-    const originX = this.$refs.note.getStage().getX();
-    const diff = e.clientX - originX;
+  public move(e: MouseEvent) {
+    const stage = this.$refs.note.getStage()
+    const originX = stage.getX();
+    const diff = this.stage.getPointerPosition().x - originX;
     const length = Math.round(diff / this.width);
 
     if (this.value === length) { return; }
