@@ -193,13 +193,7 @@ storiesOf(TimeDisplay.name, module)
 
 storiesOf(Note.name, module)
   .add('Standard', () => ({
-    template: `
-    <v-stage :config="{height: 200, width: 200}">
-      <v-layer>
-        <note :height="16" v-model="length" :width="20" text="C5"></note>
-      </v-layer>
-    </v-stage>
-    `,
+    template: `<note :height="16" v-model="length" :width="20" text="C5"></note>`,
     components: { Note },
     data: () => ({ length: 4 }),
   }));

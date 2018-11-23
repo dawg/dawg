@@ -1,24 +1,20 @@
 <template>
-  <v-stage :config="canvasConfig" ref="stage">
-    <v-layer>
-      <div v-for="(note, row) in notes" :key="note.value">
-        <template v-for="col in totalSixteenths">
-          <v-rect
-              :key="col"
-              :config="rectConfig(row, col - 1, note.color)"
-              @click="add(row, col - 1)"
-          ></v-rect>
-        </template>
-      </div>
-    </v-layer>
-    <v-layer>
+  <div :style="canvasConfig">
+    <div class="layer notes">
+      <div 
+        v-for="(note, row) in notes" 
+        :key="note.value"
+        :style="rectConfig(row, note.color)"
+        @click="add"
+      ></div>
+    </div>
+    <div class="layer">
       <template v-for="col in totalSixteenths">
-        <v-line :config="borderConfig(col)" :key="col"></v-line>
+        <div :style="borderConfig(col)" :key="col"></div> 
       </template>
-    </v-layer>
-    <v-layer>
+    </div>
+    <!-- <div class="layer">
       <template v-for="(note, i) in value">
-        <!--suppress JSUnresolvedVariable -->
         <note
             :key="i"
             :height="noteHeight"
@@ -32,8 +28,8 @@
             v-model="note.length"
         ></note>
       </template>
-    </v-layer>
-  </v-stage>
+    </div> -->
+  </div>
 </template>
 
 <script lang="ts">
@@ -42,7 +38,7 @@ import { Draggable, PX } from '@/mixins';
 import { FactoryDictionary } from 'typescript-collections';
 import { notes, range, BLACK, WHITE } from '@/utils';
 import Note from '@/components/Note.vue';
-import { NoteInfo } from '@/types'; 
+import { NoteInfo } from '@/types';
 import { Stage } from 'konva';
 
 interface Lookup {
@@ -84,8 +80,8 @@ export default class Sequencer extends Mixins(Draggable, PX) {
 
   get canvasConfig() {
     return {
-      height: this.height || this.notes.length * this.noteHeight,
-      width: this.width || this.totalSixteenths * this.noteWidth,
+      height: `${this.height || this.notes.length * this.noteHeight}px`,
+      width: `${this.width || this.totalSixteenths * this.noteWidth}px`,
     };
   }
   get colorLookup(): Colors {
@@ -120,16 +116,15 @@ export default class Sequencer extends Mixins(Draggable, PX) {
     this.$emit('added', noteBar);
     this.checkMeasure(col);
   }
-  public rectConfig(row: number, col: number, color: string) {
+  public rectConfig(row: number, color: string) {
     return {
-      height: this.noteHeight,
-      width: this.noteWidth,
-      fill: this.colorLookup[color],
-      x: col * this.noteWidth,
-      y: row * this.noteHeight,
+      height: `${this.noteHeight}px`,
+      width: `${this.noteWidth * this.totalSixteenths}px`,
+      backgroundColor: this.colorLookup[color],
     };
   }
   public borderConfig(col: number) {
+    // TODO See https://github.com/gridsound/gs-ui-components/blob/efdfde3cf7a882bc331638c0f77028182bd78d87/gsuiBeatlines/README.md
     let strokeWidth;
     if (col % (this.quarters * this.sixteenths) === 0) {
       strokeWidth = 2.4;
@@ -211,8 +206,6 @@ export default class Sequencer extends Mixins(Draggable, PX) {
   }
 
   public mounted() {
-    const stage = this.$refs.stage.getStage();
-    this.stage = stage;
     this.value.map((note) => {
       this.$emit('added', note);
       this.checkMeasure(note.col);
@@ -222,13 +215,20 @@ export default class Sequencer extends Mixins(Draggable, PX) {
 </script>
 
 <style scoped lang="sass">
-  .sequencer
-    background: #303030
-    display: inline-block
+.sequencer
+  background: #303030
+  display: inline-block
 
-  .note
-    border-bottom: solid 0.5px #000
+.note
+  border-bottom: solid 0.5px #000
 
-  .measure, .section
-    display: flex
+.measure, .section
+  display: flex
+
+// .layer
+//   position: absolute
+
+.notes
+  display: flex
+  flex-direction: column
 </style>
