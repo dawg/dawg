@@ -1,34 +1,28 @@
 <template>
   <div :style="canvasConfig">
-    <div class="layer notes" :style="`height: ${notes.length * noteHeight}px`">
+    <div class="layer rows" :style="`height: ${notes.length * noteHeight}px`">
       <div
         v-for="(note, row) in notes" 
         :key="note.value"
         :style="rectConfig(row, note.color)"
-        @click="add"
+        @click="add(row, $event)"
       ></div>
     </div>
-    <div class="layer">
-      <template v-for="col in totalSixteenths">
-        <div :style="borderConfig(col)" :key="col"></div> 
-      </template>
-    </div>
-    <!-- <div class="layer">
-      <template v-for="(note, i) in value">
-        <note
-            :key="i"
-            :height="noteHeight"
-            :width="noteWidth"
-            :stage="stage"
-            :x="note.x"
-            :y="note.y"
-            @contextmenu="(e) => remove(e, i)"
-            @mousedown="addListeners($event, note)"
-            @input="changeDefault"
-            v-model="note.length"
-        ></note>
-      </template>
-    </div> -->
+    <div class="layer lines" ref="beatLines"></div>
+    <note
+      v-for="(note, i) in value"
+      :key="i"
+      :height="noteHeight"
+      :width="noteWidth"
+      :stage="stage"
+      :x="note.x"
+      :y="note.y"
+      style="position: absolute; z-index: 2"
+      @contextmenu="(e) => remove(e, i)"
+      @mousedown="addListeners($event, note)"
+      @input="changeDefault"
+      v-model="note.length"
+    ></note>
   </div>
 </template>
 
@@ -106,8 +100,14 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     });
     return n.reverse();
   }
+  get startX() {
+    return this.$el.clientLeft;
+  }
 
-  public add(row: number, col: number) {
+  public add(row: number, e: MouseEvent) {
+    const x = e.clientX - this.startX;
+    const col = Math.floor(x / this.noteWidth);
+    console.log(e.clientX, this.startX, x, col, row);
     const noteBar = {
       length: this.default,
       row,
@@ -148,6 +148,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     };
   }
   public move(e: MouseEvent, note: NoteInfo) {
+    console.log('sldfjla');
     const row = Math.floor(e.clientY / this.noteHeight);
     const col = Math.floor(e.clientX / this.noteWidth);
 
@@ -230,12 +231,18 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 .measure, .section
   display: flex
 
-// .layer
-//   position: absolute
-
-.notes
+.rows
   display: flex
   flex-direction: column
   position: absolute
-  z-index: -1
+
+.lines
+  height: 100%
+  z-index: 1 
+  position: relative
+  pointer-events: none
+
+.notes
+  position: absolute
+  top: 0
 </style>

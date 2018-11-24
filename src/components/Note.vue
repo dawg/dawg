@@ -3,14 +3,19 @@
     class="note"
     ref="note"
     :style="noteConfig" 
-    v-on="$listeners"
   >
+    <div 
+      class="body"
+      v-on="$listeners"
+    ></div>
+
     <div 
       class="text"
       :style="textConfig"
     >
       {{ text }}
     </div>
+
     <div
       class="drag"
       :style="borderConfig"
@@ -18,6 +23,7 @@
       @mouseleave="afterHover"
       @mousedown="addListeners"
     ></div>
+    
   </div>
 </template>
 
@@ -55,8 +61,7 @@ export default class Note extends Mixins(Draggable) {
       width: `${this.borderWidth}px`,
       height: `${this.height}px`,
       backgroundColor: this.in ? this.borderColor : this.color,
-      left: `${(this.x + (this.width * this.value)) - this.borderWidth - this.takeAway}px`,
-      top: `${this.y}px`,
+      left: `${((this.width * this.value)) - this.borderWidth - this.takeAway}px`,
     };
   }
   get textConfig() {
@@ -67,10 +72,10 @@ export default class Note extends Mixins(Draggable) {
   }
   public move(e: MouseEvent) {
     const note = this.$refs.note as HTMLElement;
-    const originX = note.clientLeft;
+    const originX = note.offsetLeft;
     const diff = e.clientX - originX;
-    console.log(note.clientLeft, e.clientX, diff);
     const length = Math.round(diff / this.width);
+    console.info(note.offsetLeft, e.clientX, diff, length);
     if (this.value === length) { return; }
     if (length < 1) { return; }
     this.$emit('input', length);
@@ -82,11 +87,15 @@ export default class Note extends Mixins(Draggable) {
 .note
   position: relative
 
-.text, .drag
+.text, .drag, .body
   position: absolute
 
 .text
   left: 3px
+
+.body
+  width: 100%
+  height: 100%
 
 .note
   border-radius: 4px
