@@ -26,6 +26,7 @@ import notification from '@/notification';
 import Notifications from '@/notification/Notifications.vue';
 import Synth from '@/components/Synth.vue';
 import Split from '@/modules/split/Split.vue';
+import BeatLines from '@/components/BeatLines';
 
 import Vue from 'vue';
 
@@ -60,7 +61,7 @@ const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
 storiesOf(Sequencer.name, module)
   .add('Standard', () => ({
     template: `
-    <sequencer :note-width="20" :note-height="16" v-model="notes" :measures.sync="measures"/>
+    <sequencer :px-per-beat="80" :note-height="16" v-model="notes" :measures.sync="measures"/>
     `,
     data: () => ({ notes: [], measures: 1 }),
     components: { Sequencer },
@@ -435,4 +436,11 @@ storiesOf(Split.name, module)
     </split>
     `,
     components: { Split },
+  }));
+
+
+storiesOf(BeatLines.name, module)
+  .add('Standard', () => ({
+    template: `<div style="height: 30px; width: 400px"></div>`,
+    mixins: [BeatLines],
   }));

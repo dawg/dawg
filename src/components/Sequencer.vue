@@ -1,7 +1,7 @@
 <template>
   <div :style="canvasConfig">
-    <div class="layer notes">
-      <div 
+    <div class="layer notes" :style="`height: ${notes.length * noteHeight}px`">
+      <div
         v-for="(note, row) in notes" 
         :key="note.value"
         :style="rectConfig(row, note.color)"
@@ -40,6 +40,7 @@ import { notes, range, BLACK, WHITE } from '@/utils';
 import Note from '@/components/Note.vue';
 import { NoteInfo } from '@/types';
 import { Stage } from 'konva';
+import BeatLines from '@/components/BeatLines';
 
 interface Lookup {
   [key: string]: NoteInfo;
@@ -57,9 +58,9 @@ interface BasicNoteInfo {
 @Component({
   components: { Note },
 })
-export default class Sequencer extends Mixins(Draggable, PX) {
+export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   @Prop({ type: Number, required: true }) public noteHeight!: number;
-  @Prop({ type: Number, required: true }) public noteWidth!: number;
+  // @Prop({ type: Number, required: true }) public noteWidth!: number;
   @Prop(Number) public width!: number;
   @Prop(Number) public height!: number;
   @Prop(Array) public value!: any[];
@@ -77,6 +78,10 @@ export default class Sequencer extends Mixins(Draggable, PX) {
   public octaves = [4, 5];
   public farthest = [];
   public stage: HTMLElement | null = null;
+
+  public get noteWidth() {
+    return this.pxPerBeat / 4;
+  }
 
   get canvasConfig() {
     return {
@@ -124,7 +129,7 @@ export default class Sequencer extends Mixins(Draggable, PX) {
     };
   }
   public borderConfig(col: number) {
-    // TODO See https://github.com/gridsound/gs-ui-components/blob/efdfde3cf7a882bc331638c0f77028182bd78d87/gsuiBeatlines/README.md
+    // TODO See
     let strokeWidth;
     if (col % (this.quarters * this.sixteenths) === 0) {
       strokeWidth = 2.4;
@@ -231,4 +236,6 @@ export default class Sequencer extends Mixins(Draggable, PX) {
 .notes
   display: flex
   flex-direction: column
+  position: absolute
+  z-index: -1
 </style>

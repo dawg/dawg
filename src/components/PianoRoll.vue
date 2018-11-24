@@ -47,11 +47,10 @@ export default class PianoRoll extends Vue {
     this.part.humanize = true;
     Tone.Transport.bpm.value = 93;
   }
-  public playPause(){
-    if(Tone.Transport.state === "started"){
+  public playPause() {
+    if(Tone.Transport.state === 'started') {
       this.pause();
-    }
-    else{
+    } else {
       this.play();
     }
   }
