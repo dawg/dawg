@@ -1,12 +1,13 @@
 <template>
-  <div>
+  <div class="secondary">
     <ul class="tabs-component-tabs">
       <li v-for="(tab, i) in tabs"
           :key="i" :class="{ 'is-active': tab.isActive }"
           class="tabs-component-tab">
-        <span @click="selectTab(tab.hash, $event)" class="text">{{ tab.name }}</span>
-        <v-icon size="13px" class="close-icon" @click="close(i)">close</v-icon>
+        <span @click="selectTab(tab.name, $event)" class="text white--text">{{ tab.name }}</span>
+        <v-icon size="13px" class="close-icon" color="white" @click="close(i)">close</v-icon>
       </li>
+      <li class="tabs-component-tab remainder"></li>
     </ul>
     <div class="tabs-component-panels">
       <slot/>
@@ -15,65 +16,15 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
-import * as expiringStorage from '@/expiringStorage';
-import Tab from '@/components/Tab.vue';
+import { Component } from 'vue-property-decorator';
+import BaseTabs from '@/components/BaseTabs.vue';
 
-@Component({
-  components: { Tab },
-})
-export default class Tabs extends Vue {
-  @Prop({ type: Number, default: 5 }) public cacheLifetime!: number;
-  public tabs: Tab[] = [];
-  public $children: Tab[] = [];
-
-  get storageKey() {
-    return `vue-tabs-component.cache.${window.location.host}${window.location.pathname}`;
-  }
-  public mounted() {
-    this.tabs = [...this.$children];
-    const previousSelectedTabHash = expiringStorage.get(this.storageKey);
-
-    if (this.findTab(previousSelectedTabHash)) {
-      this.selectTab(previousSelectedTabHash);
-    } else if (this.tabs.length) {
-      this.selectTab(this.tabs[0].hash);
-    }
-  }
-  public findTab(hash: string) {
-    return this.tabs.find((tab) => tab.hash === hash);
-  }
-
-  public selectTab(selectedTabHash: string, event?: MouseEvent) {
-    if (event) {
-      event.preventDefault();
-    }
-
-    const selectedTab = this.findTab(selectedTabHash);
-    if (!selectedTab) {
-      return;
-    }
-
-    this.tabs.map((tab) => {
-      tab.isActive = (tab.hash === selectedTab.hash);
-    });
-
-    this.$emit('changed', { tab: selectedTab });
-
-    expiringStorage.set(this.storageKey, selectedTab.hash, this.cacheLifetime);
-  }
-  public close(i: number) {
-    this.tabs[i].isActive = false;
-    const tab = this.tabs[i + 1] || this.tabs[i - 1] || {};
-    this.tabs.splice(i, 1);
-    this.selectTab(tab.hash);
-  }
-}
+@Component
+export default class Tabs extends BaseTabs { }
 </script>
 
 <style lang="sass" scoped>
-  $border: #ddd
+  $border: #111
 
   .tabs-component-tabs
     border: 0
@@ -81,7 +32,6 @@ export default class Tabs extends Vue {
     align-items: stretch
     display: flex
     justify-content: flex-start
-    box-shadow: inset 0 -1px 0 $border
 
   .tabs-component-tab
     position: relative
@@ -89,7 +39,6 @@ export default class Tabs extends Vue {
     font-size: 14px
     font-weight: 600
     list-style: none
-    background-color: #fff
     width: 150px
     text-align: center
     border-left: 1px solid $border
@@ -117,6 +66,9 @@ export default class Tabs extends Vue {
       transform: scale(1)
       transition-duration: .16s
 
+  .remainder
+    flex-grow: 1
+    border-left: none
 
   .text
     align-items: center
@@ -128,9 +80,7 @@ export default class Tabs extends Vue {
       cursor: default
 
   .tabs-component-panels
-    background-color: #fff
     box-shadow: 0 0 10px rgba(0, 0, 0, .05)
-    padding: 4em 2em
 
   .close-icon
     top: 0.75em

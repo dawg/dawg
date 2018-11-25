@@ -75,7 +75,10 @@ export default class Knob extends Mixins(Draggable) {
   @Prop({ type: String, default: '#dcdfe6' }) public secondaryColor!: string;
   @Prop({ type: String, default: '#000' }) public textColor!: string;
   @Prop({ type: Number, default: 17 }) public strokeWidth!: number;
-  @Prop({ type: Function, default: (v: number) => ({}) }) public valueDisplayFunction!: (v: number) => void;
+  @Prop({
+    type: Function,
+    default: (v: number) => Math.round(v * 100) / 100,
+  }) public valueDisplayFunction!: (v: number) => number;
   @Prop({ type: Boolean, default: false }) public potentiometer!: boolean;
   @Prop({ type: Number, default: 6 }) public rectWidth!: number;
   public initialY = null;
@@ -152,6 +155,6 @@ export default class Knob extends Mixins(Draggable) {
     fill: none
 
   .knob-control__text-display
-    font-size: 1.3rem
+    font-size: 2rem
     text-align: center
 </style>

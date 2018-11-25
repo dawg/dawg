@@ -6,12 +6,18 @@ import VueShortkey from 'vue-shortkey';
 import 'vuetify/dist/vuetify.css';
 import 'vue-awesome/icons';
 import '@/styles/global.sass';
+import Ico from '@/components/Ico.vue';
+import Theme from '@/theme';
+import VueLogger from 'vuejs-logger';
 
 const middleware = () => {
-  Vue.use(Vuetify);
+  Vue.use(Vuetify, {theme: false});
+  Vue.use(Theme);
   Vue.component('icon', Icon);
   Vue.use(VueShortkey);
   Vue.use(VueKonva);
+  Vue.component('ico', Ico);
+  Vue.use(VueLogger);
 };
 
 export default middleware;

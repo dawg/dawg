@@ -7,7 +7,7 @@ import Key from '@/components/Key.vue';
 import Sequencer from '@/components/Sequencer.vue';
 import Piano from '@/components/Piano.vue';
 import Toolbar from '@/components/Toolbar.vue';
-import FileExplorer from '@/components/FileExplorer.vue';
+import Tree from '@/components/Tree.vue';
 import ChannelRack from '@/components/ChannelRack.vue';
 import Knob from '@/components/Knob.vue';
 import Mixer from '@/components/Mixer.vue';
@@ -15,11 +15,23 @@ import Slider from '@/components/Slider.vue';
 import Note from '@/components/Note.vue';
 import Bpm from '@/components/Bpm.vue';
 import TimeDisplay from '@/components/TimeDisplay.vue';
+import ActivityBar from '@/components/ActivityBar.vue';
 import PlayPause from '@/components/PlayPause.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
-import { TREE } from '@/utils';
+import ColorBlock from '@/components/ColorBlock.vue';
+import { TREE, StyleType, range, makeStyle } from '@/utils';
 import stillDre from '@/assets/still-dre';
+import Foot from '@/components/Foot.vue';
+import notification from '@/notification';
+import Notifications from '@/notification/Notifications.vue';
+import SideBar from '@/components/SideBar.vue';
+import Synth from '@/components/Synth.vue';
+import Split from '@/modules/split/Split.vue';
+
+import Vue from 'vue';
+
+Vue.use(notification);
 
 const synth = new Tone.Synth().toMaster();
 
@@ -45,17 +57,13 @@ storiesOf(Key.name, module)
     components: { Key },
   }));
 
-const piano = new Tone.PolySynth(4, Tone.Synth, {
-    volume: -8,
-    oscillator: {
-      partials: [1, 2, 1],
-    },
-    portamento: 0.05,
-}).toMaster();
+const piano = new Tone.PolySynth(4, Tone.Synth).toMaster();
 
 storiesOf(Sequencer.name, module)
   .add('Standard', () => ({
-    template: '<sequencer :note-width="20" :note-height="16" v-model="notes" :measures.sync="measures"/>',
+    template: `
+    <sequencer :note-width="20" :note-height="16" v-model="notes" :measures.sync="measures"/>
+    `,
     data: () => ({ notes: [], measures: 1 }),
     components: { Sequencer },
   }))
@@ -100,17 +108,17 @@ storiesOf(Sequencer.name, module)
       callback(time: string, chord: string) {
         piano.triggerAttackRelease(chord, '8n', time);
       },
-      added(note) {
+      added(note: object) {
         // @ts-ignore
         this.part.add(note.time, note.note);
       },
-      moved({ newTime, oldTime, note }) {
+      moved({ newTime, oldTime, note }: {newTime: string, oldTime: string, note: string}) {
         // @ts-ignore
         this.part.remove(oldTime);
         // @ts-ignore
         this.part.add(newTime, note);
       },
-      removed(note) {
+      removed(note: object) {
         // @ts-ignore
         // tslint:disable-next-line:no-console
         console.log(this.part.at(note.time));
@@ -150,16 +158,16 @@ storiesOf(Toolbar.name, module)
     components: { Toolbar },
   }));
 
-storiesOf(FileExplorer.name, module)
+storiesOf(Tree.name, module)
   .add('Standard', () => ({
     template: `
     <v-app dark>
       <v-list dense style="max-width: 300px; height: 100%">
-        <file-explorer :children="children.root" label="root"></file-explorer>
+        <tree :children="children.root" label="root"></tree>
       </v-list>
     </v-app>
     `,
-    components: { FileExplorer },
+    components: { Tree },
     data() {
       return {
         children: TREE,
@@ -281,10 +289,181 @@ storiesOf(PlayPause.name, module)
     data: () => ({ text: 'stopped' }),
     components: { PlayPause },
     methods: {
-      click(text) {
+      click(text: string) {
         action(text)();
         // @ts-ignore
         this.text = text;
       },
     },
+  }));
+
+
+storiesOf(ColorBlock.name, module)
+  .add('Example', () => ({
+    template:  `<color-block color="primary"></color-block>`,
+    components: { ColorBlock },
+  }))
+  .add('Theme', () => ({
+    template: `
+    <div>
+      <color-block v-for="color in colors" :key="color" :color="color"></color-block>
+    </div>
+    `,
+    components: { ColorBlock },
+    computed: {
+      colors(): string[] {
+        const colors: string[] = [];
+        Object.keys(StyleType).forEach((value: string) => {
+          const type = StyleType[value as keyof typeof StyleType];
+          colors.push(makeStyle(type));
+          range(4).forEach((i) => {
+            colors.push(makeStyle(type, {darken: i + 1}));
+          });
+          range(4).forEach((i) => {
+            colors.push(makeStyle(type, {lighten: i + 1}));
+          });
+        });
+        return colors;
+      },
+    },
+  }));
+
+
+storiesOf(Notifications.name, module)
+  .add('Standard', () => ({
+    template: `
+    <div>
+      <div>
+        <v-btn @click="info" class="info">INFO</v-btn>
+        <v-btn @click="success" class="success">SUCCESS</v-btn>
+      </div>
+      <div>
+        <v-btn @click="warning" class="warning">WARNING</v-btn>
+        <v-btn @click="error" class="error">ERROR</v-btn>
+      </div>
+      <notifications></notifications>
+    </div>
+    `,
+    components: { Notifications },
+    methods: {
+      info() {
+        // @ts-ignore
+        this.$notify.info('Information', {detail: 'Here is some info!'});
+      },
+      success() {
+        // @ts-ignore
+        this.$notify.success('Success', {detail: 'Something went well!'});
+      },
+      warning() {
+        // @ts-ignore
+        this.$notify.warning('Warning', {detail: 'This is bad!'});
+      },
+      error() {
+        // @ts-ignore
+        this.$notify.error('Error', {detail: 'Something is probably broken!'});
+      },
+    },
+  }));
+
+
+storiesOf(ActivityBar.name, module)
+  .add('Standard', () => ({
+    template: `
+    <activity-bar>
+      <side-bar
+        v-for="item in items"
+        :key="item.title"
+        :name="item.title"
+        :icon="item.icon"
+      ></side-bar>
+    </activity-bar>
+    `,
+    data: () => ({
+      items: [
+        { title: 'EXPLORER', icon: 'folder' },
+        { title: 'SYNTHESIZERS', icon: 'playlist_add' },
+        { title: 'SYNTHESIZER', icon: 'queue_music' },
+        { title: 'SEARCH', icon: 'search' },
+      ],
+    }),
+    components: { ActivityBar, SideBar },
+  }));
+
+storiesOf(Foot.name, module)
+  .add('Standard', () => ({
+    template: `
+    <foot></foot>
+    `,
+    components: { Foot },
+  }));
+
+const oscillator = {type: 'fatsawtooth', spread: 30};
+const envelope = {
+  attack: 0.005 ,
+  decay: 0.1 ,
+  sustain: 0.3 ,
+  release: 1,
+  };
+
+const panner = new Tone.Panner().toMaster();
+const synthesizer = new Tone.Synth({oscillator, envelope}).connect(panner);
+
+storiesOf(Synth.name, module)
+  .add('Standard', () => ({
+    data: () => ({
+      synthesizer,
+      panner,
+      mute: true,
+    }),
+    template: `
+    <v-app>
+      <div>
+        <synth
+          :type.sync="synthesizer.oscillator.type"
+          :volume.sync="synthesizer.volume.value"
+          :panning.sync="panner.pan.value"
+          :mute="mute"
+          @update:mute="muter"
+        ></synth>
+      </div>
+      <div>
+        <v-btn @click="playme">playme</v-btn>
+      </div>
+    </v-app>
+    `,
+    methods: {
+      muter(value: boolean) {
+        // @ts-ignore
+        this.mute = value;
+        if (!value) {
+          panner.disconnect(Tone.Master);
+        } else {
+          panner.toMaster();
+        }
+      },
+      playme() {
+        // @ts-ignore
+        this.synthesizer.triggerAttackRelease('C5', '8n');
+      },
+    },
+    components: { Synth },
+  }));
+
+
+storiesOf(Split.name, module)
+  .add('Horizontal', () => ({
+    template: `
+    <split direction="horizontal" resizable>
+        <split :min-size="100">
+            panel left
+        </split>
+        <split :min-size="100">
+            panel center
+        </split>
+        <split :min-size="300">
+            panel right
+        </split>
+    </split>
+    `,
+    components: { Split },
   }));
