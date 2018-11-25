@@ -1,5 +1,5 @@
 # Vuesic
-[![Build Status](https://travis-ci.org/vusic/vusic.svg?branch=master)](https://travis-ci.org/vusic/vusic)
+[![Build Status](https://travis-ci.org/dawg/vusic.svg?branch=master)](https://travis-ci.org/dawg/vusic)
 > A DAW for the 21st century!
 
 ## Envrionment Setup
