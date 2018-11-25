@@ -15,7 +15,6 @@ import Slider from '@/components/Slider.vue';
 import Note from '@/components/Note.vue';
 import Bpm from '@/components/Bpm.vue';
 import TimeDisplay from '@/components/TimeDisplay.vue';
-import ActivityBar from '@/components/ActivityBar.vue';
 import PlayPause from '@/components/PlayPause.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
@@ -363,30 +362,6 @@ storiesOf(Notifications.name, module)
         this.$notify.error('Error', {detail: 'Something is probably broken!'});
       },
     },
-  }));
-
-
-storiesOf(ActivityBar.name, module)
-  .add('Standard', () => ({
-    template: `
-    <activity-bar>
-      <side-bar
-        v-for="item in items"
-        :key="item.title"
-        :name="item.title"
-        :icon="item.icon"
-      ></side-bar>
-    </activity-bar>
-    `,
-    data: () => ({
-      items: [
-        { title: 'EXPLORER', icon: 'folder' },
-        { title: 'SYNTHESIZERS', icon: 'playlist_add' },
-        { title: 'SYNTHESIZER', icon: 'queue_music' },
-        { title: 'SEARCH', icon: 'search' },
-      ],
-    }),
-    components: { ActivityBar, SideBar },
   }));
 
 storiesOf(Foot.name, module)
