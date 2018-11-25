@@ -12,7 +12,7 @@
     "serve:electron": "vue-cli-service serve:electron",
     "postinstall": "electron-builder install-app-deps",
     "serve:storybook": "vue-cli-service serve:storybook -p 6006 -c config/storybook",
-    "build:storybook": "vue-cli-service build:storybook -c config/storybook"
+    "build:storybook": "vue-cli-service build:storybook -c config/storybook -o docs"
   },
   "dependencies": {
     "electron-context-menu": "^0.10.0",

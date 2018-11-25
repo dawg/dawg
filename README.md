@@ -2,42 +2,6 @@
 [![Build Status](https://travis-ci.org/dawg/vusic.svg?branch=master)](https://travis-ci.org/dawg/vusic)
 > A DAW for the 21st century!
 
-## Envrionment Setup
-### Prerequisites
-1. Install [Node Version Manager (NVM)](https://github.com/creationix/nvm#install-script)
-1. Install [Node and npm using NVM](https://github.com/creationix/nvm#usage)
-1. Install the dependencies: `npm i`
-
-### Development
-Development occurs one of two places. Application development occurs in `Electron`; however, `Storybook` is used as an isolated component development environment. For many components, it is recommended that you create a `story` within `Storybook` to serve as active documentation.
-
-#### Electron
-Start the `Electron` application in development mode.
-```
-npm run serve:electron
-```
-
-#### Storybook
-Start the `Storybook` server.
-```
-npm run serve:storybook
-```
-
-### Building
-Currently, there is no process for deploying the actual application.
-```
-npm run build:electron
-npm run build:storybook  # or
-
-# testing
-npm run test:unit
-npm run test:e2e  # or
-```
-
-# Vusic
-[![Build Status](https://travis-ci.org/dawg/vusic.svg?branch=master)](https://travis-ci.org/dawg/vusic)
-> A DAW for the 21st century!
-
 <img src="https://i.ibb.co/bvp4VDK/web-1920-3.png" alt="Vusic Mockup" height="400">
 
 ## Roadmap
