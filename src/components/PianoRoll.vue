@@ -14,7 +14,7 @@
     <sequencer
       :note-width="noteWidth" 
       :note-height="noteHeight" 
-      :measures="1"
+      :measures.sync="measures"
       v-model="notes"
       @added="added"
       @removed="removed"
@@ -31,8 +31,6 @@ import { NoteInfo } from '@/types';
 
 const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
 
-
-
 @Component({components: { Piano, Sequencer }})
 export default class PianoRoll extends Vue {
   public noteWidth = 20;
@@ -40,7 +38,7 @@ export default class PianoRoll extends Vue {
   public notes = [];
   public octaves = [5, 4];
   public measures = 1;
-  public part = new Tone.Part(this.callback)
+  public part = new Tone.Part(this.callback);
   public mounted() {
     this.part.start(0);
     this.part.loop = true;
@@ -48,7 +46,7 @@ export default class PianoRoll extends Vue {
     Tone.Transport.bpm.value = 93;
   }
   public playPause() {
-    if(Tone.Transport.state === 'started') {
+    if (Tone.Transport.state === 'started') {
       this.pause();
     } else {
       this.play();

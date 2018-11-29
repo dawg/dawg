@@ -68,6 +68,10 @@ export class Draggable extends Vue {
     window.removeEventListener('mouseup', this.removeListeners);
     this.mousemoveListner = () => ({});
     this.afterHover();
+    this.afterMove();
+  }
+  public afterMove() {
+    //
   }
   public startMove(e: MouseEvent, ...args: any[]) {
     if (this.disabled) { return; }

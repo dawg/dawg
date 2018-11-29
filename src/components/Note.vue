@@ -72,10 +72,8 @@ export default class Note extends Mixins(Draggable) {
   }
   public move(e: MouseEvent) {
     const note = this.$refs.note as HTMLElement;
-    const originX = note.offsetLeft;
-    const diff = e.clientX - originX;
+    const diff = e.clientX - this.$el.getBoundingClientRect().left;
     const length = Math.round(diff / this.width);
-    console.info(note.offsetLeft, e.clientX, diff, length);
     if (this.value === length) { return; }
     if (length < 1) { return; }
     this.$emit('input', length);
