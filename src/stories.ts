@@ -368,7 +368,6 @@ storiesOf(Notifications.name, module)
     },
   }));
 
-
 storiesOf(Foot.name, module)
   .add('Standard', () => ({
     template: `
