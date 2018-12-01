@@ -15,17 +15,18 @@
         @input="changeMute"
       ></dot-button>
       <div class="white--text name">{{ name }}</div>
+      <div style="flex: 1"></div>
       <knob
         class="knob"
         text-color="white"
-        :size="35"
+        :size="knobSize"
         :stroke-width="strokeWidth"
         v-model="synth.volume.value"
       ></knob>
       <knob
         class="knob"
         text-color="white"
-        :size="35"
+        :size="knobSize"
         :min="-1"
         :max="1"
         :stroke-width="strokeWidth"
@@ -79,7 +80,8 @@ export default class Synth extends Vue {
   public synth = new Tone.Synth({ oscillator, envelope }).connect(this.panner);
   public out = this.panner;
   public expand = false;
-  public strokeWidth = 10;
+  public strokeWidth = 2.5;
+  public knobSize = 30;
 
   public get synthStyle() {
     return {
@@ -118,7 +120,7 @@ export default class Synth extends Vue {
   margin: 0!important
 
 .knob
-  margin: 2.5px
+  margin: 5px
 
 .name
   font-size: 1.2em

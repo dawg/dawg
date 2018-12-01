@@ -220,6 +220,7 @@ storiesOf(Knob.name, module)
       <div>
         <knob
           v-model="value"
+          :size="100"
           label="Dry/Wet"
           style="border-radius: 3px; padding: 20px; background-color: #2C2D2F"
         ></knob>

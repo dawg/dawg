@@ -4,7 +4,7 @@
       class="rela-block knob-dial" 
       :style="knobStyle"
     >
-      <svg class="dial-svg" viewBox="0 0 100 100">
+      <svg class="dial-svg" :height="size" :width="size" :style="dialStyle">
         <path
           :d="rangePath"
           fill="none"
@@ -12,11 +12,20 @@
           :stroke-width="strokeWidth"
         ></path>
         <path 
-          :d="rangePath" 
+          v-show="showRight"
+          :d="rightRangePath" 
           fill="none" 
           :stroke="primaryColor"
           :stroke-width="strokeWidth"
-          :style="strokeStyle"
+          :style="rightStrokeStyle"
+        ></path>
+        <path 
+          v-show="showLeft"
+          :d="leftRangePath"
+          fill="none" 
+          :stroke="primaryColor"
+          :stroke-width="strokeWidth"
+          :style="lefStrokeStyle"
         ></path>
         <rect
           :width="rectWidth"
@@ -41,10 +50,11 @@
 import { Draggable } from '@/mixins';
 import { Component, Prop, Mixins, Watch } from 'vue-property-decorator';
 
-// TODO These should be computed
-
 // Credit to the styling goes to this codepen: https://codepen.io/mavrK/pen/erQPvP
 // They actually have some nice dials we may want to use
+
+// Some things to note:
+// 1. Most things here use angles from the +x axis; however, svg rotation starts from the +y axis
 
 @Component
 export default class Knob extends Mixins(Draggable) {
@@ -60,7 +70,8 @@ export default class Knob extends Mixins(Draggable) {
 
   public rotation = -this.range / 2;
   public rectWidth = 3;
-  public rectHeight = 25;
+  public rectHeight = this.size / 4; // TODO Make configurable if desired
+  public midDegrees = 90 + 132; // TODO Make prop
 
   get minDegrees() {
     return 90 + this.angle;
@@ -74,17 +85,26 @@ export default class Knob extends Mixins(Draggable) {
   get minRadians() {
     return this.minDegrees / 360 * 2 * Math.PI;
   }
+  get midRadians() {
+    return this.midDegrees / 360 * 2 * Math.PI;
+  }
   get minX() {
-    return this.center + (Math.cos(this.minRadians) * this.radius);
+    return this.center + (Math.cos(this.minRadians) * this.r);
   }
   get minY() {
-    return this.center - (Math.sin(this.minRadians) * this.radius);
+    return this.center - (Math.sin(this.minRadians) * this.r);
   }
   get maxX() {
-    return this.center + (Math.cos(this.maxRadians) * this.radius);
+    return this.center + (Math.cos(this.maxRadians) * this.r);
   }
   get maxY() {
-    return this.center - (Math.sin(this.maxRadians) * this.radius);
+    return this.center - (Math.sin(this.maxRadians) * this.r);
+  }
+  get midX() {
+    return this.center + (Math.cos(this.midRadians) * this.r);
+  }
+  get midY() {
+    return this.center - (Math.sin(this.midRadians) * this.r);
   }
 
   get angle() {
@@ -94,13 +114,69 @@ export default class Knob extends Mixins(Draggable) {
     return `rotate(${this.rotation} ${this.center} ${this.center})`;
   }
   get rangePath() {
-    return `M ${this.minX} ${this.minY} A ${this.radius} ${this.radius} 0 1 1 ${this.maxX} ${this.maxY}`;
+    return `M ${this.minX} ${this.minY} A ${this.r} ${this.r} 0 1 1 ${this.maxX} ${this.maxY}`;
+  }
+  get leftLarge() {
+    return this.leftRange > 180 ? 1 : 0;
+  }
+  get rightLarge() {
+    return this.rightRange > 180 ? 1 : 0;
+  }
+  get leftRangePath() {
+    return `M ${this.midX} ${this.midY} A ${this.r} ${this.r} 0 ${this.leftLarge} 0 ${this.minX} ${this.minY}`;
+  }
+  get rightRangePath() {
+    return `M ${this.midX} ${this.midY} A ${this.r} ${this.r} 0 ${this.rightLarge} 1 ${this.maxX} ${this.maxY}`;
   }
   public get strokeDashoffset() {
-    return 184 - (184 / 264) * (this.rotation + this.angle);
+    return this.length - this.length * ((this.rotation + this.angle) / this.range);
   }
   public get strokeStyle() {
     return { 'stroke-dashoffset': this.strokeDashoffset };
+  }
+  public get rightLength() {
+    return (this.midRadians - this.maxRadians) * this.r;
+  }
+  public get rightRange() {
+    return this.midDegrees - this.maxDegrees;
+  }
+  public get rightAngleBetween() {
+    const angle = 90 - this.rotation; // Converting to start from +x axis
+    return this.midDegrees - angle;
+  }
+  public get showRight() {
+    return this.rightAngleBetween > 0;
+  }
+  get rightStrokeStyle() {
+    let offset = this.rightRange - this.rightAngleBetween;
+    offset = (offset / this.rightRange) * this.rightLength;
+    this.$log.info('Right Offset', offset);
+    return {
+      'stroke-dasharray': this.rightLength,
+      'stroke-dashoffset': offset,
+    };
+  }
+  public get leftLength() {
+    return (this.minRadians - this.midRadians) * this.r;
+  }
+  public get leftRange() {
+    return this.minDegrees - this.midDegrees;
+  }
+  get leftAngleBetween() {
+    const angle = 90 - this.rotation; // Converting to start from +x axis
+    return angle - this.midDegrees;
+  }
+  get showLeft() {
+    return this.leftAngleBetween > 0;
+  }
+  get lefStrokeStyle() {
+    let offset = this.leftRange - this.leftAngleBetween;
+    offset = (offset / this.leftRange) * this.leftLength;
+    this.$log.info('Left Offset', offset);
+    return {
+      'stroke-dasharray': this.leftLength,
+      'stroke-dashoffset': offset,
+    };
   }
   public get knobStyle() {
     return {
@@ -109,12 +185,22 @@ export default class Knob extends Mixins(Draggable) {
       width: `${this.size}px`,
     };
   }
+  public get length() {
+    return (this.minRadians - this.maxRadians) * this.r;
+  }
+  public get dialStyle() {
+    return {
+      // strokeDasharray: `${this.length} ${this.length}`,
+    };
+  }
   public get center() {
     return this.size / 2;
   }
-  public get radius() {
-    // TODO add comment here
-    return this.center - this.strokeWidth / 2;
+
+  public get r() {
+    // The radius of the circle.
+    // We have to take off half of the stroke width due to how svg arcs work
+    return this.size / 2 - this.strokeWidth / 2;
   }
 
   public move(e: MouseEvent, { changeY }: { changeY: number }) {
@@ -144,16 +230,8 @@ export default class Knob extends Mixins(Draggable) {
   display: inline-block
   position: relative
 
-.dial-grip
-  border-radius: 100%
-  z-index: 5
-  height: 82px
-  width: 82px
-
 .dial-svg
-  stroke-width: 2.5
   pointer-events: none
-  stroke-dasharray: 184 184
     
 .knob-label
   text-align: center

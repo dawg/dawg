@@ -35,7 +35,7 @@
             >
               <div>{{ title }}</div>
             </div>
-            <vue-perfect-scrollbar class="scrollbar">
+            <vue-perfect-scrollbar class="scrollbar" style="height: 100%">
               <base-tabs ref="tabs" @changed="changed">
                 <side-bar name="EXPLORER" icon="folder">
                   <file-explorer></file-explorer>
