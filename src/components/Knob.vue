@@ -4,7 +4,7 @@
       class="rela-block knob-dial" 
       :style="knobStyle"
     >
-      <svg class="dial-svg" :height="size" :width="size" :style="dialStyle">
+      <svg class="dial-svg" :height="size" :width="size">
         <path
           :d="rangePath"
           fill="none"
@@ -55,6 +55,7 @@ import { Component, Prop, Mixins, Watch } from 'vue-property-decorator';
 
 // Some things to note:
 // 1. Most things here use angles from the +x axis; however, svg rotation starts from the +y axis
+// 2. The rotation of the knob is clockwise so the minimum variables are actually the larger values
 
 @Component
 export default class Knob extends Mixins(Draggable) {
@@ -67,12 +68,17 @@ export default class Knob extends Mixins(Draggable) {
   @Prop({ type: String, default: '#409eff' }) public primaryColor!: string;
   @Prop(String) public label?: string;
   @Prop({ type: Number, default: 2.5 }) public strokeWidth!: number;
+  @Prop(Number) public midValue?: number;
 
   public rotation = -this.range / 2;
   public rectWidth = 3;
-  public rectHeight = this.size / 4; // TODO Make configurable if desired
-  public midDegrees = 90 + 132; // TODO Make prop
+  public rectHeight = this.size / 4; // TODO Make configurable (with default)
 
+  get midDegrees() {
+    let midValue = this.midValue;
+    if (midValue === undefined) { midValue = this.min; }
+    return this.mapRange(midValue, this.min, this.max, this.minDegrees, this.maxDegrees);
+  }
   get minDegrees() {
     return 90 + this.angle;
   }
@@ -106,55 +112,43 @@ export default class Knob extends Mixins(Draggable) {
   get midY() {
     return this.center - (Math.sin(this.midRadians) * this.r);
   }
-
   get angle() {
     return this.range / 2;
   }
+  public get center() {
+    return this.size / 2;
+  }
+  public get r() {
+    // We have to take off half of the stroke width due to how svg arcs work.
+    // If we were to tell an svg to create an arc with radius 10 and a stroke-width of 2
+    // the actual radius would be 11 (measuring from outside the path).
+    // However, we want to be more exact than that. If the size is 20, we want the size the be exactly 20
+    return this.size / 2 - this.strokeWidth / 2;
+  }
+
+  // dial
   get transform() {
     return `rotate(${this.rotation} ${this.center} ${this.center})`;
   }
+  public get knobStyle() {
+    return {
+      color: this.primaryColor,
+      height: `${this.size}px`,
+      width: `${this.size}px`,
+    };
+  }
+
+  // background path
   get rangePath() {
     return `M ${this.minX} ${this.minY} A ${this.r} ${this.r} 0 1 1 ${this.maxX} ${this.maxY}`;
   }
+
+  // left path
   get leftLarge() {
     return this.leftRange > 180 ? 1 : 0;
   }
-  get rightLarge() {
-    return this.rightRange > 180 ? 1 : 0;
-  }
   get leftRangePath() {
     return `M ${this.midX} ${this.midY} A ${this.r} ${this.r} 0 ${this.leftLarge} 0 ${this.minX} ${this.minY}`;
-  }
-  get rightRangePath() {
-    return `M ${this.midX} ${this.midY} A ${this.r} ${this.r} 0 ${this.rightLarge} 1 ${this.maxX} ${this.maxY}`;
-  }
-  public get strokeDashoffset() {
-    return this.length - this.length * ((this.rotation + this.angle) / this.range);
-  }
-  public get strokeStyle() {
-    return { 'stroke-dashoffset': this.strokeDashoffset };
-  }
-  public get rightLength() {
-    return (this.midRadians - this.maxRadians) * this.r;
-  }
-  public get rightRange() {
-    return this.midDegrees - this.maxDegrees;
-  }
-  public get rightAngleBetween() {
-    const angle = 90 - this.rotation; // Converting to start from +x axis
-    return this.midDegrees - angle;
-  }
-  public get showRight() {
-    return this.rightAngleBetween > 0;
-  }
-  get rightStrokeStyle() {
-    let offset = this.rightRange - this.rightAngleBetween;
-    offset = (offset / this.rightRange) * this.rightLength;
-    this.$log.info('Right Offset', offset);
-    return {
-      'stroke-dasharray': this.rightLength,
-      'stroke-dashoffset': offset,
-    };
   }
   public get leftLength() {
     return (this.minRadians - this.midRadians) * this.r;
@@ -172,40 +166,47 @@ export default class Knob extends Mixins(Draggable) {
   get lefStrokeStyle() {
     let offset = this.leftRange - this.leftAngleBetween;
     offset = (offset / this.leftRange) * this.leftLength;
-    this.$log.info('Left Offset', offset);
     return {
       'stroke-dasharray': this.leftLength,
       'stroke-dashoffset': offset,
     };
   }
-  public get knobStyle() {
+
+  // right path
+  get rightLarge() {
+    return this.rightRange > 180 ? 1 : 0;
+  }
+  get rightRangePath() {
+    return `M ${this.midX} ${this.midY} A ${this.r} ${this.r} 0 ${this.rightLarge} 1 ${this.maxX} ${this.maxY}`;
+  }
+  public get rightLength() {
+    return (this.midRadians - this.maxRadians) * this.r;
+  }
+  public get rightRange() {
+    return this.midDegrees - this.maxDegrees;
+  }
+  public get rightAngleBetween() {
+    const angle = 90 - this.rotation; // Converting to start from +x axis
+    return this.midDegrees - angle;
+  }
+  public get showRight() {
+    return this.rightAngleBetween > 0;
+  }
+  get rightStrokeStyle() {
+    let offset = this.rightRange - this.rightAngleBetween;
+    offset = (offset / this.rightRange) * this.rightLength;
     return {
-      color: this.primaryColor,
-      height: `${this.size}px`,
-      width: `${this.size}px`,
+      'stroke-dasharray': this.rightLength,
+      'stroke-dashoffset': offset,
     };
-  }
-  public get length() {
-    return (this.minRadians - this.maxRadians) * this.r;
-  }
-  public get dialStyle() {
-    return {
-      // strokeDasharray: `${this.length} ${this.length}`,
-    };
-  }
-  public get center() {
-    return this.size / 2;
   }
 
-  public get r() {
-    // The radius of the circle.
-    // We have to take off half of the stroke width due to how svg arcs work
-    return this.size / 2 - this.strokeWidth / 2;
-  }
+
 
   public move(e: MouseEvent, { changeY }: { changeY: number }) {
     // Multiply by a factor to get better speed.
     // This factor should eventually be computed by the changeX
+    // For example, as they move farther away from their inital x position, the factor decreases
     this.rotation -= changeY * 1.5;
     this.rotation = Math.max(-132, Math.min(this.angle, this.rotation));
     const value = this.mapRange(this.rotation, -this.angle, this.angle, this.min, this.max);

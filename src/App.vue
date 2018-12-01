@@ -1,5 +1,5 @@
 <template>
-  <v-app class="app" style="height: 100vh">
+  <div class="app" style="height: 100vh">
     <split direction="vertical">
       <split direction="horizontal" resizable>
         <split :initial="65" fixed>
@@ -30,7 +30,7 @@
           <div class="aside secondary" style="display: flex; flex-direction: column">
             
             <div
-              class="title center--vertial white--text"
+              class="section-header center--vertial white--text"
               :style="`min-height: ${toolbarHeight + 1}px`"
             >
               <div>{{ title }}</div>
@@ -116,7 +116,7 @@
       </split>
       <split :initial="20" fixed><foot :height="20"></foot></split>
     </split>
-  </v-app>
+  </div>
 </template>
 
 <script lang="ts">
@@ -207,7 +207,7 @@ export default class App extends Vue {
   z-index: 3
   border-right: 1px solid
 
-.title
+.section-header
   font-size: 15px !important
   border-bottom: 1px solid rgba(0, 0, 0, 0.3)
   padding: 0 20px

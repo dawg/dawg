@@ -29,6 +29,7 @@
         :size="knobSize"
         :min="-1"
         :max="1"
+        :mid-value="0"
         :stroke-width="strokeWidth"
         v-model="panner.pan.value"
       ></knob>

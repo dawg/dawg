@@ -94,6 +94,7 @@ export class Draggable extends Vue {
   }
   public prevent(e: Event) {
     if (e && e.preventDefault) { e.preventDefault(); }
+    if (e && e.stopPropagation) { e.stopPropagation(); }
   }
   public onHover() {
     if (this.moving) { return; }
