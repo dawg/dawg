@@ -40,7 +40,13 @@
                 <side-bar name="EXPLORER" icon="folder">
                   <file-explorer></file-explorer>
                 </side-bar>
-                <side-bar name="SYNTHESIZERS" icon="playlist_add"></side-bar>
+                <side-bar name="SYNTHESIZERS" icon="playlist_add">
+                  <synth
+                    v-for="synth in synths"
+                    :key="synth.name"
+                    :name="synth.name"
+                  ></synth>
+                </side-bar>
                 <side-bar name="AUDIO FILES" icon="queue_music"></side-bar>
                 <side-bar name="SEARCH" icon="search"></side-bar>
               </base-tabs>
@@ -125,6 +131,7 @@ import Panel from '@/components/Panel.vue';
 import Split from '@/modules/split/Split.vue';
 import PianoRoll from '@/components/PianoRoll.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
+import Synth from '@/components/Synth.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 
 @Component({
@@ -140,6 +147,7 @@ import VuePerfectScrollbar from 'vue-perfect-scrollbar';
     PianoRoll,
     BaseTabs,
     VuePerfectScrollbar,
+    Synth,
   },
 })
 export default class App extends Vue {
@@ -151,6 +159,11 @@ export default class App extends Vue {
 
   public tabs?: BaseTabs;
   public items: SideBar[] = [];
+  public synths = [
+    {
+      name: 'Sawtooth',
+    },
+  ];
 
   public mounted() {
     this.tabs = this.$refs.tabs as BaseTabs;

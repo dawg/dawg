@@ -1,33 +1,49 @@
 <template>
-  <div class="synth secondary" color="white">
-    <dot-button
-      :value="mute"
-      @input="$emit('update:mute', $event)"
-    ></dot-button>
-    <v-select
-      class="synth-dropdown"
-      dense
-      dark
-      :items="types"
-      :value="type"
-      @input="$emit('update:type', $event)"
-    ></v-select>
-    <knob
-      class="knob"
-      text-color="white"
-      :size="50"
-      :value="volume"
-      @input="$emit('update:volume', $event)"
-    ></knob>
-    <knob
-      class="knob"
-      text-color="white"
-      :size="50"
-      :min="-1"
-      :max="1"
-      :value="panning"
-      @input="$emit('update:panning', $event)"
-    ></knob>
+  <div class="synth-wrapper">
+    <div 
+      class="bar primary"
+    ></div>
+    <div 
+      class="synth secondary-lighten-1" 
+      color="white"
+      :style="synthStyle"
+      @click="expand = !expand"
+    >
+      <dot-button
+        class="mute"
+        :value="active"
+        @input="changeMute"
+      ></dot-button>
+      <div class="white--text name">{{ name }}</div>
+      <knob
+        class="knob"
+        text-color="white"
+        :size="35"
+        :stroke-width="strokeWidth"
+        v-model="synth.volume.value"
+      ></knob>
+      <knob
+        class="knob"
+        text-color="white"
+        :size="35"
+        :min="-1"
+        :max="1"
+        :stroke-width="strokeWidth"
+        v-model="panner.pan.value"
+      ></knob>
+    </div>
+    <div 
+      class="options secondary-lighten-1"
+      :class="{ expand }"
+    >
+      <v-select
+        class="synth-dropdown"
+        dense
+        dark
+        :items="types"
+        v-model="synth.oscillator.type"
+      ></v-select>
+    </div>
   </div>
 </template>
 
@@ -39,29 +55,87 @@ import DotButton from '@/components/DotButton.vue';
 
 import { Component, Prop } from 'vue-property-decorator';
 
+const TYPES = ['pwm', 'sine', 'triangle', 'fatsawtooth', 'square'];
+
+const oscillator = { type: 'fatsawtooth', spread: 30 };
+const envelope = {
+  attack: 0.005,
+  decay: 0.1,
+  sustain: 0.3,
+  release: 1,
+};
+
 @Component({ components: { Knob, DotButton } })
 export default class Synth extends Vue {
-    @Prop({type: String, required: true}) public type!: string;
-    @Prop({type: Number, required: true}) public volume!: number;
-    @Prop({type: Number, required: true}) public panning!: number;
-    @Prop({type: Boolean, required: true}) public mute!: boolean;
-    public types = ['pwm', 'sine', 'triangle', 'fatsawtooth', 'square'];
+  @Prop({ type: String, required: true }) public name!: string;
+  @Prop({ type: Number, default: 50 }) public height!: number;
+  // @Prop({ type: String, required: true }) public type!: string;
+  // @Prop({ type: Number, required: true }) public volume!: number;
+  // @Prop({ type: Number, required: true }) public panning!: number;
+  // @Prop({ type: Boolean, required: true }) public mute!: boolean;
+  public types = TYPES;
+  public active = true;
+  public panner = new Tone.Panner().toMaster();
+  public synth = new Tone.Synth({ oscillator, envelope }).connect(this.panner);
+  public out = this.panner;
+  public expand = false;
+  public strokeWidth = 10;
 
+  public get synthStyle() {
+    return {
+      height: `${this.height}px`,
+    };
+  }
+
+  public changeMute(value: boolean) {
+    this.active = value;
+    if (value) {
+      this.panner.toMaster();
+    } else {
+      this.panner.disconnect(Tone.Master);
+    }
+  }
 }
-
 </script>
 
 <style scoped lang="sass">
-  .synth
-    align-items: center
-    display: flex
-    padding-right: 10px
+.synth
+  align-items: center
+  display: flex
+  padding-right: 10px
 
-  .synth-dropdown
-    padding-right: 5px
+  &:hover
+    cursor: pointer
 
-  .knob
-    margin: 2.5px
+.mute
+  height: 25px
+  width: 25px
 
+.synth-dropdown
+  padding: 5px 18px
 
+.synth-dropdown /deep/ .v-input__slot
+  margin: 0!important
+
+.knob
+  margin: 2.5px
+
+.name
+  font-size: 1.2em
+  padding-right: 40px
+
+.synth-wrapper
+  display: flex
+  flex-direction: column
+
+.bar
+  height: 5px
+
+.options
+  transition: height .5s
+  height: 0
+  overflow: hidden
+
+.expand
+  height: 55px
 </style>

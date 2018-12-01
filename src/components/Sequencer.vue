@@ -1,27 +1,29 @@
 <template>
   <div :style="sequencerStyle" class="sequencer">
-    <div class="layer rows" :style="`height: ${notes.length * noteHeight}px`">
-      <div
-        v-for="(note, row) in notes" 
-        :key="note.value"
-        :style="rowStyle(row, note.color)"
-        @click="add(row, $event)"
-      ></div>
+    <div class="sequencer-child">
+      <div class="layer rows" ref="rows" :style="`height: ${notes.length * noteHeight}px`">
+        <div
+          v-for="(note, row) in notes" 
+          :key="note.value"
+          :style="rowStyle(row, note.color)"
+          @click="add(row, $event)"
+        ></div>
+      </div>
+      <div :style="sequencerStyle" class="layer lines" ref="beatLines"></div>
+      <note
+        v-for="(note, i) in value"
+        :key="i"
+        :height="noteHeight"
+        :width="noteWidth"
+        :x="note.x"
+        :y="note.y"
+        style="position: absolute; z-index: 2"
+        @contextmenu="remove($event, note)"
+        @mousedown="addListeners($event, note)"
+        @input="changeDefault"
+        v-model="note.length"
+      ></note>
     </div>
-    <div :style="sequencerStyle" class="layer lines" ref="beatLines"></div>
-    <note
-      v-for="(note, i) in value"
-      :key="i"
-      :height="noteHeight"
-      :width="noteWidth"
-      :x="note.x"
-      :y="note.y"
-      style="position: absolute; z-index: 2"
-      @contextmenu="remove($event, note)"
-      @mousedown="addListeners($event, note)"
-      @input="changeDefault"
-      v-model="note.length"
-    ></note>
   </div>
 </template>
 
@@ -34,10 +36,6 @@ import Note from '@/components/Note.vue';
 import { NoteInfo } from '@/types';
 import BeatLines from '@/components/BeatLines';
 
-interface Lookup {
-  [key: string]: NoteInfo;
-}
-
 interface Colors {
   [key: string]: string;
 }
@@ -46,6 +44,8 @@ interface BasicNoteInfo {
   value: string;
   color: string;
 }
+
+// TODO Create NoteInfo class
 
 @Component({
   components: { Note },
@@ -56,16 +56,16 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   @Prop(Array) public value!: NoteInfo[];
   @Prop({ type: String, default: '#21252b' }) public blackColor!: string;
   @Prop({ type: String, default: '#282c34' }) public whiteColor!: string;
+  @Prop({ type: Array, default: [4, 5] }) public octaves!: number[];
   @Prop({ type: Number, default: 1 }) public defaultLength!: number;
   @Prop({ type: Number, required: true }) public measures!: number;
+  @Prop({ type: Number, default: 4 }) public minMeasures!: number; // TODO
 
-  public lineColor = '#000';
   public quarters = 4;
   public sixteenths = 4;
-  public lookup: Lookup = {};
   public cursor = 'move';
   public default = this.defaultLength;
-  public octaves = [4, 5];
+  public rows!: HTMLElement;
   public draggingIndex: number | null = null;
 
   public get noteWidth() {
@@ -79,14 +79,17 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     };
   }
   get colorLookup(): Colors {
-    return { [BLACK]: this.blackColor, [WHITE]: this.whiteColor };
+    return {
+      [BLACK]: this.blackColor,
+      [WHITE]: this.whiteColor,
+    };
   }
   get totalSixteenths() {
     return this.measures * this.quarters * this.sixteenths;
   }
   get notes() {
     const n: BasicNoteInfo[] = [];
-    this.octaves.map((octave) => {
+    this.octaves.slice().reverse().map((octave) => {
       notes.map((note) => n.push({
         color: note.color,
         value: note.value + octave,
@@ -95,7 +98,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     return n.reverse();
   }
   public leftPxValue() {
-    return this.$el.getBoundingClientRect().left;
+    return this.rows.getBoundingClientRect().left;
   }
   public afterMove() {
     this.draggingIndex = null;
@@ -104,6 +107,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   public add(row: number, e: MouseEvent) {
     const x = e.clientX - this.leftPxValue();
     const col = Math.floor(x / this.noteWidth);
+    this.$log.debug(x, e.clientX, this.leftPxValue(), col);
     const noteBar = {
       length: this.default,
       row,
@@ -123,7 +127,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     };
   }
   public move(e: MouseEvent, oldNote: NoteInfo) {
-    const reft = this.$el.getBoundingClientRect();
+    const reft = this.rows.getBoundingClientRect();
     const row = Math.floor((e.clientY - reft.top) / this.noteHeight);
     const col = Math.floor((e.clientX - reft.left) / this.noteWidth);
 
@@ -155,10 +159,10 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 
     this.$delete(this.value, i);
 
-    let max = this.measures;
+    let max = this.minMeasures;
     for (const note of this.value) {
       const measure = Math.floor(note.col / (this.sixteenths * this.quarters));
-      max = Math.min(measure, max);
+      max = Math.max(measure, max);
     }
 
     this.$log.info(`The min measure is ${max}`);
@@ -197,6 +201,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   }
 
   public mounted() {
+    this.rows = this.$refs.rows as HTMLElement;
     this.value.map((note) => {
       this.$emit('added', note);
       this.checkMeasure(note);
@@ -233,4 +238,10 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 
 .sequencer
   position: relative
+  overflow: hidden
+
+.sequencer-child
+  position: relative
+  overflow-x: scroll
+  // overflow-y: hidden
 </style>

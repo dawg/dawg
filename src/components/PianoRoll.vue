@@ -15,6 +15,7 @@
       :note-width="noteWidth" 
       :note-height="noteHeight" 
       :measures.sync="measures"
+      :octaves="octaves"
       v-model="notes"
       @added="added"
       @removed="removed"
@@ -36,8 +37,8 @@ export default class PianoRoll extends Vue {
   public noteWidth = 20;
   public noteHeight = 16;
   public notes = [];
-  public octaves = [5, 4];
-  public measures = 1;
+  public octaves = [6, 5, 4, 3];
+  public measures = 4;
   public part = new Tone.Part(this.callback);
   public mounted() {
     this.part.start(0);
