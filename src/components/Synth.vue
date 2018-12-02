@@ -1,5 +1,11 @@
 <template>
-  <div class="synth-wrapper">
+  <!-- For some reason, @click isn't working on this component.
+  However, this works when we add $emit -->
+  <div 
+    class="synth-wrapper"
+    :class="{ selected }"
+    style="position: relative; z-index: 10;"
+  >
     <div 
       class="bar primary"
     ></div>
@@ -7,7 +13,8 @@
       class="synth secondary-lighten-1" 
       color="white"
       :style="synthStyle"
-      @click="expand = !expand"
+      @dblclick="expand = !expand"
+      @click="$emit('click', $event)"
     >
       <dot-button
         class="mute"
@@ -71,10 +78,12 @@ const envelope = {
 export default class Synth extends Vue {
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, default: 50 }) public height!: number;
+  public selected = false;
   // @Prop({ type: String, required: true }) public type!: string;
   // @Prop({ type: Number, required: true }) public volume!: number;
   // @Prop({ type: Number, required: true }) public panning!: number;
   // @Prop({ type: Boolean, required: true }) public mute!: boolean;
+
   public types = TYPES;
   public active = true;
   public panner = new Tone.Panner().toMaster();
@@ -111,8 +120,9 @@ export default class Synth extends Vue {
     cursor: pointer
 
 .mute
-  height: 25px
-  width: 25px
+  height: 20px
+  width: 20px
+  margin: 5px
 
 .synth-dropdown
   padding: 5px 18px
@@ -141,4 +151,18 @@ export default class Synth extends Vue {
 
 .expand
   height: 55px
+
+.selected::after
+  content: ''
+  position: absolute
+  top: 0
+  right: 0
+  bottom: 0
+  left: 0
+  border: 1px solid rgba(255, 255, 255, 0.36)
+  pointer-events: none
+
+// .selected
+//   box-shadow: inset 0px 0px 0px 10px #f00
+  // box-shadow: inset 0px 0px 0px 10px 
 </style>

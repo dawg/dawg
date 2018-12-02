@@ -109,19 +109,22 @@ export class Draggable extends Vue {
   public mounted() {
     const el = this.$refs.drag;
     if (!el) { return; }
-
     el.addEventListener('mousedown', this.addListeners);
     el.addEventListener('mouseup', this.removeListeners);
     el.addEventListener('mouseenter', this.onHover);
     el.addEventListener('mouseleave', this.afterHover);
+    el.addEventListener('click', this.stopClick);
+  }
+  public stopClick(e: MouseEvent) {
+    e.stopPropagation();
   }
   public destroyed() {
     const el = this.$refs.drag;
     if (!el) { return; }
-
     el.removeEventListener('mousedown', this.addListeners);
     el.removeEventListener('mouseup', this.removeListeners);
     el.removeEventListener('mouseenter', this.onHover);
     el.removeEventListener('mouseleave', this.afterHover);
+    el.removeEventListener('click', this.stopClick);
   }
 }

@@ -8,6 +8,7 @@
       <piano
         v-for="octave in octaves"
         :key="octave"
+        :synth="synth"
         :octave="octave"
       ></piano>
     </div>
@@ -30,10 +31,14 @@ import Piano from '@/components/Piano.vue';
 import Sequencer from '@/components/Sequencer.vue';
 import { NoteInfo } from '@/types';
 
-const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
+// TODO PolySynth for Synth components
+// const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
+
 
 @Component({components: { Piano, Sequencer }})
 export default class PianoRoll extends Vue {
+  @Prop({ type: Object, required: false }) public synth?: Tone.Synth;
+
   public noteWidth = 20;
   public noteHeight = 16;
   public notes = [];
@@ -69,14 +74,17 @@ export default class PianoRoll extends Vue {
     this.part.remove(note.time, note);
   }
   public callback(time: string, note: NoteInfo) {
-    // console.log(`PR: ${note.length}`)
+    if (!this.synth) { return; }
+
     let rem = note.length;
     const sixteenths = rem % 4; rem = Math.floor(rem / 4);
     const quarters = rem % 4; const bars = Math.floor(rem / 4);
-    piano.triggerAttackRelease(note.value, `${bars}:${quarters}:${sixteenths}`, time);
+
+    this.synth.triggerAttackRelease(note.value, `${bars}:${quarters}:${sixteenths}`, time);
   }
   @Watch('measures', { immediate: true })
   public onMeasuresChange() {
+    // TODO differentiate between visiable + last measure that a note exists
     this.part.loopEnd = `${this.measures}m`;
   }
 }
