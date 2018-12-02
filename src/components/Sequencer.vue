@@ -1,12 +1,18 @@
 <template>
   <div :style="sequencerStyle" class="sequencer">
+    <!-- 
+      We need this child element for scroll reasons.
+      See https://stackoverflow.com/questions/16670931/hide-scroll-bar-but-while-still-being-able-to-scroll
+     -->
     <div class="sequencer-child">
+      <div class="select-area" :style="selectStyle"></div>
       <div class="layer rows" ref="rows" :style="`height: ${notes.length * noteHeight}px`">
         <div
           v-for="(note, row) in notes" 
           :key="note.value"
           :style="rowStyle(row, note.color)"
           @click="add(row, $event)"
+          @mousedown="selectStart"
         ></div>
       </div>
       <div :style="sequencerStyle" class="layer lines" ref="beatLines"></div>
@@ -45,6 +51,11 @@ interface BasicNoteInfo {
   color: string;
 }
 
+interface Point {
+  x: number;
+  y: number;
+}
+
 // TODO Create NoteInfo class
 
 @Component({
@@ -67,6 +78,8 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   public default = this.defaultLength;
   public rows!: HTMLElement;
   public draggingIndex: number | null = null;
+  public selectStartEvent: MouseEvent | null = null;
+  public selectCurrentEvent: MouseEvent | null = null;
 
   public get noteWidth() {
     return this.pxPerBeat / 4;
@@ -102,6 +115,51 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   }
   public afterMove() {
     this.draggingIndex = null;
+  }
+  public get selectStyle() {
+    if (!this.selectStartEvent) { return; }
+    if (!this.selectCurrentEvent) { return; }
+    const boundingRect = this.rows.getBoundingClientRect();
+
+    const left = this.selectStartEvent.clientX - boundingRect.left;
+    const top = this.selectStartEvent.clientY - boundingRect.top;
+
+    const width = this.selectCurrentEvent.clientX - this.selectStartEvent.clientX;
+    const height = this.selectCurrentEvent.clientY - this.selectStartEvent.clientY;
+
+    const minCol = left / this.noteWidth;
+    const minRow = top / this.noteHeight;
+    const maxCol = (left + width) / this.noteWidth;
+    const maxRow = (top + height) / this.noteHeight;
+    this.value.forEach((note) => {
+      //
+    });
+
+    return {
+      position: 'absolute',
+      borderRadius: '5px',
+      border: 'solid 1px red',
+      backgroundColor: 'rgba(255, 51, 51, 0.3)',
+      left: `${left}px`,
+      top: `${top}px`,
+      height: `${height}px`,
+      width: `${width}px`,
+      zIndex: 3,
+    };
+  }
+  public selectStart(e: MouseEvent) {
+    this.selectStartEvent = e;
+    window.addEventListener('mousemove', this.selectMove);
+    window.addEventListener('mouseup', this.selectEnd);
+  }
+  public selectMove(e: MouseEvent) {
+    this.selectCurrentEvent = e;
+  }
+  public selectEnd() {
+    this.selectCurrentEvent = null;
+    this.selectCurrentEvent = null;
+    window.removeEventListener('mousemove', this.selectMove);
+    window.removeEventListener('mouseup', this.selectEnd);
   }
 
   public add(row: number, e: MouseEvent) {
@@ -147,6 +205,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     };
 
     this.$set(this.value, this.draggingIndex, newNote);
+    this.$emit('removed', oldNote);
     this.$emit('added', newNote);
   }
   public remove(e: MouseEvent, item: any) {

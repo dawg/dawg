@@ -12,7 +12,7 @@ import { BLACK, WHITE } from '@/utils';
 @Component
 export default class Key extends Mixins(PX) {
   @Prop(String) public note!: string;
-  @Prop({type: Tone.Synth, required: false}) public synth?: Tone.Synth;
+  @Prop({type: Object, required: false}) public synth?: Tone.Synth;
   @Prop({type: Number, default: 16 * 1.71428571}) public h!: number;
   @Prop({type: Number, default: 80}) public w!: number;
   @Prop({type: Number, default: 0.55}) public widthProportion!: number;

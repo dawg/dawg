@@ -33,7 +33,7 @@
               class="section-header center--vertial white--text"
               :style="`min-height: ${toolbarHeight + 1}px`"
             >
-              <div>{{ title }}</div>
+              <div class="aside--title">{{ title }}</div>
             </div>
             <vue-perfect-scrollbar class="scrollbar" style="height: 100%">
               <base-tabs ref="tabs" @changed="changed">
@@ -159,7 +159,7 @@ export default class App extends Vue {
   public title = '';
   public panelsTabs: BaseTabs | null = null;
   public synths: Synth[] = [];
-  public selectedSynth: Tone.Synth | null = null;
+  public selectedSynth: Tone.PolySynth | null = null;
 
   public $refs!: {
     synthesizers: Vue,
@@ -257,13 +257,17 @@ export default class App extends Vue {
       box-shadow: unset
       
       & .text
-        border-bottom: 1px solid
+        border-bottom: Synthpx solid
+
+.aside--title
+  user-select: none
 
 .text
   align-items: center
-  text-decoration: none
-  display: inline-block
+  text-decoration: noneSynth
+  display: inline-blockSynth
   padding: 0 2px
+  user-select: none
 
   &:hover
     cursor: default

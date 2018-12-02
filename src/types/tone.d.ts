@@ -646,7 +646,7 @@ declare module 'tone' {
 
   // @ts-ignore
   class PolySynth extends Instrument {
-      constructor(voicesAmount?: any, voice?: { new(): Synth }); // number | Object
+      constructor(voicesAmount?: number, voice?: { new(): Synth }); // number | Object
       voices: any[];
       dispose(): this;
       get(params?: any[]): any;

@@ -30,6 +30,7 @@ import Tone from 'tone';
 import Piano from '@/components/Piano.vue';
 import Sequencer from '@/components/Sequencer.vue';
 import { NoteInfo } from '@/types';
+import pop from '@/assets/popPop';
 
 // TODO PolySynth for Synth components
 // const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
@@ -41,7 +42,7 @@ export default class PianoRoll extends Vue {
 
   public noteWidth = 20;
   public noteHeight = 16;
-  public notes = [];
+  public notes = pop;
   public octaves = [6, 5, 4, 3];
   public measures = 4;
   public part = new Tone.Part(this.callback);
@@ -85,7 +86,7 @@ export default class PianoRoll extends Vue {
   @Watch('measures', { immediate: true })
   public onMeasuresChange() {
     // TODO differentiate between visiable + last measure that a note exists
-    this.part.loopEnd = `${this.measures}m`;
+    this.part.loopEnd = '2m'; // `${this.measures}m`;
   }
 }
 </script>

@@ -50,7 +50,7 @@
         dense
         dark
         :items="types"
-        v-model="synth.oscillator.type"
+        v-model="type"
       ></v-select>
     </div>
   </div>
@@ -62,17 +62,12 @@ import Tone from 'tone';
 import Knob from '@/components/Knob.vue';
 import DotButton from '@/components/DotButton.vue';
 
-import { Component, Prop } from 'vue-property-decorator';
+import { Component, Prop, Watch } from 'vue-property-decorator';
 
 const TYPES = ['pwm', 'sine', 'triangle', 'fatsawtooth', 'square'];
 
 const oscillator = { type: 'fatsawtooth', spread: 30 };
-const envelope = {
-  attack: 0.005,
-  decay: 0.1,
-  sustain: 0.3,
-  release: 1,
-};
+const envelope = { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 };
 
 @Component({ components: { Knob, DotButton } })
 export default class Synth extends Vue {
@@ -87,11 +82,13 @@ export default class Synth extends Vue {
   public types = TYPES;
   public active = true;
   public panner = new Tone.Panner().toMaster();
-  public synth = new Tone.Synth({ oscillator, envelope }).connect(this.panner);
+  public synth = new Tone.PolySynth(8, Tone.Synth).connect(this.panner);
   public out = this.panner;
   public expand = false;
   public strokeWidth = 2.5;
   public knobSize = 30;
+
+  public type = 'fatsawtooth';
 
   public get synthStyle() {
     return {
@@ -106,6 +103,14 @@ export default class Synth extends Vue {
     } else {
       this.panner.disconnect(Tone.Master);
     }
+  }
+  public mounted() {
+    this.synth.set({ oscillator, envelope });
+  }
+
+  @Watch('type', { immediate: true })
+  public onTypeChange() {
+    this.synth.set({ oscillator: { type: this.type } });
   }
 }
 </script>
@@ -136,6 +141,7 @@ export default class Synth extends Vue {
 .name
   font-size: 1.2em
   padding-right: 40px
+  user-select: none
 
 .synth-wrapper
   display: flex
