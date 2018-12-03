@@ -1,6 +1,6 @@
 <template>
   <div class="primary footer position white--text" :style="style">
-    Vuesic &copy; {{ new Date().getFullYear() }}
+    DAWG &copy; {{ new Date().getFullYear() }}
   </div>
 </template>
 

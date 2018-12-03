@@ -17,7 +17,9 @@ const middleware = () => {
   Vue.use(VueShortkey);
   Vue.use(VueKonva);
   Vue.component('ico', Ico);
-  Vue.use(VueLogger);
+  Vue.use(VueLogger, {
+    logLevel :  'info',
+  });
 };
 
 export default middleware;

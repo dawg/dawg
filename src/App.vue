@@ -30,17 +30,24 @@
           <div class="aside secondary" style="display: flex; flex-direction: column">
             
             <div
-              class="title center--vertial white--text"
+              class="section-header center--vertial white--text"
               :style="`min-height: ${toolbarHeight + 1}px`"
             >
-              <div>{{ title }}</div>
+              <div class="aside--title">{{ title }}</div>
             </div>
-            <vue-perfect-scrollbar class="scrollbar">
+            <vue-perfect-scrollbar class="scrollbar" style="height: 100%">
               <base-tabs ref="tabs" @changed="changed">
                 <side-bar name="EXPLORER" icon="folder">
                   <file-explorer></file-explorer>
                 </side-bar>
-                <side-bar name="SYNTHESIZERS" icon="playlist_add"></side-bar>
+                <side-bar name="SYNTHESIZERS" icon="playlist_add" ref="synthesizers">
+                  <synth
+                    v-for="(synth, i) in synthInformation"
+                    :key="synth.name"
+                    @click="selectSynth(i)"
+                    :name="synth.name"
+                  ></synth>
+                </side-bar>
                 <side-bar name="AUDIO FILES" icon="queue_music"></side-bar>
                 <side-bar name="SEARCH" icon="search"></side-bar>
               </base-tabs>
@@ -97,7 +104,7 @@
                   <div></div>
                 </panel>
                 <panel name="Piano Roll">
-                  <piano-roll></piano-roll>
+                  <piano-roll :synth="selectedSynth"></piano-roll>
                 </panel>
                 <panel name="Sample">
                   <div></div>
@@ -114,6 +121,7 @@
 </template>
 
 <script lang="ts">
+import Tone from 'tone';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import Toolbar from '@/components/Toolbar.vue';
 import SideBar from '@/components/SideBar.vue';
@@ -125,6 +133,7 @@ import Panel from '@/components/Panel.vue';
 import Split from '@/modules/split/Split.vue';
 import PianoRoll from '@/components/PianoRoll.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
+import Synth from '@/components/Synth.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 
 @Component({
@@ -140,6 +149,7 @@ import VuePerfectScrollbar from 'vue-perfect-scrollbar';
     PianoRoll,
     BaseTabs,
     VuePerfectScrollbar,
+    Synth,
   },
 })
 export default class App extends Vue {
@@ -148,14 +158,29 @@ export default class App extends Vue {
   public height = window.innerHeight;
   public title = '';
   public panelsTabs: BaseTabs | null = null;
+  public synths: Synth[] = [];
+  public selectedSynth: Tone.PolySynth | null = null;
+
+  public $refs!: {
+    synthesizers: Vue,
+    tabs: BaseTabs,
+    panels: BaseTabs,
+  };
 
   public tabs?: BaseTabs;
   public items: SideBar[] = [];
+  public synthInformation = [
+    {
+      name: 'Sawtooth',
+    },
+  ];
 
   public mounted() {
-    this.tabs = this.$refs.tabs as BaseTabs;
+    this.synths = this.$refs.synthesizers.$children as Synth[];
+    this.tabs = this.$refs.tabs;
     this.items = this.tabs.$children as SideBar[];
-    this.panelsTabs = this.$refs.panels as BaseTabs;
+    this.panelsTabs = this.$refs.panels;
+    this.panelsTabs.selectTab(localStorage.getItem('panel'));
   }
 
   public click(tab: SideBar, $event: MouseEvent) {
@@ -165,7 +190,19 @@ export default class App extends Vue {
     this.title = tab.name;
   }
   public selectPanel(name: string, e: MouseEvent) {
+    localStorage.setItem('panel', name);
     this.panelsTabs!.selectTab(name, e);
+  }
+  public selectSynth(i: number) {
+    this.synths.slice(0, i).forEach((synth) => synth.selected = false);
+    this.synths.slice(i + 1).forEach((synth) => synth.selected = false);
+    this.synths[i].selected = !this.synths[i].selected;
+
+    if (this.synths[i].selected) {
+      this.selectedSynth = this.synths[i].synth;
+    } else {
+      this.selectedSynth = null;
+    }
   }
   get panels() {
     if (this.panelsTabs) {
@@ -192,7 +229,7 @@ export default class App extends Vue {
   z-index: 3
   border-right: 1px solid
 
-.title
+.section-header
   font-size: 15px !important
   border-bottom: 1px solid rgba(0, 0, 0, 0.3)
   padding: 0 20px
@@ -220,13 +257,17 @@ export default class App extends Vue {
       box-shadow: unset
       
       & .text
-        border-bottom: 1px solid
+        border-bottom: Synthpx solid
+
+.aside--title
+  user-select: none
 
 .text
   align-items: center
-  text-decoration: none
-  display: inline-block
+  text-decoration: noneSynth
+  display: inline-blockSynth
   padding: 0 2px
+  user-select: none
 
   &:hover
     cursor: default

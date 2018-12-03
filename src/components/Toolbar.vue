@@ -40,7 +40,7 @@ import TimeDisplay from '@/components/TimeDisplay.vue';
 export default class Toolbar extends Vue {
   @Prop(Number) public height!: number;
   @Prop(Number) public offset!: number;
-  public title = 'Vuesic';
+  public title = 'Vusic';
   public time = {
     mine: 0,
     sec: 0,

@@ -17,6 +17,6 @@ describe('Foot.vue', () => {
   it('renders with copyright when passed', () => {
     const wrapper = shallowMount(Foot);
     wrapper.find('.position');
-    expect(wrapper.text()).toContain('Vuesic');
+    expect(wrapper.text()).toContain('DAWG');
   });
 });

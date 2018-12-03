@@ -24,9 +24,9 @@ import stillDre from '@/assets/still-dre';
 import Foot from '@/components/Foot.vue';
 import notification from '@/notification';
 import Notifications from '@/notification/Notifications.vue';
-import SideBar from '@/components/SideBar.vue';
 import Synth from '@/components/Synth.vue';
 import Split from '@/modules/split/Split.vue';
+import BeatLines from '@/components/BeatLines';
 
 import Vue from 'vue';
 
@@ -56,12 +56,12 @@ storiesOf(Key.name, module)
     components: { Key },
   }));
 
-const piano = new Tone.PolySynth(4, Tone.Synth).toMaster();
+const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
 
 storiesOf(Sequencer.name, module)
   .add('Standard', () => ({
     template: `
-    <sequencer :note-width="20" :note-height="16" v-model="notes" :measures.sync="measures"/>
+    <sequencer :px-per-beat="80" :note-height="16" v-model="notes" :measures.sync="measures"/>
     `,
     data: () => ({ notes: [], measures: 1 }),
     components: { Sequencer },
@@ -104,8 +104,8 @@ storiesOf(Sequencer.name, module)
       stop() {
         Tone.Transport.stop();
       },
-      callback(time: string, chord: string) {
-        piano.triggerAttackRelease(chord, '8n', time);
+      callback(time: string, note: string) {
+        piano.triggerAttackRelease(note, '8n', time);
       },
       added(note: object) {
         // @ts-ignore
@@ -194,13 +194,7 @@ storiesOf(TimeDisplay.name, module)
 
 storiesOf(Note.name, module)
   .add('Standard', () => ({
-    template: `
-    <v-stage :config="{height: 200, width: 200}">
-      <v-layer>
-        <note :height="16" v-model="length" :width="20" text="C5"></note>
-      </v-layer>
-    </v-stage>
-    `,
+    template: `<note :height="16" v-model="length" :width="20" text="C5"></note>`,
     components: { Note },
     data: () => ({ length: 4 }),
   }));
@@ -222,7 +216,17 @@ storiesOf(ChannelRack.name, module)
 
 storiesOf(Knob.name, module)
   .add('Standard', () => ({
-    template: '<knob v-model="value" style="margin: 50px"></knob>',
+    template: `
+      <div>
+        <knob
+          v-model="value"
+          :size="100"
+          label="Dry/Wet"
+          style="border-radius: 3px; padding: 20px; background-color: #2C2D2F"
+        ></knob>
+        <div>{{ value }}</div>
+      </div>
+    `,
     components: { Knob },
     data() {
       return { value: 0 };
@@ -372,53 +376,20 @@ storiesOf(Foot.name, module)
     components: { Foot },
   }));
 
-const oscillator = {type: 'fatsawtooth', spread: 30};
-const envelope = {
-  attack: 0.005 ,
-  decay: 0.1 ,
-  sustain: 0.3 ,
-  release: 1,
-  };
-
-const panner = new Tone.Panner().toMaster();
-const synthesizer = new Tone.Synth({oscillator, envelope}).connect(panner);
-
 storiesOf(Synth.name, module)
   .add('Standard', () => ({
-    data: () => ({
-      synthesizer,
-      panner,
-      mute: true,
-    }),
     template: `
     <v-app>
+      <div><synth ref="synth" name="Tester"></synth></div>
       <div>
-        <synth
-          :type.sync="synthesizer.oscillator.type"
-          :volume.sync="synthesizer.volume.value"
-          :panning.sync="panner.pan.value"
-          :mute="mute"
-          @update:mute="muter"
-        ></synth>
-      </div>
-      <div>
-        <v-btn @click="playme">playme</v-btn>
+        <v-btn @click="playme">Play</v-btn>
       </div>
     </v-app>
     `,
     methods: {
-      muter(value: boolean) {
-        // @ts-ignore
-        this.mute = value;
-        if (!value) {
-          panner.disconnect(Tone.Master);
-        } else {
-          panner.toMaster();
-        }
-      },
       playme() {
         // @ts-ignore
-        this.synthesizer.triggerAttackRelease('C5', '8n');
+        this.$refs.synth.synth.triggerAttackRelease('C5', '8n');
       },
     },
     components: { Synth },
@@ -441,4 +412,11 @@ storiesOf(Split.name, module)
     </split>
     `,
     components: { Split },
+  }));
+
+
+storiesOf(BeatLines.name, module)
+  .add('Standard', () => ({
+    template: `<div style="height: 30px; width: 400px"></div>`,
+    mixins: [BeatLines],
   }));

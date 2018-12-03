@@ -1,38 +1,36 @@
 <template>
-  <v-stage :config="canvasConfig">
-    <v-layer>
-      <div v-for="(note, row) in notes" :key="note.value">
-        <template v-for="col in totalSixteenths">
-          <v-rect
-              :key="col"
-              :config="rectConfig(row, col - 1, note.color)"
-              @click="add(row, col - 1)"
-          ></v-rect>
-        </template>
+  <div :style="sequencerStyle" class="sequencer">
+    <!-- 
+      We need this child element for scroll reasons.
+      See https://stackoverflow.com/questions/16670931/hide-scroll-bar-but-while-still-being-able-to-scroll
+     -->
+    <div class="sequencer-child">
+      <div class="select-area" :style="selectStyle"></div>
+      <div class="layer rows" ref="rows" :style="`height: ${notes.length * noteHeight}px`">
+        <div
+          v-for="(note, row) in notes" 
+          :key="note.value"
+          :style="rowStyle(row, note.color)"
+          @click="add(row, $event)"
+          @mousedown="selectStart"
+        ></div>
       </div>
-    </v-layer>
-    <v-layer>
-      <template v-for="col in totalSixteenths">
-        <v-line :config="borderConfig(col)" :key="col"></v-line>
-      </template>
-    </v-layer>
-    <v-layer>
-      <template v-for="(note, i) in value">
-        <!--suppress JSUnresolvedVariable -->
-        <note
-            :key="i"
-            :height="noteHeight"
-            :width="noteWidth"
-            :x="note.x"
-            :y="note.y"
-            @contextmenu="(e) => remove(e, i)"
-            @mousedown="addListeners($event, note)"
-            @input="changeDefault"
-            v-model="note.length"
-        ></note>
-      </template>
-    </v-layer>
-  </v-stage>
+      <div :style="sequencerStyle" class="layer lines" ref="beatLines"></div>
+      <note
+        v-for="(note, i) in value"
+        :key="i"
+        :height="noteHeight"
+        :width="noteWidth"
+        :x="note.x"
+        :y="note.y"
+        style="position: absolute; z-index: 2"
+        @contextmenu="remove($event, note)"
+        @mousedown="addListeners($event, note)"
+        @input="changeDefault"
+        v-model="note.length"
+      ></note>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -41,21 +39,11 @@ import { Draggable, PX } from '@/mixins';
 import { FactoryDictionary } from 'typescript-collections';
 import { notes, range, BLACK, WHITE } from '@/utils';
 import Note from '@/components/Note.vue';
-
-interface Lookup {
-  [key: string]: NoteInfo;
-}
+import { NoteInfo } from '@/types';
+import BeatLines from '@/components/BeatLines';
 
 interface Colors {
   [key: string]: string;
-}
-
-interface NoteInfo {
-  row: number;
-  col: number;
-  index: number;
-  value: string;
-  length: number;
 }
 
 interface BasicNoteInfo {
@@ -63,45 +51,58 @@ interface BasicNoteInfo {
   color: string;
 }
 
+interface Point {
+  x: number;
+  y: number;
+}
+
+// TODO Create NoteInfo class
+
 @Component({
   components: { Note },
 })
-export default class Sequencer extends Mixins(Draggable, PX) {
+export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   @Prop({ type: Number, required: true }) public noteHeight!: number;
-  @Prop({ type: Number, required: true }) public noteWidth!: number;
-  @Prop(Number) public width!: number;
-  @Prop(Number) public height!: number;
-  @Prop(Array) public value!: any[];
+  // @Prop({ type: Number, required: true }) public noteWidth!: number;
+  @Prop(Array) public value!: NoteInfo[];
   @Prop({ type: String, default: '#21252b' }) public blackColor!: string;
   @Prop({ type: String, default: '#282c34' }) public whiteColor!: string;
+  @Prop({ type: Array, default: [4, 5] }) public octaves!: number[];
   @Prop({ type: Number, default: 1 }) public defaultLength!: number;
   @Prop({ type: Number, required: true }) public measures!: number;
+  @Prop({ type: Number, default: 4 }) public minMeasures!: number; // TODO
 
-  public lineColor = '#000';
   public quarters = 4;
   public sixteenths = 4;
-  public lookup: Lookup = {};
   public cursor = 'move';
   public default = this.defaultLength;
-  public octaves = [4, 5];
-  public farthest = [];
+  public rows!: HTMLElement;
+  public draggingIndex: number | null = null;
+  public selectStartEvent: MouseEvent | null = null;
+  public selectCurrentEvent: MouseEvent | null = null;
 
-  get canvasConfig() {
+  public get noteWidth() {
+    return this.pxPerBeat / 4;
+  }
+
+  get sequencerStyle() {
     return {
-      height: this.height || this.notes.length * this.noteHeight,
-      width: this.width || this.totalSixteenths * this.noteWidth,
+      height: `${this.notes.length * this.noteHeight}px`,
+      width: `${this.totalSixteenths * this.noteWidth}px`,
     };
   }
   get colorLookup(): Colors {
-    return { [BLACK]: this.blackColor, [WHITE]: this.whiteColor };
+    return {
+      [BLACK]: this.blackColor,
+      [WHITE]: this.whiteColor,
+    };
   }
   get totalSixteenths() {
-    // we always render 1 extra measure
-    return (this.measures + 1) * this.quarters * this.sixteenths;
+    return this.measures * this.quarters * this.sixteenths;
   }
   get notes() {
     const n: BasicNoteInfo[] = [];
-    this.octaves.map((octave) => {
+    this.octaves.slice().reverse().map((octave) => {
       notes.map((note) => n.push({
         color: note.color,
         value: note.value + octave,
@@ -109,83 +110,127 @@ export default class Sequencer extends Mixins(Draggable, PX) {
     });
     return n.reverse();
   }
+  public leftPxValue() {
+    return this.rows.getBoundingClientRect().left;
+  }
+  public afterMove() {
+    this.draggingIndex = null;
+  }
+  public get selectStyle() {
+    if (!this.selectStartEvent) { return; }
+    if (!this.selectCurrentEvent) { return; }
+    const boundingRect = this.rows.getBoundingClientRect();
 
-  public add(row: number, col: number) {
+    const left = this.selectStartEvent.clientX - boundingRect.left;
+    const top = this.selectStartEvent.clientY - boundingRect.top;
+
+    const width = this.selectCurrentEvent.clientX - this.selectStartEvent.clientX;
+    const height = this.selectCurrentEvent.clientY - this.selectStartEvent.clientY;
+
+    const minCol = left / this.noteWidth;
+    const minRow = top / this.noteHeight;
+    const maxCol = (left + width) / this.noteWidth;
+    const maxRow = (top + height) / this.noteHeight;
+    this.value.forEach((note) => {
+      //
+    });
+
+    return {
+      position: 'absolute',
+      borderRadius: '5px',
+      border: 'solid 1px red',
+      backgroundColor: 'rgba(255, 51, 51, 0.3)',
+      left: `${left}px`,
+      top: `${top}px`,
+      height: `${height}px`,
+      width: `${width}px`,
+      zIndex: 3,
+    };
+  }
+  public selectStart(e: MouseEvent) {
+    this.selectStartEvent = e;
+    window.addEventListener('mousemove', this.selectMove);
+    window.addEventListener('mouseup', this.selectEnd);
+  }
+  public selectMove(e: MouseEvent) {
+    this.selectCurrentEvent = e;
+  }
+  public selectEnd() {
+    this.selectCurrentEvent = null;
+    this.selectCurrentEvent = null;
+    window.removeEventListener('mousemove', this.selectMove);
+    window.removeEventListener('mouseup', this.selectEnd);
+  }
+
+  public add(row: number, e: MouseEvent) {
+    const x = e.clientX - this.leftPxValue();
+    const col = Math.floor(x / this.noteWidth);
+    this.$log.debug(x, e.clientX, this.leftPxValue(), col);
     const noteBar = {
       length: this.default,
       row,
       col,
-      index: this.value.length,
       ...this.compute(row, col),
     };
 
-    this.lookup[`${row}-${col}`] = noteBar;
     this.$emit('input', [...this.value, noteBar]);
     this.$emit('added', noteBar);
-    this.checkMeasure(col);
+    this.checkMeasure(noteBar);
   }
-  public rectConfig(row: number, col: number, color: string) {
+  public rowStyle(row: number, color: string) {
     return {
-      height: this.noteHeight,
-      width: this.noteWidth,
-      fill: this.colorLookup[color],
-      x: col * this.noteWidth,
-      y: row * this.noteHeight,
+      height: `${this.noteHeight}px`,
+      width: `${this.noteWidth * this.totalSixteenths}px`,
+      backgroundColor: this.colorLookup[color],
     };
   }
-  public borderConfig(col: number) {
-    let strokeWidth;
-    if (col % (this.quarters * this.sixteenths) === 0) {
-      strokeWidth = 2.4;
-    } else if (col % this.sixteenths === 0) {
-      strokeWidth = 1.5;
+  public move(e: MouseEvent, oldNote: NoteInfo) {
+    const reft = this.rows.getBoundingClientRect();
+    const row = Math.floor((e.clientY - reft.top) / this.noteHeight);
+    const col = Math.floor((e.clientX - reft.left) / this.noteWidth);
+
+    if (this.draggingIndex === null) {
+      this.draggingIndex = this.value.indexOf(oldNote);
     } else {
-      strokeWidth = 0.4;
+      oldNote = this.value[this.draggingIndex];
     }
 
-    const start = [col * this.noteWidth, 0];
-    const end = [col * this.noteWidth, (this.notes.length) * this.noteHeight];
-    return {
-      points: [...start, ...end],
-      strokeWidth,
-      stroke: '#000',
-    };
-  }
-  public move(e: MouseEvent, note: NoteInfo) {
-    const row = Math.floor(e.clientY / this.noteHeight);
-    const col = Math.floor(e.clientX / this.noteWidth);
+    if (row === oldNote.row && col === oldNote.col) { return; }
 
-    const oldNote = this.get(note.row, note.col);
     const newNote = {
-      ...oldNote, row, col, ...this.compute(row, col),
+      length: oldNote.length,
+      row,
+      col,
+      ...this.compute(row, col),
     };
 
-    this.set(row, col, newNote);
-
-    this.$set(this.value, oldNote.index, newNote);
-    this.$emit('input', this.value);
+    this.$set(this.value, this.draggingIndex, newNote);
+    this.$emit('removed', oldNote);
     this.$emit('added', newNote);
   }
-  public get(row: number, col: number) {
-    return this.lookup[`${row}-${col}`];
-  }
-  public set(row: number, col: number, value: NoteInfo) {
-    this.lookup[`${row}-${col}`] = value;
-  }
-  public remove(e: MouseEvent, i: number) {
+  public remove(e: MouseEvent, item: any) {
     e.preventDefault();
 
-    const toRemove = this.value[i];
-    this.$delete(this.value, i);
-    this.value.slice(0, i).map((note) => { note.index -= 1; });
+    const i = this.value.indexOf(item);
+    if (i === -1) {
+      throw Error(`${item} not found in the value. This should not happen.`);
+    }
 
-    // TODO XXX !!!
-    // if (this.farthest.length || toRemove.col === this.farthest[this.farthest.length - 1]) {
-    //   this.farthest.splice();
-    // }
+    this.$delete(this.value, i);
+
+    let max = this.minMeasures;
+    for (const note of this.value) {
+      const measure = Math.floor(note.col / (this.sixteenths * this.quarters));
+      max = Math.max(measure, max);
+    }
+
+    this.$log.info(`The min measure is ${max}`);
+    if (max < this.measures - 1) {
+      this.$emit('update:measures', this.measures + 1);
+    }
 
     this.$emit('input', this.value);
-    this.$emit('removed', toRemove);
+    this.$emit('removed', item);
   }
   public changeDefault(length: number) {
     this.default = length;
@@ -202,35 +247,60 @@ export default class Sequencer extends Mixins(Draggable, PX) {
       value: this.notes[row].value,
     };
   }
-  public checkMeasure(col: number) {
-    let measureValue = col / (this.quarters * this.sixteenths);
-    if (measureValue === this.measures) { this.$emit('update:measures', measureValue + 1); } else {
-      measureValue = Math.ceil(measureValue);
-      if (measureValue > this.measures) {
-        this.$emit('update:measures', measureValue);
-      } else if (measureValue < this.measures) {
-        this.$emit('update:measures', measureValue);
-      }
+  public checkMeasure(note: NoteInfo) {
+    const parts = note.time.split(':');
+    if (parts.length === 0) {
+      throw Error(`Invalid time: ${note.time}`);
     }
+
+    const measureValue = parseInt(parts[0], 10) + 1;
+    this.$log.debug(this.measures, measureValue);
+    if (measureValue < this.measures) { return; }
+    this.$emit('update:measures', measureValue + 1);
   }
 
   public mounted() {
+    this.rows = this.$refs.rows as HTMLElement;
     this.value.map((note) => {
       this.$emit('added', note);
-      this.checkMeasure(note.col);
+      this.checkMeasure(note);
     });
   }
 }
 </script>
 
 <style scoped lang="sass">
-  .sequencer
-    background: #303030
-    display: inline-block
+.sequencer
+  background: #303030
+  display: inline-block
 
-  .note
-    border-bottom: solid 0.5px #000
+.note
+  border-bottom: solid 0.5px #000
 
-  .measure, .section
-    display: flex
+.measure, .section
+  display: flex
+
+.rows
+  display: flex
+  flex-direction: column
+  position: absolute
+
+.lines
+  height: 100%
+  z-index: 1 
+  position: relative
+  pointer-events: none
+
+.notes
+  position: absolute
+  top: 0
+
+.sequencer
+  position: relative
+  overflow: hidden
+
+.sequencer-child
+  position: relative
+  overflow-x: scroll
+  // overflow-y: hidden
 </style>

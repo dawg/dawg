@@ -68,6 +68,10 @@ export class Draggable extends Vue {
     window.removeEventListener('mouseup', this.removeListeners);
     this.mousemoveListner = () => ({});
     this.afterHover();
+    this.afterMove();
+  }
+  public afterMove() {
+    //
   }
   public startMove(e: MouseEvent, ...args: any[]) {
     if (this.disabled) { return; }
@@ -90,6 +94,7 @@ export class Draggable extends Vue {
   }
   public prevent(e: Event) {
     if (e && e.preventDefault) { e.preventDefault(); }
+    if (e && e.stopPropagation) { e.stopPropagation(); }
   }
   public onHover() {
     if (this.moving) { return; }
@@ -104,19 +109,22 @@ export class Draggable extends Vue {
   public mounted() {
     const el = this.$refs.drag;
     if (!el) { return; }
-
     el.addEventListener('mousedown', this.addListeners);
     el.addEventListener('mouseup', this.removeListeners);
     el.addEventListener('mouseenter', this.onHover);
     el.addEventListener('mouseleave', this.afterHover);
+    el.addEventListener('click', this.stopClick);
+  }
+  public stopClick(e: MouseEvent) {
+    e.stopPropagation();
   }
   public destroyed() {
     const el = this.$refs.drag;
     if (!el) { return; }
-
     el.removeEventListener('mousedown', this.addListeners);
     el.removeEventListener('mouseup', this.removeListeners);
     el.removeEventListener('mouseenter', this.onHover);
     el.removeEventListener('mouseleave', this.afterHover);
+    el.removeEventListener('click', this.stopClick);
   }
 }

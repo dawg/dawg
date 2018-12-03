@@ -57,9 +57,17 @@ export const makeStyle = (type: StyleType, options?: StyleOptions) => {
   return str;
 };
 
-export const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].map((note) => ({
-  value: note,
-  color: note.endsWith('#') ? BLACK : WHITE,
+type Color = 'black' | 'white';
+type NoteValue = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B';
+
+export interface Note {
+  value: NoteValue;
+  color: Color;
+}
+
+export const notes: Note[] = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].map((note) => ({
+  value: note as NoteValue,
+  color: note.endsWith('#') ? 'black' : 'white' as Color,
 }));
 
 export const range = (a: number, b = 0, interval = 1) => {
