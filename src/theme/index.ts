@@ -1,6 +1,6 @@
 import tinycolor from 'tinycolor2';
 
-const PERCENTAGES = [4, 8, 12, 20];
+const PERCENTAGES = [4, 8, 12, 20, 30];
 
 interface Classes {[k: string]: string; }
 type Theme = Classes;

@@ -11,7 +11,7 @@
       <div class="spacer"></div>
       <div class="controls">
         <div>
-          <knob v-model="pan[i]" :size="30" :stroke-width="12"></knob>
+          <knob v-model="pan[i]" :size="30"></knob>
         </div>
       </div>
     </div>

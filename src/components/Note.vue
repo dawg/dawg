@@ -1,6 +1,7 @@
 <template>
   <div 
     class="note"
+    :class="{primary: !selected, selected}"
     ref="note"
     :style="noteConfig" 
   >
@@ -18,6 +19,7 @@
 
     <div
       class="drag"
+      :class="{'primary-lighten-3': this.in && !this.selected, in: this.in}"
       :style="borderConfig"
       @mouseenter="onHover"
       @mouseleave="afterHover"
@@ -41,8 +43,7 @@ export default class Note extends Mixins(Draggable) {
   @Prop({ type: Number, default: 0 }) public y!: number;
   @Prop(Number) public value!: number;
   @Prop(String) public text!: string;
-  @Prop({ type: String, default: '#0f82e6' }) public color!: number;
-  @Prop({ type: String, default: '#7ebef7' }) public borderColor!: number;
+  @Prop(Boolean) public selected!: boolean;
   @Prop({ type: String, default: '#fff' }) public textColor!: number;
   public cursor = 'ew-resize';
   public takeAway = 1; // we take away an extra pixel because it looks better
@@ -51,7 +52,7 @@ export default class Note extends Mixins(Draggable) {
     return {
       width: `${(this.width * this.value) - this.takeAway}px`,
       height: `${this.height}px`,
-      backgroundColor: this.color,
+      // backgroundColor: this.selected ? 'rgba(255, 51, 51, 0.2)' : this.color,
       left: `${this.x}px`,
       top: `${this.y}px`,
     };
@@ -60,7 +61,6 @@ export default class Note extends Mixins(Draggable) {
     return {
       width: `${this.borderWidth}px`,
       height: `${this.height}px`,
-      backgroundColor: this.in ? this.borderColor : this.color,
       left: `${((this.width * this.value)) - this.borderWidth - this.takeAway}px`,
     };
   }
@@ -98,4 +98,10 @@ export default class Note extends Mixins(Draggable) {
 .note
   border-radius: 4px
   overflow: hidden
+
+.selected
+  background-color: #ff9999
+
+  & .drag.in
+    background-color: #ffcccc
 </style>

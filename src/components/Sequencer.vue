@@ -23,9 +23,10 @@
         :width="noteWidth"
         :x="note.x"
         :y="note.y"
+        :selected="note.selected"
         style="position: absolute; z-index: 2"
         @contextmenu="remove($event, note)"
-        @mousedown="addListeners($event, note)"
+        @mousedown="clickNote($event, note)"
         @input="changeDefault"
         v-model="note.length"
       ></note>
@@ -67,7 +68,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   @Prop(Array) public value!: NoteInfo[];
   @Prop({ type: String, default: '#21252b' }) public blackColor!: string;
   @Prop({ type: String, default: '#282c34' }) public whiteColor!: string;
-  @Prop({ type: Array, default: [4, 5] }) public octaves!: number[];
+  @Prop({ type: Array, default: () => [4, 5] }) public octaves!: number[];
   @Prop({ type: Number, default: 1 }) public defaultLength!: number;
   @Prop({ type: Number, required: true }) public measures!: number;
   @Prop({ type: Number, default: 4 }) public minMeasures!: number; // TODO
@@ -118,7 +119,11 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   }
   public get selectStyle() {
     if (!this.selectStartEvent) { return; }
-    if (!this.selectCurrentEvent) { return; }
+    if (!this.selectCurrentEvent) {
+      this.value.forEach((note) => note.selected = false);
+      return;
+    }
+
     const boundingRect = this.rows.getBoundingClientRect();
 
     const left = this.selectStartEvent.clientX - boundingRect.left;
@@ -127,12 +132,14 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     const width = this.selectCurrentEvent.clientX - this.selectStartEvent.clientX;
     const height = this.selectCurrentEvent.clientY - this.selectStartEvent.clientY;
 
+    // these are exact numbers BTW
     const minCol = left / this.noteWidth;
     const minRow = top / this.noteHeight;
     const maxCol = (left + width) / this.noteWidth;
     const maxRow = (top + height) / this.noteHeight;
+
     this.value.forEach((note) => {
-      //
+      note.selected = note.row > minRow && note.row < maxRow && note.col > minCol && note.col < maxCol;
     });
 
     return {
@@ -156,7 +163,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.selectCurrentEvent = e;
   }
   public selectEnd() {
-    this.selectCurrentEvent = null;
+    this.selectStartEvent = null;
     this.selectCurrentEvent = null;
     window.removeEventListener('mousemove', this.selectMove);
     window.removeEventListener('mouseup', this.selectEnd);
@@ -168,6 +175,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.$log.debug(x, e.clientX, this.leftPxValue(), col);
     const noteBar = {
       length: this.default,
+      selected: false,
       row,
       col,
       ...this.compute(row, col),
@@ -199,6 +207,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 
     const newNote = {
       length: oldNote.length,
+      selected: oldNote.selected,
       row,
       col,
       ...this.compute(row, col),
@@ -257,6 +266,10 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.$log.debug(this.measures, measureValue);
     if (measureValue < this.measures) { return; }
     this.$emit('update:measures', measureValue + 1);
+  }
+  public clickNote(e: MouseEvent, note: NoteInfo) {
+    this.value.forEach((n) => n.selected = false);
+    this.addListeners(e, note);
   }
 
   public mounted() {

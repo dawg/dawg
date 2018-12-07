@@ -36,7 +36,8 @@ const synth = new Tone.Synth().toMaster();
 
 storiesOf(Piano.name, module)
   .add('Standard', () => ({
-    template: '<piano :octave="4"/>',
+    template: '<piano :octave="4" :synth="synth"/>',
+    data: () => ({ synth }),
     components: { Piano },
   }));
 
