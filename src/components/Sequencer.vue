@@ -253,6 +253,12 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
       throw Error(`${item} not found in the value. This should not happen.`);
     }
 
+    this.removeAtIndex(i);
+  }
+  public removeAtIndex(i: number) {
+    const item = this.value[i];
+    if (item === undefined) { throw Error(`${i} is out of range of notes`); }
+
     this.$delete(this.value, i);
 
     let max = this.minMeasures;
@@ -321,7 +327,14 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.addListeners(e, targetNote);
   }
   public keydown(e: KeyboardEvent) {
-    if (e.keyCode === 16) { this.shift = true; }  // TODO 16 to enum
+    if (e.keyCode === 16) { this.shift = true; }  // TODO 16 (shift) to enum
+    if (e.keyCode === 46) {
+      // Slice and reverse since we will be deleting from the array as we go
+      const lastIndex = this.value.length - 1;
+      this.value.slice().reverse().forEach((note, i) => {
+        if (note.selected) { this.removeAtIndex(lastIndex - i); }
+      });
+    }
   }
   public keyup(e: KeyboardEvent) {
     if (e.keyCode === 16) { this.shift = false; }
