@@ -12,6 +12,7 @@
           :key="note.value"
           :style="rowStyle(row, note.color)"
           @click="add(row, $event)"
+          @contextmenu="$event.preventDefault()"
           @mousedown="selectStart"
         ></div>
       </div>
@@ -81,6 +82,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   public draggingIndex: number | null = null;
   public selectStartEvent: MouseEvent | null = null;
   public selectCurrentEvent: MouseEvent | null = null;
+  public shift = false;
 
   public get noteWidth() {
     return this.pxPerBeat / 4;
@@ -181,7 +183,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
       ...this.compute(row, col),
     };
 
-    this.$emit('input', [...this.value, noteBar]);
+    this.$emit('input', [...this.value, noteBar]);  // TODO Reconsider this
     this.$emit('added', noteBar);
     this.checkMeasure(noteBar);
   }
@@ -205,17 +207,43 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 
     if (row === oldNote.row && col === oldNote.col) { return; }
 
-    const newNote = {
-      length: oldNote.length,
-      selected: oldNote.selected,
-      row,
-      col,
-      ...this.compute(row, col),
-    };
+    const colDiff = col - oldNote.col;
+    const rowDiff = row - oldNote.row;
 
-    this.$set(this.value, this.draggingIndex, newNote);
-    this.$emit('removed', oldNote);
-    this.$emit('added', newNote);
+    // TODO Merge if and else
+    if (oldNote.selected) {
+      this.value.forEach((note, i) => {
+        if (!note.selected) { return; }
+
+        const newRow = note.row + rowDiff;
+        const newCol = note.col + colDiff;
+        const newNote = {
+          length: note.length,
+          selected: note.selected,
+          row:  newRow,
+          col: newCol,
+          ...this.compute(newRow, newCol),
+        };
+
+        this.$set(this.value, i, newNote);
+        this.$emit('removed', note);
+        this.$emit('added', newNote);
+      });
+    } else {
+      const newNote = {
+        length: oldNote.length,
+        selected: oldNote.selected,
+        row,
+        col,
+        ...this.compute(row, col),
+      };
+
+      this.$set(this.value, this.draggingIndex, newNote);
+      this.$emit('removed', oldNote);
+      this.$emit('added', newNote);
+    }
+
+
   }
   public remove(e: MouseEvent, item: any) {
     e.preventDefault();
@@ -268,8 +296,35 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.$emit('update:measures', measureValue + 1);
   }
   public clickNote(e: MouseEvent, note: NoteInfo) {
-    this.value.forEach((n) => n.selected = false);
-    this.addListeners(e, note);
+    if (!note.selected) { this.value.forEach((n) => n.selected = false); }
+
+    const createNote = (oldNote: NoteInfo) => {
+      const newNote = JSON.parse(JSON.stringify(oldNote));
+      oldNote.selected = false;
+      this.value.push(newNote);
+      this.$emit('added', newNote);
+      return newNote;
+    };
+
+    let targetNote = note;
+    if (this.shift) {
+      let selected: NoteInfo[];
+      if (note.selected) {
+        selected = this.value.filter((n) => n.selected && n !== note);
+        targetNote = createNote(note);
+      } else {
+        selected = [note];
+      }
+
+      selected.forEach(createNote);
+    }
+    this.addListeners(e, targetNote);
+  }
+  public keydown(e: KeyboardEvent) {
+    if (e.keyCode === 16) { this.shift = true; }  // TODO 16 to enum
+  }
+  public keyup(e: KeyboardEvent) {
+    if (e.keyCode === 16) { this.shift = false; }
   }
 
   public mounted() {
@@ -278,6 +333,14 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
       this.$emit('added', note);
       this.checkMeasure(note);
     });
+
+    window.addEventListener('keydown', this.keydown);
+    window.addEventListener('keyup', this.keyup);
+  }
+
+  public destroyed() {
+    window.removeEventListener('keydown', this.keydown);
+    window.removeEventListener('keyup', this.keyup);
   }
 }
 </script>
