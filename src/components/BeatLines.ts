@@ -2,7 +2,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 
 @Component
 export default class BeatLines extends Vue {
-  @Prop({ type: Number, default: 80 }) public pxPerBeat!: number;
+  @Prop({ type: Number, required: true }) public noteWidth!: number;
   @Prop({ type: Number, default: 4 }) public beatsPerMeasure!: number;
   @Prop({ type: Number, default: 4 }) public stepsBerPeat!: number;
 
@@ -10,6 +10,9 @@ export default class BeatLines extends Vue {
   public stepColor = 'rgba(0,0,0,.1)';
   public measureColor = 'rgb(0,0,0)';
 
+  public get pxPerBeat() {
+    return this.noteWidth * 4;
+  }
 
   public get viewBox() {
     return this.pxPerBeat * this.beatsPerMeasure;

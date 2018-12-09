@@ -6,9 +6,9 @@
      -->
     <div class="sequencer-child">
       <div class="select-area" :style="selectStyle"></div>
-      <div class="layer rows" ref="rows" :style="`height: ${notes.length * noteHeight}px`">
+      <div class="layer rows" ref="rows" :style="`height: ${noteRows.length * noteHeight}px`">
         <div
-          v-for="(note, row) in notes" 
+          v-for="(note, row) in noteRows" 
           :key="note.value"
           :style="rowStyle(row, note.color)"
           @click="add(row, $event)"
@@ -18,7 +18,7 @@
       </div>
       <div :style="sequencerStyle" class="layer lines" ref="beatLines"></div>
       <note
-        v-for="(note, i) in value"
+        v-for="(note, i) in notes"
         :key="i"
         :height="noteHeight"
         :width="noteWidth"
@@ -38,6 +38,7 @@
 <script lang="ts">
 import { Component, Prop, Mixins } from 'vue-property-decorator';
 import { Draggable, PX } from '@/mixins';
+import { Keys } from '@/keys';
 import { FactoryDictionary } from 'typescript-collections';
 import { notes, range, BLACK, WHITE } from '@/utils';
 import Note from '@/components/Note.vue';
@@ -65,8 +66,7 @@ interface Point {
 })
 export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   @Prop({ type: Number, required: true }) public noteHeight!: number;
-  // @Prop({ type: Number, required: true }) public noteWidth!: number;
-  @Prop(Array) public value!: NoteInfo[];
+  @Prop(Array) public value?: NoteInfo[];  // TODO Change value to something else (initial maybe?)
   @Prop({ type: String, default: '#21252b' }) public blackColor!: string;
   @Prop({ type: String, default: '#282c34' }) public whiteColor!: string;
   @Prop({ type: Array, default: () => [4, 5] }) public octaves!: number[];
@@ -74,6 +74,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   @Prop({ type: Number, required: true }) public measures!: number;
   @Prop({ type: Number, default: 4 }) public minMeasures!: number; // TODO
 
+  public notes: NoteInfo[] = [];
   public quarters = 4;
   public sixteenths = 4;
   public cursor = 'move';
@@ -84,13 +85,9 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   public selectCurrentEvent: MouseEvent | null = null;
   public shift = false;
 
-  public get noteWidth() {
-    return this.pxPerBeat / 4;
-  }
-
   get sequencerStyle() {
     return {
-      height: `${this.notes.length * this.noteHeight}px`,
+      height: `${this.noteRows.length * this.noteHeight}px`,
       width: `${this.totalSixteenths * this.noteWidth}px`,
     };
   }
@@ -103,7 +100,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   get totalSixteenths() {
     return this.measures * this.quarters * this.sixteenths;
   }
-  get notes() {
+  get noteRows() {
     const n: BasicNoteInfo[] = [];
     this.octaves.slice().reverse().map((octave) => {
       notes.map((note) => n.push({
@@ -113,16 +110,13 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     });
     return n.reverse();
   }
-  public leftPxValue() {
-    return this.rows.getBoundingClientRect().left;
-  }
   public afterMove() {
     this.draggingIndex = null;
   }
   public get selectStyle() {
     if (!this.selectStartEvent) { return; }
     if (!this.selectCurrentEvent) {
-      this.value.forEach((note) => note.selected = false);
+      this.notes.forEach((note) => note.selected = false);
       return;
     }
 
@@ -140,7 +134,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     const maxCol = (left + width) / this.noteWidth;
     const maxRow = (top + height) / this.noteHeight;
 
-    this.value.forEach((note) => {
+    this.notes.forEach((note) => {
       note.selected = note.row > minRow && note.row < maxRow && note.col > minCol && note.col < maxCol;
     });
 
@@ -172,9 +166,9 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   }
 
   public add(row: number, e: MouseEvent) {
-    const x = e.clientX - this.leftPxValue();
+    const x = e.clientX - this.rows.getBoundingClientRect().left;
     const col = Math.floor(x / this.noteWidth);
-    this.$log.debug(x, e.clientX, this.leftPxValue(), col);
+    this.$log.debug(x, e.clientX, this.rows.getBoundingClientRect().left, col);
     const noteBar = {
       length: this.default,
       selected: false,
@@ -183,7 +177,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
       ...this.compute(row, col),
     };
 
-    this.$emit('input', [...this.value, noteBar]);  // TODO Reconsider this
+    this.notes.push(noteBar);
     this.$emit('added', noteBar);
     this.checkMeasure(noteBar);
   }
@@ -200,9 +194,9 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     const col = Math.floor((e.clientX - reft.left) / this.noteWidth);
 
     if (this.draggingIndex === null) {
-      this.draggingIndex = this.value.indexOf(oldNote);
+      this.draggingIndex = this.notes.indexOf(oldNote);
     } else {
-      oldNote = this.value[this.draggingIndex];
+      oldNote = this.notes[this.draggingIndex];
     }
 
     if (row === oldNote.row && col === oldNote.col) { return; }
@@ -212,7 +206,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 
     // TODO Merge if and else
     if (oldNote.selected) {
-      this.value.forEach((note, i) => {
+      this.notes.forEach((note, i) => {
         if (!note.selected) { return; }
 
         const newRow = note.row + rowDiff;
@@ -225,7 +219,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
           ...this.compute(newRow, newCol),
         };
 
-        this.$set(this.value, i, newNote);
+        this.$set(this.notes, i, newNote);
         this.$emit('removed', note);
         this.$emit('added', newNote);
       });
@@ -238,7 +232,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
         ...this.compute(row, col),
       };
 
-      this.$set(this.value, this.draggingIndex, newNote);
+      this.$set(this.notes, this.draggingIndex, newNote);
       this.$emit('removed', oldNote);
       this.$emit('added', newNote);
     }
@@ -248,7 +242,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   public remove(e: MouseEvent, item: any) {
     e.preventDefault();
 
-    const i = this.value.indexOf(item);
+    const i = this.notes.indexOf(item);
     if (i === -1) {
       throw Error(`${item} not found in the value. This should not happen.`);
     }
@@ -256,13 +250,13 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.removeAtIndex(i);
   }
   public removeAtIndex(i: number) {
-    const item = this.value[i];
+    const item = this.notes[i];
     if (item === undefined) { throw Error(`${i} is out of range of notes`); }
 
-    this.$delete(this.value, i);
+    this.$delete(this.notes, i);
 
     let max = this.minMeasures;
-    for (const note of this.value) {
+    for (const note of this.notes) {
       const measure = Math.floor(note.col / (this.sixteenths * this.quarters));
       max = Math.max(measure, max);
     }
@@ -272,7 +266,6 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
       this.$emit('update:measures', this.measures + 1);
     }
 
-    this.$emit('input', this.value);
     this.$emit('removed', item);
   }
   public changeDefault(length: number) {
@@ -280,14 +273,16 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   }
   public compute(row: number, col: number) {
     let rem = col;
-    const sixteenths = rem % this.sixteenths; rem = Math.floor(rem / this.sixteenths);
-    const quarters = rem % this.quarters; const bars = Math.floor(rem / this.quarters);
+    const sixteenths = rem % this.sixteenths;
+    rem = Math.floor(rem / this.sixteenths);
+    const quarters = rem % this.quarters;
+    const bars = Math.floor(rem / this.quarters);
     const time = `${bars}:${quarters}:${sixteenths}`;
     return {
       x: col * this.noteWidth,
       y: row * this.noteHeight,
       time,
-      value: this.notes[row].value,
+      value: this.noteRows[row].value,
     };
   }
   public checkMeasure(note: NoteInfo) {
@@ -302,12 +297,12 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.$emit('update:measures', measureValue + 1);
   }
   public clickNote(e: MouseEvent, note: NoteInfo) {
-    if (!note.selected) { this.value.forEach((n) => n.selected = false); }
+    if (!note.selected) { this.notes.forEach((n) => n.selected = false); }
 
     const createNote = (oldNote: NoteInfo) => {
       const newNote = JSON.parse(JSON.stringify(oldNote));
       oldNote.selected = false;
-      this.value.push(newNote);
+      this.notes.push(newNote);
       this.$emit('added', newNote);
       return newNote;
     };
@@ -316,7 +311,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     if (this.shift) {
       let selected: NoteInfo[];
       if (note.selected) {
-        selected = this.value.filter((n) => n.selected && n !== note);
+        selected = this.notes.filter((n) => n.selected && n !== note);
         targetNote = createNote(note);
       } else {
         selected = [note];
@@ -327,22 +322,25 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.addListeners(e, targetNote);
   }
   public keydown(e: KeyboardEvent) {
-    if (e.keyCode === 16) { this.shift = true; }  // TODO 16 (shift) to enum
-    if (e.keyCode === 46) {
+    if (e.keyCode === Keys.SHIFT) {
+      this.shift = true;
+    } else if (e.keyCode === Keys.DELETE) {
       // Slice and reverse since we will be deleting from the array as we go
-      const lastIndex = this.value.length - 1;
-      this.value.slice().reverse().forEach((note, i) => {
+      const lastIndex = this.notes.length - 1;
+      this.notes.slice().reverse().forEach((note, i) => {
         if (note.selected) { this.removeAtIndex(lastIndex - i); }
       });
     }
   }
   public keyup(e: KeyboardEvent) {
-    if (e.keyCode === 16) { this.shift = false; }
+    if (e.keyCode === Keys.SHIFT) { this.shift = false; }
   }
 
   public mounted() {
     this.rows = this.$refs.rows as HTMLElement;
-    this.value.map((note) => {
+    // Make a shallow copy so we don't alter the prop
+    this.notes = this.value ? this.value.slice() : [];
+    this.notes.map((note) => {
       this.$emit('added', note);
       this.checkMeasure(note);
     });

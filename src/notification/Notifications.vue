@@ -90,7 +90,7 @@ export default class Notifications extends Vue {
     //   ? event.duration
     //   : this.duration;
 
-    const duration = 150000;
+    const duration = this.duration;
 
     const { message, params, type, icon} = event;
     const { detail, dismissible} = params;

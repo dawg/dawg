@@ -17,7 +17,7 @@
       :note-height="noteHeight" 
       :measures.sync="measures"
       :octaves="octaves"
-      v-model="notes"
+      :value="notes"
       @added="added"
       @removed="removed"
     ></sequencer>
