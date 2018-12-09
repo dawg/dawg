@@ -27,6 +27,7 @@ import Notifications from '@/notification/Notifications.vue';
 import Synth from '@/components/Synth.vue';
 import Split from '@/modules/split/Split.vue';
 import BeatLines from '@/components/BeatLines';
+import Timeline from '@/components/Timeline.vue';
 
 import Vue from 'vue';
 
@@ -420,4 +421,11 @@ storiesOf(BeatLines.name, module)
   .add('Standard', () => ({
     template: `<div style="height: 30px; width: 400px"></div>`,
     mixins: [BeatLines],
+  }));
+
+storiesOf(Timeline.name, module)
+  .add('Standard', () => ({
+    template: `<timeline v-model="time" style="width: 400px; height: 20px"></timeline>`,
+    data: () => ({ time: 0 }),
+    components: { Timeline },
   }));

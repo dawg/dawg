@@ -2,7 +2,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 
 @Component
 export default class BeatLines extends Vue {
-  @Prop({ type: Number, required: true }) public noteWidth!: number;
+  @Prop({ type: Number, default: 20 }) public noteWidth!: number;
   @Prop({ type: Number, default: 4 }) public beatsPerMeasure!: number;
   @Prop({ type: Number, default: 4 }) public stepsBerPeat!: number;
 
