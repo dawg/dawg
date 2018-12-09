@@ -134,7 +134,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     const width = this.selectCurrentEvent.clientX - this.selectStartEvent.clientX;
     const height = this.selectCurrentEvent.clientY - this.selectStartEvent.clientY;
 
-    // these are exact numbers BTW
+    // these are exact numbers BTW, not integers
     const minCol = left / this.noteWidth;
     const minRow = top / this.noteHeight;
     const maxCol = (left + width) / this.noteWidth;

@@ -33,6 +33,7 @@
 import { Draggable } from '@/mixins';
 import { Mixins, Prop, Component } from 'vue-property-decorator';
 
+// TODO It may be possible to encapsolate some of the x, y logic within the note :)
 @Component
 export default class Note extends Mixins(Draggable) {
   @Prop({ type: Number, required: true }) public height!: number;
@@ -52,7 +53,6 @@ export default class Note extends Mixins(Draggable) {
     return {
       width: `${(this.width * this.value) - this.takeAway}px`,
       height: `${this.height}px`,
-      // backgroundColor: this.selected ? 'rgba(255, 51, 51, 0.2)' : this.color,
       left: `${this.x}px`,
       top: `${this.y}px`,
     };
@@ -99,6 +99,7 @@ export default class Note extends Mixins(Draggable) {
   border-radius: 4px
   overflow: hidden
 
+// TODO These colors are currently harcoded. We could possible make them props.
 .selected
   background-color: #ff9999
 
