@@ -428,4 +428,23 @@ storiesOf(Timeline.name, module)
     template: `<timeline v-model="time" style="width: 400px; height: 20px"></timeline>`,
     data: () => ({ time: 0 }),
     components: { Timeline },
+  }))
+  .add('With Offset', () => ({
+    template: `
+    <div>
+      <timeline v-model="time" style="width: 400px; height: 20px" :offset="offset"></timeline>
+      <div>
+        <input type="range" id="start" name="volume" min="0" max="100" v-model="pixels">
+        <label for="volume">Pixel Offset</label>
+      </div>
+    </div>
+    `,
+    data: () => ({ time: 0, pixels: 0, pxPerBeat: 80 }),
+    components: { Timeline },
+    computed: {
+      offset() {
+        // @ts-ignore
+        return this.pixels / this.pxPerBeat;
+      },
+    },
   }));

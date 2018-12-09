@@ -17,7 +17,7 @@
     <svg class="gsuiTimeline-cursorPreview gsui-hidden" width="16" height="10">
       <polygon points="2,2 8,8 14,2"/>
     </svg>
-    <svg class="gsuiTimeline-cursor" width="16" height="10" ref="cursor">
+    <svg class="gsuiTimeline-cursor" width="16" height="10" :style="cursorStyle">
       <polygon points="2,2 8,8 14,2"/>
     </svg>
     <div class="gsuiTimeline-currentTime"></div>
@@ -25,16 +25,15 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 import { Button } from '@/keys';
 
 @Component
 export default class Timeline extends Vue {
   @Prop({ type: Number, required: true }) public value!: number;
-  public cursor!: HTMLElement;
+  @Prop({ type: Number, default: 0 }) public offset!: number;
+  @Prop({ type: Number, default: 80 }) public pxPerBeat!: number;
   public steps: HTMLElement[] = [];
-  public offset = 0;
-  public pxPerBeat = 80;
   public stepsPerBeat = 4;
   public beatsPerMeasure = 4;
   public stepRound = 1;
@@ -124,56 +123,45 @@ export default class Timeline extends Vue {
       };
     }
   }
+  public get cursorStyle() {
+    return {
+      left: this.beatToPx(this.currentTime),
+    };
+  }
 
   public beatToPx(beat: number) {
     return (beat - this.offset) * this.pxPerBeat + 'px';
   }
+  public get stepsPerMeasure() { return this.stepsPerBeat * this.beatsPerMeasure; }
+  public get pxPerStep() { return this.pxPerBeat / this.stepsPerBeat; }
 
+  @Watch('offset')
   public doRender() {
-    const elSteps = this.steps;
-    const beatPx = this.pxPerBeat;
-    const stepsBeat = this.stepsPerBeat;
-    const stepsMeasure = stepsBeat * this.beatsPerMeasure;
-    const stepPx = beatPx / stepsBeat;
-    const stepEm = 1 / stepsBeat;
-    const stepsDuration = Math.ceil(this.$el.getBoundingClientRect().width / stepPx + 2);
+    const beatsPerStep = 1 / this.stepsPerBeat;
+    const stepsDuration = Math.ceil(this.$el.getBoundingClientRect().width / this.pxPerStep + 2);
 
-    let stepId = 0;
-    let step = Math.floor(this.offset * stepsBeat);
-    let em = -this.offset % stepEm;
+    let em = -this.offset % beatsPerStep;
 
-    while (elSteps.length < stepsDuration) {
-      elSteps.push(document.createElement( 'div' ));
+    // TODO Refactor manual creation
+    while (this.steps.length < stepsDuration) {
+      this.steps.push(document.createElement('div'));
     }
 
-    for (; stepId < stepsDuration; stepId++) {
-      const stepRel = step % stepsBeat;
-      const elStep = elSteps[stepId];
-
-      elStep.style.left = em * beatPx + 'px';
-      elStep.className = 'gsuiTimeline-' + ( step % stepsMeasure ? stepRel
-        ? 'step' : 'beat' : 'measure' );
-      elStep.textContent = elStep.className !== 'gsuiTimeline-step'
-        ? '' + Math.floor(1 + step / stepsBeat) : '.' ;
-      if ( !elStep.parentNode ) {
-        this.$el.appendChild( elStep );
-      }
-      ++step;
-      em += stepEm;
-    }
-    for ( ; stepId < elSteps.length; ++stepId ) {
-      const elStep = elSteps[ stepId ];
-
-      if ( !elStep.parentNode ) {
-        break;
-      }
-      elStep.remove();
-    }
-    this.cursor.style.left = this.beatToPx(this.currentTime);
+    const stepOffset = Math.floor(this.offset * this.stepsPerBeat);
+    this.steps.slice(0, stepsDuration).forEach((elStep, i) => {
+      const step = stepOffset + i;
+      const isBeat = !(step % this.stepsPerBeat);
+      const isMeasure = !(step % this.stepsPerMeasure);
+      const isStep = !isBeat && !isMeasure;
+      elStep.className = 'gsuiTimeline-' + ( isMeasure ? 'measure' : isBeat ? 'beat' : 'step');
+      elStep.style.left = em * this.pxPerBeat + 'px';
+      elStep.textContent = isStep ? '.' : Math.floor(1 + step / this.stepsPerBeat).toString();
+      this.$el.appendChild(elStep);
+      em += beatsPerStep;
+    });
   }
 
   public mounted() {
-    this.cursor = this.$refs.cursor as HTMLElement;
     this.doRender();
   }
 }
