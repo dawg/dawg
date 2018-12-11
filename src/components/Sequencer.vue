@@ -371,6 +371,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   width: 100%
   background: #303030
   display: inline-block
+  position: relative
 
 .note
   border-bottom: solid 0.5px #000
@@ -392,10 +393,6 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 .notes
   position: absolute
   top: 0
-
-.sequencer
-  position: relative
-  overflow: hidden
 
 .sequencer-child
   position: relative

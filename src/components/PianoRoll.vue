@@ -4,8 +4,11 @@
     v-shortkey="['space']"
     @shortkey="playPause"
   >
-    <div>
+    <div style="display: flex">
       <div class="empty-block"></div>
+      <timeline v-model="time" class="timeline" :offset="offset"></timeline>
+    </div>
+    <div style="overflow-y: scroll; display: flex; height: calc(100% - 20px)">
       <div class="pianos">
         <piano
           v-for="octave in octaves"
@@ -14,11 +17,8 @@
           :octave="octave"
         ></piano>
       </div>
-    </div>
-    <!-- TODO Move 100% - 80px to style area -->
-    <div style="width: calc(100% - 80px)">
-      <timeline v-model="time" class="timeline" :offset="offset"></timeline>
       <sequencer
+        style="width: calc(100% - 80px)"
         :note-width="noteWidth" 
         :note-height="noteHeight" 
         :measures.sync="measures"
@@ -111,14 +111,17 @@ export default class PianoRoll extends Vue {
 
 <style lang="sass" scoped>
 .piano-roll
-  display: flex
   border-top: 1px solid #111
   height: 100%
-  overflow-y: scroll
 
 .timeline, .empty-block
   height: 20px
-  width: 100%
+
+.timeline
+  width: calc(100% - 80px)
+
+.empty-block
+  width: 80px
 
 .pianos
   display: flex
