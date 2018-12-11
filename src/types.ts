@@ -4,4 +4,5 @@ export interface NoteInfo {
   time: string;
   row: number;
   col: number;
+  selected: boolean;
 }
