@@ -1,12 +1,16 @@
 <template>
-  <div :style="sequencerStyle" class="sequencer">
+  <div class="sequencer">
     <!-- 
       We need this child element for scroll reasons.
       See https://stackoverflow.com/questions/16670931/hide-scroll-bar-but-while-still-being-able-to-scroll
      -->
-    <div class="sequencer-child">
+    <div class="sequencer-child" @scroll="scroll" ref="scroller">
       <div class="select-area" :style="selectStyle"></div>
-      <div class="layer rows" ref="rows" :style="`height: ${noteRows.length * noteHeight}px`">
+      <div 
+        class="layer rows" 
+        ref="rows" 
+        :style="`height: ${noteRows.length * noteHeight}px`"
+      >
         <div
           v-for="(note, row) in noteRows" 
           :key="note.value"
@@ -85,10 +89,16 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   public selectCurrentEvent: MouseEvent | null = null;
   public shift = false;
 
+  public scroll(e: UIEvent) {
+    // This only handles horizontal scrolls!
+    const scroller = this.$refs.scroller as HTMLElement;
+    this.$emit('scroll-horizontal', scroller.scrollLeft);
+  }
   get sequencerStyle() {
     return {
-      height: `${this.noteRows.length * this.noteHeight}px`,
+      // TODO This may not be needed
       width: `${this.totalSixteenths * this.noteWidth}px`,
+      height: `${this.noteRows.length * this.noteHeight}px`,
     };
   }
   get colorLookup(): Colors {
@@ -358,6 +368,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 
 <style scoped lang="sass">
 .sequencer
+  width: 100%
   background: #303030
   display: inline-block
 
@@ -389,5 +400,4 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 .sequencer-child
   position: relative
   overflow-x: scroll
-  // overflow-y: hidden
 </style>

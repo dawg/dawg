@@ -1,5 +1,5 @@
 <template>
-  <div class="gsuiTimeline" @mousedown="mousedown">
+  <div class="gsuiTimeline secondary-darken" @mousedown="mousedown">
     <div class="gsuiTimeline-loopLine">
       <div class="gsuiTimeline-loop" :style="loopStyle" @mousedown="mousedown($event, 'center')">
 
@@ -14,25 +14,34 @@
         <div class="gsuiTimeline-loopBg"></div>
       </div>
     </div>
-    <svg class="gsuiTimeline-cursorPreview gsui-hidden" width="16" height="10">
-      <polygon points="2,2 8,8 14,2"/>
-    </svg>
     <svg class="gsuiTimeline-cursor" width="16" height="10" :style="cursorStyle">
       <polygon points="2,2 8,8 14,2"/>
     </svg>
     <div class="gsuiTimeline-currentTime"></div>
+    <div 
+      v-for="(step, i) in displaySteps"
+      :key="i"
+      :class="step.className"
+      :style="{left: step.left}"
+    >
+      {{ step.textContent }}
+    </div>
 </div>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
+import { Vue, Component, Prop, Watch, Mixins } from 'vue-property-decorator';
+import { ResponsiveMixin, Directions } from '@/modules/resize';
 import { Button } from '@/keys';
+import { range } from '@/utils';
 
 @Component
-export default class Timeline extends Vue {
+export default class Timeline extends Mixins(ResponsiveMixin) {
   @Prop({ type: Number, required: true }) public value!: number;
   @Prop({ type: Number, default: 0 }) public offset!: number;
   @Prop({ type: Number, default: 80 }) public pxPerBeat!: number;
+  @Prop({ type: String, default: 'step' }) public detail!: 'step' | 'beat' | 'measure';
+
   public steps: HTMLElement[] = [];
   public stepsPerBeat = 4;
   public beatsPerMeasure = 4;
@@ -46,6 +55,7 @@ export default class Timeline extends Vue {
   public inLoop = false;
   public selectedStart = false;
   public selectedEnd = false;
+  public rendered = false;
 
   public mousedown(e: MouseEvent, location?: 'start' | 'end' | 'center') {
     if (e.button !== Button.LEFT) { return; }
@@ -132,37 +142,35 @@ export default class Timeline extends Vue {
   public beatToPx(beat: number) {
     return (beat - this.offset) * this.pxPerBeat + 'px';
   }
+  public getWidth() {
+    return this.rendered ? this.$el.getBoundingClientRect().width : 0;
+  }
   public get stepsPerMeasure() { return this.stepsPerBeat * this.beatsPerMeasure; }
   public get pxPerStep() { return this.pxPerBeat / this.stepsPerBeat; }
-
-  @Watch('offset')
-  public doRender() {
-    const beatsPerStep = 1 / this.stepsPerBeat;
-    const stepsDuration = Math.ceil(this.$el.getBoundingClientRect().width / this.pxPerStep + 2);
-
-    let em = -this.offset % beatsPerStep;
-
-    // TODO Refactor manual creation
-    while (this.steps.length < stepsDuration) {
-      this.steps.push(document.createElement('div'));
-    }
-
+  public get beatsPerStep() { return 1 / this.stepsPerBeat; }
+  public get stepsDuration() { return Math.ceil(this.width / this.pxPerStep + 2); }
+  public get displaySteps() {
     const stepOffset = Math.floor(this.offset * this.stepsPerBeat);
-    this.steps.slice(0, stepsDuration).forEach((elStep, i) => {
+    let em = -this.offset % this.beatsPerStep;
+    return range(this.stepsDuration).map((i) => {
       const step = stepOffset + i;
       const isBeat = !(step % this.stepsPerBeat);
       const isMeasure = !(step % this.stepsPerMeasure);
       const isStep = !isBeat && !isMeasure;
-      elStep.className = 'gsuiTimeline-' + ( isMeasure ? 'measure' : isBeat ? 'beat' : 'step');
-      elStep.style.left = em * this.pxPerBeat + 'px';
-      elStep.textContent = isStep ? '.' : Math.floor(1 + step / this.stepsPerBeat).toString();
-      this.$el.appendChild(elStep);
-      em += beatsPerStep;
+      const className = 'gsuiTimeline-' + ( isMeasure ? 'measure' : isBeat ? 'beat' : 'step');
+      const left = em * this.pxPerBeat + 'px';
+      const textContent = isStep ? '.' : Math.floor(1 + step / this.stepsPerBeat).toString();
+      em += this.beatsPerStep;
+      return {
+        className,
+        left,
+        textContent,
+      };
     });
   }
 
   public mounted() {
-    this.doRender();
+    this.rendered = true;
   }
 }
 </script>
@@ -170,8 +178,7 @@ export default class Timeline extends Vue {
 <style>
 
 :root {
-	--gsuiTimeline-bg: darkslateblue;
-	--gsuiTimeline-color: yellow;
+	--gsuiTimeline-color: rgb(180, 180, 180);
 	--gsuiTimeline-loop-bg: tomato;
 	--gsuiTimeline-cursor-fill: yellow;
 	--gsuiTimeline-loopBorder-bg: yellow;
@@ -183,7 +190,6 @@ export default class Timeline extends Vue {
 	font: 14px monospace;
 	color: var( --gsuiTimeline-color );
 	cursor: default;
-	background-color: var( --gsuiTimeline-bg );
 }
 
 /* .......................................................................... */
@@ -241,6 +247,7 @@ export default class Timeline extends Vue {
 	transition: .2s;
 	transition-property: height, background-color, z-index;
 }
+
 .gsuiTimeline-loopBrdA { left: -1px; }
 .gsuiTimeline-loopBrdB { right: -1px; }
 .gsuiTimeline-loopA:hover ~ .gsuiTimeline-loopBrdA,
@@ -251,7 +258,6 @@ export default class Timeline extends Vue {
 	background-color: var( --gsuiTimeline-loopBorder-bg );
 }
 
-.gsuiTimeline-cursorPreview,
 .gsuiTimeline-cursor {
 	position: absolute;
 	margin-left: -8px;
@@ -262,13 +268,7 @@ export default class Timeline extends Vue {
 	stroke-width: 2px;
 	stroke-linejoin: round;
 }
-.gsuiTimeline-cursorPreview {
-	opacity: .4;
-	transition: .2s opacity;
-}
-.gsuiTimeline-cursorPreview.gsui-hidden {
-	opacity: 0;
-}
+
 
 .gsuiTimeline-measure,
 .gsuiTimeline-beat,
@@ -282,10 +282,8 @@ export default class Timeline extends Vue {
 	align-items: center;
 	justify-content: center;
 	user-select: none;
-	-moz-user-select: none;
-	-webkit-user-select: none;
-	-ms-user-select: none;
 }
+
 .gsuiTimeline-measure {
 	font-weight: bold;
 }
@@ -294,13 +292,7 @@ export default class Timeline extends Vue {
 	opacity: .2;
 }
 
-.gsuiTimeline-beat,
-.gsuiTimeline.gsui-measure .gsuiTimeline-measure {
+.gsuiTimeline-beat {
 	opacity: .5;
-}
-
-.gsuiTimeline.gsui-measure .gsuiTimeline-beat,
-.gsuiTimeline.gsui-measure .gsuiTimeline-step {
-	opacity: 0;
 }
 </style>

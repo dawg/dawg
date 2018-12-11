@@ -4,23 +4,31 @@
     v-shortkey="['space']"
     @shortkey="playPause"
   >
-    <div class="pianos">
-      <piano
-        v-for="octave in octaves"
-        :key="octave"
-        :synth="synth"
-        :octave="octave"
-      ></piano>
+    <div>
+      <div class="empty-block"></div>
+      <div class="pianos">
+        <piano
+          v-for="octave in octaves"
+          :key="octave"
+          :synth="synth"
+          :octave="octave"
+        ></piano>
+      </div>
     </div>
-    <sequencer
-      :note-width="noteWidth" 
-      :note-height="noteHeight" 
-      :measures.sync="measures"
-      :octaves="octaves"
-      :value="notes"
-      @added="added"
-      @removed="removed"
-    ></sequencer>
+    <!-- TODO Move 100% - 80px to style area -->
+    <div style="width: calc(100% - 80px)">
+      <timeline v-model="time" class="timeline" :offset="offset"></timeline>
+      <sequencer
+        :note-width="noteWidth" 
+        :note-height="noteHeight" 
+        :measures.sync="measures"
+        :octaves="octaves"
+        :value="notes"
+        @added="added"
+        @removed="removed"
+        @scroll-horizontal="scrollHorizontal"
+      ></sequencer>
+    </div>
   </div>
 </template>
 
@@ -29,6 +37,7 @@ import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 import Tone from 'tone';
 import Piano from '@/components/Piano.vue';
 import Sequencer from '@/components/Sequencer.vue';
+import Timeline from '@/components/Timeline.vue';
 import { NoteInfo } from '@/types';
 import pop from '@/assets/popPop';
 
@@ -36,14 +45,17 @@ import pop from '@/assets/popPop';
 // const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
 
 
-@Component({components: { Piano, Sequencer }})
+@Component({components: { Piano, Sequencer, Timeline }})
 export default class PianoRoll extends Vue {
   @Prop({ type: Object, required: false }) public synth?: Tone.Synth;
 
   public noteWidth = 20;
+  public pxPerBeat = 80;
+  public scrollLeft = 0;
   public noteHeight = 16;
   public notes = pop;
   public octaves = [6, 5, 4, 3];
+  public time = 0;
   public measures = 4;
   public part = new Tone.Part(this.callback);
   public mounted() {
@@ -88,6 +100,12 @@ export default class PianoRoll extends Vue {
     // TODO differentiate between visiable + last measure that a note exists
     this.part.loopEnd = '2m'; // `${this.measures}m`;
   }
+  public scrollHorizontal(scrollLeft: number) {
+    this.scrollLeft = scrollLeft;
+  }
+  public get offset() {
+    return this.scrollLeft / this.pxPerBeat;
+  }
 }
 </script>
 
@@ -97,6 +115,10 @@ export default class PianoRoll extends Vue {
   border-top: 1px solid #111
   height: 100%
   overflow-y: scroll
+
+.timeline, .empty-block
+  height: 20px
+  width: 100%
 
 .pianos
   display: flex

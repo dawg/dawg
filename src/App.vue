@@ -257,7 +257,7 @@ export default class App extends Vue {
       box-shadow: unset
       
       & .text
-        border-bottom: Synthpx solid
+        border-bottom: 1px solid
 
 .aside--title
   user-select: none
