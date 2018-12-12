@@ -25,7 +25,7 @@
         v-for="(note, i) in notes"
         :key="i"
         :height="noteHeight"
-        :width="noteWidth"
+        :width="pxPerStep"
         :x="note.x"
         :y="note.y"
         :selected="note.selected"
@@ -75,6 +75,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   @Prop({ type: String, default: '#282c34' }) public whiteColor!: string;
   @Prop({ type: Array, default: () => [4, 5] }) public octaves!: number[];
   @Prop({ type: Number, default: 1 }) public defaultLength!: number;
+  @Prop({ type: Number, default: 1 }) public snap!: number;
   @Prop({ type: Number, required: true }) public measures!: number;
   @Prop({ type: Number, default: 4 }) public minMeasures!: number; // TODO
 
@@ -97,7 +98,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   get sequencerStyle() {
     return {
       // TODO This may not be needed
-      width: `${this.totalSixteenths * this.noteWidth}px`,
+      width: `${this.totalSixteenths * this.pxPerStep}px`,
       height: `${this.noteRows.length * this.noteHeight}px`,
     };
   }
@@ -139,9 +140,9 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     const height = this.selectCurrentEvent.clientY - this.selectStartEvent.clientY;
 
     // these are exact numbers BTW, not integers
-    const minCol = left / this.noteWidth;
+    const minCol = left / this.pxPerStep;
     const minRow = top / this.noteHeight;
-    const maxCol = (left + width) / this.noteWidth;
+    const maxCol = (left + width) / this.pxPerStep;
     const maxRow = (top + height) / this.noteHeight;
 
     this.notes.forEach((note) => {
@@ -177,7 +178,8 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 
   public add(row: number, e: MouseEvent) {
     const x = e.clientX - this.rows.getBoundingClientRect().left;
-    const col = Math.floor(x / this.noteWidth);
+    // TODO Use snap value
+    const col = Math.floor(x / this.pxPerStep);
     this.$log.debug(x, e.clientX, this.rows.getBoundingClientRect().left, col);
     const noteBar = {
       length: this.default,
@@ -194,14 +196,14 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   public rowStyle(row: number, color: string) {
     return {
       height: `${this.noteHeight}px`,
-      width: `${this.noteWidth * this.totalSixteenths}px`,
+      width: `${this.pxPerStep * this.totalSixteenths}px`,
       backgroundColor: this.colorLookup[color],
     };
   }
   public move(e: MouseEvent, oldNote: NoteInfo) {
     const reft = this.rows.getBoundingClientRect();
     const row = Math.floor((e.clientY - reft.top) / this.noteHeight);
-    const col = Math.floor((e.clientX - reft.left) / this.noteWidth);
+    const col = Math.floor((e.clientX - reft.left) / this.pxPerStep);
 
     if (this.draggingIndex === null) {
       this.draggingIndex = this.notes.indexOf(oldNote);
@@ -282,29 +284,21 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.default = length;
   }
   public compute(row: number, col: number) {
-    let rem = col;
-    const sixteenths = rem % this.sixteenths;
-    rem = Math.floor(rem / this.sixteenths);
-    const quarters = rem % this.quarters;
-    const bars = Math.floor(rem / this.quarters);
-    const time = `${bars}:${quarters}:${sixteenths}`;
+    const time = col / 4;
     return {
-      x: col * this.noteWidth,
+      x: col * this.pxPerStep,
       y: row * this.noteHeight,
       time,
       value: this.noteRows[row].value,
     };
   }
   public checkMeasure(note: NoteInfo) {
-    const parts = note.time.split(':');
-    if (parts.length === 0) {
-      throw Error(`Invalid time: ${note.time}`);
-    }
-
-    const measureValue = parseInt(parts[0], 10) + 1;
+    // TODO: divide the time by the signiture. For now it is hardcoded at 4
+    const measureValue = note.time / 4 + 1;
     this.$log.debug(this.measures, measureValue);
     if (measureValue < this.measures) { return; }
-    this.$emit('update:measures', measureValue + 1);
+    this.$emit('update:measures', this.measures + 1);
+
   }
   public clickNote(e: MouseEvent, note: NoteInfo) {
     if (!note.selected) { this.notes.forEach((n) => n.selected = false); }

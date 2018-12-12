@@ -1,7 +1,7 @@
 export interface NoteInfo {
   value: string;
   length: number;
-  time: string;
+  time: number;
   row: number;
   col: number;
   selected: boolean;

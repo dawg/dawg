@@ -27,6 +27,7 @@ import Notifications from '@/notification/Notifications.vue';
 import Synth from '@/components/Synth.vue';
 import Split from '@/modules/split/Split.vue';
 import BeatLines from '@/components/BeatLines';
+import PianoRoll from '@/components/PianoRoll.vue';
 import Timeline from '@/components/Timeline.vue';
 
 import Vue from 'vue';
@@ -67,83 +68,6 @@ storiesOf(Sequencer.name, module)
     `,
     data: () => ({ notes: [], measures: 1 }),
     components: { Sequencer },
-  }))
-  .add('Playable', () => ({
-    template: `<div>
-                <sequencer
-                    :note-width="20"
-                    :note-height="16"
-                    :measures.sync="measures"
-                    @added="added"
-                    @removed="removed"
-                    :value="notes"
-                ></sequencer>
-                <play-pause @play="play" @stop="stop"/>
-                <span style="display: block">{{ processed }}</span>
-              </div>
-              `,
-    data() {
-      return {
-        notes: stillDre,
-        // @ts-ignore
-        part: new Tone.Part(this.callback),
-        measures: 1,
-      };
-    },
-    components: { Sequencer, PlayPause },
-    computed: {
-      processed() {
-        const chords = new FactoryDictionary<string, string[]>(Array);
-        // @ts-ignore
-        this.notes.map(({ time, note }) => chords.getValue(time).push(note));
-        return Object.keys(chords).map((time) => [time, chords.getValue(time).sort()]);
-      },
-    },
-    methods: {
-      play() {
-        Tone.Transport.start();
-      },
-      stop() {
-        Tone.Transport.stop();
-      },
-      callback(time: string, note: string) {
-        piano.triggerAttackRelease(note, '8n', time);
-      },
-      added(note: object) {
-        // @ts-ignore
-        this.part.add(note.time, note.note);
-      },
-      moved({ newTime, oldTime, note }: {newTime: string, oldTime: string, note: string}) {
-        // @ts-ignore
-        this.part.remove(oldTime);
-        // @ts-ignore
-        this.part.add(newTime, note);
-      },
-      removed(note: object) {
-        // @ts-ignore
-        // tslint:disable-next-line:no-console
-        console.log(this.part.at(note.time));
-        // this.part.remove(note.time)
-      },
-    },
-    mounted() {
-      // @ts-ignore
-      this.part.start(0);
-      // @ts-ignore
-      this.part.loop = true;
-      // @ts-ignore
-      this.part.humanize = true;
-      Tone.Transport.bpm.value = 93;
-    },
-    watch: {
-      measures: {
-        immediate: true,
-        handler() {
-          // @ts-ignore
-          this.part.loopEnd = `${this.measures}m`;
-        },
-      },
-    },
   }));
 
 storiesOf(DotButton.name, module)
@@ -425,21 +349,40 @@ storiesOf(BeatLines.name, module)
 
 storiesOf(Timeline.name, module)
   .add('Standard', () => ({
-    template: `<timeline v-model="time" style="width: 400px; height: 20px"></timeline>`,
-    data: () => ({ time: 0 }),
+    template: `
+      <timeline
+        :loop-start="start"
+        :loop-end="end"
+        v-model="time"
+        style="width: 400px; height: 20px"
+      ></timeline>
+    `,
+    data: () => ({ time: 0, start: 0, end: 2 }), // TODO change to 8 for beats
     components: { Timeline },
   }))
   .add('With Offset', () => ({
     template: `
     <div>
-      <timeline v-model="time" style="width: 400px; height: 20px" :offset="offset"></timeline>
+      <timeline
+        :loop-start="start"
+        :loop-end="end"
+        v-model="time"
+        style="width: 400px; height: 20px"
+        :offset="offset"
+      ></timeline>
       <div>
         <input type="range" id="start" name="volume" min="0" max="100" v-model="pixels">
         <label for="volume">Pixel Offset</label>
       </div>
     </div>
     `,
-    data: () => ({ time: 0, pixels: 0, pxPerBeat: 80 }),
+    data: () => ({
+      time: 0,
+      pixels: 0,
+      pxPerBeat: 80,
+      start: 0,
+      end: 0,
+    }),
     components: { Timeline },
     computed: {
       offset() {
@@ -447,4 +390,13 @@ storiesOf(Timeline.name, module)
         return this.pixels / this.pxPerBeat;
       },
     },
+  }));
+
+storiesOf(PianoRoll.name, module)
+  .add('Standard', () => ({
+    template: `
+    <piano-roll :synth="piano"></piano-roll>
+    `,
+    data: () => ({ piano }),
+    components: { PianoRoll },
   }));

@@ -1,5 +1,5 @@
 <template>
-  <div class="gsuiTimeline secondary-darken" @mousedown="mousedown">
+  <div class="gsuiTimeline secondary" @mousedown="mousedown">
     <div class="gsuiTimeline-loopLine">
       <div class="gsuiTimeline-loop" :style="loopStyle" @mousedown="mousedown($event, 'center')">
 
@@ -38,6 +38,8 @@ import { range } from '@/utils';
 @Component
 export default class Timeline extends Mixins(ResponsiveMixin) {
   @Prop({ type: Number, required: true }) public value!: number;
+  @Prop({ type: Number, required: true }) public loopStart!: number;
+  @Prop({ type: Number, required: true }) public loopEnd!: number;
   @Prop({ type: Number, default: 0 }) public offset!: number;
   @Prop({ type: Number, default: 80 }) public pxPerBeat!: number;
   @Prop({ type: String, default: 'step' }) public detail!: 'step' | 'beat' | 'measure';
@@ -46,7 +48,6 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   public stepsPerBeat = 4;
   public beatsPerMeasure = 4;
   public stepRound = 1;
-  public currentTime = 0;
 
   public start: number | null  = null;
   public displayStart: number | null  = null;
@@ -111,10 +112,10 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
     this.displayEnd = this.round(this.end, 'round');
   }
 
+  // TODO remove mathFn ??
   public round(value: number, mathFn: 'round' | 'floor' | 'ceil' ) {
     if ( this.stepRound ) {
-      const mod = 1 / this.stepsPerBeat * this.stepRound;
-      value = Math[mathFn](value / mod) * mod;
+      value = Math[mathFn](value);
     }
     return value;
   }
@@ -135,8 +136,11 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   }
   public get cursorStyle() {
     return {
-      left: this.beatToPx(this.currentTime),
+      left: this.progress,
     };
+  }
+  public get progress() {
+    return this.beatToPx((this.loopEnd - this.loopStart * this.value + this.loopStart));
   }
 
   public beatToPx(beat: number) {
@@ -146,9 +150,8 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
     return this.rendered ? this.$el.getBoundingClientRect().width : 0;
   }
   public get stepsPerMeasure() { return this.stepsPerBeat * this.beatsPerMeasure; }
-  public get pxPerStep() { return this.pxPerBeat / this.stepsPerBeat; }
   public get beatsPerStep() { return 1 / this.stepsPerBeat; }
-  public get stepsDuration() { return Math.ceil(this.width / this.pxPerStep + 2); }
+  public get stepsDuration() { return Math.ceil(this.width / this.pxPerBeat + 2); }
   public get displaySteps() {
     const stepOffset = Math.floor(this.offset * this.stepsPerBeat);
     let em = -this.offset % this.beatsPerStep;
@@ -178,7 +181,6 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 <style>
 
 :root {
-	--gsuiTimeline-color: rgb(180, 180, 180);
 	--gsuiTimeline-loop-bg: tomato;
 	--gsuiTimeline-cursor-fill: yellow;
 	--gsuiTimeline-loopBorder-bg: yellow;
@@ -188,7 +190,7 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 	position: relative;
 	overflow: hidden;
 	font: 14px monospace;
-	color: var( --gsuiTimeline-color );
+	color: rgb(180, 180, 180);
 	cursor: default;
 }
 

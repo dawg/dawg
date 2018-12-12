@@ -5,8 +5,16 @@
     @shortkey="playPause"
   >
     <div style="display: flex">
+      <!-- TODO Just offset the timeline and remove this block + wrapper -->
       <div class="empty-block"></div>
-      <timeline v-model="time" class="timeline" :offset="offset"></timeline>
+      <!-- TODO loop-start and loop-end need to be refactored -->
+      <timeline 
+        v-model="time" 
+        class="timeline" 
+        :loop-start="0"
+        :loop-end="8"
+        :offset="offset"
+      ></timeline>
     </div>
     <div style="overflow-y: scroll; display: flex; height: calc(100% - 20px)">
       <div class="pianos">
@@ -56,6 +64,7 @@ export default class PianoRoll extends Vue {
   public notes = pop;
   public octaves = [6, 5, 4, 3];
   public time = 0;
+  public max = 8;
   public measures = 4;
   public part = new Tone.Part(this.callback);
   public mounted() {
@@ -71,8 +80,13 @@ export default class PianoRoll extends Vue {
       this.play();
     }
   }
+  public update() {
+    if (Tone.Transport.state === 'started') { requestAnimationFrame(this.update); }
+    this.time = this.part.progress;
+  }
   public play() {
     Tone.Transport.start();
+    this.update();
   }
   public pause() {
     Tone.Transport.pause();
@@ -81,6 +95,7 @@ export default class PianoRoll extends Vue {
     Tone.Transport.stop();
   }
   public added(note: NoteInfo) {
+    const time = `${note.time * Tone.Transport.PPQ}i`;
     this.part.add(note.time, note);
   }
   public removed(note: NoteInfo) {
