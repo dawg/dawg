@@ -99,6 +99,7 @@ export default class PianoRoll extends Vue {
     this.part.add(note.time, note);
   }
   public removed(note: NoteInfo) {
+    const time = `${note.time * Tone.Transport.PPQ}i`;
     this.part.remove(note.time, note);
   }
   public callback(time: string, note: NoteInfo) {

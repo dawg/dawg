@@ -34,14 +34,14 @@ import { Vue, Component, Prop, Watch, Mixins } from 'vue-property-decorator';
 import { ResponsiveMixin, Directions } from '@/modules/resize';
 import { Button } from '@/keys';
 import { range } from '@/utils';
+import { Sizable } from '@/sizable';
 
 @Component
-export default class Timeline extends Mixins(ResponsiveMixin) {
+export default class Timeline extends Mixins(ResponsiveMixin, Sizable) {
   @Prop({ type: Number, required: true }) public value!: number;
   @Prop({ type: Number, required: true }) public loopStart!: number;
   @Prop({ type: Number, required: true }) public loopEnd!: number;
   @Prop({ type: Number, default: 0 }) public offset!: number;
-  @Prop({ type: Number, default: 80 }) public pxPerBeat!: number;
   @Prop({ type: String, default: 'step' }) public detail!: 'step' | 'beat' | 'measure';
 
   public steps: HTMLElement[] = [];
@@ -140,7 +140,7 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
     };
   }
   public get progress() {
-    return this.beatToPx((this.loopEnd - this.loopStart * this.value + this.loopStart));
+    return this.beatToPx((this.loopEnd - this.loopStart) * this.value + this.loopStart);
   }
 
   public beatToPx(beat: number) {
@@ -151,7 +151,7 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   }
   public get stepsPerMeasure() { return this.stepsPerBeat * this.beatsPerMeasure; }
   public get beatsPerStep() { return 1 / this.stepsPerBeat; }
-  public get stepsDuration() { return Math.ceil(this.width / this.pxPerBeat + 2); }
+  public get stepsDuration() { return Math.ceil(this.width / this.pxPerStep + 2); }
   public get displaySteps() {
     const stepOffset = Math.floor(this.offset * this.stepsPerBeat);
     let em = -this.offset % this.beatsPerStep;

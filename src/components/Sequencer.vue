@@ -133,11 +133,17 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 
     const boundingRect = this.rows.getBoundingClientRect();
 
-    const left = this.selectStartEvent.clientX - boundingRect.left;
-    const top = this.selectStartEvent.clientY - boundingRect.top;
+    const left = Math.min(
+      this.selectStartEvent.clientX - boundingRect.left,
+      this.selectCurrentEvent.clientX - boundingRect.left,
+    );
+    const top = Math.min(
+      this.selectStartEvent.clientY - boundingRect.top,
+      this.selectCurrentEvent.clientY - boundingRect.top,
+    );
 
-    const width = this.selectCurrentEvent.clientX - this.selectStartEvent.clientX;
-    const height = this.selectCurrentEvent.clientY - this.selectStartEvent.clientY;
+    const width = Math.abs(this.selectCurrentEvent.clientX - this.selectStartEvent.clientX);
+    const height = Math.abs(this.selectCurrentEvent.clientY - this.selectStartEvent.clientY);
 
     // these are exact numbers BTW, not integers
     const minCol = left / this.pxPerStep;
@@ -146,7 +152,15 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     const maxRow = (top + height) / this.noteHeight;
 
     this.notes.forEach((note) => {
-      note.selected = note.row > minRow && note.row < maxRow && note.col > minCol && note.col < maxCol;
+      // Check if there is any overlap between the rectangles
+      // https://www.geeksforgeeks.org/find-two-rectangles-overlap/
+      if (minRow > note.row + 1 || note.row > maxRow) {
+        note.selected = false;
+      } else if (minCol > note.col + note.length || note.col > maxCol) {
+        note.selected = false;
+      } else {
+        note.selected = true;
+      }
     });
 
     return {
@@ -328,7 +342,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   public keydown(e: KeyboardEvent) {
     if (e.keyCode === Keys.SHIFT) {
       this.shift = true;
-    } else if (e.keyCode === Keys.DELETE) {
+    } else if (e.keyCode === Keys.DELETE || e.keyCode === Keys.BACKSPACE) {
       // Slice and reverse since we will be deleting from the array as we go
       const lastIndex = this.notes.length - 1;
       this.notes.slice().reverse().forEach((note, i) => {
