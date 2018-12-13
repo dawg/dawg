@@ -58,12 +58,6 @@ export const makeStyle = (type: StyleType, options?: StyleOptions) => {
 };
 
 type Color = 'black' | 'white';
-type NoteValue = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B';
-
-export interface OctaveValue {
-  value: NoteValue;
-  color: Color;
-}
 
 export const range = (a: number, b = 0, interval = 1) => {
   let start;
@@ -80,16 +74,18 @@ export const range = (a: number, b = 0, interval = 1) => {
   return rge;
 };
 
-const octave = ['A', 'A#', 'B', 'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#'];
+const octave = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 export const allKeys: Array<{ value: string, color: Color, number: number }> = [];
-let noteNumber = 0;
+let noteNumber = -8;  // A bit hacky but we want to start at A0 not C0
 range(0, 9).slice().forEach((value) => {
   octave.forEach((key) => {
-    allKeys.push({
-      value: `${key}${value}`,
-      color: key.endsWith('#') ? 'black' : 'white' as Color,
-      number: noteNumber,
-    });
+    if (noteNumber >= 1) {  // This if statement makes it so we start at A0
+      allKeys.push({
+        value: `${key}${value}`,
+        color: key.endsWith('#') ? 'black' : 'white' as Color,
+        number: noteNumber,
+      });
+    }
     noteNumber += 1;
   });
 });
