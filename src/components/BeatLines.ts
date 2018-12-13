@@ -1,8 +1,7 @@
 import { Vue, Component, Prop, Mixins } from 'vue-property-decorator';
-import { Sizable } from '@/sizable';
 
 @Component
-export default class BeatLines extends Mixins(Sizable) {
+export default class BeatLines extends Vue {
   @Prop({ type: Number, default: 4 }) public beatsPerMeasure!: number;
   @Prop({ type: Number, default: 4 }) public stepsPerBeat!: number;
 

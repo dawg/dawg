@@ -7,7 +7,7 @@
         class="note-wrapper"
       >
         <key
-          :note="key.value"
+          :value="key.value"
           :synth="synth"
           :border="borderBottom || index !== allKeys.length - 1"
         ></key>

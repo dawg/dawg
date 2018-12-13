@@ -11,14 +11,15 @@
         ref="rows" 
         :style="`height: ${allKeys.length * noteHeight}px`"
       >
-        <div
-          v-for="(key, row) in allKeys" 
+        <sequencer-row
+          v-for="key in allKeys" 
+          :value="key.number"
           :key="key.number"
-          :style="rowStyle(row, key.color)"
-          @click="add(key.number, row, $event)"
+          :total-beats="totalBeats"
+          @click="add"
           @contextmenu="$event.preventDefault()"
           @mousedown="selectStart"
-        ></div>
+        ></sequencer-row>
       </div>
       <div :style="sequencerStyle" class="layer lines" ref="beatLines"></div>
       <note
@@ -48,20 +49,7 @@ import { allKeys, range, BLACK, WHITE } from '@/utils';
 import NoteComponent from '@/components/Note.vue';
 import { Note } from '@/types';
 import BeatLines from '@/components/BeatLines';
-
-interface Colors {
-  [key: string]: string;
-}
-
-interface BasicNoteInfo {
-  value: string;
-  color: string;
-}
-
-interface Point {
-  x: number;
-  y: number;
-}
+import SequencerRow from '@/components/SequencerRow.vue';
 
 interface EnhancedNote extends Note {
   row: number;
@@ -71,15 +59,11 @@ interface EnhancedNote extends Note {
 // TODO Create Note class
 
 @Component({
-  components: { Note: NoteComponent },
+  components: { Note: NoteComponent, SequencerRow },
 })
 export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
-  @Prop({ type: Number, required: true }) public noteHeight!: number;
   @Prop(Array) public value?: Note[];  // TODO Change value to something else (initial maybe?)
-  @Prop({ type: String, default: '#21252b' }) public blackColor!: string;
-  @Prop({ type: String, default: '#282c34' }) public whiteColor!: string;
   @Prop({ type: Number, default: 1 }) public defaultLength!: number;
-  @Prop({ type: Number, default: 1 }) public snap!: number;
   @Prop({ type: Number, required: true }) public measures!: number;
   @Prop({ type: Number, default: 4 }) public minMeasures!: number; // TODO
 
@@ -107,14 +91,12 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
       height: `${this.allKeys.length * this.noteHeight}px`,
     };
   }
-  get colorLookup(): Colors {
-    return {
-      [BLACK]: this.blackColor,
-      [WHITE]: this.whiteColor,
-    };
-  }
+
   get totalSixteenths() {
     return this.measures * this.quarters * this.sixteenths;
+  }
+  get totalBeats() {
+    return this.measures * this.quarters;
   }
   public afterMove() {
     this.draggingIndex = null;
@@ -185,15 +167,12 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     window.removeEventListener('mouseup', this.selectEnd);
   }
 
-  public add(noteNumber: number, row: number, e: MouseEvent) {
-    const x = e.clientX - this.rows.getBoundingClientRect().left;
-    // TODO Use snap value
-    const col = Math.floor(x / this.pxPerStep);
-    this.$log.debug(x, e.clientX, this.rows.getBoundingClientRect().left, col);
+  public add(keyNumber: number, startBeat: number) {
     const noteBar = {
       length: this.default,
       selected: false,
-      number: noteNumber,
+      number: keyNumber,
+      time: startBeat,
       col,
       row,
       ...this.compute(row, col),
@@ -202,13 +181,6 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.notes.push(noteBar);
     this.$emit('added', noteBar);
     this.checkMeasure(noteBar);
-  }
-  public rowStyle(row: number, color: string) {
-    return {
-      height: `${this.noteHeight}px`,
-      width: `${this.pxPerStep * this.totalSixteenths}px`,
-      backgroundColor: this.colorLookup[color],
-    };
   }
   public move(e: MouseEvent, oldNote: EnhancedNote) {
     const reft = this.rows.getBoundingClientRect();
@@ -300,7 +272,6 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     return {
       x: col * this.pxPerStep,
       y: row * this.noteHeight,
-      time,
       value: this.allKeys[row].value,
     };
   }

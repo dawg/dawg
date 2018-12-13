@@ -7,11 +7,10 @@ import { Component, Mixins, Prop } from 'vue-property-decorator';
 import Tone from 'tone';
 
 import { PX } from '@/mixins';
-import { BLACK, WHITE } from '@/utils';
 
 @Component
 export default class Key extends Mixins(PX) {
-  @Prop(String) public note!: string;
+  @Prop(String) public value!: string;
   @Prop({type: Object, required: false}) public synth?: Tone.Synth;
   @Prop({type: Number, default: 16 * 1.71428571}) public h!: number;
   @Prop({type: Number, default: 80}) public w!: number;
@@ -20,13 +19,13 @@ export default class Key extends Mixins(PX) {
   @Prop({type: Boolean, default: false}) public borderConfig!: boolean;
 
   get color() {
-    return this.note.includes('#') ? BLACK : WHITE;
+    return this.value.includes('#') ? 'black' : 'white';
   }
   get keyClass() {
-    return `key--${this.color} ${this.note}`;
+    return `key--${this.color} ${this.value}`;
   }
   get keyStyle() {
-    if (this.color === BLACK) {
+    if (this.color === 'black') {
       return {
         transform: `translate(0, -${(this.h * this.heightProportion) / 2}px)`,
         ...this.hw(this.h * this.heightProportion, this.w * this.widthProportion),
@@ -39,7 +38,7 @@ export default class Key extends Mixins(PX) {
   }
   public play() {
     if (this.synth) {
-      this.synth.triggerAttackRelease(this.note, '8n');
+      this.synth.triggerAttackRelease(this.value, '8n');
     }
   }
 }

@@ -1,7 +1,3 @@
-export const BLACK = 'black';
-
-export const WHITE = 'white';
-
 export enum StyleType {
   PRIMARY = 'primary',
   SECONDARY = 'secondary',
@@ -74,15 +70,22 @@ export const range = (a: number, b = 0, interval = 1) => {
   return rge;
 };
 
-const octave = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-export const allKeys: Array<{ value: string, color: Color, number: number }> = [];
+interface OctaveKey {
+  value: string;
+  color: Color;
+  number: number;
+}
+
+const octaveKeys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+export const allKeys: OctaveKey[] = [];
+export const keyLookup: {[n: number]: OctaveKey} = {};
 let noteNumber = -8;  // A bit hacky but we want to start at A0 not C0
 range(0, 9).slice().forEach((value) => {
-  octave.forEach((key) => {
+  octaveKeys.forEach((key) => {
     if (noteNumber >= 1) {  // This if statement makes it so we start at A0
       allKeys.push({
         value: `${key}${value}`,
-        color: key.endsWith('#') ? 'black' : 'white' as Color,
+        color: key.endsWith('#') ? 'black' : 'white',
         number: noteNumber,
       });
     }
@@ -90,14 +93,6 @@ range(0, 9).slice().forEach((value) => {
   });
 });
 
-export const TREE = {
-  root: {
-    'folder 1': {
-      'item 1': {},
-      'folder 2': {
-        'item 2': {},
-      },
-    },
-    'item 3': {},
-  },
-};
+allKeys.forEach((key) => {
+  keyLookup[key.number] = key;
+});

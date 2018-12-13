@@ -7,6 +7,7 @@ import Key from '@/components/Key.vue';
 import Sequencer from '@/components/Sequencer.vue';
 import Piano from '@/components/Piano.vue';
 import Toolbar from '@/components/Toolbar.vue';
+import Dawg from '@/components/Dawg.vue';
 import Tree from '@/components/Tree.vue';
 import ChannelRack from '@/components/ChannelRack.vue';
 import Knob from '@/components/Knob.vue';
@@ -19,8 +20,7 @@ import PlayPause from '@/components/PlayPause.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
 import ColorBlock from '@/components/ColorBlock.vue';
-import { TREE, StyleType, range, makeStyle } from '@/utils';
-import stillDre from '@/assets/still-dre';
+import { StyleType, range, makeStyle } from '@/utils';
 import Foot from '@/components/Foot.vue';
 import notification from '@/notification';
 import Notifications from '@/notification/Notifications.vue';
@@ -83,6 +83,18 @@ storiesOf(Toolbar.name, module)
     components: { Toolbar },
   }));
 
+const TREE = {
+    root: {
+      'folder 1': {
+        'item 1': {},
+        'folder 2': {
+          'item 2': {},
+        },
+      },
+      'item 3': {},
+    },
+  };
+
 storiesOf(Tree.name, module)
   .add('Standard', () => ({
     template: `
@@ -120,9 +132,13 @@ storiesOf(TimeDisplay.name, module)
 
 storiesOf(Note.name, module)
   .add('Standard', () => ({
-    template: `<note :height="16" v-model="length" :width="20" text="C5"></note>`,
-    components: { Note },
-    data: () => ({ length: 4 }),
+    template: `
+    <dawg>
+      <note v-model="length" :key-number="88" :start="0"></note>
+    </dawg>
+    `,
+    components: { Dawg, Note },
+    data: () => ({ length: 1 }),
   }));
 
 storiesOf(ChannelRack.name, module)

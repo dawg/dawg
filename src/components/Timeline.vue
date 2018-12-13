@@ -34,10 +34,9 @@ import { Vue, Component, Prop, Watch, Mixins } from 'vue-property-decorator';
 import { ResponsiveMixin, Directions } from '@/modules/resize';
 import { Button } from '@/keys';
 import { range } from '@/utils';
-import { Sizable } from '@/sizable';
 
 @Component
-export default class Timeline extends Mixins(ResponsiveMixin, Sizable) {
+export default class Timeline extends Mixins(ResponsiveMixin) {
   @Prop({ type: Number, required: true }) public value!: number;
   @Prop({ type: Number, required: true }) public loopStart!: number;
   @Prop({ type: Number, required: true }) public loopEnd!: number;
