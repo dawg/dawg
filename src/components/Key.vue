@@ -23,7 +23,7 @@ export default class Key extends Mixins(PX) {
     return this.note.includes('#') ? BLACK : WHITE;
   }
   get keyClass() {
-    return `key--${this.color}`;
+    return `key--${this.color} ${this.note}`;
   }
   get keyStyle() {
     if (this.color === BLACK) {

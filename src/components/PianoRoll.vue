@@ -17,21 +17,12 @@
       ></timeline>
     </div>
     <div style="overflow-y: scroll; display: flex; height: calc(100% - 20px)">
-      <div class="pianos">
-        <piano
-          v-for="octave in octaves"
-          :key="octave"
-          :synth="synth"
-          :octave="octave"
-        ></piano>
-      </div>
+      <piano :synth="synth"></piano>
       <sequencer
         style="width: calc(100% - 80px)"
         :note-width="noteWidth" 
         :note-height="noteHeight" 
         :measures.sync="measures"
-        :octaves="octaves"
-        :value="notes"
         @added="added"
         @removed="removed"
         @scroll-horizontal="scrollHorizontal"
@@ -46,8 +37,7 @@ import Tone from 'tone';
 import Piano from '@/components/Piano.vue';
 import Sequencer from '@/components/Sequencer.vue';
 import Timeline from '@/components/Timeline.vue';
-import { NoteInfo } from '@/types';
-import pop from '@/assets/popPop';
+import { Note } from '@/types';
 
 // TODO PolySynth for Synth components
 // const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
@@ -61,8 +51,6 @@ export default class PianoRoll extends Vue {
   public pxPerBeat = 80;
   public scrollLeft = 0;
   public noteHeight = 16;
-  public notes = pop;
-  public octaves = [6, 5, 4, 3];
   public time = 0;
   public max = 8;
   public measures = 4;
@@ -94,15 +82,16 @@ export default class PianoRoll extends Vue {
   public stop() {
     Tone.Transport.stop();
   }
-  public added(note: NoteInfo) {
+  public added(note: Note) {
     const time = `${note.time * Tone.Transport.PPQ}i`;
-    this.part.add(note.time, note);
+    this.part.add(time, note);
   }
-  public removed(note: NoteInfo) {
+  public removed(note: Note) {
     const time = `${note.time * Tone.Transport.PPQ}i`;
-    this.part.remove(note.time, note);
+    this.part.remove(time, note);
   }
-  public callback(time: string, note: NoteInfo) {
+  // TODO refacter to beats
+  public callback(time: string, note: Note) {
     if (!this.synth) { return; }
 
     let rem = note.length;
@@ -138,8 +127,4 @@ export default class PianoRoll extends Vue {
 
 .empty-block
   width: 80px
-
-.pianos
-  display: flex
-  flex-direction: column
 </style>
