@@ -1,7 +1,5 @@
 export interface Note {
-  number: number;
-  value: string;
+  id: number;
   length: number;
   time: number;
-  selected: boolean;
 }

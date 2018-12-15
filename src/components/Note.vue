@@ -31,14 +31,14 @@
 <script lang="ts">
 import { Draggable } from '@/mixins';
 import { Mixins, Prop, Component, Inject } from 'vue-property-decorator';
-import { keyLookup } from '@/utils';
+import { allKeys } from '@/utils';
 
 // TODO It may be possible to encapsolate some of the x, y logic within the note :)
 // TODO fontSize should actually be used for the font size
 @Component
 export default class Note extends Mixins(Draggable) {
   @Prop({ type: Number, required: true }) public start!: number;  // The start beat
-  @Prop({ type: Number, required: true }) public keyNumber!: number;
+  @Prop({ type: Number, required: true }) public id!: number;
   @Prop({ type: Number, default: 8 }) public borderWidth!: number;
   @Prop({ type: Number, default: 14 }) public fontSize!: number;
   @Prop({ type: Number, default: 0.25 }) public snap!: number;
@@ -59,9 +59,13 @@ export default class Note extends Mixins(Draggable) {
       top: `${this.top}px`,
     };
   }
-  // TODO 88 is hardcoded
-  get top() { return (88 - this.keyNumber) * this.noteHeight; }
-  get text() { return keyLookup[this.keyNumber].value; }
+  get top() {
+    return this.id * this.noteHeight;
+  }
+  get text() {
+    return allKeys[this.id].value;
+  }
+
   get left() { return this.start * this.pxPerBeat; }
   get pxLength() { return this.value * this.pxPerBeat; }
   get borderConfig() {
@@ -83,7 +87,7 @@ export default class Note extends Mixins(Draggable) {
     let length = diff / this.pxPerBeat;
     length = Math.round(length / this.snap) * this.snap;
     if (this.value === length) { return; }
-    if (length < 1) { return; }
+    if (length < this.snap) { return; }
     this.$emit('input', length);
   }
 }

@@ -1,7 +1,6 @@
 import { storiesOf } from '@storybook/vue';
 import { action } from '@storybook/addon-actions';
 import Tone from 'tone';
-import { FactoryDictionary } from 'typescript-collections';
 import DotButton from '@/components/DotButton.vue';
 import Key from '@/components/Key.vue';
 import Sequencer from '@/components/Sequencer.vue';
@@ -25,10 +24,12 @@ import Foot from '@/components/Foot.vue';
 import notification from '@/notification';
 import Notifications from '@/notification/Notifications.vue';
 import Synth from '@/components/Synth.vue';
+import SequencerRow from '@/components/SequencerRow.vue';
 import Split from '@/modules/split/Split.vue';
 import BeatLines from '@/components/BeatLines';
 import PianoRoll from '@/components/PianoRoll.vue';
 import Timeline from '@/components/Timeline.vue';
+
 
 import Vue from 'vue';
 
@@ -36,27 +37,58 @@ Vue.use(notification);
 
 const synth = new Tone.Synth().toMaster();
 
+storiesOf(SequencerRow.name, module)
+  .add('Standard', () => ({
+    template: `
+    <dawg>
+      <sequencer-row
+        v-for="i in 20"
+        :key="i"
+        :id="40 + i"
+        :total-beats="12"
+        @click="click"
+      ></sequencer-row>
+    </dawg>
+    `,
+    components: { SequencerRow, Dawg },
+    methods: {
+      click(...args) {
+        // tslint:disable-next-line:no-console
+        console.log('click', args);
+      },
+    },
+  }));
+
 storiesOf(Piano.name, module)
   .add('Standard', () => ({
-    template: '<piano :octave="4" :synth="synth" style="overflow-y: scroll; height: 500px"/>',
+    template: `
+    <dawg>
+      <piano
+        :synth="synth"
+        style="overflow-y: scroll; height: 500px"
+      ></piano>
+    </dawg>
+    `,
     data: () => ({ synth }),
-    components: { Piano },
+    components: { Piano, Dawg },
   }));
 
 storiesOf(Key.name, module)
   .add('White', () => ({
-    data() {
-      return { synth };
-    },
-    template: '<key note="C4" :synth="synth"/>',
-    components: { Key },
+    template: `
+    <dawg>
+      <key value="C4"></key>
+    </dawg>
+    `,
+    components: { Key, Dawg },
   }))
   .add('Black', () => ({
-    data() {
-      return { synth };
-    },
-    template: '<key note="C#4" :synth="synth"/>',
-    components: { Key },
+    template: `
+    <dawg>
+      <key value="C#4"></key>
+    </dawg>
+    `,
+    components: { Key, Dawg },
   }));
 
 const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
@@ -64,10 +96,15 @@ const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
 storiesOf(Sequencer.name, module)
   .add('Standard', () => ({
     template: `
-    <sequencer :note-width="20" :note-height="16" :value="notes" :measures.sync="measures"/>
+    <dawg>
+      <sequencer
+        :value="notes"
+        :measures.sync="measures"
+      ></sequencer>
+    </dawg>
     `,
     data: () => ({ notes: [], measures: 1 }),
-    components: { Sequencer },
+    components: { Sequencer, Dawg },
   }));
 
 storiesOf(DotButton.name, module)

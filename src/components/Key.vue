@@ -3,23 +3,24 @@
 </template>
 
 <script lang="ts">
-import { Component, Mixins, Prop } from 'vue-property-decorator';
+import { Component, Prop, Inject, Vue } from 'vue-property-decorator';
 import Tone from 'tone';
 
-import { PX } from '@/mixins';
-
 @Component
-export default class Key extends Mixins(PX) {
-  @Prop(String) public value!: string;
-  @Prop({type: Object, required: false}) public synth?: Tone.Synth;
-  @Prop({type: Number, default: 16 * 1.71428571}) public h!: number;
-  @Prop({type: Number, default: 80}) public w!: number;
-  @Prop({type: Number, default: 0.55}) public widthProportion!: number;
-  @Prop({type: Number, default: 0.50}) public heightProportion!: number;
-  @Prop({type: Boolean, default: false}) public borderConfig!: boolean;
+export default class Key extends Vue {
+  @Inject() public noteHeight!: number;
+  @Prop({ type: String, required: true }) public value!: string;
+  @Prop({ type: Object, required: false }) public synth?: Tone.Synth;
+  @Prop({ type: Number, default: 80 }) public width!: number;
+  @Prop({ type: Number, default: 0.55 }) public widthProportion!: number;
+  @Prop({ type: Number, default: 0.50 }) public heightProportion!: number;
+  @Prop(Boolean) public borderBottom!: boolean;
 
   get color() {
     return this.value.includes('#') ? 'black' : 'white';
+  }
+  get height() {
+    return this.noteHeight * (12 / 7);  // all keys / white keys
   }
   get keyClass() {
     return `key--${this.color} ${this.value}`;
@@ -27,40 +28,38 @@ export default class Key extends Mixins(PX) {
   get keyStyle() {
     if (this.color === 'black') {
       return {
-        transform: `translate(0, -${(this.h * this.heightProportion) / 2}px)`,
-        ...this.hw(this.h * this.heightProportion, this.w * this.widthProportion),
+        transform: `translate(0, -${(this.height * this.heightProportion) / 2}px)`,
+        height: `${this.height * this.heightProportion}px`,
+        width: `${this.width * this.widthProportion}px`,
       };
     }
     return {
-      borderBottom: this.borderConfig ? 'solid 1px #b9b9b9' : '',
-      ...this.hw(this.h, this.w),
+      borderBottom: this.borderBottom ? 'solid 1px rgba(0, 0, 0, 0.06)' : '',
+      height: `${this.height}px`,
+      width: `${this.width}px`,
     };
   }
   public play() {
-    if (this.synth) {
-      this.synth.triggerAttackRelease(this.value, '8n');
-    }
+    this.$emit('press', this.value);
   }
 }
 </script>
 
 <style scoped lang="sass">
-  @import '~@/styles/mixins'
+// TODO Move this to JavaScript. We have libraries for darken and lighten.
+$color_white: #eee
+$color_black: #3b3b3b
 
-  $color_white: #eee
-  $color_black: #3b3b3b
+.key--white
+  background-color: $color_white
+  &:hover
+    background-color: darken($color_white, 5)
 
-  .key--white
-    background-color: $color_white
-    &:hover
-      background-color: darken($color_white, 5)
-
-  .key--black
-    background-color: $color_black
-    position: absolute
-    z-index: 20
-    transition: 0.1s
-    &:hover
-      background-color: darken($color_black, 5)
-
+.key--black
+  background-color: $color_black
+  position: absolute
+  z-index: 20
+  transition: 0.1s
+  &:hover
+    background-color: darken($color_black, 5)
 </style>

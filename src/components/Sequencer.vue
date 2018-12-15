@@ -13,11 +13,10 @@
       >
         <sequencer-row
           v-for="key in allKeys" 
-          :value="key.number"
-          :key="key.number"
+          :key="key.id"
+          :id="key.id"
           :total-beats="totalBeats"
           @click="add"
-          @contextmenu="$event.preventDefault()"
           @mousedown="selectStart"
         ></sequencer-row>
       </div>
@@ -25,10 +24,8 @@
       <note
         v-for="(note, i) in notes"
         :key="i"
-        :height="noteHeight"
-        :width="pxPerStep"
-        :x="note.x"
-        :y="note.y"
+        :start="note.time"
+        :id="note.id"
         :selected="note.selected"
         style="position: absolute; z-index: 2"
         @contextmenu="remove($event, note)"
@@ -41,19 +38,18 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Mixins } from 'vue-property-decorator';
+import { Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 import { Draggable, PX } from '@/mixins';
 import { Keys } from '@/keys';
 import { FactoryDictionary } from 'typescript-collections';
-import { allKeys, range, BLACK, WHITE } from '@/utils';
+import { allKeys, range } from '@/utils';
 import NoteComponent from '@/components/Note.vue';
 import { Note } from '@/types';
 import BeatLines from '@/components/BeatLines';
 import SequencerRow from '@/components/SequencerRow.vue';
 
 interface EnhancedNote extends Note {
-  row: number;
-  col: number;
+  selected: boolean;
 }
 
 // TODO Create Note class
@@ -62,22 +58,24 @@ interface EnhancedNote extends Note {
   components: { Note: NoteComponent, SequencerRow },
 })
 export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
+  @Inject() public pxPerBeat!: number;
+  @Inject() public noteHeight!: number;
+  @Inject() public stepsPerBeat!: number;
   @Prop(Array) public value?: Note[];  // TODO Change value to something else (initial maybe?)
   @Prop({ type: Number, default: 1 }) public defaultLength!: number;
+  @Prop({ type: Number, default: 0.25 }) public snap!: number; // TODO snap is hardcoded
   @Prop({ type: Number, required: true }) public measures!: number;
   @Prop({ type: Number, default: 4 }) public minMeasures!: number; // TODO
 
   public notes: EnhancedNote[] = [];
-  public quarters = 4;
-  public sixteenths = 4;
   public cursor = 'move';
   public default = this.defaultLength;
   public rows!: HTMLElement;
   public draggingIndex: number | null = null;
   public selectStartEvent: MouseEvent | null = null;
   public selectCurrentEvent: MouseEvent | null = null;
-  public shift = false;
-  public allKeys = allKeys.slice().reverse();
+  public holdingShift = false;
+  public allKeys = allKeys;
 
   public scroll(e: UIEvent) {
     // This only handles horizontal scrolls!
@@ -87,16 +85,13 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   get sequencerStyle() {
     return {
       // TODO This may not be needed
-      width: `${this.totalSixteenths * this.pxPerStep}px`,
+      width: `${this.totalBeats * this.pxPerBeat}px`,
       height: `${this.allKeys.length * this.noteHeight}px`,
     };
   }
 
-  get totalSixteenths() {
-    return this.measures * this.quarters * this.sixteenths;
-  }
   get totalBeats() {
-    return this.measures * this.quarters;
+    return this.measures * this.stepsPerBeat;
   }
   public afterMove() {
     this.draggingIndex = null;
@@ -123,17 +118,17 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     const height = Math.abs(this.selectCurrentEvent.clientY - this.selectStartEvent.clientY);
 
     // these are exact numbers BTW, not integers
-    const minCol = left / this.pxPerStep;
+    const minBeat = left / this.pxPerBeat;
     const minRow = top / this.noteHeight;
-    const maxCol = (left + width) / this.pxPerStep;
+    const maxBeat = (left + width) / this.pxPerBeat;
     const maxRow = (top + height) / this.noteHeight;
 
     this.notes.forEach((note) => {
       // Check if there is any overlap between the rectangles
       // https://www.geeksforgeeks.org/find-two-rectangles-overlap/
-      if (minRow > note.row + 1 || note.row > maxRow) {
+      if (minRow > note.id + 1 || note.id > maxRow) {
         note.selected = false;
-      } else if (minCol > note.col + note.length || note.col > maxCol) {
+      } else if (minBeat > note.time + note.length || note.time > maxBeat) {
         note.selected = false;
       } else {
         note.selected = true;
@@ -167,15 +162,18 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     window.removeEventListener('mouseup', this.selectEnd);
   }
 
-  public add(keyNumber: number, startBeat: number) {
+  public add(id: number, e: MouseEvent) {
+    const left = this.$el.getBoundingClientRect().left;
+    const x = e.clientX - left;
+    let time = x / this.pxPerBeat;
+    time = Math.floor(time / this.snap) * this.snap;
+    this.$log.debug(x, e.clientX, left, time);
+
     const noteBar = {
       length: this.default,
       selected: false,
-      number: keyNumber,
-      time: startBeat,
-      col,
-      row,
-      ...this.compute(row, col),
+      id,
+      time,
     };
 
     this.notes.push(noteBar);
@@ -183,9 +181,13 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.checkMeasure(noteBar);
   }
   public move(e: MouseEvent, oldNote: EnhancedNote) {
-    const reft = this.rows.getBoundingClientRect();
-    const row = Math.floor((e.clientY - reft.top) / this.noteHeight);
-    const col = Math.floor((e.clientX - reft.left) / this.pxPerStep);
+    const rect = this.rows.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    let time = x / this.pxPerBeat;
+    time = Math.floor(time / this.snap) * this.snap;
+
+    const y = e.clientY - rect.top;
+    const row = Math.floor(y / this.noteHeight);
 
     if (this.draggingIndex === null) {
       this.draggingIndex = this.notes.indexOf(oldNote);
@@ -193,49 +195,35 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
       oldNote = this.notes[this.draggingIndex];
     }
 
-    if (row === oldNote.row && col === oldNote.col) { return; }
+    if (row === oldNote.id && time === oldNote.time) { return; }
 
-    const colDiff = col - oldNote.col;
-    const rowDiff = row - oldNote.row;
+    const timeDiff = time - oldNote.time;
+    const rowDiff = row - oldNote.id;
 
-    // TODO Merge if and else
+    let notesToMove: Array<[EnhancedNote, number]>;
     if (oldNote.selected) {
-      this.notes.forEach((note, i) => {
-        if (!note.selected) { return; }
-
-        const newRow = note.row + rowDiff;
-        const newCol = note.col + colDiff;
-        const newNote = {
-          length: note.length,
-          selected: note.selected,
-          row:  newRow,
-          col: newCol,
-          number: note.number - rowDiff,
-          ...this.compute(newRow, newCol),
-        };
-
-        this.$set(this.notes, i, newNote);
-        this.$emit('removed', note);
-        this.$emit('added', newNote);
+      notesToMove = this.notes.map((note, i) => {
+        return [note, i] as [EnhancedNote, number];
       });
     } else {
-      const newNote = {
-        length: oldNote.length,
-        selected: oldNote.selected,
-        row,
-        col,
-        number: oldNote.number - rowDiff,
-        ...this.compute(row, col),
-      };
-
-      this.$set(this.notes, this.draggingIndex, newNote);
-      this.$emit('removed', oldNote);
-      this.$emit('added', newNote);
+      notesToMove = [[oldNote, this.draggingIndex]];
     }
 
+    notesToMove.forEach(([note, i]) => {
+      const newTime = note.time + timeDiff;
+      const newNote = {
+        length: note.length,
+        selected: note.selected,
+        time: newTime,
+        id: note.id + rowDiff,
+      };
 
+      this.$set(this.notes, i, newNote);
+      this.$emit('removed', note);
+      this.$emit('added', newNote);
+    });
   }
-  public remove(e: MouseEvent, item: any) {
+  public remove(e: MouseEvent, item: EnhancedNote) {
     e.preventDefault();
 
     const i = this.notes.indexOf(item);
@@ -253,7 +241,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 
     let max = this.minMeasures;
     for (const note of this.notes) {
-      const measure = Math.floor(note.col / (this.sixteenths * this.quarters));
+      const measure = Math.floor(note.time / this.beatsPerMeasure);
       max = Math.max(measure, max);
     }
 
@@ -267,14 +255,6 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   public changeDefault(length: number) {
     this.default = length;
   }
-  public compute(row: number, col: number) {
-    const time = col / 4;
-    return {
-      x: col * this.pxPerStep,
-      y: row * this.noteHeight,
-      value: this.allKeys[row].value,
-    };
-  }
   public checkMeasure(note: Note) {
     // TODO: divide the time by the signiture. For now it is hardcoded at 4
     const measureValue = note.time / 4 + 1;
@@ -283,10 +263,10 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.$emit('update:measures', this.measures + 1);
 
   }
-  public clickNote(e: MouseEvent, note: Note) {
+  public clickNote(e: MouseEvent, note: EnhancedNote) {
     if (!note.selected) { this.notes.forEach((n) => n.selected = false); }
 
-    const createNote = (oldNote: Note) => {
+    const createNote = (oldNote: EnhancedNote) => {
       const newNote = JSON.parse(JSON.stringify(oldNote));
       oldNote.selected = false;
       this.notes.push(newNote);
@@ -295,8 +275,10 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     };
 
     let targetNote = note;
-    if (this.shift) {
-      let selected: Note[];
+    if (this.holdingShift) {
+      let selected: EnhancedNote[];
+
+      // If selected, copy all selected. If not, just copy the note that was clicked.
       if (note.selected) {
         selected = this.notes.filter((n) => n.selected && n !== note);
         targetNote = createNote(note);
@@ -310,7 +292,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   }
   public keydown(e: KeyboardEvent) {
     if (e.keyCode === Keys.SHIFT) {
-      this.shift = true;
+      this.holdingShift = true;
     } else if (e.keyCode === Keys.DELETE || e.keyCode === Keys.BACKSPACE) {
       // Slice and reverse since we will be deleting from the array as we go
       const lastIndex = this.notes.length - 1;
@@ -320,7 +302,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     }
   }
   public keyup(e: KeyboardEvent) {
-    if (e.keyCode === Keys.SHIFT) { this.shift = false; }
+    if (e.keyCode === Keys.SHIFT) { this.holdingShift = false; }
   }
 
   public mounted() {
@@ -329,9 +311,8 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     const notes = this.value ? this.value.slice() : [];
     this.notes = notes.map((note) => {
       return {
-        col: note.time / 4,
-        row: allKeys.length - note.number,
         ...note,
+        selected: false,
       };
     });
 

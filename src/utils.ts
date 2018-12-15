@@ -73,26 +73,21 @@ export const range = (a: number, b = 0, interval = 1) => {
 interface OctaveKey {
   value: string;
   color: Color;
-  number: number;
+  id: number;
 }
 
-const octaveKeys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const octaveKeys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].reverse();
 export const allKeys: OctaveKey[] = [];
-export const keyLookup: {[n: number]: OctaveKey} = {};
-let noteNumber = -8;  // A bit hacky but we want to start at A0 not C0
-range(0, 9).slice().forEach((value) => {
+let noteNumber = -octaveKeys.length + 1;  // A bit hacky but we want to start at C8 and end at A0
+range(0, 9).reverse().forEach((value) => {
   octaveKeys.forEach((key) => {
-    if (noteNumber >= 1) {  // This if statement makes it so we start at A0
+    if (noteNumber >= 0 && noteNumber < 88) {
       allKeys.push({
         value: `${key}${value}`,
         color: key.endsWith('#') ? 'black' : 'white',
-        number: noteNumber,
+        id: noteNumber,
       });
     }
     noteNumber += 1;
   });
-});
-
-allKeys.forEach((key) => {
-  keyLookup[key.number] = key;
 });

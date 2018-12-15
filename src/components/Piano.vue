@@ -9,7 +9,8 @@
         <key
           :value="key.value"
           :synth="synth"
-          :border="borderBottom || index !== allKeys.length - 1"
+          :border="index !== allKeys.length - 1"
+          @press="play"
         ></key>
       </div>
     </div>
@@ -27,9 +28,14 @@ import Key from '@/components/Key.vue';
   components: { Key },
 })
 export default class Piano extends Vue {
-  @Prop(Boolean) public borderBottom!: boolean;
   @Prop({ type: Object, required: false }) public synth?: Tone.Synth;
-  public allKeys = allKeys.slice().reverse();
+  public allKeys = allKeys;
+  public play(value: string) {
+    if (this.synth) {
+      // TODO This should be longer. Actually, I'm not entirely sure what to do.
+      this.synth.triggerAttackRelease(value, '8n');
+    }
+  }
 }
 </script>
 

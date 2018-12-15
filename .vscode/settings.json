@@ -4,6 +4,7 @@
     "Hardcoded",
     "hacky",
     "mixins",
-    "resizable"
+    "resizable",
+    "tinycolor"
   ]
 }
