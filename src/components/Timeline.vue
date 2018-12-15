@@ -1,23 +1,17 @@
 <template>
-  <div class="gsuiTimeline secondary" @mousedown="mousedown">
-    <div class="gsuiTimeline-loopLine">
-      <div class="gsuiTimeline-loop" :style="loopStyle" @mousedown="mousedown($event, 'center')">
+  <div class="timeline secondary" @mousedown="mousedown">
+      <div class="loop" :style="loopStyle" @mousedown="mousedown($event, 'center')">
 
         <!-- These are the blocks the catch the events. The little hover things are too small -->
-        <div class="gsuiTimeline-loopExt gsuiTimeline-loopA" @mousedown="mousedown($event, 'start')"></div>
-        <div class="gsuiTimeline-loopExt gsuiTimeline-loopB" @mousedown="mousedown($event, 'end')"></div>
+        <div class="loopExt loopA" @mousedown="mousedown($event, 'start')"></div>
+        <div class="loopExt loopB" @mousedown="mousedown($event, 'end')"></div>
 
         <!-- These next two elements are the little bars you see when you hover -->
-        <div class="gsuiTimeline-loopBrd gsuiTimeline-loopBrdA"></div>
-        <div class="gsuiTimeline-loopBrd gsuiTimeline-loopBrdB"></div>
+        <div class="loopBrd loopBrdA"></div>
+        <div class="loopBrd loopBrdB"></div>
         
-        <div class="gsuiTimeline-loopBg"></div>
+        <div class="loopBg"></div>
       </div>
-    </div>
-    <svg class="gsuiTimeline-cursor" width="16" height="10" :style="cursorStyle">
-      <polygon points="2,2 8,8 14,2"/>
-    </svg>
-    <div class="gsuiTimeline-currentTime"></div>
     <div 
       v-for="(step, i) in displaySteps"
       :key="i"
@@ -26,17 +20,24 @@
     >
       {{ step.textContent }}
     </div>
+    <svg class="cursor" width="16" height="10" :style="cursorStyle">
+      <polygon points="2,2 8,8 14,2"/>
+    </svg>
 </div>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch, Mixins } from 'vue-property-decorator';
+import { Vue, Component, Prop, Watch, Mixins, Inject } from 'vue-property-decorator';
 import { ResponsiveMixin, Directions } from '@/modules/resize';
 import { Button } from '@/keys';
 import { range } from '@/utils';
 
 @Component
 export default class Timeline extends Mixins(ResponsiveMixin) {
+  @Inject() public stepsPerBeat!: number;
+  @Inject() public beatsPerMeasure!: number;
+  @Inject() public pxPerBeat!: number;
+  @Inject() public pxPerStep!: number;
   @Prop({ type: Number, required: true }) public value!: number;
   @Prop({ type: Number, required: true }) public loopStart!: number;
   @Prop({ type: Number, required: true }) public loopEnd!: number;
@@ -44,8 +45,6 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   @Prop({ type: String, default: 'step' }) public detail!: 'step' | 'beat' | 'measure';
 
   public steps: HTMLElement[] = [];
-  public stepsPerBeat = 4;
-  public beatsPerMeasure = 4;
   public stepRound = 1;
 
   public start: number | null  = null;
@@ -159,7 +158,7 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
       const isBeat = !(step % this.stepsPerBeat);
       const isMeasure = !(step % this.stepsPerMeasure);
       const isStep = !isBeat && !isMeasure;
-      const className = 'gsuiTimeline-' + ( isMeasure ? 'measure' : isBeat ? 'beat' : 'step');
+      const className = isMeasure ? 'measure' : isBeat ? 'beat' : 'step';
       const left = em * this.pxPerBeat + 'px';
       const textContent = isStep ? '.' : Math.floor(1 + step / this.stepsPerBeat).toString();
       em += this.beatsPerStep;
@@ -180,12 +179,12 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 <style>
 
 :root {
-	--gsuiTimeline-loop-bg: tomato;
-	--gsuiTimeline-cursor-fill: yellow;
-	--gsuiTimeline-loopBorder-bg: yellow;
+	--loop-bg: tomato;
+	--cursor-fill: yellow;
+	--loopBorder-bg: yellow;
 }
 
-.gsuiTimeline {
+.timeline {
 	position: relative;
 	overflow: hidden;
 	font: 14px monospace;
@@ -193,42 +192,23 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 	cursor: default;
 }
 
-/* .......................................................................... */
-.gsuiTimeline-loopLine,
-.gsuiTimeline-currentTime {
+.loop {
 	position: absolute;
 	z-index: 1;
-	width: 100%;
-	height: 50%;
-	transition: .2s background-color;
-}
-.gsuiTimeline-loopLine:hover,
-.gsuiTimeline-currentTime:hover {
-	background-color: rgba( 255, 255, 255, .05 );
-}
-.gsuiTimeline-currentTime {
-	bottom: 0;
-}
-
-/* .......................................................................... */
-.gsuiTimeline-loop {
-	position: absolute;
-	z-index: 1;
-	height: 40%;
+	height: 20%;
 	top: 0;
 }
-.gsuiTimeline-loopBg {
+.loopBg {
 	position: absolute;
 	width: 100%;
 	height: 100%;
-	background-color: var( --gsuiTimeline-loop-bg );
+	background-color: var( --loop-bg );
 	transition: filter .2s;
 }
-.gsuiTimeline-loopBg:hover,
-.gsuiTimeline-loopBg.gsui-hover {
+.loopBg:hover {
 	filter: brightness( 1.2 );
 }
-.gsuiTimeline-loopExt {
+.loopExt {
 	position: absolute;
 	z-index: 2;
 	width: 25%;
@@ -236,44 +216,41 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 	max-width: 10px;
 	height: 250%;
 }
-.gsuiTimeline-loopA { left: -5px; }
-.gsuiTimeline-loopB { right: -5px; }
+.loopA { left: -5px; }
+.loopB { right: -5px; }
 
-.gsuiTimeline-loopBrd {
+.loopBrd {
 	position: absolute;
 	z-index: 0;
 	width: 2px;
 	height: 100%;
-	background-color: var( --gsuiTimeline-loop-bg );
+	background-color: var( --loop-bg );
 	transition: .2s;
 	transition-property: height, background-color, z-index;
 }
 
-.gsuiTimeline-loopBrdA { left: -1px; }
-.gsuiTimeline-loopBrdB { right: -1px; }
-.gsuiTimeline-loopA:hover ~ .gsuiTimeline-loopBrdA,
-.gsuiTimeline-loopB:hover ~ .gsuiTimeline-loopBrdB,
-.gsuiTimeline-loopBrd.gsui-hover {
+.loopBrdA { left: -1px; }
+.loopBrdB { right: -1px; }
+.loopA:hover ~ .loopBrdA,
+.loopB:hover ~ .loopBrdB {
 	z-index: 1;
 	height: 150%;
-	background-color: var( --gsuiTimeline-loopBorder-bg );
+	background-color: var( --loopBorder-bg );
 }
 
-.gsuiTimeline-cursor {
+.cursor {
 	position: absolute;
 	margin-left: -8px;
 	bottom: 1px;
 	transition: left;
-	fill: var( --gsuiTimeline-cursor-fill );
-	stroke: var( --gsuiTimeline-cursor-fill );
+	fill: var( --cursor-fill );
+	stroke: var( --cursor-fill );
 	stroke-width: 2px;
 	stroke-linejoin: round;
 }
 
 
-.gsuiTimeline-measure,
-.gsuiTimeline-beat,
-.gsuiTimeline-step {
+.measure, .beat, .step {
 	position: absolute;
 	display: flex;
 	top: 0;
@@ -285,15 +262,15 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 	user-select: none;
 }
 
-.gsuiTimeline-measure {
+.measure {
 	font-weight: bold;
 }
 
-.gsuiTimeline-step {
+.step {
 	opacity: .2;
 }
 
-.gsuiTimeline-beat {
+.beat {
 	opacity: .5;
 }
 </style>

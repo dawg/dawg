@@ -194,13 +194,6 @@ storiesOf(Knob.name, module)
     data() {
       return { value: 0 };
     },
-  }))
-  .add('Potentiometer', () => ({
-    template: '<knob v-model="value" style="margin: 50px" potentiometer></knob>',
-    components: { Knob },
-    data() {
-      return { value: 0 };
-    },
   }));
 
 storiesOf(Tabs.name, module)
@@ -271,7 +264,7 @@ storiesOf(ColorBlock.name, module)
   }))
   .add('Theme', () => ({
     template: `
-    <div>
+    <div style="height: 500px; overflow-y: auto">
       <color-block v-for="color in colors" :key="color" :color="color"></color-block>
     </div>
     `,
@@ -378,28 +371,39 @@ storiesOf(Split.name, module)
   }));
 
 
+const Temp = Vue.extend({
+  template: `<div style="height: 30px; width: 400px"></div>`,
+  mixins: [BeatLines],
+});
+
 storiesOf(BeatLines.name, module)
   .add('Standard', () => ({
-    template: `<div style="height: 30px; width: 400px"></div>`,
-    mixins: [BeatLines],
+    template: `
+    <dawg>
+      <temp></temp>
+    </dawg>
+    `,
+    components: { Temp, Dawg },
   }));
 
 storiesOf(Timeline.name, module)
   .add('Standard', () => ({
     template: `
+    <dawg>
       <timeline
         :loop-start="start"
         :loop-end="end"
         v-model="time"
         style="width: 400px; height: 20px"
       ></timeline>
+    </dawg>
     `,
     data: () => ({ time: 0, start: 0, end: 2 }), // TODO change to 8 for beats
-    components: { Timeline },
+    components: { Timeline, Dawg },
   }))
   .add('With Offset', () => ({
     template: `
-    <div>
+    <dawg>
       <timeline
         :loop-start="start"
         :loop-end="end"
@@ -411,7 +415,7 @@ storiesOf(Timeline.name, module)
         <input type="range" id="start" name="volume" min="0" max="100" v-model="pixels">
         <label for="volume">Pixel Offset</label>
       </div>
-    </div>
+    </dawg>
     `,
     data: () => ({
       time: 0,
@@ -420,7 +424,7 @@ storiesOf(Timeline.name, module)
       start: 0,
       end: 0,
     }),
-    components: { Timeline },
+    components: { Timeline, Dawg },
     computed: {
       offset() {
         // @ts-ignore
