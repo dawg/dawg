@@ -37,16 +37,16 @@ import { allKeys } from '@/utils';
 // TODO fontSize should actually be used for the font size
 @Component
 export default class Note extends Mixins(Draggable) {
+  @Inject() public snap!: number;
+  @Inject() public noteHeight!: number;
+  @Inject() public pxPerBeat!: number;
+
   @Prop({ type: Number, required: true }) public start!: number;  // The start beat
   @Prop({ type: Number, required: true }) public id!: number;
   @Prop({ type: Number, default: 8 }) public borderWidth!: number;
   @Prop({ type: Number, default: 14 }) public fontSize!: number;
-  @Prop({ type: Number, default: 0.25 }) public snap!: number;
   @Prop(Number) public value!: number;  // The length
   @Prop(Boolean) public selected!: boolean;
-
-  @Inject() public noteHeight!: number;
-  @Inject() public pxPerBeat!: number;
 
   public cursor = 'ew-resize';
 

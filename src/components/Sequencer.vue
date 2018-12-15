@@ -118,8 +118,10 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   }
   get rightStyle() {
     if (this.setLoopEnd) {
+      const left = this.setLoopEnd * this.pxPerBeat;
       return {
-        left: `${this.setLoopEnd * this.pxPerBeat}px`,
+        left: `${left}px`,
+        width: `${this.displayBeats * this.pxPerBeat - left}px`,
       };
     }
   }
@@ -410,7 +412,4 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
 
 .loop-background--left
   left: 0
-
-.loop-background--right
-  right: 0
 </style>

@@ -5,7 +5,7 @@
     @shortkey="playPause"
   >
     <div style="display: flex">
-      <div class="empty-block secondary-darken-1"></div>
+      <div class="empty-block secondary"></div>
       <timeline 
         v-model="progress" 
         class="timeline"
