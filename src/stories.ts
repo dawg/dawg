@@ -8,7 +8,6 @@ import Piano from '@/components/Piano.vue';
 import Toolbar from '@/components/Toolbar.vue';
 import Dawg from '@/components/Dawg.vue';
 import Tree from '@/components/Tree.vue';
-import ChannelRack from '@/components/ChannelRack.vue';
 import Knob from '@/components/Knob.vue';
 import Mixer from '@/components/Mixer.vue';
 import Slider from '@/components/Slider.vue';
@@ -171,26 +170,11 @@ storiesOf(Note.name, module)
   .add('Standard', () => ({
     template: `
     <dawg>
-      <note v-model="length" :key-number="88" :start="0"></note>
+      <note v-model="length" :id="0" :start="0"></note>
     </dawg>
     `,
     components: { Dawg, Note },
     data: () => ({ length: 1 }),
-  }));
-
-storiesOf(ChannelRack.name, module)
-  .add('Standard', () => ({
-    template: `
-    <v-app dark>
-      <channel-rack :instruments="instruments" style="max-width: 300px"></channel-rack>
-    </v-app>
-    `,
-    components: { ChannelRack },
-    data() {
-      return {
-        instruments: ['Synth A', 'SynthB'],
-      };
-    },
   }));
 
 storiesOf(Knob.name, module)

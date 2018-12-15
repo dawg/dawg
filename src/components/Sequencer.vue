@@ -67,7 +67,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 
   public notes: EnhancedNote[] = [];
   public cursor = 'move';
-  public default = this.defaultLength;
+  public default = this.defaultLength;  // To avoid mutating a prop
   public rows!: HTMLElement;
   public selectStartEvent: MouseEvent | null = null;
   public selectCurrentEvent: MouseEvent | null = null;
@@ -245,7 +245,11 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 
     const createNote = (oldNote: EnhancedNote) => {
       const newNote = copy(oldNote);
+
+      // We do this because `newNew` will have a heigher z-index
+      // Thus, it will be displayed on top (which we want)
       oldNote.selected = false;
+
       this.notes.push(newNote);
       this.$emit('added', newNote);
     };
@@ -257,7 +261,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
       // If selected, copy all selected. If not, just copy the note that was clicked.
       if (note.selected) {
         selected = this.notes.filter((n) => n.selected && n !== note);
-        targetIndex = this.notes.length; // A new note will be created at this index
+        targetIndex = this.notes.length; // A copy of `note` will be created at this index
         createNote(note);
       } else {
         selected = [note];
