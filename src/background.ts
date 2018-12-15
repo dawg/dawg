@@ -65,7 +65,7 @@ const setMainMenu = () => {
           label: 'Save',
           accelerator: 'CmdOrCtrl+S',
           click() {
-            //
+            mainWindow.webContents.send('save');
           },
         },
         {
