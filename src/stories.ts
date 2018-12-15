@@ -420,7 +420,6 @@ storiesOf(Timeline.name, module)
     data: () => ({
       time: 0,
       pixels: 0,
-      pxPerBeat: 80,
       start: 0,
       end: 0,
     }),

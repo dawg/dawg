@@ -7,7 +7,7 @@
     <div style="display: flex">
       <div class="empty-block secondary-darken-1"></div>
       <timeline 
-        v-model="time" 
+        v-model="progress" 
         class="timeline"
         :set-loop-end.sync="setLoopEnd"
         :set-loop-start.sync="setLoopStart"
@@ -24,6 +24,9 @@
         @removed="removed"
         @scroll-horizontal="scrollHorizontal"
         @loop-end="sequencerLoopEnd = $event"
+        :loop-start="loopStart"
+        :loop-end="loopEnd"
+        :progress="progress"
       ></sequencer>
     </div>
   </div>
@@ -44,7 +47,7 @@ export default class PianoRoll extends Vue {
   @Prop({ type: Object, required: false }) public synth?: Tone.Synth;
 
   public scrollLeft = 0;
-  public time = 0;
+  public progress = 0;
   public part = new Tone.Part(this.callback);
   public sequencerLoopEnd = 0;
   public setLoopStart: null | number = null;
@@ -71,7 +74,7 @@ export default class PianoRoll extends Vue {
   }
   public update() {
     if (Tone.Transport.state === 'started') { requestAnimationFrame(this.update); }
-    this.time = this.part.progress;
+    this.progress = this.part.progress;
   }
   public play() {
     // Hack to resolve issue

@@ -20,9 +20,17 @@
     >
       {{ step.textContent }}
     </div>
-    <svg class="cursor" width="16" height="10" :style="cursorStyle">
-      <polygon points="2,2 8,8 14,2"/>
-    </svg>
+    <progression
+      :progress="value"
+      :loop-end="loopEnd"
+      :loop-start="loopStart"
+      :offset="offset"
+      class="cursor-progress"
+    >
+      <svg class="cursor" width="16" height="10">
+        <polygon points="2,2 8,8 14,2"/>
+      </svg>
+    </progression>
 </div>
 </template>
 
@@ -31,18 +39,21 @@ import { Vue, Component, Prop, Watch, Mixins, Inject } from 'vue-property-decora
 import { ResponsiveMixin, Directions } from '@/modules/resize';
 import { Button } from '@/keys';
 import { range, Nullable } from '@/utils';
+import Progression from '@/components/Progression.vue';
 
-@Component
+@Component({
+  components: { Progression },
+})
 export default class Timeline extends Mixins(ResponsiveMixin) {
   @Inject() public stepsPerBeat!: number;
   @Inject() public beatsPerMeasure!: number;
   @Inject() public pxPerBeat!: number;
   @Inject() public pxPerStep!: number;
   @Prop({ type: Number, required: true }) public value!: number;
-  @Prop({ type: Number, required: true }) public loopStart!: number;
-  @Prop({ type: Number, required: true }) public loopEnd!: number;
   @Prop(Nullable(Number)) public setLoopStart!: number;
   @Prop(Nullable(Number)) public setLoopEnd!: number;
+  @Prop({ type: Number, required: true }) public loopStart!: number;
+  @Prop({ type: Number, required: true }) public loopEnd!: number;
   @Prop({ type: Number, default: 0 }) public offset!: number;
   @Prop({ type: String, default: 'step' }) public detail!: 'step' | 'beat' | 'measure';
 
@@ -145,18 +156,7 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
       };
     }
   }
-  public get cursorStyle() {
-    return {
-      left: this.progress,
-    };
-  }
-  public get progress() {
-    return this.beatToPx((this.loopEnd - this.loopStart) * this.value + this.loopStart);
-  }
 
-  public beatToPx(beat: number) {
-    return (beat - this.offset) * this.pxPerBeat + 'px';
-  }
   public getWidth() {
     return this.rendered ? this.$el.getBoundingClientRect().width : 0;
   }
@@ -252,15 +252,20 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 	background-color: var( --loopBorder-bg );
 }
 
-.cursor {
-	position: absolute;
-	margin-left: -8px;
+
+.cursor-progress {
+  margin-left: -8px;
 	bottom: 1px;
 	transition: left;
+}
+
+.cursor {
 	fill: var( --cursor-fill );
 	stroke: var( --cursor-fill );
 	stroke-width: 2px;
 	stroke-linejoin: round;
+  /* IDK why but float right pushes the element to the bottom */
+  float: right;
 }
 
 

@@ -33,36 +33,48 @@
         @input="changeDefault"
         v-model="note.length"
       ></note>
+      <progression
+        :loop-start="loopStart"
+        :loop-end="loopEnd"
+        :progress="progress"
+        class="progress-bar"
+      >
+        <!-- <div  style="font-size: 96px"></div> -->
+      </progression>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Mixins, Inject } from 'vue-property-decorator';
-import { Draggable, PX } from '@/mixins';
+import { Draggable } from '@/mixins';
 import { Keys } from '@/keys';
 import { FactoryDictionary } from 'typescript-collections';
-import { allKeys, range, copy } from '@/utils';
+import { allKeys, range, copy, Nullable } from '@/utils';
 import NoteComponent from '@/components/Note.vue';
 import { Note } from '@/types';
 import BeatLines from '@/components/BeatLines';
 import SequencerRow from '@/components/SequencerRow.vue';
+import Progression from '@/components/Progression.vue';
 
 interface EnhancedNote extends Note {
   selected: boolean;
 }
 
-// TODO Create Note class
-
 @Component({
-  components: { Note: NoteComponent, SequencerRow },
+  components: { Note: NoteComponent, SequencerRow, Progression },
 })
-export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
+export default class Sequencer extends Mixins(Draggable, BeatLines) {
   @Inject() public noteHeight!: number;
   @Inject() public stepsPerBeat!: number;
   @Prop(Array) public value?: Note[];  // TODO Change value to something else (initial maybe?)
   @Prop({ type: Number, default: 1 }) public defaultLength!: number;
-  @Prop({ type: Number, default: 0.25 }) public snap!: number; // TODO snap is hardcoded
+  @Prop({ type: Number, default: 0.25 }) public snap!: number;
+
+  // These values should only be set if there is a loop on the timeline
+  @Prop(Nullable(Number)) public loopEnd!: number | null;
+  @Prop(Nullable(Number)) public loopStart!: number | null;
+  @Prop({ type: Number, required: true }) public progress!: number;
 
 
   public notes: EnhancedNote[] = [];
@@ -74,7 +86,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   public holdingShift = false;
   public allKeys = allKeys;
   public minDisplayMeasures = 4;
-  public loopEnd: number | null = null;
+  public noteLoopEnd: number | null = null;
 
   public scroll(e: UIEvent) {
     // This only handles horizontal scrolls!
@@ -91,7 +103,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   get displayBeats() {
     return Math.max(
       this.minDisplayMeasures * this.beatsPerMeasure,
-      this.loopEnd,
+      this.noteLoopEnd || 0,
     ) * this.stepsPerBeat;
   }
   public get selectStyle() {
@@ -202,7 +214,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
       notesToMove = [[oldNote, i]];
     }
 
-    notesToMove.forEach(([note, i]) => {
+    notesToMove.forEach(([note, ind]) => {
       const newTime = note.time + timeDiff;
       const newNote = {
         length: note.length,
@@ -211,7 +223,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
         id: note.id + rowDiff,
       };
 
-      this.$set(this.notes, i, newNote);
+      this.$set(this.notes, ind, newNote);
       this.$emit('removed', note);
       this.$emit('added', newNote);
       this.checkLoopEnd();
@@ -233,12 +245,12 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     // Add a tiny amount to max time so that ceil will push to next number
     // if maxTime is a whole number
     maxTime = maxTime + 0.0000001;
-    const loopEnd = Math.ceil(maxTime / this.beatsPerMeasure) * this.beatsPerMeasure;
+    const noteLoopEnd = Math.ceil(maxTime / this.beatsPerMeasure) * this.beatsPerMeasure;
 
-    this.$log.debug(`loopEnd -> ${loopEnd}`);
-    if (loopEnd !== this.loopEnd) {
-      this.$emit('loop-end', loopEnd);
-      this.loopEnd = loopEnd;
+    this.$log.debug(`noteLoopEnd -> ${noteLoopEnd}`);
+    if (noteLoopEnd !== this.noteLoopEnd) {
+      this.$emit('loop-end', noteLoopEnd);
+      this.noteLoopEnd = noteLoopEnd;
     }
   }
   public changeDefault(length: number) {
@@ -351,4 +363,13 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 .sequencer-child
   position: relative
   overflow-x: scroll
+
+.progress-bar
+  width: 1px
+  background-color: #ffa
+  box-shadow: -1px 0 2px #ffa
+  z-index: 2
+  top: 0
+  bottom: 0
+  pointer-events: none
 </style>
