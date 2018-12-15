@@ -91,3 +91,8 @@ range(0, 9).reverse().forEach((value) => {
     noteNumber += 1;
   });
 });
+
+
+export const copy = <T>(o: T): T => {
+  return JSON.parse(JSON.stringify(o));
+};

@@ -28,8 +28,8 @@
         :id="note.id"
         :selected="note.selected"
         style="position: absolute; z-index: 2"
-        @contextmenu="remove($event, note)"
-        @mousedown="clickNote($event, note)"
+        @contextmenu="remove($event, i)"
+        @mousedown="clickNote($event, i)"
         @input="changeDefault"
         v-model="note.length"
       ></note>
@@ -42,7 +42,7 @@ import { Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 import { Draggable, PX } from '@/mixins';
 import { Keys } from '@/keys';
 import { FactoryDictionary } from 'typescript-collections';
-import { allKeys, range } from '@/utils';
+import { allKeys, range, copy } from '@/utils';
 import NoteComponent from '@/components/Note.vue';
 import { Note } from '@/types';
 import BeatLines from '@/components/BeatLines';
@@ -71,7 +71,6 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   public cursor = 'move';
   public default = this.defaultLength;
   public rows!: HTMLElement;
-  public draggingIndex: number | null = null;
   public selectStartEvent: MouseEvent | null = null;
   public selectCurrentEvent: MouseEvent | null = null;
   public holdingShift = false;
@@ -92,9 +91,6 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 
   get totalBeats() {
     return this.measures * this.stepsPerBeat;
-  }
-  public afterMove() {
-    this.draggingIndex = null;
   }
   public get selectStyle() {
     if (!this.selectStartEvent) { return; }
@@ -180,7 +176,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.$emit('added', noteBar);
     this.checkMeasure(noteBar);
   }
-  public move(e: MouseEvent, oldNote: EnhancedNote) {
+  public move(e: MouseEvent, i: number) {
     const rect = this.rows.getBoundingClientRect();
     const x = e.clientX - rect.left;
     let time = x / this.pxPerBeat;
@@ -189,12 +185,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     const y = e.clientY - rect.top;
     const row = Math.floor(y / this.noteHeight);
 
-    if (this.draggingIndex === null) {
-      this.draggingIndex = this.notes.indexOf(oldNote);
-    } else {
-      oldNote = this.notes[this.draggingIndex];
-    }
-
+    const oldNote = this.notes[i];
     if (row === oldNote.id && time === oldNote.time) { return; }
 
     const timeDiff = time - oldNote.time;
@@ -206,7 +197,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
         return [note, i] as [EnhancedNote, number];
       });
     } else {
-      notesToMove = [[oldNote, this.draggingIndex]];
+      notesToMove = [[oldNote, i]];
     }
 
     notesToMove.forEach(([note, i]) => {
@@ -223,14 +214,8 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
       this.$emit('added', newNote);
     });
   }
-  public remove(e: MouseEvent, item: EnhancedNote) {
+  public remove(e: MouseEvent, i: number) {
     e.preventDefault();
-
-    const i = this.notes.indexOf(item);
-    if (i === -1) {
-      throw Error(`${item} not found in the value. This should not happen.`);
-    }
-
     this.removeAtIndex(i);
   }
   public removeAtIndex(i: number) {
@@ -263,32 +248,33 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.$emit('update:measures', this.measures + 1);
 
   }
-  public clickNote(e: MouseEvent, note: EnhancedNote) {
+  public clickNote(e: MouseEvent, i: number) {
+    const note = this.notes[i];
     if (!note.selected) { this.notes.forEach((n) => n.selected = false); }
 
     const createNote = (oldNote: EnhancedNote) => {
-      const newNote = JSON.parse(JSON.stringify(oldNote));
+      const newNote = copy(oldNote);
       oldNote.selected = false;
       this.notes.push(newNote);
       this.$emit('added', newNote);
-      return newNote;
+      return this.notes.length - 1;
     };
 
-    let targetNote = note;
+    let targetIndex = i;
     if (this.holdingShift) {
       let selected: EnhancedNote[];
 
       // If selected, copy all selected. If not, just copy the note that was clicked.
       if (note.selected) {
         selected = this.notes.filter((n) => n.selected && n !== note);
-        targetNote = createNote(note);
+        targetIndex = createNote(note);
       } else {
         selected = [note];
       }
 
       selected.forEach(createNote);
     }
-    this.addListeners(e, targetNote);
+    this.addListeners(e, targetIndex);
   }
   public keydown(e: KeyboardEvent) {
     if (e.keyCode === Keys.SHIFT) {
