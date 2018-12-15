@@ -5,14 +5,13 @@
     @shortkey="playPause"
   >
     <div style="display: flex">
-      <!-- TODO Just offset the timeline and remove this block + wrapper -->
-      <div class="empty-block"></div>
+      <div class="empty-block secondary-darken-1"></div>
       <!-- TODO loop-start and loop-end need to be refactored -->
       <timeline 
         v-model="time" 
         class="timeline" 
         :loop-start="0"
-        :loop-end="8"
+        :loop-end="loopEnd"
         :offset="offset"
       ></timeline>
     </div>
@@ -77,6 +76,7 @@ export default class PianoRoll extends Vue {
   }
   public added(note: Note) {
     const time = `${note.time * Tone.Transport.PPQ}i`;
+    this.$log.info(`Adding note at ${note.time} -> ${time}`);
     this.part.add(time, note);
   }
   public removed(note: Note) {
@@ -91,6 +91,7 @@ export default class PianoRoll extends Vue {
   }
   @Watch('loopEnd', { immediate: true })
   public onMeasuresChange() {
+    this.$log.info(`loodEnd being set to ${this.loopEnd}`);
     this.part.loopEnd = `${this.loopEnd * Tone.Transport.PPQ}i`;
   }
   public scrollHorizontal(scrollLeft: number) {

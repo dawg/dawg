@@ -190,6 +190,7 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 	font: 14px monospace;
 	color: rgb(180, 180, 180);
 	cursor: default;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
 }
 
 .loop {

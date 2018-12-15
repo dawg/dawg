@@ -436,8 +436,10 @@ storiesOf(Timeline.name, module)
 storiesOf(PianoRoll.name, module)
   .add('Standard', () => ({
     template: `
-    <piano-roll :synth="piano"></piano-roll>
+    <dawg>
+      <piano-roll :synth="piano"></piano-roll>
+    </dawg>
     `,
     data: () => ({ piano }),
-    components: { PianoRoll },
+    components: { PianoRoll, Dawg },
   }));

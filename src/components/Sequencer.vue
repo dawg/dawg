@@ -74,7 +74,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   public holdingShift = false;
   public allKeys = allKeys;
   public minDisplayMeasures = 4;
-  public loopEnd = this.beatsPerMeasure;
+  public loopEnd: number | null = null;
 
   public scroll(e: UIEvent) {
     // This only handles horizontal scrolls!
@@ -228,10 +228,10 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.checkLoopEnd();
   }
   public checkLoopEnd() {
-    const maxTime = Math.max(...this.notes.map((note) => note.time), 1);
-    const loopEnd = Math.ceil(maxTime / this.beatsPerMeasure);
+    const maxTime = Math.max(...this.notes.map((note) => note.time), this.beatsPerMeasure);
+    const loopEnd = Math.ceil(maxTime / this.beatsPerMeasure) * this.beatsPerMeasure;
     this.$log.debug(`loopEnd -> ${loopEnd}`);
-    if (loopEnd < this.loopEnd) {
+    if (loopEnd !== this.loopEnd) {
       this.$emit('loop-end', loopEnd);
       this.loopEnd = loopEnd;
     }
@@ -302,6 +302,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.notes.map((note) => {
       this.$emit('added', note);
     });
+    this.checkLoopEnd();
 
     window.addEventListener('keydown', this.keydown);
     window.addEventListener('keyup', this.keyup);
