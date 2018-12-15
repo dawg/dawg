@@ -26,6 +26,8 @@
         @loop-end="sequencerLoopEnd = $event"
         :loop-start="loopStart"
         :loop-end="loopEnd"
+        :set-loop-start="setLoopStart"
+        :set-loop-end="setLoopEnd"
         :progress="progress"
       ></sequencer>
     </div>

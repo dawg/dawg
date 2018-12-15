@@ -38,9 +38,15 @@
         :loop-end="loopEnd"
         :progress="progress"
         class="progress-bar"
-      >
-        <!-- <div  style="font-size: 96px"></div> -->
-      </progression>
+      ></progression>
+      <div 
+        class="loop-background loop-background--left" 
+        :style="leftStyle"
+      ></div>
+      <div 
+        class="loop-background loop-background--right" 
+        :style="rightStyle"
+      ></div>
     </div>
   </div>
 </template>
@@ -71,9 +77,12 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   @Prop({ type: Number, default: 1 }) public defaultLength!: number;
   @Prop({ type: Number, default: 0.25 }) public snap!: number;
 
+  @Prop({ type: Number, required: true }) public loopEnd!: number | null;
+  @Prop({ type: Number, required: true }) public loopStart!: number | null;
+
   // These values should only be set if there is a loop on the timeline
-  @Prop(Nullable(Number)) public loopEnd!: number | null;
-  @Prop(Nullable(Number)) public loopStart!: number | null;
+  @Prop(Nullable(Number)) public setLoopEnd!: number | null;
+  @Prop(Nullable(Number)) public setLoopStart!: number | null;
   @Prop({ type: Number, required: true }) public progress!: number;
 
 
@@ -99,6 +108,20 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
       width: `${this.displayBeats * this.pxPerBeat}px`,
       height: `${this.allKeys.length * this.noteHeight}px`,
     };
+  }
+  get leftStyle() {
+    if (this.setLoopStart) {
+      return {
+        width: `${this.setLoopStart * this.pxPerBeat}px`,
+      };
+    }
+  }
+  get rightStyle() {
+    if (this.setLoopEnd) {
+      return {
+        left: `${this.setLoopEnd * this.pxPerBeat}px`,
+      };
+    }
   }
   get displayBeats() {
     return Math.max(
@@ -372,4 +395,22 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   top: 0
   bottom: 0
   pointer-events: none
+
+.loop-background
+  opacity: 0
+  background-color: #000
+  transition: .2s opacity
+  opacity: 0.2
+  position: absolute
+  // TODO duplicate
+  z-index: 2
+  top: 0
+  bottom: 0
+  pointer-events: none
+
+.loop-background--left
+  left: 0
+
+.loop-background--right
+  right: 0
 </style>
