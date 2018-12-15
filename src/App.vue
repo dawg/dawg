@@ -123,6 +123,7 @@
 </template>
 
 <script lang="ts">
+import fs from 'fs';
 import Tone from 'tone';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import Toolbar from '@/components/Toolbar.vue';
@@ -138,6 +139,7 @@ import BaseTabs from '@/components/BaseTabs.vue';
 import Synth from '@/components/Synth.vue';
 import Dawg from '@/components/Dawg.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
+import { ipcRenderer } from 'electron';
 
 @Component({
   components: {
@@ -184,6 +186,7 @@ export default class App extends Vue {
     this.tabs = this.$refs.tabs;
     this.items = this.tabs.$children as SideBar[];
     this.panelsTabs = this.$refs.panels;
+    ipcRenderer.on('save', this.save);
     this.panelsTabs.selectTab(localStorage.getItem('panel'));
   }
 
@@ -214,6 +217,9 @@ export default class App extends Vue {
     } else {
       return [];
     }
+  }
+  public save(fp: fs.) {
+    //
   }
 }
 </script>

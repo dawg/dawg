@@ -58,12 +58,12 @@ import { Keys } from '@/keys';
 import { FactoryDictionary } from 'typescript-collections';
 import { allKeys, range, copy, Nullable } from '@/utils';
 import NoteComponent from '@/components/Note.vue';
-import { Note } from '@/types';
+import { INote, Note } from '@/models';
 import BeatLines from '@/components/BeatLines';
 import SequencerRow from '@/components/SequencerRow.vue';
 import Progression from '@/components/Progression.vue';
 
-interface EnhancedNote extends Note {
+interface EnhancedNote extends INote {
   selected: boolean;
 }
 
@@ -163,7 +163,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
       // https://www.geeksforgeeks.org/find-two-rectangles-overlap/
       if (minRow > note.id + 1 || note.id > maxRow) {
         note.selected = false;
-      } else if (minBeat > note.time + note.length || note.time > maxBeat) {
+      } else if (minBeat > note.time + note.duration || note.time > maxBeat) {
         note.selected = false;
       } else {
         note.selected = true;
@@ -205,7 +205,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     this.$log.debug(x, e.clientX, left, time);
 
     const note = {
-      length: this.default,
+      duration: this.default,
       selected: false,
       id,
       time,
@@ -242,7 +242,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     notesToMove.forEach(([note, ind]) => {
       const newTime = note.time + timeDiff;
       const newNote = {
-        length: note.length,
+        duration: note.duration,
         selected: note.selected,
         time: newTime,
         id: note.id + rowDiff,
@@ -250,7 +250,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
 
       this.$set(this.notes, ind, newNote);
       this.$emit('removed', note);
-      this.$emit('added', newNote);
+      this.$emit('added', Note.create(newNote));
       this.checkLoopEnd();
     });
   }
@@ -293,7 +293,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
       oldNote.selected = false;
 
       this.notes.push(newNote);
-      this.$emit('added', newNote);
+      this.$emit('added', Note.create(newNote));
     };
 
     let targetIndex = i;
@@ -342,7 +342,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     });
 
     this.notes.map((note) => {
-      this.$emit('added', note);
+      this.$emit('added', Note.create(note));
     });
     this.checkLoopEnd();
 

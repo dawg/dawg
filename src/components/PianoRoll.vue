@@ -40,7 +40,7 @@ import Tone from 'tone';
 import Piano from '@/components/Piano.vue';
 import Sequencer from '@/components/Sequencer.vue';
 import Timeline from '@/components/Timeline.vue';
-import { Note } from '@/types';
+import { Note } from '@/models';
 import { allKeys } from '@/utils';
 import { Transform } from 'stream';
 
@@ -100,7 +100,7 @@ export default class PianoRoll extends Vue {
   }
   public callback(time: string, note: Note) {
     if (!this.synth) { return; }
-    const duration = `${note.length * Tone.Transport.PPQ}i`;
+    const duration = `${note.duration * Tone.Transport.PPQ}i`;
     const value = allKeys[note.id].value;
     this.synth.triggerAttackRelease(value, duration, time);
   }
