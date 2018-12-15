@@ -832,6 +832,7 @@ declare module 'tone' {
     loopEnd: _TimeArg;
     loopStart: _TimeArg;
     position: string;
+    progress: number;
     state: TransportState;
     swing: number;
     swingSubdivision: _TimeArg;

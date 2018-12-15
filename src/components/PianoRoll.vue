@@ -42,6 +42,7 @@ import Sequencer from '@/components/Sequencer.vue';
 import Timeline from '@/components/Timeline.vue';
 import { Note } from '@/types';
 import { allKeys } from '@/utils';
+import { Transform } from 'stream';
 
 @Component({components: { Piano, Sequencer, Timeline }})
 export default class PianoRoll extends Vue {
@@ -57,7 +58,7 @@ export default class PianoRoll extends Vue {
 
   public mounted() {
     this.part.start(0);
-    this.part.loop = true;
+    Tone.Transport.loop = true;
     this.part.humanize = true;
     Tone.Transport.bpm.value = 93;
   }
@@ -76,12 +77,10 @@ export default class PianoRoll extends Vue {
   }
   public update() {
     if (Tone.Transport.state === 'started') { requestAnimationFrame(this.update); }
-    this.progress = this.part.progress;
+    this.progress = Tone.Transport.progress;
   }
   public play() {
-    // Hack to resolve issue
-    // See https://github.com/Tonejs/Tone.js/issues/182
-    Tone.Transport.start(undefined, Tone.Transport.seconds);
+    Tone.Transport.start();
     this.update();
   }
   public pause() {
@@ -107,15 +106,15 @@ export default class PianoRoll extends Vue {
   }
   @Watch('loopEnd', { immediate: true })
   public onLoopEndChange() {
-    this.$log.info(`loodEnd being set to ${this.loopEnd}`);
-    this.part.loopEnd = `${this.loopEnd * Tone.Transport.PPQ}i`;
+    this.$log.debug(`loodEnd being set to ${this.loopEnd}`);
+    Tone.Transport.loopEnd = `${this.loopEnd * Tone.Transport.PPQ}i`;
   }
   @Watch('loopStart', { immediate: true })
   public onLoopStartChange() {
-    this.$log.info(`loopStart being set to ${this.loopStart}`);
+    this.$log.debug(`loopStart being set to ${this.loopStart}`);
     const time = `${this.loopStart * Tone.Transport.PPQ}i`;
     Tone.Transport.seconds = new Tone.Time(time).toSeconds();
-    this.part.loopStart = time;
+    Tone.Transport.loopStart = time;
   }
   public scrollHorizontal(scrollLeft: number) {
     this.scrollLeft = scrollLeft;
