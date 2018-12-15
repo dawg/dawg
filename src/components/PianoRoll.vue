@@ -6,11 +6,12 @@
   >
     <div style="display: flex">
       <div class="empty-block secondary-darken-1"></div>
-      <!-- TODO loop-start and loop-end need to be refactored -->
       <timeline 
         v-model="time" 
-        class="timeline" 
-        :loop-start="0"
+        class="timeline"
+        :set-loop-end.sync="setLoopEnd"
+        :set-loop-start.sync="setLoopStart"
+        :loop-start="loopStart"
         :loop-end="loopEnd"
         :offset="offset"
       ></timeline>
@@ -22,7 +23,7 @@
         @added="added"
         @removed="removed"
         @scroll-horizontal="scrollHorizontal"
-        @loop-end="setLoopEnd"
+        @loop-end="sequencerLoopEnd = $event"
       ></sequencer>
     </div>
   </div>
@@ -45,13 +46,21 @@ export default class PianoRoll extends Vue {
   public scrollLeft = 0;
   public time = 0;
   public part = new Tone.Part(this.callback);
-  public loopEnd = 0;
+  public sequencerLoopEnd = 0;
+  public setLoopStart: null | number = null;
+  public setLoopEnd: null | number = null;
 
   public mounted() {
     this.part.start(0);
     this.part.loop = true;
     this.part.humanize = true;
     Tone.Transport.bpm.value = 93;
+  }
+  public get loopStart() {
+    return this.setLoopStart || 0;
+  }
+  public get loopEnd() {
+    return this.setLoopEnd || this.sequencerLoopEnd;
   }
   public playPause() {
     if (Tone.Transport.state === 'started') {
@@ -90,18 +99,20 @@ export default class PianoRoll extends Vue {
     this.synth.triggerAttackRelease(value, duration, time);
   }
   @Watch('loopEnd', { immediate: true })
-  public onMeasuresChange() {
+  public onLoopEndChange() {
     this.$log.info(`loodEnd being set to ${this.loopEnd}`);
     this.part.loopEnd = `${this.loopEnd * Tone.Transport.PPQ}i`;
+  }
+  @Watch('loopStart', { immediate: true })
+  public onLoopStartChange() {
+    this.$log.info(`loopStart being set to ${this.loopStart}`);
+    this.part.loopStart = `${this.loopStart * Tone.Transport.PPQ}i`;
   }
   public scrollHorizontal(scrollLeft: number) {
     this.scrollLeft = scrollLeft;
   }
   public get offset() {
     return this.scrollLeft / this.pxPerBeat;
-  }
-  public setLoopEnd(loopEnd: number) {
-    this.loopEnd = loopEnd;
   }
 }
 </script>

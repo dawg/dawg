@@ -606,6 +606,7 @@ declare module 'tone' {
     readonly state: 'started' | 'stopped';
     humanize: boolean
     loopEnd: _TimeArg
+    loopStart: _TimeArg
     add(time: _TimeArg, value: T): void // TODO
     remove(time: _TimeArg, value: T): void // TODO
   }

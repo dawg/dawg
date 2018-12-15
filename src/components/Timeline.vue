@@ -30,7 +30,7 @@
 import { Vue, Component, Prop, Watch, Mixins, Inject } from 'vue-property-decorator';
 import { ResponsiveMixin, Directions } from '@/modules/resize';
 import { Button } from '@/keys';
-import { range } from '@/utils';
+import { range, Nullable } from '@/utils';
 
 @Component
 export default class Timeline extends Mixins(ResponsiveMixin) {
@@ -41,6 +41,8 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   @Prop({ type: Number, required: true }) public value!: number;
   @Prop({ type: Number, required: true }) public loopStart!: number;
   @Prop({ type: Number, required: true }) public loopEnd!: number;
+  @Prop(Nullable(Number)) public setLoopStart!: number;
+  @Prop(Nullable(Number)) public setLoopEnd!: number;
   @Prop({ type: Number, default: 0 }) public offset!: number;
   @Prop({ type: String, default: 'step' }) public detail!: 'step' | 'beat' | 'measure';
 
@@ -63,6 +65,8 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
     if (!location) {
       this.start = null;
       this.end = null;
+      this.$emit('update:setLoopStart', null);
+      this.$emit('update:setLoopEnd', null);
       this.inLoop = false;
     } else {
       this.selectedStart = location === 'start';
@@ -88,32 +92,43 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
       this.selectedEnd = true;
     }
 
-    const bt = e.movementX / this.pxPerBeat;
+    const beatDiff = e.movementX / this.pxPerBeat;
     let start = this.start!;
     let end = this.end!;
 
     if (this.selectedStart || this.selectedEnd) {
-      this.selectedStart ? start += bt : end += bt;
+      this.selectedStart ? start += beatDiff : end += beatDiff;
 
       if ( start > end ) {
         this.selectedStart = !this.selectedStart;
         this.selectedEnd = !this.selectedEnd;
       }
     } else {
-      start += bt;
-      end += bt;
+      // else we are moving the loop
+      start += beatDiff;
+      end += beatDiff;
     }
 
     this.start = Math.max(0, Math.min(start, end));
     this.end = Math.max(0, start, end);
-    this.displayStart = this.round(this.start, 'round');
-    this.displayEnd = this.round(this.end, 'round');
+    this.displayStart = this.round(this.start);
+    this.displayEnd = this.round(this.end);
+
+    if (this.displayStart !== this.setLoopStart) {
+      this.$log.info(`setLooopStart -> ${this.displayStart}`);
+      this.$emit('update:setLoopStart', this.displayStart);
+    }
+
+    if (this.displayEnd !== this.setLoopEnd) {
+      this.$log.info(`setLoopEnd -> ${this.displayEnd}`);
+      this.$emit('update:setLoopEnd', this.displayEnd);
+    }
   }
 
-  // TODO remove mathFn ??
-  public round(value: number, mathFn: 'round' | 'floor' | 'ceil' ) {
-    if ( this.stepRound ) {
-      value = Math[mathFn](value);
+  // TODO Change this
+  public round(value: number) {
+    if (this.stepRound) {
+      value = Math.round(value);
     }
     return value;
   }
