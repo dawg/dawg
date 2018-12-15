@@ -228,8 +228,13 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     this.checkLoopEnd();
   }
   public checkLoopEnd() {
-    const maxTime = Math.max(...this.notes.map((note) => note.time), this.beatsPerMeasure);
+    let maxTime = Math.max(...this.notes.map((note) => note.time), 0);
+
+    // Add a tiny amount to max time so that ceil will push to next number
+    // if maxTime is a whole number
+    maxTime = maxTime + 0.0000001;
     const loopEnd = Math.ceil(maxTime / this.beatsPerMeasure) * this.beatsPerMeasure;
+
     this.$log.debug(`loopEnd -> ${loopEnd}`);
     if (loopEnd !== this.loopEnd) {
       this.$emit('loop-end', loopEnd);

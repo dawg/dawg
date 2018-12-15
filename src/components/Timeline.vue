@@ -115,12 +115,10 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
     this.displayEnd = this.round(this.end);
 
     if (this.displayStart !== this.setLoopStart) {
-      this.$log.info(`setLooopStart -> ${this.displayStart}`);
       this.$emit('update:setLoopStart', this.displayStart);
     }
 
     if (this.displayEnd !== this.setLoopEnd) {
-      this.$log.info(`setLoopEnd -> ${this.displayEnd}`);
       this.$emit('update:setLoopEnd', this.displayEnd);
     }
   }

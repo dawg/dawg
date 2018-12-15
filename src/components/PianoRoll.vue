@@ -74,7 +74,9 @@ export default class PianoRoll extends Vue {
     this.time = this.part.progress;
   }
   public play() {
-    Tone.Transport.start();
+    // Hack to resolve issue
+    // See https://github.com/Tonejs/Tone.js/issues/182
+    Tone.Transport.start(undefined, Tone.Transport.seconds);
     this.update();
   }
   public pause() {
@@ -106,7 +108,9 @@ export default class PianoRoll extends Vue {
   @Watch('loopStart', { immediate: true })
   public onLoopStartChange() {
     this.$log.info(`loopStart being set to ${this.loopStart}`);
-    this.part.loopStart = `${this.loopStart * Tone.Transport.PPQ}i`;
+    const time = `${this.loopStart * Tone.Transport.PPQ}i`;
+    Tone.Transport.seconds = new Tone.Time(time).toSeconds();
+    this.part.loopStart = time;
   }
   public scrollHorizontal(scrollLeft: number) {
     this.scrollLeft = scrollLeft;
