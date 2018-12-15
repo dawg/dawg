@@ -20,41 +20,34 @@
       <piano :synth="synth"></piano>
       <sequencer
         style="width: calc(100% - 80px)"
-        :note-width="noteWidth" 
-        :note-height="noteHeight" 
-        :measures.sync="measures"
         @added="added"
         @removed="removed"
         @scroll-horizontal="scrollHorizontal"
+        @loop-end="setLoopEnd"
       ></sequencer>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
+import { Vue, Component, Prop, Watch, Inject } from 'vue-property-decorator';
 import Tone from 'tone';
 import Piano from '@/components/Piano.vue';
 import Sequencer from '@/components/Sequencer.vue';
 import Timeline from '@/components/Timeline.vue';
 import { Note } from '@/types';
-
-// TODO PolySynth for Synth components
-// const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
-
+import { allKeys } from '@/utils';
 
 @Component({components: { Piano, Sequencer, Timeline }})
 export default class PianoRoll extends Vue {
+  @Inject() public pxPerBeat!: number;
   @Prop({ type: Object, required: false }) public synth?: Tone.Synth;
 
-  public noteWidth = 20;
-  public pxPerBeat = 80;
   public scrollLeft = 0;
-  public noteHeight = 16;
   public time = 0;
-  public max = 8;
-  public measures = 4;
   public part = new Tone.Part(this.callback);
+  public loopEnd = 0;
+
   public mounted() {
     this.part.start(0);
     this.part.loop = true;
@@ -90,26 +83,24 @@ export default class PianoRoll extends Vue {
     const time = `${note.time * Tone.Transport.PPQ}i`;
     this.part.remove(time, note);
   }
-  // TODO refacter to beats
   public callback(time: string, note: Note) {
     if (!this.synth) { return; }
-
-    let rem = note.length;
-    const sixteenths = rem % 4; rem = Math.floor(rem / 4);
-    const quarters = rem % 4; const bars = Math.floor(rem / 4);
-
-    this.synth.triggerAttackRelease(note.value, `${bars}:${quarters}:${sixteenths}`, time);
+    const duration = `${note.length * Tone.Transport.PPQ}i`;
+    const value = allKeys[note.id].value;
+    this.synth.triggerAttackRelease(value, duration, time);
   }
-  @Watch('measures', { immediate: true })
+  @Watch('loopEnd', { immediate: true })
   public onMeasuresChange() {
-    // TODO differentiate between visiable + last measure that a note exists
-    this.part.loopEnd = '2m'; // `${this.measures}m`;
+    this.part.loopEnd = `${this.loopEnd * Tone.Transport.PPQ}i`;
   }
   public scrollHorizontal(scrollLeft: number) {
     this.scrollLeft = scrollLeft;
   }
   public get offset() {
     return this.scrollLeft / this.pxPerBeat;
+  }
+  public setLoopEnd(loopEnd: number) {
+    this.loopEnd = loopEnd;
   }
 }
 </script>

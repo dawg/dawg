@@ -2,6 +2,7 @@
   <div 
     :style="style"
     @click="click"
+    @mousedown="$emit('mousedown', $event)"
     :class="colorClass"
     @contextmenu="$event.preventDefault()"
   ></div>

@@ -15,7 +15,7 @@
           v-for="key in allKeys" 
           :key="key.id"
           :id="key.id"
-          :total-beats="totalBeats"
+          :total-beats="displayBeats"
           @click="add"
           @mousedown="selectStart"
         ></sequencer-row>
@@ -58,14 +58,12 @@ interface EnhancedNote extends Note {
   components: { Note: NoteComponent, SequencerRow },
 })
 export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
-  @Inject() public pxPerBeat!: number;
   @Inject() public noteHeight!: number;
   @Inject() public stepsPerBeat!: number;
   @Prop(Array) public value?: Note[];  // TODO Change value to something else (initial maybe?)
   @Prop({ type: Number, default: 1 }) public defaultLength!: number;
   @Prop({ type: Number, default: 0.25 }) public snap!: number; // TODO snap is hardcoded
-  @Prop({ type: Number, required: true }) public measures!: number;
-  @Prop({ type: Number, default: 4 }) public minMeasures!: number; // TODO
+
 
   public notes: EnhancedNote[] = [];
   public cursor = 'move';
@@ -75,6 +73,8 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   public selectCurrentEvent: MouseEvent | null = null;
   public holdingShift = false;
   public allKeys = allKeys;
+  public minDisplayMeasures = 4;
+  public loopEnd = this.beatsPerMeasure;
 
   public scroll(e: UIEvent) {
     // This only handles horizontal scrolls!
@@ -84,13 +84,15 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   get sequencerStyle() {
     return {
       // TODO This may not be needed
-      width: `${this.totalBeats * this.pxPerBeat}px`,
+      width: `${this.displayBeats * this.pxPerBeat}px`,
       height: `${this.allKeys.length * this.noteHeight}px`,
     };
   }
-
-  get totalBeats() {
-    return this.measures * this.stepsPerBeat;
+  get displayBeats() {
+    return Math.max(
+      this.minDisplayMeasures * this.beatsPerMeasure,
+      this.loopEnd,
+    ) * this.stepsPerBeat;
   }
   public get selectStyle() {
     if (!this.selectStartEvent) { return; }
@@ -165,16 +167,16 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
     time = Math.floor(time / this.snap) * this.snap;
     this.$log.debug(x, e.clientX, left, time);
 
-    const noteBar = {
+    const note = {
       length: this.default,
       selected: false,
       id,
       time,
     };
 
-    this.notes.push(noteBar);
-    this.$emit('added', noteBar);
-    this.checkMeasure(noteBar);
+    this.notes.push(note);
+    this.$emit('added', note);
+    this.checkLoopEnd();
   }
   public move(e: MouseEvent, i: number) {
     const rect = this.rows.getBoundingClientRect();
@@ -193,9 +195,9 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 
     let notesToMove: Array<[EnhancedNote, number]>;
     if (oldNote.selected) {
-      notesToMove = this.notes.map((note, i) => {
-        return [note, i] as [EnhancedNote, number];
-      });
+      notesToMove = this.notes.map((note, ind) => {
+        return [note, ind] as [EnhancedNote, number];
+      }).filter(([note, _]) => note.selected);
     } else {
       notesToMove = [[oldNote, i]];
     }
@@ -212,6 +214,7 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
       this.$set(this.notes, i, newNote);
       this.$emit('removed', note);
       this.$emit('added', newNote);
+      this.checkLoopEnd();
     });
   }
   public remove(e: MouseEvent, i: number) {
@@ -220,33 +223,21 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
   }
   public removeAtIndex(i: number) {
     const item = this.notes[i];
-    if (item === undefined) { throw Error(`${i} is out of range of notes`); }
-
     this.$delete(this.notes, i);
-
-    let max = this.minMeasures;
-    for (const note of this.notes) {
-      const measure = Math.floor(note.time / this.beatsPerMeasure);
-      max = Math.max(measure, max);
-    }
-
-    this.$log.info(`The min measure is ${max}`);
-    if (max < this.measures - 1) {
-      this.$emit('update:measures', this.measures + 1);
-    }
-
     this.$emit('removed', item);
+    this.checkLoopEnd();
+  }
+  public checkLoopEnd() {
+    const maxTime = Math.max(...this.notes.map((note) => note.time), 1);
+    const loopEnd = Math.ceil(maxTime / this.beatsPerMeasure);
+    this.$log.debug(`loopEnd -> ${loopEnd}`);
+    if (loopEnd < this.loopEnd) {
+      this.$emit('loop-end', loopEnd);
+      this.loopEnd = loopEnd;
+    }
   }
   public changeDefault(length: number) {
     this.default = length;
-  }
-  public checkMeasure(note: Note) {
-    // TODO: divide the time by the signiture. For now it is hardcoded at 4
-    const measureValue = note.time / 4 + 1;
-    this.$log.debug(this.measures, measureValue);
-    if (measureValue < this.measures) { return; }
-    this.$emit('update:measures', this.measures + 1);
-
   }
   public clickNote(e: MouseEvent, i: number) {
     const note = this.notes[i];
@@ -257,7 +248,6 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
       oldNote.selected = false;
       this.notes.push(newNote);
       this.$emit('added', newNote);
-      return this.notes.length - 1;
     };
 
     let targetIndex = i;
@@ -267,7 +257,8 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
       // If selected, copy all selected. If not, just copy the note that was clicked.
       if (note.selected) {
         selected = this.notes.filter((n) => n.selected && n !== note);
-        targetIndex = createNote(note);
+        targetIndex = this.notes.length; // A new note will be created at this index
+        createNote(note);
       } else {
         selected = [note];
       }
@@ -283,7 +274,9 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
       // Slice and reverse since we will be deleting from the array as we go
       const lastIndex = this.notes.length - 1;
       this.notes.slice().reverse().forEach((note, i) => {
-        if (note.selected) { this.removeAtIndex(lastIndex - i); }
+        if (note.selected) {
+          this.removeAtIndex(lastIndex - i);
+        }
       });
     }
   }
@@ -304,7 +297,6 @@ export default class Sequencer extends Mixins(Draggable, PX, BeatLines) {
 
     this.notes.map((note) => {
       this.$emit('added', note);
-      this.checkMeasure(note);
     });
 
     window.addEventListener('keydown', this.keydown);
