@@ -48,7 +48,7 @@ declare module 'tone' {
     startMobile(): void;
     toFrequency(note: Frequency, now?: number): number;
     toMaster(): this;
-    toSamples(time: Time): number;
+    toSamples(time: _TimeArg): number;
     toSeconds(time?: number, now?: number): number;
   }
 
@@ -62,7 +62,7 @@ declare module 'tone' {
   }
 
   class AmplitudeEnvelope extends Envelope {
-    constructor(attack?: any, decay?: Time, sustain?: number, release?:Time); //TODO: Change 'any' to 'Time | Object'
+    constructor(attack?: any, decay?: _TimeArg, sustain?: number, release?:_TimeArg); //TODO: Change 'any' to '_TimeArg | Object'
     dispose(): this;
   }
 
@@ -73,8 +73,8 @@ declare module 'tone' {
       harmonicity: number;
       modulator: MonoSynth;
       dispose(): this;
-      triggerEnvelopeAttack(time?: Time, velocity?: number): AMSynth;
-      triggerEnvelopeRelease(time?: Time): AMSynth;
+      triggerEnvelopeAttack(time?: _TimeArg, velocity?: number): AMSynth;
+      triggerEnvelopeRelease(time?: _TimeArg): AMSynth;
   }
 
   class AND extends SignalBase {
@@ -98,8 +98,8 @@ declare module 'tone' {
       frequency: Signal;
       type: string;
       dispose(): this;
-      start(Time?: Time): AutoPanner;
-      stop(Time?: Time): AutoPanner;
+      start(time?: Time): AutoPanner;
+      stop(time?: _TimeArg): AutoPanner;
       sync(): AutoPanner;
       unsync(): AutoPanner;
   }
@@ -198,8 +198,8 @@ declare module 'tone' {
       vibratoRate: Signal;
       voice0: MonoSynth;
       voice1: MonoSynth;
-      triggerEnvelopeAttack(time?: Time, velocity?: number): DuoSynth;
-      triggerEnvelopeRelease(time?: Time): DuoSynth;
+      triggerEnvelopeAttack(time?: _TimeArg, velocity?: number): DuoSynth;
+      triggerEnvelopeRelease(time?: _TimeArg): DuoSynth;
   }
 
   class Effect extends Tone {
@@ -210,15 +210,15 @@ declare module 'tone' {
   }
 
   class Envelope extends Tone {
-      constructor(attack: any, decay?: Time, sustain?: number, release?: Time);  //TODO: Change 'any' to 'Time | Object'
-      attack: Time;
-      decay: Time;
-      release: Time;
+      constructor(attack: any, decay?: _TimeArg, sustain?: number, release?: _TimeArg);  //TODO: Change 'any' to '_TimeArg | Object'
+      attack: _TimeArg;
+      decay: _TimeArg;
+      release: _TimeArg;
       sustain: number;
       dispose(): this;
-      triggerAttack(time?: Time, velocity?: number): Envelope;
-      triggerAttackRelease(duration: Time, time?: Time, velocity?: number): Envelope;
-      triggerRelease(time?: Time): Envelope;
+      triggerAttack(time?: _TimeArg, velocity?: number): Envelope;
+      triggerAttackRelease(duration: _TimeArg, time?: _TimeArg, velocity?: number): Envelope;
+      triggerRelease(time?: _TimeArg): Envelope;
   }
 
   class EQ3 extends Tone {
@@ -256,7 +256,7 @@ declare module 'tone' {
 
   class FeedbackCombFilter extends Tone {
       constructor(minDelay?: number, maxDelay?: number);
-      delayTime: Time;
+      delayTime: _TimeArg;
       resonance: Signal;
       dispose(): this;
   }
@@ -292,14 +292,14 @@ declare module 'tone' {
       modulationIndex: number;
       modulator: MonoSynth;
       dispose(): this;
-      triggerEnvelopeAttack(time?: Time, velocity?: number): FMSynth;
-      triggerEnvelopeRelease(time?: Time): FMSynth;
+      triggerEnvelopeAttack(time?: _TimeArg, velocity?: number): FMSynth;
+      triggerEnvelopeRelease(time?: _TimeArg): FMSynth;
   }
 
   class Follower extends Tone {
-    constructor(attack?: Time, release?: Time);  
-    attack: Time;
-    release: Time;
+    constructor(attack?: _TimeArg, release?: _TimeArg);  
+    attack: _TimeArg;
+    release: _TimeArg;
     dispose(): this;
   }
 
@@ -312,10 +312,10 @@ declare module 'tone' {
 
   class TimeBase {
       set ( exprString: string ): TimeBase;
-      add ( val: Time, units?: string ): TimeBase;
-      sub ( val: Time, units?: string ): TimeBase;
-      mult ( val: Time, units?: string ): TimeBase;
-      div ( val: Time, units?: string ): TimeBase;
+      add ( val: _TimeArg, units?: string ): TimeBase;
+      sub ( val: _TimeArg, units?: string ): TimeBase;
+      mult ( val: _TimeArg, units?: string ): TimeBase;
+      div ( val: _TimeArg, units?: string ): TimeBase;
       eval ( ): number;
       dispose: TimeBase;
   }
@@ -333,10 +333,10 @@ declare module 'tone' {
   }
 
   class Gate extends Tone {
-    constructor(thresh?: number, attackTime?: Time, releaseTime?: Time);
-    attack: Time;
-    release: Time;
-    threshold: Time;
+    constructor(thresh?: number, attackTime?: _TimeArg, releaseTime?: _TimeArg);
+    attack: _TimeArg;
+    release: _TimeArg;
+    threshold: _TimeArg;
     dispose(): this;
   }
 
@@ -355,7 +355,7 @@ declare module 'tone' {
 
   class Instrument extends AudioNode {
       volume: Signal;
-      triggerAttackRelease(note: any, duration: Time, time?: Time, velocity?: number): Instrument; //Todo: string | number
+      triggerAttackRelease(note: any, duration: _TimeArg, time?: _TimeArg, velocity?: number): Instrument; //Todo: string | number
       dispose(): this;
   }
 
@@ -371,7 +371,7 @@ declare module 'tone' {
   }
 
   class LFO extends Oscillator {
-      constructor(frequency?: Time, outputMin?: number, outputMax?: number); //TODO: Number || Object
+      constructor(frequency?: _TimeArg, outputMin?: number, outputMax?: number); //TODO: Number || Object
       amplitude: Signal;
       frequency: Signal;
       max: number;
@@ -380,9 +380,9 @@ declare module 'tone' {
       phase: number;
       type: string;
       dispose(): this;
-      start(time?: Time): LFO;
-      stop(time?: Time): LFO;
-      sync(delay?: Time): LFO;
+      start(time?: _TimeArg): LFO;
+      stop(time?: _TimeArg): LFO;
+      sync(delay?: _TimeArg): LFO;
       unsync(): LFO;
   }
 
@@ -394,10 +394,10 @@ declare module 'tone' {
   class LowpassCombFilter extends Tone {
       constructor(minDelay?: number, maxDelay?: number)
       dampening: Signal;
-      delayTime: Time;
+      delayTime: _TimeArg;
       resonance: Signal;
       dispose(): this;
-      setDelayTimeAtTime(delayAmount: Time, time?: Time): LowpassCombFilter;
+      setDelayTimeAtTime(delayAmount: _TimeArg, time?: _TimeArg): LowpassCombFilter;
   }
 
   var Master: MasterClass;
@@ -462,7 +462,7 @@ declare module 'tone' {
 
   class Monophonic extends Instrument {
       constructor();
-      portamento: Time;
+      portamento: _TimeArg;
       setNote(note: any):Monophonic; //Todo: number | string
   }
 
@@ -475,8 +475,8 @@ declare module 'tone' {
       frequency: Signal;
       oscillator: OmniOscillator;
       dispose(): this;
-      triggerEnvelopeAttack(time?: Time, velocity?: number): MonoSynth;
-      triggerEnvelopeRelease(time?: Time): MonoSynth;
+      triggerEnvelopeAttack(time?: _TimeArg, velocity?: number): MonoSynth;
+      triggerEnvelopeRelease(time?: _TimeArg): MonoSynth;
   }
 
   class MultibandCompressor extends Tone {
@@ -535,9 +535,9 @@ declare module 'tone' {
       filterEnvelope: Envelope;
       noise: Noise;
       dispose(): this;
-      triggerAttack(time?: Time, velocity?: number): NoiseSynth;
-      triggerAttackRelease(duration: Time, time?: Time, velocity?: number): NoiseSynth;
-      triggerRelease(time?: Time): NoiseSynth;
+      triggerAttack(time?: _TimeArg, velocity?: number): NoiseSynth;
+      triggerAttackRelease(duration: _TimeArg, time?: _TimeArg, velocity?: number): NoiseSynth;
+      triggerRelease(time?: _TimeArg): NoiseSynth;
   }
 
   class Normalize extends SignalBase {
@@ -548,7 +548,7 @@ declare module 'tone' {
   }
 
   class Note {
-      constructor(channel: any, time:Time, value: any); //todo: channel: number|string, value: string|number|Object|Array
+      constructor(channel: any, time:_TimeArg, value: any); //todo: channel: number|string, value: string|number|Object|Array
       value: any; //todo: string | number | Object
       parseScore(score: Object): Note[];
       route(channel:any, callback?: (e: any)=>any): void; //todo: string | number
@@ -599,12 +599,16 @@ declare module 'tone' {
   type TransportTime = number; // TODO
   class Part<T> extends Event {
     constructor(callback?: (time: string, value: T) => void, events?: Event[])
-    start(time: TransportTime, offset?: Time): void
+    start(time: TransportTime, offset?: _TimeArg): void
     loop: boolean
+    readonly progress: number;
+    mute: boolean;
+    readonly state: 'started' | 'stopped';
     humanize: boolean
-    loopEnd: Time
-    add(time: Time, value: T): void // TODO
-    remove(time: Time, value: T): void // TODO
+    loopEnd: _TimeArg
+    loopStart: _TimeArg
+    add(time: _TimeArg, value: T): void // TODO
+    remove(time: _TimeArg, value: T): void // TODO
   }
 
   class Phaser extends StereoEffect {
@@ -616,7 +620,7 @@ declare module 'tone' {
   }
 
   class PingPongDelay extends StereoXFeedbackEffect {
-      constructor(delayTime?: any, feedback?: number); //TODO: Time || Object
+      constructor(delayTime?: any, feedback?: number); //TODO: _TimeArg || Object
       delayTime: Signal;
       dispose(): this;
   }
@@ -626,13 +630,13 @@ declare module 'tone' {
       buffer: AudioBuffer;
       duration: number;
       loop: boolean;
-      loopEnd: Time;
-      loopStart: Time;
+      loopEnd: _TimeArg;
+      loopStart: _TimeArg;
       playbackRate: number;
       retrigger: boolean;
       dispose(): this;
       load(url:string, callback?:(e: any)=>any):  Player;
-      setLoopPoints(loopStart:Time, loopEnd:Time): Player;
+      setLoopPoints(loopStart: _TimeArg, loopEnd: _TimeArg): Player;
   }
 
   class PluckSynth extends Instrument {
@@ -641,7 +645,7 @@ declare module 'tone' {
       dampening: Signal;
       resonance: Signal;
       dispose(): this;
-      triggerAttack(note: any, time?: Time): PluckSynth; //todo: string | number
+      triggerAttack(note: any, time?: _TimeArg): PluckSynth; //todo: string | number
   }
 
   // @ts-ignore
@@ -652,9 +656,9 @@ declare module 'tone' {
       get(params?: any[]): any;
       set(params: Object): void;
       setPreset(presetName: string): PolySynth;
-      triggerAttack(notes: any, time?: Time, velocity?: number): PolySynth; //todo: string | number | Object| string[] | number[]
-      triggerAttackRelease(notes: any, duration: Time, time?: Time, velocity?: number): PolySynth; //todo: string | number | Object | string[] | number[]
-      triggerRelease(value: any, time?: Time): PolySynth; //todo: string | number | Object | string[] | number[]
+      triggerAttack(notes: any, time?: _TimeArg, velocity?: number): PolySynth; //todo: string | number | Object| string[] | number[]
+      triggerAttackRelease(notes: any, duration: _TimeArg, time?: _TimeArg, velocity?: number): PolySynth; //todo: string | number | Object | string[] | number[]
+      triggerRelease(value: any, time?: _TimeArg): PolySynth; //todo: string | number | Object | string[] | number[]
   }
 
   class Pow extends SignalBase {
@@ -686,7 +690,7 @@ declare module 'tone' {
       constructor(outputCount?: number);
       gate: Signal;
       dispose(): this;
-      select(which?: number, time?: Time): Route;
+      select(which?: number, time?: _TimeArg): Route;
   }
 
   class Sampler extends Instrument {
@@ -698,8 +702,8 @@ declare module 'tone' {
       player: Player;
       sample: any; //todo: number | string
       dispose(): this;
-      triggerAttack(sample?: string, time?: Time, velocity?: number): Sampler;
-      triggerRelease(time?: Time): Sampler;
+      triggerAttack(sample?: string, time?: _TimeArg, velocity?: number): Sampler;
+      triggerRelease(time?: _TimeArg): Sampler;
   }
 
   class Scale extends SignalBase {
@@ -710,7 +714,7 @@ declare module 'tone' {
   }
 
   class ScaledEnvelope extends Envelope {
-      constructor(attack?: any, decay?: Time, sustain?: number, release?:Time); //TODO: Change 'any' to 'Time | Object'
+      constructor(attack?: any, decay?: _TimeArg, sustain?: number, release?:_TimeArg); //TODO: Change 'any' to '_TimeArg | Object'
       exponent: number;
       max: number;
       min: number;
@@ -729,7 +733,7 @@ declare module 'tone' {
       constructor(sourceCount?: number);
       gate: Signal;
       dispose(): this;
-      select(which: number, time?: Time): Select;
+      select(which: number, time?: _TimeArg): Select;
   }
 
   module Signal {
@@ -740,18 +744,18 @@ declare module 'tone' {
   class Signal extends SignalBase {
       constructor(value?: any, units?: Signal.Unit); //todo: number | AudioParam
       units: Signal.Type;
-      value: any; //TODO: Time | Frequency | number
-      cancelScheduledValues(startTime: Time): Signal;
+      value: any; //TODO: _TimeArg | Frequency | number
+      cancelScheduledValues(startTime: _TimeArg): Signal;
       dispose(): this;
-      exponentialRampToValueAtTime(value: number, endTime: Time): Signal;
-      exponentialRampToValueNow(value: number, rampTime: Time): Signal;
-      linearRampToValueAtTime(value: number, endTime: Time): Signal;
-      linearRampToValueNow(value: number, rampTime: Time): Signal;
-      rampTo(value: number, rampTime: Time): Signal;
+      exponentialRampToValueAtTime(value: number, endTime: _TimeArg): Signal;
+      exponentialRampToValueNow(value: number, rampTime: _TimeArg): Signal;
+      linearRampToValueAtTime(value: number, endTime: _TimeArg): Signal;
+      linearRampToValueNow(value: number, rampTime: _TimeArg): Signal;
+      rampTo(value: number, rampTime: _TimeArg): Signal;
       setCurrentValueNow(now?: number): Signal;
-      setTargetAtTime(value: number, startTime: Time, timeConstant: number): Signal;
-      setValueAtTime(value: number, time: Time): Signal;
-      setValueCurveAtTime(values: number[], startTime: Time, duration: Time): Signal;
+      setTargetAtTime(value: number, startTime: _TimeArg, timeConstant: number): Signal;
+      setValueAtTime(value: number, time: _TimeArg): Signal;
+      setValueCurveAtTime(values: number[], startTime: _TimeArg, duration: _TimeArg): Signal;
   }
 
   class SignalBase extends Tone {
@@ -764,9 +768,9 @@ declare module 'tone' {
       state: Source.State;
       volume: Signal;
       dispose(): this;
-      start(time?: Time): Source;
-      stop(time?: Time): Source;
-      sync(delay?: Time): Source;
+      start(time?: _TimeArg): Source;
+      stop(time?: _TimeArg): Source;
+      sync(delay?: _TimeArg): Source;
       unsync(): Source;
   }
 
@@ -792,59 +796,68 @@ declare module 'tone' {
   }
 
   class StereoWidener extends MidSideEffect {
-      constructor(width?: any); //TODO change 'any' to 'number | Object'
-      width: Signal;
-      dispose(): this;
+    constructor(width?: any); //TODO change 'any' to 'number | Object'
+    width: Signal;
+    dispose(): this;
   }
 
   class StereoXFeedbackEffect extends FeedbackEffect {
-      feedback: Signal;
-      dispose(): this;
+    feedback: Signal;
+    dispose(): this;
   }
 
   class Switch extends SignalBase {
-      gate: Signal;
-      close(time: Time): Switch;
-      dispose(): this;
-      open(time: Time): Switch
+    gate: Signal;
+    close(time: _TimeArg): Switch;
+    dispose(): this;
+    open(time: _TimeArg): Switch
   }
 
   class Synth extends Monophonic {
     constructor(options?: any) // TODO fix any
   }
 
-  type Time = string | number; // TODO
+  class Time extends TimeBase {
+    constructor(val: string | number, units?: string);
+    toSeconds(): number;
+    toBarsBeatsSixteenths(): string;
+  }
+
+  type _TimeArg = string | number | Time;
 
   class TransportClass extends Tone {
-      bpm: Signal;
-      loop: boolean;
-      loopEnd: Time;
-      loopStart: Time;
-      position: string;
-      state: TransportState;
-      swing: number;
-      swingSubdivision: Time;
-      timeSignature: number;
-      clearInterval(rmInterval: number): boolean;
-      clearIntervals(): void;
-      clearTimeline(timelineID: number): boolean;
-      clearTimelines(): void;
-      clearTimeout(timeoutID: number): boolean;
-      clearTimeouts(): void;
-      dispose(): this;
-      nextBeat(subdivision?: string): number;
-      pause(time: Time): Transport;
-      setInterval(callback: (e: any)=>any, interval: Time): number;
-      setLoopPoints(startPosition: Time, endPosition: Time): Transport;
-      setTimeline(callback: (e: any)=>any, timeout: Time): number;
-      setTimeout(callback: (e: any)=>any, time: Time): number;
-      start(time?: Time, offset?: Time): Transport;
-      stop(time?: Time): Transport;
-      pause(time?: Time): Transport;
-      syncSignal(signal: Signal, ratio?: number): Transport;
-      syncSource(source: Source, delay: Time): Transport;
-      unsyncSignal(signal: Signal): Transport;
-      unsyncSource(source: Source): Transport;
+    bpm: Signal;
+    seconds: number;
+    loop: boolean;
+    loopEnd: _TimeArg;
+    loopStart: _TimeArg;
+    position: string;
+    progress: number;
+    state: TransportState;
+    swing: number;
+    swingSubdivision: _TimeArg;
+    timeSignature: number;
+    PPQ: number;
+    clearInterval(rmInterval: number): boolean;
+    clearIntervals(): void;
+    clearTimeline(timelineID: number): boolean;
+    clearTimelines(): void;
+    clearTimeout(timeoutID: number): boolean;
+    clearTimeouts(): void;
+    dispose(): this;
+    nextBeat(subdivision?: string): number;
+    pause(time: _TimeArg): Transport;
+    setInterval(callback: (e: any)=>any, interval: _TimeArg): number;
+    setLoopPoints(startPosition: _TimeArg, endPosition: _TimeArg): Transport;
+    setTimeline(callback: (e: any)=>any, timeout: _TimeArg): number;
+    setTimeout(callback: (e: any)=>any, time: _TimeArg): number;
+    start(time?: _TimeArg, offset?: _TimeArg): Transport;
+    stop(time?: _TimeArg): Transport;
+    pause(time?: _TimeArg): Transport;
+    syncSignal(signal: Signal, ratio?: number): Transport;
+    syncSource(source: Source, delay: _TimeArg): Transport;
+    unsyncSignal(signal: Signal): Transport;
+    unsyncSource(source: Source): Transport;
   }
 
   var Transport: TransportClass;

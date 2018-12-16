@@ -1,14 +1,13 @@
 import { storiesOf } from '@storybook/vue';
 import { action } from '@storybook/addon-actions';
 import Tone from 'tone';
-import { FactoryDictionary } from 'typescript-collections';
 import DotButton from '@/components/DotButton.vue';
 import Key from '@/components/Key.vue';
 import Sequencer from '@/components/Sequencer.vue';
 import Piano from '@/components/Piano.vue';
 import Toolbar from '@/components/Toolbar.vue';
+import Dawg from '@/components/Dawg.vue';
 import Tree from '@/components/Tree.vue';
-import ChannelRack from '@/components/ChannelRack.vue';
 import Knob from '@/components/Knob.vue';
 import Mixer from '@/components/Mixer.vue';
 import Slider from '@/components/Slider.vue';
@@ -19,14 +18,17 @@ import PlayPause from '@/components/PlayPause.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
 import ColorBlock from '@/components/ColorBlock.vue';
-import { TREE, StyleType, range, makeStyle } from '@/utils';
-import stillDre from '@/assets/still-dre';
+import { StyleType, range, makeStyle } from '@/utils';
 import Foot from '@/components/Foot.vue';
 import notification from '@/notification';
 import Notifications from '@/notification/Notifications.vue';
 import Synth from '@/components/Synth.vue';
+import SequencerRow from '@/components/SequencerRow.vue';
 import Split from '@/modules/split/Split.vue';
 import BeatLines from '@/components/BeatLines';
+import PianoRoll from '@/components/PianoRoll.vue';
+import Timeline from '@/components/Timeline.vue';
+
 
 import Vue from 'vue';
 
@@ -34,27 +36,58 @@ Vue.use(notification);
 
 const synth = new Tone.Synth().toMaster();
 
+storiesOf(SequencerRow.name, module)
+  .add('Standard', () => ({
+    template: `
+    <dawg>
+      <sequencer-row
+        v-for="i in 20"
+        :key="i"
+        :id="40 + i"
+        :total-beats="12"
+        @click="click"
+      ></sequencer-row>
+    </dawg>
+    `,
+    components: { SequencerRow, Dawg },
+    methods: {
+      click(...args) {
+        // tslint:disable-next-line:no-console
+        console.log('click', args);
+      },
+    },
+  }));
+
 storiesOf(Piano.name, module)
   .add('Standard', () => ({
-    template: '<piano :octave="4" :synth="synth"/>',
+    template: `
+    <dawg>
+      <piano
+        :synth="synth"
+        style="overflow-y: scroll; height: 500px"
+      ></piano>
+    </dawg>
+    `,
     data: () => ({ synth }),
-    components: { Piano },
+    components: { Piano, Dawg },
   }));
 
 storiesOf(Key.name, module)
   .add('White', () => ({
-    data() {
-      return { synth };
-    },
-    template: '<key note="C4" :synth="synth"/>',
-    components: { Key },
+    template: `
+    <dawg>
+      <key value="C4"></key>
+    </dawg>
+    `,
+    components: { Key, Dawg },
   }))
   .add('Black', () => ({
-    data() {
-      return { synth };
-    },
-    template: '<key note="C#4" :synth="synth"/>',
-    components: { Key },
+    template: `
+    <dawg>
+      <key value="C#4"></key>
+    </dawg>
+    `,
+    components: { Key, Dawg },
   }));
 
 const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
@@ -62,87 +95,15 @@ const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
 storiesOf(Sequencer.name, module)
   .add('Standard', () => ({
     template: `
-    <sequencer :note-width="20" :note-height="16" :value="notes" :measures.sync="measures"/>
+    <dawg>
+      <sequencer
+        :value="notes"
+        :measures.sync="measures"
+      ></sequencer>
+    </dawg>
     `,
     data: () => ({ notes: [], measures: 1 }),
-    components: { Sequencer },
-  }))
-  .add('Playable', () => ({
-    template: `<div>
-                <sequencer
-                    :note-width="20"
-                    :note-height="16"
-                    :measures.sync="measures"
-                    @added="added"
-                    @removed="removed"
-                    :value="notes"
-                ></sequencer>
-                <play-pause @play="play" @stop="stop"/>
-                <span style="display: block">{{ processed }}</span>
-              </div>
-              `,
-    data() {
-      return {
-        notes: stillDre,
-        // @ts-ignore
-        part: new Tone.Part(this.callback),
-        measures: 1,
-      };
-    },
-    components: { Sequencer, PlayPause },
-    computed: {
-      processed() {
-        const chords = new FactoryDictionary<string, string[]>(Array);
-        // @ts-ignore
-        this.notes.map(({ time, note }) => chords.getValue(time).push(note));
-        return Object.keys(chords).map((time) => [time, chords.getValue(time).sort()]);
-      },
-    },
-    methods: {
-      play() {
-        Tone.Transport.start();
-      },
-      stop() {
-        Tone.Transport.stop();
-      },
-      callback(time: string, note: string) {
-        piano.triggerAttackRelease(note, '8n', time);
-      },
-      added(note: object) {
-        // @ts-ignore
-        this.part.add(note.time, note.note);
-      },
-      moved({ newTime, oldTime, note }: {newTime: string, oldTime: string, note: string}) {
-        // @ts-ignore
-        this.part.remove(oldTime);
-        // @ts-ignore
-        this.part.add(newTime, note);
-      },
-      removed(note: object) {
-        // @ts-ignore
-        // tslint:disable-next-line:no-console
-        console.log(this.part.at(note.time));
-        // this.part.remove(note.time)
-      },
-    },
-    mounted() {
-      // @ts-ignore
-      this.part.start(0);
-      // @ts-ignore
-      this.part.loop = true;
-      // @ts-ignore
-      this.part.humanize = true;
-      Tone.Transport.bpm.value = 93;
-    },
-    watch: {
-      measures: {
-        immediate: true,
-        handler() {
-          // @ts-ignore
-          this.part.loopEnd = `${this.measures}m`;
-        },
-      },
-    },
+    components: { Sequencer, Dawg },
   }));
 
 storiesOf(DotButton.name, module)
@@ -157,6 +118,18 @@ storiesOf(Toolbar.name, module)
     template: '<v-app dark><toolbar/></v-app>',
     components: { Toolbar },
   }));
+
+const TREE = {
+    root: {
+      'folder 1': {
+        'item 1': {},
+        'folder 2': {
+          'item 2': {},
+        },
+      },
+      'item 3': {},
+    },
+  };
 
 storiesOf(Tree.name, module)
   .add('Standard', () => ({
@@ -195,24 +168,13 @@ storiesOf(TimeDisplay.name, module)
 
 storiesOf(Note.name, module)
   .add('Standard', () => ({
-    template: `<note :height="16" v-model="length" :width="20" text="C5"></note>`,
-    components: { Note },
-    data: () => ({ length: 4 }),
-  }));
-
-storiesOf(ChannelRack.name, module)
-  .add('Standard', () => ({
     template: `
-    <v-app dark>
-      <channel-rack :instruments="instruments" style="max-width: 300px"></channel-rack>
-    </v-app>
+    <dawg>
+      <note v-model="length" :id="0" :start="0"></note>
+    </dawg>
     `,
-    components: { ChannelRack },
-    data() {
-      return {
-        instruments: ['Synth A', 'SynthB'],
-      };
-    },
+    components: { Dawg, Note },
+    data: () => ({ length: 1 }),
   }));
 
 storiesOf(Knob.name, module)
@@ -228,13 +190,6 @@ storiesOf(Knob.name, module)
         <div>{{ value }}</div>
       </div>
     `,
-    components: { Knob },
-    data() {
-      return { value: 0 };
-    },
-  }))
-  .add('Potentiometer', () => ({
-    template: '<knob v-model="value" style="margin: 50px" potentiometer></knob>',
     components: { Knob },
     data() {
       return { value: 0 };
@@ -309,7 +264,7 @@ storiesOf(ColorBlock.name, module)
   }))
   .add('Theme', () => ({
     template: `
-    <div>
+    <div style="height: 500px; overflow-y: auto">
       <color-block v-for="color in colors" :key="color" :color="color"></color-block>
     </div>
     `,
@@ -416,8 +371,74 @@ storiesOf(Split.name, module)
   }));
 
 
+const Temp = Vue.extend({
+  template: `<div style="height: 30px; width: 400px"></div>`,
+  mixins: [BeatLines],
+});
+
 storiesOf(BeatLines.name, module)
   .add('Standard', () => ({
-    template: `<div style="height: 30px; width: 400px"></div>`,
-    mixins: [BeatLines],
+    template: `
+    <dawg>
+      <temp></temp>
+    </dawg>
+    `,
+    components: { Temp, Dawg },
+  }));
+
+storiesOf(Timeline.name, module)
+  .add('Standard', () => ({
+    template: `
+    <dawg>
+      <timeline
+        :loop-start="start"
+        :loop-end="end"
+        v-model="time"
+        style="width: 400px; height: 20px"
+      ></timeline>
+    </dawg>
+    `,
+    data: () => ({ time: 0, start: 0, end: 2 }), // TODO change to 8 for beats
+    components: { Timeline, Dawg },
+  }))
+  .add('With Offset', () => ({
+    template: `
+    <dawg>
+      <timeline
+        :loop-start="start"
+        :loop-end="end"
+        v-model="time"
+        style="width: 400px; height: 20px"
+        :offset="offset"
+      ></timeline>
+      <div>
+        <input type="range" id="start" name="volume" min="0" max="100" v-model="pixels">
+        <label for="volume">Pixel Offset</label>
+      </div>
+    </dawg>
+    `,
+    data: () => ({
+      time: 0,
+      pixels: 0,
+      start: 0,
+      end: 0,
+    }),
+    components: { Timeline, Dawg },
+    computed: {
+      offset() {
+        // @ts-ignore
+        return this.pixels / this.pxPerBeat;
+      },
+    },
+  }));
+
+storiesOf(PianoRoll.name, module)
+  .add('Standard', () => ({
+    template: `
+    <dawg>
+      <piano-roll :synth="piano"></piano-roll>
+    </dawg>
+    `,
+    data: () => ({ piano }),
+    components: { PianoRoll, Dawg },
   }));

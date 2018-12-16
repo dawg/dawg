@@ -1,8 +1,5 @@
-export interface NoteInfo {
-  value: string;
+export interface Note {
+  id: number;
   length: number;
-  time: string;
-  row: number;
-  col: number;
-  selected: boolean;
+  time: number;
 }

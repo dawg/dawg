@@ -1,7 +1,3 @@
-export const BLACK = 'black';
-
-export const WHITE = 'white';
-
 export enum StyleType {
   PRIMARY = 'primary',
   SECONDARY = 'secondary',
@@ -58,17 +54,6 @@ export const makeStyle = (type: StyleType, options?: StyleOptions) => {
 };
 
 type Color = 'black' | 'white';
-type NoteValue = 'C' | 'C#' | 'D' | 'D#' | 'E' | 'F' | 'F#' | 'G' | 'G#' | 'A' | 'A#' | 'B';
-
-export interface Note {
-  value: NoteValue;
-  color: Color;
-}
-
-export const notes: Note[] = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].map((note) => ({
-  value: note as NoteValue,
-  color: note.endsWith('#') ? 'black' : 'white' as Color,
-}));
 
 export const range = (a: number, b = 0, interval = 1) => {
   let start;
@@ -85,14 +70,40 @@ export const range = (a: number, b = 0, interval = 1) => {
   return rge;
 };
 
-export const TREE = {
-  root: {
-    'folder 1': {
-      'item 1': {},
-      'folder 2': {
-        'item 2': {},
-      },
+interface OctaveKey {
+  value: string;
+  color: Color;
+  id: number;
+}
+
+const octaveKeys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].reverse();
+export const allKeys: OctaveKey[] = [];
+let noteNumber = -octaveKeys.length + 1;  // A bit hacky but we want to start at C8 and end at A0
+range(0, 9).reverse().forEach((value) => {
+  octaveKeys.forEach((key) => {
+    if (noteNumber >= 0 && noteNumber < 88) {
+      allKeys.push({
+        value: `${key}${value}`,
+        color: key.endsWith('#') ? 'black' : 'white',
+        id: noteNumber,
+      });
+    }
+    noteNumber += 1;
+  });
+});
+
+
+export const copy = <T>(o: T): T => {
+  return JSON.parse(JSON.stringify(o));
+};
+
+
+export const Nullable = (o: { new(): object }) => {
+  return {
+    required: true,
+    validator: (prop: any) => {
+      // TODO I don't know how well the first check holds up but it works for now
+      return typeof prop === o.name.toLowerCase() || prop === null;
     },
-    'item 3': {},
-  },
+  };
 };

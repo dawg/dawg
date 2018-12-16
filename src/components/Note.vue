@@ -30,53 +30,64 @@
 
 <script lang="ts">
 import { Draggable } from '@/mixins';
-import { Mixins, Prop, Component } from 'vue-property-decorator';
+import { Mixins, Prop, Component, Inject } from 'vue-property-decorator';
+import { allKeys } from '@/utils';
 
 // TODO It may be possible to encapsolate some of the x, y logic within the note :)
-// TODO fontSize should actually be used for the font size lol
+// TODO fontSize should actually be used for the font size
 @Component
 export default class Note extends Mixins(Draggable) {
-  @Prop({ type: Number, required: true }) public height!: number;
-  @Prop({ type: Number, required: true }) public width!: number;
+  @Inject() public snap!: number;
+  @Inject() public noteHeight!: number;
+  @Inject() public pxPerBeat!: number;
+
+  @Prop({ type: Number, required: true }) public start!: number;  // The start beat
+  @Prop({ type: Number, required: true }) public id!: number;
   @Prop({ type: Number, default: 8 }) public borderWidth!: number;
   @Prop({ type: Number, default: 14 }) public fontSize!: number;
-  @Prop({ type: Number, default: 0 }) public x!: number;
-  @Prop({ type: Number, default: 0 }) public y!: number;
-  @Prop(Number) public value!: number;
-  @Prop(String) public text!: string;
+  @Prop(Number) public value!: number;  // The length
   @Prop(Boolean) public selected!: boolean;
-  @Prop({ type: String, default: '#fff' }) public textColor!: number;
+
   public cursor = 'ew-resize';
-  public takeAway = 1;
 
   get noteConfig() {
     // we take away an extra pixel because it looks better
     return {
-      width: `${(this.width * this.value) - 1}px`,
-      height: `${this.height}px`,
-      left: `${this.x}px`,
-      top: `${this.y}px`,
+      width: `${this.pxLength - 1}px`,
+      height: `${this.noteHeight}px`,
+      left: `${this.left}px`,
+      top: `${this.top}px`,
     };
   }
+  get top() {
+    return this.id * this.noteHeight;
+  }
+  get text() {
+    return allKeys[this.id].value;
+  }
+
+  get left() { return this.start * this.pxPerBeat; }
+  get pxLength() { return this.value * this.pxPerBeat; }
   get borderConfig() {
     // We also take away an extra pixel because it looks better
     return {
       width: `${this.borderWidth}px`,
-      height: `${this.height}px`,
-      left: `${((this.width * this.value)) - this.borderWidth - 1}px`,
+      height: `${this.noteHeight}px`,
+      left: `${this.pxLength - this.borderWidth - 1}px`,
     };
   }
   get textConfig() {
     return {
-      top: `${(this.y + (this.height / 2)) - ((this.fontSize / 2) + 1)}px`,
-      color: this.textColor,
+      top: `${(this.top + (this.noteHeight / 2)) - ((this.fontSize / 2) + 1)}px`,
+      color: '#fff',
     };
   }
   public move(e: MouseEvent) {
     const diff = e.clientX - this.$el.getBoundingClientRect().left;
-    const length = Math.round(diff / this.width);
+    let length = diff / this.pxPerBeat;
+    length = Math.round(length / this.snap) * this.snap;
     if (this.value === length) { return; }
-    if (length < 1) { return; }
+    if (length < this.snap) { return; }
     this.$emit('input', length);
   }
 }
@@ -100,7 +111,6 @@ export default class Note extends Mixins(Draggable) {
   border-radius: 4px
   overflow: hidden
 
-// TODO These colors are currently harcoded. We could possible make them props.
 .selected
   background-color: #ff9999
 

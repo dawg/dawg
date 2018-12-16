@@ -1,18 +1,14 @@
-import { Vue, Component, Prop } from 'vue-property-decorator';
+import { Vue, Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 
 @Component
 export default class BeatLines extends Vue {
-  @Prop({ type: Number, required: true }) public noteWidth!: number;
-  @Prop({ type: Number, default: 4 }) public beatsPerMeasure!: number;
-  @Prop({ type: Number, default: 4 }) public stepsBerPeat!: number;
+  @Inject() public pxPerBeat!: number;
+  @Inject() public beatsPerMeasure!: number;
+  @Inject() public stepsPerBeat!: number;
 
   public beatColor = 'rgba(0,0,0,.4)';
   public stepColor = 'rgba(0,0,0,.1)';
   public measureColor = 'rgb(0,0,0)';
-
-  public get pxPerBeat() {
-    return this.noteWidth * 4;
-  }
 
   public get viewBox() {
     return this.pxPerBeat * this.beatsPerMeasure;
@@ -27,11 +23,11 @@ export default class BeatLines extends Vue {
   }
 
   public get stepPx() {
-    return this.pxPerBeat / this.stepsBerPeat;
+    return this.pxPerBeat / this.stepsPerBeat;
   }
 
   public get measureSteps() {
-    return this.stepsBerPeat * this.beatsPerMeasure;
+    return this.stepsPerBeat * this.beatsPerMeasure;
   }
 
   public mounted() {
