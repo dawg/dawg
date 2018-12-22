@@ -219,7 +219,7 @@ export default class App extends Vue {
     }
   }
   public save(fp: any) {
-    fs.open;
+    // fs.open;
     //
   }
 }
