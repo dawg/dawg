@@ -1,26 +1,31 @@
 import { shallowMount } from '@vue/test-utils';
 import Note from '@/components/Note.vue';
 
+let wrapper: ReturnType<typeof shallowMount>;
+let vm: any;
+
 // TODO these should be typed!
 describe(Note.name, () => {
-  it('should have the correct width', () => {
-    const wrapper = shallowMount(Note, {
-      propsData: { height: 8, width: 8, value: 2 },
+  beforeEach(() => {
+    wrapper = shallowMount(Note, {
+      propsData: { id: 2, start: 4, value: 2 },
+      provide: {
+        snap: 0.25,
+        noteHeight: 16,
+        pxPerBeat: 80,
+      },
     });
-    const vm = wrapper.vm as any;
-    expect(vm.noteConfig.width).toBe(`15px`);
+    vm = wrapper.vm;
+  });
+  it('should have the correct width', () => {
+    expect(vm.noteConfig.width).toBe(`159px`);
   });
   it('should move correctly', () => {
-    const wrapper = shallowMount(Note, {
-      propsData: { height: 8, width: 8, value: 2 },
-    });
-    const vm = wrapper.vm as any;
-
-    vm.move({ clientX: 17 });
+    vm.move({ clientX: 1 });
     expect(wrapper.emitted().input).toBeFalsy();
 
     vm.move({ clientX: 50 });
     expect(wrapper.emitted().input).toBeTruthy();
-    expect(wrapper.emitted().input[0]).toEqual([Math.round(50 / 8)]);
+    expect(wrapper.emitted().input[0][0]).toEqual(0.75);
   });
 });
