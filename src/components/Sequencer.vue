@@ -54,7 +54,7 @@
 <script lang="ts">
 import { Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 import { Draggable } from '@/mixins';
-import { Keys } from '@/keys';
+import { Keys } from '@/utils';
 import { FactoryDictionary } from 'typescript-collections';
 import { allKeys, range, copy, Nullable } from '@/utils';
 import NoteComponent from '@/components/Note.vue';
