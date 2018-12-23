@@ -1,7 +1,6 @@
 syntax = "proto2";
 
-// npx pbjs -t static-module -w commonjs -o src/models.js src/models.proto
-// npx pbts -o src/models.d.ts src/models.js
+// npx pbjs -t static-module -w commonjs -o src/models.js src/models.proto  && npx pbts -o src/models.d.ts src/models.js
 
 message Note {
   required int32 id = 1;
@@ -9,9 +8,15 @@ message Note {
   required int32 duration = 3;
 }
 
+message Score {
+  required string name = 1;
+  required string instrument_id = 2;
+  repeated Note notes = 3;
+}
+
 message Pattern {
   required string name = 1;
-  repeated Note notes = 2;
+  repeated Score scores = 2;
 }
 
 message Project {

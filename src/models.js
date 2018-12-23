@@ -241,6 +241,260 @@ $root.Note = (function() {
     return Note;
 })();
 
+$root.Score = (function() {
+
+    /**
+     * Properties of a Score.
+     * @exports IScore
+     * @interface IScore
+     * @property {string} name Score name
+     * @property {string} instrumentId Score instrumentId
+     * @property {Array.<INote>|null} [notes] Score notes
+     */
+
+    /**
+     * Constructs a new Score.
+     * @exports Score
+     * @classdesc Represents a Score.
+     * @implements IScore
+     * @constructor
+     * @param {IScore=} [properties] Properties to set
+     */
+    function Score(properties) {
+        this.notes = [];
+        if (properties)
+            for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                if (properties[keys[i]] != null)
+                    this[keys[i]] = properties[keys[i]];
+    }
+
+    /**
+     * Score name.
+     * @member {string} name
+     * @memberof Score
+     * @instance
+     */
+    Score.prototype.name = "";
+
+    /**
+     * Score instrumentId.
+     * @member {string} instrumentId
+     * @memberof Score
+     * @instance
+     */
+    Score.prototype.instrumentId = "";
+
+    /**
+     * Score notes.
+     * @member {Array.<INote>} notes
+     * @memberof Score
+     * @instance
+     */
+    Score.prototype.notes = $util.emptyArray;
+
+    /**
+     * Creates a new Score instance using the specified properties.
+     * @function create
+     * @memberof Score
+     * @static
+     * @param {IScore=} [properties] Properties to set
+     * @returns {Score} Score instance
+     */
+    Score.create = function create(properties) {
+        return new Score(properties);
+    };
+
+    /**
+     * Encodes the specified Score message. Does not implicitly {@link Score.verify|verify} messages.
+     * @function encode
+     * @memberof Score
+     * @static
+     * @param {IScore} message Score message or plain object to encode
+     * @param {$protobuf.Writer} [writer] Writer to encode to
+     * @returns {$protobuf.Writer} Writer
+     */
+    Score.encode = function encode(message, writer) {
+        if (!writer)
+            writer = $Writer.create();
+        writer.uint32(/* id 1, wireType 2 =*/10).string(message.name);
+        writer.uint32(/* id 2, wireType 2 =*/18).string(message.instrumentId);
+        if (message.notes != null && message.notes.length)
+            for (var i = 0; i < message.notes.length; ++i)
+                $root.Note.encode(message.notes[i], writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+        return writer;
+    };
+
+    /**
+     * Encodes the specified Score message, length delimited. Does not implicitly {@link Score.verify|verify} messages.
+     * @function encodeDelimited
+     * @memberof Score
+     * @static
+     * @param {IScore} message Score message or plain object to encode
+     * @param {$protobuf.Writer} [writer] Writer to encode to
+     * @returns {$protobuf.Writer} Writer
+     */
+    Score.encodeDelimited = function encodeDelimited(message, writer) {
+        return this.encode(message, writer).ldelim();
+    };
+
+    /**
+     * Decodes a Score message from the specified reader or buffer.
+     * @function decode
+     * @memberof Score
+     * @static
+     * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+     * @param {number} [length] Message length if known beforehand
+     * @returns {Score} Score
+     * @throws {Error} If the payload is not a reader or valid buffer
+     * @throws {$protobuf.util.ProtocolError} If required fields are missing
+     */
+    Score.decode = function decode(reader, length) {
+        if (!(reader instanceof $Reader))
+            reader = $Reader.create(reader);
+        var end = length === undefined ? reader.len : reader.pos + length, message = new $root.Score();
+        while (reader.pos < end) {
+            var tag = reader.uint32();
+            switch (tag >>> 3) {
+            case 1:
+                message.name = reader.string();
+                break;
+            case 2:
+                message.instrumentId = reader.string();
+                break;
+            case 3:
+                if (!(message.notes && message.notes.length))
+                    message.notes = [];
+                message.notes.push($root.Note.decode(reader, reader.uint32()));
+                break;
+            default:
+                reader.skipType(tag & 7);
+                break;
+            }
+        }
+        if (!message.hasOwnProperty("name"))
+            throw $util.ProtocolError("missing required 'name'", { instance: message });
+        if (!message.hasOwnProperty("instrumentId"))
+            throw $util.ProtocolError("missing required 'instrumentId'", { instance: message });
+        return message;
+    };
+
+    /**
+     * Decodes a Score message from the specified reader or buffer, length delimited.
+     * @function decodeDelimited
+     * @memberof Score
+     * @static
+     * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+     * @returns {Score} Score
+     * @throws {Error} If the payload is not a reader or valid buffer
+     * @throws {$protobuf.util.ProtocolError} If required fields are missing
+     */
+    Score.decodeDelimited = function decodeDelimited(reader) {
+        if (!(reader instanceof $Reader))
+            reader = new $Reader(reader);
+        return this.decode(reader, reader.uint32());
+    };
+
+    /**
+     * Verifies a Score message.
+     * @function verify
+     * @memberof Score
+     * @static
+     * @param {Object.<string,*>} message Plain object to verify
+     * @returns {string|null} `null` if valid, otherwise the reason why it is not
+     */
+    Score.verify = function verify(message) {
+        if (typeof message !== "object" || message === null)
+            return "object expected";
+        if (!$util.isString(message.name))
+            return "name: string expected";
+        if (!$util.isString(message.instrumentId))
+            return "instrumentId: string expected";
+        if (message.notes != null && message.hasOwnProperty("notes")) {
+            if (!Array.isArray(message.notes))
+                return "notes: array expected";
+            for (var i = 0; i < message.notes.length; ++i) {
+                var error = $root.Note.verify(message.notes[i]);
+                if (error)
+                    return "notes." + error;
+            }
+        }
+        return null;
+    };
+
+    /**
+     * Creates a Score message from a plain object. Also converts values to their respective internal types.
+     * @function fromObject
+     * @memberof Score
+     * @static
+     * @param {Object.<string,*>} object Plain object
+     * @returns {Score} Score
+     */
+    Score.fromObject = function fromObject(object) {
+        if (object instanceof $root.Score)
+            return object;
+        var message = new $root.Score();
+        if (object.name != null)
+            message.name = String(object.name);
+        if (object.instrumentId != null)
+            message.instrumentId = String(object.instrumentId);
+        if (object.notes) {
+            if (!Array.isArray(object.notes))
+                throw TypeError(".Score.notes: array expected");
+            message.notes = [];
+            for (var i = 0; i < object.notes.length; ++i) {
+                if (typeof object.notes[i] !== "object")
+                    throw TypeError(".Score.notes: object expected");
+                message.notes[i] = $root.Note.fromObject(object.notes[i]);
+            }
+        }
+        return message;
+    };
+
+    /**
+     * Creates a plain object from a Score message. Also converts values to other types if specified.
+     * @function toObject
+     * @memberof Score
+     * @static
+     * @param {Score} message Score
+     * @param {$protobuf.IConversionOptions} [options] Conversion options
+     * @returns {Object.<string,*>} Plain object
+     */
+    Score.toObject = function toObject(message, options) {
+        if (!options)
+            options = {};
+        var object = {};
+        if (options.arrays || options.defaults)
+            object.notes = [];
+        if (options.defaults) {
+            object.name = "";
+            object.instrumentId = "";
+        }
+        if (message.name != null && message.hasOwnProperty("name"))
+            object.name = message.name;
+        if (message.instrumentId != null && message.hasOwnProperty("instrumentId"))
+            object.instrumentId = message.instrumentId;
+        if (message.notes && message.notes.length) {
+            object.notes = [];
+            for (var j = 0; j < message.notes.length; ++j)
+                object.notes[j] = $root.Note.toObject(message.notes[j], options);
+        }
+        return object;
+    };
+
+    /**
+     * Converts this Score to JSON.
+     * @function toJSON
+     * @memberof Score
+     * @instance
+     * @returns {Object.<string,*>} JSON object
+     */
+    Score.prototype.toJSON = function toJSON() {
+        return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+    };
+
+    return Score;
+})();
+
 $root.Pattern = (function() {
 
     /**
@@ -248,7 +502,7 @@ $root.Pattern = (function() {
      * @exports IPattern
      * @interface IPattern
      * @property {string} name Pattern name
-     * @property {Array.<INote>|null} [notes] Pattern notes
+     * @property {Array.<IScore>|null} [scores] Pattern scores
      */
 
     /**
@@ -260,7 +514,7 @@ $root.Pattern = (function() {
      * @param {IPattern=} [properties] Properties to set
      */
     function Pattern(properties) {
-        this.notes = [];
+        this.scores = [];
         if (properties)
             for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                 if (properties[keys[i]] != null)
@@ -276,12 +530,12 @@ $root.Pattern = (function() {
     Pattern.prototype.name = "";
 
     /**
-     * Pattern notes.
-     * @member {Array.<INote>} notes
+     * Pattern scores.
+     * @member {Array.<IScore>} scores
      * @memberof Pattern
      * @instance
      */
-    Pattern.prototype.notes = $util.emptyArray;
+    Pattern.prototype.scores = $util.emptyArray;
 
     /**
      * Creates a new Pattern instance using the specified properties.
@@ -308,9 +562,9 @@ $root.Pattern = (function() {
         if (!writer)
             writer = $Writer.create();
         writer.uint32(/* id 1, wireType 2 =*/10).string(message.name);
-        if (message.notes != null && message.notes.length)
-            for (var i = 0; i < message.notes.length; ++i)
-                $root.Note.encode(message.notes[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+        if (message.scores != null && message.scores.length)
+            for (var i = 0; i < message.scores.length; ++i)
+                $root.Score.encode(message.scores[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
         return writer;
     };
 
@@ -349,9 +603,9 @@ $root.Pattern = (function() {
                 message.name = reader.string();
                 break;
             case 2:
-                if (!(message.notes && message.notes.length))
-                    message.notes = [];
-                message.notes.push($root.Note.decode(reader, reader.uint32()));
+                if (!(message.scores && message.scores.length))
+                    message.scores = [];
+                message.scores.push($root.Score.decode(reader, reader.uint32()));
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -392,13 +646,13 @@ $root.Pattern = (function() {
             return "object expected";
         if (!$util.isString(message.name))
             return "name: string expected";
-        if (message.notes != null && message.hasOwnProperty("notes")) {
-            if (!Array.isArray(message.notes))
-                return "notes: array expected";
-            for (var i = 0; i < message.notes.length; ++i) {
-                var error = $root.Note.verify(message.notes[i]);
+        if (message.scores != null && message.hasOwnProperty("scores")) {
+            if (!Array.isArray(message.scores))
+                return "scores: array expected";
+            for (var i = 0; i < message.scores.length; ++i) {
+                var error = $root.Score.verify(message.scores[i]);
                 if (error)
-                    return "notes." + error;
+                    return "scores." + error;
             }
         }
         return null;
@@ -418,14 +672,14 @@ $root.Pattern = (function() {
         var message = new $root.Pattern();
         if (object.name != null)
             message.name = String(object.name);
-        if (object.notes) {
-            if (!Array.isArray(object.notes))
-                throw TypeError(".Pattern.notes: array expected");
-            message.notes = [];
-            for (var i = 0; i < object.notes.length; ++i) {
-                if (typeof object.notes[i] !== "object")
-                    throw TypeError(".Pattern.notes: object expected");
-                message.notes[i] = $root.Note.fromObject(object.notes[i]);
+        if (object.scores) {
+            if (!Array.isArray(object.scores))
+                throw TypeError(".Pattern.scores: array expected");
+            message.scores = [];
+            for (var i = 0; i < object.scores.length; ++i) {
+                if (typeof object.scores[i] !== "object")
+                    throw TypeError(".Pattern.scores: object expected");
+                message.scores[i] = $root.Score.fromObject(object.scores[i]);
             }
         }
         return message;
@@ -445,15 +699,15 @@ $root.Pattern = (function() {
             options = {};
         var object = {};
         if (options.arrays || options.defaults)
-            object.notes = [];
+            object.scores = [];
         if (options.defaults)
             object.name = "";
         if (message.name != null && message.hasOwnProperty("name"))
             object.name = message.name;
-        if (message.notes && message.notes.length) {
-            object.notes = [];
-            for (var j = 0; j < message.notes.length; ++j)
-                object.notes[j] = $root.Note.toObject(message.notes[j], options);
+        if (message.scores && message.scores.length) {
+            object.scores = [];
+            for (var j = 0; j < message.scores.length; ++j)
+                object.scores[j] = $root.Score.toObject(message.scores[j], options);
         }
         return object;
     };
@@ -479,6 +733,7 @@ $root.Project = (function() {
      * @exports IProject
      * @interface IProject
      * @property {number} bpm Project bpm
+     * @property {Array.<IPattern>|null} [patterns] Project patterns
      */
 
     /**
@@ -490,6 +745,7 @@ $root.Project = (function() {
      * @param {IProject=} [properties] Properties to set
      */
     function Project(properties) {
+        this.patterns = [];
         if (properties)
             for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
                 if (properties[keys[i]] != null)
@@ -503,6 +759,14 @@ $root.Project = (function() {
      * @instance
      */
     Project.prototype.bpm = 0;
+
+    /**
+     * Project patterns.
+     * @member {Array.<IPattern>} patterns
+     * @memberof Project
+     * @instance
+     */
+    Project.prototype.patterns = $util.emptyArray;
 
     /**
      * Creates a new Project instance using the specified properties.
@@ -529,6 +793,9 @@ $root.Project = (function() {
         if (!writer)
             writer = $Writer.create();
         writer.uint32(/* id 1, wireType 0 =*/8).int32(message.bpm);
+        if (message.patterns != null && message.patterns.length)
+            for (var i = 0; i < message.patterns.length; ++i)
+                $root.Pattern.encode(message.patterns[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
         return writer;
     };
 
@@ -565,6 +832,11 @@ $root.Project = (function() {
             switch (tag >>> 3) {
             case 1:
                 message.bpm = reader.int32();
+                break;
+            case 2:
+                if (!(message.patterns && message.patterns.length))
+                    message.patterns = [];
+                message.patterns.push($root.Pattern.decode(reader, reader.uint32()));
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -605,6 +877,15 @@ $root.Project = (function() {
             return "object expected";
         if (!$util.isInteger(message.bpm))
             return "bpm: integer expected";
+        if (message.patterns != null && message.hasOwnProperty("patterns")) {
+            if (!Array.isArray(message.patterns))
+                return "patterns: array expected";
+            for (var i = 0; i < message.patterns.length; ++i) {
+                var error = $root.Pattern.verify(message.patterns[i]);
+                if (error)
+                    return "patterns." + error;
+            }
+        }
         return null;
     };
 
@@ -622,6 +903,16 @@ $root.Project = (function() {
         var message = new $root.Project();
         if (object.bpm != null)
             message.bpm = object.bpm | 0;
+        if (object.patterns) {
+            if (!Array.isArray(object.patterns))
+                throw TypeError(".Project.patterns: array expected");
+            message.patterns = [];
+            for (var i = 0; i < object.patterns.length; ++i) {
+                if (typeof object.patterns[i] !== "object")
+                    throw TypeError(".Project.patterns: object expected");
+                message.patterns[i] = $root.Pattern.fromObject(object.patterns[i]);
+            }
+        }
         return message;
     };
 
@@ -638,10 +929,17 @@ $root.Project = (function() {
         if (!options)
             options = {};
         var object = {};
+        if (options.arrays || options.defaults)
+            object.patterns = [];
         if (options.defaults)
             object.bpm = 0;
         if (message.bpm != null && message.hasOwnProperty("bpm"))
             object.bpm = message.bpm;
+        if (message.patterns && message.patterns.length) {
+            object.patterns = [];
+            for (var j = 0; j < message.patterns.length; ++j)
+                object.patterns[j] = $root.Pattern.toObject(message.patterns[j], options);
+        }
         return object;
     };
 

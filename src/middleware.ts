@@ -7,7 +7,7 @@ import 'vuetify/dist/vuetify.css';
 import 'vue-awesome/icons';
 import '@/styles/global.sass';
 import Ico from '@/components/Ico.vue';
-import Theme from '@/theme';
+import Theme from '@/modules/theme';
 import VueLogger from 'vuejs-logger';
 
 const middleware = () => {

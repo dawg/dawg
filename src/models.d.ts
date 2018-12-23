@@ -101,14 +101,116 @@ export class Note implements INote {
     public toJSON(): { [k: string]: any };
 }
 
+/** Properties of a Score. */
+export interface IScore {
+
+    /** Score name */
+    name: string;
+
+    /** Score instrumentId */
+    instrumentId: string;
+
+    /** Score notes */
+    notes?: (INote[]|null);
+}
+
+/** Represents a Score. */
+export class Score implements IScore {
+
+    /**
+     * Constructs a new Score.
+     * @param [properties] Properties to set
+     */
+    constructor(properties?: IScore);
+
+    /** Score name. */
+    public name: string;
+
+    /** Score instrumentId. */
+    public instrumentId: string;
+
+    /** Score notes. */
+    public notes: INote[];
+
+    /**
+     * Creates a new Score instance using the specified properties.
+     * @param [properties] Properties to set
+     * @returns Score instance
+     */
+    public static create(properties?: IScore): Score;
+
+    /**
+     * Encodes the specified Score message. Does not implicitly {@link Score.verify|verify} messages.
+     * @param message Score message or plain object to encode
+     * @param [writer] Writer to encode to
+     * @returns Writer
+     */
+    public static encode(message: IScore, writer?: $protobuf.Writer): $protobuf.Writer;
+
+    /**
+     * Encodes the specified Score message, length delimited. Does not implicitly {@link Score.verify|verify} messages.
+     * @param message Score message or plain object to encode
+     * @param [writer] Writer to encode to
+     * @returns Writer
+     */
+    public static encodeDelimited(message: IScore, writer?: $protobuf.Writer): $protobuf.Writer;
+
+    /**
+     * Decodes a Score message from the specified reader or buffer.
+     * @param reader Reader or buffer to decode from
+     * @param [length] Message length if known beforehand
+     * @returns Score
+     * @throws {Error} If the payload is not a reader or valid buffer
+     * @throws {$protobuf.util.ProtocolError} If required fields are missing
+     */
+    public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): Score;
+
+    /**
+     * Decodes a Score message from the specified reader or buffer, length delimited.
+     * @param reader Reader or buffer to decode from
+     * @returns Score
+     * @throws {Error} If the payload is not a reader or valid buffer
+     * @throws {$protobuf.util.ProtocolError} If required fields are missing
+     */
+    public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): Score;
+
+    /**
+     * Verifies a Score message.
+     * @param message Plain object to verify
+     * @returns `null` if valid, otherwise the reason why it is not
+     */
+    public static verify(message: { [k: string]: any }): (string|null);
+
+    /**
+     * Creates a Score message from a plain object. Also converts values to their respective internal types.
+     * @param object Plain object
+     * @returns Score
+     */
+    public static fromObject(object: { [k: string]: any }): Score;
+
+    /**
+     * Creates a plain object from a Score message. Also converts values to other types if specified.
+     * @param message Score
+     * @param [options] Conversion options
+     * @returns Plain object
+     */
+    public static toObject(message: Score, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+    /**
+     * Converts this Score to JSON.
+     * @returns JSON object
+     */
+    public toJSON(): { [k: string]: any };
+}
+
 /** Properties of a Pattern. */
 export interface IPattern {
 
     /** Pattern name */
     name: string;
 
-    /** Pattern notes */
-    notes?: (INote[]|null);
+    /** Pattern scores */
+    scores?: (IScore[]|null);
 }
 
 /** Represents a Pattern. */
@@ -123,8 +225,8 @@ export class Pattern implements IPattern {
     /** Pattern name. */
     public name: string;
 
-    /** Pattern notes. */
-    public notes: INote[];
+    /** Pattern scores. */
+    public scores: IScore[];
 
     /**
      * Creates a new Pattern instance using the specified properties.
@@ -202,6 +304,9 @@ export interface IProject {
 
     /** Project bpm */
     bpm: number;
+
+    /** Project patterns */
+    patterns?: (IPattern[]|null);
 }
 
 /** Represents a Project. */
@@ -215,6 +320,9 @@ export class Project implements IProject {
 
     /** Project bpm. */
     public bpm: number;
+
+    /** Project patterns. */
+    public patterns: IPattern[];
 
     /**
      * Creates a new Project instance using the specified properties.
