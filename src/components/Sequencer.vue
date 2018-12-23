@@ -249,7 +249,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
       };
 
       this.$set(this.notes, ind, newNote);
-      this.$emit('removed', note);
+      this.$emit('removed', note, ind);
       this.$emit('added', Note.create(newNote));
       this.checkLoopEnd();
     });

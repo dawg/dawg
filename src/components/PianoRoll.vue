@@ -48,6 +48,7 @@ import { Transform } from 'stream';
 export default class PianoRoll extends Vue {
   @Inject() public pxPerBeat!: number;
   @Prop({ type: Object, required: false }) public synth?: Tone.Synth;
+  @Prop({ type: Array, required: true }) public value!: Note[];
 
   public scrollLeft = 0;
   public progress = 0;
@@ -93,10 +94,12 @@ export default class PianoRoll extends Vue {
     const time = `${note.time * Tone.Transport.PPQ}i`;
     this.$log.info(`Adding note at ${note.time} -> ${time}`);
     this.part.add(time, note);
+    this.value.push(note);
   }
-  public removed(note: Note) {
+  public removed(note: Note, i: number) {
     const time = `${note.time * Tone.Transport.PPQ}i`;
     this.part.remove(time, note);
+    this.$delete(this.value, i);
   }
   public callback(time: string, note: Note) {
     if (!this.synth) { return; }

@@ -19,6 +19,10 @@ message Pattern {
   repeated Score scores = 2;
 }
 
+message Instrument {
+  required string name = 1;
+}
+
 message Project {
   required int32 bpm = 1;
   repeated Pattern patterns = 2;

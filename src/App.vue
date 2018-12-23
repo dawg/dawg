@@ -105,7 +105,7 @@
                     <div></div>
                   </panel>
                   <panel name="Piano Roll">
-                    <piano-roll :synth="selectedSynth"></piano-roll>
+                    <piano-roll :synth="selectedSynth" v-model="notes"></piano-roll>
                   </panel>
                   <panel name="Sample">
                     <div></div>
@@ -140,6 +140,7 @@ import Synth from '@/components/Synth.vue';
 import Dawg from '@/components/Dawg.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { ipcRenderer } from 'electron';
+import { Pattern } from '@/models';
 
 @Component({
   components: {
@@ -166,6 +167,9 @@ export default class App extends Vue {
   public panelsTabs: BaseTabs | null = null;
   public synths: Synth[] = [];
   public selectedSynth: Tone.PolySynth | null = null;
+  public patterns: Pattern[] = [
+    new Pattern({ name: 'TESTER', scores: [] }),
+  ];
 
   public $refs!: {
     synthesizers: Vue,
