@@ -124,6 +124,8 @@
 
 <script lang="ts">
 import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import Tone from 'tone';
 import { Component, Vue, Watch } from 'vue-property-decorator';
 import Toolbar from '@/components/Toolbar.vue';
@@ -140,7 +142,8 @@ import Synth from '@/components/Synth.vue';
 import Dawg from '@/components/Dawg.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { ipcRenderer } from 'electron';
-import { Pattern } from '@/models';
+import { Pattern, Instrument, Project, ValidateProject } from '@/models';
+import io from '@/io';
 
 @Component({
   components: {
@@ -160,6 +163,7 @@ import { Pattern } from '@/models';
   },
 })
 export default class App extends Vue {
+  public filePath = path.join(os.homedir(), 'Desktop', 'tester.dg');
   public toolbarHeight = 64;
   public node?: Element;
   public height = window.innerHeight;
@@ -167,9 +171,26 @@ export default class App extends Vue {
   public panelsTabs: BaseTabs | null = null;
   public synths: Synth[] = [];
   public selectedSynth: Tone.PolySynth | null = null;
-  public patterns: Pattern[] = [
-    new Pattern({ name: 'TESTER', scores: [] }),
-  ];
+  public instruments: Instrument[] = [];
+  public notes = []; // TODO
+  public project: Project = {
+    bpm: 128,
+    patterns: [
+      {
+        name: 'TESTER',
+        scores: [
+          {
+            name: 'TEST',
+            instrument: this.instruments[0],
+            notes: [],
+          },
+        ],
+      },
+    ],
+    instruments: [
+
+    ],
+  };
 
   public $refs!: {
     synthesizers: Vue,
@@ -222,9 +243,9 @@ export default class App extends Vue {
       return [];
     }
   }
-  public save(fp: any) {
-    // fs.open;
-    //
+  public save() {
+    const project = io.encode(ValidateProject, this.project);
+    fs.writeFileSync(this.filePath,  JSON.stringify(project, null, 4));
   }
 }
 </script>

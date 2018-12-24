@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "electron-context-menu": "^0.10.0",
+    "io-ts": "^1.5.1",
     "konva": "^2.3.0",
     "lodash.throttle": "^4.1.1",
     "protobufjs": "~6.8.8",

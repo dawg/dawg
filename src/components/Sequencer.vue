@@ -58,12 +58,12 @@ import { Keys } from '@/utils';
 import { FactoryDictionary } from 'typescript-collections';
 import { allKeys, range, copy, Nullable } from '@/utils';
 import NoteComponent from '@/components/Note.vue';
-import { INote, Note } from '@/models';
+import { Note } from '@/models';
 import BeatLines from '@/components/BeatLines';
 import SequencerRow from '@/components/SequencerRow.vue';
 import Progression from '@/components/Progression.vue';
 
-interface EnhancedNote extends INote {
+interface EnhancedNote extends Note {
   selected: boolean;
 }
 
@@ -250,7 +250,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
 
       this.$set(this.notes, ind, newNote);
       this.$emit('removed', note, ind);
-      this.$emit('added', Note.create(newNote));
+      this.$emit('added', newNote);
       this.checkLoopEnd();
     });
   }
@@ -293,7 +293,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
       oldNote.selected = false;
 
       this.notes.push(newNote);
-      this.$emit('added', Note.create(newNote));
+      this.$emit('added', newNote);
     };
 
     let targetIndex = i;
@@ -342,7 +342,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     });
 
     this.notes.map((note) => {
-      this.$emit('added', Note.create(note));
+      this.$emit('added', note);
     });
     this.checkLoopEnd();
 

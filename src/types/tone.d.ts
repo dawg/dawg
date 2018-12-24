@@ -450,43 +450,43 @@ declare module 'tone' {
   }
 
   class Modulo extends SignalBase {
-      constructor(modulus: number, bits?:number);
-      value: number;
-      dispose(): this;
+    constructor(modulus: number, bits?:number);
+    value: number;
+    dispose(): this;
   }
 
   class Mono extends Tone {
-      constructor();
-      dispose(): this;
+    constructor();
+    dispose(): this;
   }
 
   class Monophonic extends Instrument {
-      constructor();
-      portamento: _TimeArg;
-      setNote(note: any):Monophonic; //Todo: number | string
+    constructor();
+    portamento: _TimeArg;
+    setNote(note: any): Monophonic; //Todo: number | string
   }
 
   class MonoSynth extends Monophonic {
-      constructor(options?: any);
-      detune: Signal;
-      envelope: Envelope;
-      filter: Filter;
-      filterEnvelope: Envelope;
-      frequency: Signal;
-      oscillator: OmniOscillator;
-      dispose(): this;
-      triggerEnvelopeAttack(time?: _TimeArg, velocity?: number): MonoSynth;
-      triggerEnvelopeRelease(time?: _TimeArg): MonoSynth;
+    constructor(options?: any);
+    detune: Signal;
+    envelope: Envelope;
+    filter: Filter;
+    filterEnvelope: Envelope;
+    frequency: Signal;
+    oscillator: OmniOscillator;
+    dispose(): this;
+    triggerEnvelopeAttack(time?: _TimeArg, velocity?: number): MonoSynth;
+    triggerEnvelopeRelease(time?: _TimeArg): MonoSynth;
   }
 
   class MultibandCompressor extends Tone {
-      constructor(options: Object);
-      high: Compressor;
-      highFrequency: Signal;
-      low: Compressor;
-      lowFrequency: Signal;
-      mid: Compressor;
-      dispose(): this;
+    constructor(options: Object);
+    high: Compressor;
+    highFrequency: Signal;
+    low: Compressor;
+    lowFrequency: Signal;
+    mid: Compressor;
+    dispose(): this;
   }
 
   class MultibandEQ extends Tone {

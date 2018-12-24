@@ -21,7 +21,7 @@ describe(Sequencer.name, () => {
     expect(vm.notes.length).toBe(1);
     expect(wrapper.emitted().added[0][0]).toEqual({
       id: 1,
-      length: 1,
+      duration: 1,
       selected: false,
       time: 0.5,
     });
