@@ -1,39 +1,49 @@
 import Notifications from './Notifications.vue';
-import { events, Params } from './events';
+import { events, NotificationConfig } from './events';
 
-interface Config {
-    name?: string;
+interface NotifyConfig {
+  name?: string;
 }
 
+interface NotificationFunctions {
+  info(message: string, params?: NotificationConfig): void;
+  success(message: string, params?: NotificationConfig): void;
+  warning(message: string, params?: NotificationConfig): void;
+  error(message: string, params?: NotificationConfig): void;
+}
+
+export interface NotifyInterface {
+  $notify: NotificationFunctions;
+}
+
+const notifications: NotificationFunctions = {
+  info(message, params) {
+    params = params || {};
+    events.$emit('add', { message, params, type: 'info', icon: 'info-circle' });
+  },
+  success(message, params) {
+    params = params || {};
+    events.$emit('add', { message, params, type: 'success', icon: 'check' });
+  },
+  warning(message, params) {
+    params = params || {};
+    events.$emit('add', { message, params, type: 'warning', icon: 'exclamation-triangle' });
+  },
+  error(message, params) {
+    params = params || {};
+    events.$emit('add', { message, params, type: 'error', icon: 'ban' });
+  },
+};
+
+
+
 const Notify = {
-  install(Vue: any, args: Config = {}) {
+  install(Vue: any, args: NotifyConfig = {}) {
 
     Vue.component('notifications', Notifications);
-
-    const info = (message: string, params?: Params) => {
-        params = params || {};
-        events.$emit('add', {message, params, type: 'info', icon: 'info-circle'});
-    };
-
-    const success = (message: string, params?: Params) => {
-      params = params || {};
-      events.$emit('add', {message, params, type: 'success', icon: 'check'});
-    };
-
-    const warning = (message: string, params?: Params) => {
-      params = params || {};
-      events.$emit('add', {message, params, type: 'warning', icon: 'exclamation-triangle'});
-    };
-
-    const error = (message: string, params?: Params) => {
-      params = params || {};
-      events.$emit('add', {message, params, type: 'error', icon: 'ban'});
-    };
-
     const name = args.name ? args.name : 'notify';
 
-    Vue.prototype['$' + name] = {info, success, error, warning};
-    Vue[name] = {info, success, error, warning};
+    Vue.prototype['$' + name] = notifications;
   },
 };
 

@@ -20,7 +20,6 @@ import Tab from '@/components/Tab.vue';
 import ColorBlock from '@/components/ColorBlock.vue';
 import { StyleType, range, makeStyle } from '@/utils';
 import Foot from '@/components/Foot.vue';
-import notification from '@/modules/notification';
 import Notifications from '@/modules/notification/Notifications.vue';
 import Synth from '@/components/Synth.vue';
 import SequencerRow from '@/components/SequencerRow.vue';
@@ -28,11 +27,7 @@ import Split from '@/modules/split/Split.vue';
 import BeatLines from '@/components/BeatLines';
 import PianoRoll from '@/components/PianoRoll.vue';
 import Timeline from '@/components/Timeline.vue';
-
-
 import Vue from 'vue';
-
-Vue.use(notification);
 
 const synth = new Tone.Synth().toMaster();
 

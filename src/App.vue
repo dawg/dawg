@@ -233,13 +233,12 @@ export default class App extends Vue {
   public save() {
     if (!this.filePath) {
       this.filePath = dialog.showSaveDialog(remote.getCurrentWindow(), {});
+      if (!this.filePath.endsWith('.dg')) {
+        this.filePath = this.filePath + '.dg';
+      }
     }
 
-    if (!this.filePath.endsWith('.dg')) {
-      this.$log.error('CCCC');
-      return;
-    }
-
+    // TODO Error handling
     fs.writeFileSync(
       this.filePath,
       JSON.stringify(io.encode(ValidateProject, this.$store.state.project), null, 4),
