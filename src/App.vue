@@ -43,7 +43,7 @@
                   </side-bar>
                   <side-bar name="SYNTHESIZERS" icon="playlist_add" ref="synthesizers">
                     <synth
-                      v-for="(synth, i) in synthInformation"
+                      v-for="(synth, i) in project.instruments"
                       :key="synth.name"
                       @click="selectSynth(i)"
                       :name="synth.name"
@@ -63,6 +63,7 @@
               <toolbar 
                 :height="toolbarHeight" 
                 style="padding-right: 26px; border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
+                :bpm.sync="bpm"
               ></toolbar>
             </split>
 
@@ -144,6 +145,8 @@ import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { ipcRenderer } from 'electron';
 import { Pattern, Instrument, Project, ValidateProject } from '@/models';
 import io from '@/io';
+import project from '@/project';
+import { MapField } from '@/utils';
 
 @Component({
   components: {
@@ -163,34 +166,17 @@ import io from '@/io';
   },
 })
 export default class App extends Vue {
+  // TODO Remove this later
   public filePath = path.join(os.homedir(), 'Desktop', 'tester.dg');
+  @MapField(project) public bpm!: number;
+
   public toolbarHeight = 64;
-  public node?: Element;
-  public height = window.innerHeight;
   public title = '';
   public panelsTabs: BaseTabs | null = null;
   public synths: Synth[] = [];
   public selectedSynth: Tone.PolySynth | null = null;
-  public instruments: Instrument[] = [];
   public notes = []; // TODO
-  public project: Project = {
-    bpm: 128,
-    patterns: [
-      {
-        name: 'TESTER',
-        scores: [
-          {
-            name: 'TEST',
-            instrument: this.instruments[0],
-            notes: [],
-          },
-        ],
-      },
-    ],
-    instruments: [
-
-    ],
-  };
+  public project = project;
 
   public $refs!: {
     synthesizers: Vue,
@@ -200,11 +186,6 @@ export default class App extends Vue {
 
   public tabs?: BaseTabs;
   public items: SideBar[] = [];
-  public synthInformation = [
-    {
-      name: 'Sawtooth',
-    },
-  ];
 
   public mounted() {
     this.synths = this.$refs.synthesizers.$children as Synth[];
@@ -244,8 +225,10 @@ export default class App extends Vue {
     }
   }
   public save() {
-    const project = io.encode(ValidateProject, this.project);
-    fs.writeFileSync(this.filePath,  JSON.stringify(project, null, 4));
+    fs.writeFileSync(
+      this.filePath,
+      JSON.stringify(io.encode(ValidateProject, this.$store.state.project), null, 4),
+    );
   }
 }
 </script>

@@ -121,3 +121,19 @@ export const Button = {
   MIDDLE: 1,
   RIGHT: 2,
 };
+
+export function MapField<T>(o: T) {
+  return (target: object, name: keyof T) => {
+    Object.defineProperty(target, name, {
+      get() {
+        return o[name];
+      },
+      set(value) {
+        // TODO
+        (o as any).setValue({key: name, value});
+      },
+      enumerable: true,
+      configurable: true,
+    });
+  };
+}

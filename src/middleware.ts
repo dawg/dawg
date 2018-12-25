@@ -8,11 +8,13 @@ import 'vue-awesome/icons';
 import '@/styles/global.sass';
 import Ico from '@/components/Ico.vue';
 import Theme from '@/modules/theme';
+import Update from '@/modules/update';
 import VueLogger from 'vuejs-logger';
 
 const middleware = () => {
   Vue.use(Vuetify, {theme: false});
   Vue.use(Theme);
+  Vue.use(Update);
   Vue.component('icon', Icon);
   Vue.use(VueShortkey);
   Vue.use(VueKonva);

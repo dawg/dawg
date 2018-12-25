@@ -46,6 +46,7 @@ export default class Drawer extends Vue {
     this.folders.push(folder); // Folder is always an array of length 1
   }
   public mounted() {
+    // TODO Remove localStorage
     try {
       this.folders = JSON.parse(localStorage.getItem('folders') || '') as string[];
     } catch (e) {
