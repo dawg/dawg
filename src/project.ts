@@ -1,8 +1,9 @@
 import os from 'os';
 import path from 'path';
-import { Module, VuexModule, Mutation, Action, getModule } from 'vuex-module-decorators';
+import { Module, VuexModule, Mutation, getModule } from 'vuex-module-decorators';
 import { Project, Instrument } from './models';
 import store from '@/store';
+import { MapFieldSetter } from './utils';
 
 const instruments: {[k: string]: Instrument} = {
   0: {
@@ -23,7 +24,7 @@ const instruments: {[k: string]: Instrument} = {
 };
 
 @Module({ dynamic: true, store, name: 'project' })
-class ProjectModule extends VuexModule implements Project {
+class ProjectModule extends VuexModule implements Project, MapFieldSetter {
   public bpm = 128;
   public patterns = [
     {
@@ -49,19 +50,14 @@ class ProjectModule extends VuexModule implements Project {
   ];
 
   @Mutation
-  public setBPM(bpm: number) { this.bpm = bpm; }
-
-  // action 'incr' commits mutation 'increment' when done with return value as payload
-  @Action
-  public incr() {
-    return this.setBPM(5);
+  public addFolder(folder: string) {
+    this.folders.push(folder);
   }
 
   @Mutation
-  public setValue<T extends keyof this>(payload: {key: T, value: any}) {
+  public setValue<V extends keyof this>(payload: { key: V, value: any }) {
     this[payload.key] = payload.value;
   }
 }
-
 
 export default getModule(ProjectModule);

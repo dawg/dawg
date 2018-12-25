@@ -142,11 +142,13 @@ import BaseTabs from '@/components/BaseTabs.vue';
 import Synth from '@/components/Synth.vue';
 import Dawg from '@/components/Dawg.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
-import { ipcRenderer } from 'electron';
+import { remote, ipcRenderer } from 'electron';
 import { Pattern, Instrument, Project, ValidateProject } from '@/models';
 import io from '@/io';
 import project from '@/project';
 import { MapField } from '@/utils';
+
+const { dialog } = remote;
 
 @Component({
   components: {
@@ -166,8 +168,8 @@ import { MapField } from '@/utils';
   },
 })
 export default class App extends Vue {
-  // TODO Remove this later
-  public filePath = path.join(os.homedir(), 'Desktop', 'tester.dg');
+  // TODO Remove this later once we have a demo project
+  public filePath: string | null = null;
   @MapField(project) public bpm!: number;
 
   public toolbarHeight = 64;
@@ -194,6 +196,10 @@ export default class App extends Vue {
     this.panelsTabs = this.$refs.panels;
     ipcRenderer.on('save', this.save);
     this.panelsTabs.selectTab(localStorage.getItem('panel'));
+
+    if (process.env.NODE_ENV !== 'production') {
+      this.filePath = path.join(os.homedir(), 'Desktop', 'tester.dg');
+    }
   }
 
   public click(tab: SideBar, $event: MouseEvent) {
@@ -225,6 +231,15 @@ export default class App extends Vue {
     }
   }
   public save() {
+    if (!this.filePath) {
+      this.filePath = dialog.showSaveDialog(remote.getCurrentWindow(), {});
+    }
+
+    if (!this.filePath.endsWith('.dg')) {
+      this.$log.error('CCCC');
+      return;
+    }
+
     fs.writeFileSync(
       this.filePath,
       JSON.stringify(io.encode(ValidateProject, this.$store.state.project), null, 4),

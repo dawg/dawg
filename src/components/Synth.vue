@@ -105,12 +105,12 @@ export default class Synth extends Vue {
     }
   }
   public mounted() {
-    this.synth.set({ oscillator, envelope });
+    // this.synth.set({ oscillator, envelope });
   }
 
   @Watch('type', { immediate: true })
   public onTypeChange() {
-    this.synth.set({ oscillator: { type: this.type } });
+    // this.synth.set({ oscillator: { type: this.type } });
   }
 }
 </script>

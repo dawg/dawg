@@ -1,3 +1,5 @@
+import { Mutation, Module } from 'vuex-module-decorators';
+
 export enum StyleType {
   PRIMARY = 'primary',
   SECONDARY = 'secondary',
@@ -122,18 +124,21 @@ export const Button = {
   RIGHT: 2,
 };
 
-export function MapField<T>(o: T) {
+export function MapField<T extends MapFieldSetter>(o: T) {
   return (target: object, name: keyof T) => {
     Object.defineProperty(target, name, {
       get() {
         return o[name];
       },
       set(value) {
-        // TODO
-        (o as any).setValue({key: name, value});
+        o.setValue({key: name, value});
       },
       enumerable: true,
       configurable: true,
     });
   };
+}
+
+export interface MapFieldSetter {
+  setValue<T extends keyof this>(payload: { key: T, value: any }): void;
 }
