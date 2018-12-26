@@ -41,15 +41,10 @@
                   <side-bar name="EXPLORER" icon="folder">
                     <file-explorer></file-explorer>
                   </side-bar>
-                  <side-bar name="SYNTHESIZERS" icon="playlist_add" ref="synthesizers">
-                    <synth
-                      v-for="(synth, i) in project.instruments"
-                      :key="synth.name"
-                      @click="selectSynth(i)"
-                      :name="synth.name"
-                    ></synth>
-                  </side-bar>
+                  <!-- <side-bar name="SYNTHESIZERS" icon="playlist_add" ref="synthesizers">
+                  </side-bar> -->
                   <side-bar name="AUDIO FILES" icon="queue_music"></side-bar>
+                  <side-bar name="PATTERNS" icon="queue_play"></side-bar>
                   <side-bar name="SEARCH" icon="search"></side-bar>
                 </base-tabs>
               </vue-perfect-scrollbar>
@@ -102,6 +97,14 @@
               </split>
               <split>
                 <base-tabs class="tabs-panels secondary" ref="panels">
+                  <panel name="Synthesizers" ref="synthesizers">
+                    <synth
+                      v-for="(synth, i) in project.instruments"
+                      :key="synth.name"
+                      @click="selectSynth(i)"
+                      :name="synth.name"
+                    ></synth>
+                  </panel>
                   <panel name="Mixer">
                     <div></div>
                   </panel>
