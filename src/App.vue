@@ -120,6 +120,7 @@
         <split :initial="20" fixed><foot :height="20"></foot></split>
       </split>
     </dawg>
+    <notifications></notifications>
   </v-app>
 </template>
 
@@ -141,14 +142,18 @@ import PianoRoll from '@/components/PianoRoll.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
 import Synth from '@/components/Synth.vue';
 import Dawg from '@/components/Dawg.vue';
+import Notifications from '@/modules/notification/Notifications.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { remote, ipcRenderer } from 'electron';
 import { Pattern, Instrument, Project, ValidateProject } from '@/models';
 import io from '@/io';
 import project from '@/project';
 import { MapField } from '@/utils';
+import { Left } from 'fp-ts/lib/Either';
 
 const { dialog } = remote;
+
+const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
 
 @Component({
   components: {
@@ -165,13 +170,13 @@ const { dialog } = remote;
     VuePerfectScrollbar,
     Synth,
     Dawg,
+    Notifications,
   },
 })
 export default class App extends Vue {
-  // TODO Remove this later once we have a demo project
-  public filePath: string | null = null;
   @MapField(project) public bpm!: number;
 
+  public filePath: string | null = null;
   public toolbarHeight = 64;
   public title = '';
   public panelsTabs: BaseTabs | null = null;
@@ -195,6 +200,7 @@ export default class App extends Vue {
     this.items = this.tabs.$children as SideBar[];
     this.panelsTabs = this.$refs.panels;
     ipcRenderer.on('save', this.save);
+    ipcRenderer.on('open', this.open);
     this.panelsTabs.selectTab(localStorage.getItem('panel'));
 
     if (process.env.NODE_ENV !== 'production') {
@@ -243,6 +249,35 @@ export default class App extends Vue {
       this.filePath,
       JSON.stringify(io.encode(ValidateProject, this.$store.state.project), null, 4),
     );
+  }
+  public open() {
+    const files = dialog.showOpenDialog(
+      remote.getCurrentWindow(),
+      { filters: FILTERS, properties: ['openFile'] },
+    );
+
+    if (!files.length) {
+      return;
+    }
+
+    this.filePath = files[0];
+    let contents = fs.readFileSync(this.filePath).toString();
+
+    try {
+      contents = JSON.parse(contents);
+    } catch (e) {
+      this.$notify.error('Unable to parse file.');
+      this.$log.error(e);
+      return;
+    }
+
+    const result = ValidateProject.decode(contents);
+    if (result instanceof Left) {
+      this.$notify.error('Unable to decode file.');
+      return;
+    }
+
+    project.reset(result.value);
   }
 }
 </script>

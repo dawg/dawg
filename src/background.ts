@@ -69,6 +69,13 @@ const setMainMenu = () => {
           },
         },
         {
+          label: 'Open',
+          accelerator: 'CmdOrCtrl+O',
+          click() {
+            mainWindow.webContents.send('open');
+          },
+        },
+        {
           label: 'Add Folder to Project',
           click() {
             const folder = dialog.showOpenDialog({properties: ['openDirectory']}); // We only ever get one folder

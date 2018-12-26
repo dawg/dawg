@@ -26,6 +26,8 @@ const instruments: {[k: string]: Instrument} = {
 @Module({ dynamic: true, store, name: 'project' })
 class ProjectModule extends VuexModule implements Project, MapFieldSetter {
   public bpm = 128;
+
+  // TODO Remove defaults
   public patterns = [
     {
       name: 'TESTER',
@@ -57,6 +59,11 @@ class ProjectModule extends VuexModule implements Project, MapFieldSetter {
   @Mutation
   public setValue<V extends keyof this>(payload: { key: V, value: any }) {
     this[payload.key] = payload.value;
+  }
+
+  @Mutation
+  public reset(payload: Project) {
+    Object.assign(this, payload);
   }
 }
 
