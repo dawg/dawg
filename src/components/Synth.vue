@@ -21,8 +21,6 @@
         :value="active"
         @input="changeMute"
       ></dot-button>
-      <div class="white--text name">{{ name }}</div>
-      <div style="flex: 1"></div>
       <knob
         class="knob"
         text-color="white"
@@ -40,6 +38,8 @@
         :stroke-width="strokeWidth"
         v-model="panner.pan.value"
       ></knob>
+      <div class="white--text name">{{ name }}</div>
+      <mini-score :notes="notes"></mini-score>
     </div>
     <div 
       class="options secondary-lighten-1"
@@ -61,18 +61,20 @@ import Vue from 'vue';
 import Tone from 'tone';
 import Knob from '@/components/Knob.vue';
 import DotButton from '@/components/DotButton.vue';
-
+import MiniScore from '@/components/MiniScore.vue';
 import { Component, Prop, Watch } from 'vue-property-decorator';
+import { Note } from '@/models';
 
 const TYPES = ['pwm', 'sine', 'triangle', 'fatsawtooth', 'square'];
 
 const oscillator = { type: 'fatsawtooth', spread: 30 };
 const envelope = { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 };
 
-@Component({ components: { Knob, DotButton } })
+@Component({ components: { Knob, DotButton, MiniScore } })
 export default class Synth extends Vue {
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, default: 50 }) public height!: number;
+  @Prop({ type: Array, default: () => [] }) public notes!: Note[];
   public selected = false;
   // @Prop({ type: String, required: true }) public type!: string;
   // @Prop({ type: Number, required: true }) public volume!: number;
@@ -140,7 +142,8 @@ export default class Synth extends Vue {
 
 .name
   font-size: 1.2em
-  padding-right: 40px
+  padding-left: 10px
+  padding-right: 20px
   user-select: none
 
 .synth-wrapper

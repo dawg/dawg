@@ -1,7 +1,7 @@
 <template>
   <svg
     preserveAspectRatio="none"
-    class="mini-score secondary primary--text"
+    class="mini-score secondary-lighten-1 primary--text"
     :viewBox="viewBox"
   >
     <rect
@@ -18,12 +18,13 @@
 <script lang="ts">
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import { Note } from '@/models';
-import { max } from 'fp-ts/lib/Ord';
 
 @Component
 export default class MiniScore extends Vue {
   @Inject() public beatsPerMeasure!: number;
   @Prop({ type: Array, required: true }) public notes!: Note[];
+  // The height and width are only used to set the aspect ratio.
+  // Use css to actually define the height and width
   @Prop({ type: Number, default: 32 }) public height!: number;
   @Prop({ type: Number, default: 200 }) public width!: number;
   @Prop({ type: Number, default: 0 }) public offset!: number;
@@ -77,6 +78,10 @@ export default class MiniScore extends Vue {
 </script>
 
 <style lang="sass" scoped>
+.mini-score
+  height: 100%
+  width: 100%
+
 svg
   fill: currentColor
 </style>

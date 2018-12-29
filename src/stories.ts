@@ -32,6 +32,19 @@ import Vue from 'vue';
 
 const synth = new Tone.Synth().toMaster();
 
+const NOTES = [
+  {id: 44, time: 0, duration: 1},
+  {id: 47, time: 0, duration: 1},
+  {id: 49, time: 0, duration: 1},
+  {id: 47, time: 1, duration: 1},
+  {id: 49, time: 1, duration: 1},
+  {id: 51, time: 1, duration: 1},
+  {id: 52, time: 2, duration: 0.5},
+  {id: 51, time: 3, duration: 0.5},
+  {id: 45, time: 4, duration: 0.5},
+  {id: 48, time: 5, duration: 0.5},
+];
+
 storiesOf(MiniScore.name, module)
   .add('Standard', () => ({
     components: { Dawg, MiniScore },
@@ -41,18 +54,7 @@ storiesOf(MiniScore.name, module)
     </dawg>
     `,
     data: () => ({
-      notes: [
-        {id: 44, time: 0, duration: 1},
-        {id: 47, time: 0, duration: 1},
-        {id: 49, time: 0, duration: 1},
-        {id: 47, time: 1, duration: 1},
-        {id: 49, time: 1, duration: 1},
-        {id: 51, time: 1, duration: 1},
-        {id: 52, time: 2, duration: 0.5},
-        {id: 51, time: 3, duration: 0.5},
-        {id: 45, time: 4, duration: 0.5},
-        {id: 48, time: 5, duration: 0.5},
-      ],
+      notes: NOTES,
     }),
   }));
 
@@ -356,7 +358,9 @@ storiesOf(Synth.name, module)
   .add('Standard', () => ({
     template: `
     <v-app>
-      <div><synth ref="synth" name="Tester"></synth></div>
+      <dawg>
+        <synth ref="synth" name="Tester" :notes="notes"></synth>
+      </dawg>
       <div>
         <v-btn @click="playme">Play</v-btn>
       </div>
@@ -368,7 +372,8 @@ storiesOf(Synth.name, module)
         this.$refs.synth.synth.triggerAttackRelease('C5', '8n');
       },
     },
-    components: { Synth },
+    data: () => ({ notes: NOTES }),
+    components: { Synth, Dawg },
   }));
 
 

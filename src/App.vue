@@ -44,7 +44,9 @@
                   <!-- <side-bar name="SYNTHESIZERS" icon="playlist_add" ref="synthesizers">
                   </side-bar> -->
                   <side-bar name="AUDIO FILES" icon="queue_music"></side-bar>
-                  <side-bar name="PATTERNS" icon="queue_play"></side-bar>
+                  <side-bar name="PATTERNS" icon="queue_play">
+                    <patterns v-model="selectedPattern" :patterns="patterns"></patterns>
+                  </side-bar>
                   <side-bar name="SEARCH" icon="search"></side-bar>
                 </base-tabs>
               </vue-perfect-scrollbar>
@@ -145,6 +147,7 @@ import PianoRoll from '@/components/PianoRoll.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
 import Synth from '@/components/Synth.vue';
 import Dawg from '@/components/Dawg.vue';
+import Patterns from '@/components/Patterns.vue';
 import Notifications from '@/modules/notification/Notifications.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { remote, ipcRenderer } from 'electron';
@@ -153,6 +156,7 @@ import io from '@/io';
 import project from '@/project';
 import { MapField } from '@/utils';
 import { Left } from 'fp-ts/lib/Either';
+import cache, { setOpenedFile } from '@/cache';
 
 const { dialog } = remote;
 
@@ -174,12 +178,12 @@ const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
     Synth,
     Dawg,
     Notifications,
+    Patterns,
   },
 })
 export default class App extends Vue {
   @MapField(project) public bpm!: number;
 
-  public filePath: string | null = null;
   public toolbarHeight = 64;
   public title = '';
   public panelsTabs: BaseTabs | null = null;
@@ -187,6 +191,7 @@ export default class App extends Vue {
   public selectedSynth: Tone.PolySynth | null = null;
   public notes = []; // TODO
   public project = project;
+  public selectedPattern = '';
 
   public $refs!: {
     synthesizers: Vue,
@@ -205,12 +210,9 @@ export default class App extends Vue {
     ipcRenderer.on('save', this.save);
     ipcRenderer.on('open', this.open);
     this.panelsTabs.selectTab(localStorage.getItem('panel'));
-
-    if (process.env.NODE_ENV !== 'production') {
-      this.filePath = path.join(os.homedir(), 'Desktop', 'tester.dg');
-    }
   }
 
+  get patterns() { return this.project.patterns; }
   public click(tab: SideBar, $event: MouseEvent) {
     this.tabs!.selectTab(tab.name, $event);
   }
@@ -240,16 +242,20 @@ export default class App extends Vue {
     }
   }
   public save() {
-    if (!this.filePath) {
-      this.filePath = dialog.showSaveDialog(remote.getCurrentWindow(), {});
-      if (!this.filePath.endsWith('.dg')) {
-        this.filePath = this.filePath + '.dg';
+    let file;
+    if (!cache.currentOpenedFile) {
+      file = dialog.showSaveDialog(remote.getCurrentWindow(), {});
+      setOpenedFile(file);
+      if (!file.endsWith('.dg')) {
+        setOpenedFile(file + '.dg');
       }
+    } else {
+      file = cache.currentOpenedFile;
     }
 
     // TODO Error handling
     fs.writeFileSync(
-      this.filePath,
+      file,
       JSON.stringify(io.encode(ValidateProject, this.$store.state.project), null, 4),
     );
   }
@@ -263,8 +269,9 @@ export default class App extends Vue {
       return;
     }
 
-    this.filePath = files[0];
-    let contents = fs.readFileSync(this.filePath).toString();
+    const filePath = files[0];
+    setOpenedFile(filePath);
+    let contents = fs.readFileSync(filePath).toString();
 
     try {
       contents = JSON.parse(contents);
