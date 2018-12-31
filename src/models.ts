@@ -1,5 +1,4 @@
 import * as t from 'io-ts';
-import project from './project';
 
 const ValidateNoteProps = {
   // The id of the note. C8 is 0 and 	A0 is 87 (88 notes in total).

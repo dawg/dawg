@@ -156,7 +156,7 @@ import io from '@/io';
 import project from '@/project';
 import { MapField } from '@/utils';
 import { Left } from 'fp-ts/lib/Either';
-import cache, { setOpenedFile } from '@/cache';
+import Cache from '@/cache';
 
 const { dialog } = remote;
 
@@ -192,6 +192,7 @@ export default class App extends Vue {
   public notes = []; // TODO
   public project = project;
   public selectedPattern = '';
+  public cache?: Cache;
 
   public $refs!: {
     synthesizers: Vue,
@@ -202,7 +203,7 @@ export default class App extends Vue {
   public tabs?: BaseTabs;
   public items: SideBar[] = [];
 
-  public mounted() {
+  public async mounted() {
     this.synths = this.$refs.synthesizers.$children as Synth[];
     this.tabs = this.$refs.tabs;
     this.items = this.tabs.$children as SideBar[];
@@ -210,6 +211,7 @@ export default class App extends Vue {
     ipcRenderer.on('save', this.save);
     ipcRenderer.on('open', this.open);
     this.panelsTabs.selectTab(localStorage.getItem('panel'));
+    this.cache = await Cache.fromCacheFolder();
   }
 
   get patterns() { return this.project.patterns; }
@@ -242,35 +244,36 @@ export default class App extends Vue {
     }
   }
   public save() {
-    let file;
-    if (!cache.currentOpenedFile) {
-      file = dialog.showSaveDialog(remote.getCurrentWindow(), {});
-      setOpenedFile(file);
-      if (!file.endsWith('.dg')) {
-        setOpenedFile(file + '.dg');
+    if (!this.cache) { return; }
+
+    if (!this.cache.openedFile) {
+      this.cache.openedFile = dialog.showSaveDialog(remote.getCurrentWindow(), {});
+      if (!this.cache.openedFile.endsWith('.dg')) {
+        this.cache.openedFile = this.cache.openedFile + '.dg';
       }
-    } else {
-      file = cache.currentOpenedFile;
     }
 
     // TODO Error handling
     fs.writeFileSync(
-      file,
+      this.cache.openedFile,
       JSON.stringify(io.encode(ValidateProject, this.$store.state.project), null, 4),
     );
   }
   public open() {
+    if (!this.cache) { return; }
+
+    // files can be undefined. There is an issue with the .d.ts files.
     const files = dialog.showOpenDialog(
       remote.getCurrentWindow(),
       { filters: FILTERS, properties: ['openFile'] },
     );
 
-    if (!files.length) {
+    if (!files) {
       return;
     }
 
     const filePath = files[0];
-    setOpenedFile(filePath);
+    this.cache.openedFile = filePath;
     let contents = fs.readFileSync(filePath).toString();
 
     try {
