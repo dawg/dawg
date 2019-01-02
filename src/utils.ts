@@ -1,4 +1,4 @@
-import { Mutation, Module } from 'vuex-module-decorators';
+import Tone from 'tone';
 
 export enum StyleType {
   PRIMARY = 'primary',
@@ -141,4 +141,8 @@ export function MapField<T extends MapFieldSetter>(o: T) {
 
 export interface MapFieldSetter {
   setValue<T extends keyof this>(payload: { key: T, value: any }): void;
+}
+
+export function toTickTime(time: number) {
+  return `${time * Tone.Transport.PPQ}i`;
 }

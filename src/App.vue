@@ -41,8 +41,6 @@
                   <side-bar name="EXPLORER" icon="folder">
                     <file-explorer></file-explorer>
                   </side-bar>
-                  <!-- <side-bar name="SYNTHESIZERS" icon="playlist_add" ref="synthesizers">
-                  </side-bar> -->
                   <side-bar name="AUDIO FILES" icon="queue_music"></side-bar>
                   <side-bar name="PATTERNS" icon="queue_play">
                     <patterns v-model="selectedPattern" :patterns="project.patterns"></patterns>
@@ -99,7 +97,7 @@
               </split>
               <split>
                 <base-tabs class="tabs-panels secondary" ref="panels">
-                  <panel name="Synthesizers">
+                  <panel name="Instruments">
                     <synths 
                       :instruments="project.instruments"
                       :selected-score.sync="selectedScore"

@@ -35,14 +35,15 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch, Inject } from 'vue-property-decorator';
+import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import Tone from 'tone';
 import Piano from '@/components/Piano.vue';
 import Sequencer from '@/components/Sequencer.vue';
 import Timeline from '@/components/Timeline.vue';
 import { Note } from '@/models';
-import { allKeys } from '@/utils';
+import { allKeys, toTickTime } from '@/utils';
 import { Transform } from 'stream';
+import { Watch } from '@/modules/update';
 
 @Component({components: { Piano, Sequencer, Timeline }})
 export default class PianoRoll extends Vue {
@@ -91,31 +92,31 @@ export default class PianoRoll extends Vue {
     Tone.Transport.stop();
   }
   public added(note: Note) {
-    const time = `${note.time * Tone.Transport.PPQ}i`;
+    const time = toTickTime(note.time);
     this.$log.info(`Adding note at ${note.time} -> ${time}`);
     this.part.add(time, note);
     this.value.push(note);
   }
   public removed(note: Note, i: number) {
-    const time = `${note.time * Tone.Transport.PPQ}i`;
+    const time = toTickTime(note.time);
     this.part.remove(time, note);
     this.$delete(this.value, i);
   }
   public callback(time: string, note: Note) {
     if (!this.synth) { return; }
-    const duration = `${note.duration * Tone.Transport.PPQ}i`;
+    const duration = toTickTime(note.duration);
     const value = allKeys[note.id].value;
     this.synth.triggerAttackRelease(value, duration, time);
   }
-  @Watch('loopEnd', { immediate: true })
+  @Watch<PianoRoll>('loopEnd', { immediate: true })
   public onLoopEndChange() {
     this.$log.debug(`loodEnd being set to ${this.loopEnd}`);
-    Tone.Transport.loopEnd = `${this.loopEnd * Tone.Transport.PPQ}i`;
+    Tone.Transport.loopEnd = toTickTime(this.loopEnd);
   }
-  @Watch('loopStart', { immediate: true })
+  @Watch<PianoRoll>('loopStart', { immediate: true })
   public onLoopStartChange() {
     this.$log.debug(`loopStart being set to ${this.loopStart}`);
-    const time = `${this.loopStart * Tone.Transport.PPQ}i`;
+    const time = toTickTime(this.loopStart);
     Tone.Transport.seconds = new Tone.Time(time).toSeconds();
     Tone.Transport.loopStart = time;
   }
