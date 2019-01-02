@@ -14,7 +14,6 @@ const CACHE_PATH = path.join(APPLICATION_PATH, 'cache.json');
 const CacheType = t.type({
   openedFile: t.union([t.string, t.null]),
 });
-const ReadOnlyCache = t.readonly(CacheType);
 export interface ICache extends t.TypeOf<typeof CacheType> {}
 
 export default class Cache implements ICache {

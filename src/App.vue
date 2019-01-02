@@ -45,7 +45,7 @@
                   </side-bar> -->
                   <side-bar name="AUDIO FILES" icon="queue_music"></side-bar>
                   <side-bar name="PATTERNS" icon="queue_play">
-                    <patterns v-model="selectedPattern" :patterns="patterns"></patterns>
+                    <patterns v-model="selectedPattern" :patterns="project.patterns"></patterns>
                   </side-bar>
                   <side-bar name="SEARCH" icon="search"></side-bar>
                 </base-tabs>
@@ -151,7 +151,6 @@ import Panel from '@/components/Panel.vue';
 import Split from '@/modules/split/Split.vue';
 import PianoRoll from '@/components/PianoRoll.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
-import Synth from '@/components/Synth.vue';
 import Dawg from '@/components/Dawg.vue';
 import Patterns from '@/components/Patterns.vue';
 import Notifications from '@/modules/notification/Notifications.vue';
@@ -182,7 +181,6 @@ const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
     PianoRoll,
     BaseTabs,
     VuePerfectScrollbar,
-    Synth,
     Dawg,
     Notifications,
     Patterns,
@@ -195,7 +193,6 @@ export default class App extends Vue {
   public toolbarHeight = 64;
   public sidebarTabTitle = '';
   public panelsTabs: BaseTabs | null = null;
-  public synths: Synth[] = [];
   public selectedSynth: Tone.PolySynth | null = null;
   public project = project;
   public selectedPattern: Pattern | null = null;
@@ -229,7 +226,6 @@ export default class App extends Vue {
     if (!this.cache || !this.cache.openedFile) { return null; }
     return path.basename(this.cache.openedFile).split('.')[0];
   }
-  get patterns() { return this.project.patterns; }
   public click(tab: SideBar, $event: MouseEvent) {
     this.tabs!.selectTab(tab.name, $event);
   }
@@ -237,6 +233,7 @@ export default class App extends Vue {
     this.sidebarTabTitle = tab.name;
   }
   public selectPanel(name: string, e: MouseEvent) {
+    // TODO Remove localStorage. Place this in the cache.
     localStorage.setItem('panel', name);
     this.panelsTabs!.selectTab(name, e);
   }

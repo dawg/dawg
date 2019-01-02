@@ -34,11 +34,26 @@ class ProjectModule extends VuexModule implements Project, MapFieldSetter {
       scores: [
         {
           name: 'TEST',
-          instrument: '0',
+          instrument: 'SYNTH',
           notes: [
             {
               id: 44,
               time: 0,
+              duration: 1,
+            },
+            {
+              id: 42,
+              time: 0,
+              duration: 1,
+            },
+            {
+              id: 47,
+              time: 1,
+              duration: 1,
+            },
+            {
+              id: 45,
+              time: 2,
               duration: 1,
             },
           ],

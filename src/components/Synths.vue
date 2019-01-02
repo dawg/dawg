@@ -32,7 +32,7 @@ export default class Synths extends Vue {
     const lookup: {[k: string]: Score} = {};
     if (this.selectedPattern) {
       this.selectedPattern.scores.forEach((score) => {
-        lookup[score.name] = score;
+        lookup[score.instrument] = score;
       });
     }
     return lookup;
