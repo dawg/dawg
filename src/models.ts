@@ -52,15 +52,16 @@ const ValidateInstrument = t.type({
 });
 export interface Instrument extends t.TypeOf<typeof ValidateInstrument> {}
 
-export const Score = t.type({
+const ValidateScore = t.type({
   name: t.string,
   instrument: t.string,
   notes: t.array(ValidateNote),
 });
+export interface Score extends t.TypeOf<typeof ValidateScore> {}
 
 export const ValidatePattern = t.type({
   name: t.string,
-  scores: t.array(Score),
+  scores: t.array(ValidateScore),
 });
 export interface Pattern extends t.TypeOf<typeof ValidatePattern> {}
 

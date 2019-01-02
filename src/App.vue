@@ -100,12 +100,7 @@
               <split>
                 <base-tabs class="tabs-panels secondary" ref="panels">
                   <panel name="Synthesizers" ref="synthesizers">
-                    <synth
-                      v-for="(synth, i) in project.instruments"
-                      :key="synth.name"
-                      @click="selectSynth(i)"
-                      :name="synth.name"
-                    ></synth>
+                    
                   </panel>
                   <panel name="Mixer">
                     <div></div>
@@ -122,7 +117,12 @@
 
           </split>
         </split>
-        <split :initial="20" fixed><foot :height="20"></foot></split>
+        <split :initial="20" fixed>
+          <foot
+            :height="20"
+            :project-name="projectName"
+          ></foot>
+        </split>
       </split>
     </dawg>
     <notifications></notifications>
@@ -151,7 +151,7 @@ import Patterns from '@/components/Patterns.vue';
 import Notifications from '@/modules/notification/Notifications.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { remote, ipcRenderer } from 'electron';
-import { Pattern, Instrument, Project, ValidateProject } from '@/models';
+import { Pattern, Instrument, Project, ValidateProject, Score } from '@/models';
 import io from '@/io';
 import project from '@/project';
 import { MapField } from '@/utils';
@@ -189,10 +189,10 @@ export default class App extends Vue {
   public panelsTabs: BaseTabs | null = null;
   public synths: Synth[] = [];
   public selectedSynth: Tone.PolySynth | null = null;
-  public notes = []; // TODO
   public project = project;
-  public selectedPattern = '';
-  public cache?: Cache;
+  public selectedPattern: Pattern | null = null;
+  public selectedScore: Score | null = null;
+  public cache: Cache | null = null;
 
   public $refs!: {
     synthesizers: Vue,
@@ -214,6 +214,14 @@ export default class App extends Vue {
     this.cache = await Cache.fromCacheFolder();
   }
 
+  get notes() {
+    if (!this.selectedScore) { return []; }
+    return this.selectedScore.notes;
+  }
+  get projectName() {
+    if (!this.cache || !this.cache.openedFile) { return null; }
+    return path.basename(this.cache.openedFile).split('.')[0];
+  }
   get patterns() { return this.project.patterns; }
   public click(tab: SideBar, $event: MouseEvent) {
     this.tabs!.selectTab(tab.name, $event);
@@ -224,17 +232,6 @@ export default class App extends Vue {
   public selectPanel(name: string, e: MouseEvent) {
     localStorage.setItem('panel', name);
     this.panelsTabs!.selectTab(name, e);
-  }
-  public selectSynth(i: number) {
-    this.synths.slice(0, i).forEach((synth) => synth.selected = false);
-    this.synths.slice(i + 1).forEach((synth) => synth.selected = false);
-    this.synths[i].selected = !this.synths[i].selected;
-
-    if (this.synths[i].selected) {
-      this.selectedSynth = this.synths[i].synth;
-    } else {
-      this.selectedSynth = null;
-    }
   }
   get panels() {
     if (this.panelsTabs) {

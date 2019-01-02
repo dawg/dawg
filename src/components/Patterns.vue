@@ -15,17 +15,21 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Pattern } from '@/models';
+import { Nullable } from '@/utils';
 
 @Component
 export default class Patterns extends Vue {
-  @Prop({ type: String, required: true }) public value!: string;
+  @Prop(Nullable(Object)) public value!: Pattern | null;
   @Prop({ type: Array, required: true }) public patterns!: Pattern[];
   public click(p: Pattern) {
-    if (this.value === p.name) {
-      this.$emit('input', '');
+    if (this.value && this.value.name === p.name) {
+      this.$emit('input', null);
     } else {
-      this.$emit('input', p.name);
+      this.$emit('input', p);
     }
+  }
+  public mounted() {
+    this.$emit('input', this.patterns[0] || null);
   }
 }
 </script>

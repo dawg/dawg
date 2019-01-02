@@ -1,7 +1,7 @@
 import os from 'os';
 import path from 'path';
 import { Module, VuexModule, Mutation, getModule } from 'vuex-module-decorators';
-import { Project, Instrument } from './models';
+import { Project, Instrument, Pattern } from './models';
 import store from '@/store';
 import { MapFieldSetter } from './utils';
 
@@ -64,6 +64,14 @@ class ProjectModule extends VuexModule implements Project, MapFieldSetter {
   @Mutation
   public reset(payload: Project) {
     Object.assign(this, payload);
+  }
+
+  get patternLookup() {
+    const patterns: {[k: string]: Pattern} = {};
+    this.patterns.forEach((pattern) => {
+      patterns[pattern.name] = pattern;
+    });
+    return patterns;
   }
 }
 
