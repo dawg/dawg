@@ -1,7 +1,15 @@
+import * as vpd from 'vue-property-decorator';
+import { WatchOptions } from 'vue';
+
 // TODO Use This
-export interface UpdateAugmentation {
-  $update: <V extends keyof this>(key: V, value: this[V]) => void;
+export function Watch<T>(path: keyof T & string, options?: WatchOptions) {
+  return vpd.Watch(path, options);
 }
+
+export interface UpdateAugmentation {
+  $update: <V extends keyof this & string>(key: V, value: this[V]) => void;
+}
+
 
 const Update = {
   install(Vue: any) {

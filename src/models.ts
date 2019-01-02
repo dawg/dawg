@@ -68,7 +68,7 @@ export interface Pattern extends t.TypeOf<typeof ValidatePattern> {}
 export const ValidateProject = t.type({
   bpm: t.number,
   patterns: t.array(ValidatePattern),
-  instruments: t.dictionary(t.string, ValidateInstrument),
+  instruments: t.array(ValidateInstrument),
   folders: t.array(t.string),
 });
 export interface Project extends t.TypeOf<typeof ValidateProject> {}

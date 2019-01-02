@@ -34,7 +34,7 @@
                 class="section-header center--vertial white--text"
                 :style="`min-height: ${toolbarHeight + 1}px`"
               >
-                <div class="aside--title">{{ title }}</div>
+                <div class="aside--title">{{ sidebarTabTitle }}</div>
               </div>
               <vue-perfect-scrollbar class="scrollbar" style="height: 100%">
                 <base-tabs ref="tabs" @changed="changed">
@@ -99,8 +99,14 @@
               </split>
               <split>
                 <base-tabs class="tabs-panels secondary" ref="panels">
-                  <panel name="Synthesizers" ref="synthesizers">
-                    
+                  <panel name="Synthesizers">
+                    <synths 
+                      :instruments="project.instruments"
+                      :selected-score.sync="selectedScore"
+                      :selected-pattern="selectedPattern"
+                      :synth.sync="selectedSynth"
+                      :scores="selectedScore"
+                    ></synths>
                   </panel>
                   <panel name="Mixer">
                     <div></div>
@@ -149,6 +155,7 @@ import Synth from '@/components/Synth.vue';
 import Dawg from '@/components/Dawg.vue';
 import Patterns from '@/components/Patterns.vue';
 import Notifications from '@/modules/notification/Notifications.vue';
+import Synths from '@/components/Synths.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { remote, ipcRenderer } from 'electron';
 import { Pattern, Instrument, Project, ValidateProject, Score } from '@/models';
@@ -179,13 +186,14 @@ const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
     Dawg,
     Notifications,
     Patterns,
+    Synths,
   },
 })
 export default class App extends Vue {
   @MapField(project) public bpm!: number;
 
   public toolbarHeight = 64;
-  public title = '';
+  public sidebarTabTitle = '';
   public panelsTabs: BaseTabs | null = null;
   public synths: Synth[] = [];
   public selectedSynth: Tone.PolySynth | null = null;
@@ -195,7 +203,6 @@ export default class App extends Vue {
   public cache: Cache | null = null;
 
   public $refs!: {
-    synthesizers: Vue,
     tabs: BaseTabs,
     panels: BaseTabs,
   };
@@ -204,7 +211,7 @@ export default class App extends Vue {
   public items: SideBar[] = [];
 
   public async mounted() {
-    this.synths = this.$refs.synthesizers.$children as Synth[];
+
     this.tabs = this.$refs.tabs;
     this.items = this.tabs.$children as SideBar[];
     this.panelsTabs = this.$refs.panels;
@@ -227,7 +234,7 @@ export default class App extends Vue {
     this.tabs!.selectTab(tab.name, $event);
   }
   public changed(tab: SideBar) {
-    this.title = tab.name;
+    this.sidebarTabTitle = tab.name;
   }
   public selectPanel(name: string, e: MouseEvent) {
     localStorage.setItem('panel', name);

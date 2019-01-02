@@ -5,8 +5,8 @@ import { Project, Instrument, Pattern } from './models';
 import store from '@/store';
 import { MapFieldSetter } from './utils';
 
-const instruments: {[k: string]: Instrument} = {
-  0: {
+const instruments: Instrument[] = [
+  {
     name: 'SYNTH',
     source: {
       type: 'sine',
@@ -21,7 +21,7 @@ const instruments: {[k: string]: Instrument} = {
       },
     },
   },
-};
+];
 
 @Module({ dynamic: true, store, name: 'project' })
 class ProjectModule extends VuexModule implements Project, MapFieldSetter {

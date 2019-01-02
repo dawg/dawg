@@ -1,10 +1,11 @@
 <template>
   <div class="synths">
     <synth
-      v-for="(synth, i) in project.instruments"
+      v-for="(synth, i) in instruments"
       :key="synth.name"
       @click="selectSynth(i)"
       :name="synth.name"
+      :notes="getNotes(synth)"
     ></synth>
   </div>
 </template>
@@ -14,24 +15,53 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import Tone from 'tone';
 import Synth from '@/components/Synth.vue';
 import { Nullable } from '@/utils';
-import { Score } from '@/models';
+import { Score, Instrument, Pattern } from '@/models';
+import { Watch } from '@/modules/update';
 
-@Component
+@Component({ components: { Synth } })
 export default class Synths extends Vue {
-  @Prop({ type: Array, required: true }) public synths!: Synth[];
-  @Prop({ type: Array, required: true }) public scores!: Score[];
-  @Prop(Nullable(Tone.PolySynth)) public synth!: Tone.PolySynth | null;
-  @Prop(Nullable(Object)) public score!: Score | null;
+  @Prop({ type: Array, required: true }) public instruments!: Instrument[];
+  @Prop(Nullable(Object)) public selectedScore!: Score | null;
+  @Prop(Nullable(Object)) public selectedPattern!: Pattern | null;
+  @Prop(Nullable(Object)) public synth!: Tone.PolySynth | null;
+
+  public $children!: Synth[];
+
+  get scoreLookup() {
+    // TODO This assumes a unique name. We might need some sort of ID.
+    const lookup: {[k: string]: Score} = {};
+    if (this.selectedPattern) {
+      this.selectedPattern.scores.forEach((score) => {
+        lookup[score.name] = score;
+      });
+    }
+    return lookup;
+  }
 
   public selectSynth(i: number) {
-    this.synths.slice(0, i).forEach((synth) => synth.selected = false);
-    this.synths.slice(i + 1).forEach((synth) => synth.selected = false);
-    this.synths[i].selected = !this.synths[i].selected;
+    this.$children.slice(0, i).forEach((synth) => synth.selected = false);
+    this.$children.slice(i + 1).forEach((synth) => synth.selected = false);
+    this.$children[i].selected = !this.$children[i].selected;
 
-    if (this.synths[i].selected) {
-      this.$update('synth', this.synths[i].synth);
+    if (this.$children[i].selected) {
+      this.$update('synth', this.$children[i].synth);
     } else {
       this.$update('synth', null);
+    }
+  }
+
+  public getNotes(synth: Synth) {
+    if (synth.name in this.scoreLookup) {
+      return this.scoreLookup[synth.name].notes;
+    }
+  }
+
+  @Watch<Synths>('selectedPattern', { immediate: true })
+  public selectScore() {
+    if (this.selectedPattern) {
+      this.$update('selectedScore', this.selectedPattern.scores[0] || null);
+    } else {
+      this.$update('selectedScore', null);
     }
   }
 }
