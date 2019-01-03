@@ -5,21 +5,12 @@ import { Project, Instrument, Pattern } from './models';
 import store from '@/store';
 import { MapFieldSetter } from './utils';
 
-const instruments: Instrument[] = [
+const ins: Instrument[] = [
   {
     name: 'SYNTH',
-    source: {
-      type: 'sine',
-      options: {
-        volume: 0,
-      },
-      envelope: {
-        attack: 0.005,
-        decay: 0.1,
-        sustain: 0.3,
-        release: 1,
-      },
-    },
+    type: 'sine',
+    volume: 0,
+    pan: 0,
   },
 ];
 
@@ -61,15 +52,7 @@ class ProjectModule extends VuexModule implements Project, MapFieldSetter {
       ],
     },
   ];
-  public instruments = instruments;
-  public folders = [
-    path.join(os.homedir(), 'Desktop'),
-  ];
-
-  @Mutation
-  public addFolder(folder: string) {
-    this.folders.push(folder);
-  }
+  public instruments = ins;
 
   @Mutation
   public setValue<V extends keyof this>(payload: { key: V, value: any }) {

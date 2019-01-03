@@ -85,7 +85,6 @@ export default class Synth extends Vue {
   public active = true;
   public panner = new Tone.Panner().toMaster();
   public synth = new Tone.PolySynth(8, Tone.Synth).connect(this.panner);
-  public out = this.panner;
   public expand = false;
   public strokeWidth = 2.5;
   public knobSize = 30;

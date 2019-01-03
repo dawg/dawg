@@ -12,6 +12,7 @@ export const ValidateNote = t.type(ValidateNoteProps);
 export interface Note extends t.TypeOf<typeof ValidateNote> {}
 
 export const ValidateOscillator = t.type({
+  pan: t.number,
   volume: t.number,
 });
 export interface Oscillator extends t.TypeOf<typeof ValidateOscillator> {}
@@ -40,15 +41,18 @@ export interface Envelope extends t.TypeOf<typeof ValidateEnvelope> {}
 
 const ValidateSynth = t.type({
   type: t.string,
-  options: ValidateOscillator,
-  envelope: ValidateEnvelope,
+  // options: ValidateOscillator,
+  // envelope: ValidateEnvelope,
 });
 export interface Synth extends t.TypeOf<typeof ValidateSynth> {}
 
 
 const ValidateInstrument = t.type({
   name: t.string,
-  source: ValidateSynth,
+  pan: t.number,
+  volume: t.number,
+  type: t.string,
+  // source: ValidateSynth,
 });
 export interface Instrument extends t.TypeOf<typeof ValidateInstrument> {}
 
@@ -69,6 +73,5 @@ export const ValidateProject = t.type({
   bpm: t.number,
   patterns: t.array(ValidatePattern),
   instruments: t.array(ValidateInstrument),
-  folders: t.array(t.string),
 });
 export interface Project extends t.TypeOf<typeof ValidateProject> {}

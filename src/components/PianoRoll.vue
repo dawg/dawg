@@ -1,9 +1,9 @@
 <template>
-  <div 
-    class="piano-roll"
+  <!-- <div
     v-shortkey="['space']"
     @shortkey="playPause"
-  >
+  ></div> -->
+  <div class="piano-roll">
     <div style="display: flex">
       <div class="empty-block secondary"></div>
       <timeline 
@@ -41,7 +41,7 @@ import Piano from '@/components/Piano.vue';
 import Sequencer from '@/components/Sequencer.vue';
 import Timeline from '@/components/Timeline.vue';
 import { Note } from '@/models';
-import { allKeys, toTickTime } from '@/utils';
+import { toTickTime } from '@/utils';
 import { Transform } from 'stream';
 import { Watch } from '@/modules/update';
 
@@ -50,63 +50,53 @@ export default class PianoRoll extends Vue {
   @Inject() public pxPerBeat!: number;
   @Prop({ type: Object, required: false }) public synth?: Tone.Synth;
   @Prop({ type: Array, required: true }) public value!: Note[];
+  @Prop({ type: Number, required: true }) public loopStart!: number;
+  @Prop({ type: Number, required: true }) public loopEnd!: number;
+  @Prop({ type: Boolean, required: true }) public play!: boolean;
 
   public scrollLeft = 0;
   public progress = 0;
-  public part = new Tone.Part(this.callback);
   public sequencerLoopEnd = 0;
   public setLoopStart: null | number = null;
   public setLoopEnd: null | number = null;
 
-  public mounted() {
-    this.part.start(0);
-    Tone.Transport.loop = true;
-    this.part.humanize = true;
-    Tone.Transport.bpm.value = 93;
+  @Watch<PianoRoll>('setLoopStart')
+  public changeLoopStart() {
+    this.$update('loopStart', this.setLoopStart || 0);
   }
-  public get loopStart() {
-    return this.setLoopStart || 0;
-  }
-  public get loopEnd() {
-    return this.setLoopEnd || this.sequencerLoopEnd;
-  }
-  public playPause() {
-    if (Tone.Transport.state === 'started') {
-      this.pause();
+
+  @Watch<PianoRoll>('setLoopEnd')
+  public changeLoopEnd() {
+    if (this.setLoopEnd) {
+      this.$update('loopEnd', this.setLoopEnd);
     } else {
-      this.play();
+      this.$update('loopEnd', this.sequencerLoopEnd);
     }
   }
+
+  @Watch<PianoRoll>('sequencerLoopEnd', { immediate: true })
+  public changeSeqLoopEnd() {
+    if (!this.setLoopEnd) {
+      this.$update('loopEnd', this.sequencerLoopEnd);
+    }
+  }
+
   public update() {
     if (Tone.Transport.state === 'started') { requestAnimationFrame(this.update); }
     this.progress = Tone.Transport.progress;
   }
-  public play() {
-    Tone.Transport.start();
-    this.update();
-  }
-  public pause() {
-    Tone.Transport.pause();
-  }
-  public stop() {
-    Tone.Transport.stop();
+
+  @Watch<PianoRoll>('play', { immediate: true })
+  public onPlay() {
+    if (this.play) {
+      this.update();
+    }
   }
   public added(note: Note) {
-    const time = toTickTime(note.time);
-    this.$log.info(`Adding note at ${note.time} -> ${time}`);
-    this.part.add(time, note);
-    this.value.push(note);
+    this.$emit('added', note);
   }
   public removed(note: Note, i: number) {
-    const time = toTickTime(note.time);
-    this.part.remove(time, note);
-    this.$delete(this.value, i);
-  }
-  public callback(time: string, note: Note) {
-    if (!this.synth) { return; }
-    const duration = toTickTime(note.duration);
-    const value = allKeys[note.id].value;
-    this.synth.triggerAttackRelease(value, duration, time);
+    this.$emit('removed', note, i);
   }
   @Watch<PianoRoll>('loopEnd', { immediate: true })
   public onLoopEndChange() {

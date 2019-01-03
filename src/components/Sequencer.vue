@@ -261,7 +261,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   public removeAtIndex(i: number) {
     const item = this.notes[i];
     this.$delete(this.notes, i);
-    this.$emit('removed', item);
+    this.$emit('removed', item, i);
     this.checkLoopEnd();
   }
   public checkLoopEnd() {

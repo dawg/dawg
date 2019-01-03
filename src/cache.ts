@@ -7,15 +7,18 @@ import { remote } from 'electron';
 const { app } = remote;
 
 const APP_DATA = app.getPath('appData');
-const DEFAULT = { openedFile: null };
+const DEFAULT = { openedFile: null, openedPanel: null, folders: [] };
 const APPLICATION_PATH = path.join(APP_DATA, app.getName());
 const CACHE_PATH = path.join(APPLICATION_PATH, 'cache.json');
 
 const CacheType = t.type({
   openedFile: t.union([t.string, t.null]),
+  openedPanel: t.union([t.string, t.null]),
+  folders: t.array(t.string),
 });
 export interface ICache extends t.TypeOf<typeof CacheType> {}
 
+// TODO Create decorator for getters & setters
 export default class Cache implements ICache {
   get openedFile() {
     return this.o.openedFile;
@@ -24,6 +27,20 @@ export default class Cache implements ICache {
     this.o.openedFile = file;
     // This write call actually works.
     // I was worried it wouldn't work since it's not in an async method.
+    this.write();
+  }
+  get openedPanel() {
+    return this.o.openedPanel;
+  }
+  set openedPanel(openedPanel: string | null) {
+    this.openedPanel = openedPanel;
+    this.write();
+  }
+  get folders() {
+    return this.o.folders;
+  }
+  set folders(folders: string[]) {
+    this.folders = folders;
     this.write();
   }
   public static async writeDefault() {

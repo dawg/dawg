@@ -39,7 +39,9 @@
               <vue-perfect-scrollbar class="scrollbar" style="height: 100%">
                 <base-tabs ref="tabs" @changed="changed">
                   <side-bar name="EXPLORER" icon="folder">
-                    <file-explorer></file-explorer>
+                    <file-explorer 
+                      :folders.sync="app.folders"
+                    ></file-explorer>
                   </side-bar>
                   <side-bar name="AUDIO FILES" icon="queue_music"></side-bar>
                   <side-bar name="PATTERNS" icon="queue_play">
@@ -99,7 +101,7 @@
                 <base-tabs class="tabs-panels secondary" ref="panels">
                   <panel name="Instruments">
                     <synths 
-                      :instruments="project.instruments"
+                      :instruments="instruments"
                       :selected-score.sync="selectedScore"
                       :selected-pattern="selectedPattern"
                       :synth.sync="selectedSynth"
@@ -110,7 +112,15 @@
                     <div></div>
                   </panel>
                   <panel name="Piano Roll">
-                    <piano-roll :synth="selectedSynth" v-model="notes"></piano-roll>
+                    <piano-roll 
+                      v-model="notes"
+                      :synth="selectedSynth"
+                      :loop-start.sync="loopStart"
+                      :loop-end.sync="loopEnd"
+                      :play="play"
+                      @added="added"
+                      @removed="removed"
+                    ></piano-roll>
                   </panel>
                   <panel name="Sample">
                     <div></div>
@@ -129,7 +139,7 @@
         </split>
       </split>
     </dawg>
-    <notifications></notifications>
+    <notifications/>
   </v-app>
 </template>
 
@@ -155,12 +165,13 @@ import Notifications from '@/modules/notification/Notifications.vue';
 import Synths from '@/components/Synths.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { remote, ipcRenderer } from 'electron';
-import { Pattern, Instrument, Project, ValidateProject, Score } from '@/models';
+import { Pattern, Instrument, Project, ValidateProject, Score, Note } from '@/models';
 import io from '@/io';
 import project from '@/project';
-import { MapField } from '@/utils';
+import { MapField, toTickTime, allKeys } from '@/utils';
 import { Left } from 'fp-ts/lib/Either';
 import Cache from '@/cache';
+import Instru from '@/Instru';
 
 const { dialog } = remote;
 
@@ -197,6 +208,13 @@ export default class App extends Vue {
   public selectedScore: Score | null = null;
   public cache: Cache | null = null;
 
+  public loopStart = 0;
+  public loopEnd = 0;
+  public play = false;
+  public part = new Tone.Part(this.callback);
+
+  public instruments: Instru[] = [];
+
   public $refs!: {
     tabs: BaseTabs,
     panels: BaseTabs,
@@ -206,14 +224,22 @@ export default class App extends Vue {
   public items: SideBar[] = [];
 
   public async mounted() {
-
     this.tabs = this.$refs.tabs;
     this.items = this.tabs.$children as SideBar[];
     this.panelsTabs = this.$refs.panels;
     ipcRenderer.on('save', this.save);
     ipcRenderer.on('open', this.open);
-    this.panelsTabs.selectTab(localStorage.getItem('panel'));
     this.cache = await Cache.fromCacheFolder();
+
+    this.panelsTabs.selectTab(this.cache.openedPanel);
+    this.part.start(0);
+    Tone.Transport.loop = true;
+    this.part.humanize = true;
+    Tone.Transport.bpm.value = 93;
+
+    this.instruments = this.project.instruments.map((instrument) => {
+      return new Instru(instrument);
+    });
   }
 
   get notes() {
@@ -224,6 +250,13 @@ export default class App extends Vue {
     if (!this.cache || !this.cache.openedFile) { return null; }
     return path.basename(this.cache.openedFile).split('.')[0];
   }
+  get instrumentLookup() {
+    const instruments: {[k: string]: Instru} = {};
+    this.instruments.forEach((instrument) => {
+      instruments[instrument.name] = instrument;
+    });
+    return instruments;
+  }
   public click(tab: SideBar, $event: MouseEvent) {
     this.tabs!.selectTab(tab.name, $event);
   }
@@ -231,8 +264,9 @@ export default class App extends Vue {
     this.sidebarTabTitle = tab.name;
   }
   public selectPanel(name: string, e: MouseEvent) {
-    // TODO Remove localStorage. Place this in the cache.
-    localStorage.setItem('panel', name);
+    if (this.cache) {
+      this.cache.openedPanel = name;
+    }
     this.panelsTabs!.selectTab(name, e);
   }
   get panels() {
@@ -290,6 +324,37 @@ export default class App extends Vue {
     }
 
     project.reset(result.value);
+  }
+  public playPattern() {
+    Tone.Transport.start();
+    this.play = true;
+  }
+  public pausePattern() {
+    Tone.Transport.pause();
+    this.play = false;
+  }
+  public playPause() {
+    if (Tone.Transport.state === 'started') {
+      this.pausePattern();
+    } else {
+      this.playPattern();
+    }
+  }
+  public added(note: Note) {
+    const time = toTickTime(note.time);
+    this.$log.info(`Adding note at ${note.time} -> ${time}`);
+    this.part.add(time, note);
+  }
+  public removed(note: Note, i: number) {
+    const time = toTickTime(note.time);
+    this.part.remove(time, note);
+  }
+  public callback(time: string, note: Note) {
+    if (!this.selectedScore) { return; }
+    const duration = toTickTime(note.duration);
+    const value = allKeys[note.id].value;
+    const instrument = this.instrumentLookup[this.selectedScore.instrument];
+    instrument.triggerAttackRelease(value, duration, time);
   }
 }
 </script>
