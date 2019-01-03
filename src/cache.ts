@@ -26,21 +26,21 @@ export default class Cache implements ICache {
   set openedFile(file: string | null) {
     this.o.openedFile = file;
     // This write call actually works.
-    // I was worried it wouldn't work since it's not in an async method.
+    // I was worried it wouldn't work since this method is not async.
     this.write();
   }
   get openedPanel() {
     return this.o.openedPanel;
   }
   set openedPanel(openedPanel: string | null) {
-    this.openedPanel = openedPanel;
+    this.o.openedPanel = openedPanel;
     this.write();
   }
   get folders() {
     return this.o.folders;
   }
   set folders(folders: string[]) {
-    this.folders = folders;
+    this.o.folders = folders;
     this.write();
   }
   public static async writeDefault() {

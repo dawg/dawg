@@ -4,27 +4,7 @@
       <split direction="vertical">
         <split direction="horizontal" resizable>
           <split :initial="65" fixed>
-            <v-navigation-drawer
-              permanent
-              mini-variant
-              class="secondary-lighten-2"
-            >
-              <v-list dense style="height: 100%; display: flex; flex-direction: column">
-                <v-list-tile
-                  v-for="item in items"
-                  :key="item.name"
-                  @click="click(item, $event)"
-                >
-                  <v-icon medium color="white">{{ item.icon }}</v-icon>
-                </v-list-tile>
-
-                <div style="flex-grow: 1"></div>
-
-                <v-list-tile @click="click">
-                  <v-icon medium color="white">settings</v-icon>
-                </v-list-tile>
-              </v-list>
-            </v-navigation-drawer>
+            <activity-bar :items="items"></activity-bar>
           </split>
 
           <split :initial="250" collapsible :min-size="100">
@@ -39,8 +19,9 @@
               <vue-perfect-scrollbar class="scrollbar" style="height: 100%">
                 <base-tabs ref="tabs" @changed="changed">
                   <side-bar name="EXPLORER" icon="folder">
-                    <file-explorer 
-                      :folders.sync="app.folders"
+                    <file-explorer
+                      v-if="cache"
+                      :folders.sync="cache.folders"
                     ></file-explorer>
                   </side-bar>
                   <side-bar name="AUDIO FILES" icon="queue_music"></side-bar>
@@ -109,7 +90,7 @@
                     ></synths>
                   </panel>
                   <panel name="Mixer">
-                    <div></div>
+                    <mixer></mixer>
                   </panel>
                   <panel name="Piano Roll">
                     <piano-roll 
@@ -148,14 +129,16 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import Tone from 'tone';
-import { Component, Vue, Watch } from 'vue-property-decorator';
+import { Component, Vue } from 'vue-property-decorator';
 import Toolbar from '@/components/Toolbar.vue';
 import SideBar from '@/components/SideBar.vue';
 import Foot from '@/components/Foot.vue';
 import FileExplorer from '@/components/FileExplorer.vue';
+import ActivityBar from '@/components/ActivityBar.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
 import Panel from '@/components/Panel.vue';
+import Mixer from '@/components/Mixer.vue';
 import Split from '@/modules/split/Split.vue';
 import PianoRoll from '@/components/PianoRoll.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
@@ -194,6 +177,8 @@ const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
     Notifications,
     Patterns,
     Synths,
+    Mixer,
+    ActivityBar,
   },
 })
 export default class App extends Vue {
@@ -207,6 +192,7 @@ export default class App extends Vue {
   public selectedPattern: Pattern | null = null;
   public selectedScore: Score | null = null;
   public cache: Cache | null = null;
+  public tone = Tone.Transport;
 
   public loopStart = 0;
   public loopEnd = 0;
@@ -240,10 +226,13 @@ export default class App extends Vue {
     this.instruments = this.project.instruments.map((instrument) => {
       return new Instru(instrument);
     });
+
+    // this.playPattern();
   }
 
   get notes() {
     if (!this.selectedScore) { return []; }
+    // this.selectedScore.notes.forEach(this.added); // TODO(jacob) REMOVE
     return this.selectedScore.notes;
   }
   get projectName() {
@@ -281,6 +270,8 @@ export default class App extends Vue {
 
     if (!this.cache.openedFile) {
       this.cache.openedFile = dialog.showSaveDialog(remote.getCurrentWindow(), {});
+      // dialog.showSaveDialog can be null. Return type for showSaveDialog is wrong.
+      if (!this.cache.openedFile) { return; }
       if (!this.cache.openedFile.endsWith('.dg')) {
         this.cache.openedFile = this.cache.openedFile + '.dg';
       }

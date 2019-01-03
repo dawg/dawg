@@ -1,10 +1,10 @@
 <template>
   <div>
     <tree
-        v-for="(children, label) in projects"
-        :key="label"
-        :label="label"
-        :children="children"
+      v-for="(children, label) in projects"
+      :key="label"
+      :label="label"
+      :children="children"
     ></tree>
   </div>
 </template>

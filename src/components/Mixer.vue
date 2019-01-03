@@ -1,8 +1,8 @@
 <template>
   <div class="mixer">
     <div v-for="i in range(channels)" :key="i" class="track">
-      <div class="color"></div>
-      <div class="label">Name</div>
+      <div class="primary color"></div>
+      <div class="secondary label">Name</div>
       <ul>
         <li v-for="i in range(10)" :key="i" class="cell">
           <v-icon size="13px" class="close-icon">add</v-icon>
@@ -45,13 +45,11 @@ export default class Mixer extends Vue {
     padding-left: 0
 
   .color
-    background-color: #44b3ff
     height: 5px
 
   .label
     height: 30px
     line-height: 30px
-    background-color: $dark
     color: white
     text-align: center
     vertical-align: text-bottom

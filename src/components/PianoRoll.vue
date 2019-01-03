@@ -20,6 +20,7 @@
       <piano :synth="synth"></piano>
       <sequencer
         style="width: calc(100% - 80px)"
+        v-model="value"
         @added="added"
         @removed="removed"
         @scroll-horizontal="scrollHorizontal"
