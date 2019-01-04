@@ -132,6 +132,7 @@ export function MapField<T extends MapFieldSetter>(o: T) {
         return o[name];
       },
       set(value) {
+        // Kick of mutation.
         o.setValue({key: name, value});
       },
       enumerable: true,

@@ -151,7 +151,6 @@ import Synths from '@/components/Synths.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { remote, ipcRenderer } from 'electron';
 import { Pattern, Instrument, Project, ValidateProject, Score, Note } from '@/models';
-import io from '@/io';
 import project from '@/project';
 import { MapField, toTickTime, allKeys, Keys } from '@/utils';
 import { Left } from 'fp-ts/lib/Either';
@@ -222,8 +221,12 @@ export default class App extends Vue {
     this.$refs.panels.selectTab(this.cache.openedPanel);
     this.$refs.tabs.selectTab(this.cache.openedSideTab);
 
+    this.part.loop = true;
+    this.part.loopStart = '0:2:0';
+    this.part.loopEnd = '1:0:0';
+
     this.part.start(0);
-    this.part.start(1);
+    // this.part.start(1);
     Tone.Transport.loop = true;
     this.part.humanize = true;
     Tone.Transport.bpm.value = 93;
@@ -241,6 +244,7 @@ export default class App extends Vue {
 
   public keydown(e: KeyboardEvent) {
     if (e.keyCode === Keys.SPACE) {
+      e.preventDefault();
       this.playPause();
     }
   }
@@ -285,10 +289,10 @@ export default class App extends Vue {
       }
     }
 
-    // TODO Error handling
+    const encoded = ValidateProject.encode(this.$store.state.project);
     fs.writeFileSync(
       this.cache.openedFile,
-      JSON.stringify(io.encode(ValidateProject, this.$store.state.project), null, 4),
+      JSON.stringify(encoded, null, 4),
     );
   }
   public open() {

@@ -825,7 +825,7 @@ declare module 'tone' {
 
   type _TimeArg = string | number | Time;
 
-  class TransportClass extends Tone {
+  class _TransportConstructor extends Tone {
     bpm: Signal;
     seconds: number;
     loop: boolean;
@@ -860,13 +860,13 @@ declare module 'tone' {
     unsyncSource(source: Source): Transport;
   }
 
-  var Transport: TransportClass;
+  var Transport: _TransportConstructor;
 
   type TransportState = 'started' | 'stopped' | 'stopped';
 
   class WaveShaper extends SignalBase {
-      constructor(mapping: any, bufferLen?: number); //TODO: change 'any' to 'Function | Array | number'
-      curve: number[];
-      oversample: string;
+    constructor(mapping: any, bufferLen?: number); //TODO: change 'any' to 'Function | Array | number'
+    curve: number[];
+    oversample: string;
   }
 }
