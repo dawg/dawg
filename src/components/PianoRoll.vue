@@ -1,8 +1,4 @@
 <template>
-  <!-- <div
-    v-shortkey="['space']"
-    @shortkey="playPause"
-  ></div> -->
   <div class="piano-roll">
     <div style="display: flex">
       <div class="empty-block secondary"></div>

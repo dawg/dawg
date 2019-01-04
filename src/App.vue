@@ -1,10 +1,12 @@
 <template>
-  <v-app class="app" style="height: 100vh">
+  <v-app 
+    class="app" 
+  >
     <dawg>
       <split direction="vertical">
         <split direction="horizontal" resizable>
           <split :initial="65" fixed>
-            <activity-bar :items="items"></activity-bar>
+            <activity-bar :items="items" @click="clickActivityBar"></activity-bar>
           </split>
 
           <split :initial="250" collapsible :min-size="100">
@@ -151,7 +153,7 @@ import { remote, ipcRenderer } from 'electron';
 import { Pattern, Instrument, Project, ValidateProject, Score, Note } from '@/models';
 import io from '@/io';
 import project from '@/project';
-import { MapField, toTickTime, allKeys } from '@/utils';
+import { MapField, toTickTime, allKeys, Keys } from '@/utils';
 import { Left } from 'fp-ts/lib/Either';
 import Cache from '@/cache';
 import Instru from '@/Instru';
@@ -186,7 +188,6 @@ export default class App extends Vue {
 
   public toolbarHeight = 64;
   public sidebarTabTitle = '';
-  public panelsTabs: BaseTabs | null = null;
   public selectedSynth: Tone.PolySynth | null = null;
   public project = project;
   public selectedPattern: Pattern | null = null;
@@ -206,19 +207,23 @@ export default class App extends Vue {
     panels: BaseTabs,
   };
 
-  public tabs?: BaseTabs;
+  // To populate the activity bar
   public items: SideBar[] = [];
+  public panels: Tab[] = [];
 
   public async mounted() {
-    this.tabs = this.$refs.tabs;
-    this.items = this.tabs.$children as SideBar[];
-    this.panelsTabs = this.$refs.panels;
+    this.items = this.$refs.tabs.$children as SideBar[];
+    this.panels = this.$refs.panels.tabs;
+
     ipcRenderer.on('save', this.save);
     ipcRenderer.on('open', this.open);
-    this.cache = await Cache.fromCacheFolder();
 
-    this.panelsTabs.selectTab(this.cache.openedPanel);
+    this.cache = await Cache.fromCacheFolder();
+    this.$refs.panels.selectTab(this.cache.openedPanel);
+    this.$refs.tabs.selectTab(this.cache.openedSideTab);
+
     this.part.start(0);
+    this.part.start(1);
     Tone.Transport.loop = true;
     this.part.humanize = true;
     Tone.Transport.bpm.value = 93;
@@ -227,12 +232,21 @@ export default class App extends Vue {
       return new Instru(instrument);
     });
 
-    // this.playPattern();
+    window.addEventListener('keypress', this.keydown);
+  }
+
+  public destroyed() {
+    window.removeEventListener('keypress', this.keydown);
+  }
+
+  public keydown(e: KeyboardEvent) {
+    if (e.keyCode === Keys.SPACE) {
+      this.playPause();
+    }
   }
 
   get notes() {
     if (!this.selectedScore) { return []; }
-    // this.selectedScore.notes.forEach(this.added); // TODO(jacob) REMOVE
     return this.selectedScore.notes;
   }
   get projectName() {
@@ -246,8 +260,9 @@ export default class App extends Vue {
     });
     return instruments;
   }
-  public click(tab: SideBar, $event: MouseEvent) {
-    this.tabs!.selectTab(tab.name, $event);
+  public clickActivityBar(tab: SideBar, $event: MouseEvent) {
+    if (this.cache) { this.cache.openedSideTab = tab.name; }
+    this.$refs.tabs.selectTab(tab.name, $event);
   }
   public changed(tab: SideBar) {
     this.sidebarTabTitle = tab.name;
@@ -256,14 +271,7 @@ export default class App extends Vue {
     if (this.cache) {
       this.cache.openedPanel = name;
     }
-    this.panelsTabs!.selectTab(name, e);
-  }
-  get panels() {
-    if (this.panelsTabs) {
-      return this.panelsTabs.tabs;
-    } else {
-      return [];
-    }
+    this.$refs.panels.selectTab(name, e);
   }
   public save() {
     if (!this.cache) { return; }

@@ -351,6 +351,9 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     // this method doesn't trigger before `selected` is also changed.
     if (this.selected.length !== this.value.length) {
       this.selected = this.value.map((_) => false);
+
+      // TODO(jacob) this won't always work
+      this.value.forEach((note) => this.$emit('added', note));
     }
   }
 }

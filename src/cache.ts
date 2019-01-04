@@ -7,13 +7,19 @@ import { remote } from 'electron';
 const { app } = remote;
 
 const APP_DATA = app.getPath('appData');
-const DEFAULT = { openedFile: null, openedPanel: null, folders: [] };
+const DEFAULT = {
+  openedFile: null,
+  openedPanel: null,
+  openedSideTab: null,
+  folders: [],
+};
 const APPLICATION_PATH = path.join(APP_DATA, app.getName());
 const CACHE_PATH = path.join(APPLICATION_PATH, 'cache.json');
 
 const CacheType = t.type({
   openedFile: t.union([t.string, t.null]),
   openedPanel: t.union([t.string, t.null]),
+  openedSideTab: t.union([t.string, t.null]),
   folders: t.array(t.string),
 });
 export interface ICache extends t.TypeOf<typeof CacheType> {}
@@ -34,6 +40,13 @@ export default class Cache implements ICache {
   }
   set openedPanel(openedPanel: string | null) {
     this.o.openedPanel = openedPanel;
+    this.write();
+  }
+  get openedSideTab() {
+    return this.o.openedSideTab;
+  }
+  set openedSideTab(openedSideTab: string | null) {
+    this.o.openedSideTab = openedSideTab;
     this.write();
   }
   get folders() {

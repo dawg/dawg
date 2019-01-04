@@ -15,11 +15,9 @@
     <v-spacer></v-spacer>
 
     <v-btn
-        icon
-        style="margin: 0"
-        v-shortkey="['space']"
-        @shortkey="playing = !playing"
-        @click="playing = !playing"
+      icon
+      style="margin: 0"
+      @click="playing = !playing"
     >
       <ico fa>{{ playing ? 'pause' : 'play' }}</ico>
     </v-btn>
