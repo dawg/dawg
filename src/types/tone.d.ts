@@ -69,6 +69,7 @@ declare module 'tone' {
   }
 
   class AudioNode extends Tone {
+    toMaster(): this;
     disconnect(output: number | AudioNode): this;
     connect(unit: Tone | AudioParam | AudioNode, outputNum?:number, inputNum?:number): this;
   }

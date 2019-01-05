@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import { shallowMount } from '@vue/test-utils';
 import Note from '@/components/Note.vue';
 
@@ -18,14 +19,13 @@ describe(Note.name, () => {
     vm = wrapper.vm;
   });
   it('should have the correct width', () => {
-    expect(vm.noteConfig.width).toBe(`159px`);
+    expect(vm.noteConfig.width).to.equal(`159px`);
   });
   it('should move correctly', () => {
     vm.move({ clientX: 1 });
-    expect(wrapper.emitted().input).toBeFalsy();
+    expect(wrapper.emitted().input).to.equal(undefined);
 
     vm.move({ clientX: 50 });
-    expect(wrapper.emitted().input).toBeTruthy();
-    expect(wrapper.emitted().input[0][0]).toEqual(0.75);
+    expect(wrapper.emitted().input[0][0]).to.equal(0.75);
   });
 });

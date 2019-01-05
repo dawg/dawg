@@ -117,7 +117,7 @@
         <split :initial="20" fixed>
           <foot
             :height="20"
-            :project-name="projectName"
+            :opened-file="openedFile"
           ></foot>
         </split>
       </split>
@@ -253,10 +253,6 @@ export default class App extends Vue {
     if (!this.selectedScore) { return []; }
     return this.selectedScore.notes;
   }
-  get projectName() {
-    if (!this.cache || !this.cache.openedFile) { return null; }
-    return path.basename(this.cache.openedFile).split('.')[0];
-  }
   get instrumentLookup() {
     const instruments: {[k: string]: Instru} = {};
     this.instruments.forEach((instrument) => {
@@ -276,6 +272,10 @@ export default class App extends Vue {
       this.cache.openedPanel = name;
     }
     this.$refs.panels.selectTab(name, e);
+  }
+  get openedFile() {
+    if (!this.cache) { return null; }
+    return this.cache.openedFile;
   }
   public save() {
     if (!this.cache) { return; }
