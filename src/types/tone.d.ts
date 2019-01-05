@@ -8,48 +8,26 @@
 //    new(inputs?: number, outputs?: number): Tone;
 //}
 
+type PrimitiveTime = string | number;
+type PrimitiveTicks = number;
+
 declare module 'tone' {
   class Tone {
     constructor(inputs?: number, outputs?: number);
     context: AudioContext;
-    input: GainNode;
-    output: GainNode;
-    chain(...nodes: any[]): Tone;
-    connectSeries(...args: any[]): Tone;
-    connectParallel(...args: any[]): Tone;
-    dbToGain(db: number): number;
-    defaultArg(given: any, fallback: any): any;
-    dispose(): this;
-    equalPowerScale(percent:number): number;
-    expScale(gain: number): number;
-    extend(child: ()=>any, parent?: ()=>any): void;
-    frequencyToNote(freq:number):string;
-    frequencyToSeconds(freq:number):number;
-    gainToDb(gain: number): number;
-    get(params?:any): any;
-    interpolate(input: number, outputMin: number, outputMax: number): number;
-    isFrequency(freq: number): boolean;
-    isFunction(arg: any): boolean;
-    isUndef(arg: any): boolean;
-    midiToNote(midiNumber: number): string;
-    noGC(): Tone;
-    normalize(input: number, inputMin: number, inputMax: number): number;
-    notationToSeconds(notation: string, bpm?: number, timeSignature?: number): number;
-    ToFrequency(note: string): number;
-    noteToMidi(note: string): number;
-    now(): number;
-    optionsObject(values: Array<any>, keys: Array<string>, defaults?:Object): Object;
-    receive(channelName: string, input?: AudioNode): Tone;
-    samplesToSeconds(samples: number): number;
-    secondsToFrequency(seconds: number): number;
-    send(channelName: string, amount?: number): Tone;
-    setContext(ctx: AudioContext): void;
-    setPreset(presetName: string): Tone;
-    startMobile(): void;
-    toFrequency(note: Frequency, now?: number): number;
-    toMaster(): this;
-    toSamples(time: _TimeArg): number;
-    toSeconds(time?: number, now?: number): number;
+    toFrequency(freq: any): number;
+    toSeconds(time?: _TimeArg): number;
+    toTicks(time: _TimeArg): number;
+
+    static connectSeries(...args: any[]): Tone;
+    static dbToGain(db: number): number;
+    static defaultArg(given: any, fallback: any): any;
+    static defaults(): object;
+    static isFunction(arg: any): boolean;
+    static isArray(arg: any): boolean;
+    static now(): number;
+    static isDefined(arg: any): boolean; 
+    protected _readOnly(property: keyof this & string): void;
   }
 
   class Abs extends SignalBase {
@@ -158,14 +136,33 @@ declare module 'tone' {
       dispose(): this;
   }
 
+  interface _Clock {
+    callback: (tickTime: number, ticks: number) => void,
+    frequency: number,
+  }
+
+  class Clock extends Emitter {
+    constructor(options: _Clock);
+    frequency: TickSignal;
+    seconds: number;
+    ticks: number;
+    setTicksAtTime(ticks: number, time: _TimeArg): void;
+    getSecondsAtTime(time: _TimeArg): number;
+    getStateAtTime(time: _TimeArg): TransportState;
+    getTicksAtTime(time: PrimitiveTime): PrimitiveTicks;
+    start(time?: PrimitiveTime, offset?: PrimitiveTicks): void;
+    stop(time?: PrimitiveTime): void;
+    pause(time?: PrimitiveTime): void;
+  }
+
   class Compressor extends Tone {
-      constructor(threshold?: any, ratio?: number); //TODO: Number || Object
-      attack: Signal;
-      knee: AudioParam;
-      ratio: AudioParam;
-      release: Signal;
-      threshold: AudioParam;
-      dispose(): this;
+    constructor(threshold?: any, ratio?: number); //TODO: Number || Object
+    attack: Signal;
+    knee: AudioParam;
+    ratio: AudioParam;
+    release: Signal;
+    threshold: AudioParam;
+    dispose(): this;
   }
 
   class Convolver extends Effect {
@@ -203,22 +200,29 @@ declare module 'tone' {
   }
 
   class Effect extends Tone {
-      constructor(initialWet?: number);
-      wet: Signal;
-      bypass(): Effect;
-      dispose(): this;
+    constructor(initialWet?: number);
+    wet: Signal;
+    bypass(): Effect;
+    dispose(): this;
+  }
+
+  class Emitter extends Tone {
+    emit(event: string, ...args: any[]): this;
+    on(event: string, callback: (...args: any[]) => void): this;
+    once(event: string, callback: (arg: any) => void): this;
+    off(event: string, callback: (arg: any) => void): this;
   }
 
   class Envelope extends Tone {
-      constructor(attack: any, decay?: _TimeArg, sustain?: number, release?: _TimeArg);  //TODO: Change 'any' to '_TimeArg | Object'
-      attack: _TimeArg;
-      decay: _TimeArg;
-      release: _TimeArg;
-      sustain: number;
-      dispose(): this;
-      triggerAttack(time?: _TimeArg, velocity?: number): Envelope;
-      triggerAttackRelease(duration: _TimeArg, time?: _TimeArg, velocity?: number): Envelope;
-      triggerRelease(time?: _TimeArg): Envelope;
+    constructor(attack: any, decay?: _TimeArg, sustain?: number, release?: _TimeArg);  //TODO: Change 'any' to '_TimeArg | Object'
+    attack: _TimeArg;
+    decay: _TimeArg;
+    release: _TimeArg;
+    sustain: number;
+    dispose(): this;
+    triggerAttack(time?: _TimeArg, velocity?: number): Envelope;
+    triggerAttackRelease(duration: _TimeArg, time?: _TimeArg, velocity?: number): Envelope;
+    triggerRelease(time?: _TimeArg): Envelope;
   }
 
   class EQ3 extends Tone {
@@ -357,6 +361,9 @@ declare module 'tone' {
       volume: Signal;
       triggerAttackRelease(note: any, duration: _TimeArg, time?: _TimeArg, velocity?: number): Instrument; //Todo: string | number
       dispose(): this;
+  }
+
+  class IntervalTimeline extends Tone {
   }
 
   class JCReverb extends Effect {
@@ -584,22 +591,21 @@ declare module 'tone' {
   }
 
   class Panner extends AudioNode {
-      constructor(initialPan?: number);
-      pan: Signal;
-      dispose(): this;
+    constructor(initialPan?: number);
+    pan: Signal;
+    dispose(): this;
   }
 
   class PanVol extends Tone {
-      constructor(pan: number, volume: number);
-      output: GainNode;
-      volume: Signal;
-      dispose(): this;
+    constructor(pan: number, volume: number);
+    output: GainNode;
+    volume: Signal;
+    dispose(): this;
   }
 
-  type TransportTime = number; // TODO
   class Part<T> extends Event {
     constructor(callback?: (time: string, value: T) => void, events?: Event[])
-    start(time: TransportTime, offset?: _TimeArg): void
+    start(time: number, offset?: _TimeArg): void;
     loop: boolean
     readonly progress: number;
     mute: boolean;
@@ -612,31 +618,31 @@ declare module 'tone' {
   }
 
   class Phaser extends StereoEffect {
-      constructor(rate?: any, depth?: number, baseFrequency?: number); //TODO: change 'any' to 'number | Object'
-      baseFrequency: number;
-      depth: number;
-      frequency: Signal;
-      dispose(): this;
+    constructor(rate?: any, depth?: number, baseFrequency?: number); //TODO: change 'any' to 'number | Object'
+    baseFrequency: number;
+    depth: number;
+    frequency: Signal;
+    dispose(): this;
   }
 
   class PingPongDelay extends StereoXFeedbackEffect {
-      constructor(delayTime?: any, feedback?: number); //TODO: _TimeArg || Object
-      delayTime: Signal;
-      dispose(): this;
+    constructor(delayTime?: any, feedback?: number); //TODO: _TimeArg || Object
+    delayTime: Signal;
+    dispose(): this;
   }
 
   class Player extends Source {
-      constructor(url?: string, onload?: (e: any)=>any); //todo: string | AudioBuffer
-      buffer: AudioBuffer;
-      duration: number;
-      loop: boolean;
-      loopEnd: _TimeArg;
-      loopStart: _TimeArg;
-      playbackRate: number;
-      retrigger: boolean;
-      dispose(): this;
-      load(url:string, callback?:(e: any)=>any):  Player;
-      setLoopPoints(loopStart: _TimeArg, loopEnd: _TimeArg): Player;
+    constructor(url?: string, onload?: (e: any)=>any); //todo: string | AudioBuffer
+    buffer: AudioBuffer;
+    duration: number;
+    loop: boolean;
+    loopEnd: _TimeArg;
+    loopStart: _TimeArg;
+    playbackRate: number;
+    retrigger: boolean;
+    dispose(): this;
+    load(url:string, callback?:(e: any)=>any):  Player;
+    setLoopPoints(loopStart: _TimeArg, loopEnd: _TimeArg): Player;
   }
 
   class PluckSynth extends Instrument {
@@ -737,8 +743,8 @@ declare module 'tone' {
   }
 
   module Signal {
-      class Unit{}
-      class Type{}
+    class Unit{}
+    class Type{}
   }
 
   class Signal extends SignalBase {
@@ -817,10 +823,27 @@ declare module 'tone' {
     constructor(options?: any) // TODO fix any
   }
 
+  class Ticks extends TransportTime {
+    constructor(val: string | number, units?: string);
+    toTicks(): PrimitiveTicks;
+  }
+
+  class TickSignal extends Signal {
+    getDurationOfTicks(ticks: number, time: _TimeArg): void;
+    timeToTicks(duration: PrimitiveTime, when?: PrimitiveTime): Ticks;
+  }
+
   class Time extends TimeBase {
     constructor(val: string | number, units?: string);
     toSeconds(): number;
     toBarsBeatsSixteenths(): string;
+  }
+
+  class Timeline extends Tone {
+    add(event: TransportEvent): void;
+    forEachAtTime(time: number, callback: (event: TransportEvent) => void): void;
+    forEachFrom(time: number, callback: (event: TransportEvent) => void): void;
+    remove(event: TransportEvent): void;
   }
 
   type _TimeArg = string | number | Time;
@@ -862,7 +885,22 @@ declare module 'tone' {
 
   var Transport: _TransportConstructor;
 
+  class TransportEvent extends Tone {
+    constructor(transport: _TransportConstructor | null, options: { time: TransportTime, callback: (time: number) => void })
+    id: string;
+    invoke(time: number): void;
+    dispose(): void;
+  }
+
   type TransportState = 'started' | 'stopped' | 'stopped';
+
+  class TransportTime extends Time {
+
+  }
+
+  class Type {
+    static BPM: 'bpm';
+  }
 
   class WaveShaper extends SignalBase {
     constructor(mapping: any, bufferLen?: number); //TODO: change 'any' to 'Function | Array | number'
