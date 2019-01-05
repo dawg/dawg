@@ -7,7 +7,10 @@ module.exports = {
         'tests/**/*.spec.ts',
         'src/**/*.spec.ts',
         'src/**/*.spec.js',
-      ]
+      ],
+      karmaConfig: {
+        browsers: ['Chrome']
+      }
     }
   }
 }
