@@ -25,6 +25,9 @@ declare module 'tone' {
     static defaults(): object;
     static isFunction(arg: any): boolean;
     static isArray(arg: any): boolean;
+    static isNumber(arg: any): boolean;
+    static isString(arg: any): boolean;
+    static isObject(arg: any): boolean;
     static now(): number;
     static isDefined(arg: any): boolean; 
     protected _readOnly(property: keyof this & string): void;
@@ -141,7 +144,13 @@ declare module 'tone' {
     frequency: number,
   }
 
-  class Clock extends Emitter {
+  interface _ClockEvents {
+    start: any,
+    stop: any,
+    pause: any,
+  }
+
+  class Clock extends Emitter<_ClockEvents> {
     constructor(options: _Clock);
     frequency: TickSignal;
     seconds: number;
@@ -206,11 +215,11 @@ declare module 'tone' {
     dispose(): this;
   }
 
-  class Emitter extends Tone {
-    emit(event: string, ...args: any[]): this;
-    on(event: string, callback: (...args: any[]) => void): this;
-    once(event: string, callback: (arg: any) => void): this;
-    off(event: string, callback: (arg: any) => void): this;
+  class Emitter<T, V extends keyof T = keyof T> extends Tone {
+    emit(event: V, ...args: any[]): this;
+    on(event: V, callback: (...args: any[]) => void): this;
+    once(event: V, callback: (arg: any) => void): this;
+    off(event: V, callback: (arg: any) => void): this;
   }
 
   class Envelope extends Tone {
@@ -895,7 +904,7 @@ declare module 'tone' {
   type TransportState = 'started' | 'stopped' | 'stopped';
 
   class TransportTime extends Time {
-
+    toTicks(): number;
   }
 
   class Type {

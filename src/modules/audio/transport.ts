@@ -1,13 +1,24 @@
 import Tone, { _TimeArg } from 'tone';
 
-export default class Transport extends Tone.Emitter {
+interface TransportEvents {
+  start: number;
+  stop: any;
+  pause: any;
+  loopEnd: any;
+  loop: any;
+  loopStart: any;
+}
+
+export default class Transport extends Tone.Emitter<TransportEvents> {
   public loop = false;
-  public bpm: Tone.TickSignal;
   // tslint:disable-next-line:variable-name
   private _loopStart = 0;
   // tslint:disable-next-line:variable-name
   private _loopEnd = 0;
-  private clock: Tone.Clock;
+  private clock = new Tone.Clock({
+    callback: this._processTick.bind(this),
+    frequency: 0,
+  });
 
   private defaults = {
     bpm : 120,
@@ -22,22 +33,15 @@ export default class Transport extends Tone.Emitter {
   private ppq = this.defaults.PPQ;
   private timeline = new Tone.Timeline();
   private isTransport = true;
-  private scheduledEvents: {[k: string]: {event: Tone.TransportEvent, timeline: Tone.Timeline}} = {};
+  private scheduledEvents: { [k: string]: Tone.TransportEvent } = {};
   // tslint:disable-next-line:variable-name
   private _timeSignature = this.defaults.timeSignature;
 
   constructor() {
     super();
-    this.clock = new Tone.Clock({
-      callback: this._processTick.bind(this),
-      frequency: 0,
-    });
-
     this._bindClockEvents();
-    this.bpm = this.clock.frequency;
     this.bpm.units = Tone.Type.BPM;
-    this.bpm.value = this.bpm;
-    this._readOnly('bpm');
+    this.bpm.value = this.defaults.bpm;
     // this.context.transport = this;
   }
 
@@ -63,26 +67,23 @@ export default class Transport extends Tone.Emitter {
       time: new Tone.TransportTime(time),
       callback,
     });
-    return this._addEvent(event, this.timeline);
+    return this._addEvent(event);
   }
 
   public clear(eventId: string) {
     if (this.scheduledEvents.hasOwnProperty(eventId)) {
-      const item = this.scheduledEvents[eventId.toString()];
-      item.timeline.remove(item.event);
-      item.event.dispose();
+      const event = this.scheduledEvents[eventId.toString()];
+      this.timeline.remove(event);
+      event.dispose();
       delete this.scheduledEvents[eventId.toString()];
     }
     return this;
   }
 
 
-  public _addEvent(event: Tone.TransportEvent, timeline: Tone.Timeline) {
-    this.scheduledEvents[event.id.toString()] = {
-      event,
-      timeline,
-    };
-    timeline.add(event);
+  public _addEvent(event: Tone.TransportEvent) {
+    this.scheduledEvents[event.id.toString()] = event;
+    this.timeline.add(event);
     return event.id;
   }
 
@@ -107,6 +108,10 @@ export default class Transport extends Tone.Emitter {
     this.clock.on('pause', (time) => {
       this.emit('pause', time);
     });
+  }
+
+  get bpm() {
+    return this.clock.frequency;
   }
 
   get state() {
