@@ -1,41 +1,10 @@
 import Tone from 'tone';
-// import global from './global';
 import { ContextTime, TransportTime } from './types';
 // import Clock from './clock';
 
-export default class Part {
-  get loopStart() {
-    return new Tone.Ticks(this._loopStart).toSeconds();
-  }
-  set loopStart(loopStart: number) {
-    this._loopStart = this.toTicks(loopStart);
-  }
+type Callback = (time: ContextTime) => void;
 
-  get loopEnd() {
-    return new Tone.Ticks(this._loopEnd).toSeconds();
-  }
-  set loopEnd(loopEnd: number) {
-    this._loopEnd = this.toTicks(loopEnd);
-  }
-
-  set bpm(bpm: number) {
-    this.clock.frequency.value = 1 / (60 / bpm / this.PPQ);
-  }
-
-  get bpm() {
-    return (this.clock.frequency.value / this.PPQ) * 60;
-  }
-
-  get PPQ() {
-    return this.ppq;
-  }
-
-  set PPQ(ppq: number) {
-    const bpm = this.bpm;
-    this.ppq = ppq;
-    this.bpm = bpm;
-  }
-
+export default class Part<T> {
   public loop = true;
   private ppq = 192;
   private timeline = new Tone.Timeline<Tone.TransportEvent>();
@@ -48,8 +17,10 @@ export default class Part {
     frequency: 0,
   });
   private scheduledEvents: { [k: string]: Tone.TransportEvent } = {};
+  private groups: Array<[string, T]> = [];
+  // private callback: (time: ContextTime, o: T) => void;
 
-  constructor() {
+  constructor(private callback: (time: ContextTime, o: T) => void) {
     // defaults
     this.bpm = 120;
   }
@@ -73,12 +44,37 @@ export default class Part {
     //
   }
 
+  public add(time: TransportTime, o: T) {
+    const eventId = this.schedule((t) => this.callback(t, o), time);
+    this.groups.push([eventId, o]);
+    return this;
+  }
+
+  public remove(o: T) {
+    this.groups.forEach(([eventId, other], i) => {
+      if (o === other) {
+        this.clear(eventId);
+        this.groups.splice(i, 1);
+      }
+    });
+  }
+
+  public clear(eventId: string) {
+    if (this.scheduledEvents.hasOwnProperty(eventId)) {
+      const event = this.scheduledEvents[eventId.toString()];
+      this.timeline.remove(event);
+      event.dispose();
+      delete this.scheduledEvents[eventId.toString()];
+    }
+    return this;
+  }
+
   /**
    * Start playback from current position.
    */
   public start(time?: ContextTime, offset?: TransportTime) {
-    if (offset) {
-      offset = this.toTicks(offset!);
+    if (offset !== undefined) {
+      offset = this.toTicks(offset!) as number;
     }
     this.clock.start(time, offset);
     return this;
@@ -87,15 +83,17 @@ export default class Part {
   /**
    * Pause playback.
    */
-  public pause() {
-    //
+  public pause(time?: ContextTime) {
+    this.clock.pause(time);
+    return this;
   }
 
   /**
    * Stop playback and return to the beginning.
    */
-  public stop() {
-    //
+  public stop(time?: ContextTime) {
+    this.clock.stop(time);
+    return this;
   }
 
   public setLoopPoints(loopStart: number, loopEnd: number) {
@@ -104,12 +102,74 @@ export default class Part {
     return this;
   }
 
-  private toUnits(freq: number) {
-    return ;
+  get loopStart() {
+    return new Tone.Ticks(this._loopStart).toSeconds();
+  }
+  set loopStart(loopStart: number | string) {
+    this._loopStart = this.toTicks(loopStart);
   }
 
-  private fromUnits(bpm: number) {
-    return;
+  get seconds() {
+    return this.clock.seconds;
+  }
+  set seconds(s: number) {
+    const now = Tone.Transport.context.now();
+    const ticks = this.clock.frequency.timeToTicks(s, now);
+    this.ticks = ticks.toTicks();
+  }
+
+  get loopEnd() {
+    return new Tone.Ticks(this._loopEnd).toSeconds();
+  }
+  set loopEnd(loopEnd: number | string) {
+    this._loopEnd = this.toTicks(loopEnd);
+  }
+
+  get ticks() {
+    return this.clock.ticks;
+  }
+  set ticks(t: number) {
+    if (this.clock.ticks !== t) {
+      const now = Tone.Transport.context.now();
+      // stop everything synced to the transport
+      if (this.state === 'started') {
+        // restart it with the new time
+        this.clock.setTicksAtTime(t, now);
+      } else {
+        this.clock.setTicksAtTime(t, now);
+      }
+    }
+  }
+
+  set bpm(bpm: number) {
+    this.clock.frequency.value = 1 / (60 / bpm / this.PPQ);
+  }
+
+  get bpm() {
+    return (this.clock.frequency.value / this.PPQ) * 60;
+  }
+
+  get PPQ() {
+    return this.ppq;
+  }
+  set PPQ(ppq: number) {
+    const bpm = this.bpm;
+    this.ppq = ppq;
+    this.bpm = bpm;
+  }
+
+  get state() {
+    return this.clock.state;
+  }
+
+  get progress() {
+    if (this.loop) {
+      const now = Tone.Transport.context.now();
+      const ticks = this.clock.getTicksAtTime(now);
+      return (ticks - this._loopStart) / (this._loopEnd - this._loopStart);
+    } else {
+      return 0;
+    }
   }
 
   private onTick(tickTime: ContextTime, ticks: number) {

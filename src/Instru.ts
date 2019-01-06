@@ -38,7 +38,7 @@ export default class Instr implements Instrument {
     this.o.type = type;
     this.synth.set({ oscillator: { type } });
   }
-  public triggerAttackRelease(note: any, duration: string, time: string) {
+  public triggerAttackRelease(note: any, duration: string, time: number) {
     this.synth.triggerAttackRelease(note, duration, time);
   }
 }

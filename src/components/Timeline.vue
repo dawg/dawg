@@ -97,7 +97,7 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   }
   public mousemove(e: MouseEvent) {
     if (!this.inLoop) {
-      this.$log.info('Starting loop!');
+      this.$log.debug('Starting loop!');
       const left = this.$el.getBoundingClientRect().left;
       const position = (e.pageX - left) / this.pxPerBeat;
       this.inLoop = true;

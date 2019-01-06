@@ -1,4 +1,5 @@
 import * as t from 'io-ts';
+import Tone from 'tone';
 
 const ValidateNoteProps = {
   // The id of the note. C8 is 0 and 	A0 is 87 (88 notes in total).
@@ -75,3 +76,54 @@ export const ValidateProject = t.type({
   instruments: t.array(ValidateInstrument),
 });
 export interface Project extends t.TypeOf<typeof ValidateProject> {}
+
+
+// class Synthesizer implements Synth {
+//   public name: string;
+//   private panner = new Tone.Panner().toMaster();
+//   private synth = new Tone.PolySynth(8, Tone.Synth).connect(this.panner);
+//   // tslint:disable-next-line:variable-name
+//   private _type!: string;
+
+//   constructor(o: Instrument) {
+//     this.synth.set({ envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 } });
+//     this.type = 'fatsawtooth';
+//     this.name = o.name;
+//     this.pan = o.pan;
+//     this.volume = o.volume;
+//     this.type = o.type;
+//   }
+//   get pan() {
+//     return this.panner.pan.value;
+//   }
+//   set pan(pan: number) {
+//     this.panner.pan.value = pan;
+//   }
+//   get volume() {
+//     return this.synth.volume.value;
+//   }
+//   set volume(volume: number) {
+//     this.synth.volume.value = volume;
+//   }
+//   get type() {
+//     return this._type;
+//   }
+//   set type(type: string) {
+//     this._type = type;
+//     this.synth.set({ oscillator: { type } });
+//   }
+//   public triggerAttackRelease(note: any, duration: string, time: string) {
+//     this.synth.triggerAttackRelease(note, duration, time);
+//   }
+// }
+
+// export const deserialize = (o: Project) => {
+//   return {
+//     ...o,
+//     instruments: o.instruments.map((instrument) => new Synthesizer(instrument)),
+//   };
+// };
+
+// export const serialize = (o: ReturnType<deserialize>) => {
+
+// }

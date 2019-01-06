@@ -58,7 +58,7 @@ export default class Cache implements ICache {
   }
   public static async writeDefault() {
     const c = new Cache(DEFAULT);
-    c.write();
+    await c.write();
     return c;
   }
   public static async fromCacheFolder() {

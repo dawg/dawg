@@ -97,6 +97,7 @@
                   <panel name="Piano Roll">
                     <piano-roll 
                       v-model="notes"
+                      :part="part"
                       :synth="selectedSynth"
                       :loop-start.sync="loopStart"
                       :loop-end.sync="loopEnd"
@@ -156,6 +157,7 @@ import { MapField, toTickTime, allKeys, Keys } from '@/utils';
 import { Left } from 'fp-ts/lib/Either';
 import Cache from '@/cache';
 import Instru from '@/Instru';
+import Part from '@/modules/audio/part';
 
 const { dialog } = remote;
 
@@ -197,7 +199,7 @@ export default class App extends Vue {
   public loopStart = 0;
   public loopEnd = 0;
   public play = false;
-  public part = new Tone.Part(this.callback);
+  public part = new Part(this.callback);
 
   public instruments: Instru[] = [];
 
@@ -225,11 +227,10 @@ export default class App extends Vue {
     this.part.loopStart = '0:2:0';
     this.part.loopEnd = '1:0:0';
 
-    this.part.start(0);
+    // this.part.start();
     // this.part.start(1);
-    Tone.Transport.loop = true;
-    this.part.humanize = true;
-    Tone.Transport.bpm.value = 93;
+    // this.part.loop = true;
+    // Tone.Transport.bpm.value = 93;
 
     this.instruments = this.project.instruments.map((instrument) => {
       return new Instru(instrument);
@@ -329,15 +330,15 @@ export default class App extends Vue {
     project.reset(result.value);
   }
   public playPattern() {
-    Tone.Transport.start();
+    this.part.start();
     this.play = true;
   }
   public pausePattern() {
-    Tone.Transport.pause();
+    this.part.pause();
     this.play = false;
   }
   public playPause() {
-    if (Tone.Transport.state === 'started') {
+    if (this.part.state === 'started') {
       this.pausePattern();
     } else {
       this.playPattern();
@@ -345,14 +346,14 @@ export default class App extends Vue {
   }
   public added(note: Note) {
     const time = toTickTime(note.time);
-    this.$log.info(`Adding note at ${note.time} -> ${time}`);
+    this.$log.debug(`Adding note at ${note.time} -> ${time}`);
     this.part.add(time, note);
   }
   public removed(note: Note, i: number) {
-    const time = toTickTime(note.time);
-    this.part.remove(time, note);
+    // const time = toTickTime(note.time);
+    this.part.remove(note);
   }
-  public callback(time: string, note: Note) {
+  public callback(time: number, note: Note) {
     if (!this.selectedScore) { return; }
     const duration = toTickTime(note.duration);
     const value = allKeys[note.id].value;

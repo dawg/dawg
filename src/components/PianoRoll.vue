@@ -41,6 +41,7 @@ import { Note } from '@/models';
 import { toTickTime } from '@/utils';
 import { Transform } from 'stream';
 import { Watch } from '@/modules/update';
+import Part from '@/modules/audio/part';
 
 @Component({components: { Piano, Sequencer, Timeline }})
 export default class PianoRoll extends Vue {
@@ -50,6 +51,7 @@ export default class PianoRoll extends Vue {
   @Prop({ type: Number, required: true }) public loopStart!: number;
   @Prop({ type: Number, required: true }) public loopEnd!: number;
   @Prop({ type: Boolean, required: true }) public play!: boolean;
+  @Prop({ type: Object, required: true }) public part!: Part<Note>;
 
   public scrollLeft = 0;
   public progress = 0;
@@ -79,8 +81,8 @@ export default class PianoRoll extends Vue {
   }
 
   public update() {
-    if (Tone.Transport.state === 'started') { requestAnimationFrame(this.update); }
-    this.progress = Tone.Transport.progress;
+    if (this.part.state === 'started') { requestAnimationFrame(this.update); }
+    this.progress = this.part.progress;
   }
 
   @Watch<PianoRoll>('play', { immediate: true })
@@ -98,14 +100,14 @@ export default class PianoRoll extends Vue {
   @Watch<PianoRoll>('loopEnd', { immediate: true })
   public onLoopEndChange() {
     this.$log.debug(`loodEnd being set to ${this.loopEnd}`);
-    Tone.Transport.loopEnd = toTickTime(this.loopEnd);
+    this.part.loopEnd = toTickTime(this.loopEnd);
   }
   @Watch<PianoRoll>('loopStart', { immediate: true })
   public onLoopStartChange() {
     this.$log.debug(`loopStart being set to ${this.loopStart}`);
     const time = toTickTime(this.loopStart);
-    Tone.Transport.seconds = new Tone.Time(time).toSeconds();
-    Tone.Transport.loopStart = time;
+    this.part.seconds = new Tone.Time(time).toSeconds();
+    this.part.loopStart = time;
   }
   public scrollHorizontal(scrollLeft: number) {
     this.scrollLeft = scrollLeft;

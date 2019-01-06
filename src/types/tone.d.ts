@@ -159,6 +159,7 @@ declare module 'tone' {
     frequency: TickSignal;
     seconds: number;
     ticks: number;
+    state: TransportState;
     setTicksAtTime(ticks: number, time: _TimeArg): void;
     getSecondsAtTime(time: _TimeArg): number;
     getStateAtTime(time: _TimeArg): TransportState;

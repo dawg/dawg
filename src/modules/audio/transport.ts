@@ -1,4 +1,5 @@
 import Tone, { _TimeArg } from 'tone';
+import { ContextTime } from './types';
 
 interface TransportEvents {
   start: number;
@@ -127,13 +128,13 @@ export default class Transport extends Tone.Emitter<TransportEvents> {
   }
 
 
-  public stop(time: number) {
+  public stop(time: ContextTime) {
     this.clock.stop(time);
     return this;
   }
 
 
-  public pause(time: number) {
+  public pause(time: ContextTime) {
     this.clock.pause(time);
     return this;
   }
