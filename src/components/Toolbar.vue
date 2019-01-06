@@ -1,6 +1,6 @@
 <template>
   <v-toolbar 
-    class="secondary" 
+    class="secondary toolbar" 
     :height="height" 
     :style="`padding-left: ${offset}px; border-bottom: 1px solid`"
   >
@@ -40,7 +40,7 @@ import TimeDisplay from '@/components/TimeDisplay.vue';
 export default class Toolbar extends Vue {
   @Prop(Number) public height!: number;
   @Prop(Number) public offset!: number;
-  public title = 'Vuesic';
+  public title = 'Vusic';
   public time = {
     mine: 0,
     sec: 0,
@@ -70,4 +70,7 @@ export default class Toolbar extends Vue {
 
   .small-text
     font-size: .5em
+
+  .toolbar
+    box-shadow: none
 </style>

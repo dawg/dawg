@@ -1,236 +1,415 @@
 <template>
-  <v-stage :config="canvasConfig">
-    <v-layer>
-      <div v-for="(note, row) in notes" :key="note.value">
-        <template v-for="col in totalSixteenths">
-          <v-rect
-              :key="col"
-              :config="rectConfig(row, col - 1, note.color)"
-              @click="add(row, col - 1)"
-          ></v-rect>
-        </template>
+  <div class="sequencer">
+    <!-- 
+      We need this child element for scroll reasons.
+      See https://stackoverflow.com/questions/16670931/hide-scroll-bar-but-while-still-being-able-to-scroll
+     -->
+    <div class="sequencer-child" @scroll="scroll" ref="scroller">
+      <div class="select-area" :style="selectStyle"></div>
+      <div 
+        class="layer rows" 
+        ref="rows" 
+        :style="`height: ${allKeys.length * noteHeight}px`"
+      >
+        <sequencer-row
+          v-for="key in allKeys" 
+          :key="key.id"
+          :id="key.id"
+          :total-beats="displayBeats"
+          @click="add"
+          @mousedown="selectStart"
+        ></sequencer-row>
       </div>
-    </v-layer>
-    <v-layer>
-      <template v-for="col in totalSixteenths">
-        <v-line :config="borderConfig(col)" :key="col"></v-line>
-      </template>
-    </v-layer>
-    <v-layer>
-      <template v-for="(note, i) in value">
-        <!--suppress JSUnresolvedVariable -->
-        <note
-            :key="i"
-            :height="noteHeight"
-            :width="noteWidth"
-            :x="note.x"
-            :y="note.y"
-            @contextmenu="(e) => remove(e, i)"
-            @mousedown="addListeners($event, note)"
-            @input="changeDefault"
-            v-model="note.length"
-        ></note>
-      </template>
-    </v-layer>
-  </v-stage>
+      <div :style="sequencerStyle" class="layer lines" ref="beatLines"></div>
+      <note
+        v-for="(note, i) in notes"
+        :key="i"
+        :start="note.time"
+        :id="note.id"
+        :selected="note.selected"
+        style="position: absolute; z-index: 2"
+        @contextmenu="remove($event, i)"
+        @mousedown="clickNote($event, i)"
+        @input="changeDefault"
+        v-model="note.length"
+      ></note>
+      <progression
+        :loop-start="loopStart"
+        :loop-end="loopEnd"
+        :progress="progress"
+        class="progress-bar"
+      ></progression>
+      <div 
+        class="loop-background loop-background--left" 
+        :style="leftStyle"
+      ></div>
+      <div 
+        class="loop-background loop-background--right" 
+        :style="rightStyle"
+      ></div>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Mixins } from 'vue-property-decorator';
-import { Draggable, PX } from '@/mixins';
+import { Component, Prop, Mixins, Inject } from 'vue-property-decorator';
+import { Draggable } from '@/mixins';
+import { Keys } from '@/keys';
 import { FactoryDictionary } from 'typescript-collections';
-import { notes, range, BLACK, WHITE } from '@/utils';
-import Note from '@/components/Note.vue';
+import { allKeys, range, copy, Nullable } from '@/utils';
+import NoteComponent from '@/components/Note.vue';
+import { Note } from '@/types';
+import BeatLines from '@/components/BeatLines';
+import SequencerRow from '@/components/SequencerRow.vue';
+import Progression from '@/components/Progression.vue';
 
-interface Lookup {
-  [key: string]: NoteInfo;
-}
-
-interface Colors {
-  [key: string]: string;
-}
-
-interface NoteInfo {
-  row: number;
-  col: number;
-  index: number;
-  value: string;
-  length: number;
-}
-
-interface BasicNoteInfo {
-  value: string;
-  color: string;
+interface EnhancedNote extends Note {
+  selected: boolean;
 }
 
 @Component({
-  components: { Note },
+  components: { Note: NoteComponent, SequencerRow, Progression },
 })
-export default class Sequencer extends Mixins(Draggable, PX) {
-  @Prop({ type: Number, required: true }) public noteHeight!: number;
-  @Prop({ type: Number, required: true }) public noteWidth!: number;
-  @Prop(Number) public width!: number;
-  @Prop(Number) public height!: number;
-  @Prop(Array) public value!: any[];
-  @Prop({ type: String, default: '#21252b' }) public blackColor!: string;
-  @Prop({ type: String, default: '#282c34' }) public whiteColor!: string;
+export default class Sequencer extends Mixins(Draggable, BeatLines) {
+  @Inject() public noteHeight!: number;
+  @Inject() public stepsPerBeat!: number;
+  @Prop(Array) public value?: Note[];  // TODO Change value to something else (initial maybe?)
   @Prop({ type: Number, default: 1 }) public defaultLength!: number;
-  @Prop({ type: Number, required: true }) public measures!: number;
+  @Prop({ type: Number, default: 0.25 }) public snap!: number;
 
-  public lineColor = '#000';
-  public quarters = 4;
-  public sixteenths = 4;
-  public lookup: Lookup = {};
+  @Prop({ type: Number, required: true }) public loopEnd!: number | null;
+  @Prop({ type: Number, required: true }) public loopStart!: number | null;
+
+  // These values should only be set if there is a loop on the timeline
+  @Prop(Nullable(Number)) public setLoopEnd!: number | null;
+  @Prop(Nullable(Number)) public setLoopStart!: number | null;
+  @Prop({ type: Number, required: true }) public progress!: number;
+
+
+  public notes: EnhancedNote[] = [];
   public cursor = 'move';
-  public default = this.defaultLength;
-  public octaves = [4, 5];
-  public farthest = [];
+  public default = this.defaultLength;  // To avoid mutating a prop
+  public rows!: HTMLElement;
+  public selectStartEvent: MouseEvent | null = null;
+  public selectCurrentEvent: MouseEvent | null = null;
+  public holdingShift = false;
+  public allKeys = allKeys;
+  public minDisplayMeasures = 4;
+  public noteLoopEnd: number | null = null;
 
-  get canvasConfig() {
+  public scroll(e: UIEvent) {
+    // This only handles horizontal scrolls!
+    const scroller = this.$refs.scroller as HTMLElement;
+    this.$emit('scroll-horizontal', scroller.scrollLeft);
+  }
+  get sequencerStyle() {
     return {
-      height: this.height || this.notes.length * this.noteHeight,
-      width: this.width || this.totalSixteenths * this.noteWidth,
+      // TODO This may not be needed
+      width: `${this.displayBeats * this.pxPerBeat}px`,
+      height: `${this.allKeys.length * this.noteHeight}px`,
     };
   }
-  get colorLookup(): Colors {
-    return { [BLACK]: this.blackColor, [WHITE]: this.whiteColor };
+  get leftStyle() {
+    if (this.setLoopStart) {
+      return {
+        width: `${this.setLoopStart * this.pxPerBeat}px`,
+      };
+    }
   }
-  get totalSixteenths() {
-    // we always render 1 extra measure
-    return (this.measures + 1) * this.quarters * this.sixteenths;
+  get rightStyle() {
+    if (this.setLoopEnd) {
+      const left = this.setLoopEnd * this.pxPerBeat;
+      return {
+        left: `${left}px`,
+        width: `${this.displayBeats * this.pxPerBeat - left}px`,
+      };
+    }
   }
-  get notes() {
-    const n: BasicNoteInfo[] = [];
-    this.octaves.map((octave) => {
-      notes.map((note) => n.push({
-        color: note.color,
-        value: note.value + octave,
-      }));
-    });
-    return n.reverse();
+  get displayBeats() {
+    return Math.max(
+      this.minDisplayMeasures * this.beatsPerMeasure,
+      this.noteLoopEnd || 0,
+    ) * this.stepsPerBeat;
   }
-
-  public add(row: number, col: number) {
-    const noteBar = {
-      length: this.default,
-      row,
-      col,
-      index: this.value.length,
-      ...this.compute(row, col),
-    };
-
-    this.lookup[`${row}-${col}`] = noteBar;
-    this.$emit('input', [...this.value, noteBar]);
-    this.$emit('added', noteBar);
-    this.checkMeasure(col);
-  }
-  public rectConfig(row: number, col: number, color: string) {
-    return {
-      height: this.noteHeight,
-      width: this.noteWidth,
-      fill: this.colorLookup[color],
-      x: col * this.noteWidth,
-      y: row * this.noteHeight,
-    };
-  }
-  public borderConfig(col: number) {
-    let strokeWidth;
-    if (col % (this.quarters * this.sixteenths) === 0) {
-      strokeWidth = 2.4;
-    } else if (col % this.sixteenths === 0) {
-      strokeWidth = 1.5;
-    } else {
-      strokeWidth = 0.4;
+  public get selectStyle() {
+    if (!this.selectStartEvent) { return; }
+    if (!this.selectCurrentEvent) {
+      this.notes.forEach((note) => note.selected = false);
+      return;
     }
 
-    const start = [col * this.noteWidth, 0];
-    const end = [col * this.noteWidth, (this.notes.length) * this.noteHeight];
+    const boundingRect = this.rows.getBoundingClientRect();
+
+    const left = Math.min(
+      this.selectStartEvent.clientX - boundingRect.left,
+      this.selectCurrentEvent.clientX - boundingRect.left,
+    );
+    const top = Math.min(
+      this.selectStartEvent.clientY - boundingRect.top,
+      this.selectCurrentEvent.clientY - boundingRect.top,
+    );
+
+    const width = Math.abs(this.selectCurrentEvent.clientX - this.selectStartEvent.clientX);
+    const height = Math.abs(this.selectCurrentEvent.clientY - this.selectStartEvent.clientY);
+
+    // these are exact numbers BTW, not integers
+    const minBeat = left / this.pxPerBeat;
+    const minRow = top / this.noteHeight;
+    const maxBeat = (left + width) / this.pxPerBeat;
+    const maxRow = (top + height) / this.noteHeight;
+
+    this.notes.forEach((note) => {
+      // Check if there is any overlap between the rectangles
+      // https://www.geeksforgeeks.org/find-two-rectangles-overlap/
+      if (minRow > note.id + 1 || note.id > maxRow) {
+        note.selected = false;
+      } else if (minBeat > note.time + note.length || note.time > maxBeat) {
+        note.selected = false;
+      } else {
+        note.selected = true;
+      }
+    });
+
     return {
-      points: [...start, ...end],
-      strokeWidth,
-      stroke: '#000',
+      position: 'absolute',
+      borderRadius: '5px',
+      border: 'solid 1px red',
+      backgroundColor: 'rgba(255, 51, 51, 0.3)',
+      left: `${left}px`,
+      top: `${top}px`,
+      height: `${height}px`,
+      width: `${width}px`,
+      zIndex: 3,
     };
   }
-  public move(e: MouseEvent, note: NoteInfo) {
-    const row = Math.floor(e.clientY / this.noteHeight);
-    const col = Math.floor(e.clientX / this.noteWidth);
+  public selectStart(e: MouseEvent) {
+    this.selectStartEvent = e;
+    window.addEventListener('mousemove', this.selectMove);
+    window.addEventListener('mouseup', this.selectEnd);
+  }
+  public selectMove(e: MouseEvent) {
+    this.selectCurrentEvent = e;
+  }
+  public selectEnd() {
+    this.selectStartEvent = null;
+    this.selectCurrentEvent = null;
+    window.removeEventListener('mousemove', this.selectMove);
+    window.removeEventListener('mouseup', this.selectEnd);
+  }
 
-    const oldNote = this.get(note.row, note.col);
-    const newNote = {
-      ...oldNote, row, col, ...this.compute(row, col),
+  public add(id: number, e: MouseEvent) {
+    const left = this.$el.getBoundingClientRect().left;
+    const x = e.clientX - left;
+    let time = x / this.pxPerBeat;
+    time = Math.floor(time / this.snap) * this.snap;
+    this.$log.debug(x, e.clientX, left, time);
+
+    const note = {
+      length: this.default,
+      selected: false,
+      id,
+      time,
     };
 
-    this.set(row, col, newNote);
+    this.notes.push(note);
+    this.$emit('added', note);
+    this.checkLoopEnd();
+  }
+  public move(e: MouseEvent, i: number) {
+    const rect = this.rows.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    let time = x / this.pxPerBeat;
+    time = Math.floor(time / this.snap) * this.snap;
 
-    this.$set(this.value, oldNote.index, newNote);
-    this.$emit('input', this.value);
-    this.$emit('added', newNote);
-  }
-  public get(row: number, col: number) {
-    return this.lookup[`${row}-${col}`];
-  }
-  public set(row: number, col: number, value: NoteInfo) {
-    this.lookup[`${row}-${col}`] = value;
+    const y = e.clientY - rect.top;
+    const row = Math.floor(y / this.noteHeight);
+
+    const oldNote = this.notes[i];
+    if (row === oldNote.id && time === oldNote.time) { return; }
+
+    const timeDiff = time - oldNote.time;
+    const rowDiff = row - oldNote.id;
+
+    let notesToMove: Array<[EnhancedNote, number]>;
+    if (oldNote.selected) {
+      notesToMove = this.notes.map((note, ind) => {
+        return [note, ind] as [EnhancedNote, number];
+      }).filter(([note, _]) => note.selected);
+    } else {
+      notesToMove = [[oldNote, i]];
+    }
+
+    notesToMove.forEach(([note, ind]) => {
+      const newTime = note.time + timeDiff;
+      const newNote = {
+        length: note.length,
+        selected: note.selected,
+        time: newTime,
+        id: note.id + rowDiff,
+      };
+
+      this.$set(this.notes, ind, newNote);
+      this.$emit('removed', note);
+      this.$emit('added', newNote);
+      this.checkLoopEnd();
+    });
   }
   public remove(e: MouseEvent, i: number) {
     e.preventDefault();
+    this.removeAtIndex(i);
+  }
+  public removeAtIndex(i: number) {
+    const item = this.notes[i];
+    this.$delete(this.notes, i);
+    this.$emit('removed', item);
+    this.checkLoopEnd();
+  }
+  public checkLoopEnd() {
+    let maxTime = Math.max(...this.notes.map((note) => note.time), 0);
 
-    const toRemove = this.value[i];
-    this.$delete(this.value, i);
-    this.value.slice(0, i).map((note) => { note.index -= 1; });
+    // Add a tiny amount to max time so that ceil will push to next number
+    // if maxTime is a whole number
+    maxTime = maxTime + 0.0000001;
+    const noteLoopEnd = Math.ceil(maxTime / this.beatsPerMeasure) * this.beatsPerMeasure;
 
-    // TODO XXX !!!
-    // if (this.farthest.length || toRemove.col === this.farthest[this.farthest.length - 1]) {
-    //   this.farthest.splice();
-    // }
-
-    this.$emit('input', this.value);
-    this.$emit('removed', toRemove);
+    this.$log.debug(`noteLoopEnd -> ${noteLoopEnd}`);
+    if (noteLoopEnd !== this.noteLoopEnd) {
+      this.$emit('loop-end', noteLoopEnd);
+      this.noteLoopEnd = noteLoopEnd;
+    }
   }
   public changeDefault(length: number) {
     this.default = length;
   }
-  public compute(row: number, col: number) {
-    let rem = col;
-    const sixteenths = rem % this.sixteenths; rem = Math.floor(rem / this.sixteenths);
-    const quarters = rem % this.quarters; const bars = Math.floor(rem / this.quarters);
-    const time = `${bars}:${quarters}:${sixteenths}`;
-    return {
-      x: col * this.noteWidth,
-      y: row * this.noteHeight,
-      time,
-      value: this.notes[row].value,
+  public clickNote(e: MouseEvent, i: number) {
+    const note = this.notes[i];
+    if (!note.selected) { this.notes.forEach((n) => n.selected = false); }
+
+    const createNote = (oldNote: EnhancedNote) => {
+      const newNote = copy(oldNote);
+
+      // We do this because `newNew` will have a heigher z-index
+      // Thus, it will be displayed on top (which we want)
+      oldNote.selected = false;
+
+      this.notes.push(newNote);
+      this.$emit('added', newNote);
     };
-  }
-  public checkMeasure(col: number) {
-    let measureValue = col / (this.quarters * this.sixteenths);
-    if (measureValue === this.measures) { this.$emit('update:measures', measureValue + 1); } else {
-      measureValue = Math.ceil(measureValue);
-      if (measureValue > this.measures) {
-        this.$emit('update:measures', measureValue);
-      } else if (measureValue < this.measures) {
-        this.$emit('update:measures', measureValue);
+
+    let targetIndex = i;
+    if (this.holdingShift) {
+      let selected: EnhancedNote[];
+
+      // If selected, copy all selected. If not, just copy the note that was clicked.
+      if (note.selected) {
+        selected = this.notes.filter((n) => n.selected && n !== note);
+        targetIndex = this.notes.length; // A copy of `note` will be created at this index
+        createNote(note);
+      } else {
+        selected = [note];
       }
+
+      selected.forEach(createNote);
     }
+    this.addListeners(e, targetIndex);
+  }
+  public keydown(e: KeyboardEvent) {
+    if (e.keyCode === Keys.SHIFT) {
+      this.holdingShift = true;
+    } else if (e.keyCode === Keys.DELETE || e.keyCode === Keys.BACKSPACE) {
+      // Slice and reverse since we will be deleting from the array as we go
+      const lastIndex = this.notes.length - 1;
+      this.notes.slice().reverse().forEach((note, i) => {
+        if (note.selected) {
+          this.removeAtIndex(lastIndex - i);
+        }
+      });
+    }
+  }
+  public keyup(e: KeyboardEvent) {
+    if (e.keyCode === Keys.SHIFT) { this.holdingShift = false; }
   }
 
   public mounted() {
-    this.value.map((note) => {
-      this.$emit('added', note);
-      this.checkMeasure(note.col);
+    this.rows = this.$refs.rows as HTMLElement;
+    // Make a shallow copy so we don't alter the prop
+    const notes = this.value ? this.value.slice() : [];
+    this.notes = notes.map((note) => {
+      return {
+        ...note,
+        selected: false,
+      };
     });
+
+    this.notes.map((note) => {
+      this.$emit('added', note);
+    });
+    this.checkLoopEnd();
+
+    window.addEventListener('keydown', this.keydown);
+    window.addEventListener('keyup', this.keyup);
+  }
+
+  public destroyed() {
+    window.removeEventListener('keydown', this.keydown);
+    window.removeEventListener('keyup', this.keyup);
   }
 }
 </script>
 
 <style scoped lang="sass">
-  .sequencer
-    background: #303030
-    display: inline-block
+.sequencer
+  width: 100%
+  background: #303030
+  display: inline-block
+  position: relative
 
-  .note
-    border-bottom: solid 0.5px #000
+.note
+  border-bottom: solid 0.5px #000
 
-  .measure, .section
-    display: flex
+.measure, .section
+  display: flex
+
+.rows
+  display: flex
+  flex-direction: column
+  position: absolute
+
+.lines
+  height: 100%
+  z-index: 1 
+  position: relative
+  pointer-events: none
+
+.notes
+  position: absolute
+  top: 0
+
+.sequencer-child
+  position: relative
+  overflow-x: scroll
+
+.progress-bar
+  width: 1px
+  background-color: #ffa
+  box-shadow: -1px 0 2px #ffa
+  z-index: 2
+  top: 0
+  bottom: 0
+  pointer-events: none
+
+.loop-background
+  opacity: 0
+  background-color: #000
+  transition: .2s opacity
+  opacity: 0.2
+  position: absolute
+  // TODO duplicate
+  z-index: 2
+  top: 0
+  bottom: 0
+  pointer-events: none
+
+.loop-background--left
+  left: 0
 </style>

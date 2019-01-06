@@ -12,7 +12,7 @@
     "serve:electron": "vue-cli-service serve:electron",
     "postinstall": "electron-builder install-app-deps",
     "serve:storybook": "vue-cli-service serve:storybook -p 6006 -c config/storybook",
-    "build:storybook": "vue-cli-service build:storybook -c config/storybook"
+    "build:storybook": "vue-cli-service build:storybook -c config/storybook -o docs"
   },
   "dependencies": {
     "electron-context-menu": "^0.10.0",
@@ -25,16 +25,21 @@
     "vue-class-component": "^6.0.0",
     "vue-draggable-resizable": "^1.7.1",
     "vue-konva": "^1.0.6",
+    "vue-perfect-scrollbar": "^0.1.0",
     "vue-property-decorator": "^7.0.0",
     "vue-router": "^3.0.1",
     "vue-shortkey": "^3.1.6",
+    "vuejs-logger": "^1.5.3",
     "vuetify": "^1.2.3",
-    "vuex": "^3.0.1"
+    "vuex": "^3.0.1",
+    "resize-observer-polyfill": "^1.5.0",
+    "lodash.throttle": "^4.1.1"
   },
   "devDependencies": {
     "@storybook/addon-actions": "4.0.0-alpha.20",
     "@storybook/addon-links": "4.0.0-alpha.20",
     "@types/jest": "^23.1.4",
+    "@types/lodash.throttle": "^4.1.4",
     "@types/storybook__addon-actions": "^3.4.1",
     "@types/storybook__vue": "^3.3.0",
     "@types/tinycolor2": "^1.4.1",

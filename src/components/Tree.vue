@@ -12,13 +12,13 @@
       <div class="white--text label">{{ label }}</div>
     </div>
     <tree
-        v-if="showChildren"
-        v-for="folder in folders"
-        :key="folder"
-        :label="folder"
-        :children="children[folder]"
-        :depth="depth + 1">
-    </tree>
+      v-if="showChildren"
+      v-for="folder in folders"
+      :key="folder"
+      :label="folder"
+      :children="children[folder]"
+      :depth="depth + 1"
+    ></tree>
   </div>
 </template>
 
@@ -66,6 +66,7 @@ export default class Tree extends Vue {
 <style lang="sass" scoped>
 .label
   margin-left: 8px
+  user-select: none
 
 .node:hover
   background: rgba(255,255,255,0.12)

@@ -1,12 +1,18 @@
 <template>
   <div class="octave-container">
     <div class="octave">
-      <key
-          v-for="(note, index) in notes"
-          :key="note"
-          :note="note"
+      <div
+        v-for="(key, index) in allKeys"
+        :key="key.value"
+        class="note-wrapper"
+      >
+        <key
+          :value="key.value"
           :synth="synth"
-          :border="borderBottom || index !== notes.length - 1"/>
+          :border="index !== allKeys.length - 1"
+          @press="play"
+        ></key>
+      </div>
     </div>
   </div>
 </template>
@@ -15,28 +21,25 @@
 import Vue from 'vue';
 import Tone from 'tone';
 import { Component, Prop } from 'vue-property-decorator';
-import { notes } from '@/utils';
+import { allKeys } from '@/utils';
 import Key from '@/components/Key.vue';
 
-const synth = new Tone.Synth().toMaster();
-
 @Component({
-  components: {Key},
+  components: { Key },
 })
 export default class Piano extends Vue {
-  @Prop({default: 4}) public octave!: number;
-  @Prop({default: false}) public borderBottom!: boolean;
-  public synth = synth;
-
-  get notes() {
-    return notes.map((n) => `${n.value}${this.octave}`).reverse();
+  @Prop({ type: Object, required: false }) public synth?: Tone.Synth;
+  public allKeys = allKeys;
+  public play(value: string) {
+    if (this.synth) {
+      // TODO This should be longer. Actually, I'm not entirely sure what to do.
+      this.synth.triggerAttackRelease(value, '8n');
+    }
   }
 }
 </script>
 
 <style scoped lang="sass">
-  .octave
-    width: 250px
-    box-shadow: 0 0 40px -5px rgba(0,0,0,0.4)
-    display: inline-block
+.note-wrapper
+  position: relative
 </style>

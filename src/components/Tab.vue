@@ -2,7 +2,7 @@
   <section 
     v-show="isActive"
     :aria-hidden="!isActive"
-    class="tabs-component-panel"
+    class="tab"
     :id="name"
     role="tabpanel"
   >
@@ -19,3 +19,9 @@ export default class Tab extends Vue {
   public isActive = false;
 }
 </script>
+
+
+<style lang="sass" scoped>
+.tab
+  height: 100%
+</style>

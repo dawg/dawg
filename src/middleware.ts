@@ -8,6 +8,7 @@ import 'vue-awesome/icons';
 import '@/styles/global.sass';
 import Ico from '@/components/Ico.vue';
 import Theme from '@/theme';
+import VueLogger from 'vuejs-logger';
 
 const middleware = () => {
   Vue.use(Vuetify, {theme: false});
@@ -16,6 +17,9 @@ const middleware = () => {
   Vue.use(VueShortkey);
   Vue.use(VueKonva);
   Vue.component('ico', Ico);
+  Vue.use(VueLogger, {
+    logLevel :  'info',
+  });
 };
 
 export default middleware;

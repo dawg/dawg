@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="base-tabs">
     <slot></slot>
   </div>
 </template>
@@ -24,12 +24,12 @@ export default class Tabs extends Vue {
     this.tabs = [...this.$children as Tab[]];
     this.selectTab(this.firstTab.name);
   }
-  public selectTab(name?: string, event?: MouseEvent) {
-    if (event !== undefined) {
+  public selectTab(name?: string | null, event?: MouseEvent) {
+    if (event) {
       event.preventDefault();
     }
 
-    if (name === undefined) {
+    if (!name) {
       return;
     }
 
@@ -48,3 +48,9 @@ export default class Tabs extends Vue {
   }
 }
 </script>
+
+
+<style lang="sass" scoped>
+.base-tabs
+  height: 100%
+</style>
