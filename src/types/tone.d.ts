@@ -12,12 +12,15 @@ type PrimitiveTime = string | number;
 type PrimitiveTicks = number;
 
 declare module 'tone' {
+  var context: Context;
+
   class Tone {
     constructor(inputs?: number, outputs?: number);
-    context: AudioContext;
+    context: Context;
     toFrequency(freq: any): number;
     toSeconds(time?: _TimeArg): number;
     toTicks(time: _TimeArg): number;
+    
 
     static connectSeries(...args: any[]): Tone;
     static dbToGain(db: number): number;
@@ -175,6 +178,11 @@ declare module 'tone' {
     dispose(): this;
   }
 
+  class Context extends Emitter<{tick: any}> {
+    resume(): Promise<void>;
+    now(): number;
+  }
+
   class Convolver extends Effect {
       constructor(url: any); //TODO: Change any to 'string | AudioBuffer' when available
       buffer: AudioBuffer;
@@ -299,15 +307,15 @@ declare module 'tone' {
   }
 
   class FMSynth extends Monophonic {
-      constructor(options?: any);
-      carrier: MonoSynth;
-      frequency: Signal;
-      harmonicity: number;
-      modulationIndex: number;
-      modulator: MonoSynth;
-      dispose(): this;
-      triggerEnvelopeAttack(time?: _TimeArg, velocity?: number): FMSynth;
-      triggerEnvelopeRelease(time?: _TimeArg): FMSynth;
+    constructor(options?: any);
+    carrier: MonoSynth;
+    frequency: Signal;
+    harmonicity: number;
+    modulationIndex: number;
+    modulator: MonoSynth;
+    dispose(): this;
+    triggerEnvelopeAttack(time?: _TimeArg, velocity?: number): FMSynth;
+    triggerEnvelopeRelease(time?: _TimeArg): FMSynth;
   }
 
   class Follower extends Tone {
@@ -318,20 +326,20 @@ declare module 'tone' {
   }
 
   class Freeverb extends Effect {
-      constructor(roomSize?: any, dampening?: number);
-      dampening: Signal;
-      roomSize: Signal;
-      dispose(): this;
+    constructor(roomSize?: any, dampening?: number);
+    dampening: Signal;
+    roomSize: Signal;
+    dispose(): this;
   }
 
   class TimeBase {
-      set ( exprString: string ): TimeBase;
-      add ( val: _TimeArg, units?: string ): TimeBase;
-      sub ( val: _TimeArg, units?: string ): TimeBase;
-      mult ( val: _TimeArg, units?: string ): TimeBase;
-      div ( val: _TimeArg, units?: string ): TimeBase;
-      eval ( ): number;
-      dispose: TimeBase;
+    set ( exprString: string ): TimeBase;
+    add ( val: _TimeArg, units?: string ): TimeBase;
+    sub ( val: _TimeArg, units?: string ): TimeBase;
+    mult ( val: _TimeArg, units?: string ): TimeBase;
+    div ( val: _TimeArg, units?: string ): TimeBase;
+    eval ( ): number;
+    dispose: TimeBase;
   }
 
   class Frequency extends TimeBase {
@@ -571,6 +579,11 @@ declare module 'tone' {
       route(channel:any, callback?: (e: any)=>any): void; //todo: string | number
       unroute(channel: any, callback?: (e: any)=>any): void; //todo: string | number;
       dispose(): this;
+  }
+
+  class OfflineContext extends Context {
+    constructor(channels: number, duration: number, sampleRate: number);
+    render(): Promise<void>;
   }
 
   class OmniOscillator extends Source {
@@ -841,6 +854,19 @@ declare module 'tone' {
   class TickSignal extends Signal {
     getDurationOfTicks(ticks: number, time: _TimeArg): void;
     timeToTicks(duration: PrimitiveTime, when?: PrimitiveTime): Ticks;
+    getTicksAtTime(time: PrimitiveTime): PrimitiveTicks;
+    getTimeOfTick(tick: PrimitiveTicks): number;
+  }
+
+  class TickSource extends Tone {
+    frequency: TickSignal;
+    start(time?: PrimitiveTime, offset?: PrimitiveTicks): this;
+    pause(time?: PrimitiveTime): void;
+    stop(time: PrimitiveTime): this;
+    getTicksAtTime(time: PrimitiveTime): PrimitiveTicks;
+    setTicksAtTime(time: PrimitiveTime, offset: PrimitiveTicks): this;
+    forEachTickBetween(startTime: PrimitiveTime, endTime: PrimitiveTime, callback: (time: number, ticks: number) => void): this;
+    dispose(): void;
   }
 
   class Time extends TimeBase {
@@ -849,11 +875,20 @@ declare module 'tone' {
     toBarsBeatsSixteenths(): string;
   }
 
-  class Timeline extends Tone {
-    add(event: TransportEvent): void;
-    forEachAtTime(time: number, callback: (event: TransportEvent) => void): void;
-    forEachFrom(time: number, callback: (event: TransportEvent) => void): void;
-    remove(event: TransportEvent): void;
+  class Timeline<T extends { time: any }> extends Tone {
+    add(event: T): void;
+    get(time: number, comparator?: keyof T): T;
+    forEachAtTime(time: number, callback: (event: T) => void): void;
+    forEachBetween(startTime: number, endTime: number, callback: (e: T) => void): this;
+    forEachFrom(time: number, callback: (event: T) => void): void;
+    remove(event: T): void;
+  }
+
+  class TimelineState extends Timeline<{state: TransportState, time: number}> {
+    constructor(initial: string);
+    cancel(time: number): this;
+    setStateAtTime(state: TransportState, time: number): this;
+    getValueAtTime(time: number): TransportState;
   }
 
   type _TimeArg = string | number | Time;
@@ -898,11 +933,12 @@ declare module 'tone' {
   class TransportEvent extends Tone {
     constructor(transport: _TransportConstructor | null, options: { time: TransportTime, callback: (time: number) => void })
     id: string;
+    time: Ticks;
     invoke(time: number): void;
     dispose(): void;
   }
 
-  type TransportState = 'started' | 'stopped' | 'stopped';
+  type TransportState = 'started' | 'stopped' | 'paused';
 
   class TransportTime extends Time {
     toTicks(): number;

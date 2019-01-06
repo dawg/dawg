@@ -31,8 +31,7 @@ export default class Transport extends Tone.Emitter<TransportEvents> {
   };
 
   private ppq = this.defaults.PPQ;
-  private timeline = new Tone.Timeline();
-  private isTransport = true;
+  private timeline = new Tone.Timeline<Tone.TransportEvent>();
   private scheduledEvents: { [k: string]: Tone.TransportEvent } = {};
   // tslint:disable-next-line:variable-name
   private _timeSignature = this.defaults.timeSignature;
