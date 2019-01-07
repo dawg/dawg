@@ -17,7 +17,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
-import { Note } from '@/models';
+import { Note } from '@/schemas';
 
 @Component
 export default class MiniScore extends Vue {

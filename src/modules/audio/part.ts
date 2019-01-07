@@ -20,7 +20,7 @@ export default class Part<T> {
   private groups: Array<[string, T]> = [];
   // private callback: (time: ContextTime, o: T) => void;
 
-  constructor(private callback: (time: ContextTime, o: T) => void) {
+  constructor() {
     // defaults
     this.bpm = 120;
   }
@@ -44,8 +44,8 @@ export default class Part<T> {
     //
   }
 
-  public add(time: TransportTime, o: T) {
-    const eventId = this.schedule((t) => this.callback(t, o), time);
+  public add(callback: (time: ContextTime, o: T) => void, time: TransportTime, o: T) {
+    const eventId = this.schedule((t) => callback(t, o), time);
     this.groups.push([eventId, o]);
     return this;
   }

@@ -132,8 +132,8 @@ export function MapField<T extends MapFieldSetter>(o: T) {
         return o[name];
       },
       set(value) {
-        // Kick of mutation.
-        o.setValue({key: name, value});
+        // Call the mutation.
+        o.setValue({o, key: name, value});
       },
       enumerable: true,
       configurable: true,
@@ -142,7 +142,7 @@ export function MapField<T extends MapFieldSetter>(o: T) {
 }
 
 export interface MapFieldSetter {
-  setValue<T extends keyof this>(payload: { key: T, value: any }): void;
+  setValue<T, V extends keyof T>(payload: { o: T, key: V, value: any }): void;
 }
 
 export function toTickTime(time: number) {

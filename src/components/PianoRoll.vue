@@ -37,7 +37,7 @@ import Tone from 'tone';
 import Piano from '@/components/Piano.vue';
 import Sequencer from '@/components/Sequencer.vue';
 import Timeline from '@/components/Timeline.vue';
-import { Note } from '@/models';
+import { Note } from '@/schemas';
 import { toTickTime } from '@/utils';
 import { Transform } from 'stream';
 import { Watch } from '@/modules/update';
@@ -48,28 +48,55 @@ export default class PianoRoll extends Vue {
   @Inject() public pxPerBeat!: number;
   @Prop({ type: Object, required: false }) public synth?: Tone.Synth;
   @Prop({ type: Array, required: true }) public value!: Note[];
-  @Prop({ type: Number, required: true }) public loopStart!: number;
-  @Prop({ type: Number, required: true }) public loopEnd!: number;
   @Prop({ type: Boolean, required: true }) public play!: boolean;
   @Prop({ type: Object, required: true }) public part!: Part<Note>;
 
+  public loopStart = 0;
+  public loopEnd = 0;
   public scrollLeft = 0;
   public progress = 0;
   public sequencerLoopEnd = 0;
   public setLoopStart: null | number = null;
   public setLoopEnd: null | number = null;
 
+  public update() {
+    if (this.part.state === 'started') { requestAnimationFrame(this.update); }
+    this.progress = this.part.progress;
+  }
+
+  public added(note: Note) {
+    this.$emit('added', note);
+  }
+
+  public removed(note: Note, i: number) {
+    this.$emit('removed', note, i);
+  }
+
+  public scrollHorizontal(scrollLeft: number) {
+    this.scrollLeft = scrollLeft;
+  }
+
+  public get offset() {
+    return this.scrollLeft / this.pxPerBeat;
+  }
+
+  @Watch<PianoRoll>('part')
+  public resetLoop() {
+    this.setLoopStart = null;
+    this.setLoopEnd = null;
+  }
+
   @Watch<PianoRoll>('setLoopStart')
   public changeLoopStart() {
-    this.$update('loopStart', this.setLoopStart || 0);
+    this.loopStart = this.setLoopStart || 0;
   }
 
   @Watch<PianoRoll>('setLoopEnd')
   public changeLoopEnd() {
     if (this.setLoopEnd) {
-      this.$update('loopEnd', this.setLoopEnd);
+      this.loopEnd = this.setLoopEnd;
     } else {
-      this.$update('loopEnd', this.sequencerLoopEnd);
+      this.loopEnd = this.sequencerLoopEnd;
     }
   }
 
@@ -80,40 +107,25 @@ export default class PianoRoll extends Vue {
     }
   }
 
-  public update() {
-    if (this.part.state === 'started') { requestAnimationFrame(this.update); }
-    this.progress = this.part.progress;
-  }
-
   @Watch<PianoRoll>('play', { immediate: true })
   public onPlay() {
     if (this.play) {
       this.update();
     }
   }
-  public added(note: Note) {
-    this.$emit('added', note);
-  }
-  public removed(note: Note, i: number) {
-    this.$emit('removed', note, i);
-  }
+
   @Watch<PianoRoll>('loopEnd', { immediate: true })
   public onLoopEndChange() {
     this.$log.debug(`loodEnd being set to ${this.loopEnd}`);
     this.part.loopEnd = toTickTime(this.loopEnd);
   }
+
   @Watch<PianoRoll>('loopStart', { immediate: true })
   public onLoopStartChange() {
     this.$log.debug(`loopStart being set to ${this.loopStart}`);
     const time = toTickTime(this.loopStart);
     this.part.seconds = new Tone.Time(time).toSeconds();
     this.part.loopStart = time;
-  }
-  public scrollHorizontal(scrollLeft: number) {
-    this.scrollLeft = scrollLeft;
-  }
-  public get offset() {
-    return this.scrollLeft / this.pxPerBeat;
   }
 }
 </script>

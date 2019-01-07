@@ -15,6 +15,7 @@
     "build:storybook": "vue-cli-service build:storybook -c config/storybook -o docs"
   },
   "dependencies": {
+    "cerialize": "^0.1.18",
     "electron-context-menu": "^0.10.0",
     "io-ts": "^1.5.1",
     "konva": "^2.3.0",

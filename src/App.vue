@@ -99,8 +99,6 @@
                       v-model="notes"
                       :part="part"
                       :synth="selectedSynth"
-                      :loop-start.sync="loopStart"
-                      :loop-end.sync="loopEnd"
                       :play="play"
                       @added="added"
                       @removed="removed"
@@ -151,13 +149,13 @@ import Notifications from '@/modules/notification/Notifications.vue';
 import Synths from '@/components/Synths.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { remote, ipcRenderer } from 'electron';
-import { Pattern, Instrument, Project, ValidateProject, Score, Note } from '@/models';
-import project from '@/project';
+import { project } from '@/store';
 import { MapField, toTickTime, allKeys, Keys } from '@/utils';
 import { Left } from 'fp-ts/lib/Either';
 import Cache from '@/cache';
-import Instru from '@/Instru';
 import Part from '@/modules/audio/part';
+import io from '@/modules/io';
+import { Pattern, Score, Project, Note, Instrument } from '@/schemas';
 
 const { dialog } = remote;
 
@@ -185,7 +183,7 @@ const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
   },
 })
 export default class App extends Vue {
-  @MapField(project) public bpm!: number;
+  // @MapField(project) public bpm!: number;
 
   public toolbarHeight = 64;
   public sidebarTabTitle = '';
@@ -196,12 +194,8 @@ export default class App extends Vue {
   public cache: Cache | null = null;
   public tone = Tone.Transport;
 
-  public loopStart = 0;
-  public loopEnd = 0;
   public play = false;
-  public part = new Part(this.callback);
-
-  public instruments: Instru[] = [];
+  public part = new Part<Note>();
 
   public $refs!: {
     tabs: BaseTabs,
@@ -224,17 +218,13 @@ export default class App extends Vue {
     this.$refs.tabs.selectTab(this.cache.openedSideTab);
 
     this.part.loop = true;
-    this.part.loopStart = '0:2:0';
-    this.part.loopEnd = '1:0:0';
+    // this.part.loopStart = '0:2:0';
+    // this.part.loopEnd = '1:0:0';
 
     // this.part.start();
     // this.part.start(1);
     // this.part.loop = true;
     // Tone.Transport.bpm.value = 93;
-
-    this.instruments = this.project.instruments.map((instrument) => {
-      return new Instru(instrument);
-    });
 
     window.addEventListener('keypress', this.keydown);
   }
@@ -255,8 +245,8 @@ export default class App extends Vue {
     return this.selectedScore.notes;
   }
   get instrumentLookup() {
-    const instruments: {[k: string]: Instru} = {};
-    this.instruments.forEach((instrument) => {
+    const instruments: {[k: string]: Instrument} = {};
+    this.project.project.instruments.forEach((instrument) => {
       instruments[instrument.name] = instrument;
     });
     return instruments;
@@ -290,7 +280,7 @@ export default class App extends Vue {
       }
     }
 
-    const encoded = ValidateProject.encode(this.$store.state.project);
+    const encoded = io.serialize(project);
     fs.writeFileSync(
       this.cache.openedFile,
       JSON.stringify(encoded, null, 4),
@@ -321,13 +311,14 @@ export default class App extends Vue {
       return;
     }
 
-    const result = ValidateProject.decode(contents);
-    if (result instanceof Left) {
-      this.$notify.error('Unable to decode file.');
-      return;
-    }
+    const result = io.deserialize(contents, Project);
+    // TODO No error handling
+    // if (result instanceof Left) {
+    //   this.$notify.error('Unable to decode file.');
+    //   return;
+    // }
 
-    project.reset(result.value);
+    project.reset(result);
   }
   public playPattern() {
     this.part.start();
@@ -347,7 +338,7 @@ export default class App extends Vue {
   public added(note: Note) {
     const time = toTickTime(note.time);
     this.$log.debug(`Adding note at ${note.time} -> ${time}`);
-    this.part.add(time, note);
+    this.part.add(this.callback, time, note);
   }
   public removed(note: Note, i: number) {
     // const time = toTickTime(note.time);

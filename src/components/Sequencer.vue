@@ -58,7 +58,7 @@ import { Keys } from '@/utils';
 import { FactoryDictionary } from 'typescript-collections';
 import { allKeys, range, copy, Nullable } from '@/utils';
 import NoteComponent from '@/components/Note.vue';
-import { Note } from '@/models';
+import { Note } from '@/schemas';
 import BeatLines from '@/components/BeatLines';
 import SequencerRow from '@/components/SequencerRow.vue';
 import Progression from '@/components/Progression.vue';

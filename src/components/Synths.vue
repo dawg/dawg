@@ -15,7 +15,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import Tone from 'tone';
 import Synth from '@/components/Synth.vue';
 import { Nullable } from '@/utils';
-import { Score, Instrument, Pattern } from '@/models';
+import { Score, Instrument, Pattern } from '@/schemas';
 import { Watch } from '@/modules/update';
 
 @Component({ components: { Synth } })

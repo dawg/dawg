@@ -14,7 +14,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { Pattern } from '@/models';
+import { Pattern } from '@/schemas';
 import { Nullable } from '@/utils';
 
 @Component

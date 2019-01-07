@@ -63,7 +63,7 @@ import Knob from '@/components/Knob.vue';
 import DotButton from '@/components/DotButton.vue';
 import MiniScore from '@/components/MiniScore.vue';
 import { Component, Prop, Watch } from 'vue-property-decorator';
-import { Note } from '@/models';
+import { Note } from '@/schemas';
 
 const TYPES = ['pwm', 'sine', 'triangle', 'fatsawtooth', 'square'];
 
