@@ -20,7 +20,7 @@
         @added="added"
         @removed="removed"
         @scroll-horizontal="scrollHorizontal"
-        @loop-end="sequencerLoopEnd = $event"
+        :sequencer-loop-end.sync="sequencerLoopEnd"
         :loop-start="loopStart"
         :loop-end="loopEnd"
         :set-loop-start="setLoopStart"
@@ -103,7 +103,7 @@ export default class PianoRoll extends Vue {
   @Watch<PianoRoll>('sequencerLoopEnd', { immediate: true })
   public changeSeqLoopEnd() {
     if (!this.setLoopEnd) {
-      this.$update('loopEnd', this.sequencerLoopEnd);
+      this.loopEnd = this.sequencerLoopEnd;
     }
   }
 

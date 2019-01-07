@@ -8,8 +8,8 @@ const deserialize = <T>(o: any, c: ConstructorOf<T>): T => {
   return Deserialize(o, c);
 };
 
-const serialize = (o: any): any => {
-  return Serialize(o);
+const serialize = <T>(o: T, c: ConstructorOf<T>): any => {
+  return Serialize(o, c);
 };
 
 export default {

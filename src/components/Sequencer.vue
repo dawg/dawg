@@ -75,8 +75,11 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   @Prop({ type: Number, default: 1 }) public defaultLength!: number;
   @Prop({ type: Number, default: 0.25 }) public snap!: number;
 
-  @Prop({ type: Number, required: true }) public loopEnd!: number | null;
-  @Prop({ type: Number, required: true }) public loopStart!: number | null;
+  @Prop({ type: Number, required: true }) public loopEnd!: number;
+  @Prop({ type: Number, required: true }) public loopStart!: number;
+
+  // The loop end determined by the notes.
+  @Prop({ type: Number, required: true }) public sequencerLoopEnd!: number;
 
   // These values should only be set if there is a loop on the timeline
   @Prop(Nullable(Number)) public setLoopEnd!: number | null;
@@ -204,7 +207,6 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
 
     const note = {
       duration: this.default,
-      selected: false,
       id,
       time,
     };
@@ -273,7 +275,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
 
     this.$log.debug(`noteLoopEnd -> ${noteLoopEnd}`);
     if (noteLoopEnd !== this.noteLoopEnd) {
-      this.$emit('loop-end', noteLoopEnd);
+      this.$update('sequencerLoopEnd', noteLoopEnd);
       this.noteLoopEnd = noteLoopEnd;
     }
   }

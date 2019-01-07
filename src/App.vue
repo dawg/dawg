@@ -161,6 +161,13 @@ const { dialog } = remote;
 
 const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
 
+type ACTIONS = 'add';
+interface Group {
+  action: ACTIONS;
+  icon: string;
+  tooltip: string;
+}
+
 @Component({
   components: {
     SideBar,
@@ -183,7 +190,7 @@ const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
   },
 })
 export default class App extends Vue {
-  // @MapField(project) public bpm!: number;
+  @MapField(project, project) public bpm!: number;
 
   public toolbarHeight = 64;
   public sidebarTabTitle = '';
@@ -193,6 +200,14 @@ export default class App extends Vue {
   public selectedScore: Score | null = null;
   public cache: Cache | null = null;
   public tone = Tone.Transport;
+
+  public synthActions: Group[] = [
+    {
+      action: 'add',
+      icon: 'add',
+      tooltip: 'Add Instrument',
+    },
+  ];
 
   public play = false;
   public part = new Part<Note>();
@@ -244,9 +259,12 @@ export default class App extends Vue {
     if (!this.selectedScore) { return []; }
     return this.selectedScore.notes;
   }
+  get instruments() {
+    return this.project.instruments;
+  }
   get instrumentLookup() {
     const instruments: {[k: string]: Instrument} = {};
-    this.project.project.instruments.forEach((instrument) => {
+    this.project.instruments.forEach((instrument) => {
       instruments[instrument.name] = instrument;
     });
     return instruments;
@@ -280,7 +298,7 @@ export default class App extends Vue {
       }
     }
 
-    const encoded = io.serialize(project);
+    const encoded = io.serialize(project, Project);
     fs.writeFileSync(
       this.cache.openedFile,
       JSON.stringify(encoded, null, 4),

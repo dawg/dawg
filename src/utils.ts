@@ -1,4 +1,5 @@
 import Tone from 'tone';
+import { Mutation } from 'vuex-module-decorators';
 
 export enum StyleType {
   PRIMARY = 'primary',
@@ -125,15 +126,15 @@ export const Button = {
   RIGHT: 2,
 };
 
-export function MapField<T extends MapFieldSetter>(o: T) {
-  return (target: object, name: keyof T) => {
+export function MapField<T extends MapFieldSetter, V>(module: T, o: V) {
+  return (target: object, name: keyof V) => {
     Object.defineProperty(target, name, {
       get() {
         return o[name];
       },
       set(value) {
         // Call the mutation.
-        o.setValue({o, key: name, value});
+        module.setValue({o, key: name, value});
       },
       enumerable: true,
       configurable: true,
@@ -143,6 +144,19 @@ export function MapField<T extends MapFieldSetter>(o: T) {
 
 export interface MapFieldSetter {
   setValue<T, V extends keyof T>(payload: { o: T, key: V, value: any }): void;
+}
+
+export type ConstructorOf<T> = new(...args: any[]) => T;
+
+export function Setter<T extends ConstructorOf<{}>>(Base: T) {
+    class WithSetter extends Base {
+      @Mutation
+      public setValue<A, V extends keyof A>(payload: { o: A, key: V, value: any }) {
+        payload.o[payload.key] = payload.value;
+      }
+    }
+
+    return WithSetter;
 }
 
 export function toTickTime(time: number) {
