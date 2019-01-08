@@ -25,7 +25,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import BaseTabs from '@/components/BaseTabs.vue';
 import { Nullable } from '@/utils';
-import { project } from '@/store';
+import { project, cache, general } from '@/store';
 import { Watch } from '@/modules/update';
 
 type ACTIONS = 'add';
@@ -37,8 +37,6 @@ interface Group {
 
 @Component
 export default class PanelHeaders extends Vue {
-  @Prop(Nullable(Object)) public panels!: BaseTabs | null;
-  @Prop(Nullable(String)) public openedPanel!: string | null;
   public synthActions: Group[] = [
     {
       icon: 'add',
@@ -48,9 +46,8 @@ export default class PanelHeaders extends Vue {
   ];
 
   get actions() {
-    if (!this.openedPanel) { return; }
     // TODO NO Type Checking
-    if (this.openedPanel === 'Instruments') {
+    if (cache.openedPanel === 'Instruments') {
       return this.synthActions;
     } else {
       return [];
@@ -58,25 +55,26 @@ export default class PanelHeaders extends Vue {
   }
 
   get tabs() {
-    if (this.panels) {
-      return this.panels.tabs;
+    if (general.panels) {
+      return general.panels.tabs;
     } else {
       return [];
     }
   }
 
   public selectPanel(name: string, e: MouseEvent) {
-    this.$update('openedPanel', name);
-    if (this.panels) {
-      this.panels.selectTab(name, e);
+    cache.setOpenedPanel(name);
+    if (general.panels) {
+      general.panels.selectTab(name, e);
     }
   }
 
-  @Watch<PanelHeaders>('panels')
-  public selectPanelIfNull() {
-    if (!this.panels || this.openedPanel) { return; }
-    this.$update('openedPanel', this.panels.tabs[0].name);
-  }
+  // TODO(jacob) Finish this
+  // @Watch<PanelHeaders>('panels')
+  // public selectPanelIfNull() {
+  //   if (!general.panels || cache.openedPanel) { return; }
+  //   cache.setOpenedPanel(general.panels.tabs[0].name);
+  // }
 }
 </script>
 

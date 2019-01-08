@@ -17,7 +17,6 @@
   "dependencies": {
     "cerialize": "^0.1.18",
     "electron-context-menu": "^0.10.0",
-    "io-ts": "^1.5.1",
     "konva": "^2.3.0",
     "lodash.throttle": "^4.1.1",
     "mz": "^2.7.0",

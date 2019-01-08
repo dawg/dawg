@@ -10,38 +10,14 @@
           </split>
 
           <split :initial="250" collapsible :min-size="100">
-            <div class="aside secondary" style="display: flex; flex-direction: column">
-              
-              <div
-                class="section-header center--vertial white--text"
-                :style="`min-height: ${toolbarHeight + 1}px`"
-              >
-                <div class="aside--title">{{ sidebarTabTitle }}</div>
-              </div>
-              <vue-perfect-scrollbar class="scrollbar" style="height: 100%">
-                <base-tabs ref="tabs" @changed="changed">
-                  <side-bar name="EXPLORER" icon="folder">
-                    <file-explorer
-                      v-if="cache"
-                      :folders.sync="cache.folders"
-                    ></file-explorer>
-                  </side-bar>
-                  <side-bar name="AUDIO FILES" icon="queue_music"></side-bar>
-                  <side-bar name="PATTERNS" icon="queue_play">
-                    <patterns v-model="selectedPattern" :patterns="project.patterns"></patterns>
-                  </side-bar>
-                  <side-bar name="SEARCH" icon="search"></side-bar>
-                </base-tabs>
-              </vue-perfect-scrollbar>
-              
-            </div>
+            <side-tabs ref="sideTabs"></side-tabs>
           </split>
 
           <split direction="vertical" resizable>
 
-            <split :initial="toolbarHeight" fixed>
+            <split :initial="general.toolbarHeight" fixed>
               <toolbar 
-                :height="toolbarHeight" 
+                :height="general.toolbarHeight" 
                 style="padding-right: 26px; border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
                 :bpm.sync="bpm"
               ></toolbar>
@@ -69,40 +45,10 @@
 
             <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`" keep>
               <split :initial="55" fixed>
-                <panel-headers
-                  v-if="cache"
-                  :panels="panels"
-                  :opened-panel.sync="cache.openedPanel"
-                ></panel-headers>
+                <panel-headers></panel-headers>
               </split>
               <split>
-                <base-tabs class="tabs-panels secondary" ref="panels">
-                  <panel name="Instruments">
-                    <synths 
-                      :instruments="instruments"
-                      :selected-score.sync="selectedScore"
-                      :selected-pattern="selectedPattern"
-                      :instrument.sync="selectedSynth"
-                      :scores="selectedScore"
-                    ></synths>
-                  </panel>
-                  <panel name="Mixer">
-                    <mixer></mixer>
-                  </panel>
-                  <panel name="Piano Roll">
-                    <piano-roll 
-                      v-model="notes"
-                      :part="part"
-                      :synth="selectedSynth"
-                      :play="play"
-                      @added="added"
-                      @removed="removed"
-                    ></piano-roll>
-                  </panel>
-                  <panel name="Sample">
-                    <div></div>
-                  </panel>
-                </base-tabs>
+                <panels></panels>
               </split>
             </split>
 
@@ -122,36 +68,29 @@
 
 <script lang="ts">
 import fs from 'fs';
-import os from 'os';
-import path from 'path';
-import Tone from 'tone';
 import { Component, Vue } from 'vue-property-decorator';
 import Toolbar from '@/components/Toolbar.vue';
 import SideBar from '@/components/SideBar.vue';
 import Foot from '@/components/Foot.vue';
 import FileExplorer from '@/components/FileExplorer.vue';
 import ActivityBar from '@/components/ActivityBar.vue';
-import PanelHeaders from '@/components/PanelHeaders.vue';
+import PanelHeaders from '@/sections/PanelHeaders.vue';
+import Panels from '@/sections/Panels.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
-import Panel from '@/components/Panel.vue';
-import Mixer from '@/components/Mixer.vue';
 import Split from '@/modules/split/Split.vue';
-import PianoRoll from '@/components/PianoRoll.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
 import Dawg from '@/components/Dawg.vue';
-import Patterns from '@/components/Patterns.vue';
+import SideTabs from '@/sections/SideTabs.vue';
 import Notifications from '@/modules/notification/Notifications.vue';
 import Synths from '@/components/Synths.vue';
-import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { remote, ipcRenderer } from 'electron';
-import { project } from '@/store';
+import { project, cache, general } from '@/store';
 import { MapField, toTickTime, allKeys, Keys } from '@/utils';
-import { Left } from 'fp-ts/lib/Either';
-import Cache from '@/cache';
 import Part from '@/modules/audio/part';
 import io from '@/modules/io';
-import { Pattern, Score, Project, Note, Instrument } from '@/schemas';
+import { Pattern, Score, Note, Instrument } from '@/schemas';
+import Project from '@/store/project';
 
 const { dialog } = remote;
 
@@ -162,20 +101,14 @@ const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
   components: {
     SideBar,
     Toolbar,
-    FileExplorer,
     Tabs,
     Tab,
     Foot,
-    Panel,
     Split,
-    PianoRoll,
     BaseTabs,
-    VuePerfectScrollbar,
     Dawg,
     Notifications,
-    Patterns,
-    Synths,
-    Mixer,
+    Panels,
     ActivityBar,
     PanelHeaders,
   },
@@ -183,37 +116,29 @@ const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
 export default class App extends Vue {
   @MapField(project, project) public bpm!: number;
 
-  public toolbarHeight = 64;
-  public sidebarTabTitle = '';
-  public selectedSynth: Tone.PolySynth | null = null;
   public project = project;
-  public selectedPattern: Pattern | null = null;
-  public selectedScore: Score | null = null;
-  public cache: Cache | null = null;
-  public tone = Tone.Transport;
+  public general = general;
 
   public play = false;
   public part = new Part<Note>();
 
   public $refs!: {
-    tabs: BaseTabs,
     panels: BaseTabs,
+    sideTabs: SideTabs,
   };
 
   // To populate the activity bar
   public items: SideBar[] = [];
-  public panels: BaseTabs | null = null;
 
   public async mounted() {
-    this.items = this.$refs.tabs.$children as SideBar[];
-    this.panels = this.$refs.panels;
-
     ipcRenderer.on('save', this.save);
     ipcRenderer.on('open', this.open);
 
-    this.cache = await Cache.fromCacheFolder();
-    this.$refs.panels.selectTab(this.cache.openedPanel);
-    this.$refs.tabs.selectTab(this.cache.openedSideTab);
+    cache.fromCacheFolder();
+
+    // TODO(jacob)
+    // this.$refs.panels.selectTab(this.cache.openedPanel);
+    this.load();
 
     this.part.loop = true;
     window.addEventListener('keypress', this.keydown);
@@ -230,13 +155,6 @@ export default class App extends Vue {
     }
   }
 
-  get notes() {
-    if (!this.selectedScore) { return []; }
-    return this.selectedScore.notes;
-  }
-  get instruments() {
-    return this.project.instruments;
-  }
   get instrumentLookup() {
     const instruments: {[k: string]: Instrument} = {};
     this.project.instruments.forEach((instrument) => {
@@ -245,37 +163,31 @@ export default class App extends Vue {
     return instruments;
   }
   public clickActivityBar(tab: SideBar, $event: MouseEvent) {
-    if (this.cache) { this.cache.openedSideTab = tab.name; }
-    this.$refs.tabs.selectTab(tab.name, $event);
-  }
-  public changed(tab: SideBar) {
-    this.sidebarTabTitle = tab.name;
+    cache.setOpenedSideTab(tab.name);
+    // TODO(jacob) This is gross
+    this.$refs.sideTabs.$refs.tabs.selectTab(tab.name, $event);
   }
   get openedFile() {
-    if (!this.cache) { return null; }
-    return this.cache.openedFile;
+    if (!cache) { return null; }
+    return cache.openedFile;
   }
   public save() {
-    if (!this.cache) { return; }
-
-    if (!this.cache.openedFile) {
-      this.cache.openedFile = dialog.showSaveDialog(remote.getCurrentWindow(), {});
+    if (!cache.openedFile) {
+      cache.setOpenedFile(dialog.showSaveDialog(remote.getCurrentWindow(), {}));
       // dialog.showSaveDialog can be null. Return type for showSaveDialog is wrong.
-      if (!this.cache.openedFile) { return; }
-      if (!this.cache.openedFile.endsWith('.dg')) {
-        this.cache.openedFile = this.cache.openedFile + '.dg';
+      if (!cache.openedFile) { return; }
+      if (!cache.openedFile.endsWith('.dg')) {
+        cache.setOpenedFile(cache.openedFile + '.dg');
       }
     }
 
     const encoded = io.serialize(project, Project);
     fs.writeFileSync(
-      this.cache.openedFile,
+      cache.openedFile,
       JSON.stringify(encoded, null, 4),
     );
   }
   public open() {
-    if (!this.cache) { return; }
-
     // files can be undefined. There is an issue with the .d.ts files.
     const files = dialog.showOpenDialog(
       remote.getCurrentWindow(),
@@ -287,8 +199,14 @@ export default class App extends Vue {
     }
 
     const filePath = files[0];
-    this.cache.openedFile = filePath;
-    let contents = fs.readFileSync(filePath).toString();
+    cache.setOpenedFile(filePath);
+    this.load();
+  }
+
+  public load(filePath?: string) {
+    if (!cache.openedFile) { return; }
+
+    let contents = fs.readFileSync(cache.openedFile).toString();
 
     try {
       contents = JSON.parse(contents);
@@ -299,14 +217,9 @@ export default class App extends Vue {
     }
 
     const result = io.deserialize(contents, Project);
-    // TODO No error handling
-    // if (result instanceof Left) {
-    //   this.$notify.error('Unable to decode file.');
-    //   return;
-    // }
-
     project.reset(result);
   }
+
   public playPattern() {
     this.part.start();
     this.play = true;
@@ -332,10 +245,10 @@ export default class App extends Vue {
     this.part.remove(note);
   }
   public callback(time: number, note: Note) {
-    if (!this.selectedScore) { return; }
+    if (!project.selectedScore) { return; }
     const duration = toTickTime(note.duration);
     const value = allKeys[note.id].value;
-    const instrument = this.instrumentLookup[this.selectedScore.instrument];
+    const instrument = this.instrumentLookup[project.selectedScore.instrument];
     instrument.triggerAttackRelease(value, duration, time);
   }
 }
@@ -349,22 +262,5 @@ export default class App extends Vue {
 .app
   display: flex
   flex-direction: column
-
-.aside
-  height: 100%
-  width: 100%
-  z-index: 3
-  border-right: 1px solid
-
-.section-header
-  font-size: 15px !important
-  border-bottom: 1px solid rgba(0, 0, 0, 0.3)
-  padding: 0 20px
-
-.scrollbar >>> .ps__scrollbar-y-rail
-  background-color: transparent
-
-.aside--title
-  user-select: none
 </style>
 
