@@ -69,16 +69,11 @@
 
             <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`" keep>
               <split :initial="55" fixed>
-                <ul class="tabs-headers">
-                  <li
-                    v-for="(tab, i) in panels"
-                    :key="i" 
-                    :class="{ 'is-active': tab.isActive }"
-                    class="tabs-header"
-                  >
-                    <div @click="selectPanel(tab.name, $event)" class="text white--text">{{ tab.name }}</div>
-                  </li>
-                </ul>
+                <panel-headers
+                  v-if="cache"
+                  :panels="panels"
+                  :opened-panel.sync="cache.openedPanel"
+                ></panel-headers>
               </split>
               <split>
                 <base-tabs class="tabs-panels secondary" ref="panels">
@@ -136,6 +131,7 @@ import SideBar from '@/components/SideBar.vue';
 import Foot from '@/components/Foot.vue';
 import FileExplorer from '@/components/FileExplorer.vue';
 import ActivityBar from '@/components/ActivityBar.vue';
+import PanelHeaders from '@/components/PanelHeaders.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
 import Panel from '@/components/Panel.vue';
@@ -161,12 +157,6 @@ const { dialog } = remote;
 
 const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
 
-type ACTIONS = 'add';
-interface Group {
-  action: ACTIONS;
-  icon: string;
-  tooltip: string;
-}
 
 @Component({
   components: {
@@ -187,6 +177,7 @@ interface Group {
     Synths,
     Mixer,
     ActivityBar,
+    PanelHeaders,
   },
 })
 export default class App extends Vue {
@@ -201,14 +192,6 @@ export default class App extends Vue {
   public cache: Cache | null = null;
   public tone = Tone.Transport;
 
-  public synthActions: Group[] = [
-    {
-      action: 'add',
-      icon: 'add',
-      tooltip: 'Add Instrument',
-    },
-  ];
-
   public play = false;
   public part = new Part<Note>();
 
@@ -219,11 +202,11 @@ export default class App extends Vue {
 
   // To populate the activity bar
   public items: SideBar[] = [];
-  public panels: Tab[] = [];
+  public panels: BaseTabs | null = null;
 
   public async mounted() {
     this.items = this.$refs.tabs.$children as SideBar[];
-    this.panels = this.$refs.panels.tabs;
+    this.panels = this.$refs.panels;
 
     ipcRenderer.on('save', this.save);
     ipcRenderer.on('open', this.open);
@@ -275,12 +258,6 @@ export default class App extends Vue {
   }
   public changed(tab: SideBar) {
     this.sidebarTabTitle = tab.name;
-  }
-  public selectPanel(name: string, e: MouseEvent) {
-    if (this.cache) {
-      this.cache.openedPanel = name;
-    }
-    this.$refs.panels.selectTab(name, e);
   }
   get openedFile() {
     if (!this.cache) { return null; }
@@ -395,39 +372,7 @@ export default class App extends Vue {
 .scrollbar >>> .ps__scrollbar-y-rail
   background-color: transparent
 
-
-.tabs-headers
-  align-items: stretch
-  display: flex
-  padding: 0
-
-.tabs-header
-    position: relative
-    color: #999
-    font-size: 14px
-    font-weight: 600
-    list-style: none
-    text-align: center
-    padding: .75em 1em
-
-    &.is-active
-      color: #000
-      box-shadow: unset
-      
-      & .text
-        border-bottom: 1px solid
-
 .aside--title
   user-select: none
-
-.text
-  align-items: center
-  text-decoration: noneSynth
-  display: inline-blockSynth
-  padding: 0 2px
-  user-select: none
-
-  &:hover
-    cursor: default
 </style>
 

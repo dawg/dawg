@@ -70,6 +70,7 @@ const TYPES = ['pwm', 'sine', 'triangle', 'fatsawtooth', 'square'];
 const oscillator = { type: 'fatsawtooth', spread: 30 };
 const envelope = { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 };
 
+// TODO(jacob) Make this work with our synths!!!
 @Component({ components: { Knob, DotButton, MiniScore } })
 export default class Synth extends Vue {
   @Prop({ type: String, required: true }) public name!: string;
@@ -141,8 +142,10 @@ export default class Synth extends Vue {
 
 .name
   font-size: 1.2em
+  min-width: 140px
+  margin: 0 auto
+  display: block
   padding-left: 10px
-  padding-right: 20px
   user-select: none
 
 .synth-wrapper

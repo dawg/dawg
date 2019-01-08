@@ -6,6 +6,7 @@ import 'vuetify/dist/vuetify.css';
 import 'vue-awesome/icons';
 import '@/styles/global.sass';
 import Ico from '@/components/Ico.vue';
+import TooltipIcon from '@/components/TooltipIcon.vue';
 import Theme from '@/modules/theme';
 import Update from '@/modules/update';
 import VueLogger from 'vuejs-logger';
@@ -19,6 +20,7 @@ const middleware = () => {
   Vue.use(VueShortkey);
   Vue.use(Notification);
   Vue.component('ico', Ico);
+  Vue.component('TooltipIcon', TooltipIcon);
   Vue.use(VueLogger, {
     logLevel :  'info',
   });
