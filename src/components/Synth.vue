@@ -18,15 +18,14 @@
     >
       <dot-button
         class="mute"
-        :value="active"
-        @input="changeMute"
+        v-model="active"
       ></dot-button>
       <knob
         class="knob"
         text-color="white"
         :size="knobSize"
         :stroke-width="strokeWidth"
-        v-model="synth.volume.value"
+        v-model="instrument.volume"
       ></knob>
       <knob
         class="knob"
@@ -36,9 +35,9 @@
         :max="1"
         :mid-value="0"
         :stroke-width="strokeWidth"
-        v-model="panner.pan.value"
+        v-model="instrument.pan"
       ></knob>
-      <div class="white--text name">{{ name }}</div>
+      <div class="white--text name">{{ instrument.name }}</div>
       <mini-score :notes="notes"></mini-score>
     </div>
     <div 
@@ -50,7 +49,7 @@
         dense
         dark
         :items="types"
-        v-model="type"
+        v-model="instrument.type"
       ></v-select>
     </div>
   </div>
@@ -62,8 +61,9 @@ import Tone from 'tone';
 import Knob from '@/components/Knob.vue';
 import DotButton from '@/components/DotButton.vue';
 import MiniScore from '@/components/MiniScore.vue';
-import { Component, Prop, Watch } from 'vue-property-decorator';
-import { Note } from '@/schemas';
+import { Component, Prop } from 'vue-property-decorator';
+import { Note, Instrument } from '@/schemas';
+import { Watch } from '@/modules/update';
 
 const TYPES = ['pwm', 'sine', 'triangle', 'fatsawtooth', 'square'];
 
@@ -73,24 +73,16 @@ const envelope = { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 };
 // TODO(jacob) Make this work with our synths!!!
 @Component({ components: { Knob, DotButton, MiniScore } })
 export default class Synth extends Vue {
-  @Prop({ type: String, required: true }) public name!: string;
+  @Prop({ type: Object, required: true }) public instrument!: Instrument;
   @Prop({ type: Number, default: 50 }) public height!: number;
   @Prop({ type: Array, default: () => [] }) public notes!: Note[];
-  public selected = false;
-  // @Prop({ type: String, required: true }) public type!: string;
-  // @Prop({ type: Number, required: true }) public volume!: number;
-  // @Prop({ type: Number, required: true }) public panning!: number;
-  // @Prop({ type: Boolean, required: true }) public mute!: boolean;
 
+  public selected = false;
   public types = TYPES;
-  public active = true;
-  public panner = new Tone.Panner().toMaster();
-  public synth = new Tone.PolySynth(8, Tone.Synth).connect(this.panner);
+  public active = !this.instrument.mute;
   public expand = false;
   public strokeWidth = 2.5;
   public knobSize = 30;
-
-  public type = 'fatsawtooth';
 
   public get synthStyle() {
     return {
@@ -98,21 +90,9 @@ export default class Synth extends Vue {
     };
   }
 
-  public changeMute(value: boolean) {
-    this.active = value;
-    if (value) {
-      this.panner.toMaster();
-    } else {
-      this.panner.disconnect(Tone.Master);
-    }
-  }
-  public mounted() {
-    // this.synth.set({ oscillator, envelope });
-  }
-
-  @Watch('type', { immediate: true })
-  public onTypeChange() {
-    // this.synth.set({ oscillator: { type: this.type } });
+  @Watch<Synth>('active')
+  public changeMute() {
+    this.instrument.mute = !this.active;
   }
 }
 </script>
@@ -172,8 +152,4 @@ export default class Synth extends Vue {
   left: 0
   border: 1px solid rgba(255, 255, 255, 0.36)
   pointer-events: none
-
-// .selected
-//   box-shadow: inset 0px 0px 0px 10px #f00
-  // box-shadow: inset 0px 0px 0px 10px 
 </style>

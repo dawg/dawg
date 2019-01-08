@@ -1,11 +1,11 @@
 <template>
   <div class="synths">
     <synth
-      v-for="(synth, i) in instruments"
-      :key="synth.name"
+      v-for="(instrument, i) in instruments"
+      :key="instrument.name"
       @click="selectSynth(i)"
-      :name="synth.name"
-      :notes="getNotes(synth)"
+      :instrument="instrument"
+      :notes="getNotes(instrument)"
     ></synth>
   </div>
 </template>
@@ -23,7 +23,7 @@ export default class Synths extends Vue {
   @Prop({ type: Array, required: true }) public instruments!: Instrument[];
   @Prop(Nullable(Object)) public selectedScore!: Score | null;
   @Prop(Nullable(Object)) public selectedPattern!: Pattern | null;
-  @Prop(Nullable(Object)) public synth!: Tone.PolySynth | null;
+  @Prop(Nullable(Object)) public instrument!: Instrument | null;
 
   public $children!: Synth[];
 
@@ -39,20 +39,20 @@ export default class Synths extends Vue {
   }
 
   public selectSynth(i: number) {
-    this.$children.slice(0, i).forEach((synth) => synth.selected = false);
-    this.$children.slice(i + 1).forEach((synth) => synth.selected = false);
+    this.$children.slice(0, i).forEach((instrument) => instrument.selected = false);
+    this.$children.slice(i + 1).forEach((instrument) => instrument.selected = false);
     this.$children[i].selected = !this.$children[i].selected;
 
     if (this.$children[i].selected) {
-      this.$update('synth', this.$children[i].synth);
+      this.$update('instrument', this.$children[i].instrument);
     } else {
-      this.$update('synth', null);
+      this.$update('instrument', null);
     }
   }
 
-  public getNotes(synth: Synth) {
-    if (synth.name in this.scoreLookup) {
-      return this.scoreLookup[synth.name].notes;
+  public getNotes(instrument: Instrument) {
+    if (instrument.name in this.scoreLookup) {
+      return this.scoreLookup[instrument.name].notes;
     }
   }
 

@@ -82,7 +82,7 @@
                       :instruments="instruments"
                       :selected-score.sync="selectedScore"
                       :selected-pattern="selectedPattern"
-                      :synth.sync="selectedSynth"
+                      :instrument.sync="selectedSynth"
                       :scores="selectedScore"
                     ></synths>
                   </panel>
@@ -216,14 +216,6 @@ export default class App extends Vue {
     this.$refs.tabs.selectTab(this.cache.openedSideTab);
 
     this.part.loop = true;
-    // this.part.loopStart = '0:2:0';
-    // this.part.loopEnd = '1:0:0';
-
-    // this.part.start();
-    // this.part.start(1);
-    // this.part.loop = true;
-    // Tone.Transport.bpm.value = 93;
-
     window.addEventListener('keypress', this.keydown);
   }
 

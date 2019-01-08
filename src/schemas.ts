@@ -49,6 +49,7 @@ export interface IInstrument {
   pan: number;
   volume: number;
   type: string;
+  mute: boolean;
 }
 
 export class Instrument implements IInstrument {
@@ -58,6 +59,7 @@ export class Instrument implements IInstrument {
     instrument.pan = o.pan;
     instrument.volume = o.volume;
     instrument.type = o.type;
+    instrument.mute = o.mute;
     return instrument;
   }
   public static default(name: string) {
@@ -66,12 +68,15 @@ export class Instrument implements IInstrument {
       pan: 0,
       volume: 0,
       type: 'fatsawtooth',
+      mute: false,
     });
   }
   @autoserialize public name!: string;
   // tslint:disable-next-line:variable-name
   private _type!: string;
-  private panner = new Tone.Panner().toMaster();
+  // tslint:disable-next-line:variable-name
+  private _mute!: boolean;
+  private panner = new Tone.Panner();
   private synth = new Tone.PolySynth(8, Tone.Synth).connect(this.panner);
 
   constructor() {
@@ -84,6 +89,19 @@ export class Instrument implements IInstrument {
   @autoserialize
   set pan(pan: number) {
     this.panner.pan.value = pan;
+  }
+
+  get mute() {
+    return this._mute;
+  }
+  @autoserialize
+  set mute(mute: boolean) {
+    this._mute = mute;
+    if (mute) {
+      this.panner.disconnect(Tone.Master);
+    } else {
+      this.panner.toMaster();
+    }
   }
 
   @autoserialize
