@@ -3,6 +3,7 @@
     <synth
       v-for="(instrument, i) in instruments"
       :key="instrument.name"
+      @contextmenu="contextmenu($event, i)"
       @click="selectSynth(i)"
       :instrument="instrument"
       :notes="getNotes(instrument)"
@@ -17,6 +18,7 @@ import Synth from '@/components/Synth.vue';
 import { Nullable } from '@/utils';
 import { Score, Instrument, Pattern } from '@/schemas';
 import { Watch } from '@/modules/update';
+import { project } from '@/store';
 
 @Component({ components: { Synth } })
 export default class Synths extends Vue {
@@ -55,6 +57,13 @@ export default class Synths extends Vue {
     if (instrument.name in this.scoreLookup) {
       return this.scoreLookup[instrument.id].notes;
     }
+  }
+
+  public contextmenu(e: MouseEvent, i: number) {
+    this.$context(e, [{
+      callback: () => project.deleteInstrument(i),
+      text: 'Delete',
+    }]);
   }
 
   @Watch<Synths>('selectedPattern', { immediate: true })

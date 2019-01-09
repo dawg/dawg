@@ -28,7 +28,6 @@ import { Nullable } from '@/utils';
 import { project, cache, general, specific } from '@/store';
 import { Watch } from '@/modules/update';
 
-type ACTIONS = 'add';
 interface Group {
   icon: string;
   tooltip: string;

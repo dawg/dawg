@@ -10,7 +10,7 @@
           </split>
 
           <split :initial="250" collapsible :min-size="100">
-            <side-tabs ref="sideTabs"></side-tabs>
+            <side-tabs></side-tabs>
           </split>
 
           <split direction="vertical" resizable>
@@ -117,24 +117,18 @@ export default class App extends Vue {
   public play = false;
   public part = new Part<Note>();
 
-  public $refs!: {
-    sideTabs: SideTabs,
-  };
+  get openedFile() {
+    if (!cache) { return null; }
+    return cache.openedFile;
+  }
 
-  // To populate the activity bar
-  public items: SideBar[] = [];
+  public async created() {
+    // Make sure we load the cache first before loading the default project.
+    await cache.fromCacheFolder();
+    this.withErrorHandling(project.load);
 
-  public async mounted() {
     ipcRenderer.on('save', project.save);
     ipcRenderer.on('open', this.open);
-
-    cache.fromCacheFolder();
-
-    // TODO(jacob)
-    // this.$refs.panels.selectTab(this.cache.openedPanel);
-    this.load();
-
-    this.part.loop = true;
     window.addEventListener('keypress', this.keydown);
   }
 
@@ -151,12 +145,6 @@ export default class App extends Vue {
 
   public clickActivityBar(tab: SideBar, $event: MouseEvent) {
     specific.setOpenedSideTab(tab.name);
-    // TODO(jacob) This is gross
-    // this.$refs.sideTabs.$refs.tabs.selectTab(tab.name, $event);
-  }
-  get openedFile() {
-    if (!cache) { return null; }
-    return cache.openedFile;
   }
 
   public withErrorHandling(callback: () => void) {
@@ -168,27 +156,17 @@ export default class App extends Vue {
     }
   }
 
-  public load() {
-    this.withErrorHandling(project.load);
-  }
-
   public open() {
     this.withErrorHandling(project.open);
   }
 
-  public playPattern() {
-    this.part.start();
-    this.play = true;
-  }
-  public pausePattern() {
-    this.part.pause();
-    this.play = false;
-  }
   public playPause() {
     if (this.part.state === 'started') {
-      this.pausePattern();
+      this.part.pause();
+      this.play = false;
     } else {
-      this.playPattern();
+      this.part.start();
+      this.play = true;
     }
   }
 }

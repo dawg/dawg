@@ -28,6 +28,7 @@ import BeatLines from '@/components/BeatLines';
 import PianoRoll from '@/components/PianoRoll.vue';
 import Timeline from '@/components/Timeline.vue';
 import MiniScore from '@/components/MiniScore.vue';
+import ContextMenu from '@/modules/context/ContextMenu.vue';
 import Vue from 'vue';
 
 const synth = new Tone.Synth().toMaster();
@@ -305,6 +306,41 @@ storiesOf(ColorBlock.name, module)
           });
         });
         return colors;
+      },
+    },
+  }));
+
+
+storiesOf(ContextMenu.name, module)
+  .add('Standard', () => ({
+    template: `
+    <div
+      class="secondary white--text"
+      @contextmenu="contextmenu"
+      style="
+        height: 200px;
+        width: 200px;
+        text-align: center;
+        vertical-align: middle;
+        line-height: 200px;
+      "
+    >
+      Right Click ({{ count }})
+      <context-menu></context-menu>
+    </div>
+    `,
+    components: { ContextMenu },
+    data: () => ({
+      count: 0,
+    }),
+    methods: {
+      contextmenu(e: MouseEvent) {
+        this.$context(e, [{
+          // tslint:disable-next-line:no-console
+          // @ts-ignore
+          callback: () => this.count += 1,
+          text: 'Increment',
+        }]);
       },
     },
   }));

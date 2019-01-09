@@ -10,7 +10,7 @@
         :key="item.name"
         @click="$emit('click', item, $event)"
       >
-        <v-icon medium color="white">{{ item.icon }}</v-icon>
+        <tooltip-icon medium color="white" :tooltip="item.name" right>{{ item.icon }}</tooltip-icon>
       </v-list-tile>
       <div style="flex-grow: 1"></div>
       <v-list-tile>

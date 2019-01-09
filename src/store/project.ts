@@ -10,10 +10,35 @@ import { Setter } from '@/utils';
 import store from '@/store/store';
 import cache from '@/store/cache';
 import io from '@/modules/io';
+import Vue from 'vue';
 
 const { dialog } = remote;
 const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
 
+const findUniqueName = (objects: Array<{ name: string }>, prefix: string) => {
+  let name: string;
+  let count = 1;
+  while (true) {
+    name = `${prefix} ${count}`;
+    let found = false;
+    for (const o of objects) {
+      if (o.name === name) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      break;
+    }
+
+    count++;
+  }
+
+  return name;
+};
+
+@Module({ dynamic: true, store, name: 'project' })
 export class Project extends VuexModule {
   @autoserialize public bpm = 128;
   @autoserializeAs(Pattern) public patterns: Pattern[] = [];
@@ -74,26 +99,20 @@ export class Project extends VuexModule {
   }
 
   @Mutation
+  public addPattern() {
+    const name = findUniqueName(this.patterns, 'Pattern');
+    this.patterns.push(Pattern.create(name));
+  }
+
+  @Mutation
   public addInstrument() {
-    let name: string;
-    let count = 0;
-    while (true) {
-      name = `Instrument ${count}`;
-      let found = false;
-      for (const instrument of this.instruments) {
-        if (instrument.name === name) {
-          found = true;
-          break;
-        }
-      }
-
-      if (!found) {
-        break;
-      }
-
-      count++;
-    }
+    const name = findUniqueName(this.instruments, 'Instrument');
     this.instruments.push(Instrument.default(name));
+  }
+
+  @Mutation
+  public deleteInstrument(i: number) {
+    Vue.delete(this.instruments, i);
   }
 
   get patternLookup() {
@@ -113,9 +132,4 @@ export class Project extends VuexModule {
   }
 }
 
-const ProjectWithSetter = Setter(Project);
-
-@Module({ dynamic: true, store, name: 'project' })
-class ProjectModule extends ProjectWithSetter {}
-
-export default getModule(ProjectModule);
+export default getModule(Setter(Project));

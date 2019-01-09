@@ -1,20 +1,30 @@
 <template>
   <div class="aside secondary" style="display: flex; flex-direction: column">
     <div
-      class="section-header center--vertial white--text"
-      :style="`min-height: ${general.toolbarHeight + 1}px`"
+      class="section-header white--text"
+      :style="`min-height: ${general.toolbarHeight + 1}px; display: flex; align-items: center`"
     >
-      <div class="aside--title">{{ sidebarTabTitle }}</div>
+      <div class="aside--title">{{ sidebarTabTitle.toUpperCase() }}</div>
+      <div style="flex-grow: 1"></div>
+      <tooltip-icon
+        v-for="action in actions"
+        :key="action.icon"
+        :tooltip="action.tooltip"
+        bottom
+        @click="action.callback"
+      >
+        {{ action.icon }}
+      </tooltip-icon>
     </div>
     <vue-perfect-scrollbar class="scrollbar" style="height: 100%">
       <base-tabs ref="tabs" @changed="changed">
-        <side-bar name="EXPLORER" icon="folder">
+        <side-bar name="Explorer" icon="folder">
           <file-explorer
             :folders.sync="cache.folders"
           ></file-explorer>
         </side-bar>
-        <side-bar name="AUDIO FILES" icon="queue_music"></side-bar>
-        <side-bar name="PATTERNS" icon="queue_play">
+        <side-bar name="Audio Files" icon="queue_music"></side-bar>
+        <side-bar name="Patterns" icon="queue_play">
           <!-- TODO(jacob) -->
           <patterns 
             :value="specific.selectedPattern" 
@@ -22,7 +32,7 @@
             :patterns="project.patterns"
           ></patterns>
         </side-bar>
-        <side-bar name="SEARCH" icon="search"></side-bar>
+        <side-bar name="Search" icon="search"></side-bar>
       </base-tabs>
     </vue-perfect-scrollbar>
   </div>
@@ -38,6 +48,12 @@ import SideBar from '@/components/SideBar.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { project, cache, general, specific, Getter } from '@/store';
 import { Watch } from '@/modules/update';
+
+interface Group {
+  icon: string;
+  tooltip: string;
+  callback: () => void;
+}
 
 @Component({
   components: {
@@ -57,6 +73,13 @@ export default class SideTabs extends Vue {
   public $refs!: {
     tabs: BaseTabs,
   };
+  public patternActions: Group[] = [
+    {
+      icon: 'add',
+      tooltip: 'Add Pattern',
+      callback: project.addPattern,
+    },
+  ];
 
   @Getter(specific) public openedSideTab!: string | null;
 
@@ -67,6 +90,15 @@ export default class SideTabs extends Vue {
 
   public changed(tab: SideBar) {
     this.sidebarTabTitle = tab.name;
+  }
+
+  get actions(): Group[] {
+    // TODO No typing
+    if (specific.openedSideTab === 'Patterns') {
+      return this.patternActions;
+    } else {
+      return [];
+    }
   }
 
   @Watch<SideTabs>('openedSideTab', { immediate: true })

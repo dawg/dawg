@@ -2,17 +2,17 @@
   <div class="icon__wrapper">
     <v-tooltip v-if="showTooltip" :right="right" :left="left" :top="top" :bottom="bottom">
       <template slot="activator">
-        <v-btn icon @click="$emit('click', $event)">
-          <icon v-if="fa" :name="icon" :style="style"></icon>
-          <v-icon v-else :style="style">{{ icon }}</v-icon>
-        </v-btn>
+        <div @click="$emit('click', $event)">
+          <icon v-if="fa" :name="icon" :style="style" v-bind="$attrs"></icon>
+          <v-icon v-else :style="style" v-bind="$attrs">{{ icon }}</v-icon>
+        </div>
       </template>
       <span>{{ tooltip }}</span>
     </v-tooltip>
-    <v-btn icon v-else @click="$emit('click', $event)">
-      <icon v-if="fa" :name="icon" :style="style"></icon>
-      <v-icon v-else :style="style">{{ icon }}</v-icon>
-    </v-btn>
+    <div v-else @click="$emit('click', $event)">
+      <icon v-if="fa" :name="icon" :style="style" v-bind="$attrs"></icon>
+      <v-icon v-else :style="style" v-bind="$attrs">{{ icon }}</v-icon>
+    </div>
     <slot v-if="false"></slot>
   </div>
 </template>
@@ -46,5 +46,6 @@ export default class TooltipIcon extends Vue {
 </script>
 
 <style lang="sass" scoped>
-
+.icon__wrapper:hover
+  cursor: pointer
 </style>

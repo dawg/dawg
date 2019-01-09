@@ -2,12 +2,13 @@
 import Vue from 'vue'
 import { UpdateAugmentation } from '@/modules/update';
 import { NotifyInterface } from '@/modules/notification';
+import { ContextInterface } from '@/modules/context';
 
 // 2. Specify a file with the types you want to augment
 //    Vue has the constructor type in types/vue.d.ts
 declare module 'vue/types/vue' {
   // 3. Declare augmentation for Vue
-  interface Vue extends UpdateAugmentation, NotifyInterface {
+  interface Vue extends UpdateAugmentation, NotifyInterface, ContextInterface {
     $log: {
       debug(...args: any[]): void,
       info(...args: any[]): void,
