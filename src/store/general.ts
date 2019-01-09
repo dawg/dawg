@@ -1,4 +1,4 @@
-import { VuexModule, Module, getModule } from 'vuex-module-decorators';
+import { VuexModule, Module, getModule, Mutation } from 'vuex-module-decorators';
 
 import SideBar from '@/components/SideBar.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
@@ -10,6 +10,16 @@ export class General extends VuexModule {
   public panels: BaseTabs | null = null;
   public toolbarHeight = 64;
   public play = false;
+
+  @Mutation
+  public setSideBarTabs(sideBarTabs: SideBar[]) {
+    this.sideBarTabs = sideBarTabs;
+  }
+
+  @Mutation
+  public setPanels(panels: BaseTabs) {
+    this.panels = panels;
+  }
 }
 
 export default getModule(General);

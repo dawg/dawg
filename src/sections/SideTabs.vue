@@ -36,7 +36,8 @@ import Patterns from '@/components/Patterns.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
 import SideBar from '@/components/SideBar.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
-import { project, cache, general, specific } from '@/store';
+import { project, cache, general, specific, Getter } from '@/store';
+import { Watch } from '@/modules/update';
 
 @Component({
   components: {
@@ -53,18 +54,27 @@ export default class SideTabs extends Vue {
   public specific = specific;
   public general = general;
   public sidebarTabTitle = '';
-  public items: SideBar[] = [];
   public $refs!: {
     tabs: BaseTabs,
   };
 
+  @Getter(specific) public openedSideTab!: string | null;
+
   public mounted() {
-    this.items = this.$refs.tabs.$children as SideBar[];
-    this.$refs.tabs.selectTab(cache.openedSideTab);
+    general.setSideBarTabs(this.$refs.tabs.$children as SideBar[]);
+    this.$refs.tabs.selectTab(specific.openedSideTab);
   }
 
   public changed(tab: SideBar) {
     this.sidebarTabTitle = tab.name;
+  }
+
+  @Watch<SideTabs>('openedSideTab', { immediate: true })
+  public onSideTabChange() {
+    if (this.$refs.tabs) {
+      this.$refs.tabs.selectTab(specific.openedSideTab);
+    }
+
   }
 }
 </script>

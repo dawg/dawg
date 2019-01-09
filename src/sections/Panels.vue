@@ -55,6 +55,10 @@ export default class Panels extends Vue {
   public general = general;
   public specific = specific;
 
+  public $refs!: {
+    panels: BaseTabs;
+  };
+
   get notes() {
     if (specific.selectedScore) {
       return specific.selectedScore.notes;
@@ -75,6 +79,10 @@ export default class Panels extends Vue {
     if (specific.selectedPattern) {
       return specific.selectedPattern.part;
     }
+  }
+
+  public mounted() {
+    general.setPanels(this.$refs.panels);
   }
 }
 </script>

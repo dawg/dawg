@@ -6,7 +6,7 @@
       <split direction="vertical">
         <split direction="horizontal" resizable>
           <split :initial="65" fixed>
-            <activity-bar :items="items" @click="clickActivityBar"></activity-bar>
+            <activity-bar :items="general.sideBarTabs" @click="clickActivityBar"></activity-bar>
           </split>
 
           <split :initial="250" collapsible :min-size="100">
@@ -83,18 +83,12 @@ import BaseTabs from '@/components/BaseTabs.vue';
 import Dawg from '@/components/Dawg.vue';
 import SideTabs from '@/sections/SideTabs.vue';
 import Notifications from '@/modules/notification/Notifications.vue';
-import Synths from '@/components/Synths.vue';
-import { remote, ipcRenderer } from 'electron';
+import { ipcRenderer } from 'electron';
 import { project, cache, general, specific } from '@/store';
 import { MapField, toTickTime, allKeys, Keys } from '@/utils';
 import Part from '@/modules/audio/part';
 import io from '@/modules/io';
 import { Pattern, Score, Note, Instrument } from '@/schemas';
-import Project from '@/store/project';
-
-const { dialog } = remote;
-
-
 
 
 @Component({
@@ -124,7 +118,6 @@ export default class App extends Vue {
   public part = new Part<Note>();
 
   public $refs!: {
-    panels: BaseTabs,
     sideTabs: SideTabs,
   };
 
@@ -157,9 +150,9 @@ export default class App extends Vue {
   }
 
   public clickActivityBar(tab: SideBar, $event: MouseEvent) {
-    cache.setOpenedSideTab(tab.name);
+    specific.setOpenedSideTab(tab.name);
     // TODO(jacob) This is gross
-    this.$refs.sideTabs.$refs.tabs.selectTab(tab.name, $event);
+    // this.$refs.sideTabs.$refs.tabs.selectTab(tab.name, $event);
   }
   get openedFile() {
     if (!cache) { return null; }

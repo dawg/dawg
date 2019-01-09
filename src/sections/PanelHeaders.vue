@@ -25,7 +25,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import BaseTabs from '@/components/BaseTabs.vue';
 import { Nullable } from '@/utils';
-import { project, cache, general } from '@/store';
+import { project, cache, general, specific } from '@/store';
 import { Watch } from '@/modules/update';
 
 type ACTIONS = 'add';
@@ -47,7 +47,7 @@ export default class PanelHeaders extends Vue {
 
   get actions() {
     // TODO NO Type Checking
-    if (cache.openedPanel === 'Instruments') {
+    if (specific.openedPanel === 'Instruments') {
       return this.synthActions;
     } else {
       return [];
@@ -63,7 +63,8 @@ export default class PanelHeaders extends Vue {
   }
 
   public selectPanel(name: string, e: MouseEvent) {
-    cache.setOpenedPanel(name);
+    // TODO(jacob)
+    specific.setOpenedPanel(name);
     if (general.panels) {
       general.panels.selectTab(name, e);
     }

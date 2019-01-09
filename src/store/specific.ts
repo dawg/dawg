@@ -2,7 +2,8 @@ import fs, { read } from 'mz/fs';
 import path from 'path';
 
 import { Module as Mod } from 'vuex';
-import { Module, getModule, VuexModule, Action, Mutation } from 'vuex-module-decorators';
+import { Module, getModule, Action, Mutation } from 'vuex-module-decorators';
+import { VuexModule } from '@/store/utils';
 
 import io from '@/modules/io';
 import store from '@/store/store';
@@ -17,11 +18,14 @@ interface ProjectCache {
   [k: string]: object;
 }
 
-@Module({ dynamic: true, store, name: 'general' })
+@Module({ dynamic: true, store, name: 'specific' })
 export class Specific extends VuexModule {
   @autoserialize public selectedPatternId: string | null = null;
   @autoserialize public selectedScoreId: string | null = null;
   @autoserialize public selectedSynthId: string | null = null;
+  @autoserialize public openedPanel: string | null = null;
+  @autoserialize public openedSideTab: string | null = null;
+  public projectId: string | null = null;
 
   constructor(module?: Mod<any, any>) {
     super(module || {});
@@ -52,22 +56,16 @@ export class Specific extends VuexModule {
     return scores;
   }
 
-  @Mutation
-  public setPattern(pattern: Pattern | null) {
-    if (pattern) {
-      this.selectedPatternId = pattern.id;
-    } else {
-      this.selectedPatternId = null;
-    }
+  @Action
+  public setOpenedPanel(openedPanel: string) {
+    this.set({ key: 'openedPanel', value: openedPanel });
+    return this.write();
   }
 
-  @Mutation
-  public setScore(score: Score | null) {
-    if (score) {
-      this.selectedScoreId = score.id;
-    } else {
-      this.selectedScoreId = null;
-    }
+  @Action
+  public setOpenedSideTab(sideTab: string) {
+    this.set({ key: 'openedSideTab', value: sideTab });
+    return this.write();
   }
 
   @Action
@@ -87,22 +85,42 @@ export class Specific extends VuexModule {
   }
 
   @Action
-  private async read() {
+  public async read() {
     const contents = (await fs.readFile(PROJECT_CACHE_PATH)).toString();
     return JSON.parse(contents) as ProjectCache;
   }
 
-  // private async write(projectId: string) {
-  //   const c = io.serialize(this, Specific);
-  //   const dir = path.dirname(PROJECT_CACHE_PATH);
-  //   if (!await fs.exists(dir)) {
-  //     await fs.mkdir(dir);
-  //   }
+  @Mutation
+  public setPattern(pattern: Pattern | null) {
+    if (pattern) {
+      this.selectedPatternId = pattern.id;
+    } else {
+      this.selectedPatternId = null;
+    }
+  }
 
-  //   const json = this.read();
+  @Mutation
+  public setScore(score: Score | null) {
+    if (score) {
+      this.selectedScoreId = score.id;
+    } else {
+      this.selectedScoreId = null;
+    }
+  }
 
-  //   return fs.writeFile(PROJECT_CACHE_PATH, JSON.stringify(c));
-  // }
+  @Action
+  private async write() {
+    if (!this.projectId) { return; }
+    const c = io.serialize(this, Specific);
+    const dir = path.dirname(PROJECT_CACHE_PATH);
+    if (!await fs.exists(dir)) {
+      await fs.mkdir(dir);
+    }
+
+    const json = await this.read();
+    json[this.projectId] = c;
+    return fs.writeFile(PROJECT_CACHE_PATH, JSON.stringify(json));
+  }
 
   private reset(payload: Specific) {
     Object.assign(this, payload);

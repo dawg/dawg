@@ -3,19 +3,18 @@ import io from '@/modules/io';
 import path from 'path';
 
 import { Module as Mod } from 'vuex';
-import { Mutation, Action, VuexModule, Module, getModule } from 'vuex-module-decorators';
+import { Mutation, Action, Module, getModule } from 'vuex-module-decorators';
 import { autoserialize, autoserializeAs } from 'cerialize';
 
 import store from '@/store/store';
 import { APPLICATION_PATH } from '@/constants';
+import { VuexModule } from '@/store/utils';
 
 const CACHE_PATH = path.join(APPLICATION_PATH, 'cache.json');
 
 @Module({ dynamic: true, store, name: 'cache' })
 export class Cache extends VuexModule {
   @autoserialize public openedFile: string | null = null;
-  @autoserialize public openedPanel: string | null = null;
-  @autoserialize public openedSideTab: string | null = null;
   @autoserializeAs(String) public folders: string[] = [];
 
   constructor(module?: Mod<any, any>) {
@@ -43,33 +42,16 @@ export class Cache extends VuexModule {
   @Action
   public setOpenedFile(openedFile: string) {
     this.openedFile = openedFile;
-    this.set('openedFile', openedFile);
+    this.set({ key: 'openedFile', value: openedFile });
     // This write call actually works.
     // I was worried it wouldn't work since this method is not async.
     return this.write();
   }
 
   @Action
-  public setOpenedPanel(openedPanel: string) {
-    this.set('openedPanel', openedPanel);
-    return this.write();
-  }
-
-  @Action
-  public setOpenedSideTab(sideTab: string) {
-    this.set('openedSideTab', sideTab);
-    return this.write();
-  }
-
-  @Action
   public setFolders(folders: string[]) {
-    this.set('folders', folders);
+    this.set({ key: 'folders', value: folders });
     return this.write();
-  }
-
-  @Mutation
-  public set<T extends keyof this & string>(key: T, value: this[T]) {
-    this[key] = value;
   }
 
   @Action
