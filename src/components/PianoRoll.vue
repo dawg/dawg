@@ -37,8 +37,8 @@ import Tone from 'tone';
 import Piano from '@/components/Piano.vue';
 import Sequencer from '@/components/Sequencer.vue';
 import Timeline from '@/components/Timeline.vue';
-import { Note } from '@/schemas';
-import { toTickTime } from '@/utils';
+import { Note, Instrument } from '@/schemas';
+import { toTickTime, allKeys } from '@/utils';
 import { Transform } from 'stream';
 import { Watch } from '@/modules/update';
 import Part from '@/modules/audio/part';
@@ -46,7 +46,7 @@ import Part from '@/modules/audio/part';
 @Component({components: { Piano, Sequencer, Timeline }})
 export default class PianoRoll extends Vue {
   @Inject() public pxPerBeat!: number;
-  @Prop({ type: Object, required: false }) public synth?: Tone.Synth;
+  @Prop({ type: Object, required: true }) public instrument!: Instrument;
   @Prop({ type: Array, required: true }) public value!: Note[];
   @Prop({ type: Boolean, required: true }) public play!: boolean;
   @Prop({ type: Object, required: true }) public part!: Part<Note>;
@@ -65,11 +65,24 @@ export default class PianoRoll extends Vue {
   }
 
   public added(note: Note) {
-    this.$emit('added', note);
+    const time = toTickTime(note.time);
+    this.$log.debug(`Adding note at ${note.time} -> ${time}`);
+    this.part.add(this.callback(this.instrument), time, note);
+  }
+  public removed(note: Note, i: number) {
+    // const time = toTickTime(note.time);
+    this.part.remove(note);
   }
 
-  public removed(note: Note, i: number) {
-    this.$emit('removed', note, i);
+  /**
+   * The callback for the part. The instrument is given so that it is stored within the callback.
+   */
+  public callback(instrument: Instrument) {
+    return (time: number, note: Note) => {
+      const duration = toTickTime(note.duration);
+      const value = allKeys[note.id].value;
+      instrument.triggerAttackRelease(value, duration, time);
+    };
   }
 
   public scrollHorizontal(scrollLeft: number) {

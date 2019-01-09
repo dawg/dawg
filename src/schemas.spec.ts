@@ -1,6 +1,6 @@
 import { Serialize, Deserialize, autoserializeAs } from 'cerialize';
 import { expect } from 'chai';
-import { Note, Score, Pattern, Instrument, Project } from './schemas';
+import { Note, Score, Pattern, Instrument } from './schemas';
 
 describe('schemas', () => {
   it('Recursive', () => {
@@ -51,7 +51,7 @@ describe('schemas', () => {
 
   context('Instrument', () => {
     it('works', () => {
-      const instrument = Instrument.create({name: 'IN', pan: 0.5, volume: 1, type: 'sine' });
+      const instrument = Instrument.create({ name: 'IN', pan: 0.5, volume: 1, type: 'sine', mute: true });
       const serialized = Deserialize(Serialize(instrument, Instrument));
       const recreated = Deserialize(Serialize(instrument, Instrument));
       expect(serialized).to.deep.eq(Serialize(recreated));

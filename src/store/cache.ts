@@ -1,39 +1,31 @@
 import fs from 'mz/fs';
 import io from '@/modules/io';
 import path from 'path';
-import { remote } from 'electron';
-import { Mutation, Action, VuexModule } from 'vuex-module-decorators';
+
+import { Module as Mod } from 'vuex';
+import { Mutation, Action, VuexModule, Module, getModule } from 'vuex-module-decorators';
 import { autoserialize, autoserializeAs } from 'cerialize';
 
-const { app } = remote;
+import store from '@/store/store';
+import { APPLICATION_PATH } from '@/constants';
 
-const APP_DATA = app.getPath('appData');
-const DEFAULT = {
-  openedFile: null,
-  openedPanel: null,
-  openedSideTab: null,
-  folders: [],
-};
-const APPLICATION_PATH = path.join(APP_DATA, app.getName());
 const CACHE_PATH = path.join(APPLICATION_PATH, 'cache.json');
 
-interface ICache {
-  openedFile: string | null;
-  openedPanel: string | null;
-  openedSideTab: string | null;
-  folders: string[];
-}
-
-export default class Cache extends VuexModule implements ICache {
+@Module({ dynamic: true, store, name: 'cache' })
+export class Cache extends VuexModule {
   @autoserialize public openedFile: string | null = null;
   @autoserialize public openedPanel: string | null = null;
   @autoserialize public openedSideTab: string | null = null;
   @autoserializeAs(String) public folders: string[] = [];
 
+  constructor(module?: Mod<any, any>) {
+    super(module || {});
+  }
+
   @Action
   public async fromCacheFolder() {
     if (!(await fs.exists(CACHE_PATH))) {
-      await this.writeDefault();
+      await this.write();
     }
 
     // TODO Error handling
@@ -44,14 +36,8 @@ export default class Cache extends VuexModule implements ICache {
   }
 
   @Mutation
-  public reset(o: ICache | Cache) {
+  public reset(o: Cache) {
     Object.assign(this, o);
-  }
-
-  @Action
-  public async writeDefault() {
-    this.reset(DEFAULT);
-    this.write();
   }
 
   @Action
@@ -97,3 +83,4 @@ export default class Cache extends VuexModule implements ICache {
     return fs.writeFile(CACHE_PATH, JSON.stringify(c));
   }
 }
+export default getModule(Cache);

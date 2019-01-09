@@ -32,7 +32,7 @@ export default class Synths extends Vue {
     const lookup: {[k: string]: Score} = {};
     if (this.selectedPattern) {
       this.selectedPattern.scores.forEach((score) => {
-        lookup[score.instrument] = score;
+        lookup[score.instrumentId] = score;
       });
     }
     return lookup;
@@ -43,6 +43,7 @@ export default class Synths extends Vue {
     this.$children.slice(i + 1).forEach((instrument) => instrument.selected = false);
     this.$children[i].selected = !this.$children[i].selected;
 
+    // TODO (jacob) How shoudl this change?
     if (this.$children[i].selected) {
       this.$update('instrument', this.$children[i].instrument);
     } else {
@@ -52,7 +53,7 @@ export default class Synths extends Vue {
 
   public getNotes(instrument: Instrument) {
     if (instrument.name in this.scoreLookup) {
-      return this.scoreLookup[instrument.name].notes;
+      return this.scoreLookup[instrument.id].notes;
     }
   }
 

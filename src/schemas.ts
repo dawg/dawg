@@ -1,6 +1,8 @@
 import { autoserialize, autoserializeAs } from 'cerialize';
 import Tone from 'tone';
-import Part from './modules/audio/part';
+import uuid from 'uuid';
+
+import Part from '@/modules/audio/part';
 
 
 export interface INote {
@@ -23,12 +25,14 @@ export class Note implements INote {
 }
 
 export class Score {
-  public static create(instrument: string) {
+  public static create(instrumentId: string) {
     const score = new Score();
-    score.instrument = instrument;
+    score.instrumentId = instrumentId;
+    score.id = uuid.v4();
     return score;
   }
-  @autoserialize public instrument!: string; // TODO try to serialize actual instrument
+  @autoserialize public id!: string;
+  @autoserialize public instrumentId!: string; // TODO try to serialize actual instrument
   @autoserializeAs(Note) public notes: Note[] = [];
 }
 
@@ -36,11 +40,13 @@ export class Pattern {
   public static create(name: string) {
     const pattern = new Pattern();
     pattern.name = name;
+    pattern.id = uuid.v4();
     return pattern;
   }
+  @autoserialize public id!: string;
   @autoserialize public name!: string;
   @autoserializeAs(Score) public scores: Score[] = [];
-  public part = new Part();
+  public part = new Part<Note>();
 }
 
 export interface IInstrument {
@@ -59,6 +65,7 @@ export class Instrument implements IInstrument {
     instrument.volume = o.volume;
     instrument.type = o.type;
     instrument.mute = o.mute;
+    instrument.id = uuid.v4();
     return instrument;
   }
   public static default(name: string) {
@@ -71,6 +78,7 @@ export class Instrument implements IInstrument {
     });
   }
   @autoserialize public name!: string;
+  @autoserialize public id!: string;
   // tslint:disable-next-line:variable-name
   private _type!: string;
   // tslint:disable-next-line:variable-name

@@ -149,7 +149,7 @@ export interface MapFieldSetter {
 export type ConstructorOf<T> = new(...args: any[]) => T;
 
 export function Setter<T extends ConstructorOf<{}>>(Base: T) {
-    class WithSetter extends Base {
+    class WithSetter extends Base implements MapFieldSetter {
       @Mutation
       public setValue<A, V extends keyof A>(payload: { o: A, key: V, value: any }) {
         payload.o[payload.key] = payload.value;

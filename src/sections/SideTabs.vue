@@ -15,7 +15,12 @@
         </side-bar>
         <side-bar name="AUDIO FILES" icon="queue_music"></side-bar>
         <side-bar name="PATTERNS" icon="queue_play">
-          <patterns v-model="project.selectedPattern" :patterns="project.patterns"></patterns>
+          <!-- TODO(jacob) -->
+          <patterns 
+            :value="specific.selectedPattern" 
+            @input="specific.setPattern"
+            :patterns="project.patterns"
+          ></patterns>
         </side-bar>
         <side-bar name="SEARCH" icon="search"></side-bar>
       </base-tabs>
@@ -31,7 +36,7 @@ import Patterns from '@/components/Patterns.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
 import SideBar from '@/components/SideBar.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
-import { project, cache, general } from '@/store';
+import { project, cache, general, specific } from '@/store';
 
 @Component({
   components: {
@@ -45,6 +50,7 @@ import { project, cache, general } from '@/store';
 export default class SideTabs extends Vue {
   public project = project;
   public cache = cache;
+  public specific = specific;
   public general = general;
   public sidebarTabTitle = '';
   public items: SideBar[] = [];

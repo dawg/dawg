@@ -85,7 +85,7 @@ import SideTabs from '@/sections/SideTabs.vue';
 import Notifications from '@/modules/notification/Notifications.vue';
 import Synths from '@/components/Synths.vue';
 import { remote, ipcRenderer } from 'electron';
-import { project, cache, general } from '@/store';
+import { project, cache, general, specific } from '@/store';
 import { MapField, toTickTime, allKeys, Keys } from '@/utils';
 import Part from '@/modules/audio/part';
 import io from '@/modules/io';
@@ -94,7 +94,7 @@ import Project from '@/store/project';
 
 const { dialog } = remote;
 
-const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
+
 
 
 @Component({
@@ -110,6 +110,7 @@ const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
     Notifications,
     Panels,
     ActivityBar,
+    SideTabs,
     PanelHeaders,
   },
 })
@@ -131,7 +132,7 @@ export default class App extends Vue {
   public items: SideBar[] = [];
 
   public async mounted() {
-    ipcRenderer.on('save', this.save);
+    ipcRenderer.on('save', project.save);
     ipcRenderer.on('open', this.open);
 
     cache.fromCacheFolder();
@@ -155,13 +156,6 @@ export default class App extends Vue {
     }
   }
 
-  get instrumentLookup() {
-    const instruments: {[k: string]: Instrument} = {};
-    this.project.instruments.forEach((instrument) => {
-      instruments[instrument.name] = instrument;
-    });
-    return instruments;
-  }
   public clickActivityBar(tab: SideBar, $event: MouseEvent) {
     cache.setOpenedSideTab(tab.name);
     // TODO(jacob) This is gross
@@ -171,53 +165,22 @@ export default class App extends Vue {
     if (!cache) { return null; }
     return cache.openedFile;
   }
-  public save() {
-    if (!cache.openedFile) {
-      cache.setOpenedFile(dialog.showSaveDialog(remote.getCurrentWindow(), {}));
-      // dialog.showSaveDialog can be null. Return type for showSaveDialog is wrong.
-      if (!cache.openedFile) { return; }
-      if (!cache.openedFile.endsWith('.dg')) {
-        cache.setOpenedFile(cache.openedFile + '.dg');
-      }
-    }
 
-    const encoded = io.serialize(project, Project);
-    fs.writeFileSync(
-      cache.openedFile,
-      JSON.stringify(encoded, null, 4),
-    );
-  }
-  public open() {
-    // files can be undefined. There is an issue with the .d.ts files.
-    const files = dialog.showOpenDialog(
-      remote.getCurrentWindow(),
-      { filters: FILTERS, properties: ['openFile'] },
-    );
-
-    if (!files) {
-      return;
-    }
-
-    const filePath = files[0];
-    cache.setOpenedFile(filePath);
-    this.load();
-  }
-
-  public load(filePath?: string) {
-    if (!cache.openedFile) { return; }
-
-    let contents = fs.readFileSync(cache.openedFile).toString();
-
+  public withErrorHandling(callback: () => void) {
     try {
-      contents = JSON.parse(contents);
+      callback();
     } catch (e) {
-      this.$notify.error('Unable to parse file.');
+      this.$notify.error('Unable to load project.');
       this.$log.error(e);
-      return;
     }
+  }
 
-    const result = io.deserialize(contents, Project);
-    project.reset(result);
+  public load() {
+    this.withErrorHandling(project.load);
+  }
+
+  public open() {
+    this.withErrorHandling(project.open);
   }
 
   public playPattern() {
@@ -234,22 +197,6 @@ export default class App extends Vue {
     } else {
       this.playPattern();
     }
-  }
-  public added(note: Note) {
-    const time = toTickTime(note.time);
-    this.$log.debug(`Adding note at ${note.time} -> ${time}`);
-    this.part.add(this.callback, time, note);
-  }
-  public removed(note: Note, i: number) {
-    // const time = toTickTime(note.time);
-    this.part.remove(note);
-  }
-  public callback(time: number, note: Note) {
-    if (!project.selectedScore) { return; }
-    const duration = toTickTime(note.duration);
-    const value = allKeys[note.id].value;
-    const instrument = this.instrumentLookup[project.selectedScore.instrument];
-    instrument.triggerAttackRelease(value, duration, time);
   }
 }
 </script>

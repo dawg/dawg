@@ -21,7 +21,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 
 @Component
-export default class NAME extends Vue {
+export default class TooltipIcon extends Vue {
   @Prop({ type: Boolean, default: false }) public fa!: boolean;
   @Prop({ type: Boolean, default: false }) public right!: boolean;
   @Prop({ type: Boolean, default: false }) public left!: boolean;
