@@ -75,8 +75,7 @@ storiesOf(SequencerRow.name, module)
     components: { SequencerRow, Dawg },
     methods: {
       click(...args) {
-        // tslint:disable-next-line:no-console
-        console.log('click', args);
+        //
       },
     },
   }));

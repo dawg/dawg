@@ -10,7 +10,7 @@
           </split>
 
           <split :initial="250" collapsible :min-size="100">
-            <side-tabs></side-tabs>
+            <side-tabs v-if="loaded"></side-tabs>
           </split>
 
           <split direction="vertical" resizable>
@@ -27,7 +27,7 @@
               <tabs 
                 :style="`height: 100%`" 
                 :selected-tab="specific.openedTab"
-                :selected-tab:update="specific.setTab"
+                @update:selected-tab="specific.setTab"
               >
                 <tab name="Playlist 1">
                   <div></div>
@@ -52,7 +52,7 @@
                 <panel-headers></panel-headers>
               </split>
               <split>
-                <panels></panels>
+                <panels v-if="loaded"></panels>
               </split>
             </split>
 
@@ -121,6 +121,7 @@ export default class App extends Vue {
   public specific = specific;
 
   public play = false;
+  public loaded = false;
   public part = new Part<Note>();
 
   get openedFile() {
@@ -128,10 +129,11 @@ export default class App extends Vue {
     return cache.openedFile;
   }
 
-  public async created() {
+  public created() {
     // Make sure we load the cache first before loading the default project.
-    await cache.fromCacheFolder();
+    cache.fromCacheFolder();
     this.withErrorHandling(project.load);
+    this.loaded = true;
 
     window.addEventListener('keypress', this.keydown);
     ipcRenderer.on('save', project.save);

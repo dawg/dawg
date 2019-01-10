@@ -4,7 +4,7 @@
       v-for="(pattern, i) in patterns"
       :key="i"
       class="pattern"
-      :class="{ selected: pattern.name === value }"
+      :class="{ selected: value && pattern.id === value.id }"
       @click="click(pattern)"
     >
       {{ pattern.name }}
@@ -16,6 +16,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Pattern } from '@/schemas';
 import { Nullable } from '@/utils';
+import { Watch } from '@/modules/update';
 
 @Component
 export default class Patterns extends Vue {
@@ -28,8 +29,12 @@ export default class Patterns extends Vue {
       this.$emit('input', p);
     }
   }
-  public mounted() {
-    this.$emit('input', this.patterns[0] || null);
+
+  @Watch<Patterns>('patterns')
+  public selectFirstPatternIfNoPatternIsSelected() {
+    if (this.value) { return; }
+    if (this.patterns.length === 0) { return; }
+    this.$emit('input', this.patterns[0]);
   }
 }
 </script>

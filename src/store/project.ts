@@ -113,6 +113,17 @@ export class Project extends VuexModule {
   }
 
   @Mutation
+  public addScore(payload: { pattern: Pattern, instrument: Instrument} ) {
+    payload.pattern.scores.forEach((pattern) => {
+      if (pattern.instrumentId === payload.instrument.id) {
+        throw Error(`An score already exists for ${payload.instrument.id}`);
+      }
+    });
+
+    payload.pattern.scores.push(Score.create(payload.instrument.id));
+  }
+
+  @Mutation
   public deleteInstrument(i: number) {
     Vue.delete(this.instruments, i);
   }
@@ -120,7 +131,7 @@ export class Project extends VuexModule {
   get patternLookup() {
     const patterns: {[k: string]: Pattern} = {};
     this.patterns.forEach((pattern) => {
-      patterns[pattern.name] = pattern;
+      patterns[pattern.id] = pattern;
     });
     return patterns;
   }
@@ -128,7 +139,7 @@ export class Project extends VuexModule {
   get instrumentLookup() {
     const instruments: {[k: string]: Instrument} = {};
     this.instruments.forEach((instrument) => {
-      instruments[instrument.name] = instrument;
+      instruments[instrument.id] = instrument;
     });
     return instruments;
   }

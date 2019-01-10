@@ -32,7 +32,7 @@ export class Score {
     return score;
   }
   @autoserialize public id!: string;
-  @autoserialize public instrumentId!: string; // TODO try to serialize actual instrument
+  @autoserialize public instrumentId!: string;
   @autoserializeAs(Note) public notes: Note[] = [];
 }
 
@@ -40,10 +40,9 @@ export class Pattern {
   public static create(name: string) {
     const pattern = new Pattern();
     pattern.name = name;
-    pattern.id = uuid.v4();
     return pattern;
   }
-  @autoserialize public id!: string;
+  @autoserialize public id: string = uuid.v4();
   @autoserialize public name!: string;
   @autoserializeAs(Score) public scores: Score[] = [];
   public part = new Part<Note>();

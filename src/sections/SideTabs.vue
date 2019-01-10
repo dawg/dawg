@@ -20,7 +20,7 @@
       <base-tabs
         ref="tabs"
         :selected-tab="specific.openedSideTab"
-        :selected-tab:update="specific.setOpenedSideTab"
+        @update:selected-tab="specific.setOpenedSideTab"
       >
         <side-bar name="Explorer" icon="folder">
           <file-explorer

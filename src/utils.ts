@@ -105,8 +105,17 @@ export const Nullable = (o: { new(): object }) => {
   return {
     required: true,
     validator: (prop: any) => {
-      // TODO I don't know how well the first check holds up but it works for now
-      return typeof prop === o.name.toLowerCase() || prop === null;
+      const valid = typeof prop === o.name.toLowerCase() || prop === null;
+      if (!valid) {
+        if (prop === undefined) {
+          // tslint:disable-next-line:no-console
+          console.warn('prop cannot be undefined');
+        } else {
+          // tslint:disable-next-line:no-console
+          console.warn(`prop should not be of type ${typeof prop}`);
+        }
+      }
+      return valid;
     },
   };
 };

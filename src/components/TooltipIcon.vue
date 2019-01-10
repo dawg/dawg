@@ -1,6 +1,6 @@
 <template>
   <div class="icon__wrapper">
-    <v-tooltip v-if="showTooltip" :right="right" :left="left" :top="top" :bottom="bottom">
+    <v-tooltip :right="right" :left="left" :top="top" :bottom="bottom" z-index="100">
       <template slot="activator">
         <div @click="$emit('click', $event)">
           <icon v-if="fa" :name="icon" :style="style" v-bind="$attrs"></icon>
@@ -9,10 +9,6 @@
       </template>
       <span>{{ tooltip }}</span>
     </v-tooltip>
-    <div v-else @click="$emit('click', $event)">
-      <icon v-if="fa" :name="icon" :style="style" v-bind="$attrs"></icon>
-      <v-icon v-else :style="style" v-bind="$attrs">{{ icon }}</v-icon>
-    </div>
     <slot v-if="false"></slot>
   </div>
 </template>
@@ -27,7 +23,7 @@ export default class TooltipIcon extends Vue {
   @Prop({ type: Boolean, default: false }) public left!: boolean;
   @Prop({ type: Boolean, default: false }) public top!: boolean;
   @Prop({ type: Boolean, default: false }) public bottom!: boolean;
-  @Prop(String) public tooltip!: boolean;
+  @Prop({ type: String, required: true }) public tooltip!: boolean;
   @Prop({ type: String, default: 'white' }) public color!: boolean;
 
   get icon() {

@@ -10,6 +10,7 @@
     </li>
     <div style="flex-grow: 1"></div>
     <tooltip-icon
+      class="action"
       v-for="action in actions"
       :key="action.icon"
       :tooltip="action.tooltip"
@@ -88,6 +89,9 @@ export default class PanelHeaders extends Vue {
       
       & .text
         border-bottom: 1px solid
+
+.action
+  padding: .75em 1em
 
 .text
   align-items: center

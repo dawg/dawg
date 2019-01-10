@@ -3,15 +3,15 @@
     class="tabs-panels secondary" 
     ref="panels"
     :selected-tab="specific.openedPanel"
-    :selected-tab:update="specific.setOpenedPanel"
+    @update:selected-tab="specific.setOpenedPanel"
   >
     <panel name="Instruments">
       <synths 
         :instruments="project.instruments"
         :selected-score="specific.selectedScore"
-        :update:selected-score="specific.setScore"
+        @update:selectedScore="specific.setScore"
         :selected-pattern="specific.selectedPattern"
-        :update:selected-pattern="specific.setPattern"
+        @update:selected-pattern="specific.setPattern"
         :instrument="specific.selectedSynth"
         :scores="specific.selectedScore"
       ></synths>
@@ -71,7 +71,7 @@ export default class Panels extends Vue {
   }
 
   get shouldRender() {
-    return !!specific.selectedPattern && !!specific.selectedScore;
+    return !!specific.selectedScore;
   }
 
   get instrument() {
