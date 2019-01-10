@@ -1,5 +1,10 @@
 <template>
-  <base-tabs class="tabs-panels secondary" ref="panels">
+  <base-tabs 
+    class="tabs-panels secondary" 
+    ref="panels"
+    :selected-tab="specific.openedPanel"
+    :selected-tab:update="specific.setOpenedPanel"
+  >
     <panel name="Instruments">
       <synths 
         :instruments="project.instruments"

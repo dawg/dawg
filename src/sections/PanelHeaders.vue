@@ -6,7 +6,7 @@
       :class="{ 'is-active': tab.isActive }"
       class="tabs-header"
     >
-      <div @click="selectPanel(tab.name, $event)" class="text white--text">{{ tab.name }}</div>
+      <div @click="selectPanel(tab.name)" class="text white--text">{{ tab.name }}</div>
     </li>
     <div style="flex-grow: 1"></div>
     <tooltip-icon
@@ -61,20 +61,9 @@ export default class PanelHeaders extends Vue {
     }
   }
 
-  public selectPanel(name: string, e: MouseEvent) {
-    // TODO(jacob)
+  public selectPanel(name: string) {
     specific.setOpenedPanel(name);
-    if (general.panels) {
-      general.panels.selectTab(name, e);
-    }
   }
-
-  // TODO(jacob) Finish this
-  // @Watch<PanelHeaders>('panels')
-  // public selectPanelIfNull() {
-  //   if (!general.panels || cache.openedPanel) { return; }
-  //   cache.setOpenedPanel(general.panels.tabs[0].name);
-  // }
 }
 </script>
 

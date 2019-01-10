@@ -24,7 +24,11 @@
             </split>
 
             <split>
-              <tabs :style="`height: 100%`">
+              <tabs 
+                :style="`height: 100%`" 
+                :selected-tab="specific.openedTab"
+                :selected-tab:update="specific.setTab"
+              >
                 <tab name="Playlist 1">
                   <div></div>
                 </tab>
@@ -114,6 +118,7 @@ export default class App extends Vue {
 
   public project = project;
   public general = general;
+  public specific = specific;
 
   public play = false;
   public part = new Part<Note>();
@@ -128,13 +133,15 @@ export default class App extends Vue {
     await cache.fromCacheFolder();
     this.withErrorHandling(project.load);
 
+    window.addEventListener('keypress', this.keydown);
     ipcRenderer.on('save', project.save);
     ipcRenderer.on('open', this.open);
-    window.addEventListener('keypress', this.keydown);
   }
 
   public destroyed() {
     window.removeEventListener('keypress', this.keydown);
+    ipcRenderer.removeListener('save', project.save);
+    ipcRenderer.removeListener('open', this.open);
   }
 
   public keydown(e: KeyboardEvent) {
@@ -151,6 +158,7 @@ export default class App extends Vue {
   public withErrorHandling(callback: () => void) {
     try {
       callback();
+      specific.load();
     } catch (e) {
       this.$notify.error('Unable to load project.');
       this.$log.error(e);

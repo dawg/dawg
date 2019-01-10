@@ -4,7 +4,7 @@
       class="section-header white--text"
       :style="`min-height: ${general.toolbarHeight + 1}px; display: flex; align-items: center`"
     >
-      <div class="aside--title">{{ sidebarTabTitle.toUpperCase() }}</div>
+      <div class="aside--title">{{ header }}</div>
       <div style="flex-grow: 1"></div>
       <tooltip-icon
         v-for="action in actions"
@@ -17,7 +17,11 @@
       </tooltip-icon>
     </div>
     <vue-perfect-scrollbar class="scrollbar" style="height: 100%">
-      <base-tabs ref="tabs" @changed="changed">
+      <base-tabs
+        ref="tabs"
+        :selected-tab="specific.openedSideTab"
+        :selected-tab:update="specific.setOpenedSideTab"
+      >
         <side-bar name="Explorer" icon="folder">
           <file-explorer
             :folders.sync="cache.folders"
@@ -46,7 +50,7 @@ import Patterns from '@/components/Patterns.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
 import SideBar from '@/components/SideBar.vue';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
-import { project, cache, general, specific, Getter } from '@/store';
+import { project, cache, general, specific } from '@/store';
 import { Watch } from '@/modules/update';
 
 interface Group {
@@ -69,7 +73,6 @@ export default class SideTabs extends Vue {
   public cache = cache;
   public specific = specific;
   public general = general;
-  public sidebarTabTitle = '';
   public $refs!: {
     tabs: BaseTabs,
   };
@@ -81,15 +84,8 @@ export default class SideTabs extends Vue {
     },
   ];
 
-  @Getter(specific) public openedSideTab!: string | null;
-
   public mounted() {
     general.setSideBarTabs(this.$refs.tabs.$children as SideBar[]);
-    this.$refs.tabs.selectTab(specific.openedSideTab);
-  }
-
-  public changed(tab: SideBar) {
-    this.sidebarTabTitle = tab.name;
   }
 
   get actions(): Group[] {
@@ -101,12 +97,10 @@ export default class SideTabs extends Vue {
     }
   }
 
-  @Watch<SideTabs>('openedSideTab', { immediate: true })
-  public onSideTabChange() {
-    if (this.$refs.tabs) {
-      this.$refs.tabs.selectTab(specific.openedSideTab);
+  get header() {
+    if (specific.openedSideTab) {
+      return specific.openedSideTab.toUpperCase();
     }
-
   }
 }
 </script>

@@ -11,6 +11,7 @@ import store from '@/store/store';
 import cache from '@/store/cache';
 import io from '@/modules/io';
 import Vue from 'vue';
+import uuid from 'uuid';
 
 const { dialog } = remote;
 const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
@@ -41,6 +42,7 @@ const findUniqueName = (objects: Array<{ name: string }>, prefix: string) => {
 @Module({ dynamic: true, store, name: 'project' })
 export class Project extends VuexModule {
   @autoserialize public bpm = 128;
+  @autoserialize public id = uuid.v4();
   @autoserializeAs(Pattern) public patterns: Pattern[] = [];
   @autoserializeAs(Instrument) public instruments: Instrument[] = [];
 

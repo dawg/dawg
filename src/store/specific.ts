@@ -25,6 +25,7 @@ export class Specific extends VuexModule {
   @autoserialize public selectedSynthId: string | null = null;
   @autoserialize public openedPanel: string | null = null;
   @autoserialize public openedSideTab: string | null = null;
+  @autoserialize public openedTab: string | null = null;
   public projectId: string | null = null;
 
   constructor(module?: Mod<any, any>) {
@@ -69,17 +70,23 @@ export class Specific extends VuexModule {
   }
 
   @Action
-  public async load(projectId: string) {
+  public setTab(tab: string) {
+    this.set({ key: 'openedTab', value: tab });
+    return this.write();
+  }
+
+  @Action
+  public async load() {
     if (!(await fs.exists(PROJECT_CACHE_PATH))) {
       await fs.writeFile(PROJECT_CACHE_PATH, JSON.stringify({}));
     }
 
     const json = await this.read();
-    if (!json.hasOwnProperty(projectId)) {
+    if (!json.hasOwnProperty(project.id)) {
       return;
     }
 
-    const projectStuff = json[projectId];
+    const projectStuff = json[project.id];
     const decoded = io.deserialize(projectStuff, Specific);
     this.reset(decoded);
   }
@@ -110,7 +117,7 @@ export class Specific extends VuexModule {
 
   @Action
   private async write() {
-    if (!this.projectId) { return; }
+    if (!project.id) { return; }
     const c = io.serialize(this, Specific);
     const dir = path.dirname(PROJECT_CACHE_PATH);
     if (!await fs.exists(dir)) {
@@ -118,7 +125,7 @@ export class Specific extends VuexModule {
     }
 
     const json = await this.read();
-    json[this.projectId] = c;
+    json[project.id] = c;
     return fs.writeFile(PROJECT_CACHE_PATH, JSON.stringify(json));
   }
 
