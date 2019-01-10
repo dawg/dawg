@@ -6,10 +6,11 @@
         class="icon"
         :scale="scale" 
         :style="indent"
+        v-if="!isLeaf || isWav"
       >
         {{ icon }}
       </ico>
-      <div class="white--text label">{{ label }}</div>
+      <div class="white--text label" v-if="!isLeaf || isWav">{{ label }}</div>
     </div>
     <tree
       v-if="showChildren"
@@ -59,6 +60,13 @@ export default class Tree extends Vue {
   }
   get scale() {
     return this.isLeaf ? 0.8 : 1;
+  }
+  get isWav() {
+    const extension = this.label.split('.').pop();
+    if (extension) {
+      return extension.toLowerCase() === 'wav';
+    }
+    return false;
   }
 }
 </script>
