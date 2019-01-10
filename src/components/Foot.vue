@@ -16,9 +16,11 @@ import { Nullable } from '@/utils';
 export default class Foot extends Vue {
   @Prop({ type: [String, Number], default: 22 }) public height!: string | number;
   @Prop(Nullable(String)) public openedFile!: string | null;
+
   get style() {
     return { lineHeight: `${this.height}px` };
   }
+
   get projectName() {
     if (!this.openedFile) { return null; }
     return path.basename(this.openedFile).split('.')[0];

@@ -7,9 +7,10 @@
     v-model="open"
     :position-x="x"
     :position-y="y"
+    :z-index="100"
     :min-width="250"
   >
-    <div class="items secondary-lighten-1 white--text">
+    <div class="items secondary-lighten-2 white--text">
       <div
         v-for="(item, i) in items"
         :key="i"
@@ -78,7 +79,7 @@ export default class ContextMenu extends Vue {
     cursor: pointer
 
 .items
-  padding: 10px 0
+  padding: 5px 0
 
 .menu
   position: absolute

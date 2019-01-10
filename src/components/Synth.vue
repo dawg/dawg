@@ -15,6 +15,7 @@
       :style="synthStyle"
       @dblclick="expand = !expand"
       @click="$emit('click', $event)"
+      @contextmenu="$emit('contextmenu', $event)"
     >
       <dot-button
         class="mute"

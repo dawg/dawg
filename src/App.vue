@@ -62,7 +62,8 @@
         </split>
       </split>
     </dawg>
-    <notifications/>
+    <notifications></notifications>
+    <context-menu></context-menu>
   </v-app>
 </template>
 
