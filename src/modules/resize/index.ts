@@ -34,6 +34,6 @@ export class ResponsiveMixin extends Vue {
     });
   }
   public onResize(direction: Directions) {
-    // TODO Can we make this abstract? Google abstract TypeScript Vue Mixin.
+    //
   }
 }

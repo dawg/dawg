@@ -6,7 +6,6 @@ import VueLogger from 'vuejs-logger';
 
 Vue.use(VueLogger);
 
-// TODO these should be typed!
 describe(Split.name, () => {
   it('should have correct gutter style', () => {
     const wrapper = shallowMount(Split, {

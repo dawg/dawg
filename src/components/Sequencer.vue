@@ -105,7 +105,6 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   }
   get sequencerStyle() {
     return {
-      // TODO This may not be needed
       width: `${this.displayBeats * this.pxPerBeat}px`,
       height: `${this.allKeys.length * this.noteHeight}px`,
     };
@@ -394,10 +393,6 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   width: 1px
   background-color: #ffa
   box-shadow: -1px 0 2px #ffa
-  z-index: 2
-  top: 0
-  bottom: 0
-  pointer-events: none
 
 .loop-background
   opacity: 0
@@ -405,7 +400,8 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   transition: .2s opacity
   opacity: 0.2
   position: absolute
-  // TODO duplicate
+
+.loop-background, .progress-bar
   z-index: 2
   top: 0
   bottom: 0

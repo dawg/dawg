@@ -5,7 +5,6 @@ import Note from '@/components/Note.vue';
 let wrapper: ReturnType<typeof shallowMount>;
 let vm: any;
 
-// TODO these should be typed!
 describe(Note.name, () => {
   beforeEach(() => {
     wrapper = shallowMount(Note, {

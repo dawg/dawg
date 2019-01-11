@@ -6,7 +6,7 @@ import { Module as Mod } from 'vuex';
 import { remote } from 'electron';
 
 import { Pattern, Instrument, Score, Note } from '@/schemas';
-import { Setter, findUniqueName, toTickTime } from '@/utils';
+import { findUniqueName, toTickTime } from '@/utils';
 import store from '@/store/store';
 import cache from '@/store/cache';
 import io from '@/modules/io';
@@ -98,6 +98,11 @@ export class Project extends VuexModule {
   }
 
   @Mutation
+  public setBpm(bpm: number) {
+    this.bpm = bpm;
+  }
+
+  @Mutation
   public addPattern() {
     const name = findUniqueName(this.patterns, 'Pattern');
     this.patterns.push(Pattern.create(name));
@@ -142,4 +147,4 @@ export class Project extends VuexModule {
   }
 }
 
-export default getModule(Setter(Project));
+export default getModule(Project);

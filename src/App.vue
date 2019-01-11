@@ -19,7 +19,8 @@
               <toolbar 
                 :height="general.toolbarHeight" 
                 style="padding-right: 26px; border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
-                :bpm.sync="bpm"
+                :bpm="project.bpm"
+                @update:bpm="project.setBpm"
               ></toolbar>
             </split>
 
@@ -90,7 +91,7 @@ import SideTabs from '@/sections/SideTabs.vue';
 import Notifications from '@/modules/notification/Notifications.vue';
 import { ipcRenderer } from 'electron';
 import { project, cache, general, specific } from '@/store';
-import { MapField, toTickTime, allKeys, Keys } from '@/utils';
+import { toTickTime, allKeys, Keys } from '@/utils';
 import Part from '@/modules/audio/part';
 import io from '@/modules/io';
 import { Pattern, Score, Note, Instrument } from '@/schemas';
@@ -114,7 +115,6 @@ import { Pattern, Score, Note, Instrument } from '@/schemas';
   },
 })
 export default class App extends Vue {
-  @MapField(project, project) public bpm!: number;
   public project = project;
   public general = general;
   public specific = specific;

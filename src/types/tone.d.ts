@@ -490,6 +490,8 @@ declare module 'tone' {
     constructor();
     portamento: _TimeArg;
     setNote(note: any): Monophonic; //Todo: number | string
+    triggerAttack(note: any, time?: PrimitiveTime, velocity?: number): void;
+    triggerRelease(time?: PrimitiveTime): void;
   }
 
   class MonoSynth extends Monophonic {

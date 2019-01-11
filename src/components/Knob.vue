@@ -72,7 +72,7 @@ export default class Knob extends Mixins(Draggable) {
 
   public rotation = -this.range / 2;
   public rectWidth = 3;
-  public rectHeight = this.size / 4; // TODO Make configurable (with default)
+  public rectHeight = this.size / 4;
 
   get midDegrees() {
     let midValue = this.midValue;

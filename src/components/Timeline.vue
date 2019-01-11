@@ -61,8 +61,6 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   @Prop({ type: String, default: 'step' }) public detail!: 'step' | 'beat' | 'measure';
 
   public steps: HTMLElement[] = [];
-  public stepRound = 1;
-
   public start: number | null  = null;
   public displayStart: number | null  = null;
   public end: number | null = null;
@@ -125,8 +123,8 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 
     this.start = Math.max(0, Math.min(start, end));
     this.end = Math.max(0, start, end);
-    this.displayStart = this.round(this.start);
-    this.displayEnd = this.round(this.end);
+    this.displayStart = Math.round(this.start);
+    this.displayEnd = Math.round(this.end);
 
     if (this.displayStart !== this.setLoopStart) {
       this.$update('setLoopStart', this.displayStart);
@@ -135,14 +133,6 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
     if (this.displayEnd !== this.setLoopEnd) {
       this.$update('setLoopEnd', this.displayEnd);
     }
-  }
-
-  // TODO Change this
-  public round(value: number) {
-    if (this.stepRound) {
-      value = Math.round(value);
-    }
-    return value;
   }
 
   public get loopStyle() {

@@ -119,12 +119,26 @@ storiesOf(Sequencer.name, module)
     template: `
     <dawg>
       <sequencer
-        :value="notes"
-        :measures.sync="measures"
+        v-model="notes"
+        :sequencer-loop-end.sync="sequencerLoopEnd"
+        :loop-start="loopStart"
+        :loop-end="loopEnd"
+        :set-loop-start="setLoopStart"
+        :set-loop-end="setLoopEnd"
+        :progress="progress"
       ></sequencer>
     </dawg>
     `,
-    data: () => ({ notes: [], measures: 1 }),
+    data: () => ({
+      notes: [],
+      measures: 1,
+      sequencerLoopEnd: 0,
+      loopStart: 0,
+      loopEnd: 0,
+      setLoopStart: 0,
+      setLoopEnd: 0,
+      progress: 0,
+    }),
     components: { Sequencer, Dawg },
   }));
 

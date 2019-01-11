@@ -29,7 +29,6 @@ export default class Synths extends Vue {
   @Prop(Nullable(Object)) public selectedPattern!: Pattern | null;
 
   get scoreLookup() {
-    // TODO This assumes a unique name. We might need some sort of ID.
     const lookup: {[k: string]: Score} = {};
     if (this.selectedPattern) {
       this.selectedPattern.scores.forEach((score) => {
@@ -54,7 +53,6 @@ export default class Synths extends Vue {
     const instrument = this.instruments[i];
     if (!this.scoreLookup.hasOwnProperty(instrument.id)) {
       project.addScore({ pattern: this.selectedPattern, instrument });
-      await this.$nextTick();
     }
 
     this.$update('selectedScore', this.scoreLookup[instrument.id]);

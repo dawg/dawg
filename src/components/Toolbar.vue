@@ -48,8 +48,7 @@ export default class Toolbar extends Vue {
   };
   public playing = false;
   public updateBpm(value: number) {
-    // TODO value is NaN
-    this.$update('bpm', 120);
+    this.$update('bpm', value);
   }
 }
 </script>
