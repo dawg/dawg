@@ -39,6 +39,7 @@ export class Specific extends VuexModule {
   get selectedScore() {
     if (!this.selectedScoreId) { return null; }
     if (!this.scoreLookup) { return null; }
+    if (!this.scoreLookup.hasOwnProperty(this.selectedScoreId)) { return null; }
     return this.scoreLookup[this.selectedScoreId];
   }
 
@@ -97,6 +98,16 @@ export class Specific extends VuexModule {
     } else {
       this.selectedPatternId = null;
     }
+
+    if (!this.selectedScoreId || !this.scoreLookup) {
+      return;
+    }
+
+    if (this.selectedScoreId in this.scoreLookup) {
+      return;
+    }
+
+    this.selectedScoreId = null;
   }
 
   @Mutation

@@ -130,6 +130,9 @@ export default class App extends Vue {
     ipcRenderer.on('save', this.save);
     ipcRenderer.on('open', this.open);
 
+    // tslint:disable-next-line:no-console
+    console.log(project);
+
     // Make sure we load the cache first before loading the default project.
     this.$log.info('Starting to read data.');
     await cache.fromCacheFolder();
