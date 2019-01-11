@@ -3,7 +3,6 @@
   However, this works when we add $emit -->
   <div 
     class="synth-wrapper"
-    :class="{ selected }"
     style="position: relative; z-index: 10;"
   >
     <div 
@@ -77,7 +76,6 @@ export default class Synth extends Vue {
   @Prop({ type: Number, default: 50 }) public height!: number;
   @Prop({ type: Array, default: () => [] }) public notes!: Note[];
 
-  public selected = false;
   public types = TYPES;
   public active = !this.instrument.mute;
   public expand = false;
@@ -142,14 +140,4 @@ export default class Synth extends Vue {
 
 .expand
   height: 55px
-
-.selected::after
-  content: ''
-  position: absolute
-  top: 0
-  right: 0
-  bottom: 0
-  left: 0
-  border: 1px solid rgba(255, 255, 255, 0.36)
-  pointer-events: none
 </style>

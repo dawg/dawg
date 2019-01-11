@@ -12,7 +12,6 @@
         @update:selectedScore="specific.setScore"
         :selected-pattern="specific.selectedPattern"
         @update:selected-pattern="specific.setPattern"
-        :instrument="specific.selectedSynth"
         :scores="specific.selectedScore"
       ></synths>
     </panel>
@@ -24,7 +23,7 @@
         v-if="shouldRender"
         v-model="notes"
         :part="part"
-        :synth="specific.selectedSynth"
+        :instrument="instrument"
         :play="general.play"
       ></piano-roll>
     </panel>

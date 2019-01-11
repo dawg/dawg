@@ -4,7 +4,6 @@
       v-for="(instrument, i) in instruments"
       :key="instrument.name"
       @contextmenu="contextmenu($event, i)"
-      @click="selectSynth(i)"
       :instrument="instrument"
       :notes="getNotes(instrument)"
     ></synth>
@@ -28,9 +27,6 @@ export default class Synths extends Vue {
   @Prop({ type: Array, required: true }) public instruments!: Instrument[];
   @Prop(Nullable(Object)) public selectedScore!: Score | null;
   @Prop(Nullable(Object)) public selectedPattern!: Pattern | null;
-  @Prop(Nullable(Object)) public instrument!: Instrument | null;
-
-  public $children!: Synth[];
 
   get scoreLookup() {
     // TODO This assumes a unique name. We might need some sort of ID.
@@ -43,21 +39,8 @@ export default class Synths extends Vue {
     return lookup;
   }
 
-  public selectSynth(i: number) {
-    this.$children.slice(0, i).forEach((instrument) => instrument.selected = false);
-    this.$children.slice(i + 1).forEach((instrument) => instrument.selected = false);
-    this.$children[i].selected = !this.$children[i].selected;
-
-    // TODO (jacob) How shoudl this change?
-    if (this.$children[i].selected) {
-      this.$update('instrument', this.$children[i].instrument);
-    } else {
-      this.$update('instrument', null);
-    }
-  }
-
   public getNotes(instrument: Instrument) {
-    if (instrument.name in this.scoreLookup) {
+    if (instrument.id in this.scoreLookup) {
       return this.scoreLookup[instrument.id].notes;
     }
   }

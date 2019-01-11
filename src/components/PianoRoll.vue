@@ -13,7 +13,7 @@
       ></timeline>
     </div>
     <div style="overflow-y: scroll; display: flex; height: calc(100% - 20px)">
-      <piano :synth="synth"></piano>
+      <piano :synth="instrument"></piano>
       <sequencer
         style="width: calc(100% - 80px)"
         v-model="value"

@@ -41,7 +41,6 @@ export class Cache extends VuexModule {
 
   @Action
   public setOpenedFile(openedFile: string) {
-    this.openedFile = openedFile;
     this.set({ key: 'openedFile', value: openedFile });
     // This write call actually works.
     // I was worried it wouldn't work since this method is not async.
@@ -62,7 +61,7 @@ export class Cache extends VuexModule {
       await fs.mkdir(dir);
     }
 
-    return fs.writeFile(CACHE_PATH, JSON.stringify(c));
+    return fs.writeFile(CACHE_PATH, JSON.stringify(c, null, 4));
   }
 }
 export default getModule(Cache);

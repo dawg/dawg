@@ -23,7 +23,7 @@ export default class Patterns extends Vue {
   @Prop(Nullable(Object)) public value!: Pattern | null;
   @Prop({ type: Array, required: true }) public patterns!: Pattern[];
   public click(p: Pattern) {
-    if (this.value && this.value.name === p.name) {
+    if (this.value && this.value.id === p.id) {
       this.$emit('input', null);
     } else {
       this.$emit('input', p);

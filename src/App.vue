@@ -129,15 +129,17 @@ export default class App extends Vue {
     return cache.openedFile;
   }
 
-  public created() {
-    // Make sure we load the cache first before loading the default project.
-    cache.fromCacheFolder();
-    this.withErrorHandling(project.load);
-    this.loaded = true;
-
+  public async created() {
     window.addEventListener('keypress', this.keydown);
-    ipcRenderer.on('save', project.save);
+    ipcRenderer.on('save', this.save);
     ipcRenderer.on('open', this.open);
+
+    // Make sure we load the cache first before loading the default project.
+    this.$log.info('Starting to read data.');
+    await cache.fromCacheFolder();
+    await this.withErrorHandling(project.load);
+    this.$log.info('Finished reading data from the fs.');
+    this.loaded = true;
   }
 
   public destroyed() {
@@ -157,10 +159,10 @@ export default class App extends Vue {
     specific.setOpenedSideTab(tab.name);
   }
 
-  public withErrorHandling(callback: () => void) {
+  public async withErrorHandling(callback: () => Promise<void>) {
     try {
-      callback();
-      specific.load();
+      await callback();
+      await specific.loadSpecific();
     } catch (e) {
       this.$notify.error('Unable to load project.');
       this.$log.error(e);
@@ -169,6 +171,11 @@ export default class App extends Vue {
 
   public open() {
     this.withErrorHandling(project.open);
+  }
+
+  public save() {
+    project.save();
+    specific.write();
   }
 
   public playPause() {

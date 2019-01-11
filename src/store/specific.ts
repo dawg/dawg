@@ -22,7 +22,6 @@ interface ProjectCache {
 export class Specific extends VuexModule {
   @autoserialize public selectedPatternId: string | null = null;
   @autoserialize public selectedScoreId: string | null = null;
-  @autoserialize public selectedSynthId: string | null = null;
   @autoserialize public openedPanel: string | null = null;
   @autoserialize public openedSideTab: string | null = null;
   @autoserialize public openedTab: string | null = null;
@@ -43,11 +42,6 @@ export class Specific extends VuexModule {
     return this.scoreLookup[this.selectedScoreId];
   }
 
-  get selectedSynth() {
-    if (!this.selectedSynthId) { return null; }
-    return project.patternLookup[this.selectedSynthId];
-  }
-
   get scoreLookup() {
     if (!this.selectedPattern) { return null; }
     const scores: {[k: string]: Score} = {};
@@ -60,35 +54,34 @@ export class Specific extends VuexModule {
   @Action
   public setOpenedPanel(openedPanel: string) {
     this.set({ key: 'openedPanel', value: openedPanel });
-    return this.write();
   }
 
   @Action
   public setOpenedSideTab(sideTab: string) {
     this.set({ key: 'openedSideTab', value: sideTab });
-    return this.write();
   }
 
   @Action
   public setTab(tab: string) {
     this.set({ key: 'openedTab', value: tab });
-    return this.write();
   }
 
   @Action
-  public async load() {
+  public async loadSpecific() {
     if (!(await fs.exists(PROJECT_CACHE_PATH))) {
       await fs.writeFile(PROJECT_CACHE_PATH, JSON.stringify({}));
     }
 
     const json = await this.read();
     if (!json.hasOwnProperty(project.id)) {
+      // tslint:disable-next-line:no-console
+      console.info(`${project.id} does not exist in the project cache`);
       return;
     }
 
     const projectStuff = json[project.id];
     const decoded = io.deserialize(projectStuff, Specific);
-    this.reset(decoded);
+    this.resetSpecific(decoded);
   }
 
   @Action
@@ -116,7 +109,7 @@ export class Specific extends VuexModule {
   }
 
   @Action
-  private async write() {
+  public async write() {
     if (!project.id) { return; }
     const c = io.serialize(this, Specific);
     const dir = path.dirname(PROJECT_CACHE_PATH);
@@ -126,10 +119,11 @@ export class Specific extends VuexModule {
 
     const json = await this.read();
     json[project.id] = c;
-    return fs.writeFile(PROJECT_CACHE_PATH, JSON.stringify(json));
+    return fs.writeFile(PROJECT_CACHE_PATH, JSON.stringify(json, null, 4));
   }
 
-  private reset(payload: Specific) {
+  @Mutation
+  private resetSpecific(payload: Specific) {
     Object.assign(this, payload);
   }
 }

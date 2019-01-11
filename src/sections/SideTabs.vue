@@ -24,7 +24,8 @@
       >
         <side-bar name="Explorer" icon="folder">
           <file-explorer
-            :folders.sync="cache.folders"
+            :folders="cache.folders"
+            @update:folder="cache.setFolders"
           ></file-explorer>
         </side-bar>
         <side-bar name="Audio Files" icon="queue_music"></side-bar>

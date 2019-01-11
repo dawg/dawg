@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'mz/fs';
 
 import { autoserialize, autoserializeAs } from 'cerialize';
 import { VuexModule, Mutation, Module, getModule, Action } from 'vuex-module-decorators';
@@ -69,7 +69,7 @@ export class Project extends VuexModule {
   }
 
   @Action
-  public open() {
+  public async open() {
     // files can be undefined. There is an issue with the .d.ts files.
     const files = dialog.showOpenDialog(
       remote.getCurrentWindow(),
@@ -82,14 +82,14 @@ export class Project extends VuexModule {
 
     const filePath = files[0];
     cache.setOpenedFile(filePath);
-    this.load();
+    return this.load();
   }
 
   @Action
-  public load() {
+  public async load() {
     if (!cache.openedFile) { return; }
-    if (!fs.existsSync(cache.openedFile)) { return; }
-    let contents = fs.readFileSync(cache.openedFile).toString();
+    if (!await fs.exists(cache.openedFile)) { return; }
+    let contents = (await fs.readFile(cache.openedFile)).toString();
     contents = JSON.parse(contents);
     const result = io.deserialize(contents, Project);
     this.reset(result);
