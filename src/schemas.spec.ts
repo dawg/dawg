@@ -45,16 +45,16 @@ describe('schemas', () => {
       score.notes.push(Note.create({id: 0, duration: 5, time: 5}));
       const pattern = Pattern.create('PAT');
       pattern.scores.push(score);
-      expect(Deserialize(Serialize(pattern, Pattern))).to.deep.eq(pattern);
+      const recreated = Deserialize(Serialize(pattern, Pattern));
+      expect(Serialize(recreated, Pattern)).to.deep.eq(Serialize(pattern, Pattern));
     });
   });
 
   context('Instrument', () => {
     it('works', () => {
       const instrument = Instrument.create({ name: 'IN', pan: 0.5, volume: 1, type: 'sine', mute: true });
-      const serialized = Deserialize(Serialize(instrument, Instrument));
       const recreated = Deserialize(Serialize(instrument, Instrument));
-      expect(serialized).to.deep.eq(Serialize(recreated));
+      expect(Serialize(instrument, Instrument)).to.deep.eq(Serialize(recreated));
     });
   });
 });

@@ -83,6 +83,7 @@ export class Instrument implements IInstrument {
   private _type!: string;
   // tslint:disable-next-line:variable-name
   private _mute!: boolean;
+  private connected = false;
   private panner = new Tone.Panner();
   private synth = new Tone.PolySynth(8, Tone.Synth).connect(this.panner);
 
@@ -104,10 +105,12 @@ export class Instrument implements IInstrument {
   @autoserialize
   set mute(mute: boolean) {
     this._mute = mute;
-    if (mute) {
+    if (mute && this.connected) {
       this.panner.disconnect(Tone.Master);
-    } else {
+      this.connected = false;
+    } else if (!mute && !this.connected) {
       this.panner.toMaster();
+      this.connected = true;
     }
   }
 
