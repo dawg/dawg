@@ -69,7 +69,8 @@ export default class PianoRoll extends Vue {
     // Eventually, we will need a solution.
     const time = toTickTime(note.time);
     this.$log.debug(`Adding note at ${note.time} -> ${time}`);
-    this.part.add(this.instrument.callback, time, note);
+    const callback = this.instrument.callback.bind(this.instrument);
+    this.part.add(callback, time, note);
   }
 
   public removed(note: Note, i: number) {
