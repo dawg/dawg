@@ -10,13 +10,13 @@
       >
         {{ icon }}
       </ico>
-      <div class="white--text label" v-if="!isLeaf || isWav">{{ label }}</div>
+      <div class="white--text path" v-if="!isLeaf || isWav" @click="preview">{{ fileName }}</div>
     </div>
     <tree
       v-if="showChildren"
       v-for="folder in folders"
       :key="folder"
-      :label="folder"
+      :path="folder"
       :children="children[folder]"
       :depth="depth + 1"
     ></tree>
@@ -25,17 +25,26 @@
 
 <script lang="ts">
 import Vue from 'vue';
+import Tone from 'tone';
+import path from 'path';
 import { Component, Prop } from 'vue-property-decorator';
 
 @Component
 export default class Tree extends Vue {
   @Prop({type: Object, required: true}) public children!: object;
-  @Prop({type: String, required: true}) public label!: string;
+  @Prop({type: String, required: true}) public path!: string;
   @Prop({type: Number, default: 0}) public depth!: number;
   public showChildren = false;
   public click() {
     if (!this.isLeaf) {
       this.showChildren = !this.showChildren;
+    }
+  }
+  public preview(event: MouseEvent) {
+    event.stopPropagation();
+    if (this.isWav) {
+      const player = new Tone.Player(this.path).toMaster();
+      player.autostart = true;
     }
   }
   get indent() {
@@ -55,6 +64,9 @@ export default class Tree extends Vue {
   get folders() {
     return Object.keys(this.children);
   }
+  get fileName() {
+    return path.basename(this.path);
+  }
   get icon() {
     return this.isLeaf ? 'file' : 'caret-right';
   }
@@ -62,7 +74,7 @@ export default class Tree extends Vue {
     return this.isLeaf ? 0.8 : 1;
   }
   get isWav() {
-    const extension = this.label.split('.').pop();
+    const extension = this.path.split('.').pop();
     if (extension) {
       return extension.toLowerCase() === 'wav';
     }
@@ -72,7 +84,7 @@ export default class Tree extends Vue {
 </script>
 
 <style lang="sass" scoped>
-.label
+.path
   margin-left: 8px
   user-select: none
 

@@ -1,9 +1,9 @@
 <template>
   <div>
     <tree
-        v-for="(children, label) in projects"
-        :key="label"
-        :label="label"
+        v-for="(children, path) in projects"
+        :key="path"
+        :path="path"
         :children="children"
     ></tree>
   </div>
@@ -28,16 +28,16 @@ export default class Drawer extends Vue {
   get projects() {
     const tree: FileTree = {};
     this.folders.forEach((folder) => {
-      tree[path.basename(folder)] = this.computeFileTree(folder);
+      tree[folder] = this.computeFileTree(folder);
     });
     return tree;
   }
   public computeFileTree(dir: string, tree: FileTree = {}) {
     fs.readdirSync(dir).map((item) => {
-      tree[item] = {};
       const p = path.join(dir, item);
+      tree[p] = {};
       if (fs.statSync(p).isDirectory()) {
-        this.computeFileTree(p, tree[item]);
+        this.computeFileTree(p, tree[p]);
       }
     });
     return tree;

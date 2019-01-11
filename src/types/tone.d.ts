@@ -634,6 +634,7 @@ declare module 'tone' {
       loopStart: _TimeArg;
       playbackRate: number;
       retrigger: boolean;
+      autostart: boolean;
       dispose(): this;
       load(url:string, callback?:(e: any)=>any):  Player;
       setLoopPoints(loopStart: _TimeArg, loopEnd: _TimeArg): Player;
