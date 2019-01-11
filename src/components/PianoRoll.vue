@@ -65,24 +65,15 @@ export default class PianoRoll extends Vue {
   }
 
   public added(note: Note) {
+    // TODO There is duplication here with project.ts
+    // Eventually, we will need a solution.
     const time = toTickTime(note.time);
     this.$log.debug(`Adding note at ${note.time} -> ${time}`);
-    this.part.add(this.callback(this.instrument), time, note);
-  }
-  public removed(note: Note, i: number) {
-    // const time = toTickTime(note.time);
-    this.part.remove(note);
+    this.part.add(this.instrument.callback, time, note);
   }
 
-  /**
-   * The callback for the part. The instrument is given so that it is stored within the callback.
-   */
-  public callback(instrument: Instrument) {
-    return (time: number, note: Note) => {
-      const duration = toTickTime(note.duration);
-      const value = allKeys[note.id].value;
-      instrument.triggerAttackRelease(value, duration, time);
-    };
+  public removed(note: Note, i: number) {
+    this.part.remove(note);
   }
 
   public scrollHorizontal(scrollLeft: number) {

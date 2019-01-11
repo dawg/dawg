@@ -6,16 +6,3 @@ export class VuexModule extends VM {
     this[options.key] = options.value;
   }
 }
-
-// TODO Probably remove??
-// export function Getter<T>(o: T) {
-//   return (target: object, name: keyof T & string) => {
-//     Object.defineProperty(target, name, {
-//       get() {
-//         return o[name];
-//       },
-//       enumerable: true,
-//       configurable: true,
-//     });
-//   };
-// }

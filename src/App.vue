@@ -115,14 +115,10 @@ import { Pattern, Score, Note, Instrument } from '@/schemas';
 })
 export default class App extends Vue {
   @MapField(project, project) public bpm!: number;
-
   public project = project;
   public general = general;
   public specific = specific;
-
-  public play = false;
   public loaded = false;
-  public part = new Part<Note>();
 
   get openedFile() {
     if (!cache) { return null; }
@@ -179,12 +175,18 @@ export default class App extends Vue {
   }
 
   public playPause() {
-    if (this.part.state === 'started') {
-      this.part.pause();
-      this.play = false;
+    const pattern = specific.selectedPattern;
+    if (!pattern) {
+      this.$notify.info('Select a pattern.');
+      return;
+    }
+
+    if (pattern.part.state === 'started') {
+      pattern.part.pause();
+      general.pause();
     } else {
-      this.part.start();
-      this.play = true;
+      pattern.part.start();
+      general.start();
     }
   }
 }

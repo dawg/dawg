@@ -171,3 +171,27 @@ export function Setter<T extends ConstructorOf<{}>>(Base: T) {
 export function toTickTime(time: number) {
   return `${time * Tone.Transport.PPQ}i`;
 }
+
+
+export const findUniqueName = (objects: Array<{ name: string }>, prefix: string) => {
+  let name: string;
+  let count = 1;
+  while (true) {
+    name = `${prefix} ${count}`;
+    let found = false;
+    for (const o of objects) {
+      if (o.name === name) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      break;
+    }
+
+    count++;
+  }
+
+  return name;
+};

@@ -3,6 +3,7 @@ import Tone from 'tone';
 import uuid from 'uuid';
 
 import Part from '@/modules/audio/part';
+import { toTickTime, allKeys } from './utils';
 
 
 export interface INote {
@@ -126,7 +127,17 @@ export class Instrument implements IInstrument {
     this._type = type;
     this.synth.set({ oscillator: { type } });
   }
+
   public triggerAttackRelease(note: string, duration: string, time: number) {
     this.synth.triggerAttackRelease(note, duration, time);
+  }
+
+  /**
+   * The callback for the part.
+   */
+  public callback(time: number, note: Note) {
+    const duration = toTickTime(note.duration);
+    const value = allKeys[note.id].value;
+    this.triggerAttackRelease(value, duration, time);
   }
 }

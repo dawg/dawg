@@ -30,7 +30,6 @@
         </side-bar>
         <side-bar name="Audio Files" icon="queue_music"></side-bar>
         <side-bar name="Patterns" icon="queue_play">
-          <!-- TODO(jacob) -->
           <patterns 
             :value="specific.selectedPattern" 
             @input="specific.setPattern"

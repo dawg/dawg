@@ -58,7 +58,7 @@ export default class Synths extends Vue {
     }
 
     this.$update('selectedScore', this.scoreLookup[instrument.id]);
-    specific.setOpenedPanel('Piano Roll'); // TODO(jacob) AHH Hardcoding
+    specific.setOpenedPanel('Piano Roll'); // TODO AHH Hardcoding
   }
 
   public contextmenu(e: MouseEvent, i: number) {

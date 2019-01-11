@@ -5,8 +5,8 @@ import { VuexModule, Mutation, Module, getModule, Action } from 'vuex-module-dec
 import { Module as Mod } from 'vuex';
 import { remote } from 'electron';
 
-import { Pattern, Instrument, Score } from '@/schemas';
-import { Setter } from '@/utils';
+import { Pattern, Instrument, Score, Note } from '@/schemas';
+import { Setter, findUniqueName, toTickTime } from '@/utils';
 import store from '@/store/store';
 import cache from '@/store/cache';
 import io from '@/modules/io';
@@ -15,29 +15,6 @@ import uuid from 'uuid';
 
 const { dialog } = remote;
 const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
-
-const findUniqueName = (objects: Array<{ name: string }>, prefix: string) => {
-  let name: string;
-  let count = 1;
-  while (true) {
-    name = `${prefix} ${count}`;
-    let found = false;
-    for (const o of objects) {
-      if (o.name === name) {
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) {
-      break;
-    }
-
-    count++;
-  }
-
-  return name;
-};
 
 @Module({ dynamic: true, store, name: 'project' })
 export class Project extends VuexModule {
@@ -93,6 +70,26 @@ export class Project extends VuexModule {
     contents = JSON.parse(contents);
     const result = io.deserialize(contents, Project);
     this.reset(result);
+
+    // This initializes the parts.
+    // Since the parts are not serialized, we need to re-add stuff.
+    // Ideally, we wouldn't have to do this, but I don't have a solution right now.
+    this.patterns.forEach((pattern) => {
+      pattern.scores.forEach((score) => {
+        const instrument = this.instrumentLookup[score.instrumentId];
+        score.notes.forEach((note) => {
+          this.addNote({ pattern, instrument, note });
+        });
+      });
+    });
+  }
+
+  @Mutation
+  public addNote(payload: { pattern: Pattern, instrument: Instrument, note: Note }) {
+    const time = toTickTime(payload.note.time);
+    // This is a bit messy... :(
+    const callback = payload.instrument.callback.bind(payload.instrument);
+    payload.pattern.part.add(callback, time, payload.note);
   }
 
   @Mutation

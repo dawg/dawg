@@ -20,6 +20,16 @@ export class General extends VuexModule {
   public setPanels(panels: BaseTabs) {
     this.panels = panels;
   }
+
+  @Mutation
+  public start() {
+    this.play = true;
+  }
+
+  @Mutation
+  public pause() {
+    this.play = false;
+  }
 }
 
 export default getModule(General);
