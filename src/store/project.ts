@@ -16,6 +16,9 @@ import uuid from 'uuid';
 const { dialog } = remote;
 const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
 
+/**
+ * This module represents the project. When a user saves the project, this file is serialized to the fs.
+ */
 @Module({ dynamic: true, store, name: 'project' })
 export class Project extends VuexModule {
   @autoserialize public bpm = 128;

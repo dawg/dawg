@@ -18,6 +18,10 @@ interface ProjectCache {
   [k: string]: object;
 }
 
+/**
+ * This information contains information about a project that is specific to a user. For example, which tabs they have
+ * open, which pattern they have selected, etc. This information is serialized, but the user does not see this file.
+ */
 @Module({ dynamic: true, store, name: 'specific' })
 export class Specific extends VuexModule {
   @autoserialize public selectedPatternId: string | null = null;

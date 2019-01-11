@@ -17,10 +17,8 @@
   "dependencies": {
     "cerialize": "^0.1.18",
     "electron-context-menu": "^0.10.0",
-    "konva": "^2.3.0",
     "lodash.throttle": "^4.1.1",
     "mz": "^2.7.0",
-    "protobufjs": "~6.8.8",
     "resize-observer-polyfill": "^1.5.0",
     "tinycolor2": "^1.4.1",
     "tone": "^0.12.80",
@@ -30,14 +28,11 @@
     "vue-awesome": "^3.1.2",
     "vue-class-component": "^6.0.0",
     "vue-draggable-resizable": "^1.7.1",
-    "vue-konva": "^1.0.6",
     "vue-perfect-scrollbar": "^0.1.0",
     "vue-property-decorator": "^7.0.0",
-    "vue-shortkey": "^3.1.6",
     "vuejs-logger": "^1.5.3",
     "vuetify": "^1.2.3",
     "vuex": "^3.0.1",
-    "vuex-map-fields": "^1.3.1",
     "vuex-module-decorators": "^0.9.7"
   },
   "devDependencies": {

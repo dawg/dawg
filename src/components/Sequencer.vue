@@ -75,6 +75,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   @Prop({ type: Number, default: 1 }) public defaultLength!: number;
   @Prop({ type: Number, default: 0.25 }) public snap!: number;
 
+  // These are for the progression.
   @Prop({ type: Number, required: true }) public loopEnd!: number;
   @Prop({ type: Number, required: true }) public loopStart!: number;
 
@@ -96,6 +97,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   public allKeys = allKeys;
   public minDisplayMeasures = 4;
   public noteLoopEnd: number | null = null;
+  // selected[i] indicates whether value[i] is selected
   public selected: boolean[] = [];
 
   public scroll(e: UIEvent) {

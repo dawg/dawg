@@ -1,6 +1,5 @@
 import Tone from 'tone';
 import { ContextTime, TransportTime } from './types';
-// import Clock from './clock';
 
 type Callback = (time: ContextTime) => void;
 

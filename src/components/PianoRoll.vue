@@ -81,6 +81,7 @@ export default class PianoRoll extends Vue {
     this.scrollLeft = scrollLeft;
   }
 
+  // Horizontal offset in beats.
   public get offset() {
     return this.scrollLeft / this.pxPerBeat;
   }

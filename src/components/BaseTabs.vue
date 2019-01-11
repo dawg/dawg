@@ -45,7 +45,7 @@ export default class BaseTabs extends Vue {
   @Watch<BaseTabs>('firstTab')
   public checkFirstTab() {
     if (!this.selectedTab && this.firstTab) {
-      this.$update('selectedTab', name);
+      this.$update('selectedTab', this.firstTab.name);
     }
   }
 

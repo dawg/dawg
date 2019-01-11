@@ -5,6 +5,16 @@ import uuid from 'uuid';
 import Part from '@/modules/audio/part';
 import { toTickTime, allKeys } from './utils';
 
+// These are all of the schemas for the project.
+// Everything is annotated using `cerialize`.
+// This allows us to serialize and deserialize between a class & a JSON object.
+// This is super important as it provides a lot of flexibility.
+// See `Instrument` for an example of the flexibility it provides.
+
+// Things to note:
+// 1. IDs (see `Pattern`, `Instrument`) are created using the uuid package. These IDs are used to reference objects.
+// Ideally, the cerialize library could automatically create IDs when serializing and then replace the proper object
+// when deserializing. It's an enhancement I want to make.
 
 export interface INote {
   id: number;
@@ -20,8 +30,19 @@ export class Note implements INote {
     note.time = o.time;
     return note;
   }
+
+  /**
+   * Refers to note ID. This are numbered 0 -> 87 and start from the higher frequencies.
+   */
   @autoserialize public id!: number;
+  /**
+   * Duration in beats.
+   */
   @autoserialize public duration!: number;
+
+  /**
+   * Time in beats.
+   */
   @autoserialize public time!: number;
 }
 

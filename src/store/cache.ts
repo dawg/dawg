@@ -12,6 +12,9 @@ import { VuexModule } from '@/store/utils';
 
 const CACHE_PATH = path.join(APPLICATION_PATH, 'cache.json');
 
+/**
+ * This module contains information about the application that does not change between projects.
+ */
 @Module({ dynamic: true, store, name: 'cache' })
 export class Cache extends VuexModule {
   @autoserialize public openedFile: string | null = null;
@@ -21,6 +24,9 @@ export class Cache extends VuexModule {
     super(module || {});
   }
 
+  /**
+   * Load in the cache from the default file location.
+   */
   @Action
   public async fromCacheFolder() {
     if (!(await fs.exists(CACHE_PATH))) {

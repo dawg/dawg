@@ -4,6 +4,9 @@ import SideBar from '@/components/SideBar.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
 import store from '@/store/store';
 
+/**
+ * This module is used to move data throughout the sections. It is not serialized in any way.
+ */
 @Module({ dynamic: true, store, name: 'general' })
 export class General extends VuexModule {
   public sideBarTabs: SideBar[] = [];

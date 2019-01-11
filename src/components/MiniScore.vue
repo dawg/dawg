@@ -19,6 +19,10 @@
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import { Note } from '@/schemas';
 
+/**
+ * This class is used in the synth components to show the score associated with that synth.
+ * We display a miniature version and adjust the size of the notes based on the min/max values.
+ */
 @Component
 export default class MiniScore extends Vue {
   @Inject() public beatsPerMeasure!: number;
@@ -28,7 +32,6 @@ export default class MiniScore extends Vue {
   @Prop({ type: Number, default: 32 }) public height!: number;
   @Prop({ type: Number, default: 200 }) public width!: number;
   @Prop({ type: Number, default: 0 }) public offset!: number;
-  @Prop(Number) public duration?: number;
 
   get viewBox() {
     return `0 0 ${this.width} ${this.height}`;
@@ -57,7 +60,7 @@ export default class MiniScore extends Vue {
     return this.height / this.difference;
   }
   get columnWidth() {
-    return this.width / (this.duration || this.totalDuration);
+    return this.width / this.totalDuration;
   }
   get rects() {
     return this.notes.map(({ id, time, duration }) => {
