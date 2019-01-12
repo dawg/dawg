@@ -8,7 +8,8 @@
         <path
           :d="rangePath"
           fill="none"
-          stroke="#55595C"
+          :class="strokeClass"
+          :stroke="strokeColor"
           :stroke-width="strokeWidth"
         ></path>
         <path 
@@ -69,6 +70,8 @@ export default class Knob extends Mixins(Draggable) {
   @Prop(String) public label?: string;
   @Prop({ type: Number, default: 2.5 }) public strokeWidth!: number;
   @Prop(Number) public midValue?: number;
+  @Prop({ type: String, default: '#55595C' }) public strokeColor!: string;
+  @Prop(String) public strokeClass?: string;
 
   public rotation = -this.range / 2;
   public rectWidth = 3;

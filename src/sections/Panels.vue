@@ -16,7 +16,7 @@
       ></synths>
     </panel>
     <panel name="Mixer">
-      <mixer></mixer>
+      <mixer :channels="project.channels"></mixer>
     </panel>
     <panel name="Piano Roll">
       <piano-roll 

@@ -8,6 +8,8 @@ type Theme = Classes;
 const add = (classes: Classes, name: string, color: string, suffix = '') => {
   classes[`${name}${suffix}`] = `background-color: #${color}!important;`;
   classes[`${name}${suffix}--text`] = `color: #${color}!important;`;
+  classes[`${name}${suffix}--stroke`] = `stroke: #${color}!important;`;
+  classes[`${name}${suffix}--fill`] = `fill: #${color}!important;`;
 };
 
 function createClasses(theme: Theme) {

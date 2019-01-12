@@ -5,8 +5,8 @@ import { VuexModule, Mutation, Module, getModule, Action } from 'vuex-module-dec
 import { Module as Mod } from 'vuex';
 import { remote } from 'electron';
 
-import { Pattern, Instrument, Score, Note } from '@/schemas';
-import { findUniqueName, toTickTime } from '@/utils';
+import { Pattern, Instrument, Score, Note, Channel } from '@/schemas';
+import { findUniqueName, toTickTime, range } from '@/utils';
 import store from '@/store/store';
 import cache from '@/store/cache';
 import io from '@/modules/io';
@@ -25,6 +25,7 @@ export class Project extends VuexModule {
   @autoserialize public id = uuid.v4();
   @autoserializeAs(Pattern) public patterns: Pattern[] = [];
   @autoserializeAs(Instrument) public instruments: Instrument[] = [];
+  @autoserializeAs(Channel) public channels = range(10).map((i) => Channel.create(i));
 
   constructor(module?: Mod<any, any>) {
     super(module || {});

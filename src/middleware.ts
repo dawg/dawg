@@ -5,12 +5,15 @@ import 'vuetify/dist/vuetify.css';
 import 'vue-awesome/icons';
 import '@/styles/global.sass';
 import Ico from '@/components/Ico.vue';
+import Pan from '@/components/Pan.vue';
+import Knob from '@/components/Knob.vue';
 import TooltipIcon from '@/components/TooltipIcon.vue';
 import Theme from '@/modules/theme';
 import Update from '@/modules/update';
 import Context from '@/modules/context';
 import VueLogger from 'vuejs-logger';
 import Notification from '@/modules/notification';
+import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 
 const middleware = () => {
   Vue.use(Vuetify, {theme: false});
@@ -20,7 +23,10 @@ const middleware = () => {
   Vue.component('icon', Icon);
   Vue.use(Notification);
   Vue.component('ico', Ico);
+  Vue.component('VuePerfectScrollbar', VuePerfectScrollbar);
   Vue.component('TooltipIcon', TooltipIcon);
+  Vue.component('Pan', Pan);
+  Vue.component('Knob', Knob);
   Vue.use(VueLogger, {
     logLevel :  'info',
   });

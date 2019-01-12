@@ -104,6 +104,8 @@ export class Instrument implements IInstrument {
   private _type!: string;
   // tslint:disable-next-line:variable-name
   private _mute!: boolean;
+  // tslint:disable-next-line:variable-name
+  private _channel: number | null = null;
   private connected = false;
   private panner = new Tone.Panner();
   private synth = new Tone.PolySynth(8, Tone.Synth).connect(this.panner);
@@ -143,6 +145,14 @@ export class Instrument implements IInstrument {
     this.synth.volume.value = volume;
   }
 
+  @autoserialize
+  get channel() {
+    return this._channel;
+  }
+  set channel(channel: number | null) {
+    this._channel = channel;
+  }
+
   get type() {
     return this._type;
   }
@@ -164,4 +174,58 @@ export class Instrument implements IInstrument {
     const value = allKeys[note.id].value;
     this.triggerAttackRelease(value, duration, time);
   }
+}
+
+// tslint:disable-next-line:ban-types
+type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? never : K }[keyof T];
+type E = NonFunctionPropertyNames<Effect>;
+type ToneEffect = Tone.AutoWah | Tone.Freeverb | Tone.Phaser;
+type Types = 'wah' | 'reverb' | 'phaser';
+
+const effectMap = {
+  wah: Tone.AutoWah,
+  reverb: Tone.Freeverb,
+  phaser: Tone.Phaser,
+};
+
+export class Effect {
+  public static create(name: string, slot: number, type: Types) {
+    const effect = new Effect();
+    effect.type = type;
+    effect.name = name;
+    effect.slot = slot;
+    return effect;
+  }
+
+  @autoserialize public name!: string;
+  @autoserialize public slot!: number; // 0 <= slot < maxSlots
+  // tslint:disable-next-line:variable-name
+  @autoserialize public _type!: Types;
+  @autoserialize public options!: object;
+  private tone!: ToneEffect;
+
+  get type() {
+    return this._type;
+  }
+  set type(type: Types) {
+    this._type = type;
+
+    if (!this.tone) {
+      const cls = effectMap[type];
+      this.tone = new cls();
+    }
+  }
+}
+
+
+export class Channel {
+  public static create(num: number) {
+    const channel = new Channel();
+    channel.number = num;
+    return channel;
+  }
+  @autoserialize public pan = 0;
+  @autoserialize public volume = 0.7;
+  @autoserialize public number!: number;
+  @autoserializeAs(Effect) public effects: Effect[] = [];
 }
