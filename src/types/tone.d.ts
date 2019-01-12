@@ -8,48 +8,32 @@
 //    new(inputs?: number, outputs?: number): Tone;
 //}
 
+type PrimitiveTime = string | number;
+type PrimitiveTicks = number;
+
 declare module 'tone' {
+  var context: Context;
+
   class Tone {
     constructor(inputs?: number, outputs?: number);
-    context: AudioContext;
-    input: GainNode;
-    output: GainNode;
-    chain(...nodes: any[]): Tone;
-    connectSeries(...args: any[]): Tone;
-    connectParallel(...args: any[]): Tone;
-    dbToGain(db: number): number;
-    defaultArg(given: any, fallback: any): any;
-    dispose(): this;
-    equalPowerScale(percent:number): number;
-    expScale(gain: number): number;
-    extend(child: ()=>any, parent?: ()=>any): void;
-    frequencyToNote(freq:number):string;
-    frequencyToSeconds(freq:number):number;
-    gainToDb(gain: number): number;
-    get(params?:any): any;
-    interpolate(input: number, outputMin: number, outputMax: number): number;
-    isFrequency(freq: number): boolean;
-    isFunction(arg: any): boolean;
-    isUndef(arg: any): boolean;
-    midiToNote(midiNumber: number): string;
-    noGC(): Tone;
-    normalize(input: number, inputMin: number, inputMax: number): number;
-    notationToSeconds(notation: string, bpm?: number, timeSignature?: number): number;
-    ToFrequency(note: string): number;
-    noteToMidi(note: string): number;
-    now(): number;
-    optionsObject(values: Array<any>, keys: Array<string>, defaults?:Object): Object;
-    receive(channelName: string, input?: AudioNode): Tone;
-    samplesToSeconds(samples: number): number;
-    secondsToFrequency(seconds: number): number;
-    send(channelName: string, amount?: number): Tone;
-    setContext(ctx: AudioContext): void;
-    setPreset(presetName: string): Tone;
-    startMobile(): void;
-    toFrequency(note: Frequency, now?: number): number;
-    toMaster(): this;
-    toSamples(time: _TimeArg): number;
-    toSeconds(time?: number, now?: number): number;
+    context: Context;
+    toFrequency(freq: any): number;
+    toSeconds(time?: _TimeArg): number;
+    toTicks(time: _TimeArg): number;
+    
+
+    static connectSeries(...args: any[]): Tone;
+    static dbToGain(db: number): number;
+    static defaultArg(given: any, fallback: any): any;
+    static defaults(): object;
+    static isFunction(arg: any): boolean;
+    static isArray(arg: any): boolean;
+    static isNumber(arg: any): boolean;
+    static isString(arg: any): boolean;
+    static isObject(arg: any): boolean;
+    static now(): number;
+    static isDefined(arg: any): boolean; 
+    protected _readOnly(property: keyof this & string): void;
   }
 
   class Abs extends SignalBase {
@@ -88,6 +72,7 @@ declare module 'tone' {
   }
 
   class AudioNode extends Tone {
+    toMaster(): this;
     disconnect(output: number | AudioNode): this;
     connect(unit: Tone | AudioParam | AudioNode, outputNum?:number, inputNum?:number): this;
   }
@@ -158,14 +143,45 @@ declare module 'tone' {
       dispose(): this;
   }
 
+  interface _Clock {
+    callback: (tickTime: number, ticks: number) => void,
+    frequency: number,
+  }
+
+  interface _ClockEvents {
+    start: any,
+    stop: any,
+    pause: any,
+  }
+
+  class Clock extends Emitter<_ClockEvents> {
+    constructor(options: _Clock);
+    frequency: TickSignal;
+    seconds: number;
+    ticks: number;
+    state: TransportState;
+    setTicksAtTime(ticks: number, time: _TimeArg): void;
+    getSecondsAtTime(time: _TimeArg): number;
+    getStateAtTime(time: _TimeArg): TransportState;
+    getTicksAtTime(time: PrimitiveTime): PrimitiveTicks;
+    start(time?: PrimitiveTime, offset?: PrimitiveTicks): void;
+    stop(time?: PrimitiveTime): void;
+    pause(time?: PrimitiveTime): void;
+  }
+
   class Compressor extends Tone {
-      constructor(threshold?: any, ratio?: number); //TODO: Number || Object
-      attack: Signal;
-      knee: AudioParam;
-      ratio: AudioParam;
-      release: Signal;
-      threshold: AudioParam;
-      dispose(): this;
+    constructor(threshold?: any, ratio?: number); //TODO: Number || Object
+    attack: Signal;
+    knee: AudioParam;
+    ratio: AudioParam;
+    release: Signal;
+    threshold: AudioParam;
+    dispose(): this;
+  }
+
+  class Context extends Emitter<{tick: any}> {
+    resume(): Promise<void>;
+    now(): number;
   }
 
   class Convolver extends Effect {
@@ -203,22 +219,29 @@ declare module 'tone' {
   }
 
   class Effect extends Tone {
-      constructor(initialWet?: number);
-      wet: Signal;
-      bypass(): Effect;
-      dispose(): this;
+    constructor(initialWet?: number);
+    wet: Signal;
+    bypass(): Effect;
+    dispose(): this;
+  }
+
+  class Emitter<T, V extends keyof T = keyof T> extends Tone {
+    emit(event: V, ...args: any[]): this;
+    on(event: V, callback: (...args: any[]) => void): this;
+    once(event: V, callback: (arg: any) => void): this;
+    off(event: V, callback: (arg: any) => void): this;
   }
 
   class Envelope extends Tone {
-      constructor(attack: any, decay?: _TimeArg, sustain?: number, release?: _TimeArg);  //TODO: Change 'any' to '_TimeArg | Object'
-      attack: _TimeArg;
-      decay: _TimeArg;
-      release: _TimeArg;
-      sustain: number;
-      dispose(): this;
-      triggerAttack(time?: _TimeArg, velocity?: number): Envelope;
-      triggerAttackRelease(duration: _TimeArg, time?: _TimeArg, velocity?: number): Envelope;
-      triggerRelease(time?: _TimeArg): Envelope;
+    constructor(attack: any, decay?: _TimeArg, sustain?: number, release?: _TimeArg);  //TODO: Change 'any' to '_TimeArg | Object'
+    attack: _TimeArg;
+    decay: _TimeArg;
+    release: _TimeArg;
+    sustain: number;
+    dispose(): this;
+    triggerAttack(time?: _TimeArg, velocity?: number): Envelope;
+    triggerAttackRelease(duration: _TimeArg, time?: _TimeArg, velocity?: number): Envelope;
+    triggerRelease(time?: _TimeArg): Envelope;
   }
 
   class EQ3 extends Tone {
@@ -285,15 +308,15 @@ declare module 'tone' {
   }
 
   class FMSynth extends Monophonic {
-      constructor(options?: any);
-      carrier: MonoSynth;
-      frequency: Signal;
-      harmonicity: number;
-      modulationIndex: number;
-      modulator: MonoSynth;
-      dispose(): this;
-      triggerEnvelopeAttack(time?: _TimeArg, velocity?: number): FMSynth;
-      triggerEnvelopeRelease(time?: _TimeArg): FMSynth;
+    constructor(options?: any);
+    carrier: MonoSynth;
+    frequency: Signal;
+    harmonicity: number;
+    modulationIndex: number;
+    modulator: MonoSynth;
+    dispose(): this;
+    triggerEnvelopeAttack(time?: _TimeArg, velocity?: number): FMSynth;
+    triggerEnvelopeRelease(time?: _TimeArg): FMSynth;
   }
 
   class Follower extends Tone {
@@ -304,20 +327,20 @@ declare module 'tone' {
   }
 
   class Freeverb extends Effect {
-      constructor(roomSize?: any, dampening?: number);
-      dampening: Signal;
-      roomSize: Signal;
-      dispose(): this;
+    constructor(roomSize?: any, dampening?: number);
+    dampening: Signal;
+    roomSize: Signal;
+    dispose(): this;
   }
 
   class TimeBase {
-      set ( exprString: string ): TimeBase;
-      add ( val: _TimeArg, units?: string ): TimeBase;
-      sub ( val: _TimeArg, units?: string ): TimeBase;
-      mult ( val: _TimeArg, units?: string ): TimeBase;
-      div ( val: _TimeArg, units?: string ): TimeBase;
-      eval ( ): number;
-      dispose: TimeBase;
+    set ( exprString: string ): TimeBase;
+    add ( val: _TimeArg, units?: string ): TimeBase;
+    sub ( val: _TimeArg, units?: string ): TimeBase;
+    mult ( val: _TimeArg, units?: string ): TimeBase;
+    div ( val: _TimeArg, units?: string ): TimeBase;
+    eval ( ): number;
+    dispose: TimeBase;
   }
 
   class Frequency extends TimeBase {
@@ -357,6 +380,9 @@ declare module 'tone' {
       volume: Signal;
       triggerAttackRelease(note: any, duration: _TimeArg, time?: _TimeArg, velocity?: number): Instrument; //Todo: string | number
       dispose(): this;
+  }
+
+  class IntervalTimeline extends Tone {
   }
 
   class JCReverb extends Effect {
@@ -450,43 +476,45 @@ declare module 'tone' {
   }
 
   class Modulo extends SignalBase {
-      constructor(modulus: number, bits?:number);
-      value: number;
-      dispose(): this;
+    constructor(modulus: number, bits?:number);
+    value: number;
+    dispose(): this;
   }
 
   class Mono extends Tone {
-      constructor();
-      dispose(): this;
+    constructor();
+    dispose(): this;
   }
 
   class Monophonic extends Instrument {
-      constructor();
-      portamento: _TimeArg;
-      setNote(note: any):Monophonic; //Todo: number | string
+    constructor();
+    portamento: _TimeArg;
+    setNote(note: any): Monophonic; //Todo: number | string
+    triggerAttack(note: any, time?: PrimitiveTime, velocity?: number): void;
+    triggerRelease(time?: PrimitiveTime): void;
   }
 
   class MonoSynth extends Monophonic {
-      constructor(options?: any);
-      detune: Signal;
-      envelope: Envelope;
-      filter: Filter;
-      filterEnvelope: Envelope;
-      frequency: Signal;
-      oscillator: OmniOscillator;
-      dispose(): this;
-      triggerEnvelopeAttack(time?: _TimeArg, velocity?: number): MonoSynth;
-      triggerEnvelopeRelease(time?: _TimeArg): MonoSynth;
+    constructor(options?: any);
+    detune: Signal;
+    envelope: Envelope;
+    filter: Filter;
+    filterEnvelope: Envelope;
+    frequency: Signal;
+    oscillator: OmniOscillator;
+    dispose(): this;
+    triggerEnvelopeAttack(time?: _TimeArg, velocity?: number): MonoSynth;
+    triggerEnvelopeRelease(time?: _TimeArg): MonoSynth;
   }
 
   class MultibandCompressor extends Tone {
-      constructor(options: Object);
-      high: Compressor;
-      highFrequency: Signal;
-      low: Compressor;
-      lowFrequency: Signal;
-      mid: Compressor;
-      dispose(): this;
+    constructor(options: Object);
+    high: Compressor;
+    highFrequency: Signal;
+    low: Compressor;
+    lowFrequency: Signal;
+    mid: Compressor;
+    dispose(): this;
   }
 
   class MultibandEQ extends Tone {
@@ -556,6 +584,11 @@ declare module 'tone' {
       dispose(): this;
   }
 
+  class OfflineContext extends Context {
+    constructor(channels: number, duration: number, sampleRate: number);
+    render(): Promise<void>;
+  }
+
   class OmniOscillator extends Source {
       constructor(frequency?: Frequency, type?: string); //TODO: Number || Object
       detune: Signal;
@@ -584,22 +617,21 @@ declare module 'tone' {
   }
 
   class Panner extends AudioNode {
-      constructor(initialPan?: number);
-      pan: Signal;
-      dispose(): this;
+    constructor(initialPan?: number);
+    pan: Signal;
+    dispose(): this;
   }
 
   class PanVol extends Tone {
-      constructor(pan: number, volume: number);
-      output: GainNode;
-      volume: Signal;
-      dispose(): this;
+    constructor(pan: number, volume: number);
+    output: GainNode;
+    volume: Signal;
+    dispose(): this;
   }
 
-  type TransportTime = number; // TODO
   class Part<T> extends Event {
     constructor(callback?: (time: string, value: T) => void, events?: Event[])
-    start(time: TransportTime, offset?: _TimeArg): void
+    start(time: number, offset?: _TimeArg): void;
     loop: boolean
     readonly progress: number;
     mute: boolean;
@@ -612,31 +644,31 @@ declare module 'tone' {
   }
 
   class Phaser extends StereoEffect {
-      constructor(rate?: any, depth?: number, baseFrequency?: number); //TODO: change 'any' to 'number | Object'
-      baseFrequency: number;
-      depth: number;
-      frequency: Signal;
-      dispose(): this;
+    constructor(rate?: any, depth?: number, baseFrequency?: number); //TODO: change 'any' to 'number | Object'
+    baseFrequency: number;
+    depth: number;
+    frequency: Signal;
+    dispose(): this;
   }
 
   class PingPongDelay extends StereoXFeedbackEffect {
-      constructor(delayTime?: any, feedback?: number); //TODO: _TimeArg || Object
-      delayTime: Signal;
-      dispose(): this;
+    constructor(delayTime?: any, feedback?: number); //TODO: _TimeArg || Object
+    delayTime: Signal;
+    dispose(): this;
   }
 
   class Player extends Source {
-      constructor(url?: string, onload?: (e: any)=>any); //todo: string | AudioBuffer
-      buffer: AudioBuffer;
-      duration: number;
-      loop: boolean;
-      loopEnd: _TimeArg;
-      loopStart: _TimeArg;
-      playbackRate: number;
-      retrigger: boolean;
-      dispose(): this;
-      load(url:string, callback?:(e: any)=>any):  Player;
-      setLoopPoints(loopStart: _TimeArg, loopEnd: _TimeArg): Player;
+    constructor(url?: string, onload?: (e: any)=>any); //todo: string | AudioBuffer
+    buffer: AudioBuffer;
+    duration: number;
+    loop: boolean;
+    loopEnd: _TimeArg;
+    loopStart: _TimeArg;
+    playbackRate: number;
+    retrigger: boolean;
+    dispose(): this;
+    load(url:string, callback?:(e: any)=>any):  Player;
+    setLoopPoints(loopStart: _TimeArg, loopEnd: _TimeArg): Player;
   }
 
   class PluckSynth extends Instrument {
@@ -737,8 +769,8 @@ declare module 'tone' {
   }
 
   module Signal {
-      class Unit{}
-      class Type{}
+    class Unit{}
+    class Type{}
   }
 
   class Signal extends SignalBase {
@@ -817,15 +849,54 @@ declare module 'tone' {
     constructor(options?: any) // TODO fix any
   }
 
+  class Ticks extends TransportTime {
+    constructor(val: string | number, units?: string);
+    toTicks(): PrimitiveTicks;
+  }
+
+  class TickSignal extends Signal {
+    getDurationOfTicks(ticks: number, time: _TimeArg): void;
+    timeToTicks(duration: PrimitiveTime, when?: PrimitiveTime): Ticks;
+    getTicksAtTime(time: PrimitiveTime): PrimitiveTicks;
+    getTimeOfTick(tick: PrimitiveTicks): number;
+  }
+
+  class TickSource extends Tone {
+    frequency: TickSignal;
+    start(time?: PrimitiveTime, offset?: PrimitiveTicks): this;
+    pause(time?: PrimitiveTime): void;
+    stop(time: PrimitiveTime): this;
+    getTicksAtTime(time: PrimitiveTime): PrimitiveTicks;
+    setTicksAtTime(time: PrimitiveTime, offset: PrimitiveTicks): this;
+    forEachTickBetween(startTime: PrimitiveTime, endTime: PrimitiveTime, callback: (time: number, ticks: number) => void): this;
+    dispose(): void;
+  }
+
   class Time extends TimeBase {
     constructor(val: string | number, units?: string);
     toSeconds(): number;
     toBarsBeatsSixteenths(): string;
   }
 
+  class Timeline<T extends { time: any }> extends Tone {
+    add(event: T): void;
+    get(time: number, comparator?: keyof T): T;
+    forEachAtTime(time: number, callback: (event: T) => void): void;
+    forEachBetween(startTime: number, endTime: number, callback: (e: T) => void): this;
+    forEachFrom(time: number, callback: (event: T) => void): void;
+    remove(event: T): void;
+  }
+
+  class TimelineState extends Timeline<{state: TransportState, time: number}> {
+    constructor(initial: string);
+    cancel(time: number): this;
+    setStateAtTime(state: TransportState, time: number): this;
+    getValueAtTime(time: number): TransportState;
+  }
+
   type _TimeArg = string | number | Time;
 
-  class TransportClass extends Tone {
+  class _TransportConstructor extends Tone {
     bpm: Signal;
     seconds: number;
     loop: boolean;
@@ -860,13 +931,29 @@ declare module 'tone' {
     unsyncSource(source: Source): Transport;
   }
 
-  var Transport: TransportClass;
+  var Transport: _TransportConstructor;
 
-  type TransportState = 'started' | 'stopped' | 'stopped';
+  class TransportEvent extends Tone {
+    constructor(transport: _TransportConstructor | null, options: { time: TransportTime, callback: (time: number) => void })
+    id: string;
+    time: Ticks;
+    invoke(time: number): void;
+    dispose(): void;
+  }
+
+  type TransportState = 'started' | 'stopped' | 'paused';
+
+  class TransportTime extends Time {
+    toTicks(): number;
+  }
+
+  class Type {
+    static BPM: 'bpm';
+  }
 
   class WaveShaper extends SignalBase {
-      constructor(mapping: any, bufferLen?: number); //TODO: change 'any' to 'Function | Array | number'
-      curve: number[];
-      oversample: string;
+    constructor(mapping: any, bufferLen?: number); //TODO: change 'any' to 'Function | Array | number'
+    curve: number[];
+    oversample: string;
   }
 }

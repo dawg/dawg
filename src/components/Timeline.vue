@@ -40,7 +40,7 @@
 <script lang="ts">
 import { Vue, Component, Prop, Watch, Mixins, Inject } from 'vue-property-decorator';
 import { ResponsiveMixin, Directions } from '@/modules/resize';
-import { Button } from '@/keys';
+import { Button } from '@/utils';
 import { range, Nullable } from '@/utils';
 import Progression from '@/components/Progression.vue';
 
@@ -61,8 +61,6 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   @Prop({ type: String, default: 'step' }) public detail!: 'step' | 'beat' | 'measure';
 
   public steps: HTMLElement[] = [];
-  public stepRound = 1;
-
   public start: number | null  = null;
   public displayStart: number | null  = null;
   public end: number | null = null;
@@ -97,7 +95,7 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   }
   public mousemove(e: MouseEvent) {
     if (!this.inLoop) {
-      this.$log.info('Starting loop!');
+      this.$log.debug('Starting loop!');
       const left = this.$el.getBoundingClientRect().left;
       const position = (e.pageX - left) / this.pxPerBeat;
       this.inLoop = true;
@@ -125,24 +123,16 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 
     this.start = Math.max(0, Math.min(start, end));
     this.end = Math.max(0, start, end);
-    this.displayStart = this.round(this.start);
-    this.displayEnd = this.round(this.end);
+    this.displayStart = Math.round(this.start);
+    this.displayEnd = Math.round(this.end);
 
     if (this.displayStart !== this.setLoopStart) {
-      this.$emit('update:setLoopStart', this.displayStart);
+      this.$update('setLoopStart', this.displayStart);
     }
 
     if (this.displayEnd !== this.setLoopEnd) {
-      this.$emit('update:setLoopEnd', this.displayEnd);
+      this.$update('setLoopEnd', this.displayEnd);
     }
-  }
-
-  // TODO Change this
-  public round(value: number) {
-    if (this.stepRound) {
-      value = Math.round(value);
-    }
-    return value;
   }
 
   public get loopStyle() {

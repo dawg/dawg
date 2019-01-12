@@ -1,3 +1,6 @@
+import Tone from 'tone';
+import { Mutation } from 'vuex-module-decorators';
+
 export enum StyleType {
   PRIMARY = 'primary',
   SECONDARY = 'secondary',
@@ -102,8 +105,60 @@ export const Nullable = (o: { new(): object }) => {
   return {
     required: true,
     validator: (prop: any) => {
-      // TODO I don't know how well the first check holds up but it works for now
-      return typeof prop === o.name.toLowerCase() || prop === null;
+      const valid = typeof prop === o.name.toLowerCase() || prop === null;
+      if (!valid) {
+        if (prop === undefined) {
+          // tslint:disable-next-line:no-console
+          console.warn('prop cannot be undefined');
+        } else {
+          // tslint:disable-next-line:no-console
+          console.warn(`prop should not be of type ${typeof prop}`);
+        }
+      }
+      return valid;
     },
   };
+};
+
+
+export const Keys = {
+  SHIFT: 16,
+  DELETE: 46,
+  BACKSPACE: 8,
+  SPACE: 32,
+};
+
+
+export const Button = {
+  LEFT: 0,
+  MIDDLE: 1,
+  RIGHT: 2,
+};
+
+export function toTickTime(time: number) {
+  return `${time * Tone.Transport.PPQ}i`;
+}
+
+
+export const findUniqueName = (objects: Array<{ name: string }>, prefix: string) => {
+  let name: string;
+  let count = 1;
+  while (true) {
+    name = `${prefix} ${count}`;
+    let found = false;
+    for (const o of objects) {
+      if (o.name === name) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      break;
+    }
+
+    count++;
+  }
+
+  return name;
 };
