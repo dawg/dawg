@@ -1,7 +1,7 @@
 <template>
   <div class="channel">
     <div class="primary color"></div>
-    <div class="secondary label">{{ channel.name }}</div>
+    <editable v-model="channel.name" class="secondary label"></editable>
     <ul>
       <li v-for="(effect, i) in effects" :key="i" class="slot" @click="showEffects($event, i)">
         <div v-if="effect" class="primary" style="height: 2px"></div>
@@ -54,6 +54,7 @@ import { Channel as C, Effect, EffectMap, EffectName } from '@/schemas';
 import { range } from '@/utils';
 
 // Beware, we are modifying data in the store directly here.
+// We will want to change this evetually.
 @Component({
   components: { Knob, Slider },
 })

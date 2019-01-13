@@ -86,6 +86,27 @@ export class Project extends VuexModule {
         });
       });
     });
+
+    // Same thing with the mixer.
+    // Reconnect all of the channels
+    this.channels.forEach((channel) => {
+      const effects = channel.effects;
+
+      if (effects.length === 0) {
+        return;
+      }
+
+      for (const [i, effect] of effects.slice(1).entries()) {
+        effects[i - 1].connect(effect);
+      }
+
+      effects[effects.length - 1].connect(Tone.Master);
+    });
+
+    // Reconnect the instruments to their channels
+    this.instruments.forEach((instrument) => {
+      this.setChannel({ instrument });
+    });
   }
 
   @Mutation
@@ -143,7 +164,7 @@ export class Project extends VuexModule {
     return lookup;
   }
 
-  @Mutation
+  @Action
   public addEffect(payload: { channel: Channel, effect: EffectName, index: number } ) {
     const effects = payload.channel.effects;
     let toInsert: null | number = null;
@@ -158,6 +179,7 @@ export class Project extends VuexModule {
       }
     }
 
+    // TODO Move to mutation
     const newEffect = Effect.create(payload.index, payload.effect);
     if (toInsert !== null) {
       effects.splice(toInsert, 0, newEffect);
@@ -206,11 +228,20 @@ export class Project extends VuexModule {
     Vue.delete(this.instruments, i);
   }
 
+  /**
+   * Sets the channel of the instrument to the given channel. If no channel is given, the instrument will be connected
+   * to channel (useful for reconnecting to channel after re-initialization from the fs).
+   */
   @Mutation
-  public setChannel(payload: { instrument: Instrument, channel: number | null }) {
-    const { instrument, channel } = payload;
+  public setChannel(payload: { instrument: Instrument, channel?: number | null }) {
+    const instrument = payload.instrument;
+    let channel = payload.channel;
     if (instrument.channel === channel) {
       return;
+    }
+
+    if (channel === undefined) {
+      channel = instrument.channel;
     }
 
     instrument.channel = channel;

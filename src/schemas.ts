@@ -223,13 +223,14 @@ export class Effect {
 
   @autoserialize public slot!: number; // 0 <= slot < maxSlots
   // tslint:disable-next-line:variable-name
-  @autoserialize public _type!: EffectName;
+  public _type!: EffectName;
   @autoserialize public options!: object;
   public effect!: ToneEffect;
 
   get type() {
     return this._type;
   }
+  @autoserialize
   set type(type: EffectName) {
     this._type = type;
 

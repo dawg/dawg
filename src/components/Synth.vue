@@ -39,7 +39,10 @@
       ></knob>
       <div class="white--text name">{{ instrument.name }}</div>
       <mini-score :notes="notes"></mini-score>
-      <channel-select v-model="instrument.channel"></channel-select>
+      <channel-select 
+        :value="channel"
+        @input="setChannel"
+      ></channel-select>
     </div>
     <div 
       class="options secondary-lighten-1"
@@ -66,6 +69,7 @@ import ChannelSelect from '@/components/ChannelSelect.vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { Note, Instrument } from '@/schemas';
 import { Watch } from '@/modules/update';
+import { Nullable } from '@/utils';
 
 const TYPES = ['pwm', 'sine', 'triangle', 'fatsawtooth', 'square'];
 
@@ -77,6 +81,7 @@ export default class Synth extends Vue {
   @Prop({ type: Object, required: true }) public instrument!: Instrument;
   @Prop({ type: Number, default: 50 }) public height!: number;
   @Prop({ type: Array, default: () => [] }) public notes!: Note[];
+  @Prop(Nullable(Number)) public channel!: number | null;
 
   public types = TYPES;
   public active = !this.instrument.mute;
@@ -88,6 +93,10 @@ export default class Synth extends Vue {
     return {
       height: `${this.height}px`,
     };
+  }
+
+  public setChannel(value: number | null) {
+    this.$update('channel', value);
   }
 
   @Watch<Synth>('active')

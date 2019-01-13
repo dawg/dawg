@@ -6,8 +6,8 @@
       @contextmenu="contextmenu($event, i)"
       :instrument="instrument"
       :notes="getNotes(instrument)"
-      @channel="instrument.channel"
-      @update:channel="project.setChannel(instrument, $event)"
+      :channel="instrument.channel"
+      @update:channel="project.setChannel({ instrument, channel: $event })"
     ></synth>
   </div>
 </template>
