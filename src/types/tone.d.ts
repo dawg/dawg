@@ -218,7 +218,7 @@ declare module 'tone' {
       triggerEnvelopeRelease(time?: _TimeArg): DuoSynth;
   }
 
-  class Effect extends Tone {
+  class Effect extends AudioNode {
     constructor(initialWet?: number);
     wet: Signal;
     bypass(): Effect;
@@ -690,7 +690,7 @@ declare module 'tone' {
       setPreset(presetName: string): PolySynth;
       triggerAttack(notes: any, time?: _TimeArg, velocity?: number): PolySynth; //todo: string | number | Object| string[] | number[]
       triggerAttackRelease(notes: any, duration: _TimeArg, time?: _TimeArg, velocity?: number): PolySynth; //todo: string | number | Object | string[] | number[]
-      triggerRelease(value: any, time?: _TimeArg): PolySynth; //todo: string | number | Object | string[] | number[]
+      triggerRelease(value: string | string[], time?: _TimeArg): PolySynth; //todo: string | number | Object | string[] | number[]
   }
 
   class Pow extends SignalBase {

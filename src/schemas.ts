@@ -100,6 +100,7 @@ export class Instrument implements IInstrument {
   }
   @autoserialize public name!: string;
   @autoserialize public id!: string;
+  public destination: Tone.AudioNode = Tone.Master;
   // tslint:disable-next-line:variable-name
   private _type!: string;
   // tslint:disable-next-line:variable-name
@@ -129,10 +130,10 @@ export class Instrument implements IInstrument {
   set mute(mute: boolean) {
     this._mute = mute;
     if (mute && this.connected) {
-      this.panner.disconnect(Tone.Master);
+      this.panner.disconnect(this.destination);
       this.connected = false;
     } else if (!mute && !this.connected) {
-      this.panner.toMaster();
+      this.panner.connect(this.destination);
       this.connected = true;
     }
   }
@@ -166,6 +167,30 @@ export class Instrument implements IInstrument {
     this.synth.triggerAttackRelease(note, duration, time);
   }
 
+  public triggerRelease(note: string) {
+    this.synth.triggerRelease(note);
+  }
+
+  public triggerAttack(note: string) {
+    this.synth.triggerAttack(note);
+  }
+
+  public connect(effect: Effect | Tone.AudioNode) {
+    if (effect instanceof Effect) {
+      this.panner.connect(effect.effect);
+    } else {
+      this.panner.connect(effect);
+    }
+  }
+
+  public disconnect(effect: Effect | Tone.AudioNode) {
+    if (effect instanceof Effect) {
+      this.panner.disconnect(effect.effect);
+    } else {
+      this.panner.disconnect(effect);
+    }
+  }
+
   /**
    * The callback for the part.
    */
@@ -180,39 +205,53 @@ export class Instrument implements IInstrument {
 type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? never : K }[keyof T];
 type E = NonFunctionPropertyNames<Effect>;
 type ToneEffect = Tone.AutoWah | Tone.Freeverb | Tone.Phaser;
-type Types = 'wah' | 'reverb' | 'phaser';
+export type EffectName = 'wah' | 'reverb' | 'phaser';
 
-const effectMap = {
+export const EffectMap = {
   wah: Tone.AutoWah,
   reverb: Tone.Freeverb,
   phaser: Tone.Phaser,
 };
 
 export class Effect {
-  public static create(name: string, slot: number, type: Types) {
+  public static create(slot: number, type: EffectName) {
     const effect = new Effect();
     effect.type = type;
-    effect.name = name;
     effect.slot = slot;
     return effect;
   }
 
-  @autoserialize public name!: string;
   @autoserialize public slot!: number; // 0 <= slot < maxSlots
   // tslint:disable-next-line:variable-name
-  @autoserialize public _type!: Types;
+  @autoserialize public _type!: EffectName;
   @autoserialize public options!: object;
-  private tone!: ToneEffect;
+  public effect!: ToneEffect;
 
   get type() {
     return this._type;
   }
-  set type(type: Types) {
+  set type(type: EffectName) {
     this._type = type;
 
-    if (!this.tone) {
-      const cls = effectMap[type];
-      this.tone = new cls();
+    if (!this.effect) {
+      const cls = EffectMap[type];
+      this.effect = new cls();
+    }
+  }
+
+  public connect(effect: Effect | Tone.AudioNode) {
+    if (effect instanceof Effect) {
+      this.effect.connect(effect.effect);
+    } else {
+      this.effect.connect(effect);
+    }
+  }
+
+  public disconnect(effect: Effect | Tone.AudioNode) {
+    if (effect instanceof Effect) {
+      this.effect.disconnect(effect.effect);
+    } else {
+      this.effect.disconnect(effect);
     }
   }
 }
@@ -222,10 +261,13 @@ export class Channel {
   public static create(num: number) {
     const channel = new Channel();
     channel.number = num;
+    channel.name = `Channel ${num}`;
     return channel;
   }
   @autoserialize public pan = 0;
   @autoserialize public volume = 0.7;
   @autoserialize public number!: number;
+  @autoserialize public name!: string;
+  @autoserialize public mute = false;
   @autoserializeAs(Effect) public effects: Effect[] = [];
 }

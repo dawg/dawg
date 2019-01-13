@@ -1,10 +1,23 @@
 <template>
   <div class="channel">
     <div class="primary color"></div>
-    <div class="secondary label">Name</div>
+    <div class="secondary label">{{ channel.name }}</div>
     <ul>
-      <li v-for="i in 10" :key="i" class="slot">
-        <v-icon size="13px" class="close-icon">add</v-icon>
+      <li v-for="(effect, i) in effects" :key="i" class="slot" @click="showEffects($event, i)">
+        <div v-if="effect" class="primary" style="height: 2px"></div>
+        <div
+          v-if="effect"
+          class="effect secondary white--text"
+        >
+          {{ effect.type }}
+        </div>
+        <v-icon 
+          v-else
+          size="13px" 
+          class="close-icon"
+        >
+          add
+        </v-icon>
       </li>
     </ul>
     <div class="spacer"></div>
@@ -17,7 +30,11 @@
             :size="30"
           ></pan>
           <div style="flex-grow: 1"></div>
-          <div class="mute primary white--text">
+          <div 
+            class="mute white--text"
+            :class="{ 'primary-lighten-2': !channel.mute }"
+            @click="mute"
+          >
             {{ channel.number }}
           </div>
         </div>
@@ -33,13 +50,44 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import Knob from '@/components/Knob.vue';
 import Slider from '@/components/Slider.vue';
-import { Channel as C } from '@/schemas';
+import { Channel as C, Effect, EffectMap, EffectName } from '@/schemas';
+import { range } from '@/utils';
 
+// Beware, we are modifying data in the store directly here.
 @Component({
   components: { Knob, Slider },
 })
 export default class Channel extends Vue {
   @Prop({ type: Object, required: true }) public channel!: C;
+
+  get effectLookup() {
+    const o: { [k: number]: Effect } = {};
+    this.channel.effects.forEach((effect) => {
+      o[effect.slot] = effect;
+    });
+    return o;
+  }
+
+  get effects() {
+    return range(10).map((i) => this.effectLookup[i]);
+  }
+
+  get options() {
+    return Object.keys(EffectMap) as EffectName[];
+  }
+
+  public showEffects(e: MouseEvent, i: number) {
+    const items = this.options.map((option) => ({ text: option, callback: () => this.addEffect(option, i) }));
+    this.$context(e, items);
+  }
+
+  public addEffect(effect: EffectName, i: number) {
+    this.$emit('add', { effect, index: i });
+  }
+
+  public mute() {
+    this.channel.mute = !this.channel.mute;
+  }
 }
 </script>
 
@@ -70,7 +118,7 @@ ul
   margin-bottom: 10px
 
 .slot
-  height: 20px
+  height: 25px
   border-top: solid 1px $between
   position: relative
 
@@ -80,7 +128,7 @@ ul
 
     .close-icon
       transform: scale(1)
-      transition-duration: .3s
+      transition-duration: .1s
 
   &:last-of-type
     border-bottom: solid 1px $between
@@ -103,10 +151,21 @@ ul
 
 .mute
   height: 40px
+  background-color: #333
   line-height: 40px
   text-align: center
   width: 40px
+  user-select: none
+
+  &:hover
+    cursor: pointer
 
 .slider
   margin-left: 10px
+
+.effect
+  height: 23px
+  line-height: 23px
+  width: 100%
+  text-align: center
 </style>

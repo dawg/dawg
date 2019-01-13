@@ -16,7 +16,10 @@
       ></synths>
     </panel>
     <panel name="Mixer">
-      <mixer :channels="project.channels"></mixer>
+      <mixer 
+        :channels="project.channels"
+        @add="addEffect"
+      ></mixer>
     </panel>
     <panel name="Piano Roll">
       <piano-roll 
@@ -42,7 +45,7 @@ import PianoRoll from '@/components/PianoRoll.vue';
 import Synths from '@/components/Synths.vue';
 import Panel from '@/components/Panel.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
-import { Note } from '@/schemas';
+import { Note, EffectName, Channel } from '@/schemas';
 import { Part } from 'tone';
 
 @Component({
@@ -87,6 +90,10 @@ export default class Panels extends Vue {
 
   public mounted() {
     general.setPanels(this.$refs.panels);
+  }
+
+  public addEffect(payload: { channel: Channel, effect: EffectName, index: number }) {
+    project.addEffect(payload);
   }
 }
 </script>

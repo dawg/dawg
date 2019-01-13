@@ -1,11 +1,11 @@
 import fs from 'mz/fs';
-
+import Tone from 'tone';
 import { autoserialize, autoserializeAs } from 'cerialize';
 import { VuexModule, Mutation, Module, getModule, Action } from 'vuex-module-decorators';
 import { Module as Mod } from 'vuex';
 import { remote } from 'electron';
 
-import { Pattern, Instrument, Score, Note, Channel } from '@/schemas';
+import { Pattern, Instrument, Score, Note, Channel, EffectName, Effect } from '@/schemas';
 import { findUniqueName, toTickTime, range } from '@/utils';
 import store from '@/store/store';
 import cache from '@/store/cache';
@@ -129,9 +129,104 @@ export class Project extends VuexModule {
     payload.pattern.scores.push(Score.create(payload.instrument.id));
   }
 
+  get instrumentChannelLookup() {
+    const lookup: { [k: number]: Instrument[] } = {};
+    this.instruments.forEach((instrument) => {
+      if (instrument.channel !== null) {
+        if (!(instrument.channel in lookup)) {
+          lookup[instrument.channel] = [];
+        }
+
+        lookup[instrument.channel].push(instrument);
+      }
+    });
+    return lookup;
+  }
+
+  @Mutation
+  public addEffect(payload: { channel: Channel, effect: EffectName, index: number } ) {
+    const effects = payload.channel.effects;
+    let toInsert: null | number = null;
+    for (const [i, effect] of effects.entries()) {
+      if (effect.slot === payload.index) {
+        throw Error(`There already exists an effect in ${effect.slot}`);
+      }
+
+      if (effect.slot > payload.index) {
+        toInsert = i;
+        break;
+      }
+    }
+
+    const newEffect = Effect.create(payload.index, payload.effect);
+    if (toInsert !== null) {
+      effects.splice(toInsert, 0, newEffect);
+    } else {
+      toInsert = effects.length;
+      effects.push(newEffect);
+    }
+
+    const instruments = this.instrumentChannelLookup[payload.channel.number];
+
+    // Instruments could be undefined if no instruments have been routed to this channel yet.
+    if (!instruments) {
+      return;
+    }
+
+    if (toInsert === 0) {
+      if (effects.length > 1) {
+        instruments.forEach((instrument) => {
+          instrument.disconnect(effects[1]);
+          instrument.connect(effects[0]);
+          effects[0].connect(effects[1]);
+        });
+      } else {
+        instruments.forEach((instrument) => {
+          instrument.disconnect(instrument.destination);
+          instrument.destination = effects[0].effect;
+          instrument.connect(effects[0]);
+          effects[0].connect(Tone.Master);
+        });
+      }
+    } else if (toInsert === effects.length - 1) {
+      const last = effects.length - 1;
+      effects[last - 1].disconnect(Tone.Master);
+      effects[last - 1].connect(effects[last]);
+      effects[last].connect(Tone.Master);
+    } else {
+      effects[toInsert - 1].disconnect(Tone.Master);
+      effects[toInsert - 1].connect(effects[toInsert]);
+      effects[toInsert].connect(Tone.Master);
+    }
+  }
+
   @Mutation
   public deleteInstrument(i: number) {
+    // TODO We may need to disconnect the node.
     Vue.delete(this.instruments, i);
+  }
+
+  @Mutation
+  public setChannel(payload: { instrument: Instrument, channel: number | null }) {
+    const { instrument, channel } = payload;
+    if (instrument.channel === channel) {
+      return;
+    }
+
+    instrument.channel = channel;
+    instrument.disconnect(instrument.destination);
+
+
+    let destination: Effect | Tone.AudioNode;
+    if (channel === null) {
+      destination = Tone.Master;
+    } else {
+      const effect = (this.channels[channel].effects[0] || {}).effect;
+      destination =  effect || Tone.Master;
+    }
+
+    instrument.connect(destination);
+    instrument.destination = destination;
   }
 
   get patternLookup() {

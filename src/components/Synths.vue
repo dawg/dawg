@@ -6,6 +6,8 @@
       @contextmenu="contextmenu($event, i)"
       :instrument="instrument"
       :notes="getNotes(instrument)"
+      @channel="instrument.channel"
+      @update:channel="project.setChannel(instrument, $event)"
     ></synth>
   </div>
 </template>
@@ -17,16 +19,16 @@ import Synth from '@/components/Synth.vue';
 import { Nullable } from '@/utils';
 import { Score, Instrument, Pattern } from '@/schemas';
 import { Watch } from '@/modules/update';
-
-// TODO We should probably create events so that we don't need to import the store here.
-// I'm leaving this for now though.
 import { project, specific } from '@/store';
 
 @Component({ components: { Synth } })
 export default class Synths extends Vue {
+  // TODO(jacob) remove these
   @Prop({ type: Array, required: true }) public instruments!: Instrument[];
   @Prop(Nullable(Object)) public selectedScore!: Score | null;
   @Prop(Nullable(Object)) public selectedPattern!: Pattern | null;
+
+  public project = project;
 
   get scoreLookup() {
     const lookup: {[k: string]: Score} = {};
