@@ -10,7 +10,7 @@
       >
         {{ icon }}
       </ico>
-      <div class="white--text path" v-if="!isLeaf || isWav" @click="preview">{{ fileName }}</div>
+      <div class="white--text path" v-if="!isLeaf || isWav" @click="preview" @dblclick="sendToSampleTab">{{ fileName }}</div>
     </div>
     <tree
       v-if="showChildren"
@@ -27,6 +27,8 @@
 import Vue from 'vue';
 import Tone from 'tone';
 import path from 'path';
+import fs from 'fs';
+import av from 'av';
 import { Component, Prop } from 'vue-property-decorator';
 
 @Component
@@ -40,11 +42,54 @@ export default class Tree extends Vue {
       this.showChildren = !this.showChildren;
     }
   }
-  public preview(event: MouseEvent) {
-    event.stopPropagation();
+
+  public async sendToSampleTab(event: MouseEvent) {
+    // TODO: From here we can send this.path to sample viewer
+  }
+
+  public async preview(event: MouseEvent) {
     if (this.isWav) {
-      const player = new Tone.Player(this.path).toMaster();
+      const audioContext = new AudioContext();
+
+      function createAudioBufferFromAVBuffer(numberOfChannels: number, sampleRate: number, buffer: any[]) {
+        const audioBuffer = audioContext.createBuffer(numberOfChannels, buffer.length / numberOfChannels, sampleRate);
+
+        for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
+          // This gives us the actual ArrayBuffer that contains the data
+          const nowBuffering = audioBuffer.getChannelData(channel);
+
+          for (let i = 0; i < audioBuffer.length; i++) {
+            nowBuffering[i] = buffer[(i * (numberOfChannels)) + channel];
+          }
+        }
+        return audioBuffer;
+      }
+
+      const getAudioBuffer = (source: string): Promise<AudioBuffer> => {
+        return new Promise((resolve, reject) => {
+          if (typeof (source) === 'string' && fs.existsSync(source)) {
+            fs.readFile(source, (err, data: any) => {
+              if (!err) {
+                const asset = av.Asset.fromBuffer(data);
+
+                asset.on('error', (error: any) => {
+                  reject(error);
+                });
+
+                asset.decodeToBuffer((b: any[]) => {
+                  resolve(createAudioBufferFromAVBuffer(asset.format.channelsPerFrame, asset.format.sampleRate, b));
+                });
+              } else {
+                reject(err);
+              }
+            });
+          }
+        });
+      };
+      const songAudioBuffer = await getAudioBuffer(this.path);
+      const player = new Tone.Player(songAudioBuffer).toMaster();
       player.autostart = true;
+      audioContext.close();
     }
   }
   get indent() {
