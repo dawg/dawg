@@ -175,7 +175,7 @@ export class Instrument implements IInstrument {
     this.synth.triggerAttack(note);
   }
 
-  public connect(effect: Effect | Tone.AudioNode) {
+  public connect(effect: AnyEffect | Tone.AudioNode) {
     if (effect instanceof Effect) {
       this.panner.connect(effect.effect);
     } else {
@@ -183,7 +183,7 @@ export class Instrument implements IInstrument {
     }
   }
 
-  public disconnect(effect: Effect | Tone.AudioNode) {
+  public disconnect(effect: AnyEffect | Tone.AudioNode) {
     if (effect instanceof Effect) {
       this.panner.disconnect(effect.effect);
     } else {
@@ -202,10 +202,9 @@ export class Instrument implements IInstrument {
 }
 
 // tslint:disable-next-line:ban-types
-type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? never : K }[keyof T];
-type E = NonFunctionPropertyNames<Effect>;
+// type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? never : K }[keyof T];
 type ToneEffect = Tone.AutoWah | Tone.Freeverb | Tone.Phaser;
-export type EffectName = 'wah' | 'reverb' | 'phaser';
+export type EffectName = keyof EffectOptions;
 
 export const EffectMap = {
   wah: Tone.AutoWah,
@@ -213,34 +212,57 @@ export const EffectMap = {
   phaser: Tone.Phaser,
 };
 
-export class Effect {
-  public static create(slot: number, type: EffectName) {
-    const effect = new Effect();
+export interface PhaserOptions {
+  frequency: number;
+  octaves: number;
+  baseFrequency: number;
+  Q: number;
+}
+
+interface EffectTones {
+  wah: Tone.AutoWah;
+  reverb: Tone.Freeverb;
+  phaser: Tone.Phaser;
+}
+
+interface EffectOptions {
+  wah: string;
+  reverb: string;
+  phaser: PhaserOptions;
+}
+
+const EffectDefaults: EffectOptions = {
+  wah: '',
+  reverb: '',
+  phaser: {
+    frequency: 0.5,
+    octaves: 3,
+    Q: 10,
+    baseFrequency: 350,
+  },
+};
+
+// TODO(jacob) What if we created in init / decompose pattern?
+export class Effect<T extends keyof EffectOptions> {
+  public static create<E extends keyof EffectOptions>(slot: number, type: E) {
+    const effect = new Effect<E>();
     effect.type = type;
     effect.slot = slot;
+    effect.options = EffectDefaults[type];
+    effect.init();
     return effect;
   }
 
   @autoserialize public slot!: number; // 0 <= slot < maxSlots
-  // tslint:disable-next-line:variable-name
-  public _type!: EffectName;
-  @autoserialize public options!: object;
-  public effect!: ToneEffect;
+  @autoserialize public type!: T;
+  @autoserialize public options!: EffectOptions[T];
+  public effect!: EffectTones[T];
 
-  get type() {
-    return this._type;
-  }
-  @autoserialize
-  set type(type: EffectName) {
-    this._type = type;
-
-    if (!this.effect) {
-      const cls = EffectMap[type];
-      this.effect = new cls();
-    }
+  public init() {
+    this.effect = new EffectMap[this.type]();
   }
 
-  public connect(effect: Effect | Tone.AudioNode) {
+  public connect(effect: AnyEffect | Tone.AudioNode) {
     if (effect instanceof Effect) {
       this.effect.connect(effect.effect);
     } else {
@@ -248,7 +270,7 @@ export class Effect {
     }
   }
 
-  public disconnect(effect: Effect | Tone.AudioNode) {
+  public disconnect(effect: AnyEffect | Tone.AudioNode) {
     if (effect instanceof Effect) {
       this.effect.disconnect(effect.effect);
     } else {
@@ -256,6 +278,10 @@ export class Effect {
     }
   }
 }
+
+export class AnyEffect extends Effect<EffectName> {}
+
+export class PhaserEffect extends Effect<'phaser'> {}
 
 
 export class Channel {
@@ -270,5 +296,5 @@ export class Channel {
   @autoserialize public number!: number;
   @autoserialize public name!: string;
   @autoserialize public mute = false;
-  @autoserializeAs(Effect) public effects: Effect[] = [];
+  @autoserializeAs(Effect) public effects: AnyEffect[] = [];
 }

@@ -40,7 +40,7 @@
     <div
       v-if="label"
       class="rela-block knob-label" 
-      style="color: #E4E8EA"
+      :style="labelStyle"
     >
       {{ label }}
     </div>
@@ -127,6 +127,11 @@ export default class Knob extends Mixins(Draggable) {
     // the actual radius would be 11 (measuring from outside the path).
     // However, we want to be more exact than that. If the size is 20, we want the size the be exactly 20
     return this.size / 2 - this.strokeWidth / 2;
+  }
+
+  get labelStyle() {
+    const fontSize = `${Math.round(this.size / 3)}px`;
+    return { fontSize };
   }
 
   // dial
@@ -239,6 +244,7 @@ export default class Knob extends Mixins(Draggable) {
     
 .knob-label
   text-align: center
+  color: #E4E8EA
   font-family: monospace
   font-size: 16px
 

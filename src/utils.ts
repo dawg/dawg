@@ -122,6 +122,7 @@ export const Nullable = (o: { new(): object }) => {
 
 
 export const Keys = {
+  ENTER: 13,
   SHIFT: 16,
   DELETE: 46,
   BACKSPACE: 8,

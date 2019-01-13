@@ -5,7 +5,7 @@ import { VuexModule, Mutation, Module, getModule, Action } from 'vuex-module-dec
 import { Module as Mod } from 'vuex';
 import { remote } from 'electron';
 
-import { Pattern, Instrument, Score, Note, Channel, EffectName, Effect } from '@/schemas';
+import { Pattern, Instrument, Score, Note, Channel, EffectName, Effect, AnyEffect } from '@/schemas';
 import { findUniqueName, toTickTime, range } from '@/utils';
 import store from '@/store/store';
 import cache from '@/store/cache';
@@ -91,6 +91,7 @@ export class Project extends VuexModule {
     // Reconnect all of the channels
     this.channels.forEach((channel) => {
       const effects = channel.effects;
+      effects.forEach((effect) => effect.init());
 
       if (effects.length === 0) {
         return;
@@ -248,7 +249,7 @@ export class Project extends VuexModule {
     instrument.disconnect(instrument.destination);
 
 
-    let destination: Effect | Tone.AudioNode;
+    let destination: AnyEffect | Tone.AudioNode;
     if (channel === null) {
       destination = Tone.Master;
     } else {

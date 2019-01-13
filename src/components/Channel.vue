@@ -7,6 +7,7 @@
         <div v-if="effect" class="primary" style="height: 2px"></div>
         <div
           v-if="effect"
+          @click="select($event, effect)"
           class="effect secondary white--text"
         >
           {{ effect.type }}
@@ -50,7 +51,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import Knob from '@/components/Knob.vue';
 import Slider from '@/components/Slider.vue';
-import { Channel as C, Effect, EffectMap, EffectName } from '@/schemas';
+import { Channel as C, EffectMap, EffectName, AnyEffect } from '@/schemas';
 import { range } from '@/utils';
 
 // Beware, we are modifying data in the store directly here.
@@ -62,7 +63,7 @@ export default class Channel extends Vue {
   @Prop({ type: Object, required: true }) public channel!: C;
 
   get effectLookup() {
-    const o: { [k: number]: Effect } = {};
+    const o: { [k: number]: AnyEffect } = {};
     this.channel.effects.forEach((effect) => {
       o[effect.slot] = effect;
     });
@@ -84,6 +85,11 @@ export default class Channel extends Vue {
 
   public addEffect(effect: EffectName, i: number) {
     this.$emit('add', { effect, index: i });
+  }
+
+  public select(e: MouseEvent, effect: AnyEffect) {
+    e.stopPropagation();
+    this.$emit('select', effect);
   }
 
   public mute() {
