@@ -1,6 +1,6 @@
 <template>
   <div style="display: contents">
-    <div @click="click" style="display: flex" class="node">
+    <div @click="click" style="display: flex" v-bind:class="nodeClass">
       <ico 
         fa 
         class="icon"
@@ -108,6 +108,9 @@ export default class Tree extends Vue {
   }
   get folders() {
     return Object.keys(this.children);
+  }
+  get nodeClass() {
+    return 'node';
   }
   get fileName() {
     return path.basename(this.path);
