@@ -19,6 +19,7 @@
       <mixer 
         :channels="project.channels"
         @add="project.addEffect"
+        @delete="project.deleteEffect"
         @set="project.setOption"
       ></mixer>
     </panel>

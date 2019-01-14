@@ -185,6 +185,31 @@ export class Project extends VuexModule {
   }
 
   @Action
+  public deleteEffect(payload: { channel: Channel, effect: AnyEffect }) {
+    const instruments = this.instrumentChannelLookup[payload.channel.number];
+    const effects = payload.channel.effects;
+    for (const [i, effect] of effects.entries()) {
+      if (effect.slot !== payload.effect.slot) { continue; }
+      const destination = (effects[i + 1] || {}).effect || Tone.Master;
+      if (i === 0) {
+        instruments.forEach((instrument) => {
+          instrument.disconnect(effects[0]);
+          instrument.connect(destination);
+          instrument.destination = destination;
+        });
+      } else {
+        effects[i - 1].disconnect(effects[i]);
+        effects[i - 1].connect(destination);
+      }
+
+      effects.splice(i, 1);
+      return;
+    }
+
+    throw Error(`Unable to delete effect ${payload.effect.slot} from channel ${payload.channel.number}`);
+  }
+
+  @Action
   public addEffect(payload: { channel: Channel, effect: EffectName, index: number } ) {
     const effects = payload.channel.effects;
     let toInsert: null | number = null;
@@ -238,7 +263,6 @@ export class Project extends VuexModule {
     } else {
       effects[toInsert - 1].disconnect(Tone.Master);
       effects[toInsert - 1].connect(effects[toInsert]);
-      effects[toInsert].connect(Tone.Master);
     }
   }
 

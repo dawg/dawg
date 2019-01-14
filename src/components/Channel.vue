@@ -8,6 +8,7 @@
         <div
           v-if="effect"
           @click="select($event, effect)"
+          @contextmenu="contextmenu($event, effect)"
           class="effect secondary white--text"
         >
           {{ effect.type }}
@@ -90,6 +91,13 @@ export default class Channel extends Vue {
   public select(e: MouseEvent, effect: AnyEffect) {
     e.stopPropagation();
     this.$emit('select', effect);
+  }
+
+  public contextmenu(e: MouseEvent, effect: AnyEffect) {
+    this.$context(e, [{
+      text: 'Delete',
+      callback: () => this.$emit('delete', effect),
+    }]);
   }
 
   public mute() {

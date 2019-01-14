@@ -5,6 +5,7 @@
       :key="i"
       :channel="channel"
       @add="addEffect(channel, $event)"
+      @delete="deleteEffect(channel, $event)"
       @select="openEffect"
     ></channel>
     <effect 
@@ -35,6 +36,10 @@ export default class Mixer extends Vue {
 
   public openEffect(effect: AnyEffect) {
     this.openedEffect = effect;
+  }
+
+  public deleteEffect(channel: Channel, effect: AnyEffect) {
+    this.$emit('delete', { channel, effect });
   }
 
   public combine(a: object, b: object) {
