@@ -20,21 +20,44 @@ import Tab from '@/components/Tab.vue';
 import ColorBlock from '@/components/ColorBlock.vue';
 import { StyleType, range, makeStyle } from '@/utils';
 import Foot from '@/components/Foot.vue';
-import notification from '@/notification';
-import Notifications from '@/notification/Notifications.vue';
+import Notifications from '@/modules/notification/Notifications.vue';
 import Synth from '@/components/Synth.vue';
 import SequencerRow from '@/components/SequencerRow.vue';
 import Split from '@/modules/split/Split.vue';
 import BeatLines from '@/components/BeatLines';
 import PianoRoll from '@/components/PianoRoll.vue';
 import Timeline from '@/components/Timeline.vue';
-
-
+import MiniScore from '@/components/MiniScore.vue';
+import ContextMenu from '@/modules/context/ContextMenu.vue';
 import Vue from 'vue';
 
-Vue.use(notification);
-
 const synth = new Tone.Synth().toMaster();
+
+const NOTES = [
+  {id: 44, time: 0, duration: 1},
+  {id: 47, time: 0, duration: 1},
+  {id: 49, time: 0, duration: 1},
+  {id: 47, time: 1, duration: 1},
+  {id: 49, time: 1, duration: 1},
+  {id: 51, time: 1, duration: 1},
+  {id: 52, time: 2, duration: 0.5},
+  {id: 51, time: 3, duration: 0.5},
+  {id: 45, time: 4, duration: 0.5},
+  {id: 48, time: 5, duration: 0.5},
+];
+
+storiesOf(MiniScore.name, module)
+  .add('Standard', () => ({
+    components: { Dawg, MiniScore },
+    template: `
+    <dawg>
+      <mini-score :notes="notes" style="height: 50px; width: 400px"></mini-score>
+    </dawg>
+    `,
+    data: () => ({
+      notes: NOTES,
+    }),
+  }));
 
 storiesOf(SequencerRow.name, module)
   .add('Standard', () => ({
@@ -52,8 +75,7 @@ storiesOf(SequencerRow.name, module)
     components: { SequencerRow, Dawg },
     methods: {
       click(...args) {
-        // tslint:disable-next-line:no-console
-        console.log('click', args);
+        //
       },
     },
   }));
@@ -97,12 +119,26 @@ storiesOf(Sequencer.name, module)
     template: `
     <dawg>
       <sequencer
-        :value="notes"
-        :measures.sync="measures"
+        v-model="notes"
+        :sequencer-loop-end.sync="sequencerLoopEnd"
+        :loop-start="loopStart"
+        :loop-end="loopEnd"
+        :set-loop-start="setLoopStart"
+        :set-loop-end="setLoopEnd"
+        :progress="progress"
       ></sequencer>
     </dawg>
     `,
-    data: () => ({ notes: [], measures: 1 }),
+    data: () => ({
+      notes: [],
+      measures: 1,
+      sequencerLoopEnd: 0,
+      loopStart: 0,
+      loopEnd: 0,
+      setLoopStart: 0,
+      setLoopEnd: 0,
+      progress: 0,
+    }),
     components: { Sequencer, Dawg },
   }));
 
@@ -288,6 +324,41 @@ storiesOf(ColorBlock.name, module)
   }));
 
 
+storiesOf(ContextMenu.name, module)
+  .add('Standard', () => ({
+    template: `
+    <div
+      class="secondary white--text"
+      @contextmenu="contextmenu"
+      style="
+        height: 200px;
+        width: 200px;
+        text-align: center;
+        vertical-align: middle;
+        line-height: 200px;
+      "
+    >
+      Right Click ({{ count }})
+      <context-menu></context-menu>
+    </div>
+    `,
+    components: { ContextMenu },
+    data: () => ({
+      count: 0,
+    }),
+    methods: {
+      contextmenu(e: MouseEvent) {
+        this.$context(e, [{
+          // tslint:disable-next-line:no-console
+          // @ts-ignore
+          callback: () => this.count += 1,
+          text: 'Increment',
+        }]);
+      },
+    },
+  }));
+
+
 storiesOf(Notifications.name, module)
   .add('Standard', () => ({
     template: `
@@ -336,7 +407,9 @@ storiesOf(Synth.name, module)
   .add('Standard', () => ({
     template: `
     <v-app>
-      <div><synth ref="synth" name="Tester"></synth></div>
+      <dawg>
+        <synth ref="synth" name="Tester" :notes="notes"></synth>
+      </dawg>
       <div>
         <v-btn @click="playme">Play</v-btn>
       </div>
@@ -348,7 +421,8 @@ storiesOf(Synth.name, module)
         this.$refs.synth.synth.triggerAttackRelease('C5', '8n');
       },
     },
-    components: { Synth },
+    data: () => ({ notes: NOTES }),
+    components: { Synth, Dawg },
   }));
 
 

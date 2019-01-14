@@ -22,16 +22,16 @@
       </div>
       <div :style="sequencerStyle" class="layer lines" ref="beatLines"></div>
       <note
-        v-for="(note, i) in notes"
+        v-for="(note, i) in value"
         :key="i"
         :start="note.time"
         :id="note.id"
-        :selected="note.selected"
+        :selected="selected[i]"
         style="position: absolute; z-index: 2"
         @contextmenu="remove($event, i)"
         @mousedown="clickNote($event, i)"
         @input="changeDefault"
-        v-model="note.length"
+        v-model="note.duration"
       ></note>
       <progression
         :loop-start="loopStart"
@@ -54,18 +54,15 @@
 <script lang="ts">
 import { Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 import { Draggable } from '@/mixins';
-import { Keys } from '@/keys';
+import { Keys } from '@/utils';
 import { FactoryDictionary } from 'typescript-collections';
 import { allKeys, range, copy, Nullable } from '@/utils';
 import NoteComponent from '@/components/Note.vue';
-import { Note } from '@/types';
+import { Note } from '@/schemas';
 import BeatLines from '@/components/BeatLines';
 import SequencerRow from '@/components/SequencerRow.vue';
 import Progression from '@/components/Progression.vue';
-
-interface EnhancedNote extends Note {
-  selected: boolean;
-}
+import { Watch } from '@/modules/update';
 
 @Component({
   components: { Note: NoteComponent, SequencerRow, Progression },
@@ -73,12 +70,17 @@ interface EnhancedNote extends Note {
 export default class Sequencer extends Mixins(Draggable, BeatLines) {
   @Inject() public noteHeight!: number;
   @Inject() public stepsPerBeat!: number;
-  @Prop(Array) public value?: Note[];  // TODO Change value to something else (initial maybe?)
+
+  @Prop({ type: Array, required: true }) public value!: Note[];
   @Prop({ type: Number, default: 1 }) public defaultLength!: number;
   @Prop({ type: Number, default: 0.25 }) public snap!: number;
 
-  @Prop({ type: Number, required: true }) public loopEnd!: number | null;
-  @Prop({ type: Number, required: true }) public loopStart!: number | null;
+  // These are for the progression.
+  @Prop({ type: Number, required: true }) public loopEnd!: number;
+  @Prop({ type: Number, required: true }) public loopStart!: number;
+
+  // The loop end determined by the notes.
+  @Prop({ type: Number, required: true }) public sequencerLoopEnd!: number;
 
   // These values should only be set if there is a loop on the timeline
   @Prop(Nullable(Number)) public setLoopEnd!: number | null;
@@ -86,7 +88,6 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   @Prop({ type: Number, required: true }) public progress!: number;
 
 
-  public notes: EnhancedNote[] = [];
   public cursor = 'move';
   public default = this.defaultLength;  // To avoid mutating a prop
   public rows!: HTMLElement;
@@ -96,6 +97,8 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   public allKeys = allKeys;
   public minDisplayMeasures = 4;
   public noteLoopEnd: number | null = null;
+  // selected[i] indicates whether value[i] is selected
+  public selected: boolean[] = [];
 
   public scroll(e: UIEvent) {
     // This only handles horizontal scrolls!
@@ -104,7 +107,6 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   }
   get sequencerStyle() {
     return {
-      // TODO This may not be needed
       width: `${this.displayBeats * this.pxPerBeat}px`,
       height: `${this.allKeys.length * this.noteHeight}px`,
     };
@@ -134,7 +136,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   public get selectStyle() {
     if (!this.selectStartEvent) { return; }
     if (!this.selectCurrentEvent) {
-      this.notes.forEach((note) => note.selected = false);
+      this.selected = this.selected.map((_) => false);
       return;
     }
 
@@ -158,15 +160,15 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     const maxBeat = (left + width) / this.pxPerBeat;
     const maxRow = (top + height) / this.noteHeight;
 
-    this.notes.forEach((note) => {
+    this.value.forEach((note, i) => {
       // Check if there is any overlap between the rectangles
       // https://www.geeksforgeeks.org/find-two-rectangles-overlap/
       if (minRow > note.id + 1 || note.id > maxRow) {
-        note.selected = false;
-      } else if (minBeat > note.time + note.length || note.time > maxBeat) {
-        note.selected = false;
+        this.selected[i] = false;
+      } else if (minBeat > note.time + note.duration || note.time > maxBeat) {
+        this.selected[i] = false;
       } else {
-        note.selected = true;
+        this.selected[i] = true;
       }
     });
 
@@ -205,13 +207,13 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     this.$log.debug(x, e.clientX, left, time);
 
     const note = {
-      length: this.default,
-      selected: false,
+      duration: this.default,
       id,
       time,
     };
 
-    this.notes.push(note);
+    this.selected.push(false);
+    this.value.push(note);
     this.$emit('added', note);
     this.checkLoopEnd();
   }
@@ -224,17 +226,17 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     const y = e.clientY - rect.top;
     const row = Math.floor(y / this.noteHeight);
 
-    const oldNote = this.notes[i];
+    const oldNote = this.value[i];
     if (row === oldNote.id && time === oldNote.time) { return; }
 
     const timeDiff = time - oldNote.time;
     const rowDiff = row - oldNote.id;
 
-    let notesToMove: Array<[EnhancedNote, number]>;
-    if (oldNote.selected) {
-      notesToMove = this.notes.map((note, ind) => {
-        return [note, ind] as [EnhancedNote, number];
-      }).filter(([note, _]) => note.selected);
+    let notesToMove: Array<[Note, number]>;
+    if (this.selected[i]) {
+      notesToMove = this.value.map((note, ind) => {
+        return [note, ind] as [Note, number];
+      }).filter(([note, ind]) => this.selected[i]);
     } else {
       notesToMove = [[oldNote, i]];
     }
@@ -242,14 +244,13 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     notesToMove.forEach(([note, ind]) => {
       const newTime = note.time + timeDiff;
       const newNote = {
-        length: note.length,
-        selected: note.selected,
+        duration: note.duration,
         time: newTime,
         id: note.id + rowDiff,
       };
 
-      this.$set(this.notes, ind, newNote);
-      this.$emit('removed', note);
+      this.$set(this.value, ind, newNote);
+      this.$emit('removed', note, ind);
       this.$emit('added', newNote);
       this.checkLoopEnd();
     });
@@ -259,13 +260,14 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     this.removeAtIndex(i);
   }
   public removeAtIndex(i: number) {
-    const item = this.notes[i];
-    this.$delete(this.notes, i);
-    this.$emit('removed', item);
+    const item = this.value[i];
+    this.$delete(this.selected, i);
+    this.$delete(this.value, i);
+    this.$emit('removed', item, i);
     this.checkLoopEnd();
   }
   public checkLoopEnd() {
-    let maxTime = Math.max(...this.notes.map((note) => note.time), 0);
+    let maxTime = Math.max(...this.value.map((note) => note.time), 0);
 
     // Add a tiny amount to max time so that ceil will push to next number
     // if maxTime is a whole number
@@ -274,7 +276,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
 
     this.$log.debug(`noteLoopEnd -> ${noteLoopEnd}`);
     if (noteLoopEnd !== this.noteLoopEnd) {
-      this.$emit('loop-end', noteLoopEnd);
+      this.$update('sequencerLoopEnd', noteLoopEnd);
       this.noteLoopEnd = noteLoopEnd;
     }
   }
@@ -282,28 +284,29 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     this.default = length;
   }
   public clickNote(e: MouseEvent, i: number) {
-    const note = this.notes[i];
-    if (!note.selected) { this.notes.forEach((n) => n.selected = false); }
+    const note = this.value[i];
+    if (!this.selected[i]) {
+      this.value.forEach((_, ind) => this.selected[ind] = false);
+    }
 
-    const createNote = (oldNote: EnhancedNote) => {
+    const createNote = (oldNote: Note) => {
       const newNote = copy(oldNote);
 
       // We do this because `newNew` will have a heigher z-index
       // Thus, it will be displayed on top (which we want)
-      oldNote.selected = false;
-
-      this.notes.push(newNote);
+      this.selected.push(false);
+      this.value.push(newNote);
       this.$emit('added', newNote);
     };
 
     let targetIndex = i;
     if (this.holdingShift) {
-      let selected: EnhancedNote[];
+      let selected: Note[];
 
       // If selected, copy all selected. If not, just copy the note that was clicked.
-      if (note.selected) {
-        selected = this.notes.filter((n) => n.selected && n !== note);
-        targetIndex = this.notes.length; // A copy of `note` will be created at this index
+      if (this.selected[i]) {
+        selected = this.value.filter((n, ind) => this.selected[ind] && n !== note);
+        targetIndex = this.value.length; // A copy of `note` will be created at this index
         createNote(note);
       } else {
         selected = [note];
@@ -318,34 +321,22 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
       this.holdingShift = true;
     } else if (e.keyCode === Keys.DELETE || e.keyCode === Keys.BACKSPACE) {
       // Slice and reverse since we will be deleting from the array as we go
-      const lastIndex = this.notes.length - 1;
-      this.notes.slice().reverse().forEach((note, i) => {
-        if (note.selected) {
+      const lastIndex = this.value.length - 1;
+      this.value.slice().reverse().forEach((note, i) => {
+        if (this.selected[i]) {
           this.removeAtIndex(lastIndex - i);
         }
       });
     }
   }
+
   public keyup(e: KeyboardEvent) {
     if (e.keyCode === Keys.SHIFT) { this.holdingShift = false; }
   }
 
   public mounted() {
     this.rows = this.$refs.rows as HTMLElement;
-    // Make a shallow copy so we don't alter the prop
-    const notes = this.value ? this.value.slice() : [];
-    this.notes = notes.map((note) => {
-      return {
-        ...note,
-        selected: false,
-      };
-    });
-
-    this.notes.map((note) => {
-      this.$emit('added', note);
-    });
     this.checkLoopEnd();
-
     window.addEventListener('keydown', this.keydown);
     window.addEventListener('keyup', this.keyup);
   }
@@ -353,6 +344,17 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   public destroyed() {
     window.removeEventListener('keydown', this.keydown);
     window.removeEventListener('keyup', this.keyup);
+  }
+
+  @Watch<Sequencer>('value', { immediate: true })
+  public resetSelectedIfNecessary() {
+    // Whenever the parent changes the notes
+    // we should reset the selected!
+    // Also, since we are watching `value`, we modify `selected` first so that
+    // this method doesn't trigger before `selected` is also changed.
+    if (this.selected.length !== this.value.length) {
+      this.selected = this.value.map((_) => false);
+    }
   }
 }
 </script>
@@ -393,10 +395,6 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   width: 1px
   background-color: #ffa
   box-shadow: -1px 0 2px #ffa
-  z-index: 2
-  top: 0
-  bottom: 0
-  pointer-events: none
 
 .loop-background
   opacity: 0
@@ -404,7 +402,8 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   transition: .2s opacity
   opacity: 0.2
   position: absolute
-  // TODO duplicate
+
+.loop-background, .progress-bar
   z-index: 2
   top: 0
   bottom: 0

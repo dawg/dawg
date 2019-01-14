@@ -1,5 +1,10 @@
 <template>
-  <div :class="keyClass" :style="keyStyle" @mousedown="play"></div>
+  <div 
+    :class="keyClass" 
+    :style="keyStyle" 
+    @mousedown="$emit('start', value)"
+    @mouseup="$emit('stop', value)"
+  ></div>
 </template>
 
 <script lang="ts">
@@ -19,12 +24,15 @@ export default class Key extends Vue {
   get color() {
     return this.value.includes('#') ? 'black' : 'white';
   }
+
   get height() {
     return this.noteHeight * (12 / 7);  // all keys / white keys
   }
+
   get keyClass() {
     return `key--${this.color} ${this.value}`;
   }
+
   get keyStyle() {
     if (this.color === 'black') {
       return {
@@ -39,14 +47,10 @@ export default class Key extends Vue {
       width: `${this.width}px`,
     };
   }
-  public play() {
-    this.$emit('press', this.value);
-  }
 }
 </script>
 
 <style scoped lang="sass">
-// TODO Move this to JavaScript. We have libraries for darken and lighten.
 $color_white: #eee
 $color_black: #3b3b3b
 

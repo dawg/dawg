@@ -14,7 +14,7 @@
     "baseUrl": ".",
     "types": [
       "webpack-env",
-      "jest"
+      "mocha"
     ],
     "paths": {
       "@/*": [

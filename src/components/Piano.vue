@@ -10,7 +10,8 @@
           :value="key.value"
           :synth="synth"
           :border="index !== allKeys.length - 1"
-          @press="play"
+          @start="start"
+          @stop="stop"
         ></key>
       </div>
     </div>
@@ -28,13 +29,17 @@ import Key from '@/components/Key.vue';
   components: { Key },
 })
 export default class Piano extends Vue {
-  @Prop({ type: Object, required: false }) public synth?: Tone.Synth;
+  @Prop({ type: Object, required: true }) public synth!: Tone.Synth;
   public allKeys = allKeys;
-  public play(value: string) {
-    if (this.synth) {
-      // TODO This should be longer. Actually, I'm not entirely sure what to do.
-      this.synth.triggerAttackRelease(value, '8n');
-    }
+
+  public start(value: string) {
+    this.synth.triggerAttack(value);
+  }
+
+  public stop() {
+    // I'm not sure what would happen if there were two notes playing.
+    // I assume it would stop both. I didn't see a way to only stops one.
+    this.synth.triggerRelease();
   }
 }
 </script>

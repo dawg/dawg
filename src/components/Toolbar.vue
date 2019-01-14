@@ -10,16 +10,14 @@
     
 
     <time-display :time="time"></time-display>
-    <bpm v-model="bpm"></bpm>
+    <bpm :value="bpm" @input="updateBpm"></bpm>
 
     <v-spacer></v-spacer>
 
     <v-btn
-        icon
-        style="margin: 0"
-        v-shortkey="['space']"
-        @shortkey="playing = !playing"
-        @click="playing = !playing"
+      icon
+      style="margin: 0"
+      @click="playing = !playing"
     >
       <ico fa>{{ playing ? 'pause' : 'play' }}</ico>
     </v-btn>
@@ -35,19 +33,23 @@ import Bpm from '@/components/Bpm.vue';
 import TimeDisplay from '@/components/TimeDisplay.vue';
 
 @Component({
-  components: {TimeDisplay, Bpm},
+  components: { TimeDisplay, Bpm },
 })
 export default class Toolbar extends Vue {
   @Prop(Number) public height!: number;
   @Prop(Number) public offset!: number;
+  @Prop({ type: Number, required: true }) public bpm!: number;
+
   public title = 'Vusic';
   public time = {
     mine: 0,
     sec: 0,
     milli: 0,
   };
-  public bpm = 120;
   public playing = false;
+  public updateBpm(value: number) {
+    this.$update('bpm', value);
+  }
 }
 </script>
 
