@@ -11,7 +11,8 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 export default class DotButton extends Vue {
   @Prop({type: Boolean, required: true}) public value!: boolean;
 
-  public thing() {
+  public thing(e: MouseEvent) {
+    e.stopPropagation();
     this.$emit('input', !this.value);
   }
 }

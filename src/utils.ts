@@ -1,6 +1,5 @@
-export const BLACK = 'black';
-
-export const WHITE = 'white';
+import Tone from 'tone';
+import { Mutation } from 'vuex-module-decorators';
 
 export enum StyleType {
   PRIMARY = 'primary',
@@ -57,10 +56,7 @@ export const makeStyle = (type: StyleType, options?: StyleOptions) => {
   return str;
 };
 
-export const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].map((note) => ({
-  value: note,
-  color: note.endsWith('#') ? BLACK : WHITE,
-}));
+type Color = 'black' | 'white';
 
 export const range = (a: number, b = 0, interval = 1) => {
   let start;
@@ -77,14 +73,92 @@ export const range = (a: number, b = 0, interval = 1) => {
   return rge;
 };
 
-export const TREE = {
-  root: {
-    'folder 1': {
-      'item 1': {},
-      'folder 2': {
-        'item 2': {},
-      },
+interface OctaveKey {
+  value: string;
+  color: Color;
+  id: number;
+}
+
+const octaveKeys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].reverse();
+export const allKeys: OctaveKey[] = [];
+let noteNumber = -octaveKeys.length + 1;  // A bit hacky but we want to start at C8 and end at A0
+range(0, 9).reverse().forEach((value) => {
+  octaveKeys.forEach((key) => {
+    if (noteNumber >= 0 && noteNumber < 88) {
+      allKeys.push({
+        value: `${key}${value}`,
+        color: key.endsWith('#') ? 'black' : 'white',
+        id: noteNumber,
+      });
+    }
+    noteNumber += 1;
+  });
+});
+
+
+export const copy = <T>(o: T): T => {
+  return JSON.parse(JSON.stringify(o));
+};
+
+
+export const Nullable = (o: { new(): object }) => {
+  return {
+    required: true,
+    validator: (prop: any) => {
+      const valid = typeof prop === o.name.toLowerCase() || prop === null;
+      if (!valid) {
+        if (prop === undefined) {
+          // tslint:disable-next-line:no-console
+          console.warn('prop cannot be undefined');
+        } else {
+          // tslint:disable-next-line:no-console
+          console.warn(`prop should not be of type ${typeof prop}`);
+        }
+      }
+      return valid;
     },
-    'item 3': {},
-  },
+  };
+};
+
+
+export const Keys = {
+  SHIFT: 16,
+  DELETE: 46,
+  BACKSPACE: 8,
+  SPACE: 32,
+};
+
+
+export const Button = {
+  LEFT: 0,
+  MIDDLE: 1,
+  RIGHT: 2,
+};
+
+export function toTickTime(time: number) {
+  return `${time * Tone.Transport.PPQ}i`;
+}
+
+
+export const findUniqueName = (objects: Array<{ name: string }>, prefix: string) => {
+  let name: string;
+  let count = 1;
+  while (true) {
+    name = `${prefix} ${count}`;
+    let found = false;
+    for (const o of objects) {
+      if (o.name === name) {
+        found = true;
+        break;
+      }
+    }
+
+    if (!found) {
+      break;
+    }
+
+    count++;
+  }
+
+  return name;
 };

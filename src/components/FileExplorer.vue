@@ -1,16 +1,16 @@
 <template>
   <div>
     <tree
-        v-for="(children, label) in projects"
-        :key="label"
-        :label="label"
-        :children="children"
+      v-for="(children, label) in projects"
+      :key="label"
+      :label="label"
+      :children="children"
     ></tree>
   </div>
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
+import { Component, Vue, Watch, Prop } from 'vue-property-decorator';
 import { ipcRenderer } from 'electron';
 import Tree from '@/components/Tree.vue';
 import fs from 'fs';
@@ -23,8 +23,9 @@ interface FileTree {
 
 @Component({components: { Tree }})
 export default class Drawer extends Vue {
+  @Prop({ type: Array, required: true }) public folders!: string[];
+
   public drawer = true;
-  public folders = [path.join(os.homedir(), 'Downloads')];
   get projects() {
     const tree: FileTree = {};
     this.folders.forEach((folder) => {
@@ -44,6 +45,7 @@ export default class Drawer extends Vue {
   }
   public addFolder(_: any, [folder]: [string]) {
     this.folders.push(folder); // Folder is always an array of length 1
+    this.$update('folders', [...this.folders, folder]);
   }
   public mounted() {
     ipcRenderer.on('folder', this.addFolder);

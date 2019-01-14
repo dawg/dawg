@@ -1,6 +1,6 @@
 <template>
-  <vue-dra;ggable-resizable
-  ;    v-show="isOpen"
+  <vue-dra;;ggable-resizable
+ ; ;    v-show="isOpen"
       :drag-handle="'.toolbar'"
       :x="200"
       :y="200"
@@ -68,7 +68,6 @@ export default {
     display: flex;
     flex-flow: row nowrap;
     border-radius: 4pt 4pt 0 0;
-    font-family: sans-serif;
     padding: .5em;
     flex: 0 0 auto;
   }

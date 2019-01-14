@@ -1,33 +1,57 @@
 <template>
-  <div class="synth secondary" color="white">
-    <dot-button
-      :value="mute"
-      @input="$emit('update:mute', $event)"
-    ></dot-button>
-    <v-select
-      class="synth-dropdown"
-      dense
-      dark
-      :items="types"
-      :value="type"
-      @input="$emit('update:type', $event)"
-    ></v-select>
-    <knob
-      class="knob"
-      text-color="white"
-      :size="50"
-      :value="volume"
-      @input="$emit('update:volume', $event)"
-    ></knob>
-    <knob
-      class="knob"
-      text-color="white"
-      :size="50"
-      :min="-1"
-      :max="1"
-      :value="panning"
-      @input="$emit('update:panning', $event)"
-    ></knob>
+  <!-- For some reason, @click isn't working on this component.
+  However, this works when we add $emit -->
+  <div 
+    class="synth-wrapper"
+    style="position: relative; z-index: 10;"
+  >
+    <div 
+      class="bar primary"
+    ></div>
+    <div 
+      class="synth secondary-lighten-1" 
+      color="white"
+      :style="synthStyle"
+      @dblclick="expand = !expand"
+      @click="$emit('click', $event)"
+      @contextmenu="$emit('contextmenu', $event)"
+    >
+      <dot-button
+        class="mute"
+        v-model="active"
+      ></dot-button>
+      <knob
+        class="knob"
+        text-color="white"
+        :size="knobSize"
+        :stroke-width="strokeWidth"
+        v-model="instrument.volume"
+      ></knob>
+      <knob
+        class="knob"
+        text-color="white"
+        :size="knobSize"
+        :min="-1"
+        :max="1"
+        :mid-value="0"
+        :stroke-width="strokeWidth"
+        v-model="instrument.pan"
+      ></knob>
+      <div class="white--text name">{{ instrument.name }}</div>
+      <mini-score :notes="notes"></mini-score>
+    </div>
+    <div 
+      class="options secondary-lighten-1"
+      :class="{ expand }"
+    >
+      <v-select
+        class="synth-dropdown"
+        dense
+        dark
+        :items="types"
+        v-model="instrument.type"
+      ></v-select>
+    </div>
   </div>
 </template>
 
@@ -36,32 +60,84 @@ import Vue from 'vue';
 import Tone from 'tone';
 import Knob from '@/components/Knob.vue';
 import DotButton from '@/components/DotButton.vue';
-
+import MiniScore from '@/components/MiniScore.vue';
 import { Component, Prop } from 'vue-property-decorator';
+import { Note, Instrument } from '@/schemas';
+import { Watch } from '@/modules/update';
 
-@Component({ components: { Knob, DotButton } })
+const TYPES = ['pwm', 'sine', 'triangle', 'fatsawtooth', 'square'];
+
+const oscillator = { type: 'fatsawtooth', spread: 30 };
+const envelope = { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 };
+
+@Component({ components: { Knob, DotButton, MiniScore } })
 export default class Synth extends Vue {
-    @Prop({type: String, required: true}) public type!: string;
-    @Prop({type: Number, required: true}) public volume!: number;
-    @Prop({type: Number, required: true}) public panning!: number;
-    @Prop({type: Boolean, required: true}) public mute!: boolean;
-    public types = ['pwm', 'sine', 'triangle', 'fatsawtooth', 'square'];
+  @Prop({ type: Object, required: true }) public instrument!: Instrument;
+  @Prop({ type: Number, default: 50 }) public height!: number;
+  @Prop({ type: Array, default: () => [] }) public notes!: Note[];
 
+  public types = TYPES;
+  public active = !this.instrument.mute;
+  public expand = false;
+  public strokeWidth = 2.5;
+  public knobSize = 30;
+
+  get synthStyle() {
+    return {
+      height: `${this.height}px`,
+    };
+  }
+
+  @Watch<Synth>('active')
+  public changeMute() {
+    this.instrument.mute = !this.active;
+  }
 }
-
 </script>
 
 <style scoped lang="sass">
-  .synth
-    align-items: center
-    display: flex
-    padding-right: 10px
+.synth
+  align-items: center
+  display: flex
+  padding-right: 10px
 
-  .synth-dropdown
-    padding-right: 5px
+  &:hover
+    cursor: pointer
 
-  .knob
-    margin: 2.5px
+.mute
+  height: 20px
+  width: 20px
+  margin: 5px
 
+.synth-dropdown
+  padding: 5px 18px
 
+.synth-dropdown /deep/ .v-input__slot
+  margin: 0!important
+
+.knob
+  margin: 5px
+
+.name
+  font-size: 1.2em
+  min-width: 140px
+  margin: 0 auto
+  display: block
+  padding-left: 10px
+  user-select: none
+
+.synth-wrapper
+  display: flex
+  flex-direction: column
+
+.bar
+  height: 5px
+
+.options
+  transition: height .5s
+  height: 0
+  overflow: hidden
+
+.expand
+  height: 55px
 </style>

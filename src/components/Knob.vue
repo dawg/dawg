@@ -1,160 +1,244 @@
 <template>
-  <div class="knob-control" :style="{ height: size-5 + 'px' }" :ref="dragRef">
-    <!--suppress HtmlUnknownAttribute -->
-    <svg
-        v-if="potentiometer"
-        :width="size"
-        :height="size"
-        viewBox="0 0 100 100">
-      <circle :r="center" :cx="center" :cy="center" :fill="secondaryColor"></circle>
-      <rect
+  <div class="rela-inline knob" :ref="dragRef">
+    <div 
+      class="rela-block knob-dial" 
+      :style="knobStyle"
+    >
+      <svg class="dial-svg" :height="size" :width="size">
+        <path
+          :d="rangePath"
+          fill="none"
+          stroke="#55595C"
+          :stroke-width="strokeWidth"
+        ></path>
+        <path 
+          v-show="showRight"
+          :d="rightRangePath" 
+          fill="none" 
+          :stroke="primaryColor"
+          :stroke-width="strokeWidth"
+          :style="rightStrokeStyle"
+        ></path>
+        <path 
+          v-show="showLeft"
+          :d="leftRangePath"
+          fill="none" 
+          :stroke="primaryColor"
+          :stroke-width="strokeWidth"
+          :style="lefStrokeStyle"
+        ></path>
+        <rect
           :width="rectWidth"
           :x="center - rectWidth / 2"
-          :y="center - size / 8 * 4"
-          :height="size / 3" fill="#000"
+          :height="rectHeight"
+          :fill="primaryColor"
           :transform="transform"
-      ></rect>
-    </svg>
-
-    <!--suppress HtmlUnknownAttribute -->
-    <svg
-        v-else
-        :width="size"
-        :height="size"
-        viewBox="0 0 100 100">
-      <path
-          :d="rangePath"
-          :stroke-width="strokeWidth"
-          :stroke="secondaryColor"
-          class="knob-control__range">
-      </path>
-      <path
-          v-if="showValue"
-          :d="valuePath"
-          :stroke-width="strokeWidth"
-          :stroke="primaryColor"
-          class="knob-control__value">
-      </path>
-      <text
-          v-if="showValue"
-          :x="50"
-          :y="57"
-          text-anchor="middle"
-          :fill="textColor"
-          class="knob-control__text-display">
-        {{ valueDisplay }}
-      </text>
-    </svg>
-
+        ></rect>
+      </svg>
+    </div>
+    <div
+      v-if="label"
+      class="rela-block knob-label" 
+      style="color: #E4E8EA"
+    >
+      {{ label }}
+    </div>
   </div>
 </template>
 
 <script lang="ts">
 import { Draggable } from '@/mixins';
-import { Component, Prop, Mixins } from 'vue-property-decorator';
+import { Component, Prop, Mixins, Watch } from 'vue-property-decorator';
 
-const RADIUS = 40;
-const MID_X = 50;
-const MID_Y = 50;
-const MIN_RADIANS = (4 * Math.PI) / 3;
-const MAX_RADIANS = -Math.PI / 3;
+// Credit to the styling goes to this codepen: https://codepen.io/mavrK/pen/erQPvP
+// They actually have some nice dials we may want to use
 
-const MIN_X = MID_X + (Math.cos(MIN_RADIANS) * RADIUS);
-const MIN_Y = MID_Y - (Math.sin(MIN_RADIANS) * RADIUS);
-const MAX_X = MID_X + (Math.cos(MAX_RADIANS) * RADIUS);
-const MAX_Y = MID_Y - (Math.sin(MAX_RADIANS) * RADIUS);
+// Some things to note:
+// 1. Most things here use angles from the +x axis; however, svg rotation starts from the +y axis
+// 2. The rotation of the knob is clockwise so the minimum variables are actually the larger values
 
 @Component
 export default class Knob extends Mixins(Draggable) {
   @Prop({ type: Number }) public value!: number;
+  @Prop({ type: Number, default: 264 }) public range!: number;
   @Prop({ type: Number, default: 100 }) public max!: number;
   @Prop({ type: Number, default: 0 }) public min!: number;
   @Prop({ type: Number, default: 1 }) public stepSize!: number;
   @Prop({ type: Number, default: 100 }) public size!: number;
   @Prop({ type: String, default: '#409eff' }) public primaryColor!: string;
-  @Prop({ type: String, default: '#dcdfe6' }) public secondaryColor!: string;
-  @Prop({ type: String, default: '#000' }) public textColor!: string;
-  @Prop({ type: Number, default: 17 }) public strokeWidth!: number;
-  @Prop({
-    type: Function,
-    default: (v: number) => Math.round(v * 100) / 100,
-  }) public valueDisplayFunction!: (v: number) => number;
-  @Prop({ type: Boolean, default: false }) public potentiometer!: boolean;
-  @Prop({ type: Number, default: 6 }) public rectWidth!: number;
-  public initialY = null;
+  @Prop(String) public label?: string;
+  @Prop({ type: Number, default: 2.5 }) public strokeWidth!: number;
+  @Prop(Number) public midValue?: number;
 
-  get rangePath() {
-    return `M ${MIN_X} ${MIN_Y} A ${RADIUS} ${RADIUS} 0 1 1 ${MAX_X} ${MAX_Y}`;
+  public rotation = -this.range / 2;
+  public rectWidth = 3;
+  public rectHeight = this.size / 4;
+
+  get midDegrees() {
+    let midValue = this.midValue;
+    if (midValue === undefined) { midValue = this.min; }
+    return this.mapRange(midValue, this.min, this.max, this.minDegrees, this.maxDegrees);
   }
-  get valuePath() {
-    return `M ${this.zeroX} ${this.zeroY} A ${RADIUS} ${RADIUS} 0 ` +
-    `${this.largeArc} ${this.sweep} ${this.valueX} ${this.valueY}`;
+  get minDegrees() {
+    return 90 + this.angle;
   }
-  get showValue() {
-    return (this.value >= this.min && this.value <= this.max) && !this.disabled;
+  get maxDegrees() {
+    return 90 - this.angle;
   }
-  get zeroRadians() {
-    /* this weird little bit of logic below is to handle the fact that usually we
-          want the value arc to start drawing from the 'zero' point, but, in the case
-          that the minimum and maximum values are both above zero, we set the 'zero point'
-          at the supplied minimum, so the value arc renders as the user would expect */
-    if (this.min > 0 && this.max > 0) {
-      return this.mapRange(this.min, this.min, this.max, MIN_RADIANS, MAX_RADIANS);
-    }
-    return this.mapRange(0, this.min, this.max, MIN_RADIANS, MAX_RADIANS);
+  get maxRadians() {
+    return this.maxDegrees / 360 * 2 * Math.PI;
   }
-  get valueRadians() {
-    return this.mapRange(this.value, this.min, this.max, MIN_RADIANS, MAX_RADIANS);
+  get minRadians() {
+    return this.minDegrees / 360 * 2 * Math.PI;
   }
-  get valueDegrees() {
-    return ((this.valueRadians * 360) / 2 / Math.PI) - 90;
+  get midRadians() {
+    return this.midDegrees / 360 * 2 * Math.PI;
   }
-  get zeroX() {
-    return MID_X + (Math.cos(this.zeroRadians) * RADIUS);
+  get minX() {
+    return this.center + (Math.cos(this.minRadians) * this.r);
   }
-  get zeroY() {
-    return MID_Y - (Math.sin(this.zeroRadians) * RADIUS);
+  get minY() {
+    return this.center - (Math.sin(this.minRadians) * this.r);
   }
-  get valueX() {
-    return MID_X + (Math.cos(this.valueRadians) * RADIUS);
+  get maxX() {
+    return this.center + (Math.cos(this.maxRadians) * this.r);
   }
-  get valueY() {
-    return MID_Y - (Math.sin(this.valueRadians) * RADIUS);
+  get maxY() {
+    return this.center - (Math.sin(this.maxRadians) * this.r);
   }
-  get largeArc() {
-    return Math.abs(this.zeroRadians - this.valueRadians) < Math.PI ? 0 : 1;
+  get midX() {
+    return this.center + (Math.cos(this.midRadians) * this.r);
   }
-  get sweep() {
-    return this.valueRadians > this.zeroRadians ? 0 : 1;
+  get midY() {
+    return this.center - (Math.sin(this.midRadians) * this.r);
   }
-  get valueDisplay() {
-    return this.valueDisplayFunction(this.value);
+  get angle() {
+    return this.range / 2;
   }
-  get transform() {
-    return `rotate(${-this.valueDegrees} ${this.center} ${this.center})`;
-  }
-  get center() {
+  public get center() {
     return this.size / 2;
   }
+  public get r() {
+    // We have to take off half of the stroke width due to how svg arcs work.
+    // If we were to tell an svg to create an arc with radius 10 and a stroke-width of 2
+    // the actual radius would be 11 (measuring from outside the path).
+    // However, we want to be more exact than that. If the size is 20, we want the size the be exactly 20
+    return this.size / 2 - this.strokeWidth / 2;
+  }
+
+  // dial
+  get transform() {
+    return `rotate(${this.rotation} ${this.center} ${this.center})`;
+  }
+  public get knobStyle() {
+    return {
+      color: this.primaryColor,
+      height: `${this.size}px`,
+      width: `${this.size}px`,
+    };
+  }
+
+  // background path
+  get rangePath() {
+    return `M ${this.minX} ${this.minY} A ${this.r} ${this.r} 0 1 1 ${this.maxX} ${this.maxY}`;
+  }
+
+  // left path
+  get leftLarge() {
+    return this.leftRange > 180 ? 1 : 0;
+  }
+  get leftRangePath() {
+    return `M ${this.midX} ${this.midY} A ${this.r} ${this.r} 0 ${this.leftLarge} 0 ${this.minX} ${this.minY}`;
+  }
+  public get leftLength() {
+    return (this.minRadians - this.midRadians) * this.r;
+  }
+  public get leftRange() {
+    return this.minDegrees - this.midDegrees;
+  }
+  get leftAngleBetween() {
+    const angle = 90 - this.rotation; // Converting to start from +x axis
+    return angle - this.midDegrees;
+  }
+  get showLeft() {
+    return this.leftAngleBetween > 0;
+  }
+  get lefStrokeStyle() {
+    let offset = this.leftRange - this.leftAngleBetween;
+    offset = (offset / this.leftRange) * this.leftLength;
+    return {
+      'stroke-dasharray': this.leftLength,
+      'stroke-dashoffset': offset,
+    };
+  }
+
+  // right path
+  get rightLarge() {
+    return this.rightRange > 180 ? 1 : 0;
+  }
+  get rightRangePath() {
+    return `M ${this.midX} ${this.midY} A ${this.r} ${this.r} 0 ${this.rightLarge} 1 ${this.maxX} ${this.maxY}`;
+  }
+  public get rightLength() {
+    return (this.midRadians - this.maxRadians) * this.r;
+  }
+  public get rightRange() {
+    return this.midDegrees - this.maxDegrees;
+  }
+  public get rightAngleBetween() {
+    const angle = 90 - this.rotation; // Converting to start from +x axis
+    return this.midDegrees - angle;
+  }
+  public get showRight() {
+    return this.rightAngleBetween > 0;
+  }
+  get rightStrokeStyle() {
+    let offset = this.rightRange - this.rightAngleBetween;
+    offset = (offset / this.rightRange) * this.rightLength;
+    return {
+      'stroke-dasharray': this.rightLength,
+      'stroke-dashoffset': offset,
+    };
+  }
+
+
 
   public move(e: MouseEvent, { changeY }: { changeY: number }) {
-    this.$emit('input', this.squash(this.value + Math.round(-changeY), this.min, this.max));
+    // Multiply by a factor to get better speed.
+    // This factor should eventually be computed by the changeX
+    // For example, as they move farther away from their inital x position, the factor decreases
+    this.rotation -= changeY * 1.5;
+    this.rotation = Math.max(-132, Math.min(this.angle, this.rotation));
+    const value = this.mapRange(this.rotation, -this.angle, this.angle, this.min, this.max);
+    this.$emit('input', value);
+  }
+
+  public beforeMount() {
+    this.rotation = this.mapRange(this.value, this.min, this.max, -this.angle, this.angle);
   }
 }
 </script>
 
+
 <style scoped lang="sass">
-  .knob-control:hover
-    cursor: ns-resize
+.abs-center
+  position: absolute
+  top: 50%
+  left: 50%
+  transform: translate(-50%, -50%)
 
-  .knob-control__range
-    fill: none
-    transition: stroke .1s ease-in
+.rela-inline
+  display: inline-block
+  position: relative
 
-  .knob-control__value
-    fill: none
+.dial-svg
+  pointer-events: none
+    
+.knob-label
+  text-align: center
+  font-family: monospace
+  font-size: 16px
 
-  .knob-control__text-display
-    font-size: 2rem
-    text-align: center
+.rela-block 
+  position: relative
 </style>

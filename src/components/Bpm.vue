@@ -11,7 +11,10 @@ import { Draggable } from '../mixins';
 
 @Component
 export default class Bpm extends Mixins(Draggable) {
-  @Prop(Number) public value!: any;
+  @Prop({ type: Number, required: true }) public value!: any;
+
+  public cursor = 'ns-resize';
+
   public move(e: Event, { changeY }: { changeY: number }) {
     this.$emit('input', this.value - changeY);
   }

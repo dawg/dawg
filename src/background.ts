@@ -51,6 +51,8 @@ function createMainWindow() {
     });
   });
 
+  setMainMenu();
+
   return window;
 }
 
@@ -63,7 +65,14 @@ const setMainMenu = () => {
           label: 'Save',
           accelerator: 'CmdOrCtrl+S',
           click() {
-            //
+            mainWindow.webContents.send('save');
+          },
+        },
+        {
+          label: 'Open',
+          accelerator: 'CmdOrCtrl+O',
+          click() {
+            mainWindow.webContents.send('open');
           },
         },
         {
@@ -90,11 +99,23 @@ const setMainMenu = () => {
       ],
     },
     {
+      label: 'View',
+      submenu: [
+        {
+          label: 'Reload',
+          accelerator: 'CommandOrControl+R',
+          click() {
+            mainWindow.reload();
+          },
+        },
+      ],
+    },
+    {
       role: 'help',
       submenu: [
         {
           label: 'Learn More',
-          click() { shell.openExternal('https://github.com/vuesic/vuesic'); },
+          click() { shell.openExternal('https://dawg.github.io/guide'); },
         },
       ],
     },

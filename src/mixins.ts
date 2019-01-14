@@ -1,24 +1,9 @@
 import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
+import { Component } from 'vue-property-decorator';
 
-@Component({
-  props: ['value'],
-})
-export class PX extends Vue {
-  public px(size: string | number) {
-    return `${size}px`;
-  }
-  public hw(h: string | number, w: string | number) {
-    return {
-      height: this.px(h),
-      width: this.px(w),
-    };
-  }
-}
-
-// tslint:disable-next-line:max-classes-per-file
-class Point {
-  constructor(public x: number, public y: number) {}
+interface Point {
+  x: number;
+  y: number;
 }
 
 // tslint:disable-next-line:max-classes-per-file
@@ -52,7 +37,7 @@ export class Draggable extends Vue {
     this.prevent(e);
     this.showCursor();
     this.moving = true;
-    this.previous = new Point(e.clientX, e.clientY);
+    this.previous = { x: e.clientX, y: e.clientY };
     this.mousemoveListner = (event) => this.startMove(event, ...args);
     window.addEventListener('mousemove', this.mousemoveListner);
     window.addEventListener('mouseup', this.removeListeners);
@@ -68,6 +53,10 @@ export class Draggable extends Vue {
     window.removeEventListener('mouseup', this.removeListeners);
     this.mousemoveListner = () => ({});
     this.afterHover();
+    this.afterMove();
+  }
+  public afterMove() {
+    //
   }
   public startMove(e: MouseEvent, ...args: any[]) {
     if (this.disabled) { return; }
@@ -90,6 +79,7 @@ export class Draggable extends Vue {
   }
   public prevent(e: Event) {
     if (e && e.preventDefault) { e.preventDefault(); }
+    if (e && e.stopPropagation) { e.stopPropagation(); }
   }
   public onHover() {
     if (this.moving) { return; }
@@ -104,19 +94,22 @@ export class Draggable extends Vue {
   public mounted() {
     const el = this.$refs.drag;
     if (!el) { return; }
-
     el.addEventListener('mousedown', this.addListeners);
     el.addEventListener('mouseup', this.removeListeners);
     el.addEventListener('mouseenter', this.onHover);
     el.addEventListener('mouseleave', this.afterHover);
+    el.addEventListener('click', this.stopClick);
+  }
+  public stopClick(e: MouseEvent) {
+    e.stopPropagation();
   }
   public destroyed() {
     const el = this.$refs.drag;
     if (!el) { return; }
-
     el.removeEventListener('mousedown', this.addListeners);
     el.removeEventListener('mouseup', this.removeListeners);
     el.removeEventListener('mouseenter', this.onHover);
     el.removeEventListener('mouseleave', this.afterHover);
+    el.removeEventListener('click', this.stopClick);
   }
 }

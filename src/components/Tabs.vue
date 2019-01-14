@@ -75,6 +75,7 @@ export default class Tabs extends BaseTabs { }
     padding: .75em 1em
     text-decoration: none
     display: block
+    user-select: none
 
     &:hover
       cursor: default
