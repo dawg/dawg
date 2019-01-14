@@ -217,19 +217,19 @@ export interface Constraints {
   max: number;
 }
 
-export interface PhaserOptions {
+interface PhaserOptions {
   frequency: number;
   octaves: number;
   baseFrequency: number;
   Q: number;
 }
 
-export interface ReverbOptions {
+interface ReverbOptions {
   decay: number;
   preDelay: number;
 }
 
-export interface WahOptions {
+interface WahOptions {
   baseFrequency: number;
   sensitivity: number;
   octaves: number;

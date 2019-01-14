@@ -9,6 +9,7 @@
     ></channel>
     <effect 
       v-if="openedEffect"
+      @set="$emit('set', combine({ effect: openedEffect }, $event))"
       :effect="openedEffect"
     ></effect>
   </vue-perfect-scrollbar>
@@ -34,6 +35,13 @@ export default class Mixer extends Vue {
 
   public openEffect(effect: AnyEffect) {
     this.openedEffect = effect;
+  }
+
+  public combine(a: object, b: object) {
+    return {
+      ...a,
+      ...b,
+    };
   }
 }
 </script>

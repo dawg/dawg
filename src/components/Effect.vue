@@ -8,7 +8,8 @@
         :key="key"
         :label="key | titleCase"
         stroke-class="secondary-lighten-2--stroke"
-        v-model="options[key]"
+        :value="options[key]"
+        @input="$emit('set', { key, value: $event })"
         :min="constraints(key).min"
         :max="constraints(key).max"
         :size="size"
@@ -20,7 +21,6 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import {
-  PhaserOptions,
   EffectConstrains,
   EffectName,
   Effect as E,
