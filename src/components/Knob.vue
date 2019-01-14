@@ -64,7 +64,6 @@ export default class Knob extends Mixins(Draggable) {
   @Prop({ type: Number, default: 264 }) public range!: number;
   @Prop({ type: Number, default: 100 }) public max!: number;
   @Prop({ type: Number, default: 0 }) public min!: number;
-  @Prop({ type: Number, default: 1 }) public stepSize!: number;
   @Prop({ type: Number, default: 100 }) public size!: number;
   @Prop({ type: String, default: '#409eff' }) public primaryColor!: string;
   @Prop(String) public label?: string;
@@ -247,6 +246,11 @@ export default class Knob extends Mixins(Draggable) {
   color: #E4E8EA
   font-family: monospace
   font-size: 16px
+
+.knob
+  display: flex
+  flex-direction: column
+  align-items: center
 
 .rela-block 
   position: relative

@@ -7,12 +7,10 @@
       @add="addEffect(channel, $event)"
       @select="openEffect"
     ></channel>
-    <component 
-      v-if="openedEffect" 
-      :is="openedEffect.type" 
-      :options="openedEffect.options"
-    ></component>
-    <!-- <phaser :options="{}"></phaser> -->
+    <effect 
+      v-if="openedEffect"
+      :effect="openedEffect"
+    ></effect>
   </vue-perfect-scrollbar>
 </template>
 

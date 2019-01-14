@@ -27,7 +27,7 @@ export default class NAME extends Vue {
     this.$nextTick(() => {
       this.$el.focus();
       // Select all of the text in the div!
-      document.execCommand('selectall', undefined, false);
+      document.execCommand('selectall', undefined, undefined);
     });
   }
 

@@ -212,6 +212,11 @@ export const EffectMap = {
   phaser: Tone.Phaser,
 };
 
+export interface Constraints {
+  min: number;
+  max: number;
+}
+
 export interface PhaserOptions {
   frequency: number;
   octaves: number;
@@ -219,21 +224,86 @@ export interface PhaserOptions {
   Q: number;
 }
 
-interface EffectTones {
+export interface ReverbOptions {
+  decay: number;
+  preDelay: number;
+}
+
+export interface WahOptions {
+  baseFrequency: number;
+  sensitivity: number;
+  octaves: number;
+}
+
+export interface EffectTones {
   wah: Tone.AutoWah;
   reverb: Tone.Freeverb;
   phaser: Tone.Phaser;
 }
 
-interface EffectOptions {
-  wah: string;
-  reverb: string;
+export interface EffectOptions {
+  wah: WahOptions;
+  reverb: ReverbOptions;
   phaser: PhaserOptions;
 }
 
+export type EffectConstrainsType = { [K in keyof EffectOptions]: { [E in keyof EffectOptions[K]]: Constraints } };
+
+export const EffectConstrains: EffectConstrainsType = {
+  wah: {
+    baseFrequency: {
+      min: 0,
+      max: 1000,
+    },
+    octaves: {
+      min: 0,
+      max: 10,
+    },
+    sensitivity: {
+      min: -40,
+      max: 0,
+    },
+  },
+  reverb: {
+    decay: {
+      min: 0,
+      max: 24,
+    },
+    preDelay: {
+      min: 0,
+      max: 24,
+    },
+  },
+  phaser: {
+    frequency: {
+      min: 0,
+      max: 10,
+    },
+    octaves: {
+      min: 0,
+      max: 10,
+    },
+    Q: {
+      min: 0,
+      max: 100,
+    },
+    baseFrequency: {
+      min: 0,
+      max: 1000,
+    },
+  },
+};
+
 const EffectDefaults: EffectOptions = {
-  wah: '',
-  reverb: '',
+  wah: {
+    octaves: 3,
+    baseFrequency: 350,
+    sensitivity: 0,
+  },
+  reverb: {
+    decay: 1.5,
+    preDelay: 0.01,
+  },
   phaser: {
     frequency: 0.5,
     octaves: 3,
@@ -242,9 +312,11 @@ const EffectDefaults: EffectOptions = {
   },
 };
 
+
+
 // TODO(jacob) What if we created in init / decompose pattern?
-export class Effect<T extends keyof EffectOptions> {
-  public static create<E extends keyof EffectOptions>(slot: number, type: E) {
+export class Effect<T extends EffectName> {
+  public static create<E extends EffectName>(slot: number, type: E) {
     const effect = new Effect<E>();
     effect.type = type;
     effect.slot = slot;

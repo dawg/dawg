@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import ContextMenu from './ContextMenu.vue';
-import bus, { Item } from './bus';
+import bus, { Item } from '@/modules/context/bus';
 
 
 type ContextFunction = (e: MouseEvent, items: Item[]) => void;

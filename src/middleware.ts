@@ -6,7 +6,7 @@ import 'vue-awesome/icons';
 import '@/styles/global.sass';
 import Ico from '@/components/Ico.vue';
 import Pan from '@/components/Pan.vue';
-import Phaser from '@/components/effects/Phaser.vue';
+import Effect from '@/components/Effect.vue';
 import Knob from '@/components/Knob.vue';
 import Editable from '@/components/Editable.vue';
 import TooltipIcon from '@/components/TooltipIcon.vue';
@@ -26,7 +26,7 @@ const middleware = () => {
   Vue.use(Notification);
   Vue.component('ico', Ico);
   Vue.component('Editable', Editable);
-  Vue.component('Phaser', Phaser);
+  Vue.component('Effect', Effect);
   Vue.component('VuePerfectScrollbar', VuePerfectScrollbar);
   Vue.component('TooltipIcon', TooltipIcon);
   Vue.component('Pan', Pan);

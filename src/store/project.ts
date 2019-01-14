@@ -5,7 +5,18 @@ import { VuexModule, Mutation, Module, getModule, Action } from 'vuex-module-dec
 import { Module as Mod } from 'vuex';
 import { remote } from 'electron';
 
-import { Pattern, Instrument, Score, Note, Channel, EffectName, Effect, AnyEffect } from '@/schemas';
+import {
+  Pattern,
+  Instrument,
+  Score,
+  Note,
+  Channel,
+  EffectName,
+  Effect,
+  AnyEffect,
+  EffectOptions,
+  EffectTones,
+} from '@/schemas';
 import { findUniqueName, toTickTime, range } from '@/utils';
 import store from '@/store/store';
 import cache from '@/store/cache';
@@ -121,6 +132,16 @@ export class Project extends VuexModule {
   @Mutation
   public reset(payload: Project) {
     Object.assign(this, payload);
+  }
+
+
+
+  @Mutation
+  public setEffectOptions<T extends EffectName, V extends keyof EffectOptions[T] & keyof EffectTones[T]>(
+    payload: { effect: Effect<T>, key: V, value: EffectOptions[T][V] & EffectTones[T][V] },
+  ) {
+    payload.effect.options[payload.key] = payload.value;
+    payload.effect.effect[payload.key] = payload.value;
   }
 
   @Mutation
