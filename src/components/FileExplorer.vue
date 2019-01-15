@@ -1,10 +1,12 @@
 <template>
   <div>
     <tree
-        v-for="(children, path) in projects"
-        :key="path"
-        :path="path"
-        :children="children"
+        refs="trees"
+        v-for="(project, i) in projects"
+        :key="project[0]"
+        :path="project[0]"
+        :children="project[1]"
+        :index= "i"
     ></tree>
   </div>
 </template>
@@ -26,9 +28,9 @@ export default class Drawer extends Vue {
   public drawer = true;
   public folders: string[] = [];
   get projects() {
-    const tree: FileTree = {};
+    const tree: Array<[string, FileTree]> = [];
     this.folders.forEach((folder) => {
-      tree[folder] = this.computeFileTree(folder);
+      tree.push([folder, this.computeFileTree(folder)]);
     });
     return tree;
   }
@@ -43,7 +45,9 @@ export default class Drawer extends Vue {
     return tree;
   }
   public addFolder(_: any, [folder]: [string]) {
-    this.folders.push(folder); // Folder is always an array of length 1
+    if (this.folders.indexOf(folder) === -1) {
+      this.folders.push(folder); // Folder is always an array of length 1
+    }
   }
   public mounted() {
     try {
