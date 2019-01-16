@@ -30,17 +30,17 @@ export default class WavScope extends Vue {
         loopSelection: true,
     });
 
-    this.load();
+    this.loadBlobFromUrl();
   }
 
   // follow the url and load as a blob
-  // public loadBlobFromUrl() {
-  //     fetch(this.url).then((res) => {
-  //       res.blob().then((blob) => {
-  //         this.wavesurfer.loadBlob(blob);
-  //       });
-  //   });
-  // }
+  public loadBlobFromUrl() {
+      fetch(this.url).then((res) => {
+        res.blob().then((blob) => {
+          this.wavesurfer.loadBlob(blob);
+        });
+    });
+  }
 
   public load() {
     this.wavesurfer.load(this.url);
