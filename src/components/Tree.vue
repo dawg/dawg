@@ -35,6 +35,7 @@ import { Keys } from '@/keys';
 import { Component, Prop } from 'vue-property-decorator';
 import Key from '@/components/Key.vue';
 import { forEach } from 'typescript-collections/dist/lib/arrays';
+import { connect } from 'tls';
 
 @Component
 export default class Tree extends Vue {
@@ -57,12 +58,13 @@ export default class Tree extends Vue {
 
   public async moveDown(event: KeyboardEvent) {
     if (event.keyCode === Keys.DOWN && this.selectedNode) {
-        if (this.index + 1 < this.$parent.$refs.trees.length && (!this.isLeaf || this.isWav)) {
-          console.log(this.index, this.$parent.$refs.trees);
+      event.stopImmediatePropagation();
+      if (this.index + 1 < this.$parent.$refs.trees.length) {
+        if (this.$parent.$refs.trees[this.index + 1].isWav) {
           this.selectOneNode(this.$parent.$refs.trees, this.index + 1);
           this.playSong(this.$parent.$refs.trees[this.index + 1].fileName);
-
         }
+      }
     }
   }
 
@@ -176,4 +178,6 @@ export default class Tree extends Vue {
   padding: 4px 8px
   background: rgba(255,255,255,0.12)
 
+.selected-node:hover
+  cursor: pointer
 </style>
