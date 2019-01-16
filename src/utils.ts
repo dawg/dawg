@@ -163,3 +163,11 @@ export const findUniqueName = (objects: Array<{ name: string }>, prefix: string)
 
   return name;
 };
+
+export function scale(value: number, from: [number, number], to: [number, number]) {
+  return (value - from[0]) * (to[1] - to[0]) / (from[1] - from[0]) + to[0];
+}
+
+export function clamp(value: number, min: number, max: number) {
+  return Math.max(min, Math.min(max, value));
+}

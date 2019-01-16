@@ -18,6 +18,7 @@
     <panel name="Mixer">
       <mixer 
         :channels="project.channels"
+        :play="general.play"
         @add="project.addEffect"
         @delete="project.deleteEffect"
         @set="project.setOption"

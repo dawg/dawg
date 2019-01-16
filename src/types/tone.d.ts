@@ -448,7 +448,7 @@ declare module 'tone' {
       dispose(): this;
   }
 
-  class Meter extends Tone {
+  class Meter extends AudioNode {
       constructor(channels?: number, smoothing?: number, clipMemory?:number);
       dispose(): this;
       getDb(channel?:number): number;

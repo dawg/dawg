@@ -112,7 +112,7 @@ export class Project extends VuexModule {
         effects[i - 1].connect(effect);
       }
 
-      effects[effects.length - 1].connect(Tone.Master);
+      effects[effects.length - 1].connect(channel.panner);
     });
 
     // Reconnect the instruments to their channels
@@ -190,15 +190,14 @@ export class Project extends VuexModule {
     const effects = payload.channel.effects;
     for (const [i, effect] of effects.entries()) {
       if (effect.slot !== payload.effect.slot) { continue; }
-      const destination = (effects[i + 1] || {}).effect || Tone.Master;
+      const destination = (effects[i + 1] || {}).effect || payload.channel.panner;
       if (i === 0) {
         instruments.forEach((instrument) => {
-          instrument.disconnect(effects[0]);
+          instrument.disconnect();
           instrument.connect(destination);
-          instrument.destination = destination;
         });
       } else {
-        effects[i - 1].disconnect(effects[i]);
+        effects[i - 1].disconnect();
         effects[i - 1].connect(destination);
       }
 
@@ -224,15 +223,6 @@ export class Project extends VuexModule {
       }
     }
 
-    // TODO Move to mutation
-    const newEffect = Effect.create(payload.index, payload.effect);
-    if (toInsert !== null) {
-      effects.splice(toInsert, 0, newEffect);
-    } else {
-      toInsert = effects.length;
-      effects.push(newEffect);
-    }
-
     const instruments = this.instrumentChannelLookup[payload.channel.number];
 
     // Instruments could be undefined if no instruments have been routed to this channel yet.
@@ -240,29 +230,26 @@ export class Project extends VuexModule {
       return;
     }
 
+    const i = toInsert || effects.length;
+    const destination = (effects[i] || {}).effect || payload.channel.panner;
+    const newEffect = Effect.create(payload.index, payload.effect);
+    newEffect.connect(destination);
     if (toInsert === 0) {
-      if (effects.length > 1) {
-        instruments.forEach((instrument) => {
-          instrument.disconnect(effects[1]);
-          instrument.connect(effects[0]);
-          effects[0].connect(effects[1]);
-        });
-      } else {
-        instruments.forEach((instrument) => {
-          instrument.disconnect(instrument.destination);
-          instrument.destination = effects[0].effect;
-          instrument.connect(effects[0]);
-          effects[0].connect(Tone.Master);
-        });
-      }
-    } else if (toInsert === effects.length - 1) {
-      const last = effects.length - 1;
-      effects[last - 1].disconnect(Tone.Master);
-      effects[last - 1].connect(effects[last]);
-      effects[last].connect(Tone.Master);
+      instruments.forEach((instrument) => {
+        instrument.disconnect();
+        instrument.connect(newEffect);
+      });
     } else {
-      effects[toInsert - 1].disconnect(Tone.Master);
-      effects[toInsert - 1].connect(effects[toInsert]);
+      effects[i].disconnect();
+      effects[i].connect(newEffect);
+    }
+
+    // TODO Move to mutation
+    if (toInsert !== null) {
+      effects.splice(toInsert, 0, newEffect);
+    } else {
+      toInsert = effects.length;
+      effects.push(newEffect);
     }
   }
 
@@ -289,7 +276,7 @@ export class Project extends VuexModule {
     }
 
     instrument.channel = channel;
-    instrument.disconnect(instrument.destination);
+    instrument.disconnect();
 
 
     let destination: AnyEffect | Tone.AudioNode;
@@ -301,7 +288,6 @@ export class Project extends VuexModule {
     }
 
     instrument.connect(destination);
-    instrument.destination = destination;
   }
 
   get patternLookup() {

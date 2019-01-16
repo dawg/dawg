@@ -100,15 +100,15 @@ export class Instrument implements IInstrument {
   }
   @autoserialize public name!: string;
   @autoserialize public id!: string;
-  public destination: Tone.AudioNode = Tone.Master;
+  private destination: Tone.AudioNode | null = Tone.Master;
   // tslint:disable-next-line:variable-name
   private _type!: string;
   // tslint:disable-next-line:variable-name
   private _mute!: boolean;
   // tslint:disable-next-line:variable-name
   private _channel: number | null = null;
-  private connected = false;
-  private panner = new Tone.Panner();
+  private panner = new Tone.Panner().toMaster();
+  private connected = true;
   private synth = new Tone.PolySynth(8, Tone.Synth).connect(this.panner);
 
   constructor() {
@@ -129,13 +129,7 @@ export class Instrument implements IInstrument {
   @autoserialize
   set mute(mute: boolean) {
     this._mute = mute;
-    if (mute && this.connected) {
-      this.panner.disconnect(this.destination);
-      this.connected = false;
-    } else if (!mute && !this.connected) {
-      this.panner.connect(this.destination);
-      this.connected = true;
-    }
+    this.checkConnection();
   }
 
   @autoserialize
@@ -178,16 +172,18 @@ export class Instrument implements IInstrument {
   public connect(effect: AnyEffect | Tone.AudioNode) {
     if (effect instanceof Effect) {
       this.panner.connect(effect.effect);
+      this.destination = effect.effect;
     } else {
       this.panner.connect(effect);
+      this.destination = effect;
     }
+    this.checkConnection();
   }
 
-  public disconnect(effect: AnyEffect | Tone.AudioNode) {
-    if (effect instanceof Effect) {
-      this.panner.disconnect(effect.effect);
-    } else {
-      this.panner.disconnect(effect);
+  public disconnect() {
+    if (this.destination) {
+      this.panner.disconnect(this.destination);
+      this.destination = null;
     }
   }
 
@@ -198,6 +194,17 @@ export class Instrument implements IInstrument {
     const duration = toTickTime(note.duration);
     const value = allKeys[note.id].value;
     this.triggerAttackRelease(value, duration, time);
+  }
+
+  private checkConnection() {
+    if (!this.destination) { return; }
+    if (this.mute && this.connected) {
+      this.panner.disconnect(this.destination);
+      this.connected = false;
+    } else if (!this.mute && !this.connected) {
+      this.panner.connect(this.destination);
+      this.connected = true;
+    }
   }
 }
 
@@ -329,6 +336,7 @@ export class Effect<T extends EffectName> {
   @autoserialize public type!: T;
   @autoserialize public options!: EffectOptions[T];
   public effect!: EffectTones[T];
+  private destination: Tone.AudioNode | null = null;
 
   public init() {
     this.effect = new EffectMap[this.type]();
@@ -337,16 +345,17 @@ export class Effect<T extends EffectName> {
   public connect(effect: AnyEffect | Tone.AudioNode) {
     if (effect instanceof Effect) {
       this.effect.connect(effect.effect);
+      this.destination = effect.effect;
     } else {
       this.effect.connect(effect);
+      this.destination = effect;
     }
   }
 
-  public disconnect(effect: AnyEffect | Tone.AudioNode) {
-    if (effect instanceof Effect) {
-      this.effect.disconnect(effect.effect);
-    } else {
-      this.effect.disconnect(effect);
+  public disconnect() {
+    if (this.destination) {
+      this.effect.disconnect(this.destination);
+      this.destination = null;
     }
   }
 }
@@ -363,10 +372,36 @@ export class Channel {
     channel.name = `Channel ${num}`;
     return channel;
   }
-  @autoserialize public pan = 0;
+
   @autoserialize public volume = 0.7;
   @autoserialize public number!: number;
   @autoserialize public name!: string;
-  @autoserialize public mute = false;
   @autoserializeAs(Effect) public effects: AnyEffect[] = [];
+  public meter = new Tone.Meter();
+  public panner = new Tone.Panner().toMaster().connect(this.meter);
+  private connected = true;
+  private muted = false;
+
+  @autoserialize
+  get pan() {
+    return this.panner.pan.value;
+  }
+  set pan(pan: number) {
+    this.panner.pan.value = pan;
+  }
+
+  @autoserialize
+  get mute() {
+    return this.muted;
+  }
+  set mute(mute: boolean) {
+    this.muted = mute;
+    if (mute && this.connected) {
+      this.panner.disconnect(Tone.Master);
+      this.connected = false;
+    } else if (!mute && !this.connected) {
+      this.panner.connect(Tone.Master);
+      this.connected = true;
+    }
+  }
 }

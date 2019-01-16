@@ -3,6 +3,7 @@
     <channel
       v-for="(channel, i) in channels"
       :key="i"
+      :play="play"
       :channel="channel"
       @add="addEffect(channel, $event)"
       @delete="deleteEffect(channel, $event)"
@@ -28,6 +29,7 @@ import { range } from '@/utils';
 })
 export default class Mixer extends Vue {
   @Prop({ type: Array, required: true  }) public channels!: C[];
+  @Prop({ type: Boolean, required: true }) public play!: boolean;
   public openedEffect: null | AnyEffect = null;
 
   public addEffect(channel: Channel, { effect, index }: { effect: AnyEffect, index: number }) {

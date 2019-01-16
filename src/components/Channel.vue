@@ -41,7 +41,7 @@
           </div>
         </div>
         <div class="slider" style="display: flex">
-          <slider v-model="channel.volume"></slider>
+          <slider v-model="channel.volume" :left="level" :right="level"></slider>
         </div>
       </div>
     </div>
@@ -53,7 +53,8 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import Knob from '@/components/Knob.vue';
 import Slider from '@/components/Slider.vue';
 import { Channel as C, EffectMap, EffectName, AnyEffect } from '@/schemas';
-import { range } from '@/utils';
+import { range, scale, clamp } from '@/utils';
+import { Watch } from '@/modules/update';
 
 // Beware, we are modifying data in the store directly here.
 // We will want to change this evetually.
@@ -62,6 +63,8 @@ import { range } from '@/utils';
 })
 export default class Channel extends Vue {
   @Prop({ type: Object, required: true }) public channel!: C;
+  @Prop({ type: Boolean, required: true }) public play!: boolean;
+  public level = 0;
 
   get effectLookup() {
     const o: { [k: number]: AnyEffect } = {};
@@ -102,6 +105,24 @@ export default class Channel extends Vue {
 
   public mute() {
     this.channel.mute = !this.channel.mute;
+  }
+
+  public renderMeter() {
+    if (this.play) {
+      requestAnimationFrame(this.renderMeter);
+      let level = this.channel.meter.getLevel();
+      if (level === -Infinity) { level = -100; }
+      this.level = clamp(scale(level, [-100, 6], [0, 1]), 0, 1);
+    } else {
+      this.level = 0;
+    }
+  }
+
+  @Watch<Channel>('play')
+  public start() {
+    if (this.play) {
+      this.renderMeter();
+    }
   }
 }
 </script>

@@ -8,8 +8,8 @@
     <rect 
       :height="leftHeight" 
       :y="getPosition(leftHeight)" 
-      :width="width" 
-      :fill="fg"
+      :width="width"
+      class="primary--fill"
     ></rect>
     <rect 
       :height="height" 
@@ -21,7 +21,7 @@
       :height="rightHeight"
       :y="getPosition(rightHeight)"
       :width="width"
-      :fill="fg"
+      class="primary--fill"
       :style="style"
     ></rect>
     <polygon 
@@ -40,8 +40,8 @@ import { Draggable } from '@/mixins';
 export default class Slider extends Mixins(Draggable) {
   @Prop({ type: Number, default: 150 }) public height!: number;
   @Prop({ type: Number, default: 6 }) public width!: number;
-  @Prop({ type: Number, default: 0 }) public right!: number;
-  @Prop({ type: Number, default: 0 }) public left!: number;
+  @Prop({ type: Number, required: true }) public right!: number;
+  @Prop({ type: Number, required: true }) public left!: number;
   @Prop({ type: Number, required: true }) public value!: number;
   public style = { x: `${this.width + 2}px` };
   public bgClass = 'secondary--fill';
@@ -66,10 +66,10 @@ export default class Slider extends Mixins(Draggable) {
     return this.height - (this.height * this.value);
   }
   get rightHeight() {
-    return this.right * (this.height / 100);
+    return this.right * this.height;
   }
   get leftHeight() {
-    return this.left * (this.height / 100);
+    return this.left * this.height;
   }
 
   public move(e: MouseEvent) {
