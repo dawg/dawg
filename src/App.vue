@@ -56,7 +56,6 @@
                 <panels v-if="loaded"></panels>
               </split>
             </split>
-
           </split>
         </split>
         <split :initial="20" fixed>

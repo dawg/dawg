@@ -31,9 +31,10 @@
     "vue-perfect-scrollbar": "^0.1.0",
     "vue-property-decorator": "^7.0.0",
     "vuejs-logger": "^1.5.3",
-    "vuetify": "^1.2.3",
+    "vuetify": "^1.4.1",
     "vuex": "^3.0.1",
-    "vuex-module-decorators": "^0.9.7"
+    "vuex-module-decorators": "^0.9.7",
+    "wavesurfer.js": "^2.1.2"
   },
   "devDependencies": {
     "@storybook/addon-actions": "4.0.0-alpha.20",
@@ -42,9 +43,10 @@
     "@types/mocha": "^5.2.5",
     "@types/mz": "0.0.32",
     "@types/storybook__addon-actions": "^3.4.1",
-    "@types/storybook__vue": "^3.3.0",
+    "@types/storybook__vue": "^3.3.1",
     "@types/tinycolor2": "^1.4.1",
     "@types/uuid": "^3.4.4",
+    "@types/wavesurfer.js": "^2.0.1",
     "@types/webaudioapi": "0.0.27",
     "@vue/cli-plugin-babel": "^3.0.1",
     "@vue/cli-plugin-e2e-cypress": "^3.0.1",
