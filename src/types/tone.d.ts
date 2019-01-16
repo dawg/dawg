@@ -956,4 +956,12 @@ declare module 'tone' {
     curve: number[];
     oversample: string;
   }
+
+  class Waveform extends AudioNode {
+      constructor(size?:number);
+      readonly channelCount: number;
+      readonly numberOfInputs: number;
+      readonly numberOfOutputs: number;
+      getValue(): Float32Array;
+  }
 }
