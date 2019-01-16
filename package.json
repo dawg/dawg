@@ -15,7 +15,6 @@
     "build:storybook": "vue-cli-service build:storybook -c config/storybook -o docs"
   },
   "dependencies": {
-    "av": "^0.4.9",
     "electron-context-menu": "^0.10.0",
     "konva": "^2.3.0",
     "lodash.throttle": "^4.1.1",

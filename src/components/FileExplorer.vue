@@ -1,12 +1,12 @@
 <template>
   <div>
     <tree
-        refs="trees"
-        v-for="(project, i) in projects"
-        :key="project[0]"
-        :path="project[0]"
-        :children="project[1]"
-        :index= "i"
+      refs="trees"
+      v-for="(project, i) in projects"
+      :key="project[0]"
+      :path="project[0]"
+      :children="project[1]"
+      :index="i"
     ></tree>
   </div>
 </template>
@@ -23,10 +23,11 @@ interface FileTree {
   [key: string]: FileTree;
 }
 
-@Component({components: { Tree }})
+@Component({ components: { Tree } })
 export default class Drawer extends Vue {
   public drawer = true;
   public folders: string[] = [];
+
   get projects() {
     const tree: Array<[string, FileTree]> = [];
     this.folders.forEach((folder) => {
@@ -34,29 +35,37 @@ export default class Drawer extends Vue {
     });
     return tree;
   }
+
   public computeFileTree(dir: string, tree: FileTree = {}) {
     fs.readdirSync(dir).map((item) => {
       const p = path.join(dir, item);
-      tree[p] = {};
+      if (this.isEligibleFile(item)) {
+        tree[p] = {};
+      }
       if (fs.statSync(p).isDirectory()) {
         this.computeFileTree(p, tree[p]);
       }
     });
     return tree;
   }
+
   public addFolder(_: any, [folder]: [string]) {
     if (this.folders.indexOf(folder) === -1) {
       this.folders.push(folder); // Folder is always an array of length 1
     }
   }
+
   public mounted() {
     try {
-      this.folders = JSON.parse(localStorage.getItem('folders') || '') as string[];
+      this.folders = JSON.parse(
+        localStorage.getItem('folders') || '',
+      ) as string[];
     } catch (e) {
       //
     }
     ipcRenderer.on('folder', this.addFolder);
   }
+
   public destroyed() {
     ipcRenderer.removeListener('folder', this.addFolder);
   }
@@ -65,9 +74,17 @@ export default class Drawer extends Vue {
   public onFoldersChange() {
     localStorage.setItem('folders', JSON.stringify(this.folders));
   }
+
+  public isEligibleFile(fileName: string) {
+    const extension = fileName.split('.').pop();
+    if (extension) {
+      return extension.toLowerCase() === 'wav';
+    }
+
+    return false;
+  }
 }
 </script>
 
 <style scoped>
-
 </style>

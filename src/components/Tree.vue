@@ -11,16 +11,18 @@
         {{ fileName }}
       </div>
     </div>
-    <tree
-      ref="trees"
-      v-if="showChildren"
-      v-for="(folder, i) in folders"
-      :key="folder"
-      :path="folder"
-      :children="children[folder]"
-      :depth="depth + 1"
-      :index="i"
-    ></tree>
+      <ul v-if="showChildren && (!isLeaf || isWav)">
+        <tree
+          ref="trees"
+          v-for="(folder, i) in folders"
+          :key="folder"
+          :path="folder"
+          :children="children[folder]"
+          :depth="depth + 1"
+          :index="i"
+        ></tree>
+      </ul>
+
   </div>
 </template>
 
@@ -29,7 +31,6 @@ import Vue from 'vue';
 import Tone from 'tone';
 import path from 'path';
 import fs from 'fs';
-import av from 'av';
 import { Keys } from '@/keys';
 import { Component, Prop } from 'vue-property-decorator';
 import Key from '@/components/Key.vue';
@@ -46,6 +47,7 @@ export default class Tree extends Vue {
   public selectedNode = false;
   public $refs!: { trees: Tree[] };
   public $parent!: Tree;
+  public player = new Tone.Player();
 
   public click() {
     if (!this.isLeaf) {
@@ -55,9 +57,11 @@ export default class Tree extends Vue {
 
   public async moveDown(event: KeyboardEvent) {
     if (event.keyCode === Keys.DOWN && this.selectedNode) {
-        if (this.index + 1 < this.$parent.$refs.trees.length) {
-           console.log(this.index, this.$parent.$refs.trees);
-           this.selectOneNode(this.$parent.$refs.trees, this.index + 1);
+        if (this.index + 1 < this.$parent.$refs.trees.length && (!this.isLeaf || this.isWav)) {
+          console.log(this.index, this.$parent.$refs.trees);
+          this.selectOneNode(this.$parent.$refs.trees, this.index + 1);
+          this.playSong(this.$parent.$refs.trees[this.index + 1].fileName);
+
         }
     }
   }
@@ -65,21 +69,22 @@ export default class Tree extends Vue {
   public async moveUp(event: KeyboardEvent) {
       if (event.keyCode === Keys.UP && this.selectedNode) {
         if (this.index - 1 >= 0) {
-          console.log(this.index, this.$parent.$refs.trees);
-          this.selectOneNode(this.$parent.$refs.trees, this.index - 1);
+          if (this.$parent.$refs.trees[this.index - 1].isWav) {
+            this.selectOneNode(this.$parent.$refs.trees, this.index - 1);
+            this.playSong(this.$parent.$refs.trees[this.index - 1].fileName);
+          }
         }
       }
   }
+
   public async sendToSampleTab(event: MouseEvent) {
-    this.selectedNode = true;
     // TODO: From here we can send this.path to sample viewer
   }
 
   public async preview(event: MouseEvent) {
     if (this.isWav) {
       this.selectOneNode(this.$parent.$refs.trees, this.index);
-      const player = new Tone.Player(this.fileName).toMaster();
-      player.autostart = true;
+      this.playSong(this.fileName);
     }
   }
 
@@ -93,41 +98,11 @@ export default class Tree extends Vue {
     }
   }
 
-  get indent() {
-    let rotate = 0;
-    if (this.showChildren) {
-      rotate = 45;
-    }
-
-    return {
-      marginLeft: `${this.depth * 10}px`,
-      transform: `rotate(${rotate}deg)`,
-    };
-  }
-  get isLeaf() {
-    return this.folders.length === 0;
-  }
-  get folders() {
-    return Object.keys(this.children);
-  }
-  get nodeClass() {
-    return this.selectedNode ? 'selected-node' : 'node';
-  }
-  get fileName() {
-    return path.basename(this.path);
-  }
-  get icon() {
-    return this.isLeaf ? 'file' : 'caret-right';
-  }
-  get scale() {
-    return this.isLeaf ? 0.8 : 1;
-  }
-  get isWav() {
-    const extension = this.path.split('.').pop();
-    if (extension) {
-      return extension.toLowerCase() === 'wav';
-    }
-    return false;
+  public playSong(songPath: string) {
+    this.player.disconnect();
+    const newPlayer = new Tone.Player(songPath).toMaster();
+    newPlayer.autostart = true;
+    this.player = newPlayer;
   }
 
   public mounted() {
@@ -138,6 +113,47 @@ export default class Tree extends Vue {
   public destroyed() {
     window.removeEventListener('keydown', this.moveDown);
     window.removeEventListener('keyup', this.moveUp);
+  }
+
+  get indent() {
+    let rotate = 0;
+    if (this.showChildren) { rotate = 45; }
+    return {
+      marginLeft: `${this.depth * 10}px`,
+      transform: `rotate(${rotate}deg)`,
+    };
+  }
+
+  get isLeaf() {
+    return this.folders.length === 0;
+  }
+
+  get folders() {
+    return Object.keys(this.children);
+  }
+
+  get nodeClass() {
+    return this.selectedNode ? 'selected-node' : 'node';
+  }
+
+  get fileName() {
+    return path.basename(this.path);
+  }
+
+  get icon() {
+    return this.isLeaf ? 'file' : 'caret-right';
+  }
+
+  get scale() {
+    return this.isLeaf ? 0.8 : 1;
+  }
+
+  get isWav() {
+    const extension = this.path.split('.').pop();
+    if (extension) {
+      return extension.toLowerCase() === 'wav';
+    }
+    return false;
   }
 }
 </script>
