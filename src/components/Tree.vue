@@ -46,7 +46,6 @@ export default class Tree extends Vue {
   public selectedNode = false;
   public $refs!: { trees: Tree[] };
   public $parent!: Tree;
-  public player = new Tone.Player();
 
   public click() {
     if (!this.isLeaf) {
@@ -99,10 +98,8 @@ export default class Tree extends Vue {
   }
 
   public playSong(songPath: string) {
-    this.player.disconnect();
-    const newPlayer = new Tone.Player(songPath).toMaster();
-    newPlayer.autostart = true;
-    this.player = newPlayer;
+    const player = new Tone.Player(songPath).toMaster();
+    player.autostart = true;
   }
 
   public mounted() {
@@ -178,4 +175,7 @@ export default class Tree extends Vue {
 
 .selected-node:hover
   cursor: pointer
+
+.icon
+  padding: 2px
 </style>

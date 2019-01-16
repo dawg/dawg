@@ -658,21 +658,6 @@ declare module 'tone' {
   }
 
   class Player extends Source {
-<<<<<<< HEAD
-      constructor(url?: string | AudioBuffer, onload?: (e: any)=>any); //todo: string | AudioBuffer
-      buffer: AudioBuffer;
-      duration: number;
-      loop: boolean;
-      loopEnd: _TimeArg;
-      loopStart: _TimeArg;
-      playbackRate: number;
-      retrigger: boolean;
-      autostart: boolean;
-      dispose(): this;
-      load(url:string, callback?:(e: any)=>any):  Player;
-      setLoopPoints(loopStart: _TimeArg, loopEnd: _TimeArg): Player;
-      disconnect(): this;
-=======
     constructor(url?: string, onload?: (e: any)=>any); //todo: string | AudioBuffer
     buffer: AudioBuffer;
     duration: number;
@@ -681,10 +666,11 @@ declare module 'tone' {
     loopStart: _TimeArg;
     playbackRate: number;
     retrigger: boolean;
+    autostart: boolean;
     dispose(): this;
     load(url:string, callback?:(e: any)=>any):  Player;
     setLoopPoints(loopStart: _TimeArg, loopEnd: _TimeArg): Player;
->>>>>>> 05f35026b084afec8fe469cb4bf0a947c72457a3
+    toMaster(): this;
   }
 
   class PluckSynth extends Instrument {
