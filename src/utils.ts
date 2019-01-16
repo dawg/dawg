@@ -1,5 +1,4 @@
 import Tone from 'tone';
-import { Mutation } from 'vuex-module-decorators';
 
 export enum StyleType {
   PRIMARY = 'primary',
@@ -126,6 +125,8 @@ export const Keys = {
   DELETE: 46,
   BACKSPACE: 8,
   SPACE: 32,
+  UP: 38,
+  DOWN: 40,
 };
 
 
