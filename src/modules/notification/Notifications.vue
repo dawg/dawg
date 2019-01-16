@@ -28,7 +28,7 @@
 </template>
 <script lang="ts">
 
-import { events, Notification, Params } from './events';
+import { events, Notification } from './events';
 import { Vue, Component, Prop} from 'vue-property-decorator';
 
 const directions = {
@@ -79,7 +79,6 @@ export default class Notifications extends Vue {
   }
 
   public addItem(event: Notification) {
-
     // TODO: Need to put this back
     // if (event.clean || event.clear) {
     //   this.destroyAll();
@@ -157,7 +156,7 @@ export default class Notifications extends Vue {
   }
 
   public notifyWrapperStyle(item: NotificationItem) {
-    return {transition: `all ${this.speed}ms`};
+    return { transition: `all ${this.speed}ms` };
   }
 
   public destroy(item: NotificationItem) {

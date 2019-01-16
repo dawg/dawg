@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import { shallowMount } from '@vue/test-utils';
 import Split from './Split.vue';
 import Vue from 'vue';
@@ -5,7 +6,6 @@ import VueLogger from 'vuejs-logger';
 
 Vue.use(VueLogger);
 
-// TODO these should be typed!
 describe(Split.name, () => {
   it('should have correct gutter style', () => {
     const wrapper = shallowMount(Split, {
@@ -18,14 +18,14 @@ describe(Split.name, () => {
     });
 
     // @ts-ignore
-    expect(wrapper.vm.gutterStyle.height).toBe(`100%`);
+    expect(wrapper.vm.gutterStyle.height).to.equal(`100%`);
     // @ts-ignore
-    expect(wrapper.vm.gutterStyle.width).toBe(`8px`);
+    expect(wrapper.vm.gutterStyle.width).to.equal(`8px`);
   });
   it('should be root', () => {
     const wrapper = shallowMount(Split);
     // @ts-ignore
-    expect(wrapper.vm.isRoot).toBe(true);
+    expect(wrapper.vm.isRoot).to.equal(true);
   });
   it('should calculate positions correctly', () => {
     class Dummy {
@@ -51,8 +51,8 @@ describe(Split.name, () => {
     const wrapper = shallowMount(Split);
     // @ts-ignore
     wrapper.vm.calculatePositions(splits, -5, 'horizontal');
-    expect(splits[0].size).toBe(7);
-    expect(splits[1].size).toBe(8);
-    expect(splits[2].size).toBe(0);
+    expect(splits[0].size).to.equal(7);
+    expect(splits[1].size).to.equal(8);
+    expect(splits[2].size).to.equal(0);
   });
 });

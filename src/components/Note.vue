@@ -33,8 +33,6 @@ import { Draggable } from '@/mixins';
 import { Mixins, Prop, Component, Inject } from 'vue-property-decorator';
 import { allKeys } from '@/utils';
 
-// TODO It may be possible to encapsolate some of the x, y logic within the note :)
-// TODO fontSize should actually be used for the font size
 @Component
 export default class Note extends Mixins(Draggable) {
   @Inject() public snap!: number;
@@ -80,6 +78,7 @@ export default class Note extends Mixins(Draggable) {
     return {
       top: `${(this.top + (this.noteHeight / 2)) - ((this.fontSize / 2) + 1)}px`,
       color: '#fff',
+      fontSize: `${this.fontSize}px`,
     };
   }
   public move(e: MouseEvent) {

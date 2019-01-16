@@ -31,11 +31,9 @@ import Vue from 'vue';
 import Tone from 'tone';
 import path from 'path';
 import fs from 'fs';
-import { Keys } from '@/keys';
+import { Keys } from '@/utils';
 import { Component, Prop } from 'vue-property-decorator';
 import Key from '@/components/Key.vue';
-import { forEach } from 'typescript-collections/dist/lib/arrays';
-import { connect } from 'tls';
 
 @Component
 export default class Tree extends Vue {

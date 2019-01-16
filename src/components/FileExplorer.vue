@@ -12,7 +12,7 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from 'vue-property-decorator';
+import { Component, Vue, Watch, Prop } from 'vue-property-decorator';
 import { ipcRenderer } from 'electron';
 import Tree from '@/components/Tree.vue';
 import fs from 'fs';
@@ -25,8 +25,9 @@ interface FileTree {
 
 @Component({ components: { Tree } })
 export default class Drawer extends Vue {
+  @Prop({ type: Array, required: true }) public folders!: string[];
+
   public drawer = true;
-  public folders: string[] = [];
 
   get projects() {
     const tree: Array<[string, FileTree]> = [];
@@ -51,28 +52,16 @@ export default class Drawer extends Vue {
 
   public addFolder(_: any, [folder]: [string]) {
     if (this.folders.indexOf(folder) === -1) {
-      this.folders.push(folder); // Folder is always an array of length 1
+      this.$update('folders', [...this.folders, folder]);
     }
   }
 
   public mounted() {
-    try {
-      this.folders = JSON.parse(
-        localStorage.getItem('folders') || '',
-      ) as string[];
-    } catch (e) {
-      //
-    }
     ipcRenderer.on('folder', this.addFolder);
   }
 
   public destroyed() {
     ipcRenderer.removeListener('folder', this.addFolder);
-  }
-
-  @Watch('folders')
-  public onFoldersChange() {
-    localStorage.setItem('folders', JSON.stringify(this.folders));
   }
 
   public isEligibleFile(fileName: string) {

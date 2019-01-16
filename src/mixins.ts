@@ -1,24 +1,9 @@
 import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
+import { Component } from 'vue-property-decorator';
 
-@Component({
-  props: ['value'],
-})
-export class PX extends Vue {
-  public px(size: string | number) {
-    return `${size}px`;
-  }
-  public hw(h: string | number, w: string | number) {
-    return {
-      height: this.px(h),
-      width: this.px(w),
-    };
-  }
-}
-
-// tslint:disable-next-line:max-classes-per-file
-class Point {
-  constructor(public x: number, public y: number) {}
+interface Point {
+  x: number;
+  y: number;
 }
 
 // tslint:disable-next-line:max-classes-per-file
@@ -52,7 +37,7 @@ export class Draggable extends Vue {
     this.prevent(e);
     this.showCursor();
     this.moving = true;
-    this.previous = new Point(e.clientX, e.clientY);
+    this.previous = { x: e.clientX, y: e.clientY };
     this.mousemoveListner = (event) => this.startMove(event, ...args);
     window.addEventListener('mousemove', this.mousemoveListner);
     window.addEventListener('mouseup', this.removeListeners);
