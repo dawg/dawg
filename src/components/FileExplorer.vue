@@ -1,10 +1,12 @@
 <template>
   <div>
     <tree
-      v-for="(children, label) in projects"
-      :key="label"
-      :label="label"
-      :children="children"
+      refs="trees"
+      v-for="(project, i) in projects"
+      :key="project[0]"
+      :path="project[0]"
+      :children="project[1]"
+      :index="i"
     ></tree>
   </div>
 </template>
@@ -21,41 +23,57 @@ interface FileTree {
   [key: string]: FileTree;
 }
 
-@Component({components: { Tree }})
+@Component({ components: { Tree } })
 export default class Drawer extends Vue {
   @Prop({ type: Array, required: true }) public folders!: string[];
 
   public drawer = true;
+
   get projects() {
-    const tree: FileTree = {};
+    const tree: Array<[string, FileTree]> = [];
     this.folders.forEach((folder) => {
-      tree[path.basename(folder)] = this.computeFileTree(folder);
+      tree.push([folder, this.computeFileTree(folder)]);
     });
     return tree;
   }
+
   public computeFileTree(dir: string, tree: FileTree = {}) {
     fs.readdirSync(dir).map((item) => {
-      tree[item] = {};
       const p = path.join(dir, item);
+      if (this.isEligibleFile(item)) {
+        tree[p] = {};
+      }
       if (fs.statSync(p).isDirectory()) {
-        this.computeFileTree(p, tree[item]);
+        this.computeFileTree(p, tree[p]);
       }
     });
     return tree;
   }
+
   public addFolder(_: any, [folder]: [string]) {
-    this.folders.push(folder); // Folder is always an array of length 1
-    this.$update('folders', [...this.folders, folder]);
+    if (this.folders.indexOf(folder) === -1) {
+      this.$update('folders', [...this.folders, folder]);
+    }
   }
+
   public mounted() {
     ipcRenderer.on('folder', this.addFolder);
   }
+
   public destroyed() {
     ipcRenderer.removeListener('folder', this.addFolder);
+  }
+
+  public isEligibleFile(fileName: string) {
+    const extension = fileName.split('.').pop();
+    if (extension) {
+      return extension.toLowerCase() === 'wav';
+    }
+
+    return false;
   }
 }
 </script>
 
 <style scoped>
-
 </style>

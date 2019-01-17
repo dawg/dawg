@@ -666,9 +666,11 @@ declare module 'tone' {
     loopStart: _TimeArg;
     playbackRate: number;
     retrigger: boolean;
+    autostart: boolean;
     dispose(): this;
     load(url:string, callback?:(e: any)=>any):  Player;
     setLoopPoints(loopStart: _TimeArg, loopEnd: _TimeArg): Player;
+    toMaster(): this;
   }
 
   class PluckSynth extends Instrument {
@@ -955,5 +957,13 @@ declare module 'tone' {
     constructor(mapping: any, bufferLen?: number); //TODO: change 'any' to 'Function | Array | number'
     curve: number[];
     oversample: string;
+  }
+
+  class Waveform extends AudioNode {
+      constructor(size?:number);
+      readonly channelCount: number;
+      readonly numberOfInputs: number;
+      readonly numberOfOutputs: number;
+      getValue(): Float32Array;
   }
 }
