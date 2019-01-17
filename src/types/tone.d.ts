@@ -363,8 +363,12 @@ declare module 'tone' {
     dispose(): this;
   }
 
+  class Gain extends AudioNode {
+    gain: Signal;
+  }
+
   class GreaterThan extends Signal {
-      constructor(value?: number);
+    constructor(value?: number);
     dispose(): this;
   }
 

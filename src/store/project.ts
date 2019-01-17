@@ -112,7 +112,7 @@ export class Project extends VuexModule {
         effects[i - 1].connect(effect);
       }
 
-      effects[effects.length - 1].connect(channel.panner);
+      effects[effects.length - 1].connect(channel.destination);
     });
 
     // Reconnect the instruments to their channels
@@ -190,7 +190,7 @@ export class Project extends VuexModule {
     const effects = payload.channel.effects;
     for (const [i, effect] of effects.entries()) {
       if (effect.slot !== payload.effect.slot) { continue; }
-      const destination = (effects[i + 1] || {}).effect || payload.channel.panner;
+      const destination = (effects[i + 1] || {}).effect || payload.channel.destination;
       if (i === 0) {
         instruments.forEach((instrument) => {
           instrument.disconnect();
@@ -212,13 +212,13 @@ export class Project extends VuexModule {
   public addEffect(payload: { channel: Channel, effect: EffectName, index: number } ) {
     const effects = payload.channel.effects;
     let toInsert: null | number = null;
-    for (const [i, effect] of effects.entries()) {
+    for (const [index, effect] of effects.entries()) {
       if (effect.slot === payload.index) {
         throw Error(`There already exists an effect in ${effect.slot}`);
       }
 
       if (effect.slot > payload.index) {
-        toInsert = i;
+        toInsert = index;
         break;
       }
     }
@@ -231,7 +231,7 @@ export class Project extends VuexModule {
     }
 
     const i = toInsert || effects.length;
-    const destination = (effects[i] || {}).effect || payload.channel.panner;
+    const destination = (effects[i] || {}).effect || payload.channel.destination;
     const newEffect = Effect.create(payload.index, payload.effect);
     newEffect.connect(destination);
     if (toInsert === 0) {

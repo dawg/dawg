@@ -267,10 +267,10 @@ storiesOf(Mixer.name, module)
 storiesOf(Slider.name, module)
   .add('Standard', () => ({
     template: `
-    <slider v-model="value" :left="46" :right="50"></slider>
+    <slider v-model="value" :left=".46" :right=".50"></slider>
     `,
     components: { Slider },
-    data: () => ({ value: 70 }),
+    data: () => ({ value: .70 }),
   }));
 
 storiesOf(PlayPause.name, module)

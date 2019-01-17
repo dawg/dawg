@@ -3,7 +3,7 @@ import Tone from 'tone';
 import uuid from 'uuid';
 
 import Part from '@/modules/audio/part';
-import { toTickTime, allKeys } from './utils';
+import { toTickTime, allKeys, scale } from './utils';
 
 // These are all of the schemas for the project.
 // Everything is annotated using `cerialize`.
@@ -373,12 +373,14 @@ export class Channel {
     return channel;
   }
 
-  @autoserialize public volume = 0.7;
   @autoserialize public number!: number;
   @autoserialize public name!: string;
   @autoserializeAs(Effect) public effects: AnyEffect[] = [];
   public meter = new Tone.Meter();
-  public panner = new Tone.Panner().toMaster().connect(this.meter);
+  private panner = new Tone.Panner().toMaster().connect(this.meter);
+  private gain = new Tone.Gain().connect(this.panner);
+  // tslint:disable-next-line:member-ordering
+  public destination = this.gain;
   private connected = true;
   private muted = false;
 
@@ -388,6 +390,14 @@ export class Channel {
   }
   set pan(pan: number) {
     this.panner.pan.value = pan;
+  }
+
+  @autoserialize
+  get volume() {
+    return scale(this.gain.gain.value, [0, 1.3], [0, 1]);
+  }
+  set volume(value: number) {
+    this.gain.gain.value = scale(value, [0, 1], [0, 1.3]);
   }
 
   @autoserialize
