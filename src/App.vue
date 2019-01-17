@@ -25,27 +25,7 @@
             </split>
 
             <split>
-              <tabs 
-                :style="`height: 100%`" 
-                :selected-tab="specific.openedTab"
-                @update:selected-tab="specific.setTab"
-              >
-                <tab name="Playlist 1">
-                  <div></div>
-                </tab>
-                <tab name="Sequence 1">
-                  <div></div>
-                </tab>
-                <tab name="Sequence 2" :is-disabled="true">
-                  <div></div>
-                </tab>
-                <tab name="Sequence 4">
-                    <div></div>
-                </tab>
-                <tab name="Master">
-                    <div></div>
-                </tab>
-              </tabs>
+              <playlist></playlist>
             </split>
 
             <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`" keep>
