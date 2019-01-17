@@ -10,7 +10,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 
-// Ico is used so it does not conflice with Icon.
+// Ico is used so it does not conflict with Icon.
 // TODO We should probably just get rid of the Icon component.
 @Component
 export default class Ico extends Vue {

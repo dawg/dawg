@@ -109,10 +109,6 @@ export default class Channel extends Vue {
   }
 
   public process(level: number) {
-    if (level === -Infinity) {
-      level = -100;
-    }
-
     return clamp(scale(level, [-100, 6], [0, 1]), 0, 1);
   }
 
