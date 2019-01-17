@@ -41,7 +41,7 @@
           </div>
         </div>
         <div class="slider" style="display: flex">
-          <slider v-model="channel.volume" :left="level" :right="level"></slider>
+          <slider v-model="channel.volume" :left="left" :right="right"></slider>
         </div>
       </div>
     </div>
@@ -64,7 +64,8 @@ import { Watch } from '@/modules/update';
 export default class Channel extends Vue {
   @Prop({ type: Object, required: true }) public channel!: C;
   @Prop({ type: Boolean, required: true }) public play!: boolean;
-  public level = 0;
+  public right = 0;
+  public left = 0;
 
   get effectLookup() {
     const o: { [k: number]: AnyEffect } = {};
@@ -107,14 +108,22 @@ export default class Channel extends Vue {
     this.channel.mute = !this.channel.mute;
   }
 
+  public process(level: number) {
+    if (level === -Infinity) {
+      level = -100;
+    }
+
+    return clamp(scale(level, [-100, 6], [0, 1]), 0, 1);
+  }
+
   public renderMeter() {
     if (this.play) {
       requestAnimationFrame(this.renderMeter);
-      let level = this.channel.meter.getLevel();
-      if (level === -Infinity) { level = -100; }
-      this.level = clamp(scale(level, [-100, 6], [0, 1]), 0, 1);
+      this.left = this.process(this.channel.left.getLevel());
+      this.right = this.process(this.channel.right.getLevel());
     } else {
-      this.level = 0;
+      this.left = 0;
+      this.right = 0;
     }
   }
 
@@ -149,6 +158,7 @@ ul
 .channel
   width: 100px
   min-height: 100%
+  height: fit-content
   display: inline-block
   border-right: solid 1px $dark
   margin-bottom: 10px

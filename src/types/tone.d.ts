@@ -193,8 +193,8 @@ declare module 'tone' {
 
   class CrossFade extends Tone {
       constructor(initialFade?: number);
-      a: GainNode;
-      b: GainNode;
+      a: Gain;
+      b: Gain;
       fade: Signal;
       dispose(): this;
   }
@@ -247,10 +247,10 @@ declare module 'tone' {
   class EQ3 extends Tone {
       constructor(lowLevel?: any, midLevel?: number, highLevel?: number); //TODO: Change 'any' to 'number | Object'
       highFrequency: Signal;
-      high: GainNode;
+      high: Gain;
       lowFrequency: Signal;
-      low: GainNode;
-      mid: GainNode;
+      low: Gain;
+      mid: Gain;
       dispose(): this;
   }
 
@@ -447,8 +447,8 @@ declare module 'tone' {
 
   class Merge extends Tone {
       constructor();
-      left: GainNode;
-      right: GainNode;
+      left: Gain;
+      right: Gain;
       dispose(): this;
   }
 
@@ -467,9 +467,9 @@ declare module 'tone' {
   }
 
   class MidSideEffect extends StereoEffect {
-      midReturn: GainNode;
+      midReturn: Gain;
       midSend: Expr;
-      sideReturn: GainNode;
+      sideReturn: Gain;
       sideSend: Expr;
       dispose(): this;
   }
@@ -628,7 +628,7 @@ declare module 'tone' {
 
   class PanVol extends Tone {
     constructor(pan: number, volume: number);
-    output: GainNode;
+    output: Gain;
     volume: Signal;
     dispose(): this;
   }
@@ -817,14 +817,14 @@ declare module 'tone' {
   }
 
   class Split extends Tone {
-      left: GainNode;
-      right: GainNode;
+      left: Gain;
+      right: Gain;
       dispose(): this;
   }
 
   class StereoEffect extends Effect {
-      effectReturnL: GainNode;
-      effectReturnR: GainNode;
+      effectReturnL: Gain;
+      effectReturnR: Gain;
       dispose(): this;
   }
 

@@ -376,13 +376,20 @@ export class Channel {
   @autoserialize public number!: number;
   @autoserialize public name!: string;
   @autoserializeAs(Effect) public effects: AnyEffect[] = [];
-  public meter = new Tone.Meter();
-  private panner = new Tone.Panner().toMaster().connect(this.meter);
+  public left = new Tone.Meter();
+  public right = new Tone.Meter();
+  public split = new Tone.Split();
+  private panner = new Tone.Panner().toMaster().connect(this.split);
   private gain = new Tone.Gain().connect(this.panner);
   // tslint:disable-next-line:member-ordering
   public destination = this.gain;
   private connected = true;
   private muted = false;
+
+  constructor() {
+    this.split.left.connect(this.left);
+    this.split.right.connect(this.right);
+  }
 
   @autoserialize
   get pan() {

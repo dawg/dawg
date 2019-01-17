@@ -9,14 +9,20 @@ export interface ContextInterface {
   $context: ContextFunction;
 }
 
-const contextFunction: ContextFunction = (e, items) => {
-  e.preventDefault();
-  bus.$emit('show', { e, items });
-};
+interface Options {
+  default?: Item[];
+}
 
 const context = {
-  install() {
+  install(vue: any, options: Options = {}) {
     Vue.component('ContextMenu', ContextMenu);
+
+    const defaultItems = options.default || [];
+    const contextFunction: ContextFunction = (e, items) => {
+      e.preventDefault();
+      bus.$emit('show', { e, items: [...items, ...defaultItems] });
+    };
+
     Vue.prototype.$context = contextFunction;
   },
 };

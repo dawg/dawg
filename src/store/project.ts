@@ -230,18 +230,27 @@ export class Project extends VuexModule {
       return;
     }
 
-    const i = toInsert || effects.length;
-    const destination = (effects[i] || {}).effect || payload.channel.destination;
+
+    let destination: Tone.AudioNode;
+    let i: number;
     const newEffect = Effect.create(payload.index, payload.effect);
+    if (toInsert === null) {
+      destination = payload.channel.destination;
+      i = effects.length;
+    } else {
+      destination = effects[toInsert].effect;
+      i = toInsert;
+    }
+
     newEffect.connect(destination);
-    if (toInsert === 0) {
+    if (i === 0) {
       instruments.forEach((instrument) => {
         instrument.disconnect();
         instrument.connect(newEffect);
       });
     } else {
-      effects[i].disconnect();
-      effects[i].connect(newEffect);
+      effects[i - 1].disconnect();
+      effects[i - 1].connect(newEffect);
     }
 
     // TODO Move to mutation
@@ -279,12 +288,12 @@ export class Project extends VuexModule {
     instrument.disconnect();
 
 
-    let destination: AnyEffect | Tone.AudioNode;
+    let destination: Tone.AudioNode;
     if (channel === null) {
       destination = Tone.Master;
     } else {
-      const effect = (this.channels[channel].effects[0] || {}).effect;
-      destination =  effect || Tone.Master;
+      const c = this.channels[channel];
+      destination = c.effects.length ? c.effects[0].effect : c.destination;
     }
 
     instrument.connect(destination);

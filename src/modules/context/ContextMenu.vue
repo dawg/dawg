@@ -14,7 +14,7 @@
       <div
         v-for="(item, i) in items"
         :key="i"
-        @click="item.callback"
+        @click="item.callback(e)"
         class="item"
         :class="{ primary: active[i] }"
         @mouseover="mouseover(i)"
@@ -39,6 +39,7 @@ export default class ContextMenu extends Vue {
   public x = 0;
   public y = 0;
   public active: boolean[] = [];
+  public e: MouseEvent | null = null;
 
   public mounted() {
     bus.$on('show', this.show);
@@ -53,6 +54,7 @@ export default class ContextMenu extends Vue {
   }
 
   public show(payload: { e: MouseEvent, items: Item[] }) {
+    this.e = payload.e;
     this.open = true;
     this.x = payload.e.pageX;
     this.y = payload.e.pageY;
