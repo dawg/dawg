@@ -100,7 +100,7 @@ export const copy = <T>(o: T): T => {
 };
 
 
-export const Nullable = (o: { new(): object }) => {
+export const Nullable = (o: new() => object ) => {
   return {
     required: true,
     validator: (prop: any) => {

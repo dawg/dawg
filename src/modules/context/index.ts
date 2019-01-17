@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import ContextMenu from './ContextMenu.vue';
+import ContextMenu from '@/modules/context/ContextMenu.vue';
 import bus, { Item } from '@/modules/context/bus';
 
 
@@ -21,5 +21,4 @@ const context = {
   },
 };
 
-export { Item } from './bus';
 export default context;

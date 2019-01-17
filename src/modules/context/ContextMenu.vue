@@ -29,7 +29,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 
-import bus, { Item } from './bus';
+import bus, { Item } from '@/modules/context/bus';
 import { Watch } from '@/modules/update';
 
 @Component

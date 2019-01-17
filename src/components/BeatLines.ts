@@ -6,6 +6,7 @@ export default class BeatLines extends Vue {
   @Inject() public beatsPerMeasure!: number;
   @Inject() public stepsPerBeat!: number;
 
+  public $el!: HTMLElement;
   public beatColor = 'rgba(0,0,0,.4)';
   public stepColor = 'rgba(0,0,0,.1)';
   public measureColor = 'rgb(0,0,0)';

@@ -17,6 +17,7 @@ import { Keys } from '@/utils';
 export default class NAME extends Vue {
   @Prop({ type: String, required: true }) public value!: string;
   public contenteditable = false;
+  public $el!: HTMLElement;
 
   public mounted() {
     this.$el.innerText = this.value;
