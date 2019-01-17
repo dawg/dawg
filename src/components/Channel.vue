@@ -158,7 +158,7 @@ ul
 .channel
   width: 100px
   min-height: 100%
-  height: fit-content
+  height: initial
   display: inline-block
   border-right: solid 1px $dark
   margin-bottom: 10px

@@ -1,20 +1,22 @@
 <template>
-  <vue-perfect-scrollbar class="mixer secondary-lighten-4" style="height: 100%; width: 100%">
-    <channel
-      v-for="(channel, i) in channels"
-      :key="i"
-      :play="play"
-      :channel="channel"
-      @add="addEffect(channel, $event)"
-      @delete="deleteEffect(channel, $event)"
-      @select="openEffect"
-    ></channel>
+  <div class="mixer secondary-lighten-4" style="height: 100%">
+    <vue-perfect-scrollbar style="height: 100%; width: 100%">
+      <channel
+        v-for="(channel, i) in channels"
+        :key="i"
+        :play="play"
+        :channel="channel"
+        @add="addEffect(channel, $event)"
+        @delete="deleteEffect(channel, $event)"
+        @select="openEffect"
+      ></channel>
+    </vue-perfect-scrollbar>
     <effect 
       v-if="openedEffect"
       @set="$emit('set', combine({ effect: openedEffect }, $event))"
       :effect="openedEffect"
     ></effect>
-  </vue-perfect-scrollbar>
+  </div>
 </template>
 
 <script lang="ts">
@@ -37,7 +39,11 @@ export default class Mixer extends Vue {
   }
 
   public openEffect(effect: AnyEffect) {
-    this.openedEffect = effect;
+    if (effect === this.openedEffect) {
+      this.openedEffect = null;
+    } else {
+      this.openedEffect = effect;
+    }
   }
 
   public deleteEffect(channel: Channel, effect: AnyEffect) {
