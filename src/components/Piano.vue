@@ -24,22 +24,23 @@ import Tone from 'tone';
 import { Component, Prop } from 'vue-property-decorator';
 import { allKeys } from '@/utils';
 import Key from '@/components/Key.vue';
+import { Instrument } from '@/schemas';
 
 @Component({
   components: { Key },
 })
 export default class Piano extends Vue {
-  @Prop({ type: Object, required: true }) public synth!: Tone.Synth;
+  @Prop({ type: Object, required: true }) public synth!: Instrument;
   public allKeys = allKeys;
 
   public start(value: string) {
     this.synth.triggerAttack(value);
   }
 
-  public stop() {
+  public stop(value: string) {
     // I'm not sure what would happen if there were two notes playing.
     // I assume it would stop both. I didn't see a way to only stops one.
-    this.synth.triggerRelease();
+    this.synth.triggerRelease(value);
   }
 }
 </script>

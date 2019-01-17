@@ -2,12 +2,12 @@ import Vue from 'vue';
 
 export interface Item {
   text: string;
-  callback: () => void;
+  callback: (e: MouseEvent) => void;
 }
 
 interface EventInterface {
   show: {
-    e: MouseEvent, items: Item[],
+    e: MouseEvent, items: Array<Item | null>,
   };
 }
 

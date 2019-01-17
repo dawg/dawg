@@ -27,7 +27,12 @@ export default class TooltipIcon extends Vue {
   @Prop({ type: String, default: 'white' }) public color!: boolean;
 
   get icon() {
-    const text = (this.$slots.default[0] || {}).text || '';
+    const slot = this.$slots.default;
+    if (!slot || !slot[0]) {
+      return '';
+    }
+
+    const text = slot[0].text || '';
     return text.trim();
   }
 

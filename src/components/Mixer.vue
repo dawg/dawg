@@ -1,98 +1,67 @@
 <template>
-  <div class="mixer">
-    <div v-for="i in range(channels)" :key="i" class="track">
-      <div class="primary color"></div>
-      <div class="secondary label">Name</div>
-      <ul>
-        <li v-for="i in range(10)" :key="i" class="cell">
-          <v-icon size="13px" class="close-icon">add</v-icon>
-        </li>
-      </ul>
-      <div class="spacer"></div>
-      <div class="controls">
-        <div>
-          <knob v-model="pan[i]" :size="30"></knob>
-        </div>
-      </div>
-    </div>
+  <div class="mixer secondary-lighten-4" style="height: 100%">
+    <vue-perfect-scrollbar style="height: 100%; width: 100%">
+      <channel
+        v-for="(channel, i) in channels"
+        :key="i"
+        :play="play"
+        :channel="channel"
+        @add="addEffect(channel, $event)"
+        @delete="deleteEffect(channel, $event)"
+        @select="openEffect"
+      ></channel>
+    </vue-perfect-scrollbar>
+    <effect 
+      v-if="openedEffect"
+      @set="$emit('set', combine({ effect: openedEffect }, $event))"
+      :effect="openedEffect"
+    ></effect>
   </div>
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
-import Knob from '@/components/Knob.vue';
+import { Component, Prop, Vue } from 'vue-property-decorator';
+import Channel from '@/components/Channel.vue';
+import { Channel as C, Effect, AnyEffect } from '@/schemas';
+import { Watch } from '@/modules/update';
+import { range } from '@/utils';
 
 @Component({
-  components: { Knob },
+  components: { Channel },
 })
 export default class Mixer extends Vue {
-  @Prop({ type: Number, default: 10  }) public channels!: number;
-  public pan = Array(this.channels).fill(0);
-  public range(i: number) {
-    return Array.from(Array(i).keys());
+  @Prop({ type: Array, required: true  }) public channels!: C[];
+  @Prop({ type: Boolean, required: true }) public play!: boolean;
+  public openedEffect: null | AnyEffect = null;
+
+  public addEffect(channel: Channel, { effect, index }: { effect: AnyEffect, index: number }) {
+    this.$emit('add', { channel, effect, index });
+  }
+
+  public openEffect(effect: AnyEffect) {
+    if (effect === this.openedEffect) {
+      this.openedEffect = null;
+    } else {
+      this.openedEffect = effect;
+    }
+  }
+
+  public deleteEffect(channel: Channel, effect: AnyEffect) {
+    this.$emit('delete', { channel, effect });
+  }
+
+  public combine(a: object, b: object) {
+    return {
+      ...a,
+      ...b,
+    };
   }
 }
 </script>
 
 <style scoped lang="sass">
-  $dark: #282c34
-  $between: #555b63
-  $light: #767a82
-
-  ul
-    list-style: none
-    padding-left: 0
-
-  .color
-    height: 5px
-
-  .label
-    height: 30px
-    line-height: 30px
-    color: white
-    text-align: center
-    vertical-align: text-bottom
-
-  .mixer
-    background-color: $light
-    display: inline-flex
-    height: 400px
-
-  .track
-    height: 100%
-    width: 100px
-    border-right: solid 1px $dark
-
-  .cell
-    height: 20px
-    border-top: solid 1px $between
-    position: relative
-
-    &:hover
-      cursor: pointer
-      background-color: darken($light, 2%)
-
-      .close-icon
-        transform: scale(1)
-        transition-duration: .3s
-
-    &:last-of-type
-      border-bottom: solid 1px $between
-
-  .close-icon
-    right: 0.5em
-    z-index: 2
-    width: 1.5em
-    height: 1.5em
-    line-height: 1.5
-    text-align: center
-    border-radius: 3px
-    overflow: hidden
-    transform: scale(0)
-    transition: transform .08s
-    position: absolute
-
-  .controls
-    padding: 10px
+.mixer
+  white-space: nowrap
+  height: 400px
+  display: flex
 </style>

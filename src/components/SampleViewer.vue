@@ -44,6 +44,10 @@ import Tone from 'tone';
 export default class SampleViewer extends Vue {
   @Prop({ type: String, required: true }) public url?: string;
 
+  public $refs!: {
+    scope: WavScope;
+  };
+
   public playSample() {
     this.$refs.scope.play();
   }

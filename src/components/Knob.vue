@@ -8,7 +8,8 @@
         <path
           :d="rangePath"
           fill="none"
-          stroke="#55595C"
+          :class="strokeClass"
+          :stroke="strokeColor"
           :stroke-width="strokeWidth"
         ></path>
         <path 
@@ -39,7 +40,7 @@
     <div
       v-if="label"
       class="rela-block knob-label" 
-      style="color: #E4E8EA"
+      :style="labelStyle"
     >
       {{ label }}
     </div>
@@ -63,12 +64,13 @@ export default class Knob extends Mixins(Draggable) {
   @Prop({ type: Number, default: 264 }) public range!: number;
   @Prop({ type: Number, default: 100 }) public max!: number;
   @Prop({ type: Number, default: 0 }) public min!: number;
-  @Prop({ type: Number, default: 1 }) public stepSize!: number;
   @Prop({ type: Number, default: 100 }) public size!: number;
   @Prop({ type: String, default: '#409eff' }) public primaryColor!: string;
   @Prop(String) public label?: string;
   @Prop({ type: Number, default: 2.5 }) public strokeWidth!: number;
   @Prop(Number) public midValue?: number;
+  @Prop({ type: String, default: '#55595C' }) public strokeColor!: string;
+  @Prop(String) public strokeClass?: string;
 
   public rotation = -this.range / 2;
   public rectWidth = 3;
@@ -124,6 +126,11 @@ export default class Knob extends Mixins(Draggable) {
     // the actual radius would be 11 (measuring from outside the path).
     // However, we want to be more exact than that. If the size is 20, we want the size the be exactly 20
     return this.size / 2 - this.strokeWidth / 2;
+  }
+
+  get labelStyle() {
+    const fontSize = `${Math.round(this.size / 3)}px`;
+    return { fontSize };
   }
 
   // dial
@@ -236,8 +243,14 @@ export default class Knob extends Mixins(Draggable) {
     
 .knob-label
   text-align: center
+  color: #E4E8EA
   font-family: monospace
   font-size: 16px
+
+.knob
+  display: flex
+  flex-direction: column
+  align-items: center
 
 .rela-block 
   position: relative

@@ -10,11 +10,18 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 
+// Ico is used so it does not conflict with Icon.
+// TODO We should probably just get rid of the Icon component.
 @Component
 export default class Ico extends Vue {
   @Prop(Boolean) public fa!: boolean;
   get icon() {
-    const text = (this.$slots.default[0] || {}).text || '';
+    const slot = this.$slots.default;
+    if (!slot || !slot[0]) {
+      return '';
+    }
+
+    const text = slot[0].text || '';
     return text.trim();
   }
 }

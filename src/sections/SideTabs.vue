@@ -49,7 +49,6 @@ import FileExplorer from '@/components/FileExplorer.vue';
 import Patterns from '@/components/Patterns.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
 import SideBar from '@/components/SideBar.vue';
-import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { project, cache, general, specific } from '@/store';
 import { Watch } from '@/modules/update';
 
@@ -64,7 +63,6 @@ interface Group {
     FileExplorer,
     Patterns,
     BaseTabs,
-    VuePerfectScrollbar,
     SideBar,
   },
 })

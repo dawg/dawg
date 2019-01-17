@@ -15,7 +15,7 @@ import { Player } from 'tone';
 
 @Component({components: { }})
 export default class WavScope extends Vue {
-  @Prop({ type: String, required: true }) public url?: string;
+  @Prop({ type: String, required: true }) public url!: string;
   @Prop({ type: String, required: false, default: '#111' }) public waveColor?: string;
   @Prop({ type: String, required: false, default: '#1976D2' }) public progressColor?: string;
 
@@ -35,8 +35,8 @@ export default class WavScope extends Vue {
 
   // follow the url and load as a blob
   public loadBlobFromUrl() {
-      fetch(this.url).then((res) => {
-        res.blob().then((blob) => {
+      fetch(this.url).then((res: any) => {
+        res.blob().then((blob: any) => {
           this.wavesurfer.loadBlob(blob);
         });
     });

@@ -39,6 +39,10 @@
       ></knob>
       <div class="white--text name">{{ instrument.name }}</div>
       <mini-score :notes="notes"></mini-score>
+      <channel-select 
+        :value="channel"
+        @input="setChannel"
+      ></channel-select>
     </div>
     <div 
       class="options secondary-lighten-1"
@@ -61,20 +65,23 @@ import Tone from 'tone';
 import Knob from '@/components/Knob.vue';
 import DotButton from '@/components/DotButton.vue';
 import MiniScore from '@/components/MiniScore.vue';
+import ChannelSelect from '@/components/ChannelSelect.vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { Note, Instrument } from '@/schemas';
 import { Watch } from '@/modules/update';
+import { Nullable } from '@/utils';
 
 const TYPES = ['pwm', 'sine', 'triangle', 'fatsawtooth', 'square'];
 
 const oscillator = { type: 'fatsawtooth', spread: 30 };
 const envelope = { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 };
 
-@Component({ components: { Knob, DotButton, MiniScore } })
+@Component({ components: { Knob, DotButton, MiniScore, ChannelSelect } })
 export default class Synth extends Vue {
   @Prop({ type: Object, required: true }) public instrument!: Instrument;
   @Prop({ type: Number, default: 50 }) public height!: number;
   @Prop({ type: Array, default: () => [] }) public notes!: Note[];
+  @Prop(Nullable(Number)) public channel!: number | null;
 
   public types = TYPES;
   public active = !this.instrument.mute;
@@ -86,6 +93,10 @@ export default class Synth extends Vue {
     return {
       height: `${this.height}px`,
     };
+  }
+
+  public setChannel(value: number | null) {
+    this.$update('channel', value);
   }
 
   @Watch<Synth>('active')
@@ -100,9 +111,6 @@ export default class Synth extends Vue {
   align-items: center
   display: flex
   padding-right: 10px
-
-  &:hover
-    cursor: pointer
 
 .mute
   height: 20px

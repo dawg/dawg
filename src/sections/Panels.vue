@@ -16,7 +16,13 @@
       ></synths>
     </panel>
     <panel name="Mixer">
-      <mixer></mixer>
+      <mixer 
+        :channels="project.channels"
+        :play="general.play"
+        @add="project.addEffect"
+        @delete="project.deleteEffect"
+        @set="project.setOption"
+      ></mixer>
     </panel>
     <panel name="Piano Roll">
       <piano-roll 
@@ -43,7 +49,7 @@ import PianoRoll from '@/components/PianoRoll.vue';
 import SampleViewer from '@/components/SampleViewer.vue';
 import Synths from '@/components/Synths.vue';
 import Panel from '@/components/Panel.vue';
-import { Note } from '@/schemas';
+import { Note, EffectName, Channel, EffectOptions } from '@/schemas';
 import { Part } from 'tone';
 
 @Component({
