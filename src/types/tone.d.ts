@@ -90,34 +90,34 @@ declare module 'tone' {
   }
 
   class AutoWah extends Effect {
-      constructor(baseFrequency?: any, octaves?: number, sensitivity?:number); //Todo number | Object
-      baseFrequency: Frequency;
-      gain: Signal;
-      octaves: number;
-      Q: Signal;
-      sensitivity: number;
-      dispose(): this;
+    constructor(baseFrequency?: any, octaves?: number, sensitivity?:number); //Todo number | Object
+    baseFrequency: Frequency;
+    gain: Signal;
+    octaves: number;
+    Q: Signal;
+    sensitivity: number;
+    dispose(): this;
   }
 
   class BitCrusher extends Effect {
-      constructor(bits: any); //TODO: Number || Object
-      bits: number;
-      dispose(): this;
+    constructor(bits?: number);
+    bits: number;
+    dispose(): this;
   }
 
   class Buffer extends Tone {
-      constructor(url: any); //TODO: Change 'any' to 'AudioBuffer | string' when available
-      MAX_SIMULTANEOUS_DOWNLOADS: number;
-      duration: number; // Readonly
-      loaded: boolean; // Readonly
-      onload: (e: any)=>any;
-      url: string; // Readonly
-      load(url:string, callback?: (e: any)=>any): Buffer;
-      onerror(): void;
-      onprogress(): void;
-      dispose(): this;
-      get(): AudioBuffer;
-      set(buffer: any): Buffer; //TODO: change any to AudioBuffer | Buffer
+    constructor(url: any); //TODO: Change 'any' to 'AudioBuffer | string' when available
+    MAX_SIMULTANEOUS_DOWNLOADS: number;
+    duration: number; // Readonly
+    loaded: boolean; // Readonly
+    onload: (e: any)=>any;
+    url: string; // Readonly
+    load(url:string, callback?: (e: any)=>any): Buffer;
+    onerror(): void;
+    onprogress(): void;
+    dispose(): this;
+    get(): AudioBuffer;
+    set(buffer: any): Buffer; //TODO: change any to AudioBuffer | Buffer
   }
 
   class Chebyshev extends Effect {
@@ -169,7 +169,7 @@ declare module 'tone' {
     pause(time?: PrimitiveTime): void;
   }
 
-  class Compressor extends Tone {
+  class Compressor extends AudioNode {
     constructor(threshold?: any, ratio?: number); //TODO: Number || Object
     attack: Signal;
     knee: AudioParam;
@@ -200,7 +200,7 @@ declare module 'tone' {
   }
 
   class Distortion extends Effect {
-      constructor(distortion: any); //TODO: Number || Object
+      constructor(distortion?: number);
       distortion: number;
       oversample: string;
       dispose(): this;
@@ -244,7 +244,7 @@ declare module 'tone' {
     triggerRelease(time?: _TimeArg): Envelope;
   }
 
-  class EQ3 extends Tone {
+  class EQ3 extends AudioNode {
       constructor(lowLevel?: any, midLevel?: number, highLevel?: number); //TODO: Change 'any' to 'number | Object'
       highFrequency: Signal;
       high: Gain;
@@ -416,9 +416,9 @@ declare module 'tone' {
       unsync(): LFO;
   }
 
-  class Limiter extends Tone {
-      constructor(threshold: AudioParam)
-      dispose(): this;
+  class Limiter extends AudioNode {
+    constructor(threshold?: AudioParam);
+    dispose(): this;
   }
 
   class LowpassCombFilter extends Tone {
@@ -951,6 +951,9 @@ declare module 'tone' {
 
   class TransportTime extends Time {
     toTicks(): number;
+  }
+
+  class Tremolo extends StereoEffect {
   }
 
   class Type {

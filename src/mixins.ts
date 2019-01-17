@@ -43,10 +43,10 @@ export class Draggable extends Vue {
     window.addEventListener('mousemove', this.mousemoveListener);
     window.addEventListener('mouseup', this.removeListeners);
   }
-  public removeListeners(e: MouseEvent) {
+  public removeListeners(e?: MouseEvent) {
     if (this.disabled) { return; }
+    if (e) { this.prevent(e); }
 
-    this.prevent(e);
     this.resetCursor();
     this.previous = null;
     this.moving = false;
@@ -79,9 +79,14 @@ export class Draggable extends Vue {
   public startMove(e: MouseEvent, ...args: any[]) {
     if (this.disabled) { return; }
 
+    if (!this.previous) {
+      this.removeListeners();
+      return;
+    }
+
     this.prevent(e);
-    const changeY = e.clientY - this.previous!.y;
-    const changeX = e.clientX - this.previous!.x;
+    const changeY = e.clientY - this.previous.y;
+    const changeX = e.clientX - this.previous.x;
 
     this.previous = { x: e.clientX, y: e.clientY };
     this.move(e, ...args, { changeY, changeX });

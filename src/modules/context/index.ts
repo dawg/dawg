@@ -7,6 +7,7 @@ type ContextFunction = (e: MouseEvent, items: Item[]) => void;
 
 export interface ContextInterface {
   $context: ContextFunction;
+  $menu: ContextFunction;
 }
 
 interface Options {
@@ -20,10 +21,16 @@ const context = {
     const defaultItems = options.default || [];
     const contextFunction: ContextFunction = (e, items) => {
       e.preventDefault();
-      bus.$emit('show', { e, items: [...items, ...defaultItems] });
+      bus.$emit('show', { e, items: [...items, null, ...defaultItems] });
+    };
+
+    const menuFunction: ContextFunction = (e, items) => {
+      e.preventDefault();
+      bus.$emit('show', { e, items });
     };
 
     Vue.prototype.$context = contextFunction;
+    Vue.prototype.$menu = menuFunction;
   },
 };
 

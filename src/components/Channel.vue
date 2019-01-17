@@ -85,7 +85,7 @@ export default class Channel extends Vue {
 
   public showEffects(e: MouseEvent, i: number) {
     const items = this.options.map((option) => ({ text: option, callback: () => this.addEffect(option, i) }));
-    this.$context(e, items);
+    this.$menu(e, items);
   }
 
   public addEffect(effect: EffectName, i: number) {

@@ -210,13 +210,20 @@ export class Instrument implements IInstrument {
 
 // tslint:disable-next-line:ban-types
 // type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? never : K }[keyof T];
-type ToneEffect = Tone.AutoWah | Tone.Freeverb | Tone.Phaser;
 export type EffectName = keyof EffectOptions;
 
 export const EffectMap = {
   wah: Tone.AutoWah,
   reverb: Tone.Freeverb,
   phaser: Tone.Phaser,
+  bitCrusher: Tone.BitCrusher,
+  pingPongDelay: Tone.PingPongDelay,
+  compressor: Tone.Compressor,
+  EQ3: Tone.EQ3,
+  limiter: Tone.Phaser,
+  chorus: Tone.Chorus,
+  tremolo: Tone.Tremolo,
+  distortion: Tone.Distortion,
 };
 
 export interface Constraints {
@@ -242,16 +249,76 @@ interface WahOptions {
   octaves: number;
 }
 
+interface BitCrusherOptions {
+  bits: number;
+}
+
+interface PingPongDelayOptions {
+  delayTime: number;
+  feedback: number;
+}
+
+interface CompressorOptions {
+  ratio: number;
+  threshold: number;
+  release: number;
+  attack: number;
+  knee: number;
+}
+
+interface EQ3Options {
+  low: number;
+  mid: number;
+  high: number;
+  lowFrequency: number;
+  highFrequency: number;
+}
+
+interface LimiterOptions {
+  threshold: number;
+}
+
+interface ChorusOptions {
+  frequency: number;
+  delayTime: number;
+  depth: number;
+}
+
+interface TremoloOptions {
+  frequency: number;
+  depth: number;
+}
+
+interface DistortionOptions {
+  depth: number;
+}
+
 export interface EffectTones {
   wah: Tone.AutoWah;
   reverb: Tone.Freeverb;
   phaser: Tone.Phaser;
+  bitCrusher: Tone.BitCrusher;
+  pingPongDelay: Tone.PingPongDelay;
+  compressor: Tone.Compressor;
+  EQ3: Tone.EQ3;
+  limiter: Tone.Limiter;
+  chorus: Tone.Chorus;
+  tremolo: Tone.Tremolo;
+  distortion: Tone.Distortion;
 }
 
 export interface EffectOptions {
   wah: WahOptions;
   reverb: ReverbOptions;
   phaser: PhaserOptions;
+  bitCrusher: BitCrusherOptions;
+  pingPongDelay: PingPongDelayOptions;
+  compressor: CompressorOptions;
+  EQ3: EQ3Options;
+  limiter: LimiterOptions;
+  chorus: ChorusOptions;
+  tremolo: TremoloOptions;
+  distortion: DistortionOptions;
 }
 
 export type EffectConstrainsType = { [K in keyof EffectOptions]: { [E in keyof EffectOptions[K]]: Constraints } };
@@ -299,6 +366,102 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 1000,
     },
   },
+  bitCrusher: {
+    bits: {
+      min: 0,
+      max: 10,
+    },
+  },
+  pingPongDelay: {
+    delayTime: {
+      min: 0,
+      max: 10,
+    },
+    feedback: {
+      min: 0,
+      max: 0,
+    },
+  },
+  compressor: {
+    ratio: {
+      min: 0,
+      max: 20,
+    },
+    threshold: {
+      min: -40,
+      max: 0,
+    },
+    release: {
+      min: 0,
+      max: 1,
+    },
+    attack: {
+      min: 0,
+      max: 1,
+    },
+    knee: {
+      min: 0,
+      max: 50,
+    },
+  },
+  EQ3: {
+    low: {
+      min: -10,
+      max: 10,
+    },
+    mid: {
+      min: -10,
+      max: 10,
+    },
+    high: {
+      min: -10,
+      max: 10,
+    },
+    lowFrequency: {
+      min: 200,
+      max: 1000,
+    },
+    highFrequency: {
+      min: 2000,
+      max: 8000,
+    },
+  },
+  limiter: {
+    threshold: {
+      min: -10,
+      max: 2,
+    },
+  },
+  chorus: {
+    frequency: {
+      min: 0,
+      max: 0,
+    },
+    delayTime: {
+      min: 0,
+      max: 0,
+    },
+    depth: {
+      min: 0,
+      max: 0,
+    },
+  },
+  tremolo: {
+    frequency: {
+      min: 0,
+      max: 20,
+    },
+    depth: {
+      min: 0,
+      max: 1,
+    },
+  },
+  distortion: {
+    depth: {
+      min: 0,
+      max: 1,
+    },
+  },
 };
 
 const EffectDefaults: EffectOptions = {
@@ -317,11 +480,44 @@ const EffectDefaults: EffectOptions = {
     Q: 10,
     baseFrequency: 350,
   },
+  bitCrusher: {
+    bits: 4,
+  },
+  pingPongDelay: {
+    delayTime: 0.25,
+    feedback: 1,
+  },
+  compressor: {
+    ratio: 1,
+    threshold: -2,
+    release: 0.2,
+    attack: 0.00,
+    knee: 30,
+  },
+  EQ3: {
+    low: 0,
+    mid: 0,
+    high: 0,
+    lowFrequency: 400,
+    highFrequency: 2500,
+  },
+  limiter: {
+    threshold: -12,
+  },
+  chorus: {
+    frequency: 1.5,
+    delayTime: 3.5,
+    depth: 0.7,
+  },
+  tremolo: {
+    depth: 0.5,
+    frequency: 10,
+  },
+  distortion: {
+    depth: 0.4,
+  },
 };
 
-
-
-// TODO(jacob) What if we created in init / decompose pattern?
 export class Effect<T extends EffectName> {
   public static create<E extends EffectName>(slot: number, type: E) {
     const effect = new Effect<E>();

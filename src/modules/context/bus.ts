@@ -7,7 +7,7 @@ export interface Item {
 
 interface EventInterface {
   show: {
-    e: MouseEvent, items: Item[],
+    e: MouseEvent, items: Array<Item | null>,
   };
 }
 

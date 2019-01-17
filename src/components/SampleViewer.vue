@@ -16,7 +16,7 @@
           @stop="pauseSample"
         ></play-pause>
       </span>
-      <span class="control">
+      <span class="control primary">
         <button   
           class="button" 
         >
@@ -25,7 +25,7 @@
       </span>
       <span class="control">
         <button   
-          class="button" 
+          class="button primary" 
         >
           Transcribe
         </button>
