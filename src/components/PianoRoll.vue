@@ -2,7 +2,7 @@
   <div class="piano-roll">
     <div style="display: flex">
       <div class="empty-block secondary"></div>
-      <timeline 
+      <!-- <timeline 
         v-model="progress" 
         class="timeline"
         :set-loop-end.sync="setLoopEnd"
@@ -10,11 +10,11 @@
         :loop-start="loopStart"
         :loop-end="loopEnd"
         :offset="offset"
-      ></timeline>
+      ></timeline> -->
     </div>
     <div style="overflow-y: scroll; display: flex; height: calc(100% - 20px)">
       <piano :synth="instrument"></piano>
-      <sequencer
+      <!-- <sequencer
         style="width: calc(100% - 80px)"
         v-model="value"
         @added="added"
@@ -26,7 +26,7 @@
         :set-loop-start="setLoopStart"
         :set-loop-end="setLoopEnd"
         :progress="progress"
-      ></sequencer>
+      ></sequencer> -->
     </div>
   </div>
 </template>
@@ -35,15 +35,19 @@
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import Tone from 'tone';
 import Piano from '@/components/Piano.vue';
-import Sequencer from '@/components/Sequencer.vue';
-import Timeline from '@/components/Timeline.vue';
+// import Sequencer from '@/components/Sequencer.vue';
+// import Timeline from '@/components/Timeline.vue';
 import { Note, Instrument } from '@/schemas';
 import { toTickTime, allKeys } from '@/utils';
 import { Transform } from 'stream';
 import { Watch } from '@/modules/update';
 import Part from '@/modules/audio/part';
 
-@Component({components: { Piano, Sequencer, Timeline }})
+@Component({components: {
+  Piano,
+  // Sequencer,
+  // Timeline,
+}})
 export default class PianoRoll extends Vue {
   @Inject() public pxPerBeat!: number;
   @Prop({ type: Object, required: true }) public instrument!: Instrument;

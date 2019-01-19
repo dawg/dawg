@@ -32,21 +32,19 @@
 import { Draggable } from '@/modules/draggable';
 import { Mixins, Prop, Component, Inject } from 'vue-property-decorator';
 import { allKeys } from '@/utils';
+import { Positionable } from '@/modules/sequencer/sequencer';
 
 @Component
-export default class TestItem extends Mixins(Draggable) {
+export default class TestItem extends Mixins(Draggable, Positionable) {
   @Inject() public snap!: number;
   @Inject() public pxPerBeat!: number;
 
   @Prop({ type: Number, required: true }) public left!: number;
   @Prop({ type: Number, required: true }) public top!: number;
-  @Prop({ type: Number, required: true }) public width!: number;
-  @Prop({ type: Number, required: true }) public height!: number;
   @Prop({ type: Number, required: true }) public row!: number;
   @Prop({ type: Number, default: 8 }) public borderWidth!: number;
   @Prop({ type: Number, default: 14 }) public fontSize!: number;
-  @Prop(Number) public duration!: number;  // The length
-  @Prop(Boolean) public selected!: boolean;
+  @Prop({ type: Boolean, required: true }) public selected!: boolean;
 
   public cursor = 'ew-resize';
 
@@ -87,7 +85,7 @@ export default class TestItem extends Mixins(Draggable) {
     length = Math.round(length / this.snap) * this.snap;
     if (this.duration === length) { return; }
     if (length < this.snap) { return; }
-    this.$emit('input', length);
+    this.$update('duration', length);
   }
 }
 </script>

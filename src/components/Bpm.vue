@@ -7,7 +7,7 @@
 
 <script lang="ts">
 import { Component, Prop, Mixins } from 'vue-property-decorator';
-import { Draggable } from '../mixins';
+import { Draggable } from '@/modules/draggable';
 
 @Component
 export default class Bpm extends Mixins(Draggable) {

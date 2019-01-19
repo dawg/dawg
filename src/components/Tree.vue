@@ -34,6 +34,7 @@ import fs from 'fs';
 import { Keys } from '@/utils';
 import { Component, Prop } from 'vue-property-decorator';
 import Key from '@/components/Key.vue';
+import { loadPlayer } from '@/modules/audio/utils';
 
 @Component
 export default class Tree extends Vue {
@@ -41,6 +42,7 @@ export default class Tree extends Vue {
   @Prop({ type: String, required: true }) public path!: string;
   @Prop({ type: Number, default: 0 }) public depth!: number;
   @Prop({ type: Number, default: 0 }) public index!: number;
+  public player: Tone.Player | null = null;
 
   public showChildren = false;
   public selectedNode = false;
@@ -59,7 +61,8 @@ export default class Tree extends Vue {
       if (this.index + 1 < this.$parent.$refs.trees.length) {
         if (this.$parent.$refs.trees[this.index + 1].isWav) {
           this.selectOneNode(this.$parent.$refs.trees, this.index + 1);
-          this.playSong(this.$parent.$refs.trees[this.index + 1].fileName);
+          this.stopSong();
+          this.playSong(this.$parent.$refs.trees[this.index + 1].path);
         }
       }
     }
@@ -70,7 +73,8 @@ export default class Tree extends Vue {
         if (this.index - 1 >= 0) {
           if (this.$parent.$refs.trees[this.index - 1].isWav) {
             this.selectOneNode(this.$parent.$refs.trees, this.index - 1);
-            this.playSong(this.$parent.$refs.trees[this.index - 1].fileName);
+            this.stopSong();
+            this.playSong(this.$parent.$refs.trees[this.index - 1].path);
           }
         }
       }
@@ -83,7 +87,7 @@ export default class Tree extends Vue {
   public async preview(event: MouseEvent) {
     if (this.isWav) {
       this.selectOneNode(this.$parent.$refs.trees, this.index);
-      this.playSong(this.fileName);
+      this.playSong(this.path);
     }
   }
 
@@ -98,8 +102,17 @@ export default class Tree extends Vue {
   }
 
   public playSong(songPath: string) {
-    const player = new Tone.Player(songPath).toMaster();
-    player.autostart = true;
+    if (!this.player) {
+      this.player = loadPlayer(songPath).toMaster();
+    }
+
+    this.player.start();
+  }
+
+  public stopSong() {
+    if (this.player) {
+      this.player.stop();
+    }
   }
 
   public mounted() {

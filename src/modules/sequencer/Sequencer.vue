@@ -9,7 +9,7 @@
       <div 
         class="layer rows" 
         ref="rows" 
-        :style="`height: ${numRows * noteHeight}px`"
+        :style="`height: ${numRows * rowHeight}px`"
       >
         <sequencer-row
           v-for="row in numRows" 
@@ -28,9 +28,8 @@
         :is="component.name"
         :left="component.left"
         :top="component.top"
-        :height="component.height"
-        :width="component.width"
         :row="component.row"
+        style="position: absolute; z-index: 2"
         :key="i"
         :selected="selected[i]"
         :duration="component.duration"
@@ -63,7 +62,6 @@ import { Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 import { Draggable } from '@/modules/draggable';
 import { FactoryDictionary } from 'typescript-collections';
 import { range, copy, Nullable, Keys } from '@/utils';
-import NoteComponent from '@/components/Note.vue'; // TODO(jacob) Remove!!
 import BeatLines from '@/modules/sequencer/BeatLines';
 import SequencerRow from '@/modules/sequencer/SequencerRow.vue';
 import Progression from '@/modules/sequencer/Progression.vue';
@@ -72,7 +70,7 @@ import { Watch } from '@/modules/update';
 
 
 @Component({
-  components: { Note: NoteComponent, SequencerRow, Progression },
+  components: { SequencerRow, Progression },
 })
 export default class Sequencer extends Mixins(Draggable, BeatLines) {
   @Inject() public noteHeight!: number;
@@ -92,7 +90,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   @Prop({ type: Number, required: true }) public loopEnd!: number;
   @Prop({ type: Number, required: true }) public loopStart!: number;
 
-  // The loop end determined by the notes.
+  // The loop end determined by the items.
   @Prop({ type: Number, required: true }) public sequencerLoopEnd!: number;
 
   // These values should only be set if there is a loop on the timeline
@@ -107,9 +105,14 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   public selectCurrentEvent: MouseEvent | null = null;
   public holdingShift = false;
   public minDisplayMeasures = 4;
-  public noteLoopEnd: number | null = null;
+  public itemLoopEnd: number | null = null;
   // selected[i] indicates whether value[i] is selected
   public selected: boolean[] = [];
+
+  // TODO(jacob) Get rid of this
+  get rowHeight() {
+    return this.noteHeight;
+  }
 
   get components() {
     return this.value.map((item) => {
@@ -125,13 +128,10 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
         component = find[1];
       }
 
-      // TODO(jacob) style="position: absolute; z-index: 2"
       return {
         row: item.row,
         left: item.time * this.pxPerBeat,
-        top: item.row * this.noteHeight,
-        width: item.duration * this.pxPerBeat,
-        height: this.noteHeight,
+        top: item.row * this.rowHeight,
         name: component,
         duration: item.duration,
       };
@@ -141,7 +141,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   get sequencerStyle() {
     return {
       width: `${this.displayBeats * this.pxPerBeat}px`,
-      height: `${this.numRows * this.noteHeight}px`,
+      height: `${this.numRows * this.rowHeight}px`,
     };
   }
 
@@ -166,7 +166,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   get displayBeats() {
     return Math.max(
       this.minDisplayMeasures * this.beatsPerMeasure,
-      this.noteLoopEnd || 0,
+      this.itemLoopEnd || 0,
     ) * this.stepsPerBeat;
   }
 
@@ -193,16 +193,16 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
 
     // these are exact numbers BTW, not integers
     const minBeat = left / this.pxPerBeat;
-    const minRow = top / this.noteHeight;
+    const minRow = top / this.rowHeight;
     const maxBeat = (left + width) / this.pxPerBeat;
-    const maxRow = (top + height) / this.noteHeight;
+    const maxRow = (top + height) / this.rowHeight;
 
-    this.value.forEach((note, i) => {
+    this.value.forEach((item, i) => {
       // Check if there is any overlap between the rectangles
       // https://www.geeksforgeeks.org/find-two-rectangles-overlap/
-      if (minRow > note.row + 1 || note.row > maxRow) {
+      if (minRow > item.row + 1 || item.row > maxRow) {
         this.selected[i] = false;
-      } else if (minBeat > note.time + note.duration || note.time > maxBeat) {
+      } else if (minBeat > item.time + item.duration || item.time > maxBeat) {
         this.selected[i] = false;
       } else {
         this.selected[i] = true;
@@ -241,7 +241,9 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   }
 
   public updateDuration(i: number, value: number) {
-    this.value[i].duration = value; // TODO(jacob) This will not be reactive!
+    // TODO(jacob) This will not be reactive!
+    this.components[i].duration = value;
+    this.value[i].duration = value;
   }
 
   public selectStart(e: MouseEvent) {
@@ -268,15 +270,15 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     time = Math.floor(time / this.snap) * this.snap;
     this.$log.debug(x, e.clientX, left, time);
 
-    const note = {
+    const item = {
       duration: this.default,
       row,
       time,
     };
 
     this.selected.push(false);
-    this.value.push(note);
-    this.$emit('added', note);
+    this.value.push(item);
+    this.$emit('added', item);
     this.checkLoopEnd();
   }
 
@@ -287,34 +289,34 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     time = Math.floor(time / this.snap) * this.snap;
 
     const y = e.clientY - rect.top;
-    const row = Math.floor(y / this.noteHeight);
+    const row = Math.floor(y / this.rowHeight);
 
-    const oldNote = this.value[i];
-    if (row === oldNote.row && time === oldNote.time) { return; }
+    const oldItem = this.value[i];
+    if (row === oldItem.row && time === oldItem.time) { return; }
 
-    const timeDiff = time - oldNote.time;
-    const rowDiff = row - oldNote.row;
+    const timeDiff = time - oldItem.time;
+    const rowDiff = row - oldItem.row;
 
-    let notesToMove: Array<[Item, number]>;
+    let itemsToMove: Array<[Item, number]>;
     if (this.selected[i]) {
-      notesToMove = this.value.map((note, ind) => {
-        return [note, ind] as [Item, number];
-      }).filter(([note, ind]) => this.selected[i]);
+      itemsToMove = this.value.map((item, ind) => {
+        return [item, ind] as [Item, number];
+      }).filter(([item, ind]) => this.selected[i]);
     } else {
-      notesToMove = [[oldNote, i]];
+      itemsToMove = [[oldItem, i]];
     }
 
-    notesToMove.forEach(([note, ind]) => {
-      const newTime = note.time + timeDiff;
-      const newNote = {
-        duration: note.duration,
+    itemsToMove.forEach(([item, ind]) => {
+      const newTime = item.time + timeDiff;
+      const newItem = {
+        duration: item.duration,
         time: newTime,
-        row: note.row + rowDiff,
+        row: item.row + rowDiff,
       };
 
-      this.$set(this.value, ind, newNote);
-      this.$emit('removed', note, ind);
-      this.$emit('added', newNote);
+      this.$set(this.value, ind, newItem);
+      this.$emit('removed', item, ind);
+      this.$emit('added', newItem);
       this.checkLoopEnd();
     });
   }
@@ -333,17 +335,17 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   }
 
   public checkLoopEnd() {
-    let maxTime = Math.max(...this.value.map((note) => note.time), 0);
+    let maxTime = Math.max(...this.value.map((item) => item.time), 0);
 
     // Add a tiny amount to max time so that ceil will push to next number
     // if maxTime is a whole number
     maxTime = maxTime + 0.0000001;
-    const noteLoopEnd = Math.ceil(maxTime / this.beatsPerMeasure) * this.beatsPerMeasure;
+    const itemLoopEnd = Math.ceil(maxTime / this.beatsPerMeasure) * this.beatsPerMeasure;
 
-    this.$log.debug(`noteLoopEnd -> ${noteLoopEnd}`);
-    if (noteLoopEnd !== this.noteLoopEnd) {
-      this.$update('sequencerLoopEnd', noteLoopEnd);
-      this.noteLoopEnd = noteLoopEnd;
+    this.$log.debug(`itemLoopEnd -> ${itemLoopEnd}`);
+    if (itemLoopEnd !== this.itemLoopEnd) {
+      this.$update('sequencerLoopEnd', itemLoopEnd);
+      this.itemLoopEnd = itemLoopEnd;
     }
   }
 
@@ -357,35 +359,35 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   }
 
   public select(e: MouseEvent, i: number) {
-    const note = this.value[i];
+    const item = this.value[i];
     if (!this.selected[i]) {
       this.value.forEach((_, ind) => this.selected[ind] = false);
     }
 
-    const createNote = (oldNote: Item) => {
-      const newNote = copy(oldNote);
+    const createItem = (oldItem: Item) => {
+      const newItem = copy(oldItem);
 
       // We do this because `newNew` will have a heigher z-index
       // Thus, it will be displayed on top (which we want)
       this.selected.push(false);
-      this.value.push(newNote);
-      this.$emit('added', newNote);
+      this.value.push(newItem);
+      this.$emit('added', newItem);
     };
 
     let targetIndex = i;
     if (this.holdingShift) {
       let selected: Item[];
 
-      // If selected, copy all selected. If not, just copy the note that was clicked.
+      // If selected, copy all selected. If not, just copy the item that was clicked.
       if (this.selected[i]) {
-        selected = this.value.filter((n, ind) => this.selected[ind] && n !== note);
-        targetIndex = this.value.length; // A copy of `note` will be created at this index
-        createNote(note);
+        selected = this.value.filter((n, ind) => this.selected[ind] && n !== item);
+        targetIndex = this.value.length; // A copy of `item` will be created at this index
+        createItem(item);
       } else {
-        selected = [note];
+        selected = [item];
       }
 
-      selected.forEach(createNote);
+      selected.forEach(createItem);
     }
     this.addListeners(e, targetIndex);
   }
@@ -396,7 +398,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     } else if (e.keyCode === Keys.DELETE || e.keyCode === Keys.BACKSPACE) {
       // Slice and reverse since we will be deleting from the array as we go
       const lastIndex = this.value.length - 1;
-      this.value.slice().reverse().forEach((note, i) => {
+      this.value.slice().reverse().forEach((item, i) => {
         if (this.selected[i]) {
           this.removeAtIndex(lastIndex - i);
         }
@@ -410,7 +412,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
 
   @Watch<Sequencer>('value', { immediate: true })
   public resetSelectedIfNecessary() {
-    // Whenever the parent changes the notes
+    // Whenever the parent changes the items
     // we should reset the selected!
     // Also, since we are watching `value`, we modify `selected` first so that
     // this method doesn't trigger before `selected` is also changed.
@@ -428,9 +430,6 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   display: inline-block
   position: relative
 
-.note
-  border-bottom: solid 0.5px #000
-
 .measure, .section
   display: flex
 
@@ -444,10 +443,6 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   z-index: 1 
   position: relative
   pointer-events: none
-
-.notes
-  position: absolute
-  top: 0
 
 .sequencer-child
   position: relative

@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import { Prop, Inject, Component } from 'vue-property-decorator';
 
 export interface Item {
   row: number;
@@ -25,3 +26,20 @@ class Bus extends Vue {
 }
 
 export default new Bus();
+
+
+@Component
+export class Positionable extends Vue {
+  @Inject() public noteHeight!: number;
+  @Inject() public pxPerBeat!: number;
+
+  @Prop({ type: Number, required: true }) public duration!: number;
+
+  get width() {
+    return this.duration * this.pxPerBeat;
+  }
+
+  get height() {
+    return this.noteHeight;
+  }
+}

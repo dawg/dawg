@@ -140,7 +140,6 @@ export class Project extends VuexModule {
   public setOption<T extends EffectName, V extends keyof EffectOptions[T] & keyof EffectTones[T]>(
     payload: { effect: Effect<T>, key: V, value: EffectOptions[T][V] & EffectTones[T][V] },
   ) {
-    console.log(payload);
     payload.effect.options[payload.key] = payload.value;
     payload.effect.effect[payload.key] = payload.value;
   }

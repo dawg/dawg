@@ -19,6 +19,7 @@
     "electron-context-menu": "^0.10.0",
     "lodash.throttle": "^4.1.1",
     "mz": "^2.7.0",
+    "node-wav": "0.0.2",
     "resize-observer-polyfill": "^1.5.0",
     "tinycolor2": "^1.4.1",
     "tone": "^0.12.80",

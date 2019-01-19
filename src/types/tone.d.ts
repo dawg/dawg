@@ -662,7 +662,7 @@ declare module 'tone' {
   }
 
   class Player extends Source {
-    constructor(url?: string, onload?: (e: any)=>any); //todo: string | AudioBuffer
+    constructor(url?: string | AudioBuffer, onload?: (e: any)=>any); //todo: string | AudioBuffer
     buffer: AudioBuffer;
     duration: number;
     loop: boolean;

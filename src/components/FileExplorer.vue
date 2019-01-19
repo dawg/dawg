@@ -39,12 +39,12 @@ export default class Drawer extends Vue {
 
   public computeFileTree(dir: string, tree: FileTree = {}) {
     fs.readdirSync(dir).map((item) => {
-      const p = path.join(dir, item);
-      if (this.isEligibleFile(item)) {
-        tree[p] = {};
+      const fullPath = path.join(dir, item);
+      if (this.isWav(item)) {
+        tree[fullPath] = {};
       }
-      if (fs.statSync(p).isDirectory()) {
-        this.computeFileTree(p, tree[p]);
+      if (fs.statSync(fullPath).isDirectory()) {
+        this.computeFileTree(fullPath, tree[fullPath]);
       }
     });
     return tree;
@@ -64,13 +64,9 @@ export default class Drawer extends Vue {
     ipcRenderer.removeListener('folder', this.addFolder);
   }
 
-  public isEligibleFile(fileName: string) {
+  public isWav(fileName: string) {
     const extension = fileName.split('.').pop();
-    if (extension) {
-      return extension.toLowerCase() === 'wav';
-    }
-
-    return false;
+    return extension && extension.toLowerCase() === 'wav';
   }
 }
 </script>
