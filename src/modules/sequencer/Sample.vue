@@ -1,17 +1,17 @@
 <template>
-  <div></div>
+  <waveform :buffer="buffer"></waveform>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
+import Waveform from '@/modules/sequencer/Waveform.vue';
+import { Nullable } from '@/utils';
 
-@Component
+@Component({
+  components: { Waveform },
+})
 export default class NAME extends Vue {
-  @Prop(String) public PROP!: string;
-
-  public mounted() {
-    //
-  }
+  @Prop(Nullable(Object)) public buffer!: AudioBuffer;
 }
 </script>
 

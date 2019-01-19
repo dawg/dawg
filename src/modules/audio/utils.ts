@@ -1,10 +1,10 @@
 import wav from 'node-wav';
-import Tone from 'tone';
 import fs from 'fs';
+import Tone from 'tone';
 
-function createBuffer(audioCtx: AudioContext, sampleRate: number, buffer: number[][]) {
+function createBuffer(sampleRate: number, buffer: number[][]) {
   const numberOfChannels = buffer.length;
-  const audioBuffer = audioCtx.createBuffer(numberOfChannels, buffer[0].length, sampleRate);
+  const audioBuffer = Tone.context.createBuffer(numberOfChannels, buffer[0].length, sampleRate);
 
   for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
     // This gives us the actual ArrayBuffer that contains the data
@@ -19,17 +19,19 @@ function createBuffer(audioCtx: AudioContext, sampleRate: number, buffer: number
   return audioBuffer;
 }
 
-
-export function loadPlayer(path: string) {
+export function loadBuffer(path: string) {
   const buffer = fs.readFileSync(path);
   const result = wav.decode(buffer);
-  const audioCtx = new AudioContext();
 
   const audioBuffer = createBuffer(
-    audioCtx,
     result.sampleRate,
     result.channelData,
   );
 
-  return new Tone.Player(audioBuffer);
+  return audioBuffer;
+}
+
+
+export function loadPlayer(path: string) {
+  return new Tone.Player(loadBuffer(path));
 }

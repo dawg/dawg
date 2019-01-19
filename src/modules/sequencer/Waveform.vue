@@ -12,10 +12,12 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import WaveSurfer from 'wavesurfer.js';
 import { Player } from 'tone';
+import { Nullable } from '@/utils';
+import { Watch } from '@/modules/update';
 
 @Component({components: { }})
 export default class WavScope extends Vue {
-  @Prop({ type: String, required: true }) public url!: string;
+  @Prop(Nullable(Object)) public buffer!: AudioBuffer | null;
   @Prop({ type: String, required: false, default: '#111' }) public waveColor?: string;
   @Prop({ type: String, required: false, default: '#1976D2' }) public progressColor?: string;
 
@@ -23,39 +25,19 @@ export default class WavScope extends Vue {
 
   public mounted() {
     this.wavesurfer = WaveSurfer.create({
-        container: '#surfer',
-        waveColor: this.waveColor,
-        progressColor: this.progressColor,
-        responsive: true,
-        loopSelection: true,
-    });
-
-    this.loadBlobFromUrl();
-  }
-
-  // follow the url and load as a blob
-  public loadBlobFromUrl() {
-      fetch(this.url).then((res: Response) => {
-        res.blob().then((blob: Blob) => {
-          this.wavesurfer.loadBlob(blob);
-        });
+      container: '#surfer',
+      waveColor: this.waveColor,
+      progressColor: this.progressColor,
+      responsive: true,
+      loopSelection: true,
     });
   }
 
+  @Watch<WavScope>('buffer')
   public load() {
-    this.wavesurfer.load(this.url);
-  }
-
-  public play() {
-    this.wavesurfer.play();
-  }
-
-  public pause() {
-    this.wavesurfer.pause();
-  }
-
-  public playPause() {
-    this.wavesurfer.playPause();
+    if (this.buffer) {
+      this.wavesurfer.loadDecodedBuffer(this.buffer);
+    }
   }
 }
 </script>
@@ -71,6 +53,4 @@ export default class WavScope extends Vue {
 
 #surfer
   z-index: 0
-
-
 </style>

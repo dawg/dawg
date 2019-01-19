@@ -1,1 +1,1 @@
-export { loadBuffer } from './utils';
+export { loadBuffer, loadPlayer } from './utils';

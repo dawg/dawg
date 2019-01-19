@@ -112,6 +112,7 @@ declare module 'tone' {
     loaded: boolean; // Readonly
     onload: (e: any)=>any;
     url: string; // Readonly
+    static load(url: string, onload: (buff: AudioBuffer) => void, onerror: (e: Error) => void): void;
     load(url:string, callback?: (e: any)=>any): Buffer;
     onerror(): void;
     onprogress(): void;
@@ -182,7 +183,11 @@ declare module 'tone' {
   class Context extends Emitter<{tick: any}> {
     resume(): Promise<void>;
     now(): number;
+    decodeAudioData(audioData: ArrayBuffer): Promise<AudioBuffer>;
+    createBuffer(numberOfChannels: number, length: number, sampleRate: number): AudioBuffer;
   }
+
+
 
   class Convolver extends Effect {
       constructor(url: any); //TODO: Change any to 'string | AudioBuffer' when available

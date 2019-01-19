@@ -5,9 +5,12 @@ import Dawg from '@/components/Dawg.vue';
 import SequencerRow from '@/modules/sequencer/SequencerRow.vue';
 import Sequencer from '@/modules/sequencer/Sequencer.vue';
 import TestItem from '@/modules/sequencer/TestItem.vue';
+import Waveform from '@/modules/sequencer/Waveform.vue';
+import Sample from '@/modules/sequencer/Sample.vue';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import { allKeys } from '@/utils';
 import TestClass from '@/modules/sequencer/TestClass';
+import { loadFromUrl } from '../audio/web';
 
 function rowClass(i: number) {
   const key = allKeys[i].value;
@@ -85,4 +88,28 @@ storiesOf(SequencerRow.name, module)
       click: action('clicked'),
       rowClass,
     },
+  }));
+
+function mounted() {
+  loadFromUrl('thing.wav')
+    .then((buffer) => {
+      // @ts-ignore
+      this.buffer = buffer;
+    });
+}
+
+storiesOf('Waveform', module)
+  .add('default', () => ({
+    template: `<waveform :buffer="buffer"></waveform>`,
+    components: { Waveform },
+    data: () => ({ buffer: null }),
+    mounted,
+  }));
+
+storiesOf('Sample', module)
+  .add('default', () => ({
+    template: `<sample :buffer="buffer"></sample>`,
+    components: { Sample },
+    data: () => ({ buffer: null }),
+    mounted,
   }));
