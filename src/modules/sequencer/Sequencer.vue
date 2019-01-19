@@ -9,30 +9,37 @@
       <div 
         class="layer rows" 
         ref="rows" 
-        :style="`height: ${allKeys.length * noteHeight}px`"
+        :style="`height: ${numRows * noteHeight}px`"
       >
         <sequencer-row
-          v-for="key in allKeys" 
-          :key="key.id"
-          :id="key.id"
+          v-for="row in numRows" 
+          :key="row"
+          :row="row - 1"
           :total-beats="displayBeats"
+          :style="rowStyle(row - 1)"
+          :class="rowClass(row - 1)"
           @click="add"
           @mousedown="selectStart"
         ></sequencer-row>
       </div>
       <div :style="sequencerStyle" class="layer lines" ref="beatLines"></div>
-      <note
-        v-for="(note, i) in value"
+      <component
+        v-for="(component, i) in components"
+        :is="component.name"
+        :left="component.left"
+        :top="component.top"
+        :height="component.height"
+        :width="component.width"
+        :row="component.row"
         :key="i"
-        :start="note.time"
-        :id="note.id"
         :selected="selected[i]"
-        style="position: absolute; z-index: 2"
+        :duration="component.duration"
+        @update:duration="updateDuration(i, $event)"
         @contextmenu="remove($event, i)"
-        @mousedown="clickNote($event, i)"
+        @mousedown="select($event, i)"
+        @dblclick="open($event, i)"
         @input="changeDefault"
-        v-model="note.duration"
-      ></note>
+      ></component>
       <progression
         :loop-start="loopStart"
         :loop-end="loopEnd"
@@ -53,16 +60,16 @@
 
 <script lang="ts">
 import { Component, Prop, Mixins, Inject } from 'vue-property-decorator';
-import { Draggable } from '@/mixins';
-import { Keys } from '@/utils';
+import { Draggable } from '@/modules/draggable';
 import { FactoryDictionary } from 'typescript-collections';
-import { allKeys, range, copy, Nullable } from '@/utils';
-import NoteComponent from '@/components/Note.vue';
-import { Note } from '@/schemas';
-import BeatLines from '@/components/BeatLines';
-import SequencerRow from '@/components/SequencerRow.vue';
-import Progression from '@/components/Progression.vue';
+import { range, copy, Nullable, Keys } from '@/utils';
+import NoteComponent from '@/components/Note.vue'; // TODO(jacob) Remove!!
+import BeatLines from '@/modules/sequencer/BeatLines';
+import SequencerRow from '@/modules/sequencer/SequencerRow.vue';
+import Progression from '@/modules/sequencer/Progression.vue';
+import { Item, ItemClass } from '@/modules/sequencer/sequencer';
 import { Watch } from '@/modules/update';
+
 
 @Component({
   components: { Note: NoteComponent, SequencerRow, Progression },
@@ -71,9 +78,15 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   @Inject() public noteHeight!: number;
   @Inject() public stepsPerBeat!: number;
 
-  @Prop({ type: Array, required: true }) public value!: Note[];
+  @Prop({ type: Array, required: true }) public value!: Item[];
   @Prop({ type: Number, default: 1 }) public defaultLength!: number;
   @Prop({ type: Number, default: 0.25 }) public snap!: number;
+
+  @Prop({ type: Function, required: true }) public createClass!: ItemClass;
+  @Prop({ type: [Array, String], required: true }) public classes!: string | Array<[Item, string]>;
+  @Prop({ type: Number, required: true }) public numRows!: number;
+  @Prop({ type: Function, default: () => ({}) }) public rowStyle!: (row: number) => object;
+  @Prop({ type: Function, default: () => undefined }) public rowClass!: (row: number) => string;
 
   // These are for the progression.
   @Prop({ type: Number, required: true }) public loopEnd!: number;
@@ -87,30 +100,51 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   @Prop(Nullable(Number)) public setLoopStart!: number | null;
   @Prop({ type: Number, required: true }) public progress!: number;
 
-
   public cursor = 'move';
   public default = this.defaultLength;  // To avoid mutating a prop
   public rows!: HTMLElement;
   public selectStartEvent: MouseEvent | null = null;
   public selectCurrentEvent: MouseEvent | null = null;
   public holdingShift = false;
-  public allKeys = allKeys;
   public minDisplayMeasures = 4;
   public noteLoopEnd: number | null = null;
   // selected[i] indicates whether value[i] is selected
   public selected: boolean[] = [];
 
-  public scroll(e: UIEvent) {
-    // This only handles horizontal scrolls!
-    const scroller = this.$refs.scroller as HTMLElement;
-    this.$emit('scroll-horizontal', scroller.scrollLeft);
+  get components() {
+    return this.value.map((item) => {
+      let component: string;
+      if (typeof this.classes === 'string') {
+        component = this.classes;
+      } else {
+        const find = this.classes.find((group) => group[0] === item);
+        if (!find) {
+          throw Error('Unable to match component');
+        }
+
+        component = find[1];
+      }
+
+      // TODO(jacob) style="position: absolute; z-index: 2"
+      return {
+        row: item.row,
+        left: item.time * this.pxPerBeat,
+        top: item.row * this.noteHeight,
+        width: item.duration * this.pxPerBeat,
+        height: this.noteHeight,
+        name: component,
+        duration: item.duration,
+      };
+    });
   }
+
   get sequencerStyle() {
     return {
       width: `${this.displayBeats * this.pxPerBeat}px`,
-      height: `${this.allKeys.length * this.noteHeight}px`,
+      height: `${this.numRows * this.noteHeight}px`,
     };
   }
+
   get leftStyle() {
     if (this.setLoopStart) {
       return {
@@ -118,6 +152,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
       };
     }
   }
+
   get rightStyle() {
     if (this.setLoopEnd) {
       const left = this.setLoopEnd * this.pxPerBeat;
@@ -127,13 +162,15 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
       };
     }
   }
+
   get displayBeats() {
     return Math.max(
       this.minDisplayMeasures * this.beatsPerMeasure,
       this.noteLoopEnd || 0,
     ) * this.stepsPerBeat;
   }
-  public get selectStyle() {
+
+  get selectStyle() {
     if (!this.selectStartEvent) { return; }
     if (!this.selectCurrentEvent) {
       this.selected = this.selected.map((_) => false);
@@ -163,7 +200,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     this.value.forEach((note, i) => {
       // Check if there is any overlap between the rectangles
       // https://www.geeksforgeeks.org/find-two-rectangles-overlap/
-      if (minRow > note.id + 1 || note.id > maxRow) {
+      if (minRow > note.row + 1 || note.row > maxRow) {
         this.selected[i] = false;
       } else if (minBeat > note.time + note.duration || note.time > maxBeat) {
         this.selected[i] = false;
@@ -184,14 +221,39 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
       zIndex: 3,
     };
   }
+
+  public mounted() {
+    this.rows = this.$refs.rows as HTMLElement;
+    this.checkLoopEnd();
+    window.addEventListener('keydown', this.keydown);
+    window.addEventListener('keyup', this.keyup);
+  }
+
+  public destroyed() {
+    window.removeEventListener('keydown', this.keydown);
+    window.removeEventListener('keyup', this.keyup);
+  }
+
+  public scroll(e: UIEvent) {
+    // This only handles horizontal scrolls!
+    const scroller = this.$refs.scroller as HTMLElement;
+    this.$emit('scroll-horizontal', scroller.scrollLeft);
+  }
+
+  public updateDuration(i: number, value: number) {
+    this.value[i].duration = value; // TODO(jacob) This will not be reactive!
+  }
+
   public selectStart(e: MouseEvent) {
     this.selectStartEvent = e;
     window.addEventListener('mousemove', this.selectMove);
     window.addEventListener('mouseup', this.selectEnd);
   }
+
   public selectMove(e: MouseEvent) {
     this.selectCurrentEvent = e;
   }
+
   public selectEnd() {
     this.selectStartEvent = null;
     this.selectCurrentEvent = null;
@@ -199,7 +261,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     window.removeEventListener('mouseup', this.selectEnd);
   }
 
-  public add(id: number, e: MouseEvent) {
+  public add(row: number, e: MouseEvent) {
     const left = this.$el.getBoundingClientRect().left;
     const x = e.clientX - left;
     let time = x / this.pxPerBeat;
@@ -208,7 +270,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
 
     const note = {
       duration: this.default,
-      id,
+      row,
       time,
     };
 
@@ -217,6 +279,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     this.$emit('added', note);
     this.checkLoopEnd();
   }
+
   public move(e: MouseEvent, i: number) {
     const rect = this.rows.getBoundingClientRect();
     const x = e.clientX - rect.left;
@@ -227,15 +290,15 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     const row = Math.floor(y / this.noteHeight);
 
     const oldNote = this.value[i];
-    if (row === oldNote.id && time === oldNote.time) { return; }
+    if (row === oldNote.row && time === oldNote.time) { return; }
 
     const timeDiff = time - oldNote.time;
-    const rowDiff = row - oldNote.id;
+    const rowDiff = row - oldNote.row;
 
-    let notesToMove: Array<[Note, number]>;
+    let notesToMove: Array<[Item, number]>;
     if (this.selected[i]) {
       notesToMove = this.value.map((note, ind) => {
-        return [note, ind] as [Note, number];
+        return [note, ind] as [Item, number];
       }).filter(([note, ind]) => this.selected[i]);
     } else {
       notesToMove = [[oldNote, i]];
@@ -246,7 +309,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
       const newNote = {
         duration: note.duration,
         time: newTime,
-        id: note.id + rowDiff,
+        row: note.row + rowDiff,
       };
 
       this.$set(this.value, ind, newNote);
@@ -255,10 +318,12 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
       this.checkLoopEnd();
     });
   }
+
   public remove(e: MouseEvent, i: number) {
     e.preventDefault();
     this.removeAtIndex(i);
   }
+
   public removeAtIndex(i: number) {
     const item = this.value[i];
     this.$delete(this.selected, i);
@@ -266,6 +331,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     this.$emit('removed', item, i);
     this.checkLoopEnd();
   }
+
   public checkLoopEnd() {
     let maxTime = Math.max(...this.value.map((note) => note.time), 0);
 
@@ -280,16 +346,23 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
       this.noteLoopEnd = noteLoopEnd;
     }
   }
+
   public changeDefault(length: number) {
     this.default = length;
   }
-  public clickNote(e: MouseEvent, i: number) {
+
+  public open(e: MouseEvent, i: number) {
+    const item = this.value[i];
+    this.$emit('open', item);
+  }
+
+  public select(e: MouseEvent, i: number) {
     const note = this.value[i];
     if (!this.selected[i]) {
       this.value.forEach((_, ind) => this.selected[ind] = false);
     }
 
-    const createNote = (oldNote: Note) => {
+    const createNote = (oldNote: Item) => {
       const newNote = copy(oldNote);
 
       // We do this because `newNew` will have a heigher z-index
@@ -301,7 +374,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
 
     let targetIndex = i;
     if (this.holdingShift) {
-      let selected: Note[];
+      let selected: Item[];
 
       // If selected, copy all selected. If not, just copy the note that was clicked.
       if (this.selected[i]) {
@@ -316,6 +389,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     }
     this.addListeners(e, targetIndex);
   }
+
   public keydown(e: KeyboardEvent) {
     if (e.keyCode === Keys.SHIFT) {
       this.holdingShift = true;
@@ -332,18 +406,6 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
 
   public keyup(e: KeyboardEvent) {
     if (e.keyCode === Keys.SHIFT) { this.holdingShift = false; }
-  }
-
-  public mounted() {
-    this.rows = this.$refs.rows as HTMLElement;
-    this.checkLoopEnd();
-    window.addEventListener('keydown', this.keydown);
-    window.addEventListener('keyup', this.keyup);
-  }
-
-  public destroyed() {
-    window.removeEventListener('keydown', this.keydown);
-    window.removeEventListener('keyup', this.keyup);
   }
 
   @Watch<Sequencer>('value', { immediate: true })

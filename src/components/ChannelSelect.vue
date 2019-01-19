@@ -7,7 +7,7 @@
 <script lang="ts">
 import { Vue, Component, Prop, Mixins } from 'vue-property-decorator';
 import { Nullable } from '@/utils';
-import { Draggable } from '@/mixins';
+import { Draggable } from '@/modules/draggable';
 
 @Component
 export default class ChannelSelect extends Mixins(Draggable) {

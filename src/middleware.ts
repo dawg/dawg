@@ -5,19 +5,11 @@ import 'vuetify/dist/vuetify.css';
 import 'vue-awesome/icons';
 import '@/styles/global.sass';
 import { remote } from 'electron';
-import Ico from '@/components/Ico.vue';
-import Pan from '@/components/Pan.vue';
-import Effect from '@/components/Effect.vue';
-import Playlist from '@/components/Playlist.vue';
-import Knob from '@/components/Knob.vue';
-import Editable from '@/components/Editable.vue';
 import TooltipIcon from '@/components/TooltipIcon.vue';
-import Theme from '@/modules/theme';
-import Update from '@/modules/update';
 import Context from '@/modules/context';
-import VueLogger from 'vuejs-logger';
 import Notification from '@/modules/notification';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
+import storybook from '@/storybook';
 
 const inspect = {
   text: 'Inspect',
@@ -36,21 +28,38 @@ const inspect = {
 
 const middleware = () => {
   Vue.use(Vuetify, {theme: false});
-  Vue.use(Theme);
-  Vue.use(Update);
   Vue.use(Context, { default: [inspect] });
   Vue.component('icon', Icon);
   Vue.use(Notification);
-  Vue.component('ico', Ico);
-  Vue.component('Editable', Editable);
-  Vue.component('Playlist', Playlist);
-  Vue.component('Effect', Effect);
   Vue.component('VuePerfectScrollbar', VuePerfectScrollbar);
   Vue.component('TooltipIcon', TooltipIcon);
-  Vue.component('Pan', Pan);
-  Vue.component('Knob', Knob);
-  Vue.use(VueLogger, {
-    logLevel :  'info',
+
+  storybook();
+
+  // This imports all .vue files in the components folder
+  // See https://vuejs.org/v2/guide/components-registration.html
+  const components = require.context(
+    './components',
+    // Whether or not to look in subfolders
+    false,
+    /\w+\.vue$/,
+  );
+
+  components.keys().forEach((fileName) => {
+    // Get component config
+    const componentConfig = components(fileName);
+
+    // Get PascalCase name of component
+    const componentName = fileName.slice(2, fileName.length - 4);
+
+    // Register component globally
+    Vue.component(
+      componentName,
+      // Look for the component options on `.default`, which will
+      // exist if the component was exported with `export default`,
+      // otherwise fall back to module's root.
+      componentConfig.default || componentConfig,
+    );
   });
 };
 

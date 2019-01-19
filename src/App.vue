@@ -25,7 +25,7 @@
             </split>
 
             <split>
-              <playlist></playlist>
+              <playlist :tracks="project.tracks" :value="[]"></playlist>
             </split>
 
             <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`" keep>

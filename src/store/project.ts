@@ -16,6 +16,7 @@ import {
   AnyEffect,
   EffectOptions,
   EffectTones,
+  Track,
 } from '@/schemas';
 import { findUniqueName, toTickTime, range } from '@/utils';
 import store from '@/store/store';
@@ -37,6 +38,7 @@ export class Project extends VuexModule {
   @autoserializeAs(Pattern) public patterns: Pattern[] = [];
   @autoserializeAs(Instrument) public instruments: Instrument[] = [];
   @autoserializeAs(Channel) public channels = range(10).map((i) => Channel.create(i));
+  @autoserializeAs(Track) public tracks = range(21).map((i) => Track.create(i));
 
   constructor(module?: Mod<any, any>) {
     super(module || {});

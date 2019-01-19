@@ -48,7 +48,7 @@
 </template>
 
 <script lang="ts">
-import { Draggable } from '@/mixins';
+import { Draggable } from '@/modules/draggable';
 import { Component, Prop, Mixins, Watch } from 'vue-property-decorator';
 
 // Credit to the styling goes to this codepen: https://codepen.io/mavrK/pen/erQPvP

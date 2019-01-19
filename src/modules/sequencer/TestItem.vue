@@ -34,9 +34,8 @@ import { Mixins, Prop, Component, Inject } from 'vue-property-decorator';
 import { allKeys } from '@/utils';
 
 @Component
-export default class Note extends Mixins(Draggable) {
+export default class TestItem extends Mixins(Draggable) {
   @Inject() public snap!: number;
-  @Inject() public noteHeight!: number;
   @Inject() public pxPerBeat!: number;
 
   @Prop({ type: Number, required: true }) public left!: number;
@@ -55,7 +54,7 @@ export default class Note extends Mixins(Draggable) {
     // we take away an extra pixel because it looks better
     return {
       width: `${this.width - 1}px`,
-      height: `${this.noteHeight}px`,
+      height: `${this.height}px`,
       left: `${this.left}px`,
       top: `${this.top}px`,
     };
@@ -76,7 +75,7 @@ export default class Note extends Mixins(Draggable) {
 
   get textConfig() {
     return {
-      top: `${(this.top + (this.noteHeight / 2)) - ((this.fontSize / 2) + 1)}px`,
+      top: `${(this.top + (this.height / 2)) - ((this.fontSize / 2) + 1)}px`,
       color: '#fff',
       fontSize: `${this.fontSize}px`,
     };

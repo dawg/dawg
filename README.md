@@ -82,3 +82,6 @@ Currently, there is a small unit suite available. These tests make use of [Vue T
 npm run test:unit
 ```
 There is also an `test:e2e` command; however, this test suite does not currently contain any tests.
+
+# TODO(jacob)
+- Add timeline to sequencer. They go together!!

@@ -3,7 +3,6 @@ import { action } from '@storybook/addon-actions';
 import Tone from 'tone';
 import DotButton from '@/components/DotButton.vue';
 import Key from '@/components/Key.vue';
-import Sequencer from '@/components/Sequencer.vue';
 import Piano from '@/components/Piano.vue';
 import Toolbar from '@/components/Toolbar.vue';
 import Dawg from '@/components/Dawg.vue';
@@ -22,9 +21,8 @@ import { StyleType, range, makeStyle } from '@/utils';
 import Foot from '@/components/Foot.vue';
 import Notifications from '@/modules/notification/Notifications.vue';
 import Synth from '@/components/Synth.vue';
-import SequencerRow from '@/components/SequencerRow.vue';
 import Split from '@/modules/split/Split.vue';
-import BeatLines from '@/components/BeatLines';
+
 import PianoRoll from '@/components/PianoRoll.vue';
 import Timeline from '@/components/Timeline.vue';
 import MiniScore from '@/components/MiniScore.vue';
@@ -57,27 +55,6 @@ storiesOf(MiniScore.name, module)
     data: () => ({
       notes: NOTES,
     }),
-  }));
-
-storiesOf(SequencerRow.name, module)
-  .add('Standard', () => ({
-    template: `
-    <dawg>
-      <sequencer-row
-        v-for="i in 20"
-        :key="i"
-        :id="40 + i"
-        :total-beats="12"
-        @click="click"
-      ></sequencer-row>
-    </dawg>
-    `,
-    components: { SequencerRow, Dawg },
-    methods: {
-      click(...args) {
-        //
-      },
-    },
   }));
 
 storiesOf(Piano.name, module)
@@ -114,33 +91,7 @@ storiesOf(Key.name, module)
 
 const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
 
-storiesOf(Sequencer.name, module)
-  .add('Standard', () => ({
-    template: `
-    <dawg>
-      <sequencer
-        v-model="notes"
-        :sequencer-loop-end.sync="sequencerLoopEnd"
-        :loop-start="loopStart"
-        :loop-end="loopEnd"
-        :set-loop-start="setLoopStart"
-        :set-loop-end="setLoopEnd"
-        :progress="progress"
-      ></sequencer>
-    </dawg>
-    `,
-    data: () => ({
-      notes: [],
-      measures: 1,
-      sequencerLoopEnd: 0,
-      loopStart: 0,
-      loopEnd: 0,
-      setLoopStart: 0,
-      setLoopEnd: 0,
-      progress: 0,
-    }),
-    components: { Sequencer, Dawg },
-  }));
+
 
 storiesOf(DotButton.name, module)
   .add('Standard', () => ({
@@ -442,22 +393,6 @@ storiesOf(Split.name, module)
     </split>
     `,
     components: { Split },
-  }));
-
-
-const Temp = Vue.extend({
-  template: `<div style="height: 30px; width: 400px"></div>`,
-  mixins: [BeatLines],
-});
-
-storiesOf(BeatLines.name, module)
-  .add('Standard', () => ({
-    template: `
-    <dawg>
-      <temp></temp>
-    </dawg>
-    `,
-    components: { Temp, Dawg },
   }));
 
 storiesOf(Timeline.name, module)

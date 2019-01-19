@@ -15,7 +15,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch, Mixins } from 'vue-property-decorator';
-import { Draggable } from '@/mixins';
+import { Draggable } from '@/modules/draggable';
 
 export type Direction = 'horizontal' | 'vertical';
 

@@ -618,3 +618,14 @@ export class Channel {
     }
   }
 }
+
+
+export class Track {
+  public static create(i: number) {
+    const track = new Track();
+    track.name = `Track ${i}`;
+    return track;
+  }
+  @autoserialize public name!: string;
+  @autoserialize public mute = false;
+}
