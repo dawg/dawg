@@ -21,7 +21,7 @@ export default class Waveform extends Vue {
   @Prop({ type: String, required: false, default: '#111' }) public waveColor?: string;
   @Prop({ type: String, required: false, default: '#1976D2' }) public progressColor?: string;
 
-  public wavesurfer!: WaveSurfer;
+  public wavesurfer: WaveSurfer | null = null;
 
   public mounted() {
     this.wavesurfer = WaveSurfer.create({
@@ -34,11 +34,20 @@ export default class Waveform extends Vue {
     });
   }
 
-  @Watch<Waveform>('buffer')
-  public load() {
-    if (this.buffer) {
+  public setBuffer() {
+    if (this.buffer && this.wavesurfer) {
       this.wavesurfer.loadDecodedBuffer(this.buffer);
     }
+  }
+
+  @Watch<Waveform>('buffer')
+  public load() {
+    this.setBuffer();
+  }
+
+  @Watch<Waveform>('wavesurfer')
+  public setBuff() {
+    this.setBuffer();
   }
 }
 </script>

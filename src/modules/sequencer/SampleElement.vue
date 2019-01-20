@@ -1,12 +1,13 @@
 <template>
   <div
     class="sample-element"
-    :style="containerStyle"
+    :style="style"
   >
     <div class="top"></div>
     <waveform 
       :style="waveformStyle"
       :buffer="buffer"
+      :height="height"
       class="waveform"
     ></waveform>
     <resizable
@@ -23,22 +24,22 @@ import Resizable from '@/modules/sequencer/Resizable.vue';
 import { Nullable } from '@/utils';
 import { Positionable } from '@/modules/sequencer/sequencer';
 import Tone from 'tone';
+import { PlacedSample } from '@/schemas';
 
 @Component({
   components: { Waveform, Resizable },
 })
 export default class Sample extends Mixins(Positionable) {
-  @Prop(Nullable(Object)) public buffer!: AudioBuffer | null;
+  @Prop(Nullable(Object)) public element!: PlacedSample;
 
-  get containerStyle() {
-    return {
-      width: this.widthPx,
-    };
+  get buffer() {
+    return this.element.buffer;
   }
 
   get waveformStyle() {
     return {
       width: this.px(this.bufferWidth),
+      height: this.heightPx,
     };
   }
 

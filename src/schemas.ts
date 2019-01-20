@@ -3,7 +3,7 @@ import Tone from 'tone';
 import uuid from 'uuid';
 
 import Part from '@/modules/audio/part';
-import { toTickTime, allKeys, scale } from './utils';
+import { toTickTime, allKeys, scale, ConstructorOf } from './utils';
 
 // These are all of the schemas for the project.
 // Everything is annotated using `cerialize`.
@@ -16,25 +16,28 @@ import { toTickTime, allKeys, scale } from './utils';
 // Ideally, the cerialize library could automatically create IDs when serializing and then replace the proper object
 // when deserializing. It's an enhancement I want to make.
 
-export interface INote {
-  id: number;
+export interface IElement {
+  row: number;
   duration: number;
   time: number;
 }
 
-export class Note implements INote {
-  public static create(o: INote) {
-    const note = new Note();
-    note.id = o.id;
-    note.duration = o.duration;
-    note.time = o.time;
-    return note;
+export abstract class Element implements IElement {
+
+  public static copy<T extends Element>(element: T, cls: ConstructorOf<T>): T {
+    const newElement = new cls();
+    newElement.duration = element.duration;
+    newElement.row = element.row;
+    newElement.time = element.time;
+    return newElement;
   }
+
+  public readonly abstract component: string;
 
   /**
    * Refers to note ID. This are numbered 0 -> 87 and start from the higher frequencies.
    */
-  @autoserialize public id!: number;
+  @autoserialize public row!: number;
   /**
    * Duration in beats.
    */
@@ -44,6 +47,77 @@ export class Note implements INote {
    * Time in beats.
    */
   @autoserialize public time!: number;
+
+  constructor(o?: IElement) {
+    if (o) {
+      this.row = o.row;
+      this.duration = o.duration;
+      this.time = o.time;
+    }
+  }
+
+  public abstract copy(): Element;
+}
+
+export class PlacedPattern extends Element {
+  public static create(pattern: Pattern) {
+    const element = new PlacedPattern();
+    element.patternId = pattern.id;
+    element.pattern = pattern;
+    return element;
+  }
+
+  public readonly component = 'pattern-element';
+
+  public pattern!: Pattern;
+  @autoserialize public patternId!: string;
+
+  public init(patterns: Pattern[]) {
+    const pattern = patterns.find((p) => p.id === this.patternId);
+    if (pattern) {
+      this.pattern = pattern;
+    } else {
+      throw Error;
+    }
+  }
+
+  public copy() {
+    const pp = new PlacedPattern();
+    Object.assign(pp, this);
+    return pp;
+  }
+}
+
+export class PlacedSample extends Element {
+  public static create(buffer: AudioBuffer) {
+    const element = new PlacedSample();
+    element.buffer = buffer;
+    return element;
+  }
+
+  public readonly component = 'sample-element';
+  public buffer!: AudioBuffer;
+
+  public copy() {
+    const pp = new PlacedSample();
+    Object.assign(pp, this);
+    return pp;
+  }
+}
+
+// TODO Rename
+export class Note extends Element {
+  public readonly component = 'note';
+
+  get id() {
+    return this.row;
+  }
+
+  public copy() {
+    const pp = new Note();
+    Object.assign(pp, this);
+    return pp;
+  }
 }
 
 export class Score {

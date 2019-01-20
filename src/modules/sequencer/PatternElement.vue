@@ -16,21 +16,19 @@
 import { Vue, Component, Prop, Mixins } from 'vue-property-decorator';
 import MiniScore from '@/modules/dawg/MiniScore.vue';
 import Resizable from '@/modules/sequencer/Resizable.vue';
-import { Note } from '@/schemas';
+import { Note, PlacedPattern } from '@/schemas';
 import { Positionable } from '@/modules/sequencer/sequencer';
 
 @Component({
   components: { MiniScore, Resizable },
 })
 export default class PatternElement extends Mixins(Positionable) {
-  @Prop({ type: Array, required: true }) public notes!: Note[];
+  @Prop({ type: Object, required: true }) public element!: PlacedPattern;
 
   public score: MiniScore | null = null;
 
-  get style() {
-    return {
-      width: this.widthPx,
-    };
+  get notes() {
+    return [].concat.apply([], this.element.pattern.scores.map((score) => score.notes));
   }
 
   get scoreStyle() {

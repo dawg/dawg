@@ -1,25 +1,33 @@
 import Vue from 'vue';
 import { storiesOf } from '@storybook/vue';
 import Dawg from '@/modules/dawg/Dawg.vue';
-import Sequencer from '@/modules/sequencer/Sequencer.vue';
+import PianoRollSequencer from '@/modules/sequencer/PianoRollSequencer.vue';
+import PlaylistSequencer from '@/modules/sequencer/PlaylistSequencer.vue';
 import Note from '@/modules/sequencer/Note.vue';
 import Waveform from '@/modules/sequencer/Waveform.vue';
 import SampleElement from '@/modules/sequencer/SampleElement.vue';
 import PatternElement from '@/modules/sequencer/PatternElement.vue';
 import BeatLines from '@/modules/sequencer/BeatLines';
-import { allKeys } from '@/utils';
-import TestClass from '@/modules/sequencer/TestClass';
 import { loadFromUrl } from '@/modules/audio/web';
-
-function rowClass(i: number) {
-  const key = allKeys[i].value;
-  return key.includes('#') ? 'secondary-darken-1' : 'secondary';
-}
+import { PlacedPattern, Pattern, Score, Note as NE, PlacedSample } from '@/schemas';
 
 const Temp = Vue.extend({
   template: `<div style="height: 30px; width: 400px"></div>`,
   mixins: [BeatLines],
 });
+
+const notes = [
+  {row: 44, time: 0, duration: 1},
+  {row: 47, time: 0, duration: 1},
+  {row: 49, time: 0, duration: 1},
+  {row: 47, time: 1, duration: 1},
+  {row: 49, time: 1, duration: 1},
+  {row: 51, time: 1, duration: 1},
+  {row: 52, time: 2, duration: 0.5},
+  {row: 51, time: 3, duration: 0.5},
+  {row: 45, time: 4, duration: 0.5},
+  {row: 48, time: 5, duration: 0.5},
+];
 
 storiesOf(BeatLines.name, module)
   .add('Standard', () => ({
@@ -32,9 +40,10 @@ storiesOf(BeatLines.name, module)
   }));
 
 Vue.component('Note', Note);
+Vue.component('PatternElement', PatternElement);
+Vue.component('SampleElement', SampleElement);
 
 const basicData = {
-  notes: [],
   measures: 1,
   sequencerLoopEnd: 0,
   loopStart: 0,
@@ -44,66 +53,69 @@ const basicData = {
   progress: 0,
 };
 
-storiesOf(Sequencer.name, module)
-  .add('piano roll', () => ({
+storiesOf('PianoRollSequencer', module)
+  .add('default', () => ({
     template: `
     <dawg>
-      <sequencer
-        v-model="notes"
+      <piano-roll-sequencer
+        :elements="notes"
         :sequencer-loop-end.sync="sequencerLoopEnd"
         :loop-start="loopStart"
         :loop-end="loopEnd"
         :set-loop-start="setLoopStart"
         :set-loop-end="setLoopEnd"
         :progress="progress"
-        :num-rows="88"
-        :classes="classes"
-        :createClass="createClass"
-        :row-class="rowClass"
-      ></sequencer>
+      ></piano-roll-sequencer>
     </dawg>
     `,
     data: () => ({
       ...basicData,
-      classes: 'Note',
-      createClass: TestClass,
+      notes: [],
     }),
-    components: { Sequencer, Dawg },
-    methods: { rowClass },
-  }))
-  .add('playlist', () => ({
-    template: `
-    <dawg>
-      <sequencer
-        v-model="notes"
-        :sequencer-loop-end.sync="sequencerLoopEnd"
-        :loop-start="loopStart"
-        :loop-end="loopEnd"
-        :set-loop-start="setLoopStart"
-        :set-loop-end="setLoopEnd"
-        :progress="progress"
-        :num-rows="20"
-        :classes="classes"
-        :createClass="createClass"
-        :row-class="() => 'secondary'"
-        :row-style="rowStyle"
-      ></sequencer>
-    </dawg>
-    `,
-    data: () => ({
-      ...basicData,
-      classes: 'Note',
-      createClass: TestClass,
-    }),
-    components: { Sequencer, Dawg },
-    methods: {
-      rowStyle() {
-        return {
-          borderBottom: '1px solid black',
-        };
-      },
-    },
+    components: { PianoRollSequencer, Dawg },
   }));
+
+
+const pattern = Pattern.create('Test Pattern');
+const score = Score.create('kslfjlsdkfj');
+pattern.scores = [score];
+score.notes = notes.map((note) => new NE(note));
+const patternElement = PlacedPattern.create(pattern);
+
+storiesOf('PlaylistSequencer', module)
+.add('default', () => ({
+  template: `
+  <dawg>
+    <playlist-sequencer
+      :elements="elements"
+      :create-class="placedSample"
+      :sequencer-loop-end.sync="sequencerLoopEnd"
+      :loop-start="loopStart"
+      :loop-end="loopEnd"
+      :set-loop-start="setLoopStart"
+      :set-loop-end="setLoopEnd"
+      :progress="progress"
+    ></playlist-sequencer>
+  </dawg>
+  `,
+  data: () => ({
+    ...basicData,
+    elements: [],
+    buffer: null,
+  }),
+  components: { PlaylistSequencer, Dawg },
+  computed: {
+    placedSample() {
+      if (!this.buffer) {
+        return null;
+      }
+
+      // @ts-ignore
+      return PlacedSample.create(this.buffer);
+    },
+  },
+  mounted,
+}));
 
 function mounted() {
   loadFromUrl('thing.wav')
@@ -136,18 +148,7 @@ storiesOf('SampleElement', module)
     mounted,
   }));
 
-const notes = [
-    {id: 44, time: 0, duration: 1},
-    {id: 47, time: 0, duration: 1},
-    {id: 49, time: 0, duration: 1},
-    {id: 47, time: 1, duration: 1},
-    {id: 49, time: 1, duration: 1},
-    {id: 51, time: 1, duration: 1},
-    {id: 52, time: 2, duration: 0.5},
-    {id: 51, time: 3, duration: 0.5},
-    {id: 45, time: 4, duration: 0.5},
-    {id: 48, time: 5, duration: 0.5},
-  ];
+
 
 
 storiesOf('PatternElement', module)

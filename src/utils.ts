@@ -172,3 +172,6 @@ export function scale(value: number, from: [number, number], to: [number, number
 export function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
+
+
+export type ConstructorOf<T> = new (...args: any[]) => T;

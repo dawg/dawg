@@ -40,8 +40,6 @@ import Resizable from '@/modules/sequencer/Resizable.vue';
 export default class Note extends Mixins(Positionable) {
   @Inject() public pxPerBeat!: number;
 
-  @Prop({ type: Number, required: true }) public left!: number;
-  @Prop({ type: Number, required: true }) public top!: number;
   @Prop({ type: Number, required: true }) public row!: number;
   @Prop({ type: Number, default: 8 }) public borderWidth!: number;
   @Prop({ type: Number, default: 14 }) public fontSize!: number;

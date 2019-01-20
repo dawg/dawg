@@ -1,12 +1,8 @@
 import Vue from 'vue';
-import Sequencer from './Sequencer.vue';
-
-interface Options {
-  default?: number;
-}
+import Sequencer from '@/modules/sequencer/Sequencer.vue';
 
 const U = {
-  install(vue: any, options: Options = {}) {
+  install(vue: any) {
     Vue.component('Sequencer', Sequencer);
   },
 };

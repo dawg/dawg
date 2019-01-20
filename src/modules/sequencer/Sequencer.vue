@@ -18,7 +18,7 @@
           :total-beats="displayBeats"
           :style="actualRowStyle(row - 1)"
           :class="rowClass(row - 1)"
-          @click="add($event, row)"
+          @click="add($event, row - 1)"
           @contextmenu="$event.preventDefault()"
           @mousedown="selectStart"
         ></div>
@@ -30,13 +30,16 @@
         :left="component.left"
         :top="component.top"
         :row="component.row"
+        :height="rowHeight"
         style="position: absolute; z-index: 2"
         :key="i"
+        :element="component.element"
         :selected="selected[i]"
         :duration="component.duration"
         @update:duration="updateDuration(i, $event)"
         @contextmenu="remove($event, i)"
         @mousedown="select($event, i)"
+        @click="clickElement(i)"
         @dblclick="open($event, i)"
         @input="changeDefault"
       ></component>
@@ -62,11 +65,11 @@
 import { Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 import { Draggable } from '@/modules/draggable';
 import { FactoryDictionary } from 'typescript-collections';
-import { range, copy, Nullable, Keys } from '@/utils';
+import { range, Nullable, Keys } from '@/utils';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import Progression from '@/modules/sequencer/Progression.vue';
-import { Item, ItemClass } from '@/modules/sequencer/sequencer';
 import { Watch } from '@/modules/update';
+import { IElement, Element } from '@/schemas';
 
 
 @Component({
@@ -75,14 +78,12 @@ import { Watch } from '@/modules/update';
 export default class Sequencer extends Mixins(Draggable, BeatLines) {
   @Inject() public stepsPerBeat!: number;
 
-  // TODO(jacob) Remove default
-  @Prop({ type: Number, default: 25 }) public rowHeight!: number;
-  @Prop({ type: Array, required: true }) public value!: Item[];
+  @Prop({ type: Number, required: true }) public rowHeight!: number;
+  @Prop({ type: Array, required: true }) public elements!: Element[];
   @Prop({ type: Number, default: 1 }) public defaultLength!: number;
   @Prop({ type: Number, default: 0.25 }) public snap!: number;
 
-  @Prop({ type: Function, required: true }) public createClass!: ItemClass;
-  @Prop({ type: [Array, String], required: true }) public classes!: string | Array<[Item, string]>;
+  @Prop(Nullable(Object)) public createClass!: Element | null;
   @Prop({ type: Number, required: true }) public numRows!: number;
   @Prop({ type: Function, default: () => ({}) }) public rowStyle!: (row: number) => object;
   @Prop({ type: Function, default: () => undefined }) public rowClass!: (row: number) => string;
@@ -107,29 +108,18 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   public holdingShift = false;
   public minDisplayMeasures = 4;
   public itemLoopEnd: number | null = null;
-  // selected[i] indicates whether value[i] is selected
+  // selected[i] indicates whether elements[i] is selected
   public selected: boolean[] = [];
 
   get components() {
-    return this.value.map((item) => {
-      let component: string;
-      if (typeof this.classes === 'string') {
-        component = this.classes;
-      } else {
-        const find = this.classes.find((group) => group[0] === item);
-        if (!find) {
-          throw Error('Unable to match component');
-        }
-
-        component = find[1];
-      }
-
+    return this.elements.map((item) => {
       return {
         row: item.row,
         left: item.time * this.pxPerBeat,
         top: item.row * this.rowHeight,
-        name: component,
+        name: item.component,
         duration: item.duration,
+        element: item,
       };
     });
   }
@@ -193,7 +183,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     const maxBeat = (left + width) / this.pxPerBeat;
     const maxRow = (top + height) / this.rowHeight;
 
-    this.value.forEach((item, i) => {
+    this.elements.forEach((item, i) => {
       // Check if there is any overlap between the rectangles
       // https://www.geeksforgeeks.org/find-two-rectangles-overlap/
       if (minRow > item.row + 1 || item.row > maxRow) {
@@ -248,7 +238,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   public updateDuration(i: number, value: number) {
     // TODO(jacob) This will not be reactive!
     this.components[i].duration = value;
-    this.value[i].duration = value;
+    this.elements[i].duration = value;
   }
 
   public selectStart(e: MouseEvent) {
@@ -268,21 +258,24 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     window.removeEventListener('mouseup', this.selectEnd);
   }
 
-  public add(row: number, e: MouseEvent) {
+  public add(e: MouseEvent, row: number) {
+    if (!this.createClass) {
+      return;
+    }
+
     const left = this.$el.getBoundingClientRect().left;
     const x = e.clientX - left;
     let time = x / this.pxPerBeat;
     time = Math.floor(time / this.snap) * this.snap;
     this.$log.debug(x, e.clientX, left, time);
 
-    const item = {
-      duration: this.default,
-      row,
-      time,
-    };
+    const item = this.createClass.copy();
+    item.row = row;
+    item.time = time;
+    item.duration = this.default;
 
     this.selected.push(false);
-    this.value.push(item);
+    this.elements.push(item);
     this.$emit('added', item);
     this.checkLoopEnd();
   }
@@ -296,16 +289,16 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     const y = e.clientY - rect.top;
     const row = Math.floor(y / this.rowHeight);
 
-    const oldItem = this.value[i];
+    const oldItem = this.elements[i];
     if (row === oldItem.row && time === oldItem.time) { return; }
 
     const timeDiff = time - oldItem.time;
     const rowDiff = row - oldItem.row;
 
-    let itemsToMove: Array<[Item, number]>;
+    let itemsToMove: Array<[Element, number]>;
     if (this.selected[i]) {
-      itemsToMove = this.value.map((item, ind) => {
-        return [item, ind] as [Item, number];
+      itemsToMove = this.elements.map((item, ind) => {
+        return [item, ind] as [Element, number];
       }).filter(([item, ind]) => this.selected[i]);
     } else {
       itemsToMove = [[oldItem, i]];
@@ -313,13 +306,11 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
 
     itemsToMove.forEach(([item, ind]) => {
       const newTime = item.time + timeDiff;
-      const newItem = {
-        duration: item.duration,
-        time: newTime,
-        row: item.row + rowDiff,
-      };
+      const newItem = item.copy();
+      newItem.time = newTime;
+      newItem.row = item.row + rowDiff;
 
-      this.$set(this.value, ind, newItem);
+      this.$put(this.elements, ind, newItem);
       this.$emit('removed', item, ind);
       this.$emit('added', newItem);
       this.checkLoopEnd();
@@ -332,15 +323,15 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   }
 
   public removeAtIndex(i: number) {
-    const item = this.value[i];
+    const item = this.elements[i];
     this.$delete(this.selected, i);
-    this.$delete(this.value, i);
+    this.$delete(this.elements, i);
     this.$emit('removed', item, i);
     this.checkLoopEnd();
   }
 
   public checkLoopEnd() {
-    let maxTime = Math.max(...this.value.map((item) => item.time), 0);
+    let maxTime = Math.max(...this.elements.map((item) => item.time), 0);
 
     // Add a tiny amount to max time so that ceil will push to next number
     // if maxTime is a whole number
@@ -359,34 +350,38 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   }
 
   public open(e: MouseEvent, i: number) {
-    const item = this.value[i];
+    const item = this.elements[i];
     this.$emit('open', item);
   }
 
+  public clickElement(i: number) {
+    this.createClass = this.elements[i];
+  }
+
   public select(e: MouseEvent, i: number) {
-    const item = this.value[i];
+    const item = this.elements[i];
     if (!this.selected[i]) {
-      this.value.forEach((_, ind) => this.selected[ind] = false);
+      this.elements.forEach((_, ind) => this.selected[ind] = false);
     }
 
-    const createItem = (oldItem: Item) => {
-      const newItem = copy(oldItem);
+    const createItem = (oldItem: Element) => {
+      const newItem = oldItem.copy();
 
       // We do this because `newNew` will have a heigher z-index
       // Thus, it will be displayed on top (which we want)
       this.selected.push(false);
-      this.value.push(newItem);
+      this.elements.push(newItem);
       this.$emit('added', newItem);
     };
 
     let targetIndex = i;
     if (this.holdingShift) {
-      let selected: Item[];
+      let selected: Element[];
 
       // If selected, copy all selected. If not, just copy the item that was clicked.
       if (this.selected[i]) {
-        selected = this.value.filter((n, ind) => this.selected[ind] && n !== item);
-        targetIndex = this.value.length; // A copy of `item` will be created at this index
+        selected = this.elements.filter((n, ind) => this.selected[ind] && n !== item);
+        targetIndex = this.elements.length; // A copy of `item` will be created at this index
         createItem(item);
       } else {
         selected = [item];
@@ -401,9 +396,9 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     if (e.keyCode === Keys.SHIFT) {
       this.holdingShift = true;
     } else if (e.keyCode === Keys.DELETE || e.keyCode === Keys.BACKSPACE) {
-      // Slice and reverse since we will be deleting from the array as we go
-      const lastIndex = this.value.length - 1;
-      this.value.slice().reverse().forEach((item, i) => {
+      // Slice and reverse sItemince we will be deleting from the array as we go
+      const lastIndex = this.elements.length - 1;
+      this.elements.slice().reverse().forEach((item, i) => {
         if (this.selected[i]) {
           this.removeAtIndex(lastIndex - i);
         }
@@ -415,14 +410,14 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     if (e.keyCode === Keys.SHIFT) { this.holdingShift = false; }
   }
 
-  @Watch<Sequencer>('value', { immediate: true })
+  @Watch<Sequencer>('elements', { immediate: true })
   public resetSelectedIfNecessary() {
     // Whenever the parent changes the items
     // we should reset the selected!
     // Also, since we are watching `value`, we modify `selected` first so that
     // this method doesn't trigger before `selected` is also changed.
-    if (this.selected.length !== this.value.length) {
-      this.selected = this.value.map((_) => false);
+    if (this.selected.length !== this.elements.length) {
+      this.selected = this.elements.map((_) => false);
     }
   }
 }
