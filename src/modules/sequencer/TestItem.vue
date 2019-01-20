@@ -16,14 +16,13 @@
       {{ text }}
     </div>
 
-    <div
+    <resizable
       class="drag"
-      :class="{'primary-lighten-3': this.in && !this.selected, in: this.in}"
-      :style="borderConfig"
-      @mouseenter="onHover"
-      @mouseleave="afterHover"
-      @mousedown="addListeners"
-    ></div>
+      :duration="duration"
+      @update:duration="updateDuration"
+      :hover-color="resizeAreaColor"
+      hover-class="primary-lighten-3"
+    ></resizable>
     
   </div>
 </template>
@@ -33,10 +32,12 @@ import { Draggable } from '@/modules/draggable';
 import { Mixins, Prop, Component, Inject } from 'vue-property-decorator';
 import { allKeys } from '@/utils';
 import { Positionable } from '@/modules/sequencer/sequencer';
+import Resizable from '@/modules/sequencer/Resizable.vue';
 
-@Component
-export default class TestItem extends Mixins(Draggable, Positionable) {
-  @Inject() public snap!: number;
+@Component({
+  components: { Resizable },
+})
+export default class TestItem extends Mixins(Positionable) {
   @Inject() public pxPerBeat!: number;
 
   @Prop({ type: Number, required: true }) public left!: number;
@@ -46,7 +47,11 @@ export default class TestItem extends Mixins(Draggable, Positionable) {
   @Prop({ type: Number, default: 14 }) public fontSize!: number;
   @Prop({ type: Boolean, required: true }) public selected!: boolean;
 
-  public cursor = 'ew-resize';
+  get resizeAreaColor() {
+    if (this.selected) {
+      return '#ffcccc';
+    }
+  }
 
   get noteConfig() {
     // we take away an extra pixel because it looks better
@@ -79,13 +84,8 @@ export default class TestItem extends Mixins(Draggable, Positionable) {
     };
   }
 
-  public move(e: MouseEvent) {
-    const diff = e.clientX - this.$el.getBoundingClientRect().left;
-    let length = diff / this.pxPerBeat;
-    length = Math.round(length / this.snap) * this.snap;
-    if (this.duration === length) { return; }
-    if (length < this.snap) { return; }
-    this.$update('duration', length);
+  public updateDuration(value: number) {
+    this.$update('duration', value);
   }
 }
 </script>
@@ -110,7 +110,4 @@ export default class TestItem extends Mixins(Draggable, Positionable) {
 
 .selected
   background-color: #ff9999
-
-  & .drag.in
-    background-color: #ffcccc
 </style>

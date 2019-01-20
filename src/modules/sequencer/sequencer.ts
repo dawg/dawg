@@ -1,5 +1,6 @@
 import Vue from 'vue';
-import { Prop, Inject, Component } from 'vue-property-decorator';
+import { Prop, Inject, Component, Mixins } from 'vue-property-decorator';
+import { Watch } from '@/modules/update';
 
 export interface Item {
   row: number;
@@ -42,4 +43,18 @@ export class Positionable extends Vue {
   get height() {
     return this.noteHeight;
   }
+
+  get widthPx() {
+    return this.px(this.width);
+  }
+
+  get heightPx() {
+    return this.px(this.height);
+  }
+
+  public px(value: number) {
+    return `${value}px`;
+  }
 }
+
+

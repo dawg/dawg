@@ -100,7 +100,7 @@ function mounted() {
 
 storiesOf('Waveform', module)
   .add('default', () => ({
-    template: `<waveform :buffer="buffer"></waveform>`,
+    template: `<waveform :buffer="buffer" style="width: 200px"></waveform>`,
     components: { Waveform },
     data: () => ({ buffer: null }),
     mounted,
@@ -108,8 +108,15 @@ storiesOf('Waveform', module)
 
 storiesOf('Sample', module)
   .add('default', () => ({
-    template: `<sample :buffer="buffer"></sample>`,
-    components: { Sample },
+    template: `
+    <dawg>
+      <sample
+        :buffer="buffer"
+        :duration="1"
+      ></sample>
+    </dawg>
+    `,
+    components: { Sample, Dawg },
     data: () => ({ buffer: null }),
     mounted,
   }));
