@@ -55,6 +55,10 @@ export class Positionable extends Vue {
   public px(value: number) {
     return `${value}px`;
   }
+
+  public updateDuration(value: number) {
+    this.$update('duration', value);
+  }
 }
 
 

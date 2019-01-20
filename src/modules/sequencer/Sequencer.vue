@@ -11,16 +11,17 @@
         ref="rows" 
         :style="`height: ${numRows * rowHeight}px`"
       >
-        <sequencer-row
+        <div
           v-for="row in numRows" 
           :key="row"
           :row="row - 1"
           :total-beats="displayBeats"
-          :style="rowStyle(row - 1)"
+          :style="actualRowStyle(row - 1)"
           :class="rowClass(row - 1)"
-          @click="add"
+          @click="add($event, row)"
+          @contextmenu="$event.preventDefault()"
           @mousedown="selectStart"
-        ></sequencer-row>
+        ></div>
       </div>
       <div :style="sequencerStyle" class="layer lines" ref="beatLines"></div>
       <component
@@ -63,19 +64,19 @@ import { Draggable } from '@/modules/draggable';
 import { FactoryDictionary } from 'typescript-collections';
 import { range, copy, Nullable, Keys } from '@/utils';
 import BeatLines from '@/modules/sequencer/BeatLines';
-import SequencerRow from '@/modules/sequencer/SequencerRow.vue';
 import Progression from '@/modules/sequencer/Progression.vue';
 import { Item, ItemClass } from '@/modules/sequencer/sequencer';
 import { Watch } from '@/modules/update';
 
 
 @Component({
-  components: { SequencerRow, Progression },
+  components: { Progression },
 })
 export default class Sequencer extends Mixins(Draggable, BeatLines) {
-  @Inject() public noteHeight!: number;
   @Inject() public stepsPerBeat!: number;
 
+  // TODO(jacob) Remove default
+  @Prop({ type: Number, default: 25 }) public rowHeight!: number;
   @Prop({ type: Array, required: true }) public value!: Item[];
   @Prop({ type: Number, default: 1 }) public defaultLength!: number;
   @Prop({ type: Number, default: 0.25 }) public snap!: number;
@@ -108,11 +109,6 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   public itemLoopEnd: number | null = null;
   // selected[i] indicates whether value[i] is selected
   public selected: boolean[] = [];
-
-  // TODO(jacob) Get rid of this
-  get rowHeight() {
-    return this.noteHeight;
-  }
 
   get components() {
     return this.value.map((item) => {
@@ -232,6 +228,15 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   public destroyed() {
     window.removeEventListener('keydown', this.keydown);
     window.removeEventListener('keyup', this.keyup);
+  }
+
+  public actualRowStyle(i: number) {
+    const style = this.rowStyle(i);
+    return {
+      ...style,
+      height: `${this.rowHeight}px`,
+      width: `${this.pxPerBeat * this.displayBeats}px`,
+    };
   }
 
   public scroll(e: UIEvent) {

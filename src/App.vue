@@ -65,7 +65,7 @@ import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
 import Split from '@/modules/split/Split.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
-import Dawg from '@/components/Dawg.vue';
+import Dawg from '@/modules/dawg/Dawg.vue';
 import SideTabs from '@/sections/SideTabs.vue';
 import Notifications from '@/modules/notification/Notifications.vue';
 import { ipcRenderer } from 'electron';

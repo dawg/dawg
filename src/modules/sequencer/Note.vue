@@ -37,7 +37,7 @@ import Resizable from '@/modules/sequencer/Resizable.vue';
 @Component({
   components: { Resizable },
 })
-export default class TestItem extends Mixins(Positionable) {
+export default class Note extends Mixins(Positionable) {
   @Inject() public pxPerBeat!: number;
 
   @Prop({ type: Number, required: true }) public left!: number;
@@ -67,25 +67,12 @@ export default class TestItem extends Mixins(Positionable) {
     return allKeys[this.row].value;
   }
 
-  get borderConfig() {
-    // We also take away an extra pixel because it looks better
-    return {
-      width: `${this.borderWidth}px`,
-      height: `${this.height}px`,
-      left: `${this.width - this.borderWidth - 1}px`,
-    };
-  }
-
   get textConfig() {
     return {
-      top: `${(this.top + (this.height / 2)) - ((this.fontSize / 2) + 1)}px`,
+      top: `${(this.height / 2) - ((this.fontSize / 2) + 1)}px`,
       color: '#fff',
       fontSize: `${this.fontSize}px`,
     };
-  }
-
-  public updateDuration(value: number) {
-    this.$update('duration', value);
   }
 }
 </script>

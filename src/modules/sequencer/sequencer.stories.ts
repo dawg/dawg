@@ -1,16 +1,15 @@
 import Vue from 'vue';
 import { storiesOf } from '@storybook/vue';
-import { action } from '@storybook/addon-actions';
-import Dawg from '@/components/Dawg.vue';
-import SequencerRow from '@/modules/sequencer/SequencerRow.vue';
+import Dawg from '@/modules/dawg/Dawg.vue';
 import Sequencer from '@/modules/sequencer/Sequencer.vue';
-import TestItem from '@/modules/sequencer/TestItem.vue';
+import Note from '@/modules/sequencer/Note.vue';
 import Waveform from '@/modules/sequencer/Waveform.vue';
 import Sample from '@/modules/sequencer/Sample.vue';
+import Pattern from '@/modules/sequencer/Pattern.vue';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import { allKeys } from '@/utils';
 import TestClass from '@/modules/sequencer/TestClass';
-import { loadFromUrl } from '../audio/web';
+import { loadFromUrl } from '@/modules/audio/web';
 
 function rowClass(i: number) {
   const key = allKeys[i].value;
@@ -32,10 +31,21 @@ storiesOf(BeatLines.name, module)
     components: { Temp, Dawg },
   }));
 
-Vue.component('TestItem', TestItem);
+Vue.component('Note', Note);
+
+const basicData = {
+  notes: [],
+  measures: 1,
+  sequencerLoopEnd: 0,
+  loopStart: 0,
+  loopEnd: 0,
+  setLoopStart: 0,
+  setLoopEnd: 0,
+  progress: 0,
+};
 
 storiesOf(Sequencer.name, module)
-  .add('Standard', () => ({
+  .add('piano roll', () => ({
     template: `
     <dawg>
       <sequencer
@@ -54,39 +64,44 @@ storiesOf(Sequencer.name, module)
     </dawg>
     `,
     data: () => ({
-      notes: [],
-      measures: 1,
-      sequencerLoopEnd: 0,
-      loopStart: 0,
-      loopEnd: 0,
-      setLoopStart: 0,
-      setLoopEnd: 0,
-      progress: 0,
-      classes: 'TestItem',
+      ...basicData,
+      classes: 'Note',
       createClass: TestClass,
     }),
     components: { Sequencer, Dawg },
     methods: { rowClass },
-  }));
-
-storiesOf(SequencerRow.name, module)
-  .add('Standard', () => ({
+  }))
+  .add('playlist', () => ({
     template: `
     <dawg>
-      <sequencer-row
-        v-for="i in 20"
-        :key="i"
-        :row="40 + i"
-        :total-beats="12"
-        :class="rowClass(i)"
-        @click="click"
-      ></sequencer-row>
+      <sequencer
+        v-model="notes"
+        :sequencer-loop-end.sync="sequencerLoopEnd"
+        :loop-start="loopStart"
+        :loop-end="loopEnd"
+        :set-loop-start="setLoopStart"
+        :set-loop-end="setLoopEnd"
+        :progress="progress"
+        :num-rows="20"
+        :classes="classes"
+        :createClass="createClass"
+        :row-class="() => 'secondary'"
+        :row-style="rowStyle"
+      ></sequencer>
     </dawg>
     `,
-    components: { SequencerRow, Dawg },
+    data: () => ({
+      ...basicData,
+      classes: 'Note',
+      createClass: TestClass,
+    }),
+    components: { Sequencer, Dawg },
     methods: {
-      click: action('clicked'),
-      rowClass,
+      rowStyle() {
+        return {
+          borderBottom: '1px solid black',
+        };
+      },
     },
   }));
 
@@ -119,4 +134,31 @@ storiesOf('Sample', module)
     components: { Sample, Dawg },
     data: () => ({ buffer: null }),
     mounted,
+  }));
+
+const notes = [
+    {id: 44, time: 0, duration: 1},
+    {id: 47, time: 0, duration: 1},
+    {id: 49, time: 0, duration: 1},
+    {id: 47, time: 1, duration: 1},
+    {id: 49, time: 1, duration: 1},
+    {id: 51, time: 1, duration: 1},
+    {id: 52, time: 2, duration: 0.5},
+    {id: 51, time: 3, duration: 0.5},
+    {id: 45, time: 4, duration: 0.5},
+    {id: 48, time: 5, duration: 0.5},
+  ];
+
+
+storiesOf('Pattern', module)
+  .add('default', () => ({
+    template: `
+    <dawg>
+      <pattern-item
+        :duration="duration"
+        :notes="notes"
+      ></pattern-item>
+    </dawg>`,
+    components: { PatternItem: Pattern, Dawg },
+    data: () => ({ notes, duration: 0 }),
   }));

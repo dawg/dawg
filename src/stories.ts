@@ -5,7 +5,6 @@ import DotButton from '@/components/DotButton.vue';
 import Key from '@/components/Key.vue';
 import Piano from '@/components/Piano.vue';
 import Toolbar from '@/components/Toolbar.vue';
-import Dawg from '@/components/Dawg.vue';
 import Tree from '@/components/Tree.vue';
 import Knob from '@/components/Knob.vue';
 import Mixer from '@/components/Mixer.vue';
@@ -25,37 +24,11 @@ import Split from '@/modules/split/Split.vue';
 
 import PianoRoll from '@/components/PianoRoll.vue';
 import Timeline from '@/components/Timeline.vue';
-import MiniScore from '@/components/MiniScore.vue';
 import ContextMenu from '@/modules/context/ContextMenu.vue';
 import Vue from 'vue';
 
 const synth = new Tone.Synth().toMaster();
 
-const NOTES = [
-  {id: 44, time: 0, duration: 1},
-  {id: 47, time: 0, duration: 1},
-  {id: 49, time: 0, duration: 1},
-  {id: 47, time: 1, duration: 1},
-  {id: 49, time: 1, duration: 1},
-  {id: 51, time: 1, duration: 1},
-  {id: 52, time: 2, duration: 0.5},
-  {id: 51, time: 3, duration: 0.5},
-  {id: 45, time: 4, duration: 0.5},
-  {id: 48, time: 5, duration: 0.5},
-];
-
-storiesOf(MiniScore.name, module)
-  .add('Standard', () => ({
-    components: { Dawg, MiniScore },
-    template: `
-    <dawg>
-      <mini-score :notes="notes" style="height: 50px; width: 400px"></mini-score>
-    </dawg>
-    `,
-    data: () => ({
-      notes: NOTES,
-    }),
-  }));
 
 storiesOf(Piano.name, module)
   .add('Standard', () => ({

@@ -3,7 +3,6 @@ import Icon from 'vue-awesome/components/Icon.vue';
 import Vue from 'vue';
 import 'vuetify/dist/vuetify.css';
 import 'vue-awesome/icons';
-import '@/styles/global.sass';
 import { remote } from 'electron';
 import TooltipIcon from '@/components/TooltipIcon.vue';
 import Context from '@/modules/context';
