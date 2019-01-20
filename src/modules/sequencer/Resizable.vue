@@ -59,4 +59,5 @@ export default class Resizable extends Mixins(Draggable) {
   position: absolute
   height: 100%
   right: 0
+  top: 0
 </style>

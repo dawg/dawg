@@ -1,6 +1,6 @@
 <template>
   <div
-    class="sample"
+    class="sample-element"
     :style="containerStyle"
   >
     <div class="top"></div>
@@ -9,18 +9,23 @@
       :buffer="buffer"
       class="waveform"
     ></waveform>
+    <resizable
+      :duration="duration"
+      @update:duration="updateDuration"
+    ></resizable>
   </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop, Mixins } from 'vue-property-decorator';
 import Waveform from '@/modules/sequencer/Waveform.vue';
+import Resizable from '@/modules/sequencer/Resizable.vue';
 import { Nullable } from '@/utils';
 import { Positionable } from '@/modules/sequencer/sequencer';
 import Tone from 'tone';
 
 @Component({
-  components: { Waveform },
+  components: { Waveform, Resizable },
 })
 export default class Sample extends Mixins(Positionable) {
   @Prop(Nullable(Object)) public buffer!: AudioBuffer | null;
@@ -56,11 +61,12 @@ export default class Sample extends Mixins(Positionable) {
 </script>
 
 <style lang="sass" scoped>
-.sample
+.sample-element
   background-color: #eee
   display: flex
   flex-direction: column
   overflow: hidden
+  position: relative
 
 .top
   background-color: #ccc

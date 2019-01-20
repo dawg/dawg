@@ -4,8 +4,8 @@ import Dawg from '@/modules/dawg/Dawg.vue';
 import Sequencer from '@/modules/sequencer/Sequencer.vue';
 import Note from '@/modules/sequencer/Note.vue';
 import Waveform from '@/modules/sequencer/Waveform.vue';
-import Sample from '@/modules/sequencer/Sample.vue';
-import Pattern from '@/modules/sequencer/Pattern.vue';
+import SampleElement from '@/modules/sequencer/SampleElement.vue';
+import PatternElement from '@/modules/sequencer/PatternElement.vue';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import { allKeys } from '@/utils';
 import TestClass from '@/modules/sequencer/TestClass';
@@ -121,18 +121,18 @@ storiesOf('Waveform', module)
     mounted,
   }));
 
-storiesOf('Sample', module)
+storiesOf('SampleElement', module)
   .add('default', () => ({
     template: `
     <dawg>
-      <sample
+      <sample-element
         :buffer="buffer"
-        :duration="1"
-      ></sample>
+        :duration.sync="duration"
+      ></sample-element>
     </dawg>
     `,
-    components: { Sample, Dawg },
-    data: () => ({ buffer: null }),
+    components: { SampleElement, Dawg },
+    data: () => ({ buffer: null, duration: 1 }),
     mounted,
   }));
 
@@ -150,15 +150,15 @@ const notes = [
   ];
 
 
-storiesOf('Pattern', module)
+storiesOf('PatternElement', module)
   .add('default', () => ({
     template: `
     <dawg>
-      <pattern-item
-        :duration="duration"
+      <pattern-element
+        :duration.sync="duration"
         :notes="notes"
-      ></pattern-item>
+      ></pattern-element>
     </dawg>`,
-    components: { PatternItem: Pattern, Dawg },
-    data: () => ({ notes, duration: 0 }),
+    components: { PatternElement, Dawg },
+    data: () => ({ notes, duration: 2 }),
   }));
