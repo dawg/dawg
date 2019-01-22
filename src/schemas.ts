@@ -22,6 +22,7 @@ export interface IElement {
   time: number;
 }
 
+// TODO(jacob) Copy methods are duplicate. There must be a better way...
 export abstract class Element implements IElement {
 
   public static copy<T extends Element>(element: T, cls: ConstructorOf<T>): T {

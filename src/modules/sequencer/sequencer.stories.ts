@@ -3,13 +3,11 @@ import { storiesOf } from '@storybook/vue';
 import Dawg from '@/modules/dawg/Dawg.vue';
 import PianoRollSequencer from '@/modules/sequencer/PianoRollSequencer.vue';
 import PlaylistSequencer from '@/modules/sequencer/PlaylistSequencer.vue';
-import Note from '@/modules/sequencer/Note.vue';
 import Waveform from '@/modules/sequencer/Waveform.vue';
-import SampleElement from '@/modules/sequencer/SampleElement.vue';
-import PatternElement from '@/modules/sequencer/PatternElement.vue';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import { loadFromUrl } from '@/modules/audio/web';
 import { PlacedPattern, Pattern, Score, Note as NE, PlacedSample } from '@/schemas';
+import { resizable, Note, PatternElement, SampleElement, positionable } from '@/modules/sequencer';
 
 const Temp = Vue.extend({
   template: `<div style="height: 30px; width: 400px"></div>`,
@@ -138,7 +136,9 @@ storiesOf('SampleElement', module)
     template: `
     <dawg>
       <sample-element
-        :buffer="buffer"
+        v-if="element"
+        :height="40"
+        :element="element"
         :duration.sync="duration"
       ></sample-element>
     </dawg>
@@ -146,6 +146,16 @@ storiesOf('SampleElement', module)
     components: { SampleElement, Dawg },
     data: () => ({ buffer: null, duration: 1 }),
     mounted,
+    computed: {
+      element() {
+        if (!this.buffer) {
+          return;
+        }
+
+        // @ts-ignore
+        return PlacedSample.create(this.buffer);
+      },
+    },
   }));
 
 
@@ -162,4 +172,48 @@ storiesOf('PatternElement', module)
     </dawg>`,
     components: { PatternElement, Dawg },
     data: () => ({ notes, duration: 2 }),
+  }));
+
+
+const Tester = Vue.component('Tester', {
+  template: `
+  <div style="background-color: red">{{ value }}</div>
+  `,
+  props: { value: { type: String, required: true } },
+});
+
+const WithPosition = positionable(Tester);
+
+storiesOf('positionable', module)
+  .add('default', () => ({
+    template: `
+    <dawg>
+      <with-position
+        :left="20"
+        :top="20"
+        :duration="2"
+        value="HELLO"
+      ></with-position>
+    </dawg>
+    `,
+    components: { WithPosition, Dawg },
+  }));
+
+
+const Resizable = resizable(Tester);
+
+
+storiesOf('resizable', module)
+  .add('default', () => ({
+    template: `
+    <dawg>
+      <resizable
+        :duration.sync="duration"
+        :height="40"
+        value="HELLO"
+      ></resizable>
+    </dawg>
+    `,
+    data: () => ({ duration: 1 }),
+    components: { Resizable, Dawg },
   }));

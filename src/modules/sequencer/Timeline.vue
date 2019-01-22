@@ -42,7 +42,7 @@ import { Vue, Component, Prop, Watch, Mixins, Inject } from 'vue-property-decora
 import { ResponsiveMixin, Directions } from '@/modules/resize';
 import { Button } from '@/utils';
 import { range, Nullable } from '@/utils';
-import Progression from '@/components/Progression.vue';
+import Progression from '@/modules/sequencer/Progression.vue';
 
 @Component({
   components: { Progression },

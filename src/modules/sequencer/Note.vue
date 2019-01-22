@@ -1,9 +1,5 @@
 <template>
-  <div 
-    class="note"
-    :class="{ primary: !selected, selected }"
-    :style="noteConfig" 
-  >
+  <div class="note primary">
     <div 
       class="body"
       v-on="$listeners"
@@ -15,51 +11,30 @@
     >
       {{ text }}
     </div>
-
-    <resizable
-      class="drag"
-      :duration="duration"
-      @update:duration="updateDuration"
-      :hover-color="resizeAreaColor"
-      hover-class="primary-lighten-3"
-    ></resizable>
     
   </div>
 </template>
 
 <script lang="ts">
 import { Draggable } from '@/modules/draggable';
-import { Mixins, Prop, Component, Inject } from 'vue-property-decorator';
+import { Mixins, Prop, Component, Inject, Vue } from 'vue-property-decorator';
 import { allKeys } from '@/utils';
-import { Positionable } from '@/modules/sequencer/sequencer';
-import Resizable from '@/modules/sequencer/Resizable.vue';
+import { Watch } from '@/modules/update';
 
-@Component({
-  components: { Resizable },
-})
-export default class Note extends Mixins(Positionable) {
+@Component
+export default class Note extends Vue {
   @Inject() public pxPerBeat!: number;
 
+  @Prop({ type: Number, required: true }) public height!: number;
   @Prop({ type: Number, required: true }) public row!: number;
-  @Prop({ type: Number, default: 8 }) public borderWidth!: number;
   @Prop({ type: Number, default: 14 }) public fontSize!: number;
-  @Prop({ type: Boolean, required: true }) public selected!: boolean;
 
-  get resizeAreaColor() {
-    if (this.selected) {
-      return '#ffcccc';
-    }
-  }
-
-  get noteConfig() {
-    // we take away an extra pixel because it looks better
-    return {
-      width: `${this.width - 1}px`,
-      height: `${this.height}px`,
-      left: `${this.left}px`,
-      top: `${this.top}px`,
-    };
-  }
+  // TODO(jacob)
+  // get resizeAreaColor() {
+  //   if (this.selected) {
+  //     return '#ffcccc';
+  //   }
+  // }
 
   get text() {
     return allKeys[this.row].value;

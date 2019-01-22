@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="sample-element"
-    :style="style"
-  >
+  <div class="sample-element">
     <div class="top"></div>
     <waveform 
       :style="waveformStyle"
@@ -10,26 +7,22 @@
       :height="height"
       class="waveform"
     ></waveform>
-    <resizable
-      :duration="duration"
-      @update:duration="updateDuration"
-    ></resizable>
   </div>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Mixins } from 'vue-property-decorator';
+import { Vue, Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 import Waveform from '@/modules/sequencer/Waveform.vue';
-import Resizable from '@/modules/sequencer/Resizable.vue';
 import { Nullable } from '@/utils';
-import { Positionable } from '@/modules/sequencer/sequencer';
 import Tone from 'tone';
 import { PlacedSample } from '@/schemas';
 
 @Component({
-  components: { Waveform, Resizable },
+  components: { Waveform },
 })
-export default class Sample extends Mixins(Positionable) {
+export default class SampleElement extends Vue {
+  @Inject() public pxPerBeat!: number;
+  @Prop({ type: Number, default: 100 }) public height!: number;
   @Prop(Nullable(Object)) public element!: PlacedSample;
 
   get buffer() {
@@ -38,8 +31,7 @@ export default class Sample extends Mixins(Positionable) {
 
   get waveformStyle() {
     return {
-      width: this.px(this.bufferWidth),
-      height: this.heightPx,
+      width: `${this.bufferWidth}px`,
     };
   }
 
@@ -68,6 +60,9 @@ export default class Sample extends Mixins(Positionable) {
   flex-direction: column
   overflow: hidden
   position: relative
+
+  &:hover
+    cursor: pointer
 
 .top
   background-color: #ccc

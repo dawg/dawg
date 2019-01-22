@@ -39,6 +39,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import WavScope from '@/components/WavScope.vue';
 import PlayPause from '@/components/PlayPause.vue';
 import Tone from 'tone';
+import { Watch } from '@/modules/update';
 
 @Component({components: { WavScope, PlayPause }})
 export default class SampleViewer extends Vue {
@@ -75,5 +76,4 @@ export default class SampleViewer extends Vue {
   border: solid 1px #111
   padding: 5px
   border-radius: 5px
-
 </style>

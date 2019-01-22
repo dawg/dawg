@@ -12,7 +12,6 @@ import WaveSurfer from 'wavesurfer.js';
 import { Player } from 'tone';
 import { Nullable } from '@/utils';
 import { Watch } from '@/modules/update';
-import { Positionable } from '@/modules/sequencer/sequencer';
 
 @Component({components: { }})
 export default class Waveform extends Vue {
@@ -32,22 +31,14 @@ export default class Waveform extends Vue {
       loopSelection: true,
       height: this.height,
     });
-  }
-
-  public setBuffer() {
-    if (this.buffer && this.wavesurfer) {
-      this.wavesurfer.loadDecodedBuffer(this.buffer);
-    }
+    this.checkBuffer();
   }
 
   @Watch<Waveform>('buffer')
-  public load() {
-    this.setBuffer();
-  }
-
-  @Watch<Waveform>('wavesurfer')
-  public setBuff() {
-    this.setBuffer();
+  public checkBuffer() {
+    if (this.buffer && this.wavesurfer) {
+      this.wavesurfer.loadDecodedBuffer(this.buffer);
+    }
   }
 }
 </script>

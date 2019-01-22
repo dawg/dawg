@@ -1,28 +1,22 @@
 <template>
-  <div class="pattern-element" :style="style">
-    <mini-score 
-      ref="score"
-      :style="scoreStyle"
-      :notes="notes"
-    ></mini-score>
-    <resizable
-      :duration="duration"
-      @update:duration="updateDuration"
-    ></resizable>
-  </div>
+  <mini-score
+    class="pattern-element"
+    ref="score"
+    :style="scoreStyle"
+    :notes="notes"
+  ></mini-score>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Mixins } from 'vue-property-decorator';
+import { Vue, Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 import MiniScore from '@/modules/dawg/MiniScore.vue';
-import Resizable from '@/modules/sequencer/Resizable.vue';
 import { Note, PlacedPattern } from '@/schemas';
-import { Positionable } from '@/modules/sequencer/sequencer';
 
 @Component({
-  components: { MiniScore, Resizable },
+  components: { MiniScore },
 })
-export default class PatternElement extends Mixins(Positionable) {
+export default class PatternElement extends Vue {
+  @Inject() public pxPerBeat!: number;
   @Prop({ type: Object, required: true }) public element!: PlacedPattern;
 
   public score: MiniScore | null = null;
