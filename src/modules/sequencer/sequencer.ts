@@ -114,7 +114,7 @@ export const resizable = (component: VueConstructor) => {
 
     get componentStyle() {
       return {
-        width: `${this.width}px`,
+        height: `${this.height}px`,
       };
     }
 
@@ -162,6 +162,8 @@ export const resizable = (component: VueConstructor) => {
         style: {
           position: 'relative',
           display: 'inline-block',
+          overflow: 'hidden',
+          width: `${this.width}px`,
         },
       }, [element, resizeArea]);
     }

@@ -20,13 +20,14 @@ import { Draggable } from '@/modules/draggable';
 import { Mixins, Prop, Component, Inject, Vue } from 'vue-property-decorator';
 import { allKeys } from '@/utils';
 import { Watch } from '@/modules/update';
+import { Note as N } from '@/schemas';
 
 @Component
 export default class Note extends Vue {
   @Inject() public pxPerBeat!: number;
 
+  @Prop({ type: Object, required: true }) public element!: N;
   @Prop({ type: Number, required: true }) public height!: number;
-  @Prop({ type: Number, required: true }) public row!: number;
   @Prop({ type: Number, default: 14 }) public fontSize!: number;
 
   // TODO(jacob)
@@ -37,7 +38,7 @@ export default class Note extends Vue {
   // }
 
   get text() {
-    return allKeys[this.row].value;
+    return allKeys[this.element.row].value;
   }
 
   get textConfig() {

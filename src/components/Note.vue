@@ -39,6 +39,7 @@ export default class Note extends Mixins(Draggable) {
   @Inject() public noteHeight!: number;
   @Inject() public pxPerBeat!: number;
 
+  @Prop({ type: Object, required: true }) public element!: N;
   @Prop({ type: Number, required: true }) public left!: number;
   @Prop({ type: Number, required: true }) public top!: number;
   @Prop({ type: Number, required: true }) public width!: number;

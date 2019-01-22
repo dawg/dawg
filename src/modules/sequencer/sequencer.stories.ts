@@ -158,22 +158,33 @@ storiesOf('SampleElement', module)
     },
   }));
 
-
-
-
 storiesOf('PatternElement', module)
   .add('default', () => ({
     template: `
     <dawg>
       <pattern-element
         :duration.sync="duration"
-        :notes="notes"
+        :height="40"
+        :element="element"
       ></pattern-element>
     </dawg>`,
     components: { PatternElement, Dawg },
-    data: () => ({ notes, duration: 2 }),
+    data: () => ({ element: patternElement, duration: 2 }),
   }));
 
+storiesOf('Note', module)
+  .add('default', () => ({
+    template: `
+    <dawg>
+      <note
+        :duration.sync="duration"
+        :height="18"
+        :element="element"
+      ></note>
+    </dawg>`,
+    components: { Note, Dawg },
+    data: () => ({ element: new NE({ row: 0, time: 0, duration: 0 }), duration: 2 }),
+  }));
 
 const Tester = Vue.component('Tester', {
   template: `
