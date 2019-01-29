@@ -1,6 +1,21 @@
-import Vue, { CreateElement, VueConstructor } from 'vue';
+import Vue, { CreateElement, VueConstructor, VNodeData } from 'vue';
 import { Prop, Inject, Component, Mixins } from 'vue-property-decorator';
-import { Draggable } from '../draggable';
+import { Draggable } from '@/modules/draggable';
+
+const createHOC = (component: VueConstructor, createElement: CreateElement, hoc: Vue, data?: VNodeData) => {
+  return createElement(component, {
+    ...data,
+    props: {
+      ...hoc.$props,
+    },
+    attrs: {
+      ...hoc.$attrs,
+    },
+    on: {
+      ...hoc.$listeners,
+    },
+  });
+};
 
 export const positionable = (component: VueConstructor) => {
   @Component
@@ -19,17 +34,8 @@ export const positionable = (component: VueConstructor) => {
     }
 
     public render(createElement: CreateElement) {
-      return createElement(component, {
+      return createHOC(component, createElement, this, {
         style: this.style,
-        props: {
-          ...this.$props,
-        },
-        attrs: {
-          ...this.$attrs,
-        },
-        on: {
-          ...this.$listeners,
-        },
       });
     }
   }
@@ -52,17 +58,8 @@ export const selectable = (component: VueConstructor) => {
     }
 
     public render(createElement: CreateElement) {
-      return createElement(component, {
+      return createHOC(component, createElement, this, {
         style: this.style,
-        props: {
-          ...this.$props,
-        },
-        attrs: {
-          ...this.$attrs,
-        },
-        on: {
-          ...this.$listeners,
-        },
       });
     }
   }
@@ -70,14 +67,6 @@ export const selectable = (component: VueConstructor) => {
   return Selectable;
 };
 
-
-// TODO(jacob)
-// <resizable
-//   class="drag"
-//   :duration="duration"
-//   @update:duration="updateDuration"
-//   hover-class="primary-lighten-3"
-// ></resizable>
 export const resizable = (component: VueConstructor) => {
   @Component
   class Resizable extends Mixins(Draggable) {
@@ -134,16 +123,7 @@ export const resizable = (component: VueConstructor) => {
     }
 
     public render(createElement: CreateElement) {
-      const element = createElement(component, {
-        props: {
-          ...this.$props,
-        },
-        attrs: {
-          ...this.$attrs,
-        },
-        on: {
-          ...this.$listeners,
-        },
+      const element = createHOC(component, createElement, this, {
         style: this.componentStyle,
       });
 

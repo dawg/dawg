@@ -20,6 +20,7 @@
       :set-loop-start="setLoopStart"
       :set-loop-end="setLoopEnd"
       :progress="progress"
+      v-bind="$attrs"
     ></arranger>
   </div>
 </template>

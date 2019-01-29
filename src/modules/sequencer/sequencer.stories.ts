@@ -8,6 +8,7 @@ import BeatLines from '@/modules/sequencer/BeatLines';
 import { loadFromUrl } from '@/modules/audio/web';
 import { PlacedPattern, Pattern, Score, Note as NE, PlacedSample } from '@/schemas';
 import { resizable, Note, PatternElement, SampleElement, positionable } from '@/modules/sequencer';
+import Part from '@/modules/audio/part';
 
 const Temp = Vue.extend({
   template: `<div style="height: 30px; width: 400px"></div>`,
@@ -41,33 +42,16 @@ Vue.component('Note', Note);
 Vue.component('PatternElement', PatternElement);
 Vue.component('SampleElement', SampleElement);
 
-const basicData = {
-  measures: 1,
-  sequencerLoopEnd: 0,
-  loopStart: 0,
-  loopEnd: 0,
-  setLoopStart: 0,
-  setLoopEnd: 0,
-  progress: 0,
-};
-
 storiesOf('PianoRollSequencer', module)
   .add('default', () => ({
     template: `
     <dawg>
       <piano-roll-sequencer
         :elements="notes"
-        :sequencer-loop-end.sync="sequencerLoopEnd"
-        :loop-start="loopStart"
-        :loop-end="loopEnd"
-        :set-loop-start="setLoopStart"
-        :set-loop-end="setLoopEnd"
-        :progress="progress"
       ></piano-roll-sequencer>
     </dawg>
     `,
     data: () => ({
-      ...basicData,
       notes: [],
     }),
     components: { PianoRollSequencer, Dawg },
@@ -87,17 +71,13 @@ storiesOf('PlaylistSequencer', module)
     <playlist-sequencer
       :elements="elements"
       :create-class="placedSample"
-      :sequencer-loop-end.sync="sequencerLoopEnd"
-      :loop-start="loopStart"
-      :loop-end="loopEnd"
-      :set-loop-start="setLoopStart"
-      :set-loop-end="setLoopEnd"
-      :progress="progress"
+      :part="part"
+      :play="false"
     ></playlist-sequencer>
   </dawg>
   `,
   data: () => ({
-    ...basicData,
+    part: new Part(),
     elements: [],
     buffer: null,
   }),
