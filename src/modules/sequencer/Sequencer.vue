@@ -21,6 +21,7 @@
       :set-loop-end="setLoopEnd"
       :progress="progress"
       v-bind="$attrs"
+      v-on="$listeners"
     ></arranger>
   </div>
 </template>
@@ -42,7 +43,7 @@ export default class Sequencer extends Vue {
   @Inject() public pxPerBeat!: number;
 
   @Prop({ type: Array, required: true }) public elements!: Element[];
-  @Prop({ type: Boolean, required: true }) public play!: boolean;
+  @Prop({ type: Boolean, default: false }) public play!: boolean;
   @Prop({ type: Object, required: true }) public part!: Part<Element>;
 
   public loopStart = 0;
@@ -141,7 +142,6 @@ export default class Sequencer extends Vue {
 .sequencer
   display: block
   border-top: 1px solid #111
-  height: 100%
 
 .timeline
   width: 100%

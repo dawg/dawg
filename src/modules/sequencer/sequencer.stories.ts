@@ -38,9 +38,8 @@ storiesOf(BeatLines.name, module)
     components: { Temp, Dawg },
   }));
 
+// TODO(jacob) Remove hack!
 Vue.component('Note', Note);
-Vue.component('PatternElement', PatternElement);
-Vue.component('SampleElement', SampleElement);
 
 storiesOf('PianoRollSequencer', module)
   .add('default', () => ({
@@ -48,11 +47,13 @@ storiesOf('PianoRollSequencer', module)
     <dawg>
       <piano-roll-sequencer
         :elements="notes"
+        :part="part"
       ></piano-roll-sequencer>
     </dawg>
     `,
     data: () => ({
       notes: [],
+      part: new Part(),
     }),
     components: { PianoRollSequencer, Dawg },
   }));
@@ -70,9 +71,8 @@ storiesOf('PlaylistSequencer', module)
   <dawg>
     <playlist-sequencer
       :elements="elements"
-      :create-class="placedSample"
+      :prototype="element"
       :part="part"
-      :play="false"
     ></playlist-sequencer>
   </dawg>
   `,
@@ -80,6 +80,7 @@ storiesOf('PlaylistSequencer', module)
     part: new Part(),
     elements: [],
     buffer: null,
+    element: patternElement,
   }),
   components: { PlaylistSequencer, Dawg },
   computed: {

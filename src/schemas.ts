@@ -63,6 +63,8 @@ export abstract class Element implements IElement {
 export class PlacedPattern extends Element {
   public static create(pattern: Pattern) {
     const element = new PlacedPattern();
+    // TODO(jacob) ??? We want to snap this...
+    element.duration = pattern.duration;
     element.patternId = pattern.id;
     element.pattern = pattern;
     return element;
@@ -143,6 +145,12 @@ export class Pattern {
   @autoserialize public name!: string;
   @autoserializeAs(Score) public scores: Score[] = [];
   public part = new Part<Note>();
+
+  get duration() {
+    return this.scores.reduce((max, score) => {
+      return Math.max(max, ...score.notes.map(({ time, duration }) => time + duration));
+    }, 0);
+  }
 }
 
 export interface IInstrument {

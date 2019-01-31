@@ -19,6 +19,8 @@ export default class Part<T> {
   private groups: Array<[string, T]> = [];
   // private callback: (time: ContextTime, o: T) => void;
 
+  private started: Array<Part<T>> = [];
+
   constructor() {
     // defaults
     this.bpm = 120;

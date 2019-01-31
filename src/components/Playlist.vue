@@ -1,33 +1,17 @@
 <template>
   <div class="playlist">
-    <div style="display: flex">
-      <div class="empty-block secondary"></div>
-      <timeline 
-        v-model="progress" 
-        class="timeline"
-        :set-loop-end.sync="setLoopEnd"
-        :set-loop-start.sync="setLoopStart"
-        :loop-start="loopStart"
-        :loop-end="loopEnd"
-        :offset="offset"
-      ></timeline>
-    </div>
-    <div style="overflow-y: scroll; display: flex; height: calc(100% - 20px)">
-      <tracks :tracks="tracks" class="tracks"></tracks>
+    <vue-perfect-scrollbar style="display: flex; height: 100%; overflow-y: scroll">
+      <div style="display: flex; flex-direction: column">
+        <div class="empty-block secondary"></div>
+        <tracks :tracks="tracks" class="tracks"></tracks>
+      </div>
       <playlist-sequencer
         style="width: calc(100% - 120px)"
-        v-model="value"
-        @added="added"
-        @removed="removed"
-        @scroll-horizontal="scrollHorizontal"
-        :sequencer-loop-end.sync="sequencerLoopEnd"
-        :loop-start="loopStart"
-        :loop-end="loopEnd"
-        :set-loop-start="setLoopStart"
-        :set-loop-end="setLoopEnd"
-        :progress="progress"
+        v-bind="$attrs"
       ></playlist-sequencer>
-    </div>
+    </vue-perfect-scrollbar>
+    <!-- <div style="overflow-y: scroll; display: flex; height: calc(100% - 20px)">
+    </div> -->
   </div>
 </template>
 
@@ -41,20 +25,6 @@ export default class Playlist extends Vue {
   @Inject() public pxPerBeat!: number;
 
   @Prop({ type: Array, required: true }) public tracks!: Track[];
-  @Prop({ type: Array, required: true }) public value!: Note[];
-
-  public setLoopEnd = 0;
-  public setLoopStart = 0;
-  public loopStart = 0;
-  public loopEnd = 0;
-  public progress = 0;
-  public sequencerLoopEnd = 0;
-  public scrollLeft = 0;
-
-  // Horizontal offset in beats.
-  public get offset() {
-    return this.scrollLeft / this.pxPerBeat;
-  }
 
   public added() {
     //
@@ -62,10 +32,6 @@ export default class Playlist extends Vue {
 
   public removed() {
     //
-  }
-
-  public scrollHorizontal(scrollLeft: number) {
-    this.scrollLeft = scrollLeft;
   }
 }
 </script>
@@ -78,6 +44,8 @@ export default class Playlist extends Vue {
 
 .empty-block, .tracks
   width: 120px
+  // TODO(jacob) Hardcoded ??
+  height: 20px
 
 .timeline
   width: calc(100% - 120px)

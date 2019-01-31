@@ -4,7 +4,7 @@
     v-bind="$attrs"
     :row-height="noteHeight"
     :num-rows="allKeys.length"
-    :create-class="Note"
+    :prototype.sync="note"
     :row-class="rowClass"
   ></sequencer>
 </template>
@@ -20,8 +20,10 @@ import { Note } from '@/schemas';
 })
 export default class PianoRollSequencer extends Vue {
   @Inject() public noteHeight!: number;
-  public note = new Note();
+  
+  public note = new Note({ row: -1, time: -1, duration: 1 });
   public allKeys = allKeys;
+
   public rowClass(i: number) {
     const key = allKeys[i].value;
     return key.includes('#') ? 'secondary-darken-1' : 'secondary';

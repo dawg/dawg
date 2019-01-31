@@ -1,10 +1,10 @@
 <template>
-  <div class="sequencer">
+  <vue-perfect-scrollbar class="sequencer sequencer-child" @scroll="scroll" ref="scroller">
     <!-- 
       We need this child element for scroll reasons.
       See https://stackoverflow.com/questions/16670931/hide-scroll-bar-but-while-still-being-able-to-scroll
      -->
-    <div class="sequencer-child" @scroll="scroll" ref="scroller">
+    <!-- <div class="sequencer-child" @scroll="scroll" ref="scroller"> -->
       <div class="select-area" :style="selectStyle"></div>
       <div 
         class="layer rows" 
@@ -39,9 +39,8 @@
         @update:duration="updateDuration(i, $event)"
         @contextmenu.native="remove($event, i)"
         @mousedown.native="select($event, i)"
-        @click="clickElement($event, i)"
+        @click="clickElement(i)"
         @dblclick="open($event, i)"
-        @input="changeDefault"
       ></component>
       <progression
         :loop-start="loopStart"
@@ -57,8 +56,8 @@
         class="loop-background loop-background--right" 
         :style="rightStyle"
       ></div>
-    </div>
-  </div>
+    </vue-perfect-scrollbar>
+  <!-- </div> -->
 </template>
 
 <script lang="ts">
@@ -80,10 +79,9 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
 
   @Prop({ type: Number, required: true }) public rowHeight!: number;
   @Prop({ type: Array, required: true }) public elements!: Element[];
-  @Prop({ type: Number, default: 1 }) public defaultLength!: number;
   @Prop({ type: Number, default: 0.25 }) public snap!: number;
 
-  @Prop(Nullable(Object)) public createClass!: Element | null;
+  @Prop(Nullable(Object)) public prototype!: Element | null;
   @Prop({ type: Number, required: true }) public numRows!: number;
   @Prop({ type: Function, default: () => ({}) }) public rowStyle!: (row: number) => object;
   @Prop({ type: Function, default: () => undefined }) public rowClass!: (row: number) => string;
@@ -101,7 +99,6 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   @Prop({ type: Number, required: true }) public progress!: number;
 
   public cursor = 'move';
-  public default = this.defaultLength;  // To avoid mutating a prop
   public rows!: HTMLElement;
   public selectStartEvent: MouseEvent | null = null;
   public selectCurrentEvent: MouseEvent | null = null;
@@ -259,7 +256,7 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   }
 
   public add(e: MouseEvent, row: number) {
-    if (!this.createClass) {
+    if (!this.prototype) {
       return;
     }
 
@@ -269,10 +266,9 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     time = Math.floor(time / this.snap) * this.snap;
     this.$log.debug(x, e.clientX, left, time);
 
-    const item = this.createClass.copy();
+    const item = this.prototype.copy();
     item.row = row;
     item.time = time;
-    item.duration = this.default;
 
     this.selected.push(false);
     this.elements.push(item);
@@ -345,17 +341,13 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     }
   }
 
-  public changeDefault(length: number) {
-    this.default = length;
-  }
-
   public open(e: MouseEvent, i: number) {
     const item = this.elements[i];
     this.$emit('open', item);
   }
 
-  public clickElement(e: MouseEvent, i: number) {
-    this.createClass = this.elements[i];
+  public clickElement(i: number) {
+    this.$update('prototype', this.elements[i]);
   }
 
   public select(e: MouseEvent, i: number) {

@@ -25,7 +25,12 @@
             </split>
 
             <split>
-              <playlist :tracks="project.tracks" :value="[]"></playlist>
+              <playlist 
+                :tracks="project.tracks" 
+                :elements="[]"
+                :part="master"
+                :prototype="null"
+              ></playlist>
             </split>
 
             <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`" keep>
@@ -98,6 +103,8 @@ export default class App extends Vue {
   public general = general;
   public specific = specific;
   public loaded = false;
+
+  public master = new Part();
 
   get openedFile() {
     if (!cache) { return null; }
