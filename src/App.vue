@@ -25,12 +25,12 @@
             </split>
 
             <split>
-              <playlist 
+              <playlist-sequencer
                 :tracks="project.tracks" 
                 :elements="[]"
                 :part="master"
                 :prototype="null"
-              ></playlist>
+              ></playlist-sequencer>
             </split>
 
             <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`" keep>

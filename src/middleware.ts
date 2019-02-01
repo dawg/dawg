@@ -1,13 +1,8 @@
-import Vuetify from 'vuetify';
-import Icon from 'vue-awesome/components/Icon.vue';
 import Vue from 'vue';
-import 'vuetify/dist/vuetify.css';
-import 'vue-awesome/icons';
 import { remote } from 'electron';
 import TooltipIcon from '@/components/TooltipIcon.vue';
 import Context from '@/modules/context';
 import Notification from '@/modules/notification';
-import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import storybook from '@/storybook';
 
 const inspect = {
@@ -26,11 +21,8 @@ const inspect = {
 };
 
 const middleware = () => {
-  Vue.use(Vuetify, {theme: false});
   Vue.use(Context, { default: [inspect] });
-  Vue.component('icon', Icon);
   Vue.use(Notification);
-  Vue.component('VuePerfectScrollbar', VuePerfectScrollbar);
   Vue.component('TooltipIcon', TooltipIcon);
 
   storybook();

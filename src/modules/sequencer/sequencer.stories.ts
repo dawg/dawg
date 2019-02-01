@@ -6,9 +6,10 @@ import PlaylistSequencer from '@/modules/sequencer/PlaylistSequencer.vue';
 import Waveform from '@/modules/sequencer/Waveform.vue';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import { loadFromUrl } from '@/modules/audio/web';
-import { PlacedPattern, Pattern, Score, Note as NE, PlacedSample } from '@/schemas';
+import { PlacedPattern, Pattern, Score, Note as NE, PlacedSample, Instrument, Track } from '@/schemas';
 import { resizable, Note, PatternElement, SampleElement, positionable } from '@/modules/sequencer';
 import Part from '@/modules/audio/part';
+import { range } from '@/utils';
 
 const Temp = Vue.extend({
   template: `<div style="height: 30px; width: 400px"></div>`,
@@ -46,14 +47,17 @@ storiesOf('PianoRollSequencer', module)
     template: `
     <dawg>
       <piano-roll-sequencer
+        style="height: 500px"
         :elements="notes"
         :part="part"
+        :instrument="instrument"
       ></piano-roll-sequencer>
     </dawg>
     `,
     data: () => ({
       notes: [],
       part: new Part(),
+      instrument: Instrument.default('TEST'),
     }),
     components: { PianoRollSequencer, Dawg },
   }));
@@ -70,9 +74,11 @@ storiesOf('PlaylistSequencer', module)
   template: `
   <dawg>
     <playlist-sequencer
+      style="height: 500px"
       :elements="elements"
       :prototype="element"
       :part="part"
+      :tracks="tracks"
     ></playlist-sequencer>
   </dawg>
   `,
@@ -81,6 +87,8 @@ storiesOf('PlaylistSequencer', module)
     elements: [],
     buffer: null,
     element: patternElement,
+    tracks: range(21).map((i) => Track.create(i)),
+
   }),
   components: { PlaylistSequencer, Dawg },
   computed: {

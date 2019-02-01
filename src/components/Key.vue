@@ -1,5 +1,6 @@
 <template>
   <div 
+    class="key"
     :class="keyClass" 
     :style="keyStyle" 
     @mousedown="mousedown"

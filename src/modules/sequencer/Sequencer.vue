@@ -1,28 +1,47 @@
 <template>
   <div class="sequencer">
-    <timeline 
-      v-model="progress" 
-      class="timeline"
-      :set-loop-end.sync="setLoopEnd"
-      :set-loop-start.sync="setLoopStart"
-      :loop-start="loopStart"
-      :loop-end="loopEnd"
-      :offset="offset"
-    ></timeline>
-    <arranger
-      @added="added"
-      @removed="removed"
-      @scroll-horizontal="scrollHorizontal"
-      :elements="elements"
-      :sequencer-loop-end.sync="sequencerLoopEnd"
-      :loop-start="loopStart"
-      :loop-end="loopEnd"
-      :set-loop-start="setLoopStart"
-      :set-loop-end="setLoopEnd"
-      :progress="progress"
-      v-bind="$attrs"
-      v-on="$listeners"
-    ></arranger>
+    <div style="display: flex">
+      <div class="empty-block secondary" :style="style"></div>
+      <timeline 
+        v-model="progress" 
+        class="timeline"
+        :set-loop-end.sync="setLoopEnd"
+        :set-loop-start.sync="setLoopStart"
+        :loop-start="loopStart"
+        :loop-end="loopEnd"
+        :offset="offset"
+      ></timeline>
+    </div>
+    <!-- TODO(jacob) move this stuff out of here -->
+    <vue-perfect-scrollbar style="overflow-y: scroll; display: flex; height: calc(100% - 20px)">
+      <!-- Use a wrapper div to add width attribute -->
+      <div :style="style" class="side-wrapper">
+        <slot name="side"></slot>
+      </div>
+      <!-- TODO(jacob) -->
+      <vue-perfect-scrollbar
+        class="sequencer sequencer-child" 
+        @ps-scroll-x="scroll" 
+        ref="scroller"
+        style="height: fit-content"
+        :settings="{ suppressScrollY: true }"
+      >
+        <arranger
+          @added="added"
+          @removed="removed"
+          :elements="elements"
+          :sequencer-loop-end.sync="sequencerLoopEnd"
+          :loop-start="loopStart"
+          :loop-end="loopEnd"
+          :set-loop-start="setLoopStart"
+          :set-loop-end="setLoopEnd"
+          :progress="progress"
+          v-bind="$attrs"
+          v-on="$listeners"
+        ></arranger>
+      </vue-perfect-scrollbar>
+
+    </vue-perfect-scrollbar>
   </div>
 </template>
 
@@ -42,6 +61,8 @@ import Timeline from '@/modules/sequencer/Timeline.vue';
 export default class Sequencer extends Vue {
   @Inject() public pxPerBeat!: number;
 
+  // TODO(jacob) Rename width to something else
+  @Prop({ type: Number, default: 80 }) public width!: number;
   @Prop({ type: Array, required: true }) public elements!: Element[];
   @Prop({ type: Boolean, default: false }) public play!: boolean;
   @Prop({ type: Object, required: true }) public part!: Part<Element>;
@@ -59,13 +80,22 @@ export default class Sequencer extends Vue {
     return this.scrollLeft / this.pxPerBeat;
   }
 
-  public scrollHorizontal(scrollLeft: number) {
-    this.scrollLeft = scrollLeft;
+  public scroll(e: UIEvent) {
+    // This only handles horizontal scrolls!
+    const scroller = this.$refs.scroller as Vue;
+    // this.$emit('scroll-horizontal', scroller.$el.scrollLeft);
+    this.scrollLeft = scroller.$el.scrollLeft;
   }
 
   public update() {
     if (this.part.state === 'started') { requestAnimationFrame(this.update); }
     this.progress = this.part.progress;
+  }
+
+  get style() {
+    return {
+      minWidth: `${this.width}px`,
+    }
   }
 
   public added(note: Element) {
@@ -141,9 +171,13 @@ export default class Sequencer extends Vue {
 <style lang="sass" scoped>
 .sequencer
   display: block
-  border-top: 1px solid #111
 
 .timeline
   width: 100%
+
+.timeline, .empty-block
   height: 20px
+
+.side-wrapper
+  height: fit-content
 </style>

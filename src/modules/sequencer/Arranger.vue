@@ -1,5 +1,6 @@
 <template>
-  <vue-perfect-scrollbar class="sequencer sequencer-child" @scroll="scroll" ref="scroller">
+  <!-- TODO(jacob) Remove this I think........... -->
+  <div class="sequencer sequencer-child">
     <!-- 
       We need this child element for scroll reasons.
       See https://stackoverflow.com/questions/16670931/hide-scroll-bar-but-while-still-being-able-to-scroll
@@ -56,12 +57,11 @@
         class="loop-background loop-background--right" 
         :style="rightStyle"
       ></div>
-    </vue-perfect-scrollbar>
-  <!-- </div> -->
+    </div>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Mixins, Inject } from 'vue-property-decorator';
+import { Component, Prop, Mixins, Inject, Vue } from 'vue-property-decorator';
 import { Draggable } from '@/modules/draggable';
 import { FactoryDictionary } from 'typescript-collections';
 import { range, Nullable, Keys } from '@/utils';
@@ -224,12 +224,6 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
       height: `${this.rowHeight}px`,
       width: `${this.pxPerBeat * this.displayBeats}px`,
     };
-  }
-
-  public scroll(e: UIEvent) {
-    // This only handles horizontal scrolls!
-    const scroller = this.$refs.scroller as HTMLElement;
-    this.$emit('scroll-horizontal', scroller.scrollLeft);
   }
 
   public updateDuration(i: number, value: number) {
@@ -438,7 +432,6 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
 
 .sequencer-child
   position: relative
-  overflow-x: scroll
 
 .progress-bar
   width: 1px
