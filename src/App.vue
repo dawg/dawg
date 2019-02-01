@@ -26,6 +26,7 @@
 
             <split>
               <playlist-sequencer
+                style="height: 100%"
                 :tracks="project.tracks" 
                 :elements="[]"
                 :part="master"

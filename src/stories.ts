@@ -15,6 +15,7 @@ import TimeDisplay from '@/components/TimeDisplay.vue';
 import PlayPause from '@/components/PlayPause.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
+import Dawg from '@/modules/dawg/Dawg.vue';
 import ColorBlock from '@/components/ColorBlock.vue';
 import { StyleType, range, makeStyle } from '@/utils';
 import Foot from '@/components/Foot.vue';
@@ -22,10 +23,8 @@ import Notifications from '@/modules/notification/Notifications.vue';
 import Synth from '@/components/Synth.vue';
 import Split from '@/modules/split/Split.vue';
 
-import PianoRoll from '@/components/PianoRoll.vue';
 import Timeline from '@/components/Timeline.vue';
 import ContextMenu from '@/modules/context/ContextMenu.vue';
-import Vue from 'vue';
 
 const synth = new Tone.Synth().toMaster();
 
@@ -327,6 +326,19 @@ storiesOf(Foot.name, module)
     components: { Foot },
   }));
 
+const NOTES = [
+  {id: 44, time: 0, duration: 1},
+  {id: 47, time: 0, duration: 1},
+  {id: 49, time: 0, duration: 1},
+  {id: 47, time: 1, duration: 1},
+  {id: 49, time: 1, duration: 1},
+  {id: 51, time: 1, duration: 1},
+  {id: 52, time: 2, duration: 0.5},
+  {id: 51, time: 3, duration: 0.5},
+  {id: 45, time: 4, duration: 0.5},
+  {id: 48, time: 5, duration: 0.5},
+];
+
 storiesOf(Synth.name, module)
   .add('Standard', () => ({
     template: `
@@ -412,15 +424,4 @@ storiesOf(Timeline.name, module)
         return this.pixels / this.pxPerBeat;
       },
     },
-  }));
-
-storiesOf(PianoRoll.name, module)
-  .add('Standard', () => ({
-    template: `
-    <dawg>
-      <piano-roll :synth="piano"></piano-roll>
-    </dawg>
-    `,
-    data: () => ({ piano }),
-    components: { PianoRoll, Dawg },
   }));

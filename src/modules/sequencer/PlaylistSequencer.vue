@@ -6,10 +6,14 @@
     :row-height="40"
     :row-class="() => 'secondary'"
     :row-style="rowStyle"
-    :width="120"
+    :width="130"
   >
     <template slot="side">
-      <tracks :tracks="tracks" class="tracks"></tracks>
+      <d-track
+        v-for="(track, i) in tracks" 
+        :key="i" 
+        :track="track"
+      ></d-track>
     </template>
   </sequencer>
 </template>

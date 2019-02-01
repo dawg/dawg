@@ -22,7 +22,8 @@ export default class PatternElement extends Vue {
   public score: MiniScore | null = null;
 
   get notes() {
-    return [].concat.apply([], this.element.pattern.scores.map((score) => score.notes));
+    const notes: Note[] = [];
+    return notes.concat(...this.element.pattern.scores.map((score) => score.notes));
   }
 
   get scoreStyle() {

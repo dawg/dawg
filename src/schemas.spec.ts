@@ -20,11 +20,11 @@ describe('schemas', () => {
   context('Note', () => {
     it('works', () => {
       const noteObject = {
-        id: 0,
+        row: 0,
         duration: 5,
         time: 5,
       };
-      const note = Note.create(noteObject);
+      const note = new Note(noteObject);
       const serialized = Serialize(note);
       expect(serialized).to.deep.eq(note);
       expect(Deserialize(serialized, Note)).to.deep.eq(note);
@@ -34,7 +34,7 @@ describe('schemas', () => {
   context('Score', () => {
     it('works', () => {
       const score = Score.create('instr');
-      score.notes.push(Note.create({id: 0, duration: 5, time: 5}));
+      score.notes.push(new Note({row: 0, duration: 5, time: 5}));
       expect(Deserialize(Serialize(score, Score))).to.deep.eq(score);
     });
   });
@@ -42,7 +42,7 @@ describe('schemas', () => {
   context('Pattern', () => {
     it('works', () => {
       const score = Score.create('instr');
-      score.notes.push(Note.create({id: 0, duration: 5, time: 5}));
+      score.notes.push(new Note({row: 0, duration: 5, time: 5}));
       const pattern = Pattern.create('PAT');
       pattern.scores.push(score);
       const recreated = Deserialize(Serialize(pattern, Pattern));

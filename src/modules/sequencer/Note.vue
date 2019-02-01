@@ -30,13 +30,6 @@ export default class Note extends Vue {
   @Prop({ type: Number, required: true }) public height!: number;
   @Prop({ type: Number, default: 14 }) public fontSize!: number;
 
-  // TODO(jacob)
-  // get resizeAreaColor() {
-  //   if (this.selected) {
-  //     return '#ffcccc';
-  //   }
-  // }
-
   get text() {
     return allKeys[this.element.row].value;
   }
