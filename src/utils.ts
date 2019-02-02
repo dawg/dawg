@@ -138,7 +138,7 @@ export const Button = {
 };
 
 export function toTickTime(time: number) {
-  return `${time * Tone.Transport.PPQ}i`;
+  return time * Tone.Transport.PPQ;
 }
 
 

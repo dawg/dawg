@@ -3,10 +3,12 @@
   "cSpell.words": [
     "Hardcoded",
     "Positionable",
+    "Schedulable",
     "Vuex",
     "autoserialize",
     "comparator",
     "deserialize",
+    "deserialized",
     "deserializing",
     "dismissible",
     "fatsawtooth",

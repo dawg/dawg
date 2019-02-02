@@ -12,13 +12,11 @@
         :offset="offset"
       ></timeline>
     </div>
-    <!-- TODO(jacob) move this stuff out of here -->
     <vue-perfect-scrollbar style="overflow-y: scroll; display: flex; height: calc(100% - 20px)">
       <!-- Use a wrapper div to add width attribute -->
       <div :style="style" class="side-wrapper">
         <slot name="side"></slot>
       </div>
-      <!-- TODO(jacob) -->
       <vue-perfect-scrollbar
         class="sequencer sequencer-child" 
         @ps-scroll-x="scroll" 
@@ -76,15 +74,24 @@ export default class Sequencer extends Vue {
   public setLoopEnd: null | number = null;
 
   // Horizontal offset in beats.
-  public get offset() {
+  get offset() {
     return this.scrollLeft / this.pxPerBeat;
   }
 
-  public scroll(e: UIEvent) {
-    // This only handles horizontal scrolls!
-    const scroller = this.$refs.scroller as Vue;
-    // this.$emit('scroll-horizontal', scroller.$el.scrollLeft);
-    this.scrollLeft = scroller.$el.scrollLeft;
+  get style() {
+    return {
+      minWidth: `${this.width}px`,
+    };
+  }
+
+  public added(element: Element) {
+    const time = toTickTime(element.time);
+    this.$log.debug(`Adding element at ${element.time} -> ${time}`);
+    this.part.add(element.callback, time, element);
+  }
+
+  public removed(element: Element) {
+    this.part.remove(element);
   }
 
   public update() {
@@ -92,30 +99,11 @@ export default class Sequencer extends Vue {
     this.progress = this.part.progress;
   }
 
-  get style() {
-    return {
-      minWidth: `${this.width}px`,
-    }
-  }
-
-  public added(note: Element) {
-    // TODO There is duplication here with project.ts
-    // Eventually, we will need a solution.
-    const time = toTickTime(note.time);
-    this.$log.debug(`Adding note at ${note.time} -> ${time}`);
-
-    // TODO(jacob) FIX
-    // const callback = this.instrument.callback.bind(this.instrument);
-    const callback = () => {
-      // tslint:disable-next-line:no-console
-      console.log(note.time, note.row);
-    };
-
-    this.part.add(callback, time, note);
-  }
-
-  public removed(note: Element, i: number) {
-    this.part.remove(note);
+  public scroll(e: UIEvent) {
+    // This only handles horizontal scrolls!
+    const scroller = this.$refs.scroller as Vue;
+    // this.$emit('scroll-horizontal', scroller.$el.scrollLeft);
+    this.scrollLeft = scroller.$el.scrollLeft;
   }
 
   @Watch<Sequencer>('loopEnd', { immediate: true })

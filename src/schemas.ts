@@ -1,4 +1,4 @@
-import { autoserialize, autoserializeAs } from 'cerialize';
+import { autoserialize, autoserializeAs, inheritSerialization } from 'cerialize';
 import Tone from 'tone';
 import uuid from 'uuid';
 
@@ -57,6 +57,7 @@ export abstract class Element implements IElement {
     }
   }
 
+  public abstract callback(time: number, ticks: number): void;
   public abstract copy(): Element;
 }
 
@@ -74,6 +75,11 @@ export class PlacedPattern extends Element {
 
   public pattern!: Pattern;
   @autoserialize public patternId!: string;
+
+  get callback() {
+    // TODO(jacob) This doesn't make any sense...
+    return this.pattern.part.onTick;
+  }
 
   public init(patterns: Pattern[]) {
     const pattern = patterns.find((p) => p.id === this.patternId);
@@ -94,23 +100,40 @@ export class PlacedPattern extends Element {
 export class PlacedSample extends Element {
   public static create(buffer: AudioBuffer) {
     const element = new PlacedSample();
-    element.buffer = buffer;
+    element.player = new Tone.Player(buffer);
     return element;
   }
 
   public readonly component = 'sample-element';
-  public buffer!: AudioBuffer;
+  public player!: Tone.Player;
 
   public copy() {
     const pp = new PlacedSample();
     Object.assign(pp, this);
     return pp;
   }
+
+  public callback(exact: number) {
+    const duration = toTickTime(this.duration);
+    this.player.start(exact, undefined, duration);
+  }
 }
 
 // TODO Rename
+@inheritSerialization(Element)
 export class Note extends Element {
+  public static create(instrument: Instrument) {
+    const element = new Note();
+    element.instrument = instrument;
+    return element;
+  }
+
   public readonly component = 'note';
+  public instrument!: Instrument;
+
+  public init(score: Score) {
+    this.instrument = score.instrument;
+  }
 
   get id() {
     return this.row;
@@ -121,18 +144,32 @@ export class Note extends Element {
     Object.assign(pp, this);
     return pp;
   }
+
+  public callback(time: number) {
+    return this.instrument.callback(time, this);
+  }
 }
 
 export class Score {
-  public static create(instrumentId: string) {
+  public static create(instrument: Instrument) {
     const score = new Score();
-    score.instrumentId = instrumentId;
+    score.instrument = instrument;
+    score.instrumentId = instrument.id;
     score.id = uuid.v4();
     return score;
   }
+  public instrument!: Instrument;
   @autoserialize public id!: string;
   @autoserialize public instrumentId!: string;
   @autoserializeAs(Note) public notes: Note[] = [];
+
+  public init(lookup: { [k: string]: Instrument }) {
+    if (!(this.instrumentId in lookup)) {
+      throw Error(`${this.instrumentId} not in lookup`);
+    }
+
+    this.instrument = lookup[this.instrumentId];
+  }
 }
 
 export class Pattern {
@@ -240,8 +277,8 @@ export class Instrument implements IInstrument {
     this.synth.set({ oscillator: { type } });
   }
 
-  public triggerAttackRelease(note: string, duration: string, time: number) {
-    this.synth.triggerAttackRelease(note, duration, time);
+  public triggerAttackRelease(note: string, duration: number, time: number) {
+    this.synth.triggerAttackRelease(note, `${duration}i`, time);
   }
 
   public triggerRelease(note: string) {
@@ -270,12 +307,9 @@ export class Instrument implements IInstrument {
     }
   }
 
-  /**
-   * The callback for the part.
-   */
   public callback(time: number, note: Note) {
     const duration = toTickTime(note.duration);
-    const value = allKeys[note.id].value;
+    const value = allKeys[note.row].value;
     this.triggerAttackRelease(value, duration, time);
   }
 
@@ -291,8 +325,6 @@ export class Instrument implements IInstrument {
   }
 }
 
-// tslint:disable-next-line:ban-types
-// type NonFunctionPropertyNames<T> = { [K in keyof T]: T[K] extends Function ? never : K }[keyof T];
 export type EffectName = keyof EffectOptions;
 
 export const EffectMap = {

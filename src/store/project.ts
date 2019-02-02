@@ -93,8 +93,10 @@ export class Project extends VuexModule {
     // Ideally, we wouldn't have to do this, but I don't have a solution right now.
     this.patterns.forEach((pattern) => {
       pattern.scores.forEach((score) => {
+        score.init(this.instrumentLookup);
         const instrument = this.instrumentLookup[score.instrumentId];
         score.notes.forEach((note) => {
+          note.init(score);
           this.addNote({ pattern, instrument, note });
         });
       });
@@ -126,9 +128,8 @@ export class Project extends VuexModule {
   @Mutation
   public addNote(payload: { pattern: Pattern, instrument: Instrument, note: Note }) {
     const time = toTickTime(payload.note.time);
-    // This is a bit messy... :(
-    const callback = payload.instrument.callback.bind(payload.instrument);
-    payload.pattern.part.add(callback, time, payload.note);
+    // TODO(jacob) This is a bit messy... :(
+    payload.pattern.part.add(payload.note.callback, time, payload.note);
   }
 
   @Mutation
@@ -169,7 +170,7 @@ export class Project extends VuexModule {
       }
     });
 
-    payload.pattern.scores.push(Score.create(payload.instrument.id));
+    payload.pattern.scores.push(Score.create(payload.instrument));
   }
 
   get instrumentChannelLookup() {

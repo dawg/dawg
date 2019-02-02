@@ -2,6 +2,7 @@
   <sequencer
     v-on="$listeners"
     v-bind="$attrs"
+    :part="part"
     :row-height="noteHeight"
     :num-rows="allKeys.length"
     :prototype.sync="note"
@@ -16,8 +17,8 @@
 <script lang="ts">
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import Sequencer from '@/modules/sequencer/Sequencer.vue';
-import { allKeys } from '@/utils';
-import { Note, Instrument } from '@/schemas';
+import { allKeys, toTickTime } from '@/utils';
+import { Note, Instrument, Element } from '@/schemas';
 import Part from '@/modules/audio/part';
 
 @Component({
@@ -27,8 +28,9 @@ export default class PianoRollSequencer extends Vue {
   @Inject() public noteHeight!: number;
   @Inject() public pxPerBeat!: number;
 
+  @Prop({ type: Object, required: true }) public part!: Part<Note>;
   @Prop({ type: Object, required: true }) public instrument!: Instrument;
-  
+
   public note = new Note({ row: -1, time: -1, duration: 1 });
   public allKeys = allKeys;
 

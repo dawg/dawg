@@ -26,7 +26,7 @@ export default class SampleElement extends Vue {
   @Prop(Nullable(Object)) public element!: PlacedSample;
 
   get buffer() {
-    return this.element.buffer;
+    return this.element.player.buffer;
   }
 
   get waveformStyle() {

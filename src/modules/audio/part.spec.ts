@@ -7,7 +7,7 @@ describe('part', () => {
     let invocations = 0;
     return Offline(() => {
         const part = new Part();
-        part.schedule(() => {
+        part.scheduleEvent(() => {
           invocations++;
         }, 0);
         part.setLoopPoints(0, 0.1).start(0);

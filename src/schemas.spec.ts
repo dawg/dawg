@@ -1,6 +1,6 @@
-import { Serialize, Deserialize, autoserializeAs } from 'cerialize';
+import { Serialize, Deserialize, autoserializeAs, deserialize, autoserialize } from 'cerialize';
 import { expect } from 'chai';
-import { Note, Score, Pattern, Instrument } from './schemas';
+import { Note, Pattern, Score, Instrument } from './schemas';
 
 describe('schemas', () => {
   it('Recursive', () => {
@@ -26,22 +26,25 @@ describe('schemas', () => {
       };
       const note = new Note(noteObject);
       const serialized = Serialize(note);
-      expect(serialized).to.deep.eq(note);
       expect(Deserialize(serialized, Note)).to.deep.eq(note);
     });
   });
 
   context('Score', () => {
     it('works', () => {
-      const score = Score.create('instr');
+      const instrument = Instrument.default('asdfs');
+      const score = Score.create(instrument);
       score.notes.push(new Note({row: 0, duration: 5, time: 5}));
-      expect(Deserialize(Serialize(score, Score))).to.deep.eq(score);
+      const serialized = Serialize(score, Score);
+      const deserialized = Deserialize(serialized, Score);
+      deserialized.init({ [instrument.id]: instrument });
+      expect(deserialized).to.deep.eq(score);
     });
   });
 
   context('Pattern', () => {
     it('works', () => {
-      const score = Score.create('instr');
+      const score = Score.create(Instrument.default('lksdfj'));
       score.notes.push(new Note({row: 0, duration: 5, time: 5}));
       const pattern = Pattern.create('PAT');
       pattern.scores.push(score);

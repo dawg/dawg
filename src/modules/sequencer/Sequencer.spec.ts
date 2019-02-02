@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 import { shallowMount } from '@vue/test-utils';
-import Sequencer from '@/components/Sequencer.vue';
+import Arranger from '@/modules/sequencer/Arranger.vue';
 import Vue from 'vue';
 import Update from '@/modules/update';
 import VueLogger from 'vuejs-logger';
@@ -10,17 +10,20 @@ import io from '@/modules/io';
 Vue.use(VueLogger);
 Vue.use(Update);
 
-describe(Sequencer.name, () => {
+describe(Arranger.name, () => {
   it('should add correctly', () => {
-    const wrapper = shallowMount(Sequencer, {
+    const wrapper = shallowMount(Arranger, {
       propsData: {
         progress: 0,
         loopStart: 0,
         loopEnd: 0,
         setLoopStart: 0,
         setLoopEnd: 0,
-        value: [],
+        elements: [],
         sequencerLoopEnd: 0,
+        prototype: new Note({ row: 0, duration: 1, time: 0 }),
+        rowHeight: 20,
+        numRows: 20,
       },
       provide: {
         noteHeight: 16,
@@ -30,12 +33,12 @@ describe(Sequencer.name, () => {
       },
     });
     const vm = wrapper.vm as any;
-    vm.add(1, { clientX: 50 });
-    expect(vm.value.length).to.equal(1);
+    vm.add({ clientX: 50 }, 1);
+    expect(vm.elements.length).to.equal(1);
     let note: Note = wrapper.emitted().added[0][0];
     note = io.serialize(note, Note);
     expect(note).to.deep.equal({
-      id: 1,
+      row: 1,
       duration: 1,
       time: 0.5,
     });

@@ -149,13 +149,7 @@ declare module 'tone' {
     frequency: number,
   }
 
-  interface _ClockEvents {
-    start: any,
-    stop: any,
-    pause: any,
-  }
-
-  class Clock extends Emitter<_ClockEvents> {
+  class Clock extends Emitter<{ start: [], stop: [], pause: [] }> {
     constructor(options: _Clock);
     frequency: TickSignal;
     seconds: number;
@@ -230,8 +224,8 @@ declare module 'tone' {
     dispose(): this;
   }
 
-  class Emitter<T, V extends keyof T = keyof T> extends Tone {
-    emit(event: V, ...args: any[]): this;
+  class Emitter<T extends { [k: string]: any[] }, V extends keyof T = keyof T> extends Tone {
+    emit(event: V, ...args: T[V]): this;
     on(event: V, callback: (...args: any[]) => void): this;
     once(event: V, callback: (arg: any) => void): this;
     off(event: V, callback: (arg: any) => void): this;
@@ -811,7 +805,7 @@ declare module 'tone' {
       state: Source.State;
       volume: Signal;
       dispose(): this;
-      start(time?: _TimeArg): Source;
+      start(startTime?: _TimeArg, offset?: _TimeArg, duraiton?: _TimeArg): Source;
       stop(time?: _TimeArg): Source;
       sync(delay?: _TimeArg): Source;
       unsync(): Source;
@@ -889,9 +883,10 @@ declare module 'tone' {
     toBarsBeatsSixteenths(): string;
   }
 
-  class Timeline<T extends { time: any }> extends Tone {
+  class Timeline<T extends { time: number }> extends Tone {
     add(event: T): void;
     get(time: number, comparator?: keyof T): T;
+    forEach(callback: (event: T) => void): void;
     forEachAtTime(time: number, callback: (event: T) => void): void;
     forEachBetween(startTime: number, endTime: number, callback: (e: T) => void): this;
     forEachFrom(time: number, callback: (event: T) => void): void;
@@ -944,10 +939,12 @@ declare module 'tone' {
 
   var Transport: _TransportConstructor;
 
+  // TODO(jacob) function stuff is messed up. Move all stuff to part.ts
   class TransportEvent extends Tone {
     constructor(transport: _TransportConstructor | null, options: { time: TransportTime, callback: (time: number) => void })
     id: string;
     time: Ticks;
+    callback: (exact: number) => void;
     invoke(time: number): void;
     dispose(): void;
   }

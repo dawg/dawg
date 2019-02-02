@@ -16,7 +16,7 @@
           <split direction="vertical" resizable>
 
             <split :initial="general.toolbarHeight" fixed>
-              <toolbar 
+              <toolbar
                 :height="general.toolbarHeight" 
                 style="padding-right: 26px; border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
                 :bpm="project.bpm"
@@ -118,7 +118,7 @@ export default class App extends Vue {
     ipcRenderer.on('open', this.open);
 
     // tslint:disable-next-line:no-console
-    console.log(project);
+    console.info(project);
 
     // Make sure we load the cache first before loading the default project.
     this.$log.info('Starting to read data.');

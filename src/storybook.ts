@@ -11,7 +11,6 @@ import '@/styles/global.sass';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 
 import Piano from '@/components/Piano.vue';
-import Tracks from '@/components/Tracks.vue';
 import DTrack from '@/components/DTrack.vue';
 import DotButton from '@/components/DotButton.vue';
 
@@ -19,7 +18,7 @@ export default function middleware() {
   Vue.use(Theme);
   Vue.use(Update);
   Vue.use(VueLogger, {
-    logLevel :  'info',
+    logLevel: 'info',
   });
   Vue.use(sequencer);
   Vue.component('VuePerfectScrollbar', VuePerfectScrollbar);
@@ -29,7 +28,6 @@ export default function middleware() {
 
   // TODO(jacob) :)
   Vue.component('Piano', Piano);
-  Vue.component('Tracks', Tracks);
   Vue.component('DTrack', DTrack);
   Vue.component('DotButton', DotButton);
 }

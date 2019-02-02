@@ -64,7 +64,7 @@ storiesOf('PianoRollSequencer', module)
 
 
 const pattern = Pattern.create('Test Pattern');
-const score = Score.create('kslfjlsdkfj');
+const score = Score.create(Instrument.default('sdklfjsdf'));
 pattern.scores = [score];
 score.notes = notes.map((note) => new NE(note));
 const patternElement = PlacedPattern.create(pattern);
