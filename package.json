@@ -28,6 +28,7 @@
     "vue": "^2.5.17",
     "vue-awesome": "^3.1.2",
     "vue-class-component": "^6.0.0",
+    "vue-drag-drop": "^1.1.4",
     "vue-draggable-resizable": "^1.7.1",
     "vue-perfect-scrollbar": "^0.1.0",
     "vue-property-decorator": "^7.0.0",

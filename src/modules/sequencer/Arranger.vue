@@ -1,63 +1,63 @@
 <template>
   <!-- TODO(jacob) Remove this I think........... -->
-  <div class="sequencer sequencer-child">
+  <drop class="sequencer sequencer-child">
     <!-- 
       We need this child element for scroll reasons.
       See https://stackoverflow.com/questions/16670931/hide-scroll-bar-but-while-still-being-able-to-scroll
      -->
     <!-- <div class="sequencer-child" @scroll="scroll" ref="scroller"> -->
-      <div class="select-area" :style="selectStyle"></div>
-      <div 
-        class="layer rows" 
-        ref="rows" 
-        :style="`height: ${numRows * rowHeight}px`"
-      >
-        <div
-          v-for="row in numRows" 
-          :key="row"
-          :row="row - 1"
-          :total-beats="displayBeats"
-          :style="actualRowStyle(row - 1)"
-          :class="rowClass(row - 1)"
-          @click="add($event, row - 1)"
-          @contextmenu="$event.preventDefault()"
-          @mousedown="selectStart"
-        ></div>
-      </div>
-      <div :style="sequencerStyle" class="layer lines" ref="beatLines"></div>
-      <component
-        v-for="(component, i) in components"
-        :is="component.name"
-        :left="component.left"
-        :top="component.top"
-        :row="component.row"
-        :height="rowHeight"
-        style="position: absolute; z-index: 2"
-        :key="i"
-        :element="component.element"
-        :selected="selected[i]"
-        :duration="component.duration"
-        @update:duration="updateDuration(i, $event)"
-        @contextmenu.native="remove($event, i)"
-        @mousedown.native="select($event, i)"
-        @click="clickElement(i)"
-        @dblclick="open($event, i)"
-      ></component>
-      <progression
-        :loop-start="loopStart"
-        :loop-end="loopEnd"
-        :progress="progress"
-        class="progress-bar"
-      ></progression>
-      <div 
-        class="loop-background loop-background--left" 
-        :style="leftStyle"
-      ></div>
-      <div 
-        class="loop-background loop-background--right" 
-        :style="rightStyle"
+    <div class="select-area" :style="selectStyle"></div>
+    <div
+      class="layer rows" 
+      ref="rows" 
+      :style="`height: ${numRows * rowHeight}px`"
+    >
+      <div
+        v-for="row in numRows" 
+        :key="row"
+        :row="row - 1"
+        :total-beats="displayBeats"
+        :style="actualRowStyle(row - 1)"
+        :class="rowClass(row - 1)"
+        @click="add($event, row - 1)"
+        @contextmenu="$event.preventDefault()"
+        @mousedown="selectStart"
       ></div>
     </div>
+    <div :style="sequencerStyle" class="layer lines" ref="beatLines"></div>
+    <component
+      v-for="(component, i) in components"
+      :is="component.name"
+      :left="component.left"
+      :top="component.top"
+      :row="component.row"
+      :height="rowHeight"
+      style="position: absolute; z-index: 2"
+      :key="i"
+      :element="component.element"
+      :selected="selected[i]"
+      :duration="component.duration"
+      @update:duration="updateDuration(i, $event)"
+      @contextmenu.native="remove($event, i)"
+      @mousedown.native="select($event, i)"
+      @click="clickElement(i)"
+      @dblclick="open($event, i)"
+    ></component>
+    <progression
+      :loop-start="loopStart"
+      :loop-end="loopEnd"
+      :progress="progress"
+      class="progress-bar"
+    ></progression>
+    <div 
+      class="loop-background loop-background--left" 
+      :style="leftStyle"
+    ></div>
+    <div 
+      class="loop-background loop-background--right" 
+      :style="rightStyle"
+    ></div>
+  </drop>
 </template>
 
 <script lang="ts">

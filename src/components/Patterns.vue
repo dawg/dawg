@@ -6,6 +6,7 @@
       class="pattern"
       :class="{ selected: value && pattern.id === value.id }"
       @click="click(pattern)"
+      draggable="true"
     >
       {{ pattern.name }}
     </div>
