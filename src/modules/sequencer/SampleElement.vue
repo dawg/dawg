@@ -26,7 +26,8 @@ export default class SampleElement extends Vue {
   @Prop(Nullable(Object)) public element!: PlacedSample;
 
   get buffer() {
-    return this.element.player.buffer;
+    // @ts-ignore
+    return this.element.player.buffer._buffer;
   }
 
   get waveformStyle() {
@@ -44,7 +45,11 @@ export default class SampleElement extends Vue {
   }
 
   get bufferBeats() {
-    return this.bufferMinutes * Tone.Transport.bpm.value;
+    if (this.element) {
+      return this.element.beats;
+    } else {
+      return 0;
+    }
   }
 
   get bufferWidth() {

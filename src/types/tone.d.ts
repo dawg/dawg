@@ -108,6 +108,7 @@ declare module 'tone' {
   class Buffer extends Tone {
     constructor(url: any); //TODO: Change 'any' to 'AudioBuffer | string' when available
     MAX_SIMULTANEOUS_DOWNLOADS: number;
+    _buffer: AudioBuffer;
     duration: number; // Readonly
     loaded: boolean; // Readonly
     onload: (e: any)=>any;
@@ -662,7 +663,7 @@ declare module 'tone' {
 
   class Player extends Source {
     constructor(url?: string | AudioBuffer, onload?: (e: any)=>any); //todo: string | AudioBuffer
-    buffer: AudioBuffer;
+    buffer: Buffer;
     duration: number;
     loop: boolean;
     loopEnd: _TimeArg;

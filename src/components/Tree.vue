@@ -2,14 +2,17 @@
   <div style="display: contents">
     <div @click="click" style="display: flex" v-bind:class="nodeClass" v-if="!isLeaf || isWav">
       <ico fa class="icon" :scale="scale" :style="indent">{{ icon }}</ico>
-      <div
+      <drag
         class="white--text path"
+        group="arranger"
+        :transfer-data="prototype"
         v-if="!isLeaf || isWav"
         @click="preview"
         @dblclick="sendToSampleTab"
+        :draggable="isWav"
       >
         {{ fileName }}
-      </div>
+      </drag>
     </div>
       <ul v-if="showChildren && (!isLeaf || isWav)">
         <tree
@@ -35,6 +38,7 @@ import { Keys } from '@/utils';
 import { Component, Prop } from 'vue-property-decorator';
 import Key from '@/components/Key.vue';
 import { loadPlayer } from '@/modules/audio/utils';
+import { PlacedSample } from '@/schemas';
 
 @Component
 export default class Tree extends Vue {
@@ -102,11 +106,14 @@ export default class Tree extends Vue {
   }
 
   public playSong(songPath: string) {
-    if (!this.player) {
-      this.player = loadPlayer(songPath).toMaster();
-    }
+    this.player!.start();
+  }
 
-    this.player.start();
+  get prototype() {
+    console.log(this.player);
+    if (this.player) {
+      return PlacedSample.create(this.player.buffer);
+    }
   }
 
   public stopSong() {
@@ -116,6 +123,10 @@ export default class Tree extends Vue {
   }
 
   public mounted() {
+    if (!this.player && this.isWav) {
+      this.player = loadPlayer(this.path).toMaster();
+    }
+
     window.addEventListener('keydown', this.moveDown);
     window.addEventListener('keyup', this.moveUp);
   }

@@ -97,6 +97,7 @@ export class PlacedSample extends Element {
   public static create(buffer: AudioBuffer) {
     const element = new PlacedSample();
     element.player = new Tone.Player(buffer);
+    element.duration = element.beats;
     return element;
   }
 
@@ -114,6 +115,12 @@ export class PlacedSample extends Element {
       const duration = toTickTime(this.duration);
       this.player.start(exact, undefined, duration);
     };
+  }
+
+  get beats() {
+    const buffer = this.player.buffer._buffer;
+    const minutes = buffer.length / buffer.sampleRate / 60;
+    return minutes * Tone.Transport.bpm.value;
   }
 }
 
