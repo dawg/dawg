@@ -15,9 +15,8 @@ const NOTES = [
   {id: 48, time: 5, duration: 0.5},
 ];
 
-storiesOf(MiniScore.name, module)
+storiesOf('MiniScore', module)
   .add('Standard', () => ({
-    components: { Dawg, MiniScore },
     template: `
     <dawg>
       <mini-score :notes="notes" style="height: 50px; width: 400px"></mini-score>
@@ -26,4 +25,19 @@ storiesOf(MiniScore.name, module)
     data: () => ({
       notes: NOTES,
     }),
+  }));
+
+
+storiesOf('Slider', module)
+  .add('Standard', () => ({
+    template: `
+    <slider v-model="value" :left=".46" :right=".50"></slider>
+    `,
+    data: () => ({ value: .70 }),
+  }));
+
+
+storiesOf('Toolbar', module)
+  .add('Standard', () => ({
+    template: `<v-app dark><toolbar/></v-app>`,
   }));

@@ -4,11 +4,9 @@ import Tone from 'tone';
 import DotButton from '@/components/DotButton.vue';
 import Key from '@/components/Key.vue';
 import Piano from '@/components/Piano.vue';
-import Toolbar from '@/components/Toolbar.vue';
 import Tree from '@/components/Tree.vue';
 import Knob from '@/components/Knob.vue';
 import Mixer from '@/components/Mixer.vue';
-import Slider from '@/components/Slider.vue';
 import Note from '@/components/Note.vue';
 import Bpm from '@/components/Bpm.vue';
 import TimeDisplay from '@/components/TimeDisplay.vue';
@@ -61,21 +59,11 @@ storiesOf(Key.name, module)
     components: { Key, Dawg },
   }));
 
-const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
-
-
-
 storiesOf(DotButton.name, module)
   .add('Standard', () => ({
     components: { DotButton },
     template: '<dot-button @click="click"></dot-button>',
     methods: { click: action('clicked') },
-  }));
-
-storiesOf(Toolbar.name, module)
-  .add('Standard', () => ({
-    template: '<v-app dark><toolbar/></v-app>',
-    components: { Toolbar },
   }));
 
 const TREE = {
@@ -185,15 +173,6 @@ storiesOf(Mixer.name, module)
     <mixer></mixer>
     `,
     components: { Mixer },
-  }));
-
-storiesOf(Slider.name, module)
-  .add('Standard', () => ({
-    template: `
-    <slider v-model="value" :left=".46" :right=".50"></slider>
-    `,
-    components: { Slider },
-    data: () => ({ value: .70 }),
   }));
 
 storiesOf(PlayPause.name, module)

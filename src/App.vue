@@ -1,7 +1,5 @@
 <template>
-  <v-app 
-    class="app" 
-  >
+  <v-app class="app">
     <dawg>
       <split direction="vertical">
         <split direction="horizontal" resizable>
@@ -17,8 +15,12 @@
 
             <split :initial="general.toolbarHeight" fixed>
               <toolbar
-                :height="general.toolbarHeight" 
-                style="padding-right: 26px; border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
+                :height="general.toolbarHeight"
+                :part="part"
+                :context="general.applicationContext"
+                :play="general.play"
+                @update:play="playPause"
+                style="border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
                 :bpm="project.bpm"
                 @update:bpm="project.setBpm"
               ></toolbar>
@@ -59,7 +61,6 @@
 <script lang="ts">
 import fs from 'fs';
 import { Component, Vue } from 'vue-property-decorator';
-import Toolbar from '@/components/Toolbar.vue';
 import SideBar from '@/components/SideBar.vue';
 import Foot from '@/components/Foot.vue';
 import FileExplorer from '@/components/FileExplorer.vue';
@@ -84,7 +85,6 @@ import { Pattern, Score, Note, Instrument } from '@/schemas';
 @Component({
   components: {
     SideBar,
-    Toolbar,
     Tabs,
     Tab,
     Foot,
@@ -166,6 +166,15 @@ export default class App extends Vue {
     specific.write();
   }
 
+  get part() {
+    if (general.applicationContext === 'pianoroll') {
+      const pattern = specific.selectedPattern;
+      return pattern ? pattern.part : null;
+    } else {
+      return this.master;
+    }
+  }
+
   public playPause() {
     const pattern = specific.selectedPattern;
     if (!pattern) {
@@ -174,11 +183,11 @@ export default class App extends Vue {
     }
 
     if (pattern.part.state === 'started') {
-      this.$log.info('PAUSING');
+      this.$log.debug('PAUSING');
       pattern.part.pause();
       general.pause();
     } else {
-      this.$log.info('PLAY');
+      this.$log.debug('PLAY');
       pattern.part.start();
       general.start();
     }

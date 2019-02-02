@@ -15,7 +15,7 @@ interface ScheduledItem<T> {
   event: TimelineEvent<T>;
 }
 
-export default class Part<T> extends Tone.Emitter<
+export default class Part<T = Element> extends Tone.Emitter<
   {add: [Part<T>, ScheduledItem<T>], remove: [Part<T>, ScheduledItem<T>],
 }> {
   public loop = true;

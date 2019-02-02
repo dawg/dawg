@@ -3,6 +3,7 @@ import { VuexModule, Module, getModule, Mutation } from 'vuex-module-decorators'
 import SideBar from '@/components/SideBar.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
 import store from '@/store/store';
+import { ApplicationContext } from '@/constants';
 
 /**
  * This module is used to move data throughout the sections. It is not serialized in any way.
@@ -13,6 +14,7 @@ export class General extends VuexModule {
   public panels: BaseTabs | null = null;
   public toolbarHeight = 64;
   public play = false;
+  public applicationContext: ApplicationContext = 'pianoroll';
 
   @Mutation
   public setSideBarTabs(sideBarTabs: SideBar[]) {

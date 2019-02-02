@@ -110,9 +110,8 @@ export default class Tree extends Vue {
   }
 
   get prototype() {
-    console.log(this.player);
     if (this.player) {
-      return PlacedSample.create(this.player.buffer);
+      return PlacedSample.create(this.player.buffer._buffer);
     }
   }
 

@@ -7,6 +7,7 @@ import VueLogger from 'vuejs-logger';
 import Update from '@/modules/update';
 import Theme from '@/modules/theme';
 import sequencer from '@/modules/sequencer';
+import Dawg from '@/modules/dawg';
 import DragNDrop from '@/modules/dragndrop';
 import '@/styles/global.sass';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
@@ -19,6 +20,7 @@ export default function middleware() {
   Vue.use(Theme);
   Vue.use(Update);
   Vue.use(DragNDrop);
+  Vue.use(Dawg);
   Vue.use(VueLogger, {
     logLevel: 'info',
   });
