@@ -81,13 +81,8 @@ export class PlacedPattern extends Element {
     return this.pattern.part;
   }
 
-  public init(patterns: Pattern[]) {
-    const pattern = patterns.find((p) => p.id === this.patternId);
-    if (pattern) {
-      this.pattern = pattern;
-    } else {
-      throw Error;
-    }
+  public init(pattern: Pattern) {
+    this.pattern = pattern;
   }
 
   public copy() {
@@ -189,9 +184,10 @@ export class Pattern {
   public part = new Part<Note>();
 
   get duration() {
+    // TODO(jacob) 4 is not good
     return this.scores.reduce((max, score) => {
       return Math.max(max, ...score.notes.map(({ time, duration }) => time + duration));
-    }, 0);
+    }, 4);
   }
 }
 

@@ -1,6 +1,9 @@
 <template>
-  <!-- TODO(jacob) Remove this I think........... -->
-  <drop class="sequencer sequencer-child">
+  <drop 
+    class="sequencer sequencer-child"
+    group="arranger"
+    @drop="handleDrop"
+  >
     <!-- 
       We need this child element for scroll reasons.
       See https://stackoverflow.com/questions/16670931/hide-scroll-bar-but-while-still-being-able-to-scroll
@@ -19,7 +22,7 @@
         :total-beats="displayBeats"
         :style="actualRowStyle(row - 1)"
         :class="rowClass(row - 1)"
-        @click="add($event, row - 1)"
+        @click="add($event)"
         @contextmenu="$event.preventDefault()"
         @mousedown="selectStart"
       ></div>
@@ -74,14 +77,13 @@ import { IElement, Element } from '@/schemas';
 @Component({
   components: { Progression },
 })
-export default class Sequencer extends Mixins(Draggable, BeatLines) {
+export default class Arranger extends Mixins(Draggable, BeatLines) {
   @Inject() public stepsPerBeat!: number;
 
   @Prop({ type: Number, required: true }) public rowHeight!: number;
   @Prop({ type: Array, required: true }) public elements!: Element[];
   @Prop({ type: Number, default: 0.25 }) public snap!: number;
 
-  @Prop(Nullable(Object)) public prototype!: Element | null;
   @Prop({ type: Number, required: true }) public numRows!: number;
   @Prop({ type: Function, default: () => ({}) }) public rowStyle!: (row: number) => object;
   @Prop({ type: Function, default: () => undefined }) public rowClass!: (row: number) => string;
@@ -97,6 +99,9 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
   @Prop(Nullable(Number)) public setLoopEnd!: number | null;
   @Prop(Nullable(Number)) public setLoopStart!: number | null;
   @Prop({ type: Number, required: true }) public progress!: number;
+
+  // TODO(jacob) edge case -> what happens if the element is deleted?
+  @Prop(Nullable(Object)) public prototype!: Element | null;
 
   public cursor = 'move';
   public rows!: HTMLElement;
@@ -249,17 +254,22 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     window.removeEventListener('mouseup', this.selectEnd);
   }
 
-  public add(e: MouseEvent, row: number) {
+  public add(e: MouseEvent) {
     if (!this.prototype) {
       return;
     }
 
-    const left = this.$el.getBoundingClientRect().left;
-    const x = e.clientX - left;
+    const rect = this.$el.getBoundingClientRect();
+
+    const x = e.clientX - rect.left;
     let time = x / this.pxPerBeat;
     time = Math.floor(time / this.snap) * this.snap;
-    this.$log.debug(x, e.clientX, left, time);
+    this.$log.debug(x, e.clientX, rect.left, time);
 
+    const y = e.clientY - rect.top;
+    const row = Math.floor(y / this.rowHeight);
+
+    this.$log.info(`Adding to row -> ${row}, time -> ${time}`);
     const item = this.prototype.copy();
     item.row = row;
     item.time = time;
@@ -275,9 +285,11 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     const x = e.clientX - rect.left;
     let time = x / this.pxPerBeat;
     time = Math.floor(time / this.snap) * this.snap;
+    if (time < 0) { return; }
 
     const y = e.clientY - rect.top;
     const row = Math.floor(y / this.rowHeight);
+    if (row < 0) { return; }
 
     const oldItem = this.elements[i];
     if (row === oldItem.row && time === oldItem.time) { return; }
@@ -396,7 +408,13 @@ export default class Sequencer extends Mixins(Draggable, BeatLines) {
     if (e.keyCode === Keys.SHIFT) { this.holdingShift = false; }
   }
 
-  @Watch<Sequencer>('elements', { immediate: true })
+  public handleDrop(prototype: Element, event: MouseEvent) {
+    this.$update('prototype', prototype);
+    this.$nextTick(() => this.add(event));
+    // prototype is not updated automatically
+  }
+
+  @Watch<Arranger>('elements', { immediate: true })
   public resetSelectedIfNecessary() {
     // Whenever the parent changes the items
     // we should reset the selected!

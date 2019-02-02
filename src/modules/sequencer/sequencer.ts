@@ -1,21 +1,7 @@
 import Vue, { CreateElement, VueConstructor, VNodeData } from 'vue';
 import { Prop, Inject, Component, Mixins } from 'vue-property-decorator';
 import { Draggable } from '@/modules/draggable';
-
-const createHOC = (component: VueConstructor, createElement: CreateElement, hoc: Vue, data?: VNodeData) => {
-  return createElement(component, {
-    ...data,
-    props: {
-      ...hoc.$props,
-    },
-    attrs: {
-      ...hoc.$attrs,
-    },
-    on: {
-      ...hoc.$listeners,
-    },
-  });
-};
+import { createHOC } from '@/modules/utils';
 
 export const positionable = (component: VueConstructor) => {
   @Component

@@ -28,9 +28,8 @@
               <playlist-sequencer
                 style="height: 100%"
                 :tracks="project.tracks" 
-                :elements="[]"
+                :elements="elements"
                 :part="master"
-                :prototype="null"
               ></playlist-sequencer>
             </split>
 
@@ -104,6 +103,9 @@ export default class App extends Vue {
   public general = general;
   public specific = specific;
   public loaded = false;
+
+  // TODO(jacob) Fix THIS
+  public elements = [];
 
   public master = new Part();
 

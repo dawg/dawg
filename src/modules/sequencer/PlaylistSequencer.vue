@@ -8,6 +8,7 @@
     :row-style="rowStyle"
     :width="130"
     :part="part"
+    :prototype.sync="prototype"
   >
     <template slot="side">
       <d-track
@@ -33,6 +34,7 @@ import Part from '@/modules/audio/part';
 export default class PlaylistSequencer extends Vue {
   @Prop({ type: Array, required: true }) public tracks!: Track[];
   @Prop({ type: Object, required: true }) public part!: Part<Element>;
+  public prototype = null;
 
   public height = 40;
 
