@@ -96,7 +96,7 @@ export class Project extends VuexModule {
         score.init(this.instrumentLookup);
         const instrument = this.instrumentLookup[score.instrumentId];
         score.notes.forEach((note) => {
-          note.init(score);
+          note.init(score.instrument);
           this.addNote({ pattern, instrument, note });
         });
       });

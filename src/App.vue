@@ -172,9 +172,11 @@ export default class App extends Vue {
     }
 
     if (pattern.part.state === 'started') {
+      this.$log.info('PAUSING');
       pattern.part.pause();
       general.pause();
     } else {
+      this.$log.info('PLAY');
       pattern.part.start();
       general.start();
     }

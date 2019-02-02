@@ -26,8 +26,9 @@
     </panel>
     <panel name="Piano Roll">
       <piano-roll-sequencer
+        style="height: 100%"
         v-if="shouldRender"
-        v-model="notes"
+        :elements="notes"
         :part="part"
         :instrument="instrument"
         :play="general.play"

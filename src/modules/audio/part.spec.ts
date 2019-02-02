@@ -60,7 +60,7 @@ describe('part', () => {
     const event = child.scheduleEvent(noOp, 2);
     expect(parent.timeline.length).to.equal(1);
 
-    child.removeAtTime(2, event);
+    child.removeAtTime(2, event.event);
     expect(parent.timeline.length).to.equal(0);
   });
 

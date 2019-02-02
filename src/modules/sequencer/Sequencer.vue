@@ -12,7 +12,10 @@
         :offset="offset"
       ></timeline>
     </div>
-    <vue-perfect-scrollbar style="overflow-y: scroll; display: flex; height: calc(100% - 20px)">
+    <vue-perfect-scrollbar 
+      style="overflow-y: scroll; display: flex; height: calc(100% - 20px)"
+      :settings="{ handlers: ['wheel'] }"
+    >
       <!-- Use a wrapper div to add width attribute -->
       <div :style="style" class="side-wrapper">
         <slot name="side"></slot>
@@ -22,7 +25,7 @@
         @ps-scroll-x="scroll" 
         ref="scroller"
         style="height: fit-content"
-        :settings="{ suppressScrollY: true }"
+        :settings="{ suppressScrollY: true, handlers: ['wheel'] }"
       >
         <arranger
           @added="added"
@@ -87,7 +90,7 @@ export default class Sequencer extends Vue {
   public added(element: Element) {
     const time = toTickTime(element.time);
     this.$log.debug(`Adding element at ${element.time} -> ${time}`);
-    this.part.add(element.callback, time, element);
+    this.part.add(element.callback(), time, element);
   }
 
   public removed(element: Element) {
@@ -149,6 +152,7 @@ export default class Sequencer extends Vue {
 
   @Watch<Sequencer>('play', { immediate: true })
   public onPlay() {
+    this.$log.debug(`play -> ${this.play}`);
     if (this.play) {
       this.update();
     }

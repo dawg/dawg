@@ -2,7 +2,7 @@ import { autoserialize, autoserializeAs, inheritSerialization } from 'cerialize'
 import Tone from 'tone';
 import uuid from 'uuid';
 
-import Part from '@/modules/audio/part';
+import Part, { Schedulable } from '@/modules/audio/part';
 import { toTickTime, allKeys, scale, ConstructorOf } from './utils';
 
 // These are all of the schemas for the project.
@@ -57,10 +57,11 @@ export abstract class Element implements IElement {
     }
   }
 
-  public abstract callback(time: number, ticks: number): void;
+  public abstract callback(): Schedulable<any>;
   public abstract copy(): Element;
 }
 
+@inheritSerialization(Element)
 export class PlacedPattern extends Element {
   public static create(pattern: Pattern) {
     const element = new PlacedPattern();
@@ -76,9 +77,8 @@ export class PlacedPattern extends Element {
   public pattern!: Pattern;
   @autoserialize public patternId!: string;
 
-  get callback() {
-    // TODO(jacob) This doesn't make any sense...
-    return this.pattern.part.onTick;
+  public callback() {
+    return this.pattern.part;
   }
 
   public init(patterns: Pattern[]) {
@@ -97,6 +97,7 @@ export class PlacedPattern extends Element {
   }
 }
 
+@inheritSerialization(Element)
 export class PlacedSample extends Element {
   public static create(buffer: AudioBuffer) {
     const element = new PlacedSample();
@@ -113,13 +114,14 @@ export class PlacedSample extends Element {
     return pp;
   }
 
-  public callback(exact: number) {
-    const duration = toTickTime(this.duration);
-    this.player.start(exact, undefined, duration);
+  public callback() {
+    return (exact: number) => {
+      const duration = toTickTime(this.duration);
+      this.player.start(exact, undefined, duration);
+    };
   }
 }
 
-// TODO Rename
 @inheritSerialization(Element)
 export class Note extends Element {
   public static create(instrument: Instrument) {
@@ -131,8 +133,9 @@ export class Note extends Element {
   public readonly component = 'note';
   public instrument!: Instrument;
 
-  public init(score: Score) {
-    this.instrument = score.instrument;
+  public init(instrument: Instrument) {
+    this.instrument = instrument;
+    return this;
   }
 
   get id() {
@@ -145,8 +148,10 @@ export class Note extends Element {
     return pp;
   }
 
-  public callback(time: number) {
-    return this.instrument.callback(time, this);
+  public callback() {
+    return (exact: number) => {
+      this.instrument.callback(exact, this);
+    };
   }
 }
 

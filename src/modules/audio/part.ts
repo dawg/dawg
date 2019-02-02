@@ -2,21 +2,24 @@ import Tone, { TransportEvent } from 'tone';
 import { ContextTime, TransportTime } from './types';
 import uuid from 'uuid';
 
-type PartCallback = (exact: ContextTime, ticks: number) => void;
+type PartCallback = (exact: ContextTime) => void;
+export type Schedulable<T> = PartCallback | Part<T>;
 
-class TimelineEvent {
+class TimelineEvent<T> {
   public id = uuid.v4();
-  constructor(public callback: PartCallback) {}
+  constructor(public item: Schedulable<T>) {}
 }
 
-interface ScheduledItem {
+interface ScheduledItem<T> {
   time: number; // ticks
-  event: TimelineEvent;
+  event: TimelineEvent<T>;
 }
 
-export default class Part<T> extends Tone.Emitter<{add: [Part<T>, ScheduledItem], remove: [Part<T>, ScheduledItem]}> {
+export default class Part<T> extends Tone.Emitter<
+  {add: [Part<T>, ScheduledItem<T>], remove: [Part<T>, ScheduledItem<T>],
+}> {
   public loop = true;
-  public timeline = new Tone.Timeline<ScheduledItem>();
+  public timeline = new Tone.Timeline<ScheduledItem<T>>();
   private ppq = 192;
   // tslint:disable-next-line:variable-name
   private _loopStart = 0;
@@ -26,8 +29,7 @@ export default class Part<T> extends Tone.Emitter<{add: [Part<T>, ScheduledItem]
     callback: this.onTick.bind(this),
     frequency: 0,
   });
-  private scheduledEvents: { [k: string]: ScheduledItem } = {};
-  private groups: Array<[string, T]> = [];
+  private groups: Array<[ScheduledItem<T>, T]> = [];
 
   private parts: { [k: string]: [Part<T>, number[]] } = {};
   private id = uuid.v4();
@@ -45,8 +47,7 @@ export default class Part<T> extends Tone.Emitter<{add: [Part<T>, ScheduledItem]
       time: ticks,
       event: new TimelineEvent(callback),
     });
-
-    return item.event;
+    return item;
   }
 
   public scheduleEvents(part: Part<T>, ticks: number) {
@@ -63,6 +64,12 @@ export default class Part<T> extends Tone.Emitter<{add: [Part<T>, ScheduledItem]
       event: item.event,
       time: ticks + item.time,
     }));
+
+    const event = new TimelineEvent(part);
+    return {
+      time: ticks,
+      event,
+    };
   }
 
   public removeEvents(part: Part<T>, ticks: number) {
@@ -87,7 +94,7 @@ export default class Part<T> extends Tone.Emitter<{add: [Part<T>, ScheduledItem]
     part.off('remove', this.childRemove.bind(this));
   }
 
-  public childSchedule(child: Part<T>, item: ScheduledItem) {
+  public childSchedule(child: Part<T>, item: ScheduledItem<T>) {
     if (!(child.id in this.parts)) {
       throw Error(`Information about ${child.id} not available`);
     }
@@ -100,7 +107,7 @@ export default class Part<T> extends Tone.Emitter<{add: [Part<T>, ScheduledItem]
     });
   }
 
-  public childRemove(child: Part<T>, childItem: ScheduledItem) {
+  public childRemove(child: Part<T>, childItem: ScheduledItem<T>) {
     const event = childItem.event;
     this.parts[child.id][1].forEach((startTicks) => {
       const ticks = childItem.time + startTicks;
@@ -108,44 +115,49 @@ export default class Part<T> extends Tone.Emitter<{add: [Part<T>, ScheduledItem]
     });
   }
 
-  public removeAtTime(ticks: number, event: TimelineEvent) {
+  public removeAtTime(ticks: number, event: TimelineEvent<T>) {
     this.timeline.forEachAtTime(ticks, (item) => {
       if (event === item.event) {
-        this.timeline.remove(item);
-        this.emit('remove', this, item);
+        this.clear(item);
       }
     });
   }
 
-  public addEvent(item: ScheduledItem) {
-    this.scheduledEvents[item.event.id] = item;
+  public addEvent(item: ScheduledItem<T>) {
     this.timeline.add(item);
     this.emit('add', this, item);
     return item;
   }
 
-  public add(callback: PartCallback, ticks: number, o: T) {
-    const event = this.scheduleEvent(callback, ticks);
-    this.groups.push([event.id, o]);
+  public add(schedulable: Schedulable<T>, ticks: number, o: T) {
+    let item: ScheduledItem<T>;
+    if (schedulable instanceof Part) {
+      item = this.scheduleEvents(schedulable, ticks);
+    } else {
+      item = this.scheduleEvent(schedulable, ticks);
+    }
+
+    this.groups.push([item, o]);
+    return item;
   }
 
   public remove(o: T) {
-    this.groups.forEach(([id, other], i) => {
+    this.groups.forEach(([event, other], i) => {
       if (o === other) {
-        this.clear(id);
+        this.clear(event);
         this.groups.splice(i, 1);
       }
     });
   }
 
-  public clear(eventId: string) {
-    if (eventId in this.scheduledEvents) {
-      const event = this.scheduledEvents[eventId];
-      this.timeline.remove(event);
-      this.emit('remove', this, event);
-      delete this.scheduledEvents[eventId];
+  public clear(item: ScheduledItem<T>) {
+    this.timeline.remove(item);
+
+    if (item.event.item instanceof Part) {
+      this.removeEvents(item.event.item, item.time);
+    } else {
+      this.emit('remove', this, item);
     }
-    return this;
   }
 
   /**
@@ -200,8 +212,8 @@ export default class Part<T> extends Tone.Emitter<{add: [Part<T>, ScheduledItem]
   get loopEnd() {
     return new Tone.Ticks(this._loopEnd).toSeconds();
   }
-  set loopEnd(loopEnd: number | string) {
-    this._loopEnd = this.toTicks(loopEnd);
+  set loopEnd(loopEnd: number) {
+    this._loopEnd = this.toTicks(`${loopEnd}i`);
   }
 
   get ticks() {
@@ -261,7 +273,9 @@ export default class Part<T> extends Tone.Emitter<{add: [Part<T>, ScheduledItem]
     }
     // invoke the timeline events scheduled on this tick
     this.timeline.forEachAtTime(ticks, (item) => {
-      item.event.callback(exact, ticks);
+      if (typeof item.event.item === 'function') {
+        item.event.item(exact);
+      }
     });
   }
 }

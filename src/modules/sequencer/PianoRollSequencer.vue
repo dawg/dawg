@@ -31,7 +31,7 @@ export default class PianoRollSequencer extends Vue {
   @Prop({ type: Object, required: true }) public part!: Part<Note>;
   @Prop({ type: Object, required: true }) public instrument!: Instrument;
 
-  public note = new Note({ row: -1, time: -1, duration: 1 });
+  public note = new Note({ row: -1, time: -1, duration: 1 }).init(this.instrument);
   public allKeys = allKeys;
 
   public rowClass(i: number) {
