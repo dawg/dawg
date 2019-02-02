@@ -226,9 +226,9 @@ declare module 'tone' {
 
   class Emitter<T extends { [k: string]: any[] }, V extends keyof T = keyof T> extends Tone {
     emit(event: V, ...args: T[V]): this;
-    on(event: V, callback: (...args: any[]) => void): this;
-    once(event: V, callback: (arg: any) => void): this;
-    off(event: V, callback: (arg: any) => void): this;
+    on(event: V, callback: (...args: T[V]) => void): this;
+    once(event: V, callback: (...arg: T[V]) => void): this;
+    off(event: V, callback: (...arg: T[V]) => void): this;
   }
 
   class Envelope extends Tone {
@@ -884,6 +884,7 @@ declare module 'tone' {
   }
 
   class Timeline<T extends { time: number }> extends Tone {
+    length: number;
     add(event: T): void;
     get(time: number, comparator?: keyof T): T;
     forEach(callback: (event: T) => void): void;
