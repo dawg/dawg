@@ -190,7 +190,7 @@ export default class App extends Vue {
 
     if (part.state === 'started') {
       this.$log.debug('PAUSING');
-      part.pause();
+      part.stop();
       general.pause();
     } else {
       this.$log.debug('PLAY');

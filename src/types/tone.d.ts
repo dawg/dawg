@@ -806,7 +806,7 @@ declare module 'tone' {
       state: Source.State;
       volume: Signal;
       dispose(): this;
-      start(startTime?: _TimeArg, offset?: _TimeArg, duraiton?: _TimeArg): Source;
+      start(startTime?: _TimeArg, offset?: _TimeArg, duration?: _TimeArg): Source;
       stop(time?: _TimeArg): Source;
       sync(delay?: _TimeArg): Source;
       unsync(): Source;

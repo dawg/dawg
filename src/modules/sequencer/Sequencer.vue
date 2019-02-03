@@ -155,6 +155,10 @@ export default class Sequencer extends Vue {
     this.$log.debug(`play -> ${this.play}`);
     if (this.play) {
       this.update();
+    } else if (this.part.state === 'started') {
+      // This may not be the best way
+      // since we are mutating state directly...
+      this.part.stop();
     }
   }
 }

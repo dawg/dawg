@@ -96,7 +96,7 @@ export class PlacedPattern extends Element {
 export class PlacedSample extends Element {
   public static create(buffer: AudioBuffer) {
     const element = new PlacedSample();
-    element.player = new Tone.Player(buffer);
+    element.player = new Tone.Player(buffer).toMaster();
     element.duration = element.beats;
     return element;
   }
@@ -113,7 +113,7 @@ export class PlacedSample extends Element {
   public callback() {
     return (exact: number) => {
       const duration = toTickTime(this.duration);
-      this.player.start(exact, undefined, duration);
+      this.player.start(exact, undefined, `${duration}i`);
     };
   }
 

@@ -48,7 +48,6 @@ export default class Toolbar extends Vue {
   public sliderTop = false;
 
   get icon() {
-    console.log(this.play ? 'pause' : 'play');
     return this.play ? 'pause' : 'play';
   }
 

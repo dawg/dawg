@@ -7,8 +7,8 @@
         group="arranger"
         :transfer-data="prototype"
         v-if="!isLeaf || isWav"
-        @click="preview"
-        @dblclick="sendToSampleTab"
+        @click.native="preview"
+        @dblclick.native="sendToSampleTab"
         :draggable="isWav"
       >
         {{ fileName }}
@@ -84,11 +84,11 @@ export default class Tree extends Vue {
       }
   }
 
-  public async sendToSampleTab(event: MouseEvent) {
+  public sendToSampleTab(event: MouseEvent) {
     // TODO: From here we can send this.path to sample viewer
   }
 
-  public async preview(event: MouseEvent) {
+  public preview(event: MouseEvent) {
     if (this.isWav) {
       this.selectOneNode(this.$parent.$refs.trees, this.index);
       this.playSong(this.path);

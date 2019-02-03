@@ -138,7 +138,8 @@ export const Button = {
 };
 
 export function toTickTime(time: number) {
-  return time * Tone.Transport.PPQ;
+  // TODO(jacob) is ceil right?
+  return Math.ceil(time * Tone.Transport.PPQ);
 }
 
 
