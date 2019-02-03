@@ -35,6 +35,12 @@ describe.only('cerialize', () => {
     });
   });
 
+  it('deserialize', () => {
+    const start = { a: 'test', b: 5, dude: 'test' };
+    const finish = { a: 'test', b: 5, bad: '5' };
+    expect(D(start, A)).to.deep.equal(finish);
+  });
+
   context('autoserializeAs', () => {
     it('simple', () => {
       const b = new B();
@@ -82,7 +88,6 @@ describe.only('cerialize', () => {
       const c = new C();
       c.as.help = new A();
 
-      console.log(S(c, C));
       expect(S(c, C)).to.deep.equal({
         as: {
           help: {
