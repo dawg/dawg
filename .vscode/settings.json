@@ -1,14 +1,17 @@
 {
   "editor.tabSize": 2,
   "cSpell.words": [
+    "Deserializer",
     "Hardcoded",
     "Positionable",
     "Schedulable",
+    "Serializable",
     "Vuex",
     "autoserialize",
     "comparator",
     "deserialize",
     "deserialized",
+    "deserializes",
     "deserializing",
     "dismissible",
     "dragndrop",
