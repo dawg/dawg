@@ -33,7 +33,7 @@ describe(Arranger.name, () => {
       },
     });
     const vm = wrapper.vm as any;
-    vm.add({ clientX: 50 }, 1);
+    vm.add({ clientX: 50, clientY: 20 });
     expect(vm.elements.length).to.equal(1);
     let note: Note = wrapper.emitted().added[0][0];
     note = io.serialize(note, Note);

@@ -5,8 +5,7 @@
   ],
   "linterOptions": {
     "exclude": [
-      "node_modules/**",
-      "src/modules/cerialize/**"
+      "node_modules/**"
     ]
   },
   "rules": {

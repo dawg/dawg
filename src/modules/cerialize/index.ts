@@ -13,7 +13,9 @@ const TypeMap = win.__CerializeTypeMap = new (win as any).Map();
 export type Serializer = (value: any) => any;
 export type Deserializer = (value: any) => any;
 
-export type INewable<T> = new (...args: any[]) => T;
+type Func = () => void;
+
+export type Constructor<T> = new (...args: any[]) => T;
 
 export interface IEnum {
   [enumeration: string]: any;
@@ -97,10 +99,10 @@ function serializeString(value: any): string | string[] {
 function serializeNumber(value: any): number | number[] {
   if (Array.isArray(value)) {
     return value.map((element: any) => {
-      return parseInt(element);
+      return parseInt(element, 10);
     });
   } else {
-    return parseInt(value);
+    return parseInt(value, 10);
   }
 }
 
@@ -141,9 +143,9 @@ function getSerializeFnForType(type: any): Serializer {
 // gets meta data for a key name, creating a new meta data instance
 // if the input array doesn't already define one for the given keyName
 function getMetaData(array: MetaData[], keyName: string): MetaData {
-  for (let i = 0; i < array.length; i++) {
-    if (array[i].keyName === keyName) {
-      return array[i];
+  for (const item of array) {
+    if (item.keyName === keyName) {
+      return item;
     }
   }
   array.push(new MetaData(keyName));
@@ -151,14 +153,14 @@ function getMetaData(array: MetaData[], keyName: string): MetaData {
 }
 
 // helper for grabbing the type and keyname from a multi-type input variable
-function getTypeAndKeyName(keyNameOrType: string | Function | ISerializable, keyName?: string) {
-  let type: Function | null = null;
+function getTypeAndKeyName(keyNameOrType: string | Func | ISerializable | Constructor<any>, keyName?: string) {
+  let type: Func | null = null;
   let key: string | null = null;
   if (typeof keyNameOrType === 'string') {
     key = keyNameOrType as string;
 
   } else if (keyNameOrType && typeof keyNameOrType === 'function' || typeof keyNameOrType === 'object') {
-    type = keyNameOrType as Function;
+    type = keyNameOrType as Func;
     key = keyName || null;
   }
   return {
@@ -170,38 +172,18 @@ function getTypeAndKeyName(keyNameOrType: string | Function | ISerializable, key
 // todo instance.constructor.prototype.__proto__ === parent class, maybe use this?
 // because types are stored in a JS Map keyed by constructor, serialization is not inherited by default
 // keeping this seperate by default also allows sub classes to serialize differently than their parent
-export function inheritSerialization(parentType: Function): any {
-  return (childType: Function) => {
+export function inheritSerialization(parentType: Func): any {
+  return (childType: Func) => {
     const parentMetaData: MetaData[] = TypeMap.get(parentType) || [];
     const childMetaData: MetaData[] = TypeMap.get(childType) || [];
-    for (let i = 0; i < parentMetaData.length; i++) {
-      const keyName = parentMetaData[i].keyName;
+    for (const item of parentMetaData) {
+      const keyName = item.keyName;
       if (!MetaData.hasKeyName(childMetaData, keyName)) {
-        childMetaData.push(MetaData.clone(parentMetaData[i]));
+        childMetaData.push(MetaData.clone(item));
       }
     }
     TypeMap.set(childType, childMetaData);
   };
-}
-
-// an untyped serialization property annotation, gets existing meta data for the target or creates
-// a new one and assigns the serialization key for that type in the meta data
-export function serialize(target: any, keyName: string): any {
-  if (!target || !keyName) { return; }
-  const metaDataList: MetaData[] = TypeMap.get(target.constructor) || [];
-  const metadata = getMetaData(metaDataList, keyName);
-  metadata.serializedKey = keyName;
-  TypeMap.set(target.constructor, metaDataList);
-}
-
-// an untyped deserialization property annotation, gets existing meta data for the target or creates
-// a new one and assigns the deserialization key for that type in the meta data
-export function deserialize(target: any, keyName: string): any {
-  if (!target || !keyName) { return; }
-  const metaDataList: MetaData[] = TypeMap.get(target.constructor) || [];
-  const metadata = getMetaData(metaDataList, keyName);
-  metadata.deserializedKey = keyName;
-  TypeMap.set(target.constructor, metaDataList);
 }
 
 // this combines @serialize and @deserialize as defined above
@@ -214,90 +196,9 @@ export function autoserialize(target: any, keyName: string): any {
   TypeMap.set(target.constructor, metaDataList);
 }
 
-// We dont actually need the type to serialize but I like the consistency with deserializeAs which definitely does
-// serializes a type using 1.) a custom key name, 2.) a custom type, or 3.) both custom key and type
-export function serializeAs(keyNameOrType: string | Serializer | INewable<any> | ISerializable | IEnum, keyName?: string): any {
-  if (!keyNameOrType) { return; }
-  const { key, type } = getTypeAndKeyName(keyNameOrType, keyName);
-  return (target: any, actualKeyName: string) => {
-    if (!target || !actualKeyName) { return; }
-    const metaDataList: MetaData[] = TypeMap.get(target.constructor) || [];
-    const metadata = getMetaData(metaDataList, actualKeyName);
-    metadata.serializedKey = (key) ? key : actualKeyName;
-    metadata.serializedType = type;
-    // this allows the type to be a stand alone function instead of a class
-    if (type !== Date && type !== RegExp && !TypeMap.get(type) && typeof type === 'function') {
-      metadata.serializedType = {
-        Serialize: getSerializeFnForType(type),
-      } as ISerializable;
-    }
-    TypeMap.set(target.constructor, metaDataList);
-  };
-}
-
-// Supports serializing of dictionary-like map objects, ie: { x: {}, y: {} }
-export function serializeIndexable(type: Serializer | INewable<any> | ISerializable, keyName?: string): any {
-  if (!type) { return; }
-  return (target: any, actualKeyName: string) => {
-    if (!target || !actualKeyName) { return; }
-    const metaDataList: MetaData[] = TypeMap.get(target.constructor) || [];
-    const metadata = getMetaData(metaDataList, actualKeyName);
-    metadata.serializedKey = (keyName) ? keyName : actualKeyName;
-    metadata.serializedType = type;
-    metadata.indexable = true;
-    // this allows the type to be a stand alone function instead of a class
-    if (type !== Date && type !== RegExp && !TypeMap.get(type) && typeof type === 'function') {
-      metadata.serializedType = {
-        Serialize: getSerializeFnForType(type),
-      } as ISerializable;
-    }
-    TypeMap.set(target.constructor, metaDataList);
-  };
-}
-
-// deserializes a type using 1.) a custom key name, 2.) a custom type, or 3.) both custom key and type
-export function deserializeAs(keyNameOrType: string | Function | INewable<any> | ISerializable | IEnum, keyName?: string): any {
-  if (!keyNameOrType) { return; }
-  const { key, type } = getTypeAndKeyName(keyNameOrType, keyName);
-  return (target: any, actualKeyName: string) => {
-    if (!target || !actualKeyName) { return; }
-    const metaDataList: MetaData[] = TypeMap.get(target.constructor) || [];
-    const metadata = getMetaData(metaDataList, actualKeyName);
-    metadata.deserializedKey = (key) ? key : actualKeyName;
-    metadata.deserializedType = type;
-    // this allows the type to be a stand alone function instead of a class
-    // todo maybe add an explicit date and regexp deserialization function here
-    if (!TypeMap.get(type) && type !== Date && type !== RegExp && typeof type === 'function') {
-      metadata.deserializedType = {
-        Deserialize: getDeserializeFnForType(type),
-      } as ISerializable;
-    }
-    TypeMap.set(target.constructor, metaDataList);
-  };
-}
-
-// Supports deserializing of dictionary-like map objects, ie: { x: {}, y: {} }
-export function deserializeIndexable(type: Function | INewable<any> | ISerializable, keyName?: string): any {
-  if (!type) { return; }
-  const key = keyName;
-  return (target: any, actualKeyName: string) => {
-    if (!target || !actualKeyName) { return; }
-    const metaDataList: MetaData[] = TypeMap.get(target.constructor) || [];
-    const metadata = getMetaData(metaDataList, actualKeyName);
-    metadata.deserializedKey = (key) ? key : actualKeyName;
-    metadata.deserializedType = type;
-    metadata.indexable = true;
-    if (!TypeMap.get(type) && type !== Date && type !== RegExp && typeof type === 'function') {
-      metadata.deserializedType = {
-        Deserialize: getDeserializeFnForType(type),
-      } as ISerializable;
-    }
-    TypeMap.set(target.constructor, metaDataList);
-  };
-}
-
 // serializes and deserializes a type using 1.) a custom key name, 2.) a custom type, or 3.) both custom key and type
-export function autoserializeAs(keyNameOrType: string | Function | INewable<any> | ISerializable | IEnum, keyName?: string): any {
+export function autoserializeAs(
+  keyNameOrType: string | Func | Constructor<any> | ISerializable | IEnum, keyName?: string): any {
   if (!keyNameOrType) { return; }
   const { key, type } = getTypeAndKeyName(keyNameOrType, keyName);
   return (target: any, actualKeyName: string) => {
@@ -309,7 +210,7 @@ export function autoserializeAs(keyNameOrType: string | Function | INewable<any>
     metadata.deserializedType = type;
     metadata.serializedKey = serialKey;
     metadata.serializedType = getSerializeFnForType(type);
-    if (!TypeMap.get(type) && type !== Date && type !== RegExp && typeof type === 'function') {
+    if (!TypeMap.get(type) && type !== Date && typeof type === 'function') {
       metadata.deserializedType = {
         Deserialize: getDeserializeFnForType(type),
       } as ISerializable;
@@ -319,7 +220,7 @@ export function autoserializeAs(keyNameOrType: string | Function | INewable<any>
 }
 
 // Supports serializing/deserializing of dictionary-like map objects, ie: { x: {}, y: {} }
-export function autoserializeIndexable(type: Function | INewable<any> | ISerializable, keyName?: string): any {
+export function autoserializeIndexable(type: Func | Constructor<any> | ISerializable, keyName?: string): any {
   if (!type) { return; }
   const key = keyName;
   return (target: any, actualKeyName: string) => {
@@ -348,10 +249,7 @@ class MetaData {
 
   // checks for a key name in a meta data array
   public static hasKeyName(metadataArray: MetaData[], key: string): boolean {
-    for (let i = 0; i < metadataArray.length; i++) {
-      if (metadataArray[i].keyName === key) { return true; }
-    }
-    return false;
+    return metadataArray.some((item) => item.keyName === key);
   }
 
   // clone a meta data instance, used for inheriting serialization properties
@@ -366,19 +264,18 @@ class MetaData {
   }
 
   public keyName: string;    // the key name of the property this meta data describes
-  public serializedKey: string | null; // the target keyname for serializing
+  public serializedKey: string | null = null; // the target keyname for serializing
   public deserializedKey: string | null;    // the target keyname for deserializing
 
   // the type or function to use when serializing this property
-  public serializedType: Function | INewable<any> | ISerializable | null;
+  public serializedType: Serializer | Constructor<any> | ISerializable | null;
 
   // the type or function to use when deserializing this property
-  public deserializedType: Function | INewable<any> | ISerializable | null;
+  public deserializedType: Func | Constructor<any> | ISerializable | null;
   public indexable: boolean;
 
   constructor(keyName: string) {
     this.keyName = keyName;
-    this.serializedKey = null;
     this.deserializedKey = null;
     this.deserializedType = null;
     this.serializedType = null;
@@ -425,7 +322,8 @@ function mergePrimitiveObjects(instance: any, json: any): any {
 
 // takes an array defined in json and deserializes it into an array that ist stuffed with instances of `type`.
 // any instances already defined in `arrayInstance` will be re-used where possible to maintain referential integrity.
-function deserializeArrayInto(source: any[], type: Function | INewable<any> | ISerializable, arrayInstance: any): any[] {
+function deserializeArrayInto(
+  source: any[], type: Func | Constructor<any> | ISerializable, arrayInstance: any): any[] {
   if (!Array.isArray(arrayInstance)) {
     arrayInstance = new Array<any>(source.length);
   }
@@ -441,7 +339,7 @@ function deserializeArrayInto(source: any[], type: Function | INewable<any> | IS
 
 // takes an object defined in json and deserializes it into a `type` instance or populates / overwrites
 // properties on `instance` if it is provided.
-function deserializeObjectInto(json: any, type: Function | INewable<any> | ISerializable | null, instance: any): any {
+function deserializeObjectInto(json: any, type: Func | Constructor<any> | ISerializable | null, instance: any): any {
   const metadataArray: MetaData[] = TypeMap.get(type);
   // if we dont have an instance we need to create a new `type`
   if (instance === null || instance === void 0) {
@@ -462,8 +360,7 @@ function deserializeObjectInto(json: any, type: Function | INewable<any> | ISeri
   }
 
   // for each property in meta data, try to hydrate that property with its corresponding json value
-  for (let i = 0; i < metadataArray.length; i++) {
-    const metadata = metadataArray[i];
+  for (const metadata of metadataArray) {
     // these are not the droids we're looking for (to deserialize), moving along
     if (!metadata.deserializedKey) { continue; }
 
@@ -490,7 +387,10 @@ function deserializeObjectInto(json: any, type: Function | INewable<any> | ISeri
       } else {
         instance[keyName] = deserializeArray(source, null);
       }
-    } else if ((typeof source === 'string' || source instanceof Date) && metadata.deserializedType === Date.prototype.constructor) {
+    } else if (
+        (typeof source === 'string' || source instanceof Date) &&
+        metadata.deserializedType === Date.prototype.constructor
+      ) {
       const deserializedDate = new Date(source);
       if (instance[keyName] instanceof Date) {
         instance[keyName].setTime(deserializedDate.getTime());
@@ -517,7 +417,7 @@ function deserializeObjectInto(json: any, type: Function | INewable<any> | ISeri
 }
 
 // deserializes a bit of json into a `type`
-export function Deserialize(json: any, type?: Function | INewable<any> | ISerializable | null): any {
+export function Deserialize(json: any, type?: Func | Constructor<any> | ISerializable | null): any {
 
   if (Array.isArray(json)) {
     return deserializeArray(json, type);
@@ -534,7 +434,7 @@ export function Deserialize(json: any, type?: Function | INewable<any> | ISerial
 }
 
 // takes some json, a type, and a target object and deserializes the json into that object
-export function DeserializeInto(source: any, type: Function | INewable<any> | ISerializable, target: any): any {
+export function DeserializeInto(source: any, type: Func | Constructor<any> | ISerializable, target: any): any {
   if (Array.isArray(source)) {
     return deserializeArrayInto(source, type, target || []);
   } else if (source && typeof source === 'object') {
@@ -545,7 +445,7 @@ export function DeserializeInto(source: any, type: Function | INewable<any> | IS
 }
 
 // deserializes an array of json into an array of `type`
-function deserializeArray(source: any[], type?: Function | INewable<any> | ISerializable | null): any[] {
+function deserializeArray(source: any[], type?: Func | Constructor<any> | ISerializable | null): any[] {
   const retn: any[] = new Array(source.length);
   for (let i = 0; i < source.length; i++) {
     retn[i] = Deserialize(source[i], type);
@@ -566,7 +466,7 @@ function invokeSerializeHook(instance: any, json: any): void {
 }
 
 // deserialize a bit of json into an instance of `type`
-function deserializeObject(json: any, type?: Function | INewable<any> | ISerializable | null): any {
+function deserializeObject(json: any, type?: Func | Constructor<any> | ISerializable | null): any {
   const metadataArray: MetaData[] = TypeMap.get(type);
 
   // if we dont have meta data, just decode the json and use that
@@ -584,9 +484,7 @@ function deserializeObject(json: any, type?: Function | INewable<any> | ISeriali
   const instance = new (type as any)();
 
   // for each tagged property on the source type, try to deserialize it
-  for (let i = 0; i < metadataArray.length; i++) {
-    const metadata = metadataArray[i];
-
+  for (const metadata of metadataArray) {
     if (!metadata.deserializedKey) { continue; }
 
     let serializedKey = metadata.deserializedKey;
@@ -609,7 +507,10 @@ function deserializeObject(json: any, type?: Function | INewable<any> | ISeriali
       instance[keyName] = (metadata.deserializedType as any).Deserialize(source);
     } else if (Array.isArray(source)) {
       instance[keyName] = deserializeArray(source, metadata.deserializedType || null);
-    } else if ((typeof source === 'string' || source instanceof Date) && metadata.deserializedType === Date.prototype.constructor) {
+    } else if (
+      (typeof source === 'string' || source instanceof Date) &&
+      metadata.deserializedType === Date.prototype.constructor
+    ) {
       instance[keyName] = new Date(source);
     } else if (typeof source === 'string' && metadata.deserializedType === RegExp) {
       instance[keyName] = new RegExp(json);
@@ -629,7 +530,7 @@ function deserializeObject(json: any, type?: Function | INewable<any> | ISeriali
   return instance;
 }
 
-function deserializeIndexableObject(source: any, type: Function | ISerializable | null): any {
+function deserializeIndexableObject(source: any, type: Func | ISerializable | Constructor<any> | null): any {
   const retn: any = {};
   // todo apply key transformation here?
   Object.keys(source).forEach((key: string) => {
@@ -638,7 +539,8 @@ function deserializeIndexableObject(source: any, type: Function | ISerializable 
   return retn;
 }
 
-function deserializeIndexableObjectInto(source: any, type: Function | ISerializable | null, instance: any): any {
+function deserializeIndexableObjectInto(
+  source: any, type: Func | ISerializable | Constructor<any> | null, instance: any): any {
   // todo apply key transformation here?
   Object.keys(source).forEach((key: string) => {
     instance[key] = deserializeObjectInto(source[key], type, instance[key]);
@@ -647,7 +549,7 @@ function deserializeIndexableObjectInto(source: any, type: Function | ISerializa
 }
 
 // take an array and spit out json
-function serializeArray(source: any[], type?: Function | ISerializable | null): any[] {
+function serializeArray(source: any[], type?: Serializer | ISerializable | Constructor<any> | null): any[] {
   const serializedArray: any[] = new Array(source.length);
   for (let j = 0; j < source.length; j++) {
     serializedArray[j] = Serialize(source[j], type);
@@ -656,7 +558,7 @@ function serializeArray(source: any[], type?: Function | ISerializable | null): 
 }
 
 // take an instance of something and try to spit out json for it based on property annotaitons
-function serializeTypedObject(instance: any, type?: Function | ISerializable): any {
+function serializeTypedObject(instance: any, type?: Serializer | ISerializable | Constructor<any>): any {
 
   const json: any = {};
 
@@ -667,9 +569,7 @@ function serializeTypedObject(instance: any, type?: Function | ISerializable): a
     metadataArray = TypeMap.get(instance.constructor);
   }
 
-  for (let i = 0; i < metadataArray.length; i++) {
-    const metadata = metadataArray[i];
-
+  for (const metadata of metadataArray) {
     if (!metadata.serializedKey) { continue; }
 
     let serializedKey = metadata.serializedKey;
@@ -704,7 +604,7 @@ function serializeTypedObject(instance: any, type?: Function | ISerializable): a
 }
 
 // take an instance of something and spit out some json
-export function Serialize(instance: any, type?: Function | ISerializable | null): any {
+export function Serialize(instance: any, type?: Serializer | ISerializable | Constructor<any> | null): any {
   if (instance === null || instance === void 0) { return null; }
 
   if (Array.isArray(instance)) {
@@ -730,9 +630,9 @@ export function Serialize(instance: any, type?: Function | ISerializable | null)
   if (instance && typeof instance === 'object' || typeof instance === 'function') {
     const keys = Object.keys(instance);
     const json: any = {};
-    for (let i = 0; i < keys.length; i++) {
+    for (const key of keys) {
       // todo this probably needs a key transform
-      json[keys[i]] = Serialize(instance[keys[i]]);
+      json[key] = Serialize(instance[key]);
     }
     invokeSerializeHook(instance, json);
     return json;
@@ -741,11 +641,11 @@ export function Serialize(instance: any, type?: Function | ISerializable | null)
   return instance;
 }
 
-export function GenericDeserialize<T>(json: any, type: INewable<T>): T {
+export function GenericDeserialize<T>(json: any, type: Constructor<T>): T {
   return Deserialize(json, type) as T;
 }
 
-export function GenericDeserializeInto<T>(json: any, type: INewable<T>, instance: T): T {
+export function GenericDeserializeInto<T>(json: any, type: Constructor<T>, instance: T): T {
   return DeserializeInto(json, type, instance) as T;
 }
 
