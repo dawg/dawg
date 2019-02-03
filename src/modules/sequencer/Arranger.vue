@@ -340,7 +340,7 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
     maxTime = maxTime + 0.0000001;
     const itemLoopEnd = Math.ceil(maxTime / this.beatsPerMeasure) * this.beatsPerMeasure;
 
-    this.$log.debug(`itemLoopEnd -> ${itemLoopEnd}`);
+    this.$log.info(`itemLoopEnd -> ${itemLoopEnd}`);
     if (itemLoopEnd !== this.itemLoopEnd) {
       this.$update('sequencerLoopEnd', itemLoopEnd);
       this.itemLoopEnd = itemLoopEnd;

@@ -1,18 +1,16 @@
 <template>
-  <div class="onoffswitch">
-    <input 
-      type="checkbox" 
-      name="onoffswitch" 
-      class="onoffswitch-checkbox" 
-      id="myonoffswitch" 
-      :value="top"
-      @input="update"
-    >
-    <label class="onoffswitch-label" for="myonoffswitch">
-        <span class="onoffswitch-inner"></span>
-        <span class="onoffswitch-switch"></span>
-    </label>
-</div>
+  <div class="onoffswitch onoffswitch-inner">
+    <div 
+      class="upper"
+      @click="selectTop"
+      :class="{ 'primary-lighten-3': top }"
+    ></div>
+    <div
+      class="lower" 
+      @click="selectBottom"
+      :class="{ 'primary-lighten-3': bottom }"
+    ></div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -22,67 +20,45 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 export default class VerticalSwitch extends Vue {
   @Prop({ type: Boolean, required: true }) public top!: boolean;
 
-  public update() {
-    this.$update('top', !this.top);
+  get bottom() {
+    return !this.top;
+  }
+
+  public selectTop() {
+    if (!this.top) {
+      this.$update('top', true);
+    }
+  }
+
+  public selectBottom() {
+    if (this.top) {
+      this.$update('top', false);
+    }
   }
 }
 </script>
 
-<style scoped>
-.onoffswitch {
-  position: relative; 
-  width: 60px;
-  transform: rotate(90deg);
-}
+<style scoped lang="sass">
+$size: 30px
 
-.onoffswitch-checkbox {
-  display: none;
-}
+.onoffswitch
+  position: relative
+  height: $size
+  display: flex
+  flex-direction: column
+  margin-left: 10px
 
-.onoffswitch-label {
-  display: block; overflow: hidden; cursor: pointer;
-  border: 2px solid #E3E3E3; border-radius: 0px;
-}
+.upper, .lower
+  float: left
+  height: $size
+  width: $size
+  border: 2px solid transparent
+  background-clip: padding-box
+  content: ""
+  background-color: #FFFFFF
+  transition: .5s
+  border-radius: 4px
 
-.onoffswitch-inner {
-  display: block; width: 200%; margin-left: -100%;
-  transition: margin 0.3s ease-in 0s;
-}
-
-.onoffswitch-inner:before, .onoffswitch-inner:after {
-  display: block; float: left; width: 50%; height: 53px; padding: 0; line-height: 49px;
-  font-size: 16px; color: white; font-family: Trebuchet, Arial, sans-serif; font-weight: bold;
-  box-sizing: border-box;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-}
-
-.onoffswitch-inner:before {
-  content: "";
-  padding-left: 10px;
-  background-color: #FFFFFF; color: #FFFFFF;
-}
-
-.onoffswitch-inner:after {
-  content: "";
-  padding-right: 10px;
-  background-color: #FFFFFF; color: #666666;
-  text-align: right;
-}
-
-.onoffswitch-switch {
-  display: block; width: 33px; margin: 0px;
-  background: #489CD4;
-  position: absolute; top: 0; bottom: 0;
-  right: 27px;
-  transition: all 0.3s ease-in 0s; 
-}
-
-.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-inner {
-  margin-left: 0;
-}
-
-.onoffswitch-checkbox:checked + .onoffswitch-label .onoffswitch-switch {
-  right: 0px; 
-}
+  &:hover
+    cursor: pointer
 </style>

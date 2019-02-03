@@ -31,7 +31,7 @@
         :elements="notes"
         :part="part"
         :instrument="instrument"
-        :play="general.play"
+        :play="general.pianoRollPlay"
       ></piano-roll-sequencer>
     </panel>
     <panel name="Sample">

@@ -18,6 +18,7 @@
                 :height="general.toolbarHeight"
                 :part="part"
                 :context="general.applicationContext"
+                @update:context="general.setContext"
                 :play="general.play"
                 @update:play="playPause"
                 style="border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
@@ -32,6 +33,7 @@
                 :tracks="project.tracks" 
                 :elements="elements"
                 :part="master"
+                :play="general.playlistPlay"
               ></playlist-sequencer>
             </split>
 
@@ -71,7 +73,6 @@ import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
 import Split from '@/modules/split/Split.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
-import Dawg from '@/modules/dawg/Dawg.vue';
 import SideTabs from '@/sections/SideTabs.vue';
 import Notifications from '@/modules/notification/Notifications.vue';
 import { ipcRenderer } from 'electron';
@@ -90,7 +91,6 @@ import { Pattern, Score, Note, Instrument } from '@/schemas';
     Foot,
     Split,
     BaseTabs,
-    Dawg,
     Notifications,
     Panels,
     ActivityBar,
@@ -176,19 +176,25 @@ export default class App extends Vue {
   }
 
   public playPause() {
-    const pattern = specific.selectedPattern;
-    if (!pattern) {
-      this.$notify.info('Select a pattern.');
-      return;
+    let part: Part<Note | Element>;
+    if (general.applicationContext === 'pianoroll') {
+      const pattern = specific.selectedPattern;
+      if (!pattern) {
+        this.$notify.info('Select a pattern.');
+        return;
+      }
+      part = pattern.part;
+    } else {
+      part = this.master;
     }
 
-    if (pattern.part.state === 'started') {
+    if (part.state === 'started') {
       this.$log.debug('PAUSING');
-      pattern.part.pause();
+      part.pause();
       general.pause();
     } else {
       this.$log.debug('PLAY');
-      pattern.part.start();
+      part.start();
       general.start();
     }
   }

@@ -22,6 +22,12 @@ export class General extends VuexModule {
   }
 
   @Mutation
+  public setContext(context: ApplicationContext) {
+    this.applicationContext = context;
+    this.play = false;
+  }
+
+  @Mutation
   public setPanels(panels: BaseTabs) {
     this.panels = panels;
   }
@@ -34,6 +40,14 @@ export class General extends VuexModule {
   @Mutation
   public pause() {
     this.play = false;
+  }
+
+  get playlistPlay() {
+    return this.play && this.applicationContext === 'playlist';
+  }
+
+  get pianoRollPlay() {
+    return this.play && this.applicationContext === 'pianoroll';
   }
 }
 
