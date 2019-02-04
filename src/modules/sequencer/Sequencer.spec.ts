@@ -5,7 +5,7 @@ import Vue from 'vue';
 import Update from '@/modules/update';
 import VueLogger from 'vuejs-logger';
 import { Note } from '@/schemas';
-import io from '@/modules/io';
+import * as io from '@/modules/cerialize';
 
 Vue.use(VueLogger);
 Vue.use(Update);

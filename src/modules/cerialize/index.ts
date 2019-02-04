@@ -7,11 +7,13 @@ export type Deserializer = (value: any) => any;
 
 export type Constructor<T> = new (...args: any[]) => T;
 export type Type = Constructor<any>;
+interface AnyObject { [k: string]: any; }
 
 // todo instance.constructor.prototype.__proto__ === parent class, maybe use this?
 // because types are stored in a JS Map keyed by constructor, serialization is not inherited by default
 // keeping this seperate by default also allows sub classes to serialize differently than their parent
-export function inheritSerialization<T>(parentType: Constructor<T>): any {
+// tslint:disable-next-line:ban-types
+export function inheritSerialization<T>(parentType: Function & { prototype: T }): any {
   return (childType: any) => {
     const parentMetaData = TypeMap.get(parentType) || {};
     const childMetaData = TypeMap.get(childType) || {};
@@ -25,33 +27,55 @@ export function inheritSerialization<T>(parentType: Constructor<T>): any {
   };
 }
 
-const storeInformation = (target: any, data: IMetaData) => {
+const storeInformation = (target: Constructor<any>, data: IMetaData) => {
   const metaDataList = TypeMap.get(target.constructor) || {};
   const metadata = new MetaData(data);
   metaDataList[data.key] = metadata;
   TypeMap.set(target.constructor, metaDataList);
 };
 
+export interface Target {
+  name: string;
+  new (...args: any[]): any;
+}
+
+export interface Options {
+  type?: Constructor<any>;
+  nullable?: boolean;
+}
+
+export function autoserialize(target: any, key: string): void;
+export function autoserialize(options: Options): (target: any, key: string) => void;
+
 // this combines @serialize and @deserialize as defined above
-export function autoserialize(target: any, key: string): any {
-  storeInformation(target, { key });
+export function autoserialize(targetOrOptions: Constructor<any> | Options, maybeKey?: string): any {
+  if (maybeKey) {
+    // Key will always be defined. See above function declarations.
+    storeInformation(targetOrOptions as any, { key: maybeKey! });
+  } else {
+    const options = targetOrOptions as Options;
+    return (target: Constructor<any>, key: string) => {
+      const types = options.type ? [options.type] : undefined;
+      storeInformation(target, { key, types, nullable: options.nullable });
+    };
+  }
 }
 
 // serializes and deserializes a type using 1.) a custom key name, 2.) a custom type, or 3.) both custom key and type
 export function autoserializeAs(type: Constructor<any>): any {
-  if (!TypeMap.get(type) && type !== Date) {
-    throw Error('type not found!!');
-  }
-
   return (target: any, key: string) => {
+    if (!TypeMap.get(type)) {
+      throw Error(`type not found!! ${type}`);
+    }
+
     storeInformation(target, { key, types: [type] });
   };
 }
 
 // Supports serializing/deserializing of dictionary-like map objects, ie: { x: {}, y: {} }
 export function autoserializeIndexable(type: Constructor<any>): any {
-  if (!TypeMap.get(type) && type !== Date) {
-    throw Error('type not found!!');
+  if (!TypeMap.get(type)) {
+    throw Error(`not found ${type.name}`);
   }
 
   return (target: any, key: string) => {
@@ -60,8 +84,8 @@ export function autoserializeIndexable(type: Constructor<any>): any {
 }
 
 export function union(type: Constructor<any>, ...types: Array<Constructor<any>>): any {
-  if (!TypeMap.get(type) && type !== Date) {
-    throw Error('type not found!!');
+  if (!TypeMap.get(type)) {
+    throw Error(`not found ${type.name}`);
   }
 
   return (target: any, key: string) => {
@@ -76,20 +100,23 @@ interface IMetaData {
   key: string;
   types?: Type[];
   indexable?: boolean;
+  nullable?: boolean;
 }
 
 // helper class to contain serialization meta data for a property, each property
 // in a type tagged with a serialization annotation will contain an array of these
 // objects each describing one property
-class MetaData implements IMetaData {
+class MetaData {
   public key: string;    // the key name of the property this meta data describes
   public types: Type[];
   public indexable: boolean;
+  public nullable: boolean;
 
   constructor(o: IMetaData) {
     this.indexable = o.indexable || false;
     this.types = o.types || [];
     this.key = o.key;
+    this.nullable = o.nullable || false;
   }
 
   // clone a meta data instance, used for inheriting serialization properties
@@ -98,38 +125,8 @@ class MetaData implements IMetaData {
       key: this.key,
       types: this.types,
       indexable: this.indexable,
+      nullable: this.nullable,
     });
-  }
-}
-
-/**
- * Deserializes json into a `type`.
- *
- * @param json The JSON.
- * @param type The type.
- */
-export function Deserialize(json: any, type?: Type, indexable = false): any {
-  if (json === null) {
-    throw Error('NULL');
-  } else if (Array.isArray(json)) {
-    return json.map((item) => Deserialize(item, type));
-  } else if (indexable) {
-    if (typeof json !== 'object' || !type) {
-      throw Error('BAD');
-    }
-
-    const deserialized: { [k: string]: any } = {};
-    Object.keys(json).forEach((key: string) => {
-      deserialized[key] = deserializeObject(json[key], type);
-    });
-
-    return deserialized;
-  } else if (type && typeof json === 'object') {
-    return deserializeObject(json, type);
-  } else if (typeof json === 'string' && type === Date.prototype.constructor) {
-    return new Date(json);
-  } else {
-    return json;
   }
 }
 
@@ -141,7 +138,7 @@ export const is = (o: any, type: Constructor<any>) => {
 
   const metadataArray = TypeMap.get(type);
   if (!metadataArray) {
-    throw Error('TypeMap does not contain type');
+    throw Error(`TypeMap does not contain type ${type}`);
   }
 
   for (const metadata of Object.values(metadataArray)) {
@@ -155,47 +152,62 @@ export const is = (o: any, type: Constructor<any>) => {
 };
 
 // deserialize a bit of json into an instance of `type`
-function deserializeObject(json: any, type: Constructor<any>): any {
-  const metadataArray = TypeMap.get(type);
+function deserializeObject(json: any, types: Array<Constructor<any>>): any {
+  // This is a bit weird, but Deserialize does not accept null right now...
+  let theType: Type | undefined;
+  if (types.length === 1) {
+    theType = types[0];
+  } else if (types.length > 1) { // union check
+    for (const maybe of types) {
+      if (is(json, maybe)) {
+        theType = maybe;
+        break;
+      }
+    }
+  }
+
+  if (!theType) {
+    throw Error(`Unable to determine suitable type out of ${types.length} types.`);
+  }
+
+  const metadataArray = TypeMap.get(theType);
 
   // if we dont have meta data, just decode the json and use that
   if (!metadataArray) {
-    throw new Error('TypeMap does not contain type');
+    throw new Error(`TypeMap does not contain type ${theType}`);
   }
 
-  const instance = new type();
+  const instance = new theType();
 
   // for each tagged property on the source type, try to deserialize it
   for (const metadata of Object.values(metadataArray)) {
     const key = metadata.key;
     const source = json[key];
     if (source === undefined) {
-      throw Error(`${key} does not exist in JSON`);
+      throw Error(`${key} does not exist`);
     }
 
-
-    // This is a bit weird, but Deserialize does not accept null right now...
-    let theType: Type | undefined;
-    if (metadata.types.length === 1) {
-      theType = metadata.types[0];
-    } else if (metadata.types.length > 1) { // union check
-      for (const maybe of metadata.types) {
-        if (is(source, maybe)) {
-          theType = maybe;
-          break;
-        }
-      }
-
-      if (!theType) {
-        throw Error('Unable to determine suitable type');
-      }
+    try {
+      instance[key] = Deserialize(source, metadata);
+    } catch (e) {
+      throw Error(`${key} -> ${e.message}`);
     }
-
-    instance[key] = Deserialize(source, theType, metadata.indexable);
   }
 
   return instance;
 }
+
+const apply = (o: AnyObject, func: (value: any) => any) => {
+  if (typeof o !== 'object') {
+    throw Error('BAD');
+  }
+  const deserialized: { [k: string]: any } = {};
+  Object.keys(o).forEach((key: string) => {
+    deserialized[key] = func(o[key]);
+  });
+
+  return deserialized;
+};
 
 // take an instance of something and try to spit out json for it based on property annotaitons
 function serializedObject(instance: any, type?: Serializer | Constructor<any>): any {
@@ -210,10 +222,36 @@ function serializedObject(instance: any, type?: Serializer | Constructor<any>): 
       throw Error(`${metadata.key} does not exist.`);
     }
 
-    json[metadata.key] = Serialize(instance[metadata.key], undefined, metadata.indexable);
+    json[metadata.key] = Serialize(instance[metadata.key], undefined, metadata);
   }
 
   return json;
+}
+
+/**
+ * Deserializes json into a `type`.
+ *
+ * @param json The JSON.
+ * @param type The type.
+ */
+export function Deserialize(json: any, meta: MetaData): any {
+  const { indexable, nullable, types } = meta;
+
+  if (json === null) {
+    if (nullable) {
+      return json;
+    } else {
+      throw Error('is null');
+    }
+  } else if (Array.isArray(json)) {
+    return json.map((item) => Deserialize(item, meta));
+  } else if (indexable) {
+    return apply(json, (value) => deserializeObject(value, types));
+  } else if (typeof json === 'object') {
+    return deserializeObject(json, types);
+  } else {
+    return json;
+  }
 }
 
 // TODO(jacob) Remove any type here
@@ -224,24 +262,19 @@ function serializedObject(instance: any, type?: Serializer | Constructor<any>): 
  * @param type
  * @param indexable
  */
-export function Serialize(instance: any, type?: Constructor<any> | Serializer | null, indexable = false): any {
+export function Serialize(instance: any, type?: Constructor<any> | Serializer | null, meta?: MetaData): any {
+  const { indexable = false, nullable = false } = meta || {};
+
   if (instance === null) {
-    throw Error('instance is null');
+    if (nullable) {
+      return instance;
+    } else {
+      throw Error('instance is null');
+    }
   } else if (Array.isArray(instance)) {
     return instance.map((item) => Serialize(item, type));
-  } else if (instance instanceof Date) {
-    return instance.toISOString();
   } else if (indexable) {
-      if (typeof instance !== 'object') {
-        throw Error('BAD');
-      }
-
-      const deserialized: { [k: string]: any } = {};
-      Object.keys(instance).forEach((key: string) => {
-        deserialized[key] = serializedObject(instance[key]);
-      });
-
-      return deserialized;
+    return apply(instance, serializedObject);
   } else if (instance.constructor && TypeMap.has(instance.constructor)) {
     return serializedObject(instance);
   } else if (type && TypeMap.has(type)) {
@@ -250,6 +283,15 @@ export function Serialize(instance: any, type?: Constructor<any> | Serializer | 
     return instance;
   }
 }
+
+export const deserialize = <T>(o: any, c: Constructor<T>): T => {
+  const meta = new MetaData({ types: [c], key: '' });
+  return Deserialize(o, meta);
+};
+
+export const serialize = <T>(o: T, c: Constructor<T>): any => {
+  return Serialize(o, c);
+};
 
 // expose the type map
 export { TypeMap as __TypeMap };

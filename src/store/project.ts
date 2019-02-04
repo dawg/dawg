@@ -1,10 +1,9 @@
 import fs from 'mz/fs';
 import Tone from 'tone';
-import { autoserialize, autoserializeAs } from 'cerialize';
+import * as io from '@/modules/cerialize';
 import { VuexModule, Mutation, Module, getModule, Action } from 'vuex-module-decorators';
 import { Module as Mod } from 'vuex';
 import { remote } from 'electron';
-
 import {
   Pattern,
   Instrument,
@@ -17,11 +16,11 @@ import {
   EffectOptions,
   EffectTones,
   Track,
+  Playlist,
 } from '@/schemas';
 import { findUniqueName, toTickTime, range } from '@/utils';
 import store from '@/store/store';
 import cache from '@/store/cache';
-import io from '@/modules/io';
 import Vue from 'vue';
 import uuid from 'uuid';
 
@@ -33,12 +32,13 @@ const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
  */
 @Module({ dynamic: true, store, name: 'project' })
 export class Project extends VuexModule {
-  @autoserialize public bpm = 128;
-  @autoserialize public id = uuid.v4();
-  @autoserializeAs(Pattern) public patterns: Pattern[] = [];
-  @autoserializeAs(Instrument) public instruments: Instrument[] = [];
-  @autoserializeAs(Channel) public channels = range(10).map((i) => Channel.create(i));
-  @autoserializeAs(Track) public tracks = range(21).map((i) => Track.create(i));
+  @io.autoserialize public bpm = 128;
+  @io.autoserialize public id = uuid.v4();
+  @io.autoserializeAs(Pattern) public patterns: Pattern[] = [];
+  @io.autoserializeAs(Instrument) public instruments: Instrument[] = [];
+  @io.autoserializeAs(Channel) public channels = range(10).map((i) => Channel.create(i));
+  @io.autoserializeAs(Track) public tracks = range(21).map((i) => Track.create(i));
+  @io.autoserializeAs(Playlist) public master: Playlist = new Playlist();
 
   constructor(module?: Mod<any, any>) {
     super(module || {});
@@ -88,6 +88,8 @@ export class Project extends VuexModule {
     const result = io.deserialize(contents, Project);
     this.reset(result);
 
+    this.master.init();
+
     // This initializes the parts.
     // Since the parts are not serialized, we need to re-add stuff.
     // Ideally, we wouldn't have to do this, but I don't have a solution right now.
@@ -105,18 +107,7 @@ export class Project extends VuexModule {
     // Same thing with the mixer.
     // Reconnect all of the channels
     this.channels.forEach((channel) => {
-      const effects = channel.effects;
-      effects.forEach((effect) => effect.init());
-
-      if (effects.length === 0) {
-        return;
-      }
-
-      for (const [i, effect] of effects.slice(1).entries()) {
-        effects[i - 1].connect(effect);
-      }
-
-      effects[effects.length - 1].connect(channel.destination);
+      channel.init();
     });
 
     // Reconnect the instruments to their channels

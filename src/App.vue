@@ -31,8 +31,8 @@
               <playlist-sequencer
                 style="height: 100%"
                 :tracks="project.tracks" 
-                :elements="elements"
-                :part="master"
+                :elements="project.master.elements"
+                :part="project.master.part"
                 :play="general.playlistPlay"
               ></playlist-sequencer>
             </split>
@@ -107,8 +107,6 @@ export default class App extends Vue {
   // TODO(jacob) Fix THIS
   public elements = [];
 
-  public master = new Part();
-
   get openedFile() {
     if (!cache) { return null; }
     return cache.openedFile;
@@ -171,12 +169,12 @@ export default class App extends Vue {
       const pattern = specific.selectedPattern;
       return pattern ? pattern.part : null;
     } else {
-      return this.master;
+      return project.master.part;
     }
   }
 
   public playPause() {
-    let part: Part<Note | Element>;
+    let part: Part<any>;
     if (general.applicationContext === 'pianoroll') {
       const pattern = specific.selectedPattern;
       if (!pattern) {
@@ -185,7 +183,7 @@ export default class App extends Vue {
       }
       part = pattern.part;
     } else {
-      part = this.master;
+      part = project.master.part;
     }
 
     if (part.state === 'started') {

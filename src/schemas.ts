@@ -1,4 +1,4 @@
-import { autoserialize, autoserializeAs, inheritSerialization } from 'cerialize';
+import * as io from '@/modules/cerialize';
 import Tone from 'tone';
 import uuid from 'uuid';
 
@@ -38,16 +38,16 @@ export abstract class Element implements IElement {
   /**
    * Refers to note ID. This are numbered 0 -> 87 and start from the higher frequencies.
    */
-  @autoserialize public row!: number;
+  @io.autoserialize public row!: number;
   /**
    * Duration in beats.
    */
-  @autoserialize public duration!: number;
+  @io.autoserialize public duration!: number;
 
   /**
    * Time in beats.
    */
-  @autoserialize public time!: number;
+  @io.autoserialize public time!: number;
 
   constructor(o?: IElement) {
     if (o) {
@@ -61,7 +61,7 @@ export abstract class Element implements IElement {
   public abstract copy(): Element;
 }
 
-@inheritSerialization(Element)
+@io.inheritSerialization(Element)
 export class PlacedPattern extends Element {
   public static create(pattern: Pattern) {
     const element = new PlacedPattern();
@@ -75,7 +75,7 @@ export class PlacedPattern extends Element {
   public readonly component = 'pattern-element';
 
   public pattern!: Pattern;
-  @autoserialize public patternId!: string;
+  @io.autoserialize public patternId!: string;
 
   public callback() {
     return this.pattern.part;
@@ -92,7 +92,7 @@ export class PlacedPattern extends Element {
   }
 }
 
-@inheritSerialization(Element)
+@io.inheritSerialization(Element)
 export class PlacedSample extends Element {
   public static create(buffer: AudioBuffer) {
     const element = new PlacedSample();
@@ -124,7 +124,7 @@ export class PlacedSample extends Element {
   }
 }
 
-@inheritSerialization(Element)
+@io.inheritSerialization(Element)
 export class Note extends Element {
   public static create(instrument: Instrument) {
     const element = new Note();
@@ -166,9 +166,9 @@ export class Score {
     return score;
   }
   public instrument!: Instrument;
-  @autoserialize public id!: string;
-  @autoserialize public instrumentId!: string;
-  @autoserializeAs(Note) public notes: Note[] = [];
+  @io.autoserialize public id!: string;
+  @io.autoserialize public instrumentId!: string;
+  @io.autoserializeAs(Note) public notes: Note[] = [];
 
   public init(lookup: { [k: string]: Instrument }) {
     if (!(this.instrumentId in lookup)) {
@@ -185,9 +185,9 @@ export class Pattern {
     pattern.name = name;
     return pattern;
   }
-  @autoserialize public id: string = uuid.v4();
-  @autoserialize public name!: string;
-  @autoserializeAs(Score) public scores: Score[] = [];
+  @io.autoserialize public id: string = uuid.v4();
+  @io.autoserialize public name!: string;
+  @io.autoserialize({ type: Score }) public scores: Score[] = [];
   public part = new Part<Note>();
 
   get duration() {
@@ -226,8 +226,8 @@ export class Instrument implements IInstrument {
       mute: false,
     });
   }
-  @autoserialize public name!: string;
-  @autoserialize public id!: string;
+  @io.autoserialize public name!: string;
+  @io.autoserialize public id!: string;
   private destination: Tone.AudioNode | null = Tone.Master;
   // tslint:disable-next-line:variable-name
   private _type!: string;
@@ -246,7 +246,7 @@ export class Instrument implements IInstrument {
   get pan() {
     return this.panner.pan.value;
   }
-  @autoserialize
+  @io.autoserialize
   set pan(pan: number) {
     this.panner.pan.value = pan;
   }
@@ -254,13 +254,13 @@ export class Instrument implements IInstrument {
   get mute() {
     return this._mute;
   }
-  @autoserialize
+  @io.autoserialize
   set mute(mute: boolean) {
     this._mute = mute;
     this.checkConnection();
   }
 
-  @autoserialize
+  @io.autoserialize
   get volume() {
     return this.synth.volume.value;
   }
@@ -268,7 +268,7 @@ export class Instrument implements IInstrument {
     this.synth.volume.value = volume;
   }
 
-  @autoserialize
+  @io.autoserialize({ nullable: true })
   get channel() {
     return this._channel;
   }
@@ -279,7 +279,7 @@ export class Instrument implements IInstrument {
   get type() {
     return this._type;
   }
-  @autoserialize
+  @io.autoserialize
   set type(type: string) {
     this._type = type;
     this.synth.set({ oscillator: { type } });
@@ -651,9 +651,9 @@ export class Effect<T extends EffectName> {
     return effect;
   }
 
-  @autoserialize public slot!: number; // 0 <= slot < maxSlots
-  @autoserialize public type!: T;
-  @autoserialize public options!: EffectOptions[T];
+  @io.autoserialize public slot!: number; // 0 <= slot < maxSlots
+  @io.autoserialize public type!: T;
+  @io.autoserialize public options!: EffectOptions[T];
   public effect!: EffectTones[T];
   private destination: Tone.AudioNode | null = null;
 
@@ -692,9 +692,9 @@ export class Channel {
     return channel;
   }
 
-  @autoserialize public number!: number;
-  @autoserialize public name!: string;
-  @autoserializeAs(Effect) public effects: AnyEffect[] = [];
+  @io.autoserialize public number!: number;
+  @io.autoserialize public name!: string;
+  @io.autoserializeAs(Effect) public effects: AnyEffect[] = [];
   public left = new Tone.Meter();
   public right = new Tone.Meter();
   public split = new Tone.Split();
@@ -710,7 +710,7 @@ export class Channel {
     this.split.right.connect(this.right);
   }
 
-  @autoserialize
+  @io.autoserialize
   get pan() {
     return this.panner.pan.value;
   }
@@ -718,7 +718,7 @@ export class Channel {
     this.panner.pan.value = pan;
   }
 
-  @autoserialize
+  @io.autoserialize
   get volume() {
     return scale(this.gain.gain.value, [0, 1.3], [0, 1]);
   }
@@ -726,7 +726,7 @@ export class Channel {
     this.gain.gain.value = scale(value, [0, 1], [0, 1.3]);
   }
 
-  @autoserialize
+  @io.autoserialize
   get mute() {
     return this.muted;
   }
@@ -740,6 +740,21 @@ export class Channel {
       this.connected = true;
     }
   }
+
+  public init() {
+    const effects = this.effects;
+    effects.forEach((effect) => effect.init());
+
+    if (effects.length === 0) {
+      return;
+    }
+
+    for (const [i, effect] of effects.slice(1).entries()) {
+      effects[i - 1].connect(effect);
+    }
+
+    effects[effects.length - 1].connect(this.destination);
+  }
 }
 
 
@@ -749,6 +764,19 @@ export class Track {
     track.name = `Track ${i}`;
     return track;
   }
-  @autoserialize public name!: string;
-  @autoserialize public mute = false;
+  @io.autoserialize public name!: string;
+  @io.autoserialize public mute = false;
+}
+
+type PlaylistElements = PlacedPattern | PlacedSample | Note;
+export class Playlist {
+  @io.union(PlacedPattern, PlacedSample) public elements: PlaylistElements[] = [];
+  public part = new Part<PlaylistElements>();
+
+  public init() {
+    this.elements.forEach((element) => {
+      const ticks = toTickTime(element.time);
+      this.part.add(element.callback(), ticks, element);
+    });
+  }
 }

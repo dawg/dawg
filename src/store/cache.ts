@@ -1,10 +1,9 @@
 import fs from 'mz/fs';
-import io from '@/modules/io';
+import * as io from '@/modules/cerialize';
 import path from 'path';
 
 import { Module as Mod } from 'vuex';
 import { Mutation, Action, Module, getModule } from 'vuex-module-decorators';
-import { autoserialize, autoserializeAs } from 'cerialize';
 
 import store from '@/store/store';
 import { APPLICATION_PATH } from '@/constants';
@@ -17,8 +16,8 @@ const CACHE_PATH = path.join(APPLICATION_PATH, 'cache.json');
  */
 @Module({ dynamic: true, store, name: 'cache' })
 export class Cache extends VuexModule {
-  @autoserialize public openedFile: string | null = null;
-  @autoserializeAs(String) public folders: string[] = [];
+  @io.autoserialize({ nullable: true }) public openedFile: string | null = null;
+  @io.autoserialize public folders: string[] = [];
 
   constructor(module?: Mod<any, any>) {
     super(module || {});
