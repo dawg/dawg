@@ -210,20 +210,38 @@ function serializedObject(instance: any, type?: Serializer | Constructor<any>): 
       throw Error(`${metadata.key} does not exist.`);
     }
 
-    json[metadata.key] = Serialize(instance[metadata.key]);
+    json[metadata.key] = Serialize(instance[metadata.key], undefined, metadata.indexable);
   }
 
   return json;
 }
 
-// take an instance of something and spit out some json
-export function Serialize<T>(instance: T, type?: Constructor<T> | Serializer | null): any {
+// TODO(jacob) Remove any type here
+/**
+ * Take an instance of something and spit out some json.
+ *
+ * @param instance
+ * @param type
+ * @param indexable
+ */
+export function Serialize(instance: any, type?: Constructor<any> | Serializer | null, indexable = false): any {
   if (instance === null) {
     throw Error('instance is null');
   } else if (Array.isArray(instance)) {
     return instance.map((item) => Serialize(item, type));
   } else if (instance instanceof Date) {
     return instance.toISOString();
+  } else if (indexable) {
+      if (typeof instance !== 'object') {
+        throw Error('BAD');
+      }
+
+      const deserialized: { [k: string]: any } = {};
+      Object.keys(instance).forEach((key: string) => {
+        deserialized[key] = serializedObject(instance[key]);
+      });
+
+      return deserialized;
   } else if (instance.constructor && TypeMap.has(instance.constructor)) {
     return serializedObject(instance);
   } else if (type && TypeMap.has(type)) {
