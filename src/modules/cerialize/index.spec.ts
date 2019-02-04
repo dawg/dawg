@@ -5,6 +5,7 @@ import {
   autoserialize,
   autoserializeIndexable,
   inheritSerialization,
+  is,
 } from '@/modules/cerialize';
 import { expect } from 'chai';
 
@@ -113,6 +114,19 @@ describe.only('cerialize', () => {
       });
 
       expect(D(S(aa, AA), AA)).to.deep.eq(aa);
+    });
+  });
+
+  context('is', () => {
+    it('simple', () => {
+      class IS {
+        @autoserialize public a = 1;
+        @autoserialize public b = 1;
+      }
+
+      expect(is({ a: 1, b: 0 }, IS)).to.eq(true);
+      expect(is({ a: '', b: 0, c: 0 }, IS)).to.eq(true);
+      expect(is({ a: 1 }, IS)).to.eq(false);
     });
   });
 });
