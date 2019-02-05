@@ -51,7 +51,6 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import Knob from '@/components/Knob.vue';
-import Slider from '@/components/Slider.vue';
 import { Channel as C, EffectMap, EffectName, AnyEffect } from '@/schemas';
 import { range, scale, clamp } from '@/utils';
 import { Watch } from '@/modules/update';
@@ -59,7 +58,7 @@ import { Watch } from '@/modules/update';
 // Beware, we are modifying data in the store directly here.
 // We will want to change this evetually.
 @Component({
-  components: { Knob, Slider },
+  components: { Knob },
 })
 export default class Channel extends Vue {
   @Prop({ type: Object, required: true }) public channel!: C;

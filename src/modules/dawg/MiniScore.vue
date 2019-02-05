@@ -37,7 +37,7 @@ export default class MiniScore extends Vue {
     return `0 0 ${this.width} ${this.height}`;
   }
   get rows() {
-    return this.notes.map(({ id }) => id);
+    return this.notes.map(({ row }) => row);
   }
   get minRow() {
     const minRow = Math.min(...this.rows);
@@ -63,15 +63,15 @@ export default class MiniScore extends Vue {
     return this.width / this.totalDuration;
   }
   get rects() {
-    return this.notes.map(({ id, time, duration }) => {
-      const row = this.difference - (id - this.minRow);
+    return this.notes.map(({ row, time, duration }) => {
+      const actualRow = this.difference - (row - this.minRow);
       const x = (time - this.offset) * this.columnWidth;
       const width = duration * this.columnWidth;
       if (x + width > 0 && x < this.width) {
         return {
           x: `${x}px`,
           width: `${width}px`,
-          y: row * this.rowHeight + 'px',
+          y: actualRow * this.rowHeight + 'px',
           height: `${this.rowHeight}px`,
         };
       }

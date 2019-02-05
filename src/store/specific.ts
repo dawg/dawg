@@ -1,14 +1,13 @@
-import fs, { read } from 'mz/fs';
+import fs from 'mz/fs';
 import path from 'path';
 
 import { Module as Mod } from 'vuex';
 import { Module, getModule, Action, Mutation } from 'vuex-module-decorators';
 import { VuexModule } from '@/store/utils';
 
-import io from '@/modules/io';
+import * as io from '@/modules/cerialize';
 import store from '@/store/store';
 import project from '@/store/project';
-import { autoserialize } from 'cerialize';
 import { APPLICATION_PATH } from '@/constants';
 import { Score, Pattern } from '@/schemas';
 
@@ -24,11 +23,11 @@ interface ProjectCache {
  */
 @Module({ dynamic: true, store, name: 'specific' })
 export class Specific extends VuexModule {
-  @autoserialize public selectedPatternId: string | null = null;
-  @autoserialize public selectedScoreId: string | null = null;
-  @autoserialize public openedPanel: string | null = null;
-  @autoserialize public openedSideTab: string | null = null;
-  @autoserialize public openedTab: string | null = null;
+  @io.autoserialize({ nullable: true }) public selectedPatternId: string | null = null;
+  @io.autoserialize({ nullable: true }) public selectedScoreId: string | null = null;
+  @io.autoserialize({ nullable: true }) public openedPanel: string | null = null;
+  @io.autoserialize({ nullable: true }) public openedSideTab: string | null = null;
+  @io.autoserialize({ nullable: true }) public openedTab: string | null = null;
   public projectId: string | null = null;
 
   constructor(module?: Mod<any, any>) {

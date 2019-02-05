@@ -106,12 +106,13 @@ declare module 'tone' {
   }
 
   class Buffer extends Tone {
-    constructor(url: any); //TODO: Change 'any' to 'AudioBuffer | string' when available
+    constructor(url: AudioBuffer | string);
     MAX_SIMULTANEOUS_DOWNLOADS: number;
     duration: number; // Readonly
     loaded: boolean; // Readonly
     onload: (e: any)=>any;
     url: string; // Readonly
+    static load(url: string, onload: (buff: AudioBuffer) => void, onerror: (e: Error) => void): void;
     load(url:string, callback?: (e: any)=>any): Buffer;
     onerror(): void;
     onprogress(): void;
@@ -148,13 +149,7 @@ declare module 'tone' {
     frequency: number,
   }
 
-  interface _ClockEvents {
-    start: any,
-    stop: any,
-    pause: any,
-  }
-
-  class Clock extends Emitter<_ClockEvents> {
+  class Clock extends Emitter<{ start: [], stop: [], pause: [] }> {
     constructor(options: _Clock);
     frequency: TickSignal;
     seconds: number;
@@ -182,7 +177,11 @@ declare module 'tone' {
   class Context extends Emitter<{tick: any}> {
     resume(): Promise<void>;
     now(): number;
+    decodeAudioData(audioData: ArrayBuffer): Promise<AudioBuffer>;
+    createBuffer(numberOfChannels: number, length: number, sampleRate: number): AudioBuffer;
   }
+
+
 
   class Convolver extends Effect {
       constructor(url: any); //TODO: Change any to 'string | AudioBuffer' when available
@@ -225,11 +224,11 @@ declare module 'tone' {
     dispose(): this;
   }
 
-  class Emitter<T, V extends keyof T = keyof T> extends Tone {
-    emit(event: V, ...args: any[]): this;
-    on(event: V, callback: (...args: any[]) => void): this;
-    once(event: V, callback: (arg: any) => void): this;
-    off(event: V, callback: (arg: any) => void): this;
+  class Emitter<T extends { [k: string]: any[] }, V extends keyof T = keyof T> extends Tone {
+    emit(event: V, ...args: T[V]): this;
+    on(event: V, callback: (...args: T[V]) => void): this;
+    once(event: V, callback: (...arg: T[V]) => void): this;
+    off(event: V, callback: (...arg: T[V]) => void): this;
   }
 
   class Envelope extends Tone {
@@ -662,8 +661,8 @@ declare module 'tone' {
   }
 
   class Player extends Source {
-    constructor(url?: string, onload?: (e: any)=>any); //todo: string | AudioBuffer
-    buffer: AudioBuffer;
+    constructor(url?: string | AudioBuffer, onload?: (e: any)=>any); //todo: string | AudioBuffer
+    buffer: Buffer;
     duration: number;
     loop: boolean;
     loopEnd: _TimeArg;
@@ -806,7 +805,7 @@ declare module 'tone' {
       state: Source.State;
       volume: Signal;
       dispose(): this;
-      start(time?: _TimeArg): Source;
+      start(startTime?: _TimeArg, offset?: _TimeArg, duration?: _TimeArg): Source;
       stop(time?: _TimeArg): Source;
       sync(delay?: _TimeArg): Source;
       unsync(): Source;
@@ -884,9 +883,11 @@ declare module 'tone' {
     toBarsBeatsSixteenths(): string;
   }
 
-  class Timeline<T extends { time: any }> extends Tone {
+  class Timeline<T extends { time: number }> extends Tone {
+    length: number;
     add(event: T): void;
     get(time: number, comparator?: keyof T): T;
+    forEach(callback: (event: T) => void): void;
     forEachAtTime(time: number, callback: (event: T) => void): void;
     forEachBetween(startTime: number, endTime: number, callback: (e: T) => void): this;
     forEachFrom(time: number, callback: (event: T) => void): void;
@@ -943,6 +944,7 @@ declare module 'tone' {
     constructor(transport: _TransportConstructor | null, options: { time: TransportTime, callback: (time: number) => void })
     id: string;
     time: Ticks;
+    callback: (exact: number) => void;
     invoke(time: number): void;
     dispose(): void;
   }

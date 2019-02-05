@@ -6,7 +6,6 @@ interface Point {
   y: number;
 }
 
-// tslint:disable-next-line:max-classes-per-file
 @Component
 export class Draggable extends Vue {
   public previous: Point | null = null;

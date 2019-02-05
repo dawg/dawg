@@ -65,7 +65,6 @@ export default class BeatLines extends Vue {
 </svg>
       `;
 
-    this.$log.debug(svg);
     el.style.backgroundImage = `url("data:image/svg+xml,${encodeURI(svg)}")`;
     el.style.backgroundSize = `${this.viewBox}px 1px`;
 

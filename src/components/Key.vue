@@ -1,9 +1,12 @@
 <template>
   <div 
+    class="key"
     :class="keyClass" 
     :style="keyStyle" 
     @mousedown="mousedown"
-  ></div>
+  >
+    <div v-if="text" class="text">{{ text }}</div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -20,6 +23,8 @@ export default class Key extends Vue {
   @Prop({ type: Number, default: 0.50 }) public heightProportion!: number;
   @Prop(Boolean) public borderBottom!: boolean;
 
+  public down = false;
+
   get color() {
     return this.value.includes('#') ? 'black' : 'white';
   }
@@ -29,7 +34,21 @@ export default class Key extends Vue {
   }
 
   get keyClass() {
-    return `key--${this.color} ${this.value}`;
+    return {
+      'c': this.isC,
+      'primary-lighten-4': this.down,
+      [`key--${this.color} ${this.value}`]: true,
+    };
+  }
+
+  get isC() {
+    return this.value.startsWith('C') && this.color === 'white';
+  }
+
+  get text() {
+    if (this.isC) {
+      return this.value;
+    }
   }
 
   get keyStyle() {
@@ -49,11 +68,13 @@ export default class Key extends Vue {
 
   public mousedown() {
     this.$emit('start', this.value);
+    this.down = true;
     window.addEventListener('mouseup', this.mouseup);
   }
 
   public mouseup() {
     window.removeEventListener('mouseup', this.mouseup);
+    this.down = false;
     this.$emit('stop', this.value);
   }
 }
@@ -63,10 +84,21 @@ export default class Key extends Vue {
 $color_white: #eee
 $color_black: #3b3b3b
 
+.text
+  position: absolute
+  right: 0
+  bottom: 0
+  font-size: 0.8em
+
+.key
+  position: relative
+
 .key--white
   background-color: $color_white
+  border-bottom: 1px solid #ddd
+
   &:hover
-    background-color: darken($color_white, 5)
+    background-color: darken($color_white, 6)
 
 .key--black
   background-color: $color_black
@@ -74,5 +106,8 @@ $color_black: #3b3b3b
   z-index: 20
   transition: 0.1s
   &:hover
-    background-color: darken($color_black, 5)
+    background-color: darken($color_black, 6)
+
+.c
+  background-color: darken($color_white, 3)
 </style>

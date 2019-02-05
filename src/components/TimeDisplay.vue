@@ -1,9 +1,9 @@
 <template>
   <div class="screen">
-    <span class="text">{{ time.min }}</span>
+    <span class="text">{{ minutes }}</span>
     <span class="text colon">:</span>
-    <span class="text">{{ formatNumberLength(time.sec, 2) }}</span>
-    <span class="small-text">. {{ formatNumberLength(time.milli, 3) }}</span>
+    <span class="text">{{ formattedSeconds }}</span>
+    <span class="small-text">. {{ formattedMillis }}</span>
   </div>
 </template>
 
@@ -13,7 +13,32 @@ import { Component, Prop } from 'vue-property-decorator';
 
 @Component
 export default class TimeDisplay extends Vue {
-  @Prop(Object) public time!: object;
+  @Prop({ type: Number, required: true }) public raw!: number;
+
+  get mraw() {
+    return Math.max(this.raw, 0);
+  }
+
+  get minutes() {
+    return Math.floor(this.mraw / 60);
+  }
+
+  get formattedSeconds() {
+    return this.formatNumberLength(this.seconds, 2);
+  }
+
+  get seconds() {
+    return Math.floor(this.mraw - (this.minutes * 60));
+  }
+
+  get formattedMillis() {
+    return this.formatNumberLength(this.millis, 3);
+  }
+
+  get millis() {
+    return Math.floor((this.mraw - this.seconds) * 1000);
+  }
+
   public formatNumberLength(num: number, length: number) {
     let r = `${num}`;
     while (r.length < length) {

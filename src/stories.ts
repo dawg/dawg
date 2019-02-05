@@ -3,82 +3,29 @@ import { action } from '@storybook/addon-actions';
 import Tone from 'tone';
 import DotButton from '@/components/DotButton.vue';
 import Key from '@/components/Key.vue';
-import Sequencer from '@/components/Sequencer.vue';
 import Piano from '@/components/Piano.vue';
-import Toolbar from '@/components/Toolbar.vue';
-import Dawg from '@/components/Dawg.vue';
 import Tree from '@/components/Tree.vue';
 import Knob from '@/components/Knob.vue';
 import Mixer from '@/components/Mixer.vue';
-import Slider from '@/components/Slider.vue';
 import Note from '@/components/Note.vue';
 import Bpm from '@/components/Bpm.vue';
 import TimeDisplay from '@/components/TimeDisplay.vue';
 import PlayPause from '@/components/PlayPause.vue';
 import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
+import Dawg from '@/modules/dawg/Dawg.vue';
 import ColorBlock from '@/components/ColorBlock.vue';
 import { StyleType, range, makeStyle } from '@/utils';
 import Foot from '@/components/Foot.vue';
 import Notifications from '@/modules/notification/Notifications.vue';
 import Synth from '@/components/Synth.vue';
-import SequencerRow from '@/components/SequencerRow.vue';
 import Split from '@/modules/split/Split.vue';
-import BeatLines from '@/components/BeatLines';
-import PianoRoll from '@/components/PianoRoll.vue';
+
 import Timeline from '@/components/Timeline.vue';
-import MiniScore from '@/components/MiniScore.vue';
 import ContextMenu from '@/modules/context/ContextMenu.vue';
-import Vue from 'vue';
 
 const synth = new Tone.Synth().toMaster();
 
-const NOTES = [
-  {id: 44, time: 0, duration: 1},
-  {id: 47, time: 0, duration: 1},
-  {id: 49, time: 0, duration: 1},
-  {id: 47, time: 1, duration: 1},
-  {id: 49, time: 1, duration: 1},
-  {id: 51, time: 1, duration: 1},
-  {id: 52, time: 2, duration: 0.5},
-  {id: 51, time: 3, duration: 0.5},
-  {id: 45, time: 4, duration: 0.5},
-  {id: 48, time: 5, duration: 0.5},
-];
-
-storiesOf(MiniScore.name, module)
-  .add('Standard', () => ({
-    components: { Dawg, MiniScore },
-    template: `
-    <dawg>
-      <mini-score :notes="notes" style="height: 50px; width: 400px"></mini-score>
-    </dawg>
-    `,
-    data: () => ({
-      notes: NOTES,
-    }),
-  }));
-
-storiesOf(SequencerRow.name, module)
-  .add('Standard', () => ({
-    template: `
-    <dawg>
-      <sequencer-row
-        v-for="i in 20"
-        :key="i"
-        :id="40 + i"
-        :total-beats="12"
-        @click="click"
-      ></sequencer-row>
-    </dawg>
-    `,
-    components: { SequencerRow, Dawg },
-    methods: {
-      click(...args) {
-        //
-      },
-    },
-  }));
 
 storiesOf(Piano.name, module)
   .add('Standard', () => ({
@@ -112,47 +59,11 @@ storiesOf(Key.name, module)
     components: { Key, Dawg },
   }));
 
-const piano = new Tone.PolySynth(8, Tone.Synth).toMaster();
-
-storiesOf(Sequencer.name, module)
-  .add('Standard', () => ({
-    template: `
-    <dawg>
-      <sequencer
-        v-model="notes"
-        :sequencer-loop-end.sync="sequencerLoopEnd"
-        :loop-start="loopStart"
-        :loop-end="loopEnd"
-        :set-loop-start="setLoopStart"
-        :set-loop-end="setLoopEnd"
-        :progress="progress"
-      ></sequencer>
-    </dawg>
-    `,
-    data: () => ({
-      notes: [],
-      measures: 1,
-      sequencerLoopEnd: 0,
-      loopStart: 0,
-      loopEnd: 0,
-      setLoopStart: 0,
-      setLoopEnd: 0,
-      progress: 0,
-    }),
-    components: { Sequencer, Dawg },
-  }));
-
 storiesOf(DotButton.name, module)
   .add('Standard', () => ({
     components: { DotButton },
     template: '<dot-button @click="click"></dot-button>',
     methods: { click: action('clicked') },
-  }));
-
-storiesOf(Toolbar.name, module)
-  .add('Standard', () => ({
-    template: '<v-app dark><toolbar/></v-app>',
-    components: { Toolbar },
   }));
 
 const TREE = {
@@ -262,15 +173,6 @@ storiesOf(Mixer.name, module)
     <mixer></mixer>
     `,
     components: { Mixer },
-  }));
-
-storiesOf(Slider.name, module)
-  .add('Standard', () => ({
-    template: `
-    <slider v-model="value" :left=".46" :right=".50"></slider>
-    `,
-    components: { Slider },
-    data: () => ({ value: .70 }),
   }));
 
 storiesOf(PlayPause.name, module)
@@ -403,6 +305,19 @@ storiesOf(Foot.name, module)
     components: { Foot },
   }));
 
+const NOTES = [
+  {id: 44, time: 0, duration: 1},
+  {id: 47, time: 0, duration: 1},
+  {id: 49, time: 0, duration: 1},
+  {id: 47, time: 1, duration: 1},
+  {id: 49, time: 1, duration: 1},
+  {id: 51, time: 1, duration: 1},
+  {id: 52, time: 2, duration: 0.5},
+  {id: 51, time: 3, duration: 0.5},
+  {id: 45, time: 4, duration: 0.5},
+  {id: 48, time: 5, duration: 0.5},
+];
+
 storiesOf(Synth.name, module)
   .add('Standard', () => ({
     template: `
@@ -442,22 +357,6 @@ storiesOf(Split.name, module)
     </split>
     `,
     components: { Split },
-  }));
-
-
-const Temp = Vue.extend({
-  template: `<div style="height: 30px; width: 400px"></div>`,
-  mixins: [BeatLines],
-});
-
-storiesOf(BeatLines.name, module)
-  .add('Standard', () => ({
-    template: `
-    <dawg>
-      <temp></temp>
-    </dawg>
-    `,
-    components: { Temp, Dawg },
   }));
 
 storiesOf(Timeline.name, module)
@@ -504,15 +403,4 @@ storiesOf(Timeline.name, module)
         return this.pixels / this.pxPerBeat;
       },
     },
-  }));
-
-storiesOf(PianoRoll.name, module)
-  .add('Standard', () => ({
-    template: `
-    <dawg>
-      <piano-roll :synth="piano"></piano-roll>
-    </dawg>
-    `,
-    data: () => ({ piano }),
-    components: { PianoRoll, Dawg },
   }));

@@ -1,7 +1,5 @@
 <template>
-  <v-app 
-    class="app" 
-  >
+  <v-app class="app">
     <dawg>
       <split direction="vertical">
         <split direction="horizontal" resizable>
@@ -16,36 +14,29 @@
           <split direction="vertical" resizable>
 
             <split :initial="general.toolbarHeight" fixed>
-              <toolbar 
-                :height="general.toolbarHeight" 
-                style="padding-right: 26px; border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
+              <toolbar
+                :height="general.toolbarHeight"
+                :part="part"
+                :context="general.applicationContext"
+                @update:context="general.setContext"
+                :play="general.play"
+                @update:play="playPause"
+                style="border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
                 :bpm="project.bpm"
                 @update:bpm="project.setBpm"
               ></toolbar>
             </split>
 
             <split>
-              <tabs 
-                :style="`height: 100%`" 
-                :selected-tab="specific.openedTab"
-                @update:selected-tab="specific.setTab"
-              >
-                <tab name="Playlist 1">
-                  <div></div>
-                </tab>
-                <tab name="Sequence 1">
-                  <div></div>
-                </tab>
-                <tab name="Sequence 2" :is-disabled="true">
-                  <div></div>
-                </tab>
-                <tab name="Sequence 4">
-                    <div></div>
-                </tab>
-                <tab name="Master">
-                    <div></div>
-                </tab>
-              </tabs>
+              <playlist-sequencer
+                v-if="loaded"
+                style="height: 100%"
+                :tracks="project.tracks" 
+                :elements="project.master.elements"
+                :part="project.master.part"
+                :play="general.playlistPlay"
+                @new-prototype="checkPrototype"
+              ></playlist-sequencer>
             </split>
 
             <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`" keep>
@@ -74,7 +65,6 @@
 <script lang="ts">
 import fs from 'fs';
 import { Component, Vue } from 'vue-property-decorator';
-import Toolbar from '@/components/Toolbar.vue';
 import SideBar from '@/components/SideBar.vue';
 import Foot from '@/components/Foot.vue';
 import FileExplorer from '@/components/FileExplorer.vue';
@@ -85,27 +75,23 @@ import Tabs from '@/components/Tabs.vue';
 import Tab from '@/components/Tab.vue';
 import Split from '@/modules/split/Split.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
-import Dawg from '@/components/Dawg.vue';
 import SideTabs from '@/sections/SideTabs.vue';
 import Notifications from '@/modules/notification/Notifications.vue';
 import { ipcRenderer } from 'electron';
 import { project, cache, general, specific } from '@/store';
 import { toTickTime, allKeys, Keys } from '@/utils';
 import Part from '@/modules/audio/part';
-import io from '@/modules/io';
-import { Pattern, Score, Note, Instrument } from '@/schemas';
+import { Pattern, Score, Note, Instrument, PlacedPattern, PlacedSample } from '@/schemas';
 
 
 @Component({
   components: {
     SideBar,
-    Toolbar,
     Tabs,
     Tab,
     Foot,
     Split,
     BaseTabs,
-    Dawg,
     Notifications,
     Panels,
     ActivityBar,
@@ -117,6 +103,12 @@ export default class App extends Vue {
   public project = project;
   public general = general;
   public specific = specific;
+
+  // This loaded flag is important
+  // Bugs can appear if we render before we load the project file
+  // This occurs because some components mutate objects
+  // However, they do not reapply their mutations
+  // ie. some components expect props to stay the same.
   public loaded = false;
 
   get openedFile() {
@@ -130,7 +122,7 @@ export default class App extends Vue {
     ipcRenderer.on('open', this.open);
 
     // tslint:disable-next-line:no-console
-    console.log(project);
+    console.info(project);
 
     // Make sure we load the cache first before loading the default project.
     this.$log.info('Starting to read data.');
@@ -176,20 +168,50 @@ export default class App extends Vue {
     specific.write();
   }
 
+  get part() {
+    if (general.applicationContext === 'pianoroll') {
+      const pattern = specific.selectedPattern;
+      return pattern ? pattern.part : null;
+    } else {
+      return project.master.part;
+    }
+  }
+
   public playPause() {
-    const pattern = specific.selectedPattern;
-    if (!pattern) {
-      this.$notify.info('Select a pattern.');
+    let part: Part<any>;
+    if (general.applicationContext === 'pianoroll') {
+      const pattern = specific.selectedPattern;
+      if (!pattern) {
+        this.$notify.info('Select a pattern.');
+        return;
+      }
+      part = pattern.part;
+    } else {
+      part = project.master.part;
+    }
+
+    if (part.state === 'started') {
+      this.$log.debug('PAUSING');
+      part.stop();
+      general.pause();
+    } else {
+      this.$log.debug('PLAY');
+      part.start();
+      general.start();
+    }
+  }
+
+  public checkPrototype(prototype: PlacedPattern | PlacedSample) {
+    if (!(prototype instanceof PlacedSample)) {
       return;
     }
 
-    if (pattern.part.state === 'started') {
-      pattern.part.pause();
-      general.pause();
-    } else {
-      pattern.part.start();
-      general.start();
+    const sample = prototype.sample;
+    if (sample.id in project.sampleLookup) {
+      return;
     }
+
+    project.addSample(sample);
   }
 }
 </script>

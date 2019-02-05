@@ -1,10 +1,9 @@
 import fs from 'mz/fs';
 import Tone from 'tone';
-import { autoserialize, autoserializeAs } from 'cerialize';
+import * as io from '@/modules/cerialize';
 import { VuexModule, Mutation, Module, getModule, Action } from 'vuex-module-decorators';
 import { Module as Mod } from 'vuex';
 import { remote } from 'electron';
-
 import {
   Pattern,
   Instrument,
@@ -16,11 +15,15 @@ import {
   AnyEffect,
   EffectOptions,
   EffectTones,
+  Track,
+  Playlist,
+  PlacedPattern,
+  PlacedSample,
+  Sample,
 } from '@/schemas';
 import { findUniqueName, toTickTime, range } from '@/utils';
 import store from '@/store/store';
 import cache from '@/store/cache';
-import io from '@/modules/io';
 import Vue from 'vue';
 import uuid from 'uuid';
 
@@ -32,11 +35,14 @@ const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
  */
 @Module({ dynamic: true, store, name: 'project' })
 export class Project extends VuexModule {
-  @autoserialize public bpm = 128;
-  @autoserialize public id = uuid.v4();
-  @autoserializeAs(Pattern) public patterns: Pattern[] = [];
-  @autoserializeAs(Instrument) public instruments: Instrument[] = [];
-  @autoserializeAs(Channel) public channels = range(10).map((i) => Channel.create(i));
+  @io.autoserialize public bpm = 128;
+  @io.autoserialize public id = uuid.v4();
+  @io.autoserializeAs(Pattern) public patterns: Pattern[] = [];
+  @io.autoserializeAs(Instrument) public instruments: Instrument[] = [];
+  @io.autoserializeAs(Channel) public channels = range(10).map((i) => Channel.create(i));
+  @io.autoserializeAs(Track) public tracks = range(21).map((i) => Track.create(i));
+  @io.autoserializeAs(Playlist) public master: Playlist = new Playlist();
+  @io.autoserialize({ type: Sample }) public samples: Sample[] = [];
 
   constructor(module?: Mod<any, any>) {
     super(module || {});
@@ -86,13 +92,31 @@ export class Project extends VuexModule {
     const result = io.deserialize(contents, Project);
     this.reset(result);
 
+    this.samples.forEach((sample) => {
+      sample.init();
+    });
+
+    this.master.elements.forEach((element) => {
+      if (element instanceof PlacedPattern) {
+        element.init(this.patternLookup[element.patternId]);
+      } else if (element instanceof PlacedSample) {
+        element.init(this.sampleLookup[element.sampleId]);
+      }
+    });
+
+    // Init the master after all of the elements
+    // have been initialized
+    this.master.init();
+
     // This initializes the parts.
     // Since the parts are not serialized, we need to re-add stuff.
     // Ideally, we wouldn't have to do this, but I don't have a solution right now.
     this.patterns.forEach((pattern) => {
       pattern.scores.forEach((score) => {
+        score.init(this.instrumentLookup);
         const instrument = this.instrumentLookup[score.instrumentId];
         score.notes.forEach((note) => {
+          note.init(score.instrument);
           this.addNote({ pattern, instrument, note });
         });
       });
@@ -101,18 +125,7 @@ export class Project extends VuexModule {
     // Same thing with the mixer.
     // Reconnect all of the channels
     this.channels.forEach((channel) => {
-      const effects = channel.effects;
-      effects.forEach((effect) => effect.init());
-
-      if (effects.length === 0) {
-        return;
-      }
-
-      for (const [i, effect] of effects.slice(1).entries()) {
-        effects[i - 1].connect(effect);
-      }
-
-      effects[effects.length - 1].connect(channel.destination);
+      channel.init();
     });
 
     // Reconnect the instruments to their channels
@@ -124,9 +137,8 @@ export class Project extends VuexModule {
   @Mutation
   public addNote(payload: { pattern: Pattern, instrument: Instrument, note: Note }) {
     const time = toTickTime(payload.note.time);
-    // This is a bit messy... :(
-    const callback = payload.instrument.callback.bind(payload.instrument);
-    payload.pattern.part.add(callback, time, payload.note);
+    // TODO This is a bit messy... :(
+    payload.pattern.part.add(payload.note.callback(), time, payload.note);
   }
 
   @Mutation
@@ -138,7 +150,6 @@ export class Project extends VuexModule {
   public setOption<T extends EffectName, V extends keyof EffectOptions[T] & keyof EffectTones[T]>(
     payload: { effect: Effect<T>, key: V, value: EffectOptions[T][V] & EffectTones[T][V] },
   ) {
-    console.log(payload);
     payload.effect.options[payload.key] = payload.value;
     payload.effect.effect[payload.key] = payload.value;
   }
@@ -168,7 +179,21 @@ export class Project extends VuexModule {
       }
     });
 
-    payload.pattern.scores.push(Score.create(payload.instrument.id));
+    payload.pattern.scores.push(Score.create(payload.instrument));
+  }
+
+  @Action
+  public addSample(payload: Sample) {
+    if (payload.id in this.sampleLookup) {
+      throw Error(`${payload.id} already exists`);
+    }
+
+    this.pushSample(payload);
+  }
+
+  @Mutation
+  public pushSample(payload: Sample) {
+    this.samples.push(payload);
   }
 
   get instrumentChannelLookup() {
@@ -306,6 +331,14 @@ export class Project extends VuexModule {
       patterns[pattern.id] = pattern;
     });
     return patterns;
+  }
+
+  get sampleLookup() {
+    const lookup: {[k: string]: Sample} = {};
+    this.samples.forEach((sample) => {
+      lookup[sample.id] = sample;
+    });
+    return lookup;
   }
 
   get instrumentLookup() {

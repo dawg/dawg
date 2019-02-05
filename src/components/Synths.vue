@@ -23,7 +23,7 @@ import { project, specific } from '@/store';
 
 @Component({ components: { Synth } })
 export default class Synths extends Vue {
-  // TODO(jacob) remove these
+  // TODO remove these, this component can just import the store
   @Prop({ type: Array, required: true }) public instruments!: Instrument[];
   @Prop(Nullable(Object)) public selectedScore!: Score | null;
   @Prop(Nullable(Object)) public selectedPattern!: Pattern | null;

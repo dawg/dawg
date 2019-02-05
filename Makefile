@@ -1,8 +1,8 @@
 dev:
-	npm run serve:electron
+	npm run electron:serve
 
 storybook:
-	npm run serve:storybook
+	npm run storybook:serve
 
 test:
 	npm run test:unit

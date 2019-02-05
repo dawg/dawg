@@ -19,7 +19,7 @@ export default class WavScope extends Vue {
   @Prop({ type: String, required: false, default: '#111' }) public waveColor?: string;
   @Prop({ type: String, required: false, default: '#1976D2' }) public progressColor?: string;
 
-  public wavesurfer: any;
+  public wavesurfer!: WaveSurfer;
 
   public mounted() {
     this.wavesurfer = WaveSurfer.create({
@@ -35,8 +35,8 @@ export default class WavScope extends Vue {
 
   // follow the url and load as a blob
   public loadBlobFromUrl() {
-      fetch(this.url).then((res: any) => {
-        res.blob().then((blob: any) => {
+      fetch(this.url).then((res: Response) => {
+        res.blob().then((blob: Blob) => {
           this.wavesurfer.loadBlob(blob);
         });
     });

@@ -2,14 +2,17 @@
   <div style="display: contents">
     <div @click="click" style="display: flex" v-bind:class="nodeClass" v-if="!isLeaf || isWav">
       <ico fa class="icon" :scale="scale" :style="indent">{{ icon }}</ico>
-      <div
+      <drag
         class="white--text path"
+        group="arranger"
+        :transfer-data="prototype"
         v-if="!isLeaf || isWav"
-        @click="preview"
-        @dblclick="sendToSampleTab"
+        @click.native="preview"
+        @dblclick.native="sendToSampleTab"
+        :draggable="isWav"
       >
         {{ fileName }}
-      </div>
+      </drag>
     </div>
       <ul v-if="showChildren && (!isLeaf || isWav)">
         <tree
@@ -34,6 +37,8 @@ import fs from 'fs';
 import { Keys } from '@/utils';
 import { Component, Prop } from 'vue-property-decorator';
 import Key from '@/components/Key.vue';
+import { loadPlayer } from '@/modules/audio/utils';
+import { PlacedSample, Sample } from '@/schemas';
 
 @Component
 export default class Tree extends Vue {
@@ -41,6 +46,7 @@ export default class Tree extends Vue {
   @Prop({ type: String, required: true }) public path!: string;
   @Prop({ type: Number, default: 0 }) public depth!: number;
   @Prop({ type: Number, default: 0 }) public index!: number;
+  public sample: Sample | null = null;
 
   public showChildren = false;
   public selectedNode = false;
@@ -59,7 +65,8 @@ export default class Tree extends Vue {
       if (this.index + 1 < this.$parent.$refs.trees.length) {
         if (this.$parent.$refs.trees[this.index + 1].isWav) {
           this.selectOneNode(this.$parent.$refs.trees, this.index + 1);
-          this.playSong(this.$parent.$refs.trees[this.index + 1].fileName);
+          this.stopSong();
+          this.playSong(this.$parent.$refs.trees[this.index + 1].path);
         }
       }
     }
@@ -70,20 +77,21 @@ export default class Tree extends Vue {
         if (this.index - 1 >= 0) {
           if (this.$parent.$refs.trees[this.index - 1].isWav) {
             this.selectOneNode(this.$parent.$refs.trees, this.index - 1);
-            this.playSong(this.$parent.$refs.trees[this.index - 1].fileName);
+            this.stopSong();
+            this.playSong(this.$parent.$refs.trees[this.index - 1].path);
           }
         }
       }
   }
 
-  public async sendToSampleTab(event: MouseEvent) {
+  public sendToSampleTab(event: MouseEvent) {
     // TODO: From here we can send this.path to sample viewer
   }
 
-  public async preview(event: MouseEvent) {
+  public preview(event: MouseEvent) {
     if (this.isWav) {
       this.selectOneNode(this.$parent.$refs.trees, this.index);
-      this.playSong(this.fileName);
+      this.playSong(this.path);
     }
   }
 
@@ -98,11 +106,26 @@ export default class Tree extends Vue {
   }
 
   public playSong(songPath: string) {
-    const player = new Tone.Player(songPath).toMaster();
-    player.autostart = true;
+    this.sample!.start();
+  }
+
+  get prototype() {
+    if (this.sample) {
+      return PlacedSample.create(this.sample);
+    }
+  }
+
+  public stopSong() {
+    if (this.sample) {
+      this.sample.stop();
+    }
   }
 
   public mounted() {
+    if (!this.sample && this.isWav) {
+      this.sample = Sample.create(this.path);
+    }
+
     window.addEventListener('keydown', this.moveDown);
     window.addEventListener('keyup', this.moveUp);
   }

@@ -1,20 +1,22 @@
 <template>
   <div class="patterns">
-    <div
-      v-for="(pattern, i) in patterns"
+    <drag
+      group="arranger"
+      v-for="(item, i) in items"
       :key="i"
       class="pattern"
-      :class="{ selected: value && pattern.id === value.id }"
-      @click="click(pattern)"
+      :transfer-data="item.prototype"
+      :class="{ selected: value && item.pattern.id === value.id }"
+      @click="click(item.pattern)"
     >
-      {{ pattern.name }}
-    </div>
+      {{ item.pattern.name }}
+    </drag>
   </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { Pattern } from '@/schemas';
+import { Pattern, PlacedPattern } from '@/schemas';
 import { Nullable } from '@/utils';
 import { Watch } from '@/modules/update';
 
@@ -22,6 +24,16 @@ import { Watch } from '@/modules/update';
 export default class Patterns extends Vue {
   @Prop(Nullable(Object)) public value!: Pattern | null;
   @Prop({ type: Array, required: true }) public patterns!: Pattern[];
+
+  get items() {
+    return this.patterns.map((pattern) => {
+      return {
+        prototype: PlacedPattern.create(pattern),
+        pattern,
+      };
+    });
+  }
+
   public click(p: Pattern) {
     if (this.value && this.value.id === p.id) {
       this.$emit('input', null);

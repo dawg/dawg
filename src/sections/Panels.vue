@@ -25,13 +25,14 @@
       ></mixer>
     </panel>
     <panel name="Piano Roll">
-      <piano-roll 
+      <piano-roll-sequencer
+        style="height: 100%"
         v-if="shouldRender"
-        v-model="notes"
+        :elements="notes"
         :part="part"
         :instrument="instrument"
-        :play="general.play"
-      ></piano-roll>
+        :play="general.pianoRollPlay"
+      ></piano-roll-sequencer>
     </panel>
     <panel name="Sample">
       <sample-viewer url="thing.wav"></sample-viewer>
@@ -45,7 +46,6 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import { project, specific, general } from '@/store';
 import BaseTabs from '@/components/BaseTabs.vue';
 import Mixer from '@/components/Mixer.vue';
-import PianoRoll from '@/components/PianoRoll.vue';
 import SampleViewer from '@/components/SampleViewer.vue';
 import Synths from '@/components/Synths.vue';
 import Panel from '@/components/Panel.vue';
@@ -57,7 +57,6 @@ import { Part } from 'tone';
     BaseTabs,
     Mixer,
     Panel,
-    PianoRoll,
     SampleViewer,
     Synths,
   },

@@ -138,7 +138,8 @@ export const Button = {
 };
 
 export function toTickTime(time: number) {
-  return `${time * Tone.Transport.PPQ}i`;
+  // TODO is ceil right?
+  return Math.ceil(time * Tone.Transport.PPQ);
 }
 
 
@@ -172,3 +173,6 @@ export function scale(value: number, from: [number, number], to: [number, number
 export function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
+
+
+export type ConstructorOf<T> = new (...args: any[]) => T;
