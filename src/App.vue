@@ -102,10 +102,13 @@ export default class App extends Vue {
   public project = project;
   public general = general;
   public specific = specific;
-  public loaded = false;
 
-  // TODO(jacob) Fix THIS
-  public elements = [];
+  // This loaded flag is important
+  // Bugs can appear if we render before we load the project file
+  // This occurs because some components mutate objects
+  // However, they do not reapply their mutations
+  // ie. some components expect props to stay the same.
+  public loaded = false;
 
   get openedFile() {
     if (!cache) { return null; }

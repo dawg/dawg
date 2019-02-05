@@ -23,7 +23,7 @@ class C {
   @autoserializeIndexable(A) public as: { [k: string]: A } = {};
 }
 
-describe.only('cerialize', () => {
+describe('cerialize', () => {
   context('autoserialize', () => {
     it('simple', () => {
       const a = new A();

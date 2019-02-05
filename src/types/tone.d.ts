@@ -941,7 +941,6 @@ declare module 'tone' {
 
   var Transport: _TransportConstructor;
 
-  // TODO(jacob) function stuff is messed up. Move all stuff to part.ts
   class TransportEvent extends Tone {
     constructor(transport: _TransportConstructor | null, options: { time: TransportTime, callback: (time: number) => void })
     id: string;

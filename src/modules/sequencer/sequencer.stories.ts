@@ -39,9 +39,6 @@ storiesOf(BeatLines.name, module)
     components: { Temp, Dawg },
   }));
 
-// TODO(jacob) Remove hack!
-Vue.component('Note', Note);
-
 storiesOf('PianoRollSequencer', module)
   .add('default', () => ({
     template: `

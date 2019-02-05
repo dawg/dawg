@@ -101,7 +101,7 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
   @Prop(Nullable(Number)) public setLoopStart!: number | null;
   @Prop({ type: Number, required: true }) public progress!: number;
 
-  // TODO(jacob) edge case -> what happens if the element is deleted?
+  // TODO edge case -> what happens if the element is deleted?
   @Prop(Nullable(Object)) public prototype!: Element | null;
 
   public cursor = 'move';
@@ -233,7 +233,6 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
   }
 
   public updateDuration(i: number, value: number) {
-    // TODO(jacob) This will not be reactive!
     this.components[i].duration = value;
     this.elements[i].duration = value;
   }
@@ -334,7 +333,7 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
   }
 
   public checkLoopEnd() {
-    let maxTime = Math.max(...this.elements.map((item) => item.time), 0);
+    let maxTime = Math.max(...this.elements.map((item) => item.time + item.duration), 0);
 
     // Add a tiny amount to max time so that ceil will push to next number
     // if maxTime is a whole number

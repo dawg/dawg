@@ -25,7 +25,7 @@ export default class Track extends Vue {
 </script>
 
 <style lang="sass" scoped>
-// TODO(jacob) 20px and 5px is hardcoded! 
+// TODO 20px and 5px is hardcoded! 
 .track
   display: flex
   border: 0 solid

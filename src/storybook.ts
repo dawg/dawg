@@ -30,7 +30,7 @@ export default function middleware() {
   Vue.use(Vuetify, {theme: false});
   Vue.component('icon', Icon);
 
-  // TODO(jacob) :)
+  // TODO Move these to the dawg module
   Vue.component('Piano', Piano);
   Vue.component('DTrack', DTrack);
   Vue.component('DotButton', DotButton);

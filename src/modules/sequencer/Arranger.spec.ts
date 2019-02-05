@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { shallowMount } from '@vue/test-utils';
+import { shallowMount, Wrapper } from '@vue/test-utils';
 import Arranger from '@/modules/sequencer/Arranger.vue';
 import Vue from 'vue';
 import Update from '@/modules/update';
@@ -9,10 +9,13 @@ import * as io from '@/modules/cerialize';
 
 Vue.use(VueLogger);
 Vue.use(Update);
+let wrapper: Wrapper<Arranger>;
+let vm: any;
+
 
 describe(Arranger.name, () => {
-  it('should add correctly', () => {
-    const wrapper = shallowMount(Arranger, {
+  beforeEach(() => {
+    wrapper = shallowMount(Arranger, {
       propsData: {
         progress: 0,
         loopStart: 0,
@@ -32,7 +35,11 @@ describe(Arranger.name, () => {
         pxPerBeat: 80,
       },
     });
-    const vm = wrapper.vm as any;
+
+    vm = wrapper.vm as any;
+  });
+
+  it('should add correctly', () => {
     vm.add({ clientX: 50, clientY: 20 });
     expect(vm.elements.length).to.equal(1);
     let note: Note = wrapper.emitted().added[0][0];
@@ -44,5 +51,14 @@ describe(Arranger.name, () => {
     });
 
     expect(wrapper.emitted()['update:sequencerLoopEnd'][0][0]).to.equal(4);
+  });
+
+  it('should move correctly', () => {
+    // TODO fix the test
+    // vm.move({ clientX: 1 });
+    // expect(wrapper.emitted().input).to.equal(undefined);
+
+    // vm.move({ clientX: 50 });
+    // expect(wrapper.emitted().input[0][0]).to.equal(0.75);
   });
 });

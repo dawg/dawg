@@ -131,7 +131,7 @@ export class Project extends VuexModule {
   @Mutation
   public addNote(payload: { pattern: Pattern, instrument: Instrument, note: Note }) {
     const time = toTickTime(payload.note.time);
-    // TODO(jacob) This is a bit messy... :(
+    // TODO This is a bit messy... :(
     payload.pattern.part.add(payload.note.callback(), time, payload.note);
   }
 

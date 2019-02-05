@@ -6,7 +6,7 @@
     :row-height="height"
     :row-class="() => 'secondary'"
     :row-style="rowStyle"
-    :width="130"
+    :side-width="130"
     :part="part"
     name="Playlist"
     :prototype.sync="prototype"

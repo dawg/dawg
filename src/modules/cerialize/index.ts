@@ -130,7 +130,6 @@ class MetaData {
   }
 }
 
-// TODO(jacob) Do you want to export this?
 export const is = (o: any, type: Constructor<any>) => {
   if (!o) {
     return false;
@@ -142,7 +141,7 @@ export const is = (o: any, type: Constructor<any>) => {
   }
 
   for (const metadata of Object.values(metadataArray)) {
-    // TODO(jacob) Check Types!
+    // TODO Check Types!
     if (!o.hasOwnProperty(metadata.key)) {
       return false;
     }
@@ -253,7 +252,7 @@ export function Deserialize(json: any, meta: MetaData): any {
   }
 }
 
-// TODO(jacob) Remove any type here
+// TODO Remove any type here
 /**
  * Take an instance of something and spit out some json.
  *

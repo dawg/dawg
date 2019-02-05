@@ -12,11 +12,10 @@ describe('part', () => {
         part.scheduleEvent(() => {
           invocations++;
         }, 0);
-        part.setLoopPoints(0, 0.1).start(0);
+        part.setLoopPoints(0, 100).start(0);
         part.loop = true;
-      }, 0.41).then(() => {
-        // TODO(jacob) change expected to 5
-        expect(invocations).to.equal(1);
+      }, 1.1).then(() => {
+        expect(invocations).to.equal(5);
       });
   });
 

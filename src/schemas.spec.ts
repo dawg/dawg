@@ -1,22 +1,8 @@
-import { autoserializeAs, deserialize, serialize } from '@/modules/cerialize';
+import { deserialize, serialize } from '@/modules/cerialize';
 import { expect } from 'chai';
 import { Note, Pattern, Score, Instrument } from './schemas';
 
 describe('schemas', () => {
-  it('Recursive', () => {
-    class A {
-      public static create() {
-        const a = new A();
-        a.a = a;
-        return a;
-      }
-      @autoserializeAs(A) public a!: A;
-    }
-
-    const aa = A.create();
-    // expect(deserialize(Serialize(aa, A))).to.deep.eq(aa);
-  });
-
   context('Note', () => {
     it('works', () => {
       const noteObject = {

@@ -63,9 +63,8 @@ import Timeline from '@/modules/sequencer/Timeline.vue';
 export default class Sequencer extends Vue {
   @Inject() public pxPerBeat!: number;
 
-  // TODO(jacob) Rename width to something else
   @Prop({ type: String, required: true }) public name!: string;
-  @Prop({ type: Number, default: 80 }) public width!: number;
+  @Prop({ type: Number, default: 80 }) public sideWidth!: number;
   @Prop({ type: Array, required: true }) public elements!: Element[];
   @Prop({ type: Boolean, default: false }) public play!: boolean;
   @Prop({ type: Object, required: true }) public part!: Part<Element>;
@@ -85,7 +84,7 @@ export default class Sequencer extends Vue {
 
   get style() {
     return {
-      minWidth: `${this.width}px`,
+      minWidth: `${this.sideWidth}px`,
     };
   }
 
