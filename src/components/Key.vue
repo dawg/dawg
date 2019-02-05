@@ -2,8 +2,7 @@
   <div 
     :class="keyClass" 
     :style="keyStyle" 
-    @mousedown="$emit('start', value)"
-    @mouseup="$emit('stop', value)"
+    @mousedown="mousedown"
   ></div>
 </template>
 
@@ -46,6 +45,16 @@ export default class Key extends Vue {
       height: `${this.height}px`,
       width: `${this.width}px`,
     };
+  }
+
+  public mousedown() {
+    this.$emit('start', this.value);
+    window.addEventListener('mouseup', this.mouseup);
+  }
+
+  public mouseup() {
+    window.removeEventListener('mouseup', this.mouseup);
+    this.$emit('stop', this.value);
   }
 }
 </script>

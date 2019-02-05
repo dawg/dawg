@@ -16,7 +16,13 @@
       ></synths>
     </panel>
     <panel name="Mixer">
-      <mixer></mixer>
+      <mixer 
+        :channels="project.channels"
+        :play="general.play"
+        @add="project.addEffect"
+        @delete="project.deleteEffect"
+        @set="project.setOption"
+      ></mixer>
     </panel>
     <panel name="Piano Roll">
       <piano-roll 
@@ -28,7 +34,7 @@
       ></piano-roll>
     </panel>
     <panel name="Sample">
-      <div></div>
+      <sample-viewer url="thing.wav"></sample-viewer>
     </panel>
   </base-tabs>
 </template>
@@ -37,21 +43,23 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 
 import { project, specific, general } from '@/store';
+import BaseTabs from '@/components/BaseTabs.vue';
 import Mixer from '@/components/Mixer.vue';
 import PianoRoll from '@/components/PianoRoll.vue';
+import SampleViewer from '@/components/SampleViewer.vue';
 import Synths from '@/components/Synths.vue';
 import Panel from '@/components/Panel.vue';
-import BaseTabs from '@/components/BaseTabs.vue';
-import { Note } from '@/schemas';
+import { Note, EffectName, Channel, EffectOptions } from '@/schemas';
 import { Part } from 'tone';
 
 @Component({
   components: {
-    Mixer,
-    PianoRoll,
-    Synths,
-    Panel,
     BaseTabs,
+    Mixer,
+    Panel,
+    PianoRoll,
+    SampleViewer,
+    Synths,
   },
 })
 export default class Panels extends Vue {

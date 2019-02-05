@@ -90,34 +90,34 @@ declare module 'tone' {
   }
 
   class AutoWah extends Effect {
-      constructor(baseFrequency?: any, octaves?: number, sensitivity?:number); //Todo number | Object
-      baseFrequency: Frequency;
-      gain: Signal;
-      octaves: number;
-      Q: Signal;
-      sensitivity: number;
-      dispose(): this;
+    constructor(baseFrequency?: any, octaves?: number, sensitivity?:number); //Todo number | Object
+    baseFrequency: Frequency;
+    gain: Signal;
+    octaves: number;
+    Q: Signal;
+    sensitivity: number;
+    dispose(): this;
   }
 
   class BitCrusher extends Effect {
-      constructor(bits: any); //TODO: Number || Object
-      bits: number;
-      dispose(): this;
+    constructor(bits?: number);
+    bits: number;
+    dispose(): this;
   }
 
   class Buffer extends Tone {
-      constructor(url: any); //TODO: Change 'any' to 'AudioBuffer | string' when available
-      MAX_SIMULTANEOUS_DOWNLOADS: number;
-      duration: number; // Readonly
-      loaded: boolean; // Readonly
-      onload: (e: any)=>any;
-      url: string; // Readonly
-      load(url:string, callback?: (e: any)=>any): Buffer;
-      onerror(): void;
-      onprogress(): void;
-      dispose(): this;
-      get(): AudioBuffer;
-      set(buffer: any): Buffer; //TODO: change any to AudioBuffer | Buffer
+    constructor(url: any); //TODO: Change 'any' to 'AudioBuffer | string' when available
+    MAX_SIMULTANEOUS_DOWNLOADS: number;
+    duration: number; // Readonly
+    loaded: boolean; // Readonly
+    onload: (e: any)=>any;
+    url: string; // Readonly
+    load(url:string, callback?: (e: any)=>any): Buffer;
+    onerror(): void;
+    onprogress(): void;
+    dispose(): this;
+    get(): AudioBuffer;
+    set(buffer: any): Buffer; //TODO: change any to AudioBuffer | Buffer
   }
 
   class Chebyshev extends Effect {
@@ -169,7 +169,7 @@ declare module 'tone' {
     pause(time?: PrimitiveTime): void;
   }
 
-  class Compressor extends Tone {
+  class Compressor extends AudioNode {
     constructor(threshold?: any, ratio?: number); //TODO: Number || Object
     attack: Signal;
     knee: AudioParam;
@@ -193,14 +193,14 @@ declare module 'tone' {
 
   class CrossFade extends Tone {
       constructor(initialFade?: number);
-      a: GainNode;
-      b: GainNode;
+      a: Gain;
+      b: Gain;
       fade: Signal;
       dispose(): this;
   }
 
   class Distortion extends Effect {
-      constructor(distortion: any); //TODO: Number || Object
+      constructor(distortion?: number);
       distortion: number;
       oversample: string;
       dispose(): this;
@@ -218,7 +218,7 @@ declare module 'tone' {
       triggerEnvelopeRelease(time?: _TimeArg): DuoSynth;
   }
 
-  class Effect extends Tone {
+  class Effect extends AudioNode {
     constructor(initialWet?: number);
     wet: Signal;
     bypass(): Effect;
@@ -244,13 +244,13 @@ declare module 'tone' {
     triggerRelease(time?: _TimeArg): Envelope;
   }
 
-  class EQ3 extends Tone {
+  class EQ3 extends AudioNode {
       constructor(lowLevel?: any, midLevel?: number, highLevel?: number); //TODO: Change 'any' to 'number | Object'
       highFrequency: Signal;
-      high: GainNode;
+      high: Gain;
       lowFrequency: Signal;
-      low: GainNode;
-      mid: GainNode;
+      low: Gain;
+      mid: Gain;
       dispose(): this;
   }
 
@@ -363,8 +363,12 @@ declare module 'tone' {
     dispose(): this;
   }
 
+  class Gain extends AudioNode {
+    gain: Signal;
+  }
+
   class GreaterThan extends Signal {
-      constructor(value?: number);
+    constructor(value?: number);
     dispose(): this;
   }
 
@@ -412,9 +416,9 @@ declare module 'tone' {
       unsync(): LFO;
   }
 
-  class Limiter extends Tone {
-      constructor(threshold: AudioParam)
-      dispose(): this;
+  class Limiter extends AudioNode {
+    constructor(threshold?: AudioParam);
+    dispose(): this;
   }
 
   class LowpassCombFilter extends Tone {
@@ -443,12 +447,12 @@ declare module 'tone' {
 
   class Merge extends Tone {
       constructor();
-      left: GainNode;
-      right: GainNode;
+      left: Gain;
+      right: Gain;
       dispose(): this;
   }
 
-  class Meter extends Tone {
+  class Meter extends AudioNode {
       constructor(channels?: number, smoothing?: number, clipMemory?:number);
       dispose(): this;
       getDb(channel?:number): number;
@@ -463,9 +467,9 @@ declare module 'tone' {
   }
 
   class MidSideEffect extends StereoEffect {
-      midReturn: GainNode;
+      midReturn: Gain;
       midSend: Expr;
-      sideReturn: GainNode;
+      sideReturn: Gain;
       sideSend: Expr;
       dispose(): this;
   }
@@ -624,7 +628,7 @@ declare module 'tone' {
 
   class PanVol extends Tone {
     constructor(pan: number, volume: number);
-    output: GainNode;
+    output: Gain;
     volume: Signal;
     dispose(): this;
   }
@@ -666,9 +670,11 @@ declare module 'tone' {
     loopStart: _TimeArg;
     playbackRate: number;
     retrigger: boolean;
+    autostart: boolean;
     dispose(): this;
     load(url:string, callback?:(e: any)=>any):  Player;
     setLoopPoints(loopStart: _TimeArg, loopEnd: _TimeArg): Player;
+    toMaster(): this;
   }
 
   class PluckSynth extends Instrument {
@@ -690,7 +696,7 @@ declare module 'tone' {
       setPreset(presetName: string): PolySynth;
       triggerAttack(notes: any, time?: _TimeArg, velocity?: number): PolySynth; //todo: string | number | Object| string[] | number[]
       triggerAttackRelease(notes: any, duration: _TimeArg, time?: _TimeArg, velocity?: number): PolySynth; //todo: string | number | Object | string[] | number[]
-      triggerRelease(value: any, time?: _TimeArg): PolySynth; //todo: string | number | Object | string[] | number[]
+      triggerRelease(value: string | string[], time?: _TimeArg): PolySynth; //todo: string | number | Object | string[] | number[]
   }
 
   class Pow extends SignalBase {
@@ -811,14 +817,14 @@ declare module 'tone' {
   }
 
   class Split extends Tone {
-      left: GainNode;
-      right: GainNode;
+      left: Gain;
+      right: Gain;
       dispose(): this;
   }
 
   class StereoEffect extends Effect {
-      effectReturnL: GainNode;
-      effectReturnR: GainNode;
+      effectReturnL: Gain;
+      effectReturnR: Gain;
       dispose(): this;
   }
 
@@ -947,6 +953,9 @@ declare module 'tone' {
     toTicks(): number;
   }
 
+  class Tremolo extends StereoEffect {
+  }
+
   class Type {
     static BPM: 'bpm';
   }
@@ -955,5 +964,13 @@ declare module 'tone' {
     constructor(mapping: any, bufferLen?: number); //TODO: change 'any' to 'Function | Array | number'
     curve: number[];
     oversample: string;
+  }
+
+  class Waveform extends AudioNode {
+      constructor(size?:number);
+      readonly channelCount: number;
+      readonly numberOfInputs: number;
+      readonly numberOfOutputs: number;
+      getValue(): Float32Array;
   }
 }

@@ -12,6 +12,11 @@
     "hacky",
     "mixins",
     "resizable",
-    "tinycolor"
+    "scrollbar",
+    "tinycolor",
+    "vuejs",
+    "vuetify",
+    "wheeldown",
+    "wheelup"
   ]
 }

@@ -35,6 +35,7 @@ export default class Split extends Mixins(Draggable) {
   @Prop(Number) public initial?: number;
   @Prop({type: Number, default: 6}) public gutterSize!: number;
 
+  public $el!: HTMLElement;
   public children!: Split[];
   public parent: Split | null = null; // giving initial null makes parent reactive!
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="channel-select screen" ref="drag">
+  <div class="channel-select screen secondary" ref="drag">
     <div style="line-height: 38px">{{ display }}</div>
   </div>
 </template>
@@ -31,7 +31,17 @@ export default class ChannelSelect extends Mixins(Draggable) {
     if (newValue < 0) {
       this.$emit('input', null);
     } else {
-      this.$emit('input', newValue);
+      this.$emit('input', Math.min(newValue, 9));
+    }
+  }
+
+  public scrollMove({ y }: { y: number }) {
+    const current = this.value === null ? -1 : this.value;
+    const newValue = current + y;
+    if (newValue < 0) {
+      this.$emit('input', null);
+    } else {
+      this.$emit('input', Math.min(newValue, 9));
     }
   }
 }
@@ -43,16 +53,4 @@ export default class ChannelSelect extends Mixins(Draggable) {
   min-width: 40px
   display: flex
   justify-content: center
-//   position: relative
-
-// .after::after
-//   position: absolute
-//   top: 0
-//   left: 0
-//   right: 0
-//   bottom: 0
-//   content: ''
-//   background-image: linear-gradient(to top, rgba(#fff,.2) 33.33333%, rgba(#fff,.4) 33.33333%, rgba(#fff,.4) 66.66666%, rgba(#fff,.6) 66.66666%), linear-gradient(to right, rgba(#f00,.7) 33.33333%, rgba(#0f0,.7) 33.33333%, rgba(#0f0,.7) 66.66666%, rgba(#00f,.7) 66.66666%)
-//   background-size: 3px 3px
-//   mix-blend-mode: multiply
 </style>

@@ -15,11 +15,12 @@ export class Draggable extends Vue {
   public moving = false;
   public in = false;
   public disabled = false;
+  public mousewheelPosition: number | null = null;
 
   public $refs!: {
     drag: HTMLElement,
   };
-  public mousemoveListner: (e: MouseEvent) => void = () => ({});
+  public mousemoveListener: (e: MouseEvent) => void = () => ({});
   public showCursor() {
     if (document.documentElement) {
       document.documentElement.style.cursor = this.cursor;
@@ -38,39 +39,67 @@ export class Draggable extends Vue {
     this.showCursor();
     this.moving = true;
     this.previous = { x: e.clientX, y: e.clientY };
-    this.mousemoveListner = (event) => this.startMove(event, ...args);
-    window.addEventListener('mousemove', this.mousemoveListner);
+    this.mousemoveListener = (event) => this.startMove(event, ...args);
+    window.addEventListener('mousemove', this.mousemoveListener);
     window.addEventListener('mouseup', this.removeListeners);
   }
-  public removeListeners(e: MouseEvent) {
+  public removeListeners(e?: MouseEvent) {
     if (this.disabled) { return; }
+    if (e) { this.prevent(e); }
 
-    this.prevent(e);
     this.resetCursor();
     this.previous = null;
     this.moving = false;
-    window.removeEventListener('mousemove', this.mousemoveListner);
+    window.removeEventListener('mousemove', this.mousemoveListener);
     window.removeEventListener('mouseup', this.removeListeners);
-    this.mousemoveListner = () => ({});
+    this.mousemoveListener = () => ({});
     this.afterHover();
     this.afterMove();
   }
   public afterMove() {
     //
   }
+
+  public mousewheel(e: MouseWheelEvent) {
+    if (!this.mousewheelPosition) {
+      this.mousewheelPosition = 0;
+    }
+
+    // delta y is negative when scrolling away from user.
+    this.mousewheelPosition -= e.deltaY;
+
+    // 65 was determined from trial and error
+    const y = Math.floor(this.mousewheelPosition / 65);
+    this.mousewheelPosition %= 65;
+
+    // Right now, we only support y movement and not x movement.
+    this.scrollMove({ x: 0, y });
+  }
+
   public startMove(e: MouseEvent, ...args: any[]) {
     if (this.disabled) { return; }
 
+    if (!this.previous) {
+      this.removeListeners();
+      return;
+    }
+
     this.prevent(e);
-    const changeY = e.clientY - this.previous!.y;
-    const changeX = e.clientX - this.previous!.x;
+    const changeY = e.clientY - this.previous.y;
+    const changeX = e.clientX - this.previous.x;
 
     this.previous = { x: e.clientX, y: e.clientY };
     this.move(e, ...args, { changeY, changeX });
   }
+
   public move(e: MouseEvent, ...args: any[]) {
     throw new Error('`move` is not defined');
   }
+
+  public scrollMove(delta: { x: number, y: number }) {
+    //
+  }
+
   public squash(v: number, low: number, high: number) {
     return Math.max(low, Math.min(high, v));
   }
@@ -89,11 +118,13 @@ export class Draggable extends Vue {
   public afterHover() {
     if (this.moving) { return; }
     this.in = false;
+    this.mousewheelPosition = null;
     this.resetCursor();
   }
   public mounted() {
     const el = this.$refs.drag;
     if (!el) { return; }
+    el.addEventListener('wheel', this.mousewheel);
     el.addEventListener('mousedown', this.addListeners);
     el.addEventListener('mouseup', this.removeListeners);
     el.addEventListener('mouseenter', this.onHover);
