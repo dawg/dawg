@@ -4,6 +4,7 @@ import uuid from 'uuid';
 
 import Part, { Schedulable } from '@/modules/audio/part';
 import { toTickTime, allKeys, scale, ConstructorOf } from './utils';
+import { loadBuffer } from './modules/audio';
 
 // These are all of the schemas for the project.
 // Everything is annotated using `cerialize`.
@@ -91,18 +92,55 @@ export class PlacedPattern extends Element {
   }
 }
 
-// TODO(jacob) This is broken. We need to store file information!!
+export class Sample {
+  public static create(path: string) {
+    const sample = new Sample();
+    sample.path = path;
+    sample.init();
+    return sample;
+  }
+
+  @io.autoserialize public id = uuid.v4();
+  @io.autoserialize public path!: string;
+  public buffer!: AudioBuffer;
+  private player!: Tone.Player;
+
+  public init() {
+    this.buffer = loadBuffer(this.path);
+    this.player = new Tone.Player(this.buffer).toMaster();
+  }
+
+  public start(exact?: number, ticks?: number) {
+    this.player.start(exact, undefined, ticks !== undefined ? `${ticks}i` : ticks);
+  }
+
+  public stop() {
+    this.player.stop();
+  }
+
+  get beats() {
+    const minutes = this.buffer.length / this.buffer.sampleRate / 60;
+    return minutes * Tone.Transport.bpm.value;
+  }
+}
+
 @io.inheritSerialization(Element)
 export class PlacedSample extends Element {
-  public static create(buffer: AudioBuffer) {
+  public static create(sample: Sample) {
     const element = new PlacedSample();
-    element.player = new Tone.Player(buffer).toMaster();
-    element.duration = element.beats;
+    element.sampleId = sample.id;
+    element.duration = sample.beats;
+    element.init(sample);
     return element;
   }
 
+  @io.autoserialize public sampleId!: string;
   public readonly component = 'sample-element';
-  public player!: Tone.Player;
+  public sample!: Sample;
+
+  get beats() {
+    return this.sample.beats;
+  }
 
   public copy() {
     const pp = new PlacedSample();
@@ -113,14 +151,12 @@ export class PlacedSample extends Element {
   public callback() {
     return (exact: number) => {
       const duration = toTickTime(this.duration);
-      this.player.start(exact, undefined, `${duration}i`);
+      this.sample.start(exact, duration);
     };
   }
 
-  get beats() {
-    const buffer = this.player.buffer._buffer;
-    const minutes = buffer.length / buffer.sampleRate / 60;
-    return minutes * Tone.Transport.bpm.value;
+  public init(sample: Sample) {
+    this.sample = sample;
   }
 }
 

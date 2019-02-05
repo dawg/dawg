@@ -106,9 +106,8 @@ declare module 'tone' {
   }
 
   class Buffer extends Tone {
-    constructor(url: any); //TODO: Change 'any' to 'AudioBuffer | string' when available
+    constructor(url: AudioBuffer | string);
     MAX_SIMULTANEOUS_DOWNLOADS: number;
-    _buffer: AudioBuffer;
     duration: number; // Readonly
     loaded: boolean; // Readonly
     onload: (e: any)=>any;

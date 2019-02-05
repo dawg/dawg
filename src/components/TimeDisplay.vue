@@ -15,8 +15,12 @@ import { Component, Prop } from 'vue-property-decorator';
 export default class TimeDisplay extends Vue {
   @Prop({ type: Number, required: true }) public raw!: number;
 
+  get mraw() {
+    return Math.max(this.raw, 0);
+  }
+
   get minutes() {
-    return Math.floor(this.raw / 60);
+    return Math.floor(this.mraw / 60);
   }
 
   get formattedSeconds() {
@@ -24,7 +28,7 @@ export default class TimeDisplay extends Vue {
   }
 
   get seconds() {
-    return Math.floor(this.raw - (this.minutes * 60));
+    return Math.floor(this.mraw - (this.minutes * 60));
   }
 
   get formattedMillis() {
@@ -32,7 +36,7 @@ export default class TimeDisplay extends Vue {
   }
 
   get millis() {
-    return Math.floor((this.raw - this.seconds) * 1000);
+    return Math.floor((this.mraw - this.seconds) * 1000);
   }
 
   public formatNumberLength(num: number, length: number) {

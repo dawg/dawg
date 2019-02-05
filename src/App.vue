@@ -35,6 +35,7 @@
                 :elements="project.master.elements"
                 :part="project.master.part"
                 :play="general.playlistPlay"
+                @new-prototype="checkPrototype"
               ></playlist-sequencer>
             </split>
 
@@ -80,7 +81,7 @@ import { ipcRenderer } from 'electron';
 import { project, cache, general, specific } from '@/store';
 import { toTickTime, allKeys, Keys } from '@/utils';
 import Part from '@/modules/audio/part';
-import { Pattern, Score, Note, Instrument } from '@/schemas';
+import { Pattern, Score, Note, Instrument, PlacedPattern, PlacedSample } from '@/schemas';
 
 
 @Component({
@@ -198,6 +199,19 @@ export default class App extends Vue {
       part.start();
       general.start();
     }
+  }
+
+  public checkPrototype(prototype: PlacedPattern | PlacedSample) {
+    if (!(prototype instanceof PlacedSample)) {
+      return;
+    }
+
+    const sample = prototype.sample;
+    if (sample.id in project.sampleLookup) {
+      return;
+    }
+
+    project.addSample(sample);
   }
 }
 </script>

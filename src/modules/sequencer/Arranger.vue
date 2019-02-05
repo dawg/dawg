@@ -411,6 +411,7 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
   public handleDrop(prototype: Element, event: MouseEvent) {
     this.$update('prototype', prototype);
     this.$nextTick(() => this.add(event));
+    this.$emit('new-prototype', prototype);
     // prototype is not updated automatically
   }
 

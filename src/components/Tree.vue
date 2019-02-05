@@ -38,7 +38,7 @@ import { Keys } from '@/utils';
 import { Component, Prop } from 'vue-property-decorator';
 import Key from '@/components/Key.vue';
 import { loadPlayer } from '@/modules/audio/utils';
-import { PlacedSample } from '@/schemas';
+import { PlacedSample, Sample } from '@/schemas';
 
 @Component
 export default class Tree extends Vue {
@@ -46,7 +46,7 @@ export default class Tree extends Vue {
   @Prop({ type: String, required: true }) public path!: string;
   @Prop({ type: Number, default: 0 }) public depth!: number;
   @Prop({ type: Number, default: 0 }) public index!: number;
-  public player: Tone.Player | null = null;
+  public sample: Sample | null = null;
 
   public showChildren = false;
   public selectedNode = false;
@@ -106,24 +106,24 @@ export default class Tree extends Vue {
   }
 
   public playSong(songPath: string) {
-    this.player!.start();
+    this.sample!.start();
   }
 
   get prototype() {
-    if (this.player) {
-      return PlacedSample.create(this.player.buffer._buffer);
+    if (this.sample) {
+      return PlacedSample.create(this.sample);
     }
   }
 
   public stopSong() {
-    if (this.player) {
-      this.player.stop();
+    if (this.sample) {
+      this.sample.stop();
     }
   }
 
   public mounted() {
-    if (!this.player && this.isWav) {
-      this.player = loadPlayer(this.path).toMaster();
+    if (!this.sample && this.isWav) {
+      this.sample = Sample.create(this.path);
     }
 
     window.addEventListener('keydown', this.moveDown);

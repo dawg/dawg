@@ -19,6 +19,7 @@ import {
   Playlist,
   PlacedPattern,
   PlacedSample,
+  Sample,
 } from '@/schemas';
 import { findUniqueName, toTickTime, range } from '@/utils';
 import store from '@/store/store';
@@ -41,6 +42,7 @@ export class Project extends VuexModule {
   @io.autoserializeAs(Channel) public channels = range(10).map((i) => Channel.create(i));
   @io.autoserializeAs(Track) public tracks = range(21).map((i) => Track.create(i));
   @io.autoserializeAs(Playlist) public master: Playlist = new Playlist();
+  @io.autoserialize({ type: Sample }) public samples: Sample[] = [];
 
   constructor(module?: Mod<any, any>) {
     super(module || {});
@@ -90,11 +92,15 @@ export class Project extends VuexModule {
     const result = io.deserialize(contents, Project);
     this.reset(result);
 
+    this.samples.forEach((sample) => {
+      sample.init();
+    });
+
     this.master.elements.forEach((element) => {
       if (element instanceof PlacedPattern) {
         element.init(this.patternLookup[element.patternId]);
       } else if (element instanceof PlacedSample) {
-        // TODO(jacob)
+        element.init(this.sampleLookup[element.sampleId]);
       }
     });
 
@@ -174,6 +180,20 @@ export class Project extends VuexModule {
     });
 
     payload.pattern.scores.push(Score.create(payload.instrument));
+  }
+
+  @Action
+  public addSample(payload: Sample) {
+    if (payload.id in this.sampleLookup) {
+      throw Error(`${payload.id} already exists`);
+    }
+
+    this.pushSample(payload);
+  }
+
+  @Mutation
+  public pushSample(payload: Sample) {
+    this.samples.push(payload);
   }
 
   get instrumentChannelLookup() {
@@ -311,6 +331,14 @@ export class Project extends VuexModule {
       patterns[pattern.id] = pattern;
     });
     return patterns;
+  }
+
+  get sampleLookup() {
+    const lookup: {[k: string]: Sample} = {};
+    this.samples.forEach((sample) => {
+      lookup[sample.id] = sample;
+    });
+    return lookup;
   }
 
   get instrumentLookup() {

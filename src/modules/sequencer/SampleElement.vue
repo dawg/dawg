@@ -26,22 +26,13 @@ export default class SampleElement extends Vue {
   @Prop(Nullable(Object)) public element!: PlacedSample;
 
   get buffer() {
-    // @ts-ignore
-    return this.element.player.buffer._buffer;
+    return this.element.sample.buffer;
   }
 
   get waveformStyle() {
     return {
       width: `${this.bufferWidth}px`,
     };
-  }
-
-  get bufferMinutes() {
-    if (this.buffer) {
-      return this.buffer.length / this.buffer.sampleRate / 60;
-    } else {
-      return 0;
-    }
   }
 
   get bufferBeats() {
