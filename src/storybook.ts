@@ -11,12 +11,14 @@ import Dawg from '@/modules/dawg';
 import DragNDrop from '@/modules/dragndrop';
 import '@/styles/global.sass';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
+import Draggable from '@/modules/draggable';
 
 import Piano from '@/components/Piano.vue';
 import DTrack from '@/components/DTrack.vue';
 import DotButton from '@/components/DotButton.vue';
 
 export default function middleware() {
+  Vue.use(Draggable);
   Vue.use(Theme);
   Vue.use(Update);
   Vue.use(DragNDrop);

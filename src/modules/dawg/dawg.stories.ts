@@ -1,6 +1,32 @@
-import Dawg from '@/modules/dawg/Dawg.vue';
-import MiniScore from '@/modules/dawg/MiniScore.vue';
 import { storiesOf } from '@storybook/vue';
+
+storiesOf('AutomationClip', module)
+  .add('Standard', () => ({
+    template: `
+    <dawg>
+      <automation-clip
+        style="margin: 20px;"
+        :points="points"
+      ></automation-clip>
+    </dawg>
+    `,
+    data: () => ({
+      points: [
+        {
+          value: 0.5,
+          time: 0,
+        },
+        {
+          value: 0.8,
+          time: 1,
+        },
+        {
+          value: 1,
+          time: 2,
+        },
+      ],
+    }),
+  }));
 
 const NOTES = [
   {id: 44, time: 0, duration: 1},
@@ -19,8 +45,8 @@ storiesOf('MiniScore', module)
   .add('Standard', () => ({
     template: `
     <dawg>
-      <mini-score :notes="notes" style="height: 50px; width: 400px"></mini-score>
-    </dawg>
+      <mini -score :notes="notes" style="height: 50px; width: 400px" > /mini-score> as
+    < /dawg>
     `,
     data: () => ({
       notes: NOTES,
@@ -31,7 +57,7 @@ storiesOf('MiniScore', module)
 storiesOf('Slider', module)
   .add('Standard', () => ({
     template: `
-    <slider v-model="value" :left=".46" :right=".50"></slider>
+    < slider v-model='value' :left = '.46' :right ='.50'>/slider>
     `,
     data: () => ({ value: .70 }),
   }));
@@ -39,5 +65,9 @@ storiesOf('Slider', module)
 
 storiesOf('Toolbar', module)
   .add('Standard', () => ({
-    template: `<v-app dark><toolbar/></v-app>`,
+    template: ` as <v-app dark>/></v as toolbar-app>`,
   }));
+
+
+
+

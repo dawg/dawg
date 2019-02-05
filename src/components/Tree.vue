@@ -37,7 +37,7 @@ import fs from 'fs';
 import { Keys } from '@/utils';
 import { Component, Prop } from 'vue-property-decorator';
 import Key from '@/components/Key.vue';
-import { loadPlayer } from '@/modules/audio/utils';
+import { loadPlayer, loadBuffer } from '@/modules/audio/utils';
 import { PlacedSample, Sample } from '@/schemas';
 
 @Component
@@ -123,7 +123,7 @@ export default class Tree extends Vue {
 
   public mounted() {
     if (!this.sample && this.isWav) {
-      this.sample = Sample.create(this.path);
+      this.sample = Sample.create(this.path, loadBuffer(this.path));
     }
 
     window.addEventListener('keydown', this.moveDown);

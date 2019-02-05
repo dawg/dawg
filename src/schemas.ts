@@ -4,7 +4,6 @@ import uuid from 'uuid';
 
 import Part, { Schedulable } from '@/modules/audio/part';
 import { toTickTime, allKeys, scale, ConstructorOf } from './utils';
-import { loadBuffer } from './modules/audio';
 
 // These are all of the schemas for the project.
 // Everything is annotated using `cerialize`.
@@ -93,10 +92,10 @@ export class PlacedPattern extends Element {
 }
 
 export class Sample {
-  public static create(path: string) {
+  public static create(path: string, buffer: AudioBuffer) {
     const sample = new Sample();
     sample.path = path;
-    sample.init();
+    sample.init(buffer);
     return sample;
   }
 
@@ -105,8 +104,8 @@ export class Sample {
   public buffer!: AudioBuffer;
   private player!: Tone.Player;
 
-  public init() {
-    this.buffer = loadBuffer(this.path);
+  public init(buffer: AudioBuffer) {
+    this.buffer = buffer;
     this.player = new Tone.Player(this.buffer).toMaster();
   }
 
@@ -367,6 +366,15 @@ export class Instrument implements IInstrument {
       this.connected = true;
     }
   }
+}
+
+export interface Point {
+  time: number; // beats
+  value: number; // Range 0 - 1
+}
+
+class AutomationClip {
+  @io.autoserialize public points: Point[] = [];
 }
 
 export type EffectName = keyof EffectOptions;
