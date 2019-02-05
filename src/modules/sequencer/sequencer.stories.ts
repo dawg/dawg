@@ -6,7 +6,7 @@ import PlaylistSequencer from '@/modules/sequencer/PlaylistSequencer.vue';
 import Waveform from '@/modules/sequencer/Waveform.vue';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import { loadFromUrl } from '@/modules/audio/web';
-import { PlacedPattern, Pattern, Score, Note as NE, PlacedSample, Instrument, Track } from '@/schemas';
+import { PlacedPattern, Pattern, Score, Note as NE, PlacedSample, Instrument, Track, Sample } from '@/schemas';
 import { resizable, Note, PatternElement, SampleElement, positionable } from '@/modules/sequencer';
 import Part from '@/modules/audio/part';
 import { range } from '@/utils';
@@ -88,16 +88,6 @@ storiesOf('PlaylistSequencer', module)
 
   }),
   components: { PlaylistSequencer, Dawg },
-  computed: {
-    placedSample() {
-      if (!this.buffer) {
-        return null;
-      }
-
-      // @ts-ignore
-      return PlacedSample.create(this.buffer);
-    },
-  },
   mounted,
 }));
 
@@ -139,7 +129,11 @@ storiesOf('SampleElement', module)
         }
 
         // @ts-ignore
-        return PlacedSample.create(this.buffer);
+        const buffer: AudioBuffer = this.buffer;
+        const sample = new Sample();
+        sample.buffer = buffer;
+
+        return PlacedSample.create(sample);
       },
     },
   }));

@@ -80,6 +80,7 @@ import { IElement, Element } from '@/schemas';
 export default class Arranger extends Mixins(Draggable, BeatLines) {
   @Inject() public stepsPerBeat!: number;
 
+  // name is used for debugging
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, required: true }) public rowHeight!: number;
   @Prop({ type: Array, required: true }) public elements!: Element[];
