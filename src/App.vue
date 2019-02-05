@@ -29,6 +29,7 @@
 
             <split>
               <playlist-sequencer
+                v-if="loaded"
                 style="height: 100%"
                 :tracks="project.tracks" 
                 :elements="project.master.elements"
@@ -79,7 +80,6 @@ import { ipcRenderer } from 'electron';
 import { project, cache, general, specific } from '@/store';
 import { toTickTime, allKeys, Keys } from '@/utils';
 import Part from '@/modules/audio/part';
-import io from '@/modules/io';
 import { Pattern, Score, Note, Instrument } from '@/schemas';
 
 

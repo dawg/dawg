@@ -8,6 +8,7 @@
     :row-style="rowStyle"
     :width="130"
     :part="part"
+    name="Playlist"
     :prototype.sync="prototype"
   >
     <template slot="side">

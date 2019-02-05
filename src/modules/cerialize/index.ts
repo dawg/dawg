@@ -90,7 +90,7 @@ export function union(type: Constructor<any>, ...types: Array<Constructor<any>>)
 
   return (target: any, key: string) => {
     const metaDataList = TypeMap.get(target.constructor) || {};
-    const metadata = new MetaData({ key, types: [type, ...types], indexable: true });
+    const metadata = new MetaData({ key, types: [type, ...types] });
     metaDataList[key] = metadata;
     TypeMap.set(target.constructor, metaDataList);
   };
@@ -153,7 +153,6 @@ export const is = (o: any, type: Constructor<any>) => {
 
 // deserialize a bit of json into an instance of `type`
 function deserializeObject(json: any, types: Array<Constructor<any>>): any {
-  // This is a bit weird, but Deserialize does not accept null right now...
   let theType: Type | undefined;
   if (types.length === 1) {
     theType = types[0];

@@ -92,6 +92,7 @@ export class PlacedPattern extends Element {
   }
 }
 
+// TODO(jacob) This is broken. We need to store file information!!
 @io.inheritSerialization(Element)
 export class PlacedSample extends Element {
   public static create(buffer: AudioBuffer) {

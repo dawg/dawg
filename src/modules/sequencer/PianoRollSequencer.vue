@@ -7,6 +7,7 @@
     :num-rows="allKeys.length"
     :prototype.sync="note"
     :row-class="rowClass"
+    name="Piano Roll"
   >
     <template slot="side">
       <piano :synth="instrument"></piano>

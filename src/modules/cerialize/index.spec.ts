@@ -1,6 +1,6 @@
 import {
-  Serialize as S,
-  Deserialize as D,
+  serialize as S,
+  deserialize as D,
   autoserializeAs,
   autoserialize,
   autoserializeIndexable,
@@ -71,7 +71,7 @@ describe.only('cerialize', () => {
       }
 
       const aaa = new AAA();
-      expect(S(aaa)).to.deep.equal({
+      expect(S(aaa, AAA)).to.deep.equal({
         aa: {
           a: {
             a: 'test',

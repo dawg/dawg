@@ -37,6 +37,7 @@
           :set-loop-start="setLoopStart"
           :set-loop-end="setLoopEnd"
           :progress="progress"
+          :name="name"
           v-bind="$attrs"
           v-on="$listeners"
         ></arranger>
@@ -63,6 +64,7 @@ export default class Sequencer extends Vue {
   @Inject() public pxPerBeat!: number;
 
   // TODO(jacob) Rename width to something else
+  @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, default: 80 }) public width!: number;
   @Prop({ type: Array, required: true }) public elements!: Element[];
   @Prop({ type: Boolean, default: false }) public play!: boolean;
@@ -111,7 +113,7 @@ export default class Sequencer extends Vue {
 
   @Watch<Sequencer>('loopEnd', { immediate: true })
   public onLoopEndChange() {
-    this.$log.debug(`loodEnd being set to ${this.loopEnd}`);
+    this.$log.info(`${this.name} -> loodEnd being set to ${this.loopEnd}`);
     this.part.loopEnd = toTickTime(this.loopEnd);
   }
 

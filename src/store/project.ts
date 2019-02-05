@@ -17,6 +17,8 @@ import {
   EffectTones,
   Track,
   Playlist,
+  PlacedPattern,
+  PlacedSample,
 } from '@/schemas';
 import { findUniqueName, toTickTime, range } from '@/utils';
 import store from '@/store/store';
@@ -88,6 +90,16 @@ export class Project extends VuexModule {
     const result = io.deserialize(contents, Project);
     this.reset(result);
 
+    this.master.elements.forEach((element) => {
+      if (element instanceof PlacedPattern) {
+        element.init(this.patternLookup[element.patternId]);
+      } else if (element instanceof PlacedSample) {
+        // TODO(jacob)
+      }
+    });
+
+    // Init the master after all of the elements
+    // have been initialized
     this.master.init();
 
     // This initializes the parts.
@@ -120,7 +132,7 @@ export class Project extends VuexModule {
   public addNote(payload: { pattern: Pattern, instrument: Instrument, note: Note }) {
     const time = toTickTime(payload.note.time);
     // TODO(jacob) This is a bit messy... :(
-    payload.pattern.part.add(payload.note.callback, time, payload.note);
+    payload.pattern.part.add(payload.note.callback(), time, payload.note);
   }
 
   @Mutation
