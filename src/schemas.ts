@@ -4,7 +4,7 @@ import uuid from 'uuid';
 
 import Transport from '@/modules/audio/transport';
 import { toTickTime, allKeys, scale, ConstructorOf } from './utils';
-import { TransportTime, TransportTimelineSignal, Time } from '@/modules/audio';
+import { TransportTimelineSignal, Time } from '@/modules/audio';
 
 // These are all of the schemas for the project.
 // Everything is annotated using `cerialize`.

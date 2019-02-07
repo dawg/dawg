@@ -7,7 +7,7 @@
     :row-class="() => 'secondary'"
     :row-style="rowStyle"
     :side-width="130"
-    :part="part"
+    :transport="transport"
     name="Playlist"
     :prototype.sync="prototype"
   >
@@ -36,7 +36,7 @@ export default class PlaylistSequencer extends Vue {
   @Inject() public trackHeight!: number;
 
   @Prop({ type: Array, required: true }) public tracks!: Track[];
-  @Prop({ type: Object, required: true }) public part!: Transport<Element>;
+  @Prop({ type: Object, required: true }) public transport!: Transport<Element>;
 
   public prototype = null;
 

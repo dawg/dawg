@@ -30,7 +30,7 @@ import store from '@/store/store';
 import cache from '@/store/cache';
 import Vue from 'vue';
 import uuid from 'uuid';
-import { loadBuffer } from '@/modules/audio';
+import { loadBuffer } from '@/modules/wav/local';
 import { makeLookup, chain } from '@/modules/utils';
 
 const { dialog } = remote;
@@ -122,10 +122,9 @@ export class Project extends VuexModule {
     this.patterns.forEach((pattern) => {
       pattern.scores.forEach((score) => {
         score.init(this.instrumentLookup);
-        const instrument = this.instrumentLookup[score.instrumentId];
         score.notes.forEach((note) => {
           note.init(score.instrument);
-          this.addNote({ pattern, instrument, note });
+          note.schedule(pattern.transport);
         });
       });
     });
@@ -140,13 +139,6 @@ export class Project extends VuexModule {
     this.instruments.forEach((instrument) => {
       this.setChannel({ instrument });
     });
-  }
-
-  @Mutation
-  public addNote(payload: { pattern: Pattern, instrument: Instrument, note: Note }) {
-    const time = toTickTime(payload.note.time);
-    // TODO This is a bit messy... :(
-    payload.pattern.part.add(payload.note.callback(), time, payload.note);
   }
 
   @Mutation

@@ -5,7 +5,7 @@ import PianoRollSequencer from '@/modules/sequencer/PianoRollSequencer.vue';
 import PlaylistSequencer from '@/modules/sequencer/PlaylistSequencer.vue';
 import Waveform from '@/modules/sequencer/Waveform.vue';
 import BeatLines from '@/modules/sequencer/BeatLines';
-import { loadFromUrl } from '@/modules/audio/web';
+import { loadFromUrl } from '@/modules/wav/web';
 import { PlacedPattern, Pattern, Score, Note as NE, PlacedSample, Instrument, Track, Sample } from '@/schemas';
 import { resizable, Note, PatternElement, SampleElement, positionable } from '@/modules/sequencer';
 import Transport from '@/modules/audio/transport';
@@ -46,14 +46,14 @@ storiesOf('PianoRollSequencer', module)
       <piano-roll-sequencer
         style="height: 500px"
         :elements="notes"
-        :part="part"
+        :transport="transport"
         :instrument="instrument"
       ></piano-roll-sequencer>
     </dawg>
     `,
     data: () => ({
       notes: [],
-      part: new Transport(),
+      transport: new Transport(),
       instrument: Instrument.default('TEST'),
     }),
     components: { PianoRollSequencer, Dawg },
@@ -74,13 +74,13 @@ storiesOf('PlaylistSequencer', module)
       style="height: 500px"
       :elements="elements"
       :prototype="element"
-      :part="part"
+      :transport="transport"
       :tracks="tracks"
     ></playlist-sequencer>
   </dawg>
   `,
   data: () => ({
-    part: new Transport(),
+    transport: new Transport(),
     elements: [],
     buffer: null,
     element: patternElement,

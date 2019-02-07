@@ -1,7 +1,6 @@
 import Tone from 'tone';
 import { TransportTime } from './types';
-import Transport from './transport';
-import Transport from './transport';
+import Transport from '@/modules/audio/transport';
 
 
 export class TransportTimelineSignal extends Tone.Signal {
@@ -89,8 +88,8 @@ export class TransportTimelineSignal extends Tone.Signal {
   }
 
   public dispose() {
-    // this.part.clear(this.synced);
-    // this.part.off('start', this.callback).off('stop', this.callback).off('pause', this.callback);
+    // this.transport.clear(this.synced);
+    // this.transport.off('start', this.callback).off('stop', this.callback).off('pause', this.callback);
     // @ts-ignore
     this._events.cancel(0);
     super.dispose.call(this);

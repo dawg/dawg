@@ -62,7 +62,8 @@ export default class Effect<T extends EffectName> extends Vue {
   }
 
   public automate(key: keyof E<T>['options']) {
-    this.$automate(this.effect.options, key);
+    // TODO(jacob)
+    // this.$automate(this.effect.options, key);
   }
 }
 </script>

@@ -42,7 +42,7 @@ export default class Toolbar extends Vue {
   @Prop({ type: String, required: true }) public context!: ApplicationContext;
   @Prop({ type: Number, required: true }) public bpm!: number;
   @Prop({ type: Boolean, required: true }) public play!: boolean;
-  @Prop(Nullable(Object)) public part!: Transport | null;
+  @Prop(Nullable(Object)) public transport!: Transport<any> | null;
 
   public seconds = 0;
   public sliderTop = false;
@@ -60,13 +60,13 @@ export default class Toolbar extends Vue {
   }
 
   public update() {
-    if (!this.part) {
+    if (!this.transport) {
       this.seconds = 0;
       return;
     }
 
-    if (this.part.state === 'started') { requestAnimationFrame(this.update); }
-    this.seconds = this.part.seconds;
+    if (this.transport.state === 'started') { requestAnimationFrame(this.update); }
+    this.seconds = this.transport.seconds;
   }
 
   @Watch<Toolbar>('play')

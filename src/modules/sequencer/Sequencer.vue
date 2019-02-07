@@ -67,7 +67,7 @@ export default class Sequencer extends Vue {
   @Prop({ type: Number, default: 80 }) public sideWidth!: number;
   @Prop({ type: Array, required: true }) public elements!: Element[];
   @Prop({ type: Boolean, default: false }) public play!: boolean;
-  @Prop({ type: Object, required: true }) public part!: Transport<Element>;
+  @Prop({ type: Object, required: true }) public transport!: Transport<Element>;
   @Prop(Number) public end!: number;
   @Prop(Number) public start!: number;
 
@@ -93,17 +93,17 @@ export default class Sequencer extends Vue {
 
   public added(element: Element) {
     this.$log.debug(`Adding element at ${element.time}`);
-    element.schedule(this.part);
+    element.schedule(this.transport);
   }
 
   public removed(element: Element) {
     this.$log.debug(`Removing element at ${element.time}`);
-    element.remove(this.part);
+    element.remove(this.transport);
   }
 
   public update() {
-    if (this.part.state === 'started') { requestAnimationFrame(this.update); }
-    this.progress = this.part.progress;
+    if (this.transport.state === 'started') { requestAnimationFrame(this.update); }
+    this.progress = this.transport.progress;
   }
 
   public scroll(e: UIEvent) {
@@ -116,7 +116,7 @@ export default class Sequencer extends Vue {
   @Watch<Sequencer>('loopEnd', { immediate: true })
   public onLoopEndChange() {
     this.$log.info(`${this.name} -> loodEnd being set to ${this.loopEnd}`);
-    this.part.loopEnd = toTickTime(this.loopEnd);
+    this.transport.loopEnd = toTickTime(this.loopEnd);
     this.$update('end', this.loopEnd);
   }
 
@@ -124,8 +124,8 @@ export default class Sequencer extends Vue {
   public onLoopStartChange() {
     this.$log.debug(`loopStart being set to ${this.loopStart}`);
     const time = toTickTime(this.loopStart);
-    this.part.seconds = new Tone.Time(time).toSeconds();
-    this.part.loopStart = time;
+    this.transport.seconds = new Tone.Time(time).toSeconds();
+    this.transport.loopStart = time;
     this.$update('start', this.loopStart);
   }
 
@@ -150,7 +150,7 @@ export default class Sequencer extends Vue {
     }
   }
 
-  @Watch<Sequencer>('part')
+  @Watch<Sequencer>('transport')
   public resetLoop() {
     this.setLoopStart = null;
     this.setLoopEnd = null;
@@ -161,10 +161,10 @@ export default class Sequencer extends Vue {
     this.$log.debug(`play -> ${this.play}`);
     if (this.play) {
       this.update();
-    } else if (this.part.state === 'started') {
+    } else if (this.transport.state === 'started') {
       // This may not be the best way
       // since we are mutating state directly...
-      this.part.stop();
+      this.transport.stop();
     }
   }
 }

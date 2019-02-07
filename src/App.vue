@@ -16,7 +16,7 @@
             <split :initial="general.toolbarHeight" fixed>
               <toolbar
                 :height="general.toolbarHeight"
-                :part="part"
+                :transport="transport"
                 :context="general.applicationContext"
                 @update:context="general.setContext"
                 :play="general.play"
@@ -33,7 +33,7 @@
                 style="height: 100%"
                 :tracks="project.tracks" 
                 :elements="project.master.elements"
-                :part="project.master.part"
+                :transport="project.master.transport"
                 :play="general.playlistPlay"
                 :start.sync="masterStart"
                 :end.sync="masterEnd"
@@ -157,35 +157,35 @@ export default class App extends Vue {
     specific.write();
   }
 
-  get part() {
+  get transport() {
     if (general.applicationContext === 'pianoroll') {
       const pattern = specific.selectedPattern;
-      return pattern ? pattern.part : null;
+      return pattern ? pattern.transport : null;
     } else {
-      return project.master.part;
+      return project.master.transport;
     }
   }
 
   public playPause() {
-    let part: Transport<any>;
+    let transport: Transport<any>;
     if (general.applicationContext === 'pianoroll') {
       const pattern = specific.selectedPattern;
       if (!pattern) {
         this.$notify.info('Select a pattern.');
         return;
       }
-      part = pattern.part;
+      transport = pattern.transport;
     } else {
-      part = project.master.part;
+      transport = project.master.transport;
     }
 
-    if (part.state === 'started') {
+    if (transport.state === 'started') {
       this.$log.debug('PAUSING');
-      part.stop();
+      transport.stop();
       general.pause();
     } else {
       this.$log.debug('PLAY');
-      part.start();
+      transport.start();
       general.start();
     }
   }

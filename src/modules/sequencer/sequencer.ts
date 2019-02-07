@@ -1,5 +1,6 @@
-import Vue, { CreateElement, VueConstructor, VNodeData } from 'vue';
+import Vue, { CreateElement, VueConstructor } from 'vue';
 import { Prop, Inject, Component, Mixins } from 'vue-property-decorator';
+import tinycolor from 'tinycolor2';
 import { Draggable } from '@/modules/draggable';
 import { createHOC } from '@/modules/utils';
 
@@ -27,6 +28,44 @@ export const positionable = (component: VueConstructor) => {
   }
 
   return Positionable;
+};
+
+export const colored = (component: VueConstructor) => {
+  @Component
+  class Colored extends Vue {
+    @Prop({ type: String, default: '#ccc' }) public color!: string;
+    public percentage = 50;
+
+    get lightColor() {
+      return tinycolor(this.color).lighten(this.percentage).toHex();
+    }
+
+    public render(createElement: CreateElement) {
+      const element = createHOC(component, createElement, this);
+
+      const top = createElement('top', {
+        style: {
+          backgroundColor: this.color,
+          height: '8px',
+          width: '100%',
+        },
+        class: 'top',
+      });
+
+      return createElement('div', {
+        class: 'formatted',
+        style: {
+          backgroundColor: this.lightColor,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          position: 'relative',
+        },
+      }, [top, element]);
+    }
+  }
+
+  return Colored;
 };
 
 

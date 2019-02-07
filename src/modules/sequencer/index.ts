@@ -5,10 +5,10 @@ import SE from '@/modules/sequencer/SampleElement.vue';
 import PlaylistSequencer from '@/modules/sequencer/PlaylistSequencer.vue';
 import PianoRollSequencer from '@/modules/sequencer/PianoRollSequencer.vue';
 import N from '@/modules/sequencer/Note.vue';
-import { positionable, resizable, selectable } from './sequencer';
+import { positionable, resizable, selectable, colored } from './sequencer';
 
 function hoc(o: VueConstructor) {
-  return positionable(selectable(resizable(o)));
+  return positionable(selectable(colored(resizable(o))));
 }
 
 export const SampleElement = hoc(SE);

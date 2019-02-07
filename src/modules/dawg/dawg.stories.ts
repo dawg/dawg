@@ -45,8 +45,8 @@ storiesOf('MiniScore', module)
   .add('Standard', () => ({
     template: `
     <dawg>
-      <mini -score :notes="notes" style="height: 50px; width: 400px" > /mini-score> as
-    < /dawg>
+      <mini-score :notes="notes" style="height: 50px; width: 400px"></mini-score>
+    </dawg>
     `,
     data: () => ({
       notes: NOTES,
@@ -57,7 +57,7 @@ storiesOf('MiniScore', module)
 storiesOf('Slider', module)
   .add('Standard', () => ({
     template: `
-    < slider v-model='value' :left = '.46' :right ='.50'>/slider>
+    <slider v-model="value" :left=".46" :right =".50"></slider>
     `,
     data: () => ({ value: .70 }),
   }));
@@ -65,7 +65,7 @@ storiesOf('Slider', module)
 
 storiesOf('Toolbar', module)
   .add('Standard', () => ({
-    template: ` as <v-app dark>/></v as toolbar-app>`,
+    template: `<v-app dark><toolbar></toolbar></v-app>`,
   }));
 
 

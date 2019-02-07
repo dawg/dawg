@@ -29,7 +29,7 @@
         style="height: 100%"
         v-if="shouldRender"
         :elements="notes"
-        :part="part"
+        :transport="transport"
         :instrument="instrument"
         :play="general.pianoRollPlay"
       ></piano-roll-sequencer>
@@ -85,9 +85,9 @@ export default class Panels extends Vue {
     }
   }
 
-  get part() {
+  get transport() {
     if (specific.selectedPattern) {
-      return specific.selectedPattern.part;
+      return specific.selectedPattern.transport;
     }
   }
 

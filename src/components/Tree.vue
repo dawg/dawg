@@ -36,7 +36,7 @@ import fs from 'fs';
 import { Keys } from '@/utils';
 import { Component, Prop } from 'vue-property-decorator';
 import Key from '@/components/Key.vue';
-import { loadPlayer, loadBuffer } from '@/modules/audio/utils';
+import { loadPlayer, loadBuffer } from '@/modules/wav/local';
 import { PlacedSample, Sample } from '@/schemas';
 
 @Component

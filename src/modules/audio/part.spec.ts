@@ -4,16 +4,16 @@
 
 const noOp = () => ({});
 
-describe('part', () => {
+describe('transport', () => {
   // it('can loop events scheduled on the transport', async () => {
   //   let invocations = 0;
   //   return Offline(() => {
-  //       const part = new Transport();
-  //       part.scheduleEvent(() => {
+  //       const transport = new Transport();
+  //       transport.scheduleEvent(() => {
   //         invocations++;
   //       }, 0);
-  //       part.setLoopPoints(0, 100).start(0);
-  //       part.loop = true;
+  //       transport.setLoopPoints(0, 100).start(0);
+  //       transport.loop = true;
   //     }, 1.1).then(() => {
   //       expect(invocations).to.equal(5);
   //     });
@@ -38,7 +38,7 @@ describe('part', () => {
   //   });
   // });
 
-  // it('can remove a part from a part', () => {
+  // it('can remove a transport from a transport', () => {
   //   const child = new Transport();
   //   child.scheduleEvent(noOp, 0);
   //   child.scheduleEvent(noOp, 4);
@@ -69,17 +69,17 @@ describe('part', () => {
   //     //
   //   }
 
-  //   const part = new Transport<Class>();
+  //   const transport = new Transport<Class>();
   //   const a = new Class();
   //   const b = new Class();
 
-  //   part.add(noOp, 5, a);
-  //   part.add(noOp, 5, b);
+  //   transport.add(noOp, 5, a);
+  //   transport.add(noOp, 5, b);
 
-  //   expect(part.timeline.length).to.eq(2);
-  //   part.remove(a); part.remove(a);
-  //   expect(part.timeline.length).to.eq(1);
-  //   part.remove(b);
-  //   expect(part.timeline.length).to.eq(0);
+  //   expect(transport.timeline.length).to.eq(2);
+  //   transport.remove(a); transport.remove(a);
+  //   expect(transport.timeline.length).to.eq(1);
+  //   transport.remove(b);
+  //   expect(transport.timeline.length).to.eq(0);
   // });
 });
