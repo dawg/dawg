@@ -24,7 +24,8 @@
       class="primary--fill"
       :style="style"
     ></rect>
-    <polygon 
+    <polygon
+      @contextmenu="contextmenu"
       :points="points" 
       class="level primary--fill" 
       :ref="dragRef"
@@ -81,6 +82,15 @@ export default class Slider extends Mixins(Draggable) {
 
   public getPosition(level: number) {
     return this.height - level;
+  }
+
+  public contextmenu(e: MouseEvent) {
+    this.$context(e, [
+      {
+        text: 'Create Automation Clip',
+        callback: () => this.$emit('automate'),
+      },
+    ]);
   }
 }
 </script>

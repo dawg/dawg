@@ -35,7 +35,7 @@ import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import { Point } from '@/schemas';
 
 @Component
-export default class AutomationClip extends Vue {
+export default class AutomationClipElement extends Vue {
   @Inject() public pxPerBeat!: number;
   @Inject() public trackHeight!: number;
   @Inject() public snap!: number;
@@ -86,11 +86,15 @@ export default class AutomationClip extends Vue {
     const rect = this.$el.getBoundingClientRect();
     const x = e.clientX - rect.left;
     let time = x / this.pxPerBeat;
+
+    const lowerBound = i === 0 ? 0 : this.points[i - 1].time;
+    const upperBound = i === this.points.length - 1 ? Infinity : this.points[i + 1].time;
+
     time = Math.round(time / this.snap) * this.snap;
-    time = Math.max(0, time);
+    time = Math.max(lowerBound, Math.min(upperBound, time));
 
     const point = this.points[i];
-    let value = point.value + e.movementY / this.trackHeight;
+    let value = (e.clientY - rect.top) / this.trackHeight;
     value = Math.max(0, Math.min(1, value));
 
     this.$set(this.points, i, { time, value });

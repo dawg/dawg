@@ -52,7 +52,7 @@ import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import Tone from 'tone';
 import { Watch } from '@/modules/update';
 import { Element } from '@/schemas';
-import Part from '@/modules/audio/part';
+import Transport from '@/modules/audio/transport';
 import { toTickTime } from '@/utils';
 import Arranger from '@/modules/sequencer/Arranger.vue';
 import Timeline from '@/modules/sequencer/Timeline.vue';
@@ -67,7 +67,9 @@ export default class Sequencer extends Vue {
   @Prop({ type: Number, default: 80 }) public sideWidth!: number;
   @Prop({ type: Array, required: true }) public elements!: Element[];
   @Prop({ type: Boolean, default: false }) public play!: boolean;
-  @Prop({ type: Object, required: true }) public part!: Part<Element>;
+  @Prop({ type: Object, required: true }) public part!: Transport<Element>;
+  @Prop(Number) public end!: number;
+  @Prop(Number) public start!: number;
 
   public loopStart = 0;
   public loopEnd = 0;
@@ -78,6 +80,7 @@ export default class Sequencer extends Vue {
   public setLoopEnd: null | number = null;
 
   // Horizontal offset in beats.
+  // Used to offset the timeline
   get offset() {
     return this.scrollLeft / this.pxPerBeat;
   }
@@ -89,13 +92,13 @@ export default class Sequencer extends Vue {
   }
 
   public added(element: Element) {
-    const time = toTickTime(element.time);
-    this.$log.debug(`Adding element at ${element.time} -> ${time}`);
-    this.part.add(element.callback(), time, element);
+    this.$log.debug(`Adding element at ${element.time}`);
+    element.schedule(this.part);
   }
 
   public removed(element: Element) {
-    this.part.remove(element);
+    this.$log.debug(`Removing element at ${element.time}`);
+    element.remove(this.part);
   }
 
   public update() {
@@ -114,6 +117,7 @@ export default class Sequencer extends Vue {
   public onLoopEndChange() {
     this.$log.info(`${this.name} -> loodEnd being set to ${this.loopEnd}`);
     this.part.loopEnd = toTickTime(this.loopEnd);
+    this.$update('end', this.loopEnd);
   }
 
   @Watch<Sequencer>('loopStart', { immediate: true })
@@ -122,6 +126,7 @@ export default class Sequencer extends Vue {
     const time = toTickTime(this.loopStart);
     this.part.seconds = new Tone.Time(time).toSeconds();
     this.part.loopStart = time;
+    this.$update('start', this.loopStart);
   }
 
   @Watch<Sequencer>('setLoopStart')

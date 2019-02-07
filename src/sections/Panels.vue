@@ -50,7 +50,6 @@ import SampleViewer from '@/components/SampleViewer.vue';
 import Synths from '@/components/Synths.vue';
 import Panel from '@/components/Panel.vue';
 import { Note, EffectName, Channel, EffectOptions } from '@/schemas';
-import { Part } from 'tone';
 
 @Component({
   components: {

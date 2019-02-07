@@ -1,13 +1,13 @@
 import { storiesOf } from '@storybook/vue';
 
-storiesOf('AutomationClip', module)
+storiesOf('AutomationClipElement', module)
   .add('Standard', () => ({
     template: `
     <dawg>
-      <automation-clip
+      <automation-clip-element
         style="margin: 20px;"
         :points="points"
-      ></automation-clip>
+      ></automation-clip-element>
     </dawg>
     `,
     data: () => ({

@@ -14,7 +14,6 @@
       :style="synthStyle"
       @dblclick="expand = !expand"
       @click="$emit('click', $event)"
-      @contextmenu="$emit('contextmenu', $event)"
     >
       <dot-button
         class="mute"
@@ -26,6 +25,7 @@
         :size="knobSize"
         :stroke-width="strokeWidth"
         v-model="instrument.volume"
+        @automate="automateVolume"
       ></knob>
       <knob
         class="knob"
@@ -36,6 +36,7 @@
         :mid-value="0"
         :stroke-width="strokeWidth"
         v-model="instrument.pan"
+        @automate="automatePan"
       ></knob>
       <div class="white--text name">{{ instrument.name }}</div>
       <mini-score :notes="notes"></mini-score>
@@ -62,7 +63,6 @@
 <script lang="ts">
 import Vue from 'vue';
 import Tone from 'tone';
-import Knob from '@/components/Knob.vue';
 import DotButton from '@/components/DotButton.vue';
 import MiniScore from '@/modules/dawg/MiniScore.vue';
 import ChannelSelect from '@/components/ChannelSelect.vue';
@@ -76,7 +76,7 @@ const TYPES = ['pwm', 'sine', 'triangle', 'fatsawtooth', 'square'];
 const oscillator = { type: 'fatsawtooth', spread: 30 };
 const envelope = { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 };
 
-@Component({ components: { Knob, DotButton, MiniScore, ChannelSelect } })
+@Component({ components: { DotButton, MiniScore, ChannelSelect } })
 export default class Synth extends Vue {
   @Prop({ type: Object, required: true }) public instrument!: Instrument;
   @Prop({ type: Number, default: 50 }) public height!: number;
@@ -97,6 +97,14 @@ export default class Synth extends Vue {
 
   public setChannel(value: number | null) {
     this.$update('channel', value);
+  }
+
+  public automateVolume() {
+    this.$automate(this.instrument, 'volume');
+  }
+
+  public automatePan() {
+    this.$automate(this.instrument, 'pan');
   }
 
   @Watch<Synth>('active')

@@ -8,7 +8,7 @@ import BeatLines from '@/modules/sequencer/BeatLines';
 import { loadFromUrl } from '@/modules/audio/web';
 import { PlacedPattern, Pattern, Score, Note as NE, PlacedSample, Instrument, Track, Sample } from '@/schemas';
 import { resizable, Note, PatternElement, SampleElement, positionable } from '@/modules/sequencer';
-import Part from '@/modules/audio/part';
+import Transport from '@/modules/audio/transport';
 import { range } from '@/utils';
 
 const Temp = Vue.extend({
@@ -53,7 +53,7 @@ storiesOf('PianoRollSequencer', module)
     `,
     data: () => ({
       notes: [],
-      part: new Part(),
+      part: new Transport(),
       instrument: Instrument.default('TEST'),
     }),
     components: { PianoRollSequencer, Dawg },
@@ -80,7 +80,7 @@ storiesOf('PlaylistSequencer', module)
   </dawg>
   `,
   data: () => ({
-    part: new Part(),
+    part: new Transport(),
     elements: [],
     buffer: null,
     element: patternElement,

@@ -149,7 +149,7 @@ declare module 'tone' {
     frequency: number,
   }
 
-  class Clock extends Emitter<{ start: [], stop: [], pause: [] }> {
+  class Clock extends Emitter<{ start: [number], stop: [number], pause: [number] }> {
     constructor(options: _Clock);
     frequency: TickSignal;
     seconds: number;
@@ -225,10 +225,10 @@ declare module 'tone' {
   }
 
   class Emitter<T extends { [k: string]: any[] }, V extends keyof T = keyof T> extends Tone {
-    emit(event: V, ...args: T[V]): this;
-    on(event: V, callback: (...args: T[V]) => void): this;
-    once(event: V, callback: (...arg: T[V]) => void): this;
-    off(event: V, callback: (...arg: T[V]) => void): this;
+    emit<Z extends V>(event: Z, ...args: T[Z]): this;
+    on<Z extends V>(event: Z, callback: (...args: T[Z]) => void): this;
+    once<Z extends V>(event: Z, callback: (...arg: T[Z]) => void): this;
+    off<Z extends V>(event: Z, callback: (...arg: T[Z]) => void): this;
   }
 
   class Envelope extends Tone {
@@ -773,26 +773,27 @@ declare module 'tone' {
       select(which: number, time?: _TimeArg): Select;
   }
 
-  module Signal {
+  module Sig {
     class Unit{}
     class Type{}
   }
 
   class Signal extends SignalBase {
-      constructor(value?: any, units?: Signal.Unit); //todo: number | AudioParam
-      units: Signal.Type;
+      constructor(value?: any, units?: Sig.Unit); //todo: number | AudioParam
+      units: Sig.Type;
       value: any; //TODO: _TimeArg | Frequency | number
-      cancelScheduledValues(startTime: _TimeArg): Signal;
+      cancelScheduledValues(startTime: _TimeArg): this;
       dispose(): this;
-      exponentialRampToValueAtTime(value: number, endTime: _TimeArg): Signal;
-      exponentialRampToValueNow(value: number, rampTime: _TimeArg): Signal;
-      linearRampToValueAtTime(value: number, endTime: _TimeArg): Signal;
-      linearRampToValueNow(value: number, rampTime: _TimeArg): Signal;
-      rampTo(value: number, rampTime: _TimeArg): Signal;
-      setCurrentValueNow(now?: number): Signal;
-      setTargetAtTime(value: number, startTime: _TimeArg, timeConstant: number): Signal;
-      setValueAtTime(value: number, time: _TimeArg): Signal;
-      setValueCurveAtTime(values: number[], startTime: _TimeArg, duration: _TimeArg): Signal;
+      exponentialRampToValueAtTime(value: number, endTime: _TimeArg): this;
+      exponentialRampToValueNow(value: number, rampTime: _TimeArg): this;
+      linearRampToValueAtTime(value: number, endTime: _TimeArg): this;
+      linearRampToValueNow(value: number, rampTime: _TimeArg): this;
+      rampTo(value: number, rampTime: _TimeArg): this;
+      setCurrentValueNow(now?: number): this;
+      setTargetAtTime(value: number, startTime: _TimeArg, timeConstant: number): this;
+      getValueAtTime(tiem: _TimeArg): number;
+      setValueAtTime(value: number, time: _TimeArg): this;
+      setValueCurveAtTime(values: number[], startTime: _TimeArg, duration: _TimeArg): this;
   }
 
   class SignalBase extends Tone {
@@ -860,6 +861,8 @@ declare module 'tone' {
   }
 
   class TickSignal extends Signal {
+    _toUnits(value: number): number;
+    _fromUnits(value: number): number;
     getDurationOfTicks(ticks: number, time: _TimeArg): void;
     timeToTicks(duration: PrimitiveTime, when?: PrimitiveTime): Ticks;
     getTicksAtTime(time: PrimitiveTime): PrimitiveTicks;
@@ -883,7 +886,7 @@ declare module 'tone' {
     toBarsBeatsSixteenths(): string;
   }
 
-  class Timeline<T extends { time: number }> extends Tone {
+  class Timeline<T extends { time: Time }> extends Tone {
     length: number;
     add(event: T): void;
     get(time: number, comparator?: keyof T): T;
@@ -894,7 +897,7 @@ declare module 'tone' {
     remove(event: T): void;
   }
 
-  class TimelineState extends Timeline<{state: TransportState, time: number}> {
+  class TimelineState extends Timeline<{state: TransportState, time: Time}> {
     constructor(initial: string);
     cancel(time: number): this;
     setStateAtTime(state: TransportState, time: number): this;
@@ -940,13 +943,27 @@ declare module 'tone' {
 
   var Transport: _TransportConstructor;
 
+  type TransportCallback = (exact: number, ticks: number) => void;
+
+  // TODO callback ^^ is wrong
   class TransportEvent extends Tone {
-    constructor(transport: _TransportConstructor | null, options: { time: TransportTime, callback: (time: number) => void })
+    constructor(transport: _TransportConstructor, options: { time: TransportTime, callback: TransportCallback })
     id: string;
     time: Ticks;
-    callback: (exact: number) => void;
-    invoke(time: number): void;
+    callback: TransportCallback;
+    invoke(exact: number, ticks: number): void;
     dispose(): void;
+  }
+
+  class _TransportRepeatEventOptions {
+    callback: TransportCallback;
+    interval: Time;
+    time: Time;
+    duration: Time;
+  }
+
+  class TransportRepeatEvent extends TransportEvent {
+    constructor(transport: _TransportConstructor, options: _TransportRepeatEventOptions)
   }
 
   type TransportState = 'started' | 'stopped' | 'paused';

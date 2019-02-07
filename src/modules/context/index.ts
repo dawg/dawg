@@ -21,6 +21,7 @@ const context = {
     const defaultItems = options.default || [];
     const contextFunction: ContextFunction = (e, items) => {
       e.preventDefault();
+      e.stopPropagation();
       bus.$emit('show', { e, items: [...items, null, ...defaultItems] });
     };
 

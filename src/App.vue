@@ -35,6 +35,8 @@
                 :elements="project.master.elements"
                 :part="project.master.part"
                 :play="general.playlistPlay"
+                :start.sync="masterStart"
+                :end.sync="masterEnd"
                 @new-prototype="checkPrototype"
               ></playlist-sequencer>
             </split>
@@ -65,39 +67,20 @@
 <script lang="ts">
 import fs from 'fs';
 import { Component, Vue } from 'vue-property-decorator';
-import SideBar from '@/components/SideBar.vue';
-import Foot from '@/components/Foot.vue';
-import FileExplorer from '@/components/FileExplorer.vue';
-import ActivityBar from '@/components/ActivityBar.vue';
-import PanelHeaders from '@/sections/PanelHeaders.vue';
-import Panels from '@/sections/Panels.vue';
-import Tabs from '@/components/Tabs.vue';
-import Tab from '@/components/Tab.vue';
-import Split from '@/modules/split/Split.vue';
-import BaseTabs from '@/components/BaseTabs.vue';
-import SideTabs from '@/sections/SideTabs.vue';
-import Notifications from '@/modules/notification/Notifications.vue';
 import { ipcRenderer } from 'electron';
 import { project, cache, general, specific } from '@/store';
 import { toTickTime, allKeys, Keys } from '@/utils';
-import Part from '@/modules/audio/part';
-import { Pattern, Score, Note, Instrument, PlacedPattern, PlacedSample } from '@/schemas';
-
+import Transport from '@/modules/audio/transport';
+import { automation } from '@/modules/knobs';
+import { Pattern, Score, Note, Instrument, PlacedPattern, PlacedSample, Automatable, AutomationClip } from '@/schemas';
+import Sidebar from '@/components/SideBar.vue';
+import SideTabs from '@/sections/SideTabs.vue';
+import Panels from '@/sections/Panels.vue';
+import PanelHeaders from '@/sections/PanelHeaders.vue';
+import Tone from 'tone';
 
 @Component({
-  components: {
-    SideBar,
-    Tabs,
-    Tab,
-    Foot,
-    Split,
-    BaseTabs,
-    Notifications,
-    Panels,
-    ActivityBar,
-    SideTabs,
-    PanelHeaders,
-  },
+  components: { SideTabs, Panels, PanelHeaders },
 })
 export default class App extends Vue {
   public project = project;
@@ -111,6 +94,11 @@ export default class App extends Vue {
   // ie. some components expect props to stay the same.
   public loaded = false;
 
+  // We need these to be able to keep track of the start and end of the playlist loop
+  // for creating automation clips
+  public masterStart = 0;
+  public masterEnd = 0;
+
   get openedFile() {
     if (!cache) { return null; }
     return cache.openedFile;
@@ -120,6 +108,7 @@ export default class App extends Vue {
     window.addEventListener('keypress', this.keydown);
     ipcRenderer.on('save', this.save);
     ipcRenderer.on('open', this.open);
+    automation.$on('automate', this.addAutomationClip);
 
     // tslint:disable-next-line:no-console
     console.info(project);
@@ -145,7 +134,7 @@ export default class App extends Vue {
     }
   }
 
-  public clickActivityBar(tab: SideBar, $event: MouseEvent) {
+  public clickActivityBar(tab: Sidebar, $event: MouseEvent) {
     specific.setOpenedSideTab(tab.name);
   }
 
@@ -178,7 +167,7 @@ export default class App extends Vue {
   }
 
   public playPause() {
-    let part: Part<any>;
+    let part: Transport<any>;
     if (general.applicationContext === 'pianoroll') {
       const pattern = specific.selectedPattern;
       if (!pattern) {
@@ -212,6 +201,21 @@ export default class App extends Vue {
     }
 
     project.addSample(sample);
+  }
+
+  public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T) {
+    const added = await project.createAutomationClip({
+      automatable,
+      key,
+      start: this.masterStart,
+      end: this.masterEnd,
+    });
+
+    if (!added) {
+      this.$notify.warning('Unable to create automation clip', {
+        detail: 'There are no free tracks. Move elements and try again.',
+      });
+    }
   }
 }
 </script>

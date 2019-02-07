@@ -14,18 +14,17 @@
         {{ fileName }}
       </drag>
     </div>
-      <ul v-if="showChildren && (!isLeaf || isWav)">
-        <tree
-          ref="trees"
-          v-for="(folder, i) in folders"
-          :key="folder"
-          :path="folder"
-          :children="children[folder]"
-          :depth="depth + 1"
-          :index="i"
-        ></tree>
-      </ul>
-
+    <ul v-if="showChildren && (!isLeaf || isWav)">
+      <tree
+        ref="trees"
+        v-for="(folder, i) in folders"
+        :key="folder"
+        :path="folder"
+        :children="children[folder]"
+        :depth="depth + 1"
+        :index="i"
+      ></tree>
+    </ul>
   </div>
 </template>
 

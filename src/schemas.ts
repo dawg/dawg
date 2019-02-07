@@ -1,9 +1,10 @@
 import * as io from '@/modules/cerialize';
-import Tone from 'tone';
+import Tone, { Signal } from 'tone';
 import uuid from 'uuid';
 
-import Part, { Schedulable } from '@/modules/audio/part';
+import Transport from '@/modules/audio/transport';
 import { toTickTime, allKeys, scale, ConstructorOf } from './utils';
+import { TransportTime, TransportTimelineSignal, Time } from '@/modules/audio';
 
 // These are all of the schemas for the project.
 // Everything is annotated using `cerialize`.
@@ -22,7 +23,7 @@ export interface IElement {
   time: number;
 }
 
-// TODO Copy methods are duplicate. There must be a better way...
+// TODO Consolidate all Element classes!
 export abstract class Element implements IElement {
 
   public static copy<T extends Element>(element: T, cls: ConstructorOf<T>): T {
@@ -36,7 +37,8 @@ export abstract class Element implements IElement {
   public readonly abstract component: string;
 
   /**
-   * Refers to note ID. This are numbered 0 -> 87 and start from the higher frequencies.
+   * Refers to row where the element is placed.
+   * For notes, these are numbered 0 -> 87 and start from the higher frequencies.
    */
   @io.autoserialize public row!: number;
   /**
@@ -49,6 +51,9 @@ export abstract class Element implements IElement {
    */
   @io.autoserialize public time!: number;
 
+  protected eventId?: string;
+
+
   constructor(o?: IElement) {
     if (o) {
       this.row = o.row;
@@ -57,8 +62,18 @@ export abstract class Element implements IElement {
     }
   }
 
-  public abstract callback(): Schedulable<any>;
+  public remove(transport: Transport<any>) {
+    if (this.eventId) {
+      transport.clear(this.eventId);
+    }
+  }
+
+  public abstract schedule(transport: Transport<any>): void;
   public abstract copy(): Element;
+
+  get tickTime() {
+    return toTickTime(this.time);
+  }
 }
 
 @io.inheritSerialization(Element)
@@ -76,9 +91,9 @@ export class PlacedPattern extends Element {
   public pattern!: Pattern;
   @io.autoserialize public patternId!: string;
 
-  public callback() {
-    return this.pattern.part;
-  }
+  // public callback() {
+  //   return this.pattern.transport;
+  // }
 
   public init(pattern: Pattern) {
     this.pattern = pattern;
@@ -88,6 +103,10 @@ export class PlacedPattern extends Element {
     const pp = new PlacedPattern();
     Object.assign(pp, this);
     return pp;
+  }
+
+  public schedule(transport: Transport<any>) {
+    this.eventId = transport.embed(this.pattern.transport, this.tickTime);
   }
 }
 
@@ -109,8 +128,8 @@ export class Sample {
     this.player = new Tone.Player(this.buffer).toMaster();
   }
 
-  public start(exact?: number, ticks?: number) {
-    this.player.start(exact, undefined, ticks !== undefined ? `${ticks}i` : ticks);
+  public start(exact?: number, ticks?: string) {
+    this.player.start(exact, undefined, ticks);
   }
 
   public stop() {
@@ -148,14 +167,18 @@ export class PlacedSample extends Element {
   }
 
   public callback() {
-    return (exact: number) => {
-      const duration = toTickTime(this.duration);
-      this.sample.start(exact, duration);
-    };
+    return ;
   }
 
   public init(sample: Sample) {
     this.sample = sample;
+  }
+
+  public schedule(transport: Transport<any>) {
+    transport.schedule((exact: number) => {
+      const duration = toTickTime(this.duration);
+      this.sample.start(exact, duration);
+    }, this.tickTime);
   }
 }
 
@@ -172,11 +195,6 @@ export class Note extends Element {
 
   public init(instrument: Instrument) {
     this.instrument = instrument;
-    return this;
-  }
-
-  get id() {
-    return this.row;
   }
 
   public copy() {
@@ -186,9 +204,43 @@ export class Note extends Element {
   }
 
   public callback() {
-    return (exact: number) => {
+    return ;
+  }
+
+  public schedule(transport: Transport<any>) {
+    this.eventId = transport.schedule((exact: number) => {
       this.instrument.callback(exact, this);
-    };
+    }, this.tickTime);
+  }
+}
+
+@io.inheritSerialization(Element)
+export class PlacedAutomationClip extends Element {
+  public static create(clip: AutomationClip, time: number, row: number, duration: number) {
+    const element = new PlacedAutomationClip();
+    element.clip = clip;
+    element.time = time;
+    element.row = row;
+    element.duration = duration;
+    return element;
+  }
+
+  public readonly component = 'automation-clip';
+  public clip!: AutomationClip;
+
+  public init(clip: AutomationClip) {
+    this.clip = clip;
+    return this;
+  }
+
+  public copy() {
+    const pp = new PlacedAutomationClip();
+    Object.assign(pp, this);
+    return pp;
+  }
+
+  public schedule(transport: Transport<any>) {
+    this.eventId = this.clip.control.sync(transport, this.tickTime);
   }
 }
 
@@ -223,7 +275,7 @@ export class Pattern {
   @io.autoserialize public id: string = uuid.v4();
   @io.autoserialize public name!: string;
   @io.autoserialize({ type: Score }) public scores: Score[] = [];
-  public part = new Part<Note>();
+  public transport = new Transport<Note>();
 
   get duration() {
     // TODO 4 is is hardcoded
@@ -320,8 +372,8 @@ export class Instrument implements IInstrument {
     this.synth.set({ oscillator: { type } });
   }
 
-  public triggerAttackRelease(note: string, duration: number, time: number) {
-    this.synth.triggerAttackRelease(note, `${duration}i`, time);
+  public triggerAttackRelease(note: string, duration: Time, time: number) {
+    this.synth.triggerAttackRelease(note, duration, time);
   }
 
   public triggerRelease(note: string) {
@@ -373,8 +425,28 @@ export interface Point {
   value: number; // Range 0 - 1
 }
 
-class AutomationClip {
+export type ClipContext = 'channel' | 'instrument' | 'effect';
+export type Automatable = Channel | Instrument;
+
+export class AutomationClip {
+  public static create(length: number, signal: Tone.Signal, context: ClipContext, id: string) {
+    const ac = new AutomationClip();
+    ac.points.push({ time: 0, value: signal.value }, { time: length, value: signal.value });
+    ac.context = context;
+    ac.contextId = id;
+    return ac;
+  }
+
   @io.autoserialize public points: Point[] = [];
+  @io.autoserialize public context!: ClipContext;
+  @io.autoserialize public contextId!: string;
+  public signal!: Tone.Signal;
+  public control!: TransportTimelineSignal;
+
+  public init(signal: Tone.Signal) {
+    this.signal = signal;
+    this.control = new TransportTimelineSignal();
+  }
 }
 
 export type EffectName = keyof EffectOptions;
@@ -698,6 +770,8 @@ export class Effect<T extends EffectName> {
   @io.autoserialize public slot!: number; // 0 <= slot < maxSlots
   @io.autoserialize public type!: T;
   @io.autoserialize public options!: EffectOptions[T];
+  @io.autoserialize public id = uuid.v4();
+
   public effect!: EffectTones[T];
   private destination: Tone.AudioNode | null = null;
 
@@ -725,9 +799,6 @@ export class Effect<T extends EffectName> {
 
 export class AnyEffect extends Effect<EffectName> {}
 
-export class PhaserEffect extends Effect<'phaser'> {}
-
-
 export class Channel {
   public static create(num: number) {
     const channel = new Channel();
@@ -739,13 +810,22 @@ export class Channel {
   @io.autoserialize public number!: number;
   @io.autoserialize public name!: string;
   @io.autoserializeAs(Effect) public effects: AnyEffect[] = [];
+  @io.autoserialize public id = uuid.v4();
+
   public left = new Tone.Meter();
   public right = new Tone.Meter();
   public split = new Tone.Split();
-  private panner = new Tone.Panner().toMaster().connect(this.split);
-  private gain = new Tone.Gain().connect(this.panner);
+
+  private pannerNode = new Tone.Panner().toMaster().connect(this.split);
   // tslint:disable-next-line:member-ordering
-  public destination = this.gain;
+  public panner = this.pannerNode.pan;
+
+  private gainNode = new Tone.Gain().connect(this.pannerNode);
+  // tslint:disable-next-line:member-ordering
+  public gain = this.gainNode.gain;
+
+  // tslint:disable-next-line:member-ordering
+  public destination = this.gainNode;
   private connected = true;
   private muted = false;
 
@@ -756,38 +836,42 @@ export class Channel {
 
   @io.autoserialize
   get pan() {
-    return this.panner.pan.value;
+    return this.panner.value;
   }
+
   set pan(pan: number) {
-    this.panner.pan.value = pan;
+    this.panner.value = pan;
   }
 
   @io.autoserialize
   get volume() {
-    return scale(this.gain.gain.value, [0, 1.3], [0, 1]);
+    return scale(this.gain.value, [0, 1.3], [0, 1]);
   }
+
   set volume(value: number) {
-    this.gain.gain.value = scale(value, [0, 1], [0, 1.3]);
+    this.gain.value = scale(value, [0, 1], [0, 1.3]);
   }
 
   @io.autoserialize
   get mute() {
     return this.muted;
   }
+
   set mute(mute: boolean) {
     this.muted = mute;
     if (mute && this.connected) {
-      this.panner.disconnect(Tone.Master);
+      this.pannerNode.disconnect(Tone.Master);
       this.connected = false;
     } else if (!mute && !this.connected) {
-      this.panner.connect(Tone.Master);
+      this.pannerNode.connect(Tone.Master);
       this.connected = true;
     }
   }
 
   public init() {
     const effects = this.effects;
-    effects.forEach((effect) => effect.init());
+    effects.forEach(
+      (effect) => effect.init());
 
     if (effects.length === 0) {
       return;
@@ -812,15 +896,14 @@ export class Track {
   @io.autoserialize public mute = false;
 }
 
-type PlaylistElements = PlacedPattern | PlacedSample | Note;
+type PlaylistElements = PlacedPattern | PlacedSample | PlacedAutomationClip;
 export class Playlist {
   @io.union(PlacedPattern, PlacedSample) public elements: PlaylistElements[] = [];
-  public part = new Part<PlaylistElements>();
+  public transport = new Transport<PlaylistElements>();
 
   public init() {
     this.elements.forEach((element) => {
-      const ticks = toTickTime(element.time);
-      this.part.add(element.callback(), ticks, element);
+      element.schedule(this.transport);
     });
   }
 }

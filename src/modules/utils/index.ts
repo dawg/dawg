@@ -23,3 +23,19 @@ export const createHOC = (component: VueConstructor, createElement: CreateElemen
     },
   }, slots);
 };
+
+export function* chain<T>(...arrays: T[][]) {
+  for (const array of arrays) {
+    for (const item of array) {
+      yield item;
+    }
+  }
+}
+
+export const makeLookup = <T>(array: Iterable<T>, keyFunc: (item: T) => string) => {
+  const lookup: { [k: string]: T } = {};
+  for (const item of array) {
+    lookup[keyFunc(item)] = item;
+  }
+  return lookup;
+};

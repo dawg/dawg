@@ -12,6 +12,8 @@ import DragNDrop from '@/modules/dragndrop';
 import '@/styles/global.sass';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import Draggable from '@/modules/draggable';
+import Knobs from '@/modules/knobs';
+import Split from '@/modules/split';
 
 import Piano from '@/components/Piano.vue';
 import DTrack from '@/components/DTrack.vue';
@@ -21,8 +23,10 @@ export default function middleware() {
   Vue.use(Draggable);
   Vue.use(Theme);
   Vue.use(Update);
+  Vue.use(Split);
   Vue.use(DragNDrop);
   Vue.use(Dawg);
+  Vue.use(Knobs);
   Vue.use(VueLogger, {
     logLevel: 'info',
   });

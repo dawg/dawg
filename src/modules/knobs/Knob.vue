@@ -3,8 +3,13 @@
     <div 
       class="rela-block knob-dial" 
       :style="knobStyle"
+      @contextmenu="contextmenu"
     >
-      <svg class="dial-svg" :height="size" :width="size">
+      <svg 
+        class="dial-svg" 
+        :height="size" 
+        :width="size"
+      >
         <path
           :d="rangePath"
           fill="none"
@@ -222,6 +227,15 @@ export default class Knob extends Mixins(Draggable) {
 
   public beforeMount() {
     this.rotation = this.mapRange(this.value, this.min, this.max, -this.angle, this.angle);
+  }
+
+  public contextmenu(e: MouseEvent) {
+    this.$context(e, [
+      {
+        text: 'Create Automation Clip',
+        callback: () => this.$emit('automate'),
+      },
+    ]);
   }
 }
 </script>

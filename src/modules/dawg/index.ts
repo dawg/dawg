@@ -4,7 +4,7 @@ import Slider from '@/modules/dawg/Slider.vue';
 import MiniScore from '@/modules/dawg/MiniScore.vue';
 import Dawg from '@/modules/dawg/Dawg.vue';
 import VerticalSwitch from '@/modules/dawg/VerticalSwitch.vue';
-import AutomationClip from '@/modules/dawg/AutomationClip.vue';
+import AutomationClipElement from '@/modules/dawg/AutomationClipElement.vue';
 
 export default  {
   install() {
@@ -13,7 +13,7 @@ export default  {
     Vue.component('MiniScore', MiniScore);
     Vue.component('Dawg', Dawg);
     Vue.component('VerticalSwitch', VerticalSwitch);
-    Vue.component('AutomationClip', AutomationClip);
+    Vue.component('AutomationClipElement', AutomationClipElement);
   },
 };
 

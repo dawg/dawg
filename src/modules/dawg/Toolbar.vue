@@ -29,7 +29,7 @@ import Bpm from '@/components/Bpm.vue';
 import TimeDisplay from '@/components/TimeDisplay.vue';
 import { Watch } from '@/modules/update';
 import { Element } from '@/schemas';
-import Part from '@/modules/audio/part';
+import Transport from '@/modules/audio/transport';
 import { ApplicationContext } from '@/constants';
 import { Nullable } from '@/utils';
 
@@ -42,7 +42,7 @@ export default class Toolbar extends Vue {
   @Prop({ type: String, required: true }) public context!: ApplicationContext;
   @Prop({ type: Number, required: true }) public bpm!: number;
   @Prop({ type: Boolean, required: true }) public play!: boolean;
-  @Prop(Nullable(Object)) public part!: Part | null;
+  @Prop(Nullable(Object)) public part!: Transport | null;
 
   public seconds = 0;
   public sliderTop = false;

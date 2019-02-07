@@ -139,7 +139,7 @@ export const Button = {
 
 export function toTickTime(time: number) {
   // TODO is ceil right?
-  return Math.ceil(time * Tone.Transport.PPQ);
+  return `${Math.ceil(time * Tone.Transport.PPQ)}i`;
 }
 
 

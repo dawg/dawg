@@ -30,6 +30,7 @@
             v-model="channel.pan"
             stroke-class="secondary-lighten-2--stroke"
             :size="30"
+            @automate="automatePan"
           ></pan>
           <div style="flex-grow: 1"></div>
           <div 
@@ -41,7 +42,12 @@
           </div>
         </div>
         <div class="slider" style="display: flex">
-          <slider v-model="channel.volume" :left="left" :right="right"></slider>
+          <slider 
+            v-model="channel.volume" 
+            :left="left" 
+            :right="right"
+            @automate="automateVolume"
+          ></slider>
         </div>
       </div>
     </div>
@@ -50,16 +56,13 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import Knob from '@/components/Knob.vue';
 import { Channel as C, EffectMap, EffectName, AnyEffect } from '@/schemas';
 import { range, scale, clamp } from '@/utils';
 import { Watch } from '@/modules/update';
 
 // Beware, we are modifying data in the store directly here.
 // We will want to change this evetually.
-@Component({
-  components: { Knob },
-})
+@Component
 export default class Channel extends Vue {
   @Prop({ type: Object, required: true }) public channel!: C;
   @Prop({ type: Boolean, required: true }) public play!: boolean;
@@ -120,6 +123,14 @@ export default class Channel extends Vue {
       this.left = 0;
       this.right = 0;
     }
+  }
+
+  public automatePan() {
+    this.$automate(this.channel, 'panner');
+  }
+
+  public automateVolume() {
+    this.$automate(this.channel, 'gain');
   }
 
   @Watch<Channel>('play')

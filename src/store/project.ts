@@ -20,12 +20,18 @@ import {
   PlacedPattern,
   PlacedSample,
   Sample,
+  AutomationClip,
+  PlacedAutomationClip,
+  ClipContext,
+  Automatable,
 } from '@/schemas';
 import { findUniqueName, toTickTime, range } from '@/utils';
 import store from '@/store/store';
 import cache from '@/store/cache';
 import Vue from 'vue';
 import uuid from 'uuid';
+import { loadBuffer } from '@/modules/audio';
+import { makeLookup, chain } from '@/modules/utils';
 
 const { dialog } = remote;
 const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
@@ -43,6 +49,7 @@ export class Project extends VuexModule {
   @io.autoserializeAs(Track) public tracks = range(21).map((i) => Track.create(i));
   @io.autoserializeAs(Playlist) public master: Playlist = new Playlist();
   @io.autoserialize({ type: Sample }) public samples: Sample[] = [];
+  @io.autoserialize({ type: AutomationClip }) public automationClips: AutomationClip[] = [];
 
   constructor(module?: Mod<any, any>) {
     super(module || {});
@@ -93,7 +100,8 @@ export class Project extends VuexModule {
     this.reset(result);
 
     this.samples.forEach((sample) => {
-      sample.init();
+      const buffer = loadBuffer(sample.path);
+      sample.init(buffer);
     });
 
     this.master.elements.forEach((element) => {
@@ -169,6 +177,64 @@ export class Project extends VuexModule {
   public addInstrument() {
     const name = findUniqueName(this.instruments, 'Instrument');
     this.instruments.push(Instrument.default(name));
+  }
+
+  @Action
+  public createAutomationClip<T extends Automatable>(
+    payload: { automatable: T, key: keyof T, end: number, start: number },
+  ) {
+    const { start, end, key, automatable } = payload;
+    const signal = automatable[key] as any as Tone.Signal;
+
+
+    const available = Array(this.tracks.length).fill(true);
+    this.master.elements.forEach((element) => {
+      if (
+        start > element.time && start < element.time + element.duration ||
+        end > element.time && end < element.time + element.duration
+      ) {
+        available[element.row] = false;
+      }
+    });
+
+    let row: number | null = null;
+    available.forEach((isAvailable, i) => {
+      if (isAvailable) {
+        row = i;
+        return;
+      }
+    });
+
+    // return project.createAutomationClip({
+    //   start: this.masterStart,
+    //   end: this.masterEnd,
+    //   signal: currentValue,
+    //   row: i,
+    // });
+
+    if (row === null) {
+      return false;
+    }
+
+    let context: ClipContext;
+    if (automatable instanceof Channel) {
+      context = 'channel';
+    } else {
+      context = 'instrument';
+    }
+
+    const length = payload.end - payload.start;
+    const clip = AutomationClip.create(length, signal, context, automatable.id);
+    const placed = PlacedAutomationClip.create(clip, payload.start, row, length);
+    this.pushAutomationClip({ clip, placed });
+
+    return true;
+  }
+
+  @Mutation
+  public pushAutomationClip(payload: { clip: AutomationClip, placed: PlacedAutomationClip }) {
+    this.automationClips.push(payload.clip);
+    this.master.elements.push(payload.placed);
   }
 
   @Mutation
@@ -326,27 +392,25 @@ export class Project extends VuexModule {
   }
 
   get patternLookup() {
-    const patterns: {[k: string]: Pattern} = {};
-    this.patterns.forEach((pattern) => {
-      patterns[pattern.id] = pattern;
-    });
-    return patterns;
+    return makeLookup(this.patterns, (pattern) => pattern.id);
   }
 
   get sampleLookup() {
-    const lookup: {[k: string]: Sample} = {};
-    this.samples.forEach((sample) => {
-      lookup[sample.id] = sample;
-    });
-    return lookup;
+    return makeLookup(this.samples, (sample) => sample.id);
   }
 
   get instrumentLookup() {
-    const instruments: {[k: string]: Instrument} = {};
-    this.instruments.forEach((instrument) => {
-      instruments[instrument.id] = instrument;
-    });
-    return instruments;
+    return makeLookup(this.instruments, (instrument) => instrument.id);
+  }
+
+  get effectLookup() {
+    const effects = this.channels.map((channel) => channel.effects);
+    const iterable = chain(...effects);
+    return makeLookup(iterable, (effect) => effect.id);
+  }
+
+  get channelLookup() {
+    return makeLookup(this.channels, (channel) => channel.id);
   }
 }
 
