@@ -115,7 +115,7 @@ export default class Sequencer extends Vue {
 
   @Watch<Sequencer>('loopEnd', { immediate: true })
   public onLoopEndChange() {
-    this.$log.info(`${this.name} -> loodEnd being set to ${this.loopEnd}`);
+    this.$log.debug(`${this.name} -> loodEnd being set to ${this.loopEnd}`);
     this.transport.loopEnd = toTickTime(this.loopEnd);
     this.$update('end', this.loopEnd);
   }

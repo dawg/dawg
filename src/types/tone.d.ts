@@ -883,6 +883,7 @@ declare module 'tone' {
   class Time extends TimeBase {
     constructor(val: string | number, units?: string);
     toSeconds(): number;
+    toTicks(): number;
     toBarsBeatsSixteenths(): string;
   }
 
@@ -925,6 +926,7 @@ declare module 'tone' {
     clearTimelines(): void;
     clearTimeout(timeoutID: number): boolean;
     clearTimeouts(): void;
+    clear(eventId: string): void;
     dispose(): this;
     nextBeat(subdivision?: string): number;
     pause(time: _TimeArg): Transport;
@@ -949,7 +951,9 @@ declare module 'tone' {
   class TransportEvent extends Tone {
     constructor(transport: _TransportConstructor, options: { time: TransportTime, callback: TransportCallback })
     id: string;
+    Transport: _TransportConstructor;
     time: Ticks;
+    _once: boolean;
     callback: TransportCallback;
     invoke(exact: number, ticks: number): void;
     dispose(): void;

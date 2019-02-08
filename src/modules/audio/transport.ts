@@ -14,6 +14,25 @@ type Events = {
   loop: [number];
 };
 
+
+// A little hack to pass on time AND ticks
+Tone.TransportEvent.prototype.invoke = function(time, ticks) {
+  if (this.callback) {
+    this.callback(time, ticks);
+    if (this._once && this.Transport) {
+      this.Transport.clear(this.id);
+    }
+  }
+};
+
+Tone.TransportRepeatEvent.prototype.invoke = function(time, ticks) {
+  // create more events if necessary
+  // @ts-ignore
+  this._createEvents(time);
+  // call the super class
+  Tone.TransportEvent.prototype.invoke.call(this, time, ticks);
+};
+
 type Event = Tone.TransportEvent | Tone.TransportRepeatEvent;
 
 export default class Transport<T> extends Tone.Emitter<Events> {
@@ -38,6 +57,7 @@ export default class Transport<T> extends Tone.Emitter<Events> {
     this.bpm = this.clock.frequency;
     this.bpm._toUnits = this.toUnits.bind(this);
     this.bpm._fromUnits = this.fromUnits.bind(this);
+    this.bpm.value = 120;
 
 
     this.clock.on('start', (time) => {
@@ -84,7 +104,18 @@ export default class Transport<T> extends Tone.Emitter<Events> {
   }
 
   public embed(child: Transport<T>, time: TransportTime) {
-    return this.scheduleRepeat(child.processTick, '1i', time);
+    const t = new Tone.Time(time);
+    const ticksOffset = t.toTicks();
+    const secondsOffset = t.toSeconds();
+
+    const callback = (exact: number, ticks: number) => {
+      if (ticks === undefined) {
+        throw Error('LKSDjlfkjds');
+      }
+      child.processTick(exact - secondsOffset, ticks - ticksOffset);
+    };
+
+    return this.scheduleRepeat(callback, '1i', time);
   }
 
   public remove(o: T) {
@@ -236,7 +267,7 @@ export default class Transport<T> extends Tone.Emitter<Events> {
     }
     // invoke the timeline events scheduled on this tick
     this.timeline.forEachAtTime(ticks, (event) => {
-      event.callback(exact, ticks);
+      event.invoke(exact, ticks);
     });
   }
 

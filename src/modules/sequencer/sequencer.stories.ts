@@ -7,7 +7,7 @@ import Waveform from '@/modules/sequencer/Waveform.vue';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import { loadFromUrl } from '@/modules/wav/web';
 import { PlacedPattern, Pattern, Score, Note as NE, PlacedSample, Instrument, Track, Sample } from '@/schemas';
-import { resizable, Note, PatternElement, SampleElement, positionable } from '@/modules/sequencer';
+import { colored, resizable, Note, PatternElement, SampleElement, positionable } from '@/modules/sequencer';
 import Transport from '@/modules/audio/transport';
 import { range } from '@/utils';
 
@@ -105,6 +105,37 @@ storiesOf('Waveform', module)
     components: { Waveform },
     data: () => ({ buffer: null }),
     mounted,
+  }));
+
+storiesOf('AutomationClipElement', module)
+  .add('Standard', () => ({
+    template: `
+    <dawg>
+      <automation-clip-element
+        style="margin: 20px;"
+        :points="points"
+        :duration.sync="duration"
+        :height="50"
+      ></automation-clip-element>
+    </dawg>
+    `,
+    data: () => ({
+      points: [
+        {
+          value: 0.5,
+          time: 0,
+        },
+        {
+          value: 0.8,
+          time: 1,
+        },
+        {
+          value: 1,
+          time: 2,
+        },
+      ],
+      duration: 1,
+    }),
   }));
 
 storiesOf('SampleElement', module)
@@ -207,4 +238,17 @@ storiesOf('resizable', module)
     `,
     data: () => ({ duration: 1 }),
     components: { Resizable, Dawg },
+  }));
+
+const Colored = colored(Tester);
+
+storiesOf('colored', module)
+  .add('default', () => ({
+    template: `
+    <colored
+      style="width: 100px; height: 50px"
+      value="HELLO"
+    ></colored>
+    `,
+    components: { Colored },
   }));

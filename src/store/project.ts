@@ -41,7 +41,7 @@ const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
  */
 @Module({ dynamic: true, store, name: 'project' })
 export class Project extends VuexModule {
-  @io.autoserialize public bpm = 128;
+  @io.autoserialize public bpm = 120;
   @io.autoserialize public id = uuid.v4();
   @io.autoserializeAs(Pattern) public patterns: Pattern[] = [];
   @io.autoserializeAs(Instrument) public instruments: Instrument[] = [];

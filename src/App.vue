@@ -114,10 +114,10 @@ export default class App extends Vue {
     console.info(project);
 
     // Make sure we load the cache first before loading the default project.
-    this.$log.info('Starting to read data.');
+    this.$log.debug('Starting to read data.');
     await cache.fromCacheFolder();
     await this.withErrorHandling(project.load);
-    this.$log.info('Finished reading data from the fs.');
+    this.$log.debug('Finished reading data from the fs.');
     this.loaded = true;
   }
 

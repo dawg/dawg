@@ -195,6 +195,7 @@ export class Note extends Element {
 
   public init(instrument: Instrument) {
     this.instrument = instrument;
+    return this;
   }
 
   public copy() {
@@ -203,12 +204,9 @@ export class Note extends Element {
     return pp;
   }
 
-  public callback() {
-    return ;
-  }
-
   public schedule(transport: Transport<any>) {
     this.eventId = transport.schedule((exact: number) => {
+      console.log('HELLO');
       this.instrument.callback(exact, this);
     }, this.tickTime);
   }

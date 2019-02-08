@@ -34,16 +34,17 @@ export const colored = (component: VueConstructor) => {
   @Component
   class Colored extends Vue {
     @Prop({ type: String, default: '#ccc' }) public color!: string;
-    public percentage = 50;
+    public percentage = 15;
 
     get lightColor() {
-      return tinycolor(this.color).lighten(this.percentage).toHex();
+      const color = tinycolor(this.color).lighten(this.percentage).toHex();
+      return `#${color}`;
     }
 
     public render(createElement: CreateElement) {
       const element = createHOC(component, createElement, this);
 
-      const top = createElement('top', {
+      const top = createElement('div', {
         style: {
           backgroundColor: this.color,
           height: '8px',
