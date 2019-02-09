@@ -43,8 +43,12 @@ export default class AutomationClipElement extends Vue {
   @Prop({ type: Number, default: 4 }) public radius!: number;
   @Prop({ type: Object, required: true }) public element!: PlacedAutomationClip;
 
+  get clip() {
+    return this.element.clip;
+  }
+
   get points() {
-    return this.element.clip.points;
+    return this.clip.points;
   }
 
   get processed() {
@@ -101,10 +105,10 @@ export default class AutomationClipElement extends Vue {
     let value = (e.clientY - rect.top) / this.trackHeight;
     value = Math.max(0, Math.min(1, value));
 
-    const before = this.points[i];
-    this.$set(this.points, i, { time, value });
-
-    this.$emit('move', { index: i });
+    console.log('FROM', this.clip.points[i].value);
+    this.clip.change(i, value);
+    console.log('TO', this.clip.points[i].value);
+    this.$set(this.points, i, this.points[i]);
   }
 
   public sort(a: Point, b: Point) {

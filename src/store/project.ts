@@ -229,6 +229,8 @@ export class Project extends VuexModule {
   public pushAutomationClip(payload: { clip: AutomationClip, placed: PlacedAutomationClip }) {
     this.automationClips.push(payload.clip);
     this.master.elements.push(payload.placed);
+    // TODO(jacob) uh
+    payload.placed.schedule(this.master.transport);
   }
 
   @Mutation

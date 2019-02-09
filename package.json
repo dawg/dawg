@@ -21,7 +21,7 @@
     "node-wav": "0.0.2",
     "resize-observer-polyfill": "^1.5.0",
     "tinycolor2": "^1.4.1",
-    "tone": "^0.12.80",
+    "tone": "^13.4.9",
     "typescript-collections": "^1.3.2",
     "uuid": "^3.3.2",
     "vue": "^2.5.17",

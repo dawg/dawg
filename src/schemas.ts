@@ -17,6 +17,9 @@ import { TransportTimelineSignal, Time } from '@/modules/audio';
 // Ideally, the cerialize library could automatically create IDs when serializing and then replace the proper object
 // when deserializing. It's an enhancement I want to make.
 
+export type Beats = number;
+export type Range = number;
+
 export interface IElement {
   row: number;
   duration: number;
@@ -410,9 +413,21 @@ export class Instrument {
   }
 }
 
-export interface Point {
-  time: number; // beats
-  value: number; // Range 0 - 1
+export class Point {
+  public static create(time: Beats, value: Range) {
+    const point = new Point();
+    point.time = time;
+    point.value = value;
+    return point;
+  }
+
+  @io.autoserialize public time!: Beats;
+  @io.autoserialize public value!: Range;
+  public eventId!: string;
+
+  public init(eventId: string) {
+    this.eventId = eventId;
+  }
 }
 
 export type ClipContext = 'channel' | 'instrument' | 'effect';
@@ -421,13 +436,17 @@ export type Automatable = Channel | Instrument;
 export class AutomationClip {
   public static create(length: number, signal: Tone.Signal, context: ClipContext, id: string) {
     const ac = new AutomationClip();
-    ac.points.push({ time: 0, value: signal.value }, { time: length, value: signal.value });
+    ac.init(signal);
     ac.context = context;
     ac.contextId = id;
+
+    ac.add(0, signal.value);
+    ac.add(length, signal.value);
+
     return ac;
   }
 
-  @io.autoserialize public points: Point[] = [];
+  @io.autoserializeAs(Point) public points: Point[] = [];
   @io.autoserialize public context!: ClipContext;
   @io.autoserialize public contextId!: string;
 
@@ -437,6 +456,24 @@ export class AutomationClip {
   public init(signal: Tone.Signal) {
     this.signal = signal;
     this.control.connect(signal);
+    this.points.forEach(this.schedule);
+  }
+
+  public add(time: number, value: number) {
+    const point = Point.create(time, value);
+    this.schedule(point);
+    this.points.push(point);
+  }
+
+  public change(index: number, value: number) {
+    const point = this.points[index];
+    this.control.change(point.eventId, value);
+    this.points[index].value = value;
+  }
+
+  private schedule(point: Point) {
+    const eventId = this.control.add(toTickTime(point.time), point.value);
+    point.init(eventId);
   }
 }
 
