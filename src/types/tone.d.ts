@@ -632,6 +632,10 @@ declare module 'tone' {
     dispose(): this;
   }
 
+  class Param extends AudioNode {
+    getValueAtTime(time: _TimeArg): number;
+  }
+
   class Part<T> extends Event {
     constructor(callback?: (time: string, value: T) => void, events?: Event[])
     start(time: number, offset?: _TimeArg): void;
@@ -778,38 +782,38 @@ declare module 'tone' {
     class Type{}
   }
 
-  class Signal extends SignalBase {
-      constructor(value?: any, units?: Sig.Unit); //todo: number | AudioParam
-      units: Sig.Type;
-      value: any; //TODO: _TimeArg | Frequency | number
-      cancelScheduledValues(startTime: _TimeArg): this;
-      dispose(): this;
-      exponentialRampToValueAtTime(value: number, endTime: _TimeArg): this;
-      exponentialRampToValueNow(value: number, rampTime: _TimeArg): this;
-      linearRampToValueAtTime(value: number, endTime: _TimeArg): this;
-      linearRampToValueNow(value: number, rampTime: _TimeArg): this;
-      rampTo(value: number, rampTime: _TimeArg): this;
-      setCurrentValueNow(now?: number): this;
-      setTargetAtTime(value: number, startTime: _TimeArg, timeConstant: number): this;
-      getValueAtTime(tiem: _TimeArg): number;
-      setValueAtTime(value: number, time: _TimeArg): this;
-      setValueCurveAtTime(values: number[], startTime: _TimeArg, duration: _TimeArg): this;
+  class Signal extends Param {
+    constructor(value?: any, units?: Sig.Unit); //todo: number | AudioParam
+    units: Sig.Type;
+    value: number; //TODO: _TimeArg | Frequency | number
+    cancelScheduledValues(startTime: _TimeArg): this;
+    dispose(): this;
+    exponentialRampToValueAtTime(value: number, endTime: _TimeArg): this;
+    exponentialRampToValueNow(value: number, rampTime: _TimeArg): this;
+    linearRampToValueAtTime(value: number, endTime: _TimeArg): this;
+    linearRampToValueNow(value: number, rampTime: _TimeArg): this;
+    rampTo(value: number, rampTime: _TimeArg): this;
+    setCurrentValueNow(now?: number): this;
+    setTargetAtTime(value: number, startTime: _TimeArg, timeConstant: number): this;
+    getValueAtTime(time: _TimeArg): number;
+    setValueAtTime(value: number, time: _TimeArg): this;
+    setValueCurveAtTime(values: number[], startTime: _TimeArg, duration: _TimeArg): this;
   }
 
   class SignalBase extends Tone {
-      connect(node: any, outputNumber?: number, inputNumber?: number): SignalBase; //TODO: Change 'any' to 'AudioParam | AudioNode | Signal | tone' when available
+    connect(node: AudioParam | AudioNode | Signal | Tone, outputNumber?: number, inputNumber?: number): SignalBase;
   }
 
   class Source extends Tone {
-      State: string;
-      onended: ()=>any;
-      state: Source.State;
-      volume: Signal;
-      dispose(): this;
-      start(startTime?: _TimeArg, offset?: _TimeArg, duration?: _TimeArg): Source;
-      stop(time?: _TimeArg): Source;
-      sync(delay?: _TimeArg): Source;
-      unsync(): Source;
+    State: string;
+    onended: ()=>any;
+    state: Source.State;
+    volume: Signal;
+    dispose(): this;
+    start(startTime?: _TimeArg, offset?: _TimeArg, duration?: _TimeArg): Source;
+    stop(time?: _TimeArg): Source;
+    sync(delay?: _TimeArg): Source;
+    unsync(): Source;
   }
 
   module Source {
@@ -817,15 +821,15 @@ declare module 'tone' {
   }
 
   class Split extends Tone {
-      left: Gain;
-      right: Gain;
-      dispose(): this;
+    left: Gain;
+    right: Gain;
+    dispose(): this;
   }
 
   class StereoEffect extends Effect {
-      effectReturnL: Gain;
-      effectReturnR: Gain;
-      dispose(): this;
+    effectReturnL: Gain;
+    effectReturnR: Gain;
+    dispose(): this;
   }
 
   class StereoFeedbackEffect extends FeedbackEffect {
@@ -887,7 +891,7 @@ declare module 'tone' {
     toBarsBeatsSixteenths(): string;
   }
 
-  class Timeline<T extends { time: Time }> extends Tone {
+  class Timeline<T extends { time: Time | number }> extends Tone {
     length: number;
     add(event: T): void;
     get(time: number, comparator?: keyof T): T;
@@ -920,6 +924,7 @@ declare module 'tone' {
     swingSubdivision: _TimeArg;
     timeSignature: number;
     PPQ: number;
+    getTicksAtTime(time: _TimeArg): number;
     clearInterval(rmInterval: number): boolean;
     clearIntervals(): void;
     clearTimeline(timelineID: number): boolean;
@@ -952,7 +957,7 @@ declare module 'tone' {
     constructor(transport: _TransportConstructor, options: { time: TransportTime, callback: TransportCallback })
     id: string;
     Transport: _TransportConstructor;
-    time: Ticks;
+    time: Ticks | number;
     _once: boolean;
     callback: TransportCallback;
     invoke(exact: number, ticks: number): void;
@@ -967,7 +972,8 @@ declare module 'tone' {
   }
 
   class TransportRepeatEvent extends TransportEvent {
-    constructor(transport: _TransportConstructor, options: _TransportRepeatEventOptions)
+    constructor(transport: _TransportConstructor, options: _TransportRepeatEventOptions);
+    _createEvents(time: _TimeArg): void;
   }
 
   type TransportState = 'started' | 'stopped' | 'paused';
@@ -990,10 +996,10 @@ declare module 'tone' {
   }
 
   class Waveform extends AudioNode {
-      constructor(size?:number);
-      readonly channelCount: number;
-      readonly numberOfInputs: number;
-      readonly numberOfOutputs: number;
-      getValue(): Float32Array;
+    constructor(size?:number);
+    readonly channelCount: number;
+    readonly numberOfInputs: number;
+    readonly numberOfOutputs: number;
+    getValue(): Float32Array;
   }
 }

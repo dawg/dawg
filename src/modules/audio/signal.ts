@@ -90,7 +90,6 @@ export class TransportTimelineSignal extends Tone.Signal {
   public dispose() {
     // this.transport.clear(this.synced);
     // this.transport.off('start', this.callback).off('stop', this.callback).off('pause', this.callback);
-    // @ts-ignore
     this._events.cancel(0);
     super.dispose.call(this);
     this.output.dispose();

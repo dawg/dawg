@@ -14,6 +14,26 @@ type Events = {
   loop: [number];
 };
 
+Tone.TransportRepeatEvent.prototype._createEvents = function(time) {
+  // schedule the next event
+  const ticks = this.Transport.getTicksAtTime(time);
+
+  // @ts-ignore
+  // console.log(ticks, this.time + this.duration);
+
+  // @ts-ignore
+  if (ticks >= this.time && ticks >= this._nextTick && this._nextTick + this._interval < this.time + this.duration) {
+    // @ts-ignore
+    this._nextTick += this._interval;
+    // @ts-ignore
+    this._currentId = this._nextId;
+    // @ts-ignore
+    this._nextId = this.Transport.scheduleOnce(this.invoke.bind(this), Tone.Ticks(this._nextTick));
+  } else {
+    // console.log('DONE');
+  }
+};
+
 
 // A little hack to pass on time AND ticks
 Tone.TransportEvent.prototype.invoke = function(time, ticks) {
@@ -27,7 +47,6 @@ Tone.TransportEvent.prototype.invoke = function(time, ticks) {
 
 Tone.TransportRepeatEvent.prototype.invoke = function(time, ticks) {
   // create more events if necessary
-  // @ts-ignore
   this._createEvents(time);
   // call the super class
   Tone.TransportEvent.prototype.invoke.call(this, time, ticks);
@@ -79,7 +98,7 @@ export default class Transport<T> extends Tone.Emitter<Events> {
   public schedule(callback: Tone.TransportCallback, time: TransportTime) {
     // @ts-ignore
     const event = new Tone.TransportEvent(this, {
-      time : new Tone.TransportTime(time),
+      time: new Tone.TransportTime(time),
       callback,
     });
 
@@ -106,16 +125,20 @@ export default class Transport<T> extends Tone.Emitter<Events> {
   public embed(child: Transport<T>, time: TransportTime) {
     const t = new Tone.Time(time);
     const ticksOffset = t.toTicks();
-    const secondsOffset = t.toSeconds();
 
     const callback = (exact: number, ticks: number) => {
-      if (ticks === undefined) {
-        throw Error('LKSDjlfkjds');
-      }
-      child.processTick(exact - secondsOffset, ticks - ticksOffset);
+      child.processTick(exact, ticks - ticksOffset);
     };
 
-    return this.scheduleRepeat(callback, '1i', time);
+    // TODO(jacob)
+    let duration = 0;
+    child.timeline.forEach((element) => {
+      if (typeof element.time !== 'object') {
+        duration = Math.max(duration, element.time);
+      }
+    });
+
+    return this.scheduleRepeat(callback, '1i', time, `${duration + 1}i`);
   }
 
   public remove(o: T) {

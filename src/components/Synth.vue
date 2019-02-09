@@ -24,7 +24,7 @@
         text-color="white"
         :size="knobSize"
         :stroke-width="strokeWidth"
-        v-model="instrument.volume"
+        v-model="instrument.volume.value"
         @automate="automateVolume"
       ></knob>
       <knob
@@ -35,7 +35,7 @@
         :max="1"
         :mid-value="0"
         :stroke-width="strokeWidth"
-        v-model="instrument.pan"
+        v-model="instrument.pan.value"
         @automate="automatePan"
       ></knob>
       <div class="white--text name">{{ instrument.name }}</div>

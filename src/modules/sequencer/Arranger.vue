@@ -334,11 +334,7 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
   }
 
   public checkLoopEnd() {
-    let maxTime = Math.max(...this.elements.map((item) => item.time + item.duration), 0);
-
-    // Add a tiny amount to max time so that ceil will push to next number
-    // if maxTime is a whole number
-    maxTime = maxTime + 0.0000001;
+    const maxTime = Math.max(...this.elements.map((item) => item.time + item.duration), 0);
     const itemLoopEnd = Math.ceil(maxTime / this.beatsPerMeasure) * this.beatsPerMeasure;
 
     this.$log.info(`${this.name} -> sequencerLoopEnd -> ${itemLoopEnd}`);

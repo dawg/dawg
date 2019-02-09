@@ -63,7 +63,7 @@ export abstract class Element implements IElement {
   }
 
   public remove(transport: Transport<any>) {
-    if (this.eventId) {
+    if (this.eventId !== undefined) {
       transport.clear(this.eventId);
     }
   }
@@ -175,7 +175,7 @@ export class PlacedSample extends Element {
   }
 
   public schedule(transport: Transport<any>) {
-    transport.schedule((exact: number) => {
+    this.eventId = transport.schedule((exact: number) => {
       const duration = toTickTime(this.duration);
       this.sample.start(exact, duration);
     }, this.tickTime);
@@ -206,7 +206,6 @@ export class Note extends Element {
 
   public schedule(transport: Transport<any>) {
     this.eventId = transport.schedule((exact: number) => {
-      console.log('HELLO');
       this.instrument.callback(exact, this);
     }, this.tickTime);
   }
@@ -223,7 +222,7 @@ export class PlacedAutomationClip extends Element {
     return element;
   }
 
-  public readonly component = 'automation-clip';
+  public readonly component = 'automation-clip-element';
   public clip!: AutomationClip;
 
   public init(clip: AutomationClip) {
@@ -291,12 +290,12 @@ export interface IInstrument {
   mute: boolean;
 }
 
-export class Instrument implements IInstrument {
+export class Instrument {
   public static create(o: IInstrument) {
     const instrument = new Instrument();
     instrument.name = o.name;
-    instrument.pan = o.pan;
-    instrument.volume = o.volume;
+    instrument.pan.value = o.pan;
+    instrument.volume.value = o.volume;
     instrument.type = o.type;
     instrument.mute = o.mute;
     instrument.id = uuid.v4();
@@ -320,20 +319,21 @@ export class Instrument implements IInstrument {
   private _mute!: boolean;
   // tslint:disable-next-line:variable-name
   private _channel: number | null = null;
+  // tslint:disable-next-line:member-ordering
   private panner = new Tone.Panner().toMaster();
   private connected = true;
   private synth = new Tone.PolySynth(8, Tone.Synth).connect(this.panner);
 
+  // tslint:disable-next-line:member-ordering
+  @io.attr('value')
+  public volume = this.synth.volume;
+
+  // tslint:disable-next-line:member-ordering
+  @io.attr('value')
+  public pan = this.panner.pan;
+
   constructor() {
     this.synth.set({ envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 } });
-  }
-
-  get pan() {
-    return this.panner.pan.value;
-  }
-  @io.autoserialize
-  set pan(pan: number) {
-    this.panner.pan.value = pan;
   }
 
   get mute() {
@@ -343,14 +343,6 @@ export class Instrument implements IInstrument {
   set mute(mute: boolean) {
     this._mute = mute;
     this.checkConnection();
-  }
-
-  @io.autoserialize
-  get volume() {
-    return this.synth.volume.value;
-  }
-  set volume(volume: number) {
-    this.synth.volume.value = volume;
   }
 
   @io.autoserialize({ nullable: true })
@@ -438,12 +430,13 @@ export class AutomationClip {
   @io.autoserialize public points: Point[] = [];
   @io.autoserialize public context!: ClipContext;
   @io.autoserialize public contextId!: string;
+
   public signal!: Tone.Signal;
-  public control!: TransportTimelineSignal;
+  public control = new TransportTimelineSignal();
 
   public init(signal: Tone.Signal) {
     this.signal = signal;
-    this.control = new TransportTimelineSignal();
+    this.control.connect(signal);
   }
 }
 

@@ -176,10 +176,12 @@ export class Project extends VuexModule {
     payload: { automatable: T, key: keyof T, end: number, start: number },
   ) {
     const { start, end, key, automatable } = payload;
+    // tslint:disable-next-line:no-console
+    console.info(automatable[key]);
     const signal = automatable[key] as any as Tone.Signal;
 
 
-    const available = Array(this.tracks.length).fill(true);
+    const available: boolean[] = Array(this.tracks.length).fill(true);
     this.master.elements.forEach((element) => {
       if (
         start > element.time && start < element.time + element.duration ||
@@ -190,12 +192,12 @@ export class Project extends VuexModule {
     });
 
     let row: number | null = null;
-    available.forEach((isAvailable, i) => {
+    for (const [i, isAvailable] of available.entries()) {
       if (isAvailable) {
         row = i;
-        return;
+        break;
       }
-    });
+    }
 
     // return project.createAutomationClip({
     //   start: this.masterStart,

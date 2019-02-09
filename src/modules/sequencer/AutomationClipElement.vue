@@ -32,7 +32,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
-import { Point } from '@/schemas';
+import { Point, PlacedAutomationClip } from '@/schemas';
 
 @Component
 export default class AutomationClipElement extends Vue {
@@ -41,7 +41,11 @@ export default class AutomationClipElement extends Vue {
   @Inject() public snap!: number;
 
   @Prop({ type: Number, default: 4 }) public radius!: number;
-  @Prop({ type: Array, required: true }) public points!: Point[];
+  @Prop({ type: Object, required: true }) public element!: PlacedAutomationClip;
+
+  get points() {
+    return this.element.clip.points;
+  }
 
   get processed() {
     return this.points.sort(this.sort).map((point) => {
@@ -97,7 +101,10 @@ export default class AutomationClipElement extends Vue {
     let value = (e.clientY - rect.top) / this.trackHeight;
     value = Math.max(0, Math.min(1, value));
 
+    const before = this.points[i];
     this.$set(this.points, i, { time, value });
+
+    this.$emit('move', { index: i });
   }
 
   public sort(a: Point, b: Point) {

@@ -44,6 +44,12 @@ export interface Options {
   nullable?: boolean;
 }
 
+export function attr(attribute: string): any {
+  return (target: any, key: string) => {
+    storeInformation(target, { key, attribute });
+  };
+}
+
 export function autoserialize(target: any, key: string): void;
 export function autoserialize(options: Options): (target: any, key: string) => void;
 
@@ -101,6 +107,7 @@ interface IMetaData {
   types?: Type[];
   indexable?: boolean;
   nullable?: boolean;
+  attribute?: string;
 }
 
 // helper class to contain serialization meta data for a property, each property
@@ -111,12 +118,14 @@ class MetaData {
   public types: Type[];
   public indexable: boolean;
   public nullable: boolean;
+  public attribute?: string;
 
   constructor(o: IMetaData) {
     this.indexable = o.indexable || false;
     this.types = o.types || [];
     this.key = o.key;
     this.nullable = o.nullable || false;
+    this.attribute = o.attribute;
   }
 
   // clone a meta data instance, used for inheriting serialization properties
@@ -183,6 +192,11 @@ function deserializeObject(json: any, types: Array<Constructor<any>>): any {
     const source = json[key];
     if (source === undefined) {
       throw Error(`${key} does not exist`);
+    }
+
+    if (metadata.attribute) {
+      instance[key][metadata.attribute] = source;
+      continue;
     }
 
     try {
@@ -261,7 +275,7 @@ export function Deserialize(json: any, meta: MetaData): any {
  * @param indexable
  */
 export function Serialize(instance: any, type?: Constructor<any> | Serializer | null, meta?: MetaData): any {
-  const { indexable = false, nullable = false } = meta || {};
+  const { indexable = false, nullable = false, attribute = null } = meta || {};
 
   if (instance === null) {
     if (nullable) {
@@ -277,6 +291,8 @@ export function Serialize(instance: any, type?: Constructor<any> | Serializer | 
     return serializedObject(instance);
   } else if (type && TypeMap.has(type)) {
     return serializedObject(instance, type);
+  } else if (attribute !== null) {
+    return instance[attribute];
   } else {
     return instance;
   }
