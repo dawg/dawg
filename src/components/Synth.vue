@@ -1,6 +1,4 @@
 <template>
-  <!-- For some reason, @click isn't working on this component.
-  However, this works when we add $emit -->
   <div 
     class="synth-wrapper"
     style="position: relative; z-index: 10;"

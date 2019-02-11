@@ -32,6 +32,7 @@ import { Element } from '@/schemas';
 import Transport from '@/modules/audio/transport';
 import { ApplicationContext } from '@/constants';
 import { Nullable } from '@/utils';
+import { Signal } from 'tone';
 
 @Component({
   components: { TimeDisplay, Bpm },
@@ -43,6 +44,8 @@ export default class Toolbar extends Vue {
   @Prop({ type: Number, required: true }) public bpm!: number;
   @Prop({ type: Boolean, required: true }) public play!: boolean;
   @Prop(Nullable(Object)) public transport!: Transport<any> | null;
+
+  public signal = new Signal(5);
 
   public seconds = 0;
   public sliderTop = false;

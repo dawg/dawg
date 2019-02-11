@@ -1,2 +1,3 @@
 export { TransportTime, Time, ContextTime } from '@/modules/audio/types';
-export { TransportTimelineSignal } from '@/modules/audio/signal';
+export { Controller } from '@/modules/audio/controller';
+export { Signal } from '@/modules/audio/signal';

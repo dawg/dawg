@@ -105,9 +105,8 @@ export default class AutomationClipElement extends Vue {
     let value = (e.clientY - rect.top) / this.trackHeight;
     value = Math.max(0, Math.min(1, value));
 
-    console.log('FROM', this.clip.points[i].value);
+    this.$log.debug(`Changing ${this.clip.points[i].value} -> ${value}`);
     this.clip.change(i, value);
-    console.log('TO', this.clip.points[i].value);
     this.$set(this.points, i, this.points[i]);
   }
 

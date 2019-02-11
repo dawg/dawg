@@ -66,6 +66,7 @@ declare module 'tone' {
   class AudioNode extends Tone {
     toMaster(): this;
     disconnect(output: number | AudioNode): this;
+    chain(...nodes: AudioNode[]): this;
     connect(unit: Tone | AudioParam | AudioNode, outputNum?: number, inputNum?: number): this;
   }
 
@@ -171,6 +172,7 @@ declare module 'tone' {
     now(): number;
     decodeAudioData(audioData: ArrayBuffer): Promise<AudioBuffer>;
     createBuffer(numberOfChannels: number, length: number, sampleRate: number): AudioBuffer;
+    createStereoPanner(): StereoPannerNode;
   }
 
 
@@ -436,7 +438,7 @@ declare module 'tone' {
     dispose(): this;
   }
 
-  class Merge extends Tone {
+  class Merge extends AudioNode {
     constructor();
     left: Gain;
     right: Gain;
@@ -799,11 +801,12 @@ declare module 'tone' {
     setValueCurveAtTime(values: number[], startTime: _TimeArg, duration: _TimeArg): this;
   }
 
-  class SignalBase extends Tone {
+  class SignalBase extends AudioNode {
+    // @ts-ignore
     connect(node: AudioParam | AudioNode | Signal | Tone, outputNumber?: number, inputNumber?: number): SignalBase;
   }
 
-  class Source extends Tone {
+  class Source extends AudioNode {
     State: string;
     onended: () => any;
     state: Source.State;
@@ -981,6 +984,10 @@ declare module 'tone' {
 
   class TransportTime extends Time {
     toTicks(): number;
+  }
+
+  class TransportTimelineSignal extends Signal {
+    //
   }
 
   class Tremolo extends StereoEffect {

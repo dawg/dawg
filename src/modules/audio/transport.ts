@@ -167,6 +167,11 @@ export default class Transport<T> extends Tone.Emitter<Events> {
     if (offset !== undefined) {
       offset = this.toTicks(offset!) as number;
     }
+
+    if (time === undefined) {
+      time = Tone.Transport.context.now();
+    }
+
     this.clock.start(time, offset);
     this.emit('start', time);
     return this;

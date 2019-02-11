@@ -27,7 +27,8 @@
       <div style="display: flex">
         <div style="display: flex; flex-direction: column; align-items: center">
           <pan
-            v-model="channel.pan"
+            :value="pan"
+            @input="panInput"
             stroke-class="secondary-lighten-2--stroke"
             :size="30"
             @automate="automatePan"
@@ -43,7 +44,8 @@
         </div>
         <div class="slider" style="display: flex">
           <slider 
-            v-model="channel.volume" 
+            :value="volume"
+            @input="volumeInput"
             :left="left" 
             :right="right"
             @automate="automateVolume"
@@ -66,6 +68,7 @@ import { Watch } from '@/modules/update';
 export default class Channel extends Vue {
   @Prop({ type: Object, required: true }) public channel!: C;
   @Prop({ type: Boolean, required: true }) public play!: boolean;
+
   public right = 0;
   public left = 0;
 
@@ -83,6 +86,14 @@ export default class Channel extends Vue {
 
   get options() {
     return Object.keys(EffectMap) as EffectName[];
+  }
+
+  get pan() {
+    return this.channel.panner.raw;
+  }
+
+  get volume() {
+    return scale(this.channel.volume.raw, [0, 1.3], [0, 1]);
   }
 
   public showEffects(e: MouseEvent, i: number) {
@@ -130,7 +141,15 @@ export default class Channel extends Vue {
   }
 
   public automateVolume() {
-    this.$automate(this.channel, 'gain');
+    this.$automate(this.channel, 'volume');
+  }
+
+  public panInput(value: number) {
+    this.channel.panner.value = value;
+  }
+
+  public volumeInput(value: number) {
+    this.channel.volume.value = scale(value, [0, 1], [0, 1.3]);
   }
 
   @Watch<Channel>('play')

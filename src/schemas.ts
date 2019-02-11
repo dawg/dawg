@@ -1,10 +1,10 @@
 import * as io from '@/modules/cerialize';
-import Tone, { Signal } from 'tone';
+import Tone from 'tone';
 import uuid from 'uuid';
 
 import Transport from '@/modules/audio/transport';
 import { toTickTime, allKeys, scale, ConstructorOf } from './utils';
-import { TransportTimelineSignal, Time } from '@/modules/audio';
+import { Controller, Time, Signal } from '@/modules/audio';
 
 // These are all of the schemas for the project.
 // Everything is annotated using `cerialize`.
@@ -93,10 +93,6 @@ export class PlacedPattern extends Element {
 
   public pattern!: Pattern;
   @io.autoserialize public patternId!: string;
-
-  // public callback() {
-  //   return this.pattern.transport;
-  // }
 
   public init(pattern: Pattern) {
     this.pattern = pattern;
@@ -451,11 +447,10 @@ export class AutomationClip {
   @io.autoserialize public contextId!: string;
 
   public signal!: Tone.Signal;
-  public control = new TransportTimelineSignal();
+  public control!: Controller;
 
   public init(signal: Tone.Signal) {
-    this.signal = signal;
-    this.control.connect(signal);
+    this.control = new Controller(signal);
     this.points.forEach(this.schedule);
   }
 
@@ -846,11 +841,13 @@ export class Channel {
 
   private pannerNode = new Tone.Panner().toMaster().connect(this.split);
   // tslint:disable-next-line:member-ordering
-  public panner = this.pannerNode.pan;
+  @io.attr('value')
+  public panner = new Signal(this.pannerNode.pan);
 
   private gainNode = new Tone.Gain().connect(this.pannerNode);
   // tslint:disable-next-line:member-ordering
-  public gain = this.gainNode.gain;
+  @io.attr('value')
+  public volume = new Signal(this.gainNode.gain);
 
   // tslint:disable-next-line:member-ordering
   public destination = this.gainNode;
@@ -860,24 +857,6 @@ export class Channel {
   constructor() {
     this.split.left.connect(this.left);
     this.split.right.connect(this.right);
-  }
-
-  @io.autoserialize
-  get pan() {
-    return this.panner.value;
-  }
-
-  set pan(pan: number) {
-    this.panner.value = pan;
-  }
-
-  @io.autoserialize
-  get volume() {
-    return scale(this.gain.value, [0, 1.3], [0, 1]);
-  }
-
-  set volume(value: number) {
-    this.gain.value = scale(value, [0, 1], [0, 1.3]);
   }
 
   @io.autoserialize
