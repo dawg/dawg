@@ -108,6 +108,7 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
   public cursor = 'move';
   public rows!: HTMLElement;
   public selectStartEvent: MouseEvent | null = null;
+  public dragStartEvent: MouseEvent | null = null;
   public selectCurrentEvent: MouseEvent | null = null;
   public holdingShift = false;
   public minDisplayMeasures = 4;
@@ -287,18 +288,37 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
   }
 
   public move(e: MouseEvent, i: number) {
+    if (!this.dragStartEvent) {
+      return;
+    }
+
+    // Get the preVIOUS element first
+    // and ALSO grab the current position
+    const oldItem = this.elements[i];
     const rect = this.rows.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    let time = x / this.pxPerBeat;
-    time = Math.floor(time / this.snap) * this.snap;
+
+    // Get the start BEAT
+    let startBeat = (this.dragStartEvent.clientX - rect.left) / this.pxPerBeat;
+    startBeat = Math.floor(startBeat / this.snap) * this.snap;
+
+    // Get the end BEAT
+    let endBeat = (e.clientX - rect.left) / this.pxPerBeat;
+    endBeat = Math.floor(endBeat / this.snap) * this.snap;
+
+    // CHeck if we are going to move squares
+    const diff = endBeat - startBeat;
+    const time = oldItem.time + diff;
     if (time < 0) { return; }
 
     const y = e.clientY - rect.top;
     const row = Math.floor(y / this.rowHeight);
     if (row < 0) { return; }
 
-    const oldItem = this.elements[i];
     if (row === oldItem.row && time === oldItem.time) { return; }
+    // OK, so we've moved squares
+    // Lets update our dragStartEvent or else
+    // things will start to go haywyre :////
+    this.dragStartEvent = e;
 
     const timeDiff = time - oldItem.time;
     const rowDiff = row - oldItem.row;
@@ -389,7 +409,13 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
 
       selected.forEach(createItem);
     }
+
+    this.dragStartEvent = e;
     this.addListeners(e, targetIndex);
+  }
+
+  public afterMove() {
+    this.dragStartEvent = null;
   }
 
   public keydown(e: KeyboardEvent) {

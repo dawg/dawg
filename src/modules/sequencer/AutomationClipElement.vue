@@ -5,6 +5,7 @@
     preserveAspectRatio="xMinYMid slice"
     :height="trackHeight"
     :width="width"
+    @click="addPoint"
   >
     <path 
       class="envelope-shape primary--stroke" 
@@ -19,6 +20,7 @@
       tag="circle"
       curse="pointer"
       @move="move($event, i)"
+      @contextmenu.native="pointContext($event, i)"
       v-bind="point"
       :r="radius"
       class="primary--stroke"
@@ -38,6 +40,7 @@ import { scale } from '@/utils';
 @Component
 export default class AutomationClipElement extends Vue {
   @Inject() public pxPerBeat!: number;
+  // TODO small bug trackHeight !== height
   @Inject() public trackHeight!: number;
   @Inject() public snap!: number;
 
@@ -102,23 +105,38 @@ export default class AutomationClipElement extends Vue {
     return points.map(({ letter, point }) => `${letter} ${point.cx} ${point.cy}`).join(' ');
   }
 
-  public move(e: MouseEvent, i: number) {
+  public getTimeValue(e: MouseEvent) {
     // TODO duplication
     const rect = this.$el.getBoundingClientRect();
     const x = e.clientX - rect.left;
     let time = x / this.pxPerBeat;
 
+    time = Math.round(time / this.snap) * this.snap;
+    const value = (e.clientY - rect.top) / this.trackHeight;
+
+    return {
+      time,
+      value,
+    };
+  }
+
+  public addPoint(e: MouseEvent) {
+    const { time, value } = this.getTimeValue(e);
+    this.clip.add(time, value);
+  }
+
+  public move(e: MouseEvent, i: number) {
+    // We still NEED to put bounds on the returned values as
+    // it is possible to move out of bounds
+    let { time, value } = this.getTimeValue(e);
+
     const lowerBound = i === 0 ? 0 : this.points[i - 1].time;
     const upperBound = i === this.points.length - 1 ? Infinity : this.points[i + 1].time;
-
-    time = Math.round(time / this.snap) * this.snap;
     time = Math.max(lowerBound, Math.min(upperBound, time));
 
-    const point = this.points[i];
-    let value = (e.clientY - rect.top) / this.trackHeight;
     value = Math.max(0, Math.min(1, value));
-
     value = scale(value, [0, 1], this.fromRange);
+
     this.$log.debug(`Changing ${this.clip.points[i].value} -> ${value}`);
     this.clip.change(i, value);
     this.$set(this.points, i, this.points[i]);
@@ -126,6 +144,20 @@ export default class AutomationClipElement extends Vue {
 
   public sort(a: Point, b: Point) {
     return a.time - b.time;
+  }
+
+  public delete(i: number) {
+    this.clip.remove(i);
+  }
+
+  public pointContext(e: MouseEvent, i: number) {
+    console.log('HELLO');
+    this.$context(e, [
+      {
+        text: 'Delete',
+        callback: () => this.delete(i),
+      },
+    ]);
   }
 }
 </script>

@@ -97,7 +97,7 @@ export default class Sequencer extends Vue {
   }
 
   public removed(element: Element) {
-    this.$log.info(`Removing element at ${element.time}`);
+    this.$log.debug(`Removing element at ${element.time}`);
     element.remove(this.transport);
   }
 

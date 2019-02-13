@@ -504,6 +504,12 @@ export class AutomationClip {
     this.points[index].value = value;
   }
 
+  public remove(i: number) {
+    const point = this.points[i];
+    this.control.remove(point.eventId);
+    this.points.splice(i, 1);
+  }
+
   private schedule(point: Point) {
     const eventId = this.control.add(toTickTime(point.time), point.value);
     point.init(eventId);
