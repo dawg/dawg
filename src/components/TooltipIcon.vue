@@ -4,7 +4,7 @@
       <template slot="activator">
         <div @click="$emit('click', $event)">
           <icon v-if="fa" :name="icon" :style="style" v-bind="$attrs"></icon>
-          <v-icon v-else :style="style" v-bind="$attrs">{{ icon }}</v-icon>
+          <v-icon v-else class="icon" :style="style" v-bind="$attrs">{{ icon }}</v-icon>
         </div>
       </template>
       <span>{{ tooltip }}</span>
@@ -49,4 +49,9 @@ export default class TooltipIcon extends Vue {
 <style lang="sass" scoped>
 .icon__wrapper:hover
   cursor: pointer
+
+// IDK why we need this? It also hardcodes 28px which isn't good
+// If you remove this, the patterns tooltip will be super weird...
+.icon__wrapper /deep/ .v-icon
+  max-width: 28px
 </style>

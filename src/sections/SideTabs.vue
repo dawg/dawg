@@ -38,7 +38,6 @@
             :patterns="project.patterns"
           ></patterns>
         </side-bar>
-        <side-bar name="Search" icon="search"></side-bar>
       </base-tabs>
     </vue-perfect-scrollbar>
   </div>

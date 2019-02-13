@@ -170,7 +170,8 @@ export default class Notifications extends Vue {
 }
 
 </script>
-<style>
+
+<style scoped>
 .notifications {
   display: block;
   position: fixed;
