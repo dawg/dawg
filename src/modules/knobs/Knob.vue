@@ -69,7 +69,7 @@ export default class Knob extends Mixins(Draggable) {
   @Prop({ type: Number, default: 264 }) public range!: number;
   @Prop({ type: Number, default: 100 }) public max!: number;
   @Prop({ type: Number, default: 0 }) public min!: number;
-  @Prop({ type: Number, default: 100 }) public size!: number;
+  @Prop({ type: Number, default: 30 }) public size!: number;
   @Prop({ type: String, default: '#409eff' }) public primaryColor!: string;
   @Prop(String) public label?: string;
   @Prop({ type: Number, default: 2.5 }) public strokeWidth!: number;

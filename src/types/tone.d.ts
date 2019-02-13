@@ -634,6 +634,9 @@ declare module 'tone' {
     'cancelScheduledValues'
 
   class Param extends AudioNode {
+    value: number;
+    minValue: number;
+    maxValue: number;
     getValueAtTime(time: _TimeArg): number;
   }
 
@@ -786,7 +789,6 @@ declare module 'tone' {
   class Signal extends Param {
     constructor(value?: any, units?: Sig.Unit); //todo: number | AudioParam
     units: Sig.Type;
-    value: number; //TODO: _TimeArg | Frequency | number
     cancelScheduledValues(startTime: _TimeArg): this;
     dispose(): this;
     exponentialRampToValueAtTime(value: number, endTime: _TimeArg): this;

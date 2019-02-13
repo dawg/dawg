@@ -1,7 +1,7 @@
 import Tone from 'tone';
 import { TransportTime } from './types';
 import Transport from '@/modules/audio/transport';
-import Signal from './signal';
+import { Signal } from '@/modules/audio';
 
 interface IAutomationEvent {
   time: Tone.Time;

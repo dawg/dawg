@@ -27,7 +27,7 @@
       <div style="display: flex">
         <div style="display: flex; flex-direction: column; align-items: center">
           <pan
-            :value="pan"
+            :value="channel.panner.raw"
             @input="panInput"
             stroke-class="secondary-lighten-2--stroke"
             :size="30"
@@ -44,7 +44,7 @@
         </div>
         <div class="slider" style="display: flex">
           <slider 
-            :value="volume"
+            :value="channel.volume.raw"
             @input="volumeInput"
             :left="left" 
             :right="right"
@@ -86,14 +86,6 @@ export default class Channel extends Vue {
 
   get options() {
     return Object.keys(EffectMap) as EffectName[];
-  }
-
-  get pan() {
-    return this.channel.panner.raw;
-  }
-
-  get volume() {
-    return scale(this.channel.volume.raw, [0, 1.3], [0, 1]);
   }
 
   public showEffects(e: MouseEvent, i: number) {
@@ -149,7 +141,7 @@ export default class Channel extends Vue {
   }
 
   public volumeInput(value: number) {
-    this.channel.volume.value = scale(value, [0, 1], [0, 1.3]);
+    this.channel.volume.value = value;
   }
 
   @Watch<Channel>('play')

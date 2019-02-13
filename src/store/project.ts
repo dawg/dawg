@@ -8,7 +8,6 @@ import {
   Pattern,
   Instrument,
   Score,
-  Note,
   Channel,
   EffectName,
   Effect,
@@ -25,13 +24,14 @@ import {
   ClipContext,
   Automatable,
 } from '@/schemas';
-import { findUniqueName, toTickTime, range } from '@/utils';
+import { findUniqueName, range } from '@/utils';
 import store from '@/store/store';
 import cache from '@/store/cache';
 import Vue from 'vue';
 import uuid from 'uuid';
 import { loadBuffer } from '@/modules/wav/local';
 import { makeLookup, chain } from '@/modules/utils';
+import { Signal } from '@/modules/audio';
 
 const { dialog } = remote;
 const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
@@ -139,6 +139,26 @@ export class Project extends VuexModule {
     this.instruments.forEach((instrument) => {
       this.setChannel({ instrument });
     });
+
+    // I don't like this at all
+    // But I can't think of a better way to serialize / deserialize automation clips
+    // We should figure out how other DAWs serialize automation clips
+    this.automationClips.forEach((clip) => {
+      let signal: Signal;
+      if (clip.context === 'channel') {
+        // @ts-ignore
+        signal = this.channelLookup[clip.contextId][clip.attr];
+      } else {
+        // @ts-ignore
+        signal = this.instrumentLookup[clip.contextId][clip.attr];
+      }
+
+      if (!signal) {
+        throw Error(`Unable to deserialize automation clip: ${clip.context} -> ${clip.contextId} -> ${clip.attr}`);
+      }
+
+      clip.init(signal);
+    });
   }
 
   @Mutation
@@ -178,7 +198,7 @@ export class Project extends VuexModule {
     const { start, end, key, automatable } = payload;
     // tslint:disable-next-line:no-console
     console.info(automatable[key]);
-    const signal = automatable[key] as any as Tone.Signal;
+    const signal = automatable[key] as any as Signal;
 
 
     const available: boolean[] = Array(this.tracks.length).fill(true);

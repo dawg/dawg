@@ -33,6 +33,7 @@
 <script lang="ts">
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import { Point, PlacedAutomationClip } from '@/schemas';
+import { scale } from '@/utils';
 
 @Component
 export default class AutomationClipElement extends Vue {
@@ -51,11 +52,15 @@ export default class AutomationClipElement extends Vue {
     return this.clip.points;
   }
 
+  get fromRange(): [number, number] {
+    return [this.clip.signal.minValue, this.clip.signal.maxValue];
+  }
+
   get processed() {
     return this.points.sort(this.sort).map((point) => {
       return {
         cx: point.time * this.pxPerBeat,
-        cy: point.value * this.trackHeight,
+        cy: scale(point.value, this.fromRange, [0, 1]) * this.trackHeight,
       };
     });
   }

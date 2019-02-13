@@ -16,6 +16,14 @@ export class Signal {
     this.raw = value;
   }
 
+  get maxValue() {
+    return this.signal.maxValue;
+  }
+
+  get minValue() {
+    return this.signal.minValue;
+  }
+
   public linearRampToValueAtTime(value: number, time: number) {
     this.signal.linearRampToValueAtTime(value, time);
     this.raw = value;

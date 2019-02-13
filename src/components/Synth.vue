@@ -20,22 +20,16 @@
       <knob
         class="knob"
         text-color="white"
-        :size="knobSize"
         :stroke-width="strokeWidth"
-        v-model="instrument.volume.value"
+        :value="instrument.volume.raw"
+        @input="volumeInput"
         @automate="automateVolume"
       ></knob>
-      <knob
-        class="knob"
-        text-color="white"
-        :size="knobSize"
-        :min="-1"
-        :max="1"
-        :mid-value="0"
-        :stroke-width="strokeWidth"
-        v-model="instrument.pan.value"
+      <pan
+        :value="instrument.pan.raw"
+        @input="panInput"
         @automate="automatePan"
-      ></knob>
+      ></pan>
       <div class="white--text name">{{ instrument.name }}</div>
       <mini-score :notes="notes"></mini-score>
       <channel-select 
@@ -85,7 +79,6 @@ export default class Synth extends Vue {
   public active = !this.instrument.mute;
   public expand = false;
   public strokeWidth = 2.5;
-  public knobSize = 30;
 
   get synthStyle() {
     return {
@@ -95,6 +88,14 @@ export default class Synth extends Vue {
 
   public setChannel(value: number | null) {
     this.$update('channel', value);
+  }
+
+  public volumeInput(value: number) {
+    this.instrument.volume.value = value;
+  }
+
+  public panInput(value: number) {
+    this.instrument.pan.value = value;
   }
 
   public automateVolume() {

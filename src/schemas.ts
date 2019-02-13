@@ -1,5 +1,5 @@
 import * as io from '@/modules/cerialize';
-import Tone from 'tone';
+import Tone, { Sig } from 'tone';
 import uuid from 'uuid';
 
 import Transport from '@/modules/audio/transport';
@@ -325,11 +325,11 @@ export class Instrument {
 
   // tslint:disable-next-line:member-ordering
   @io.attr('value')
-  public volume = this.synth.volume;
+  public volume = new Signal(this.synth.volume);
 
   // tslint:disable-next-line:member-ordering
   @io.attr('value')
-  public pan = this.panner.pan;
+  public pan = new Signal(this.panner.pan);
 
   constructor() {
     this.synth.set({ envelope: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 } });
@@ -410,7 +410,7 @@ export class Instrument {
 }
 
 export class Point {
-  public static create(time: Beats, value: Range) {
+  public static create(time: Beats, value: number) {
     const point = new Point();
     point.time = time;
     point.value = value;
@@ -418,7 +418,7 @@ export class Point {
   }
 
   @io.autoserialize public time!: Beats;
-  @io.autoserialize public value!: Range;
+  @io.autoserialize public value!: number;
   public eventId!: string;
 
   public init(eventId: string) {
@@ -426,11 +426,11 @@ export class Point {
   }
 }
 
-export type ClipContext = 'channel' | 'instrument' | 'effect';
+export type ClipContext = 'channel' | 'instrument';
 export type Automatable = Channel | Instrument;
 
 export class AutomationClip {
-  public static create(length: number, signal: Tone.Signal, context: ClipContext, id: string) {
+  public static create(length: number, signal: Signal, context: ClipContext, id: string) {
     const ac = new AutomationClip();
     ac.init(signal);
     ac.context = context;
@@ -445,11 +445,17 @@ export class AutomationClip {
   @io.autoserializeAs(Point) public points: Point[] = [];
   @io.autoserialize public context!: ClipContext;
   @io.autoserialize public contextId!: string;
+  @io.autoserialize public attr!: string;
 
-  public signal!: Tone.Signal;
+  public signal!: Signal;
   public control!: Controller;
 
-  public init(signal: Tone.Signal) {
+  public init(signal: Signal) {
+    if (!(signal instanceof Signal)) {
+      throw Error(`${signal} not instanceof Signal`);
+    }
+
+    this.signal = signal;
     this.control = new Controller(signal);
     this.points.forEach(this.schedule);
   }
