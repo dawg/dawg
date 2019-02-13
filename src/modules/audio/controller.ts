@@ -47,10 +47,9 @@ export class Controller extends Tone.Signal {
     this._events.memory = Infinity;
   }
 
-  public sync(transport: Transport<any>, time: TransportTime) {
+  public sync(transport: Transport<any>, time: TransportTime, duration: TransportTime) {
     transport.on('start', this.callback).on('stop', this.callback).on('pause', this.callback);
-    // TODO(jacob) duration
-    return transport.scheduleRepeat(this.onTick.bind(this), '1i', time);
+    return transport.scheduleRepeat(this.onTick.bind(this), '1i', time, duration);
   }
 
   public onTick(time: number, ticks: number) {

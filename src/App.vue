@@ -200,6 +200,7 @@ export default class App extends Vue {
       return;
     }
 
+    this.$log.info('Adding a sample!');
     project.addSample(sample);
   }
 

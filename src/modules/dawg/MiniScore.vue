@@ -1,7 +1,7 @@
 <template>
   <svg
     preserveAspectRatio="none"
-    class="mini-score secondary-lighten-1 primary--text"
+    class="mini-score primary--text"
     :viewBox="viewBox"
   >
     <rect

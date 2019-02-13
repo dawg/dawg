@@ -135,11 +135,9 @@ export default class Tree extends Vue {
   }
 
   get indent() {
-    let rotate = 0;
-    if (this.showChildren) { rotate = 45; }
     return {
       marginLeft: `${this.depth * 10}px`,
-      transform: `rotate(${rotate}deg)`,
+      transform: `rotate(${this.showChildren ? 45 : 0}deg)`,
     };
   }
 

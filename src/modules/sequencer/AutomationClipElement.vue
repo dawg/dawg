@@ -52,8 +52,16 @@ export default class AutomationClipElement extends Vue {
     return this.clip.points;
   }
 
+  get minValue() {
+    return this.clip.signal.minValue;
+  }
+
+  get maxValue() {
+    return this.clip.signal.maxValue;
+  }
+
   get fromRange(): [number, number] {
-    return [this.clip.signal.minValue, this.clip.signal.maxValue];
+    return [this.minValue, this.maxValue];
   }
 
   get processed() {
@@ -110,6 +118,7 @@ export default class AutomationClipElement extends Vue {
     let value = (e.clientY - rect.top) / this.trackHeight;
     value = Math.max(0, Math.min(1, value));
 
+    value = scale(value, [0, 1], this.fromRange);
     this.$log.debug(`Changing ${this.clip.points[i].value} -> ${value}`);
     this.clip.change(i, value);
     this.$set(this.points, i, this.points[i]);

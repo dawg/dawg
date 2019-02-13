@@ -104,18 +104,6 @@ export class Project extends VuexModule {
       sample.init(buffer);
     });
 
-    this.master.elements.forEach((element) => {
-      if (element instanceof PlacedPattern) {
-        element.init(this.patternLookup[element.patternId]);
-      } else if (element instanceof PlacedSample) {
-        element.init(this.sampleLookup[element.sampleId]);
-      }
-    });
-
-    // Init the master after all of the elements
-    // have been initialized
-    this.master.init();
-
     // This initializes the parts.
     // Since the parts are not serialized, we need to re-add stuff.
     // Ideally, we wouldn't have to do this, but I don't have a solution right now.
@@ -142,7 +130,7 @@ export class Project extends VuexModule {
 
     // I don't like this at all
     // But I can't think of a better way to serialize / deserialize automation clips
-    // We should figure out how other DAWs serialize automation clips
+    // We should figure out how othinit(init(init(er DAWs serialize automation clips
     this.automationClips.forEach((clip) => {
       let signal: Signal;
       if (clip.context === 'channel') {
@@ -159,6 +147,20 @@ export class Project extends VuexModule {
 
       clip.init(signal);
     });
+
+    this.master.elements.forEach((element) => {
+      if (element instanceof PlacedPattern) {
+        element.init(this.patternLookup[element.patternId]);
+      } else if (element instanceof PlacedSample) {
+        element.init(this.sampleLookup[element.sampleId]);
+      } else if (element instanceof PlacedAutomationClip) {
+        element.init(this.automationLookup[element.automationId]);
+      }
+    });
+
+    // Init the master after all of the elements
+    // have been initialized
+    this.master.init();
   }
 
   @Mutation
@@ -249,7 +251,6 @@ export class Project extends VuexModule {
   public pushAutomationClip(payload: { clip: AutomationClip, placed: PlacedAutomationClip }) {
     this.automationClips.push(payload.clip);
     this.master.elements.push(payload.placed);
-    // TODO(jacob) uh
     payload.placed.schedule(this.master.transport);
   }
 
@@ -417,6 +418,10 @@ export class Project extends VuexModule {
 
   get instrumentLookup() {
     return makeLookup(this.instruments, (instrument) => instrument.id);
+  }
+
+  get automationLookup() {
+    return makeLookup(this.automationClips, (clip) => clip.id);
   }
 
   get effectLookup() {

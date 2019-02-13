@@ -865,7 +865,6 @@ declare module 'tone' {
 
   class Ticks extends TransportTime {
     constructor(val: string | number, units?: string);
-    toTicks(): PrimitiveTicks;
   }
 
   class TickSignal extends Signal {
@@ -979,6 +978,7 @@ declare module 'tone' {
 
   class TransportRepeatEvent extends TransportEvent {
     constructor(transport: _TransportConstructor, options: _TransportRepeatEventOptions);
+    duration: Ticks;
     _createEvents(time: _TimeArg): void;
   }
 

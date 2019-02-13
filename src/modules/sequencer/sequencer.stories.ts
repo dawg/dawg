@@ -6,10 +6,23 @@ import PlaylistSequencer from '@/modules/sequencer/PlaylistSequencer.vue';
 import Waveform from '@/modules/sequencer/Waveform.vue';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import { loadFromUrl } from '@/modules/wav/web';
-import { PlacedPattern, Pattern, Score, Note as NE, PlacedSample, Instrument, Track, Sample } from '@/schemas';
+import {
+  PlacedPattern,
+  Pattern,
+  Score,
+  Note as NE,
+  PlacedSample,
+  Instrument,
+  Track,
+  Sample,
+  AutomationClip,
+  PlacedAutomationClip,
+} from '@/schemas';
 import { colored, resizable, Note, PatternElement, SampleElement, positionable } from '@/modules/sequencer';
 import Transport from '@/modules/audio/transport';
 import { range } from '@/utils';
+import { Signal } from '../audio';
+import Tone from 'tone';
 
 const Temp = Vue.extend({
   template: `<div style="height: 30px; width: 400px"></div>`,
@@ -107,34 +120,28 @@ storiesOf('Waveform', module)
     mounted,
   }));
 
+const clip = AutomationClip.create(
+  1,
+  new Signal(new Tone.Signal()),
+  'instrument',
+  '',
+);
+
 storiesOf('AutomationClipElement', module)
   .add('Standard', () => ({
     template: `
     <dawg>
       <automation-clip-element
         style="margin: 20px;"
-        :points="points"
-        :duration.sync="duration"
+        :element="element"
         :height="50"
+        :duration.sync="element.duration"
       ></automation-clip-element>
     </dawg>
     `,
     data: () => ({
-      points: [
-        {
-          value: 0.5,
-          time: 0,
-        },
-        {
-          value: 0.8,
-          time: 1,
-        },
-        {
-          value: 1,
-          time: 2,
-        },
-      ],
-      duration: 1,
+      clip,
+      element: PlacedAutomationClip.create(clip, 0, 0, 1),
     }),
   }));
 

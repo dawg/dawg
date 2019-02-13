@@ -234,8 +234,13 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
   }
 
   public updateDuration(i: number, value: number) {
+    // Ok so we update both the duration of getter and the duraion of the element
+    // This DEfinitely might not be needed
     this.components[i].duration = value;
     this.elements[i].duration = value;
+
+    // Make sure to check the loop end when the duration of an element has been changed!!
+    this.checkLoopEnd();
   }
 
   public selectStart(e: MouseEvent) {
@@ -270,7 +275,7 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
     const y = e.clientY - rect.top;
     const row = Math.floor(y / this.rowHeight);
 
-    this.$log.info(`Adding to row -> ${row}, time -> ${time}`);
+    this.$log.debug(`Adding to row -> ${row}, time -> ${time}`);
     const item = this.prototype.copy();
     item.row = row;
     item.time = time;

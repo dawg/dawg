@@ -122,7 +122,7 @@ export default class Transport<T> extends Tone.Emitter<Events> {
     return this.addEvent(event);
   }
 
-  public embed(child: Transport<T>, time: TransportTime) {
+  public embed(child: Transport<T>, time: TransportTime, duration: TransportTime) {
     const t = new Tone.Time(time);
     const ticksOffset = t.toTicks();
 
@@ -130,15 +130,7 @@ export default class Transport<T> extends Tone.Emitter<Events> {
       child.processTick(exact, ticks - ticksOffset);
     };
 
-    // TODO(jacob)
-    let duration = 0;
-    child.timeline.forEach((element) => {
-      if (typeof element.time !== 'object') {
-        duration = Math.max(duration, element.time);
-      }
-    });
-
-    return this.scheduleRepeat(callback, '1i', time, `${duration + 1}i`);
+    return this.scheduleRepeat(callback, '1i', time, duration);
   }
 
   public remove(o: T) {
@@ -266,6 +258,10 @@ export default class Transport<T> extends Tone.Emitter<Events> {
     } else {
       return 0;
     }
+  }
+
+  public get(eventId: string) {
+    return this.scheduledEvents[eventId];
   }
 
   public getTicksAtTime(time: number) {

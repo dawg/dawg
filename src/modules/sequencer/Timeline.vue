@@ -212,8 +212,10 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 	position: absolute;
 	width: 100%;
 	height: 100%;
+  top: 1px;
 	transition: filter .2s;
 }
+
 .loopBg:hover {
 	filter: brightness( 1.2 );
 }

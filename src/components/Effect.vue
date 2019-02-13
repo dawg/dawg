@@ -13,7 +13,7 @@
         :min="constraints(key).min"
         :max="constraints(key).max"
         :size="size"
-        @automate="automate(key)"
+        disable-automation
       ></knob>
     </div>
   </div>
@@ -59,11 +59,6 @@ export default class Effect<T extends EffectName> extends Vue {
 
   public constraints(name: keyof EffectConstrainsType[T]) {
     return EffectConstrains[this.effect.type][name];
-  }
-
-  public automate(key: keyof E<T>['options']) {
-    // TODO(jacob)
-    // this.$automate(this.effect.options, key);
   }
 }
 </script>

@@ -37,8 +37,8 @@ export const colored = (component: VueConstructor) => {
     public percentage = 15;
 
     get lightColor() {
-      const color = tinycolor(this.color).lighten(this.percentage).toHex();
-      return `#${color}`;
+      const color = tinycolor(this.color).lighten(this.percentage).setAlpha(.1).toRgbString();
+      return `${color}`;
     }
 
     public render(createElement: CreateElement) {
@@ -54,7 +54,7 @@ export const colored = (component: VueConstructor) => {
       });
 
       return createElement('div', {
-        class: 'formatted',
+        class: 'colored',
         style: {
           backgroundColor: this.lightColor,
           display: 'flex',

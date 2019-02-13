@@ -7,14 +7,16 @@ export const createHOC = (component: VueConstructor, createElement: CreateElemen
   // 3. Listeners
   // 4. Slots
   const slots = Object.values(hoc.$slots);
+
   return createElement(component, {
     ...data,
-    props: {
-      ...hoc.$props,
-      ...data.props,
-    },
+    // props: {
+    //   ...hoc.$props,
+    //   ...data.props,
+    // },
     attrs: {
       ...hoc.$attrs,
+      ...hoc.$props,
       ...data.attrs,
     },
     on: {

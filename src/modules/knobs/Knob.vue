@@ -76,6 +76,7 @@ export default class Knob extends Mixins(Draggable) {
   @Prop(Number) public midValue?: number;
   @Prop({ type: String, default: '#55595C' }) public strokeColor!: string;
   @Prop(String) public strokeClass?: string;
+  @Prop(Boolean) public disableAutomation!: boolean;
 
   public rectWidth = 3;
   public rectHeight = this.size / 4;
@@ -227,6 +228,10 @@ export default class Knob extends Mixins(Draggable) {
   }
 
   public contextmenu(e: MouseEvent) {
+    if (this.disableAutomation) {
+      return;
+    }
+
     this.$context(e, [
       {
         text: 'Create Automation Clip',

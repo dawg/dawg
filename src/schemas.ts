@@ -1,9 +1,10 @@
+import path from 'path';
 import * as io from '@/modules/cerialize';
-import Tone, { Sig } from 'tone';
+import Tone from 'tone';
 import uuid from 'uuid';
 
 import Transport from '@/modules/audio/transport';
-import { toTickTime, allKeys, scale, ConstructorOf } from './utils';
+import { toTickTime, allKeys, ConstructorOf } from './utils';
 import { Controller, Time, Signal } from '@/modules/audio';
 
 // These are all of the schemas for the project.
@@ -44,10 +45,31 @@ export abstract class Element implements IElement {
    * For notes, these are numbered 0 -> 87 and start from the higher frequencies.
    */
   @io.autoserialize public row!: number;
+
   /**
    * Duration in beats.
    */
-  @io.autoserialize public duration!: number;
+  // tslint:disable-next-line:variable-name
+  public _duration!: number;
+
+  @io.autoserialize
+  get duration() {
+    return this._duration;
+  }
+
+  set duration(value: number) {
+    this._duration = value;
+
+    if (this.transport && this.eventId) {
+      const event = this.transport.get(this.eventId);
+
+      if (!(event instanceof Tone.TransportRepeatEvent)) {
+        return;
+      }
+
+      event.duration = new Tone.Ticks(toTickTime(value));
+    }
+  }
 
   /**
    * Time in beats.
@@ -55,6 +77,7 @@ export abstract class Element implements IElement {
   @io.autoserialize public time!: number;
 
   protected eventId?: string;
+  protected transport?: Transport<any>;
 
 
   constructor(o?: IElement) {
@@ -105,7 +128,8 @@ export class PlacedPattern extends Element {
   }
 
   public schedule(transport: Transport<any>) {
-    this.eventId = transport.embed(this.pattern.transport, this.tickTime);
+    this.transport = transport;
+    this.eventId = transport.embed(this.pattern.transport, this.tickTime, toTickTime(this._duration));
   }
 }
 
@@ -138,6 +162,10 @@ export class Sample {
   get beats() {
     const minutes = this.buffer.length / this.buffer.sampleRate / 60;
     return minutes * Tone.Transport.bpm.value;
+  }
+
+  get name() {
+    return path.basename(this.path);
   }
 }
 
@@ -217,11 +245,13 @@ export class PlacedAutomationClip extends Element {
     element.clip = clip;
     element.time = time;
     element.row = row;
+    element.automationId = clip.id;
     element.duration = duration;
     return element;
   }
 
   public readonly component = 'automation-clip-element';
+  @io.autoserialize public automationId!: string;
   public clip!: AutomationClip;
 
   public init(clip: AutomationClip) {
@@ -236,7 +266,8 @@ export class PlacedAutomationClip extends Element {
   }
 
   public schedule(transport: Transport<any>) {
-    this.eventId = this.clip.control.sync(transport, this.tickTime);
+    this.transport = transport;
+    this.eventId = this.clip.control.sync(transport, this.tickTime, toTickTime(this.duration));
   }
 }
 
@@ -446,6 +477,7 @@ export class AutomationClip {
   @io.autoserialize public context!: ClipContext;
   @io.autoserialize public contextId!: string;
   @io.autoserialize public attr!: string;
+  @io.autoserialize public id = uuid.v4();
 
   public signal!: Signal;
   public control!: Controller;
