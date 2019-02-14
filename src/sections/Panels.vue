@@ -29,7 +29,7 @@
         style="height: 100%"
         v-if="shouldRender"
         :elements="notes"
-        :part="part"
+        :transport="transport"
         :instrument="instrument"
         :play="general.pianoRollPlay"
       ></piano-roll-sequencer>
@@ -50,7 +50,6 @@ import SampleViewer from '@/components/SampleViewer.vue';
 import Synths from '@/components/Synths.vue';
 import Panel from '@/components/Panel.vue';
 import { Note, EffectName, Channel, EffectOptions } from '@/schemas';
-import { Part } from 'tone';
 
 @Component({
   components: {
@@ -86,9 +85,9 @@ export default class Panels extends Vue {
     }
   }
 
-  get part() {
+  get transport() {
     if (specific.selectedPattern) {
-      return specific.selectedPattern.part;
+      return specific.selectedPattern.transport;
     }
   }
 

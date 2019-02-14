@@ -80,6 +80,7 @@ import { IElement, Element } from '@/schemas';
 export default class Arranger extends Mixins(Draggable, BeatLines) {
   @Inject() public stepsPerBeat!: number;
 
+  // name is used for debugging
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, required: true }) public rowHeight!: number;
   @Prop({ type: Array, required: true }) public elements!: Element[];
@@ -107,6 +108,7 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
   public cursor = 'move';
   public rows!: HTMLElement;
   public selectStartEvent: MouseEvent | null = null;
+  public dragStartEvent: MouseEvent | null = null;
   public selectCurrentEvent: MouseEvent | null = null;
   public holdingShift = false;
   public minDisplayMeasures = 4;
@@ -233,8 +235,13 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
   }
 
   public updateDuration(i: number, value: number) {
+    // Ok so we update both the duration of getter and the duraion of the element
+    // This DEfinitely might not be needed
     this.components[i].duration = value;
     this.elements[i].duration = value;
+
+    // Make sure to check the loop end when the duration of an element has been changed!!
+    this.checkLoopEnd();
   }
 
   public selectStart(e: MouseEvent) {
@@ -269,7 +276,7 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
     const y = e.clientY - rect.top;
     const row = Math.floor(y / this.rowHeight);
 
-    this.$log.info(`Adding to row -> ${row}, time -> ${time}`);
+    this.$log.debug(`Adding to row -> ${row}, time -> ${time}`);
     const item = this.prototype.copy();
     item.row = row;
     item.time = time;
@@ -281,18 +288,37 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
   }
 
   public move(e: MouseEvent, i: number) {
+    if (!this.dragStartEvent) {
+      return;
+    }
+
+    // Get the preVIOUS element first
+    // and ALSO grab the current position
+    const oldItem = this.elements[i];
     const rect = this.rows.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    let time = x / this.pxPerBeat;
-    time = Math.floor(time / this.snap) * this.snap;
+
+    // Get the start BEAT
+    let startBeat = (this.dragStartEvent.clientX - rect.left) / this.pxPerBeat;
+    startBeat = Math.floor(startBeat / this.snap) * this.snap;
+
+    // Get the end BEAT
+    let endBeat = (e.clientX - rect.left) / this.pxPerBeat;
+    endBeat = Math.floor(endBeat / this.snap) * this.snap;
+
+    // CHeck if we are going to move squares
+    const diff = endBeat - startBeat;
+    const time = oldItem.time + diff;
     if (time < 0) { return; }
 
     const y = e.clientY - rect.top;
     const row = Math.floor(y / this.rowHeight);
     if (row < 0) { return; }
 
-    const oldItem = this.elements[i];
     if (row === oldItem.row && time === oldItem.time) { return; }
+    // OK, so we've moved squares
+    // Lets update our dragStartEvent or else
+    // things will start to go haywyre :////
+    this.dragStartEvent = e;
 
     const timeDiff = time - oldItem.time;
     const rowDiff = row - oldItem.row;
@@ -333,11 +359,7 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
   }
 
   public checkLoopEnd() {
-    let maxTime = Math.max(...this.elements.map((item) => item.time + item.duration), 0);
-
-    // Add a tiny amount to max time so that ceil will push to next number
-    // if maxTime is a whole number
-    maxTime = maxTime + 0.0000001;
+    const maxTime = Math.max(...this.elements.map((item) => item.time + item.duration), 0);
     const itemLoopEnd = Math.ceil(maxTime / this.beatsPerMeasure) * this.beatsPerMeasure;
 
     this.$log.info(`${this.name} -> sequencerLoopEnd -> ${itemLoopEnd}`);
@@ -387,7 +409,13 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
 
       selected.forEach(createItem);
     }
+
+    this.dragStartEvent = e;
     this.addListeners(e, targetIndex);
+  }
+
+  public afterMove() {
+    this.dragStartEvent = null;
   }
 
   public keydown(e: KeyboardEvent) {

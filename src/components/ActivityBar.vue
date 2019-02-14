@@ -12,10 +12,6 @@
       >
         <tooltip-icon medium color="white" :tooltip="item.name" right>{{ item.icon }}</tooltip-icon>
       </v-list-tile>
-      <div style="flex-grow: 1"></div>
-      <v-list-tile>
-        <v-icon medium color="white">settings</v-icon>
-      </v-list-tile>
     </v-list>
   </v-navigation-drawer>
 </template>

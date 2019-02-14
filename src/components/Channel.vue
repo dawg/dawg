@@ -27,9 +27,11 @@
       <div style="display: flex">
         <div style="display: flex; flex-direction: column; align-items: center">
           <pan
-            v-model="channel.pan"
+            :value="channel.panner.raw"
+            @input="panInput"
             stroke-class="secondary-lighten-2--stroke"
             :size="30"
+            @automate="automatePan"
           ></pan>
           <div style="flex-grow: 1"></div>
           <div 
@@ -41,7 +43,13 @@
           </div>
         </div>
         <div class="slider" style="display: flex">
-          <slider v-model="channel.volume" :left="left" :right="right"></slider>
+          <slider 
+            :value="channel.volume.raw"
+            @input="volumeInput"
+            :left="left" 
+            :right="right"
+            @automate="automateVolume"
+          ></slider>
         </div>
       </div>
     </div>
@@ -50,19 +58,17 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import Knob from '@/components/Knob.vue';
 import { Channel as C, EffectMap, EffectName, AnyEffect } from '@/schemas';
 import { range, scale, clamp } from '@/utils';
 import { Watch } from '@/modules/update';
 
 // Beware, we are modifying data in the store directly here.
 // We will want to change this evetually.
-@Component({
-  components: { Knob },
-})
+@Component
 export default class Channel extends Vue {
   @Prop({ type: Object, required: true }) public channel!: C;
   @Prop({ type: Boolean, required: true }) public play!: boolean;
+
   public right = 0;
   public left = 0;
 
@@ -120,6 +126,22 @@ export default class Channel extends Vue {
       this.left = 0;
       this.right = 0;
     }
+  }
+
+  public automatePan() {
+    this.$automate(this.channel, 'panner');
+  }
+
+  public automateVolume() {
+    this.$automate(this.channel, 'volume');
+  }
+
+  public panInput(value: number) {
+    this.channel.panner.value = value;
+  }
+
+  public volumeInput(value: number) {
+    this.channel.volume.value = value;
   }
 
   @Watch<Channel>('play')

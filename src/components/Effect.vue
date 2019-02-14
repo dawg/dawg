@@ -13,6 +13,7 @@
         :min="constraints(key).min"
         :max="constraints(key).max"
         :size="size"
+        disable-automation
       ></knob>
     </div>
   </div>

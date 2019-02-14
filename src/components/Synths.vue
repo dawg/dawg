@@ -3,7 +3,7 @@
     <synth
       v-for="(instrument, i) in instruments"
       :key="instrument.name"
-      @contextmenu="contextmenu($event, i)"
+      @contextmenu.native="contextmenu($event, i)"
       :instrument="instrument"
       :notes="getNotes(instrument)"
       :channel="instrument.channel"

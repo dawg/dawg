@@ -3,8 +3,13 @@
     <div 
       class="rela-block knob-dial" 
       :style="knobStyle"
+      @contextmenu="contextmenu"
     >
-      <svg class="dial-svg" :height="size" :width="size">
+      <svg 
+        class="dial-svg" 
+        :height="size" 
+        :width="size"
+      >
         <path
           :d="rangePath"
           fill="none"
@@ -64,17 +69,21 @@ export default class Knob extends Mixins(Draggable) {
   @Prop({ type: Number, default: 264 }) public range!: number;
   @Prop({ type: Number, default: 100 }) public max!: number;
   @Prop({ type: Number, default: 0 }) public min!: number;
-  @Prop({ type: Number, default: 100 }) public size!: number;
+  @Prop({ type: Number, default: 30 }) public size!: number;
   @Prop({ type: String, default: '#409eff' }) public primaryColor!: string;
   @Prop(String) public label?: string;
   @Prop({ type: Number, default: 2.5 }) public strokeWidth!: number;
   @Prop(Number) public midValue?: number;
   @Prop({ type: String, default: '#55595C' }) public strokeColor!: string;
   @Prop(String) public strokeClass?: string;
+  @Prop(Boolean) public disableAutomation!: boolean;
 
-  public rotation = -this.range / 2;
   public rectWidth = 3;
   public rectHeight = this.size / 4;
+
+  get rotation() {
+    return this.mapRange(this.value, this.min, this.max, -this.angle, this.angle);
+  }
 
   get midDegrees() {
     let midValue = this.midValue;
@@ -208,20 +217,27 @@ export default class Knob extends Mixins(Draggable) {
     };
   }
 
-
-
   public move(e: MouseEvent, { changeY }: { changeY: number }) {
     // Multiply by a factor to get better speed.
     // This factor should eventually be computed by the changeX
     // For example, as they move farther away from their inital x position, the factor decreases
-    this.rotation -= changeY * 1.5;
-    this.rotation = Math.max(-132, Math.min(this.angle, this.rotation));
-    const value = this.mapRange(this.rotation, -this.angle, this.angle, this.min, this.max);
+    let rotation = this.rotation - changeY * 1.5;
+    rotation = Math.max(-132, Math.min(this.angle, rotation));
+    const value = this.mapRange(rotation, -this.angle, this.angle, this.min, this.max);
     this.$emit('input', value);
   }
 
-  public beforeMount() {
-    this.rotation = this.mapRange(this.value, this.min, this.max, -this.angle, this.angle);
+  public contextmenu(e: MouseEvent) {
+    if (this.disableAutomation) {
+      return;
+    }
+
+    this.$context(e, [
+      {
+        text: 'Create Automation Clip',
+        callback: () => this.$emit('automate'),
+      },
+    ]);
   }
 }
 </script>

@@ -6,6 +6,7 @@ import {
   autoserializeIndexable,
   inheritSerialization,
   is,
+  attr,
 } from '@/modules/cerialize';
 import { expect } from 'chai';
 
@@ -24,6 +25,20 @@ class C {
 }
 
 describe('cerialize', () => {
+  context('attr', () => {
+    it.only('simple', () => {
+      class G {
+        @attr('value') public element = {
+          value: 5,
+        };
+      }
+
+      const g = new G();
+      expect(S(g, G)).to.deep.eq({ element: 5 });
+      expect(D({ element: 5 }, G)).to.deep.eq(g);
+    });
+  });
+
   context('autoserialize', () => {
     it('simple', () => {
       const a = new A();

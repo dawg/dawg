@@ -5,11 +5,24 @@ import PianoRollSequencer from '@/modules/sequencer/PianoRollSequencer.vue';
 import PlaylistSequencer from '@/modules/sequencer/PlaylistSequencer.vue';
 import Waveform from '@/modules/sequencer/Waveform.vue';
 import BeatLines from '@/modules/sequencer/BeatLines';
-import { loadFromUrl } from '@/modules/audio/web';
-import { PlacedPattern, Pattern, Score, Note as NE, PlacedSample, Instrument, Track } from '@/schemas';
-import { resizable, Note, PatternElement, SampleElement, positionable } from '@/modules/sequencer';
-import Part from '@/modules/audio/part';
+import { loadFromUrl } from '@/modules/wav/web';
+import {
+  PlacedPattern,
+  Pattern,
+  Score,
+  Note as NE,
+  PlacedSample,
+  Instrument,
+  Track,
+  Sample,
+  AutomationClip,
+  PlacedAutomationClip,
+} from '@/schemas';
+import { colored, resizable, Note, PatternElement, SampleElement, positionable } from '@/modules/sequencer';
+import Transport from '@/modules/audio/transport';
 import { range } from '@/utils';
+import { Signal } from '../audio';
+import Tone from 'tone';
 
 const Temp = Vue.extend({
   template: `<div style="height: 30px; width: 400px"></div>`,
@@ -46,14 +59,14 @@ storiesOf('PianoRollSequencer', module)
       <piano-roll-sequencer
         style="height: 500px"
         :elements="notes"
-        :part="part"
+        :transport="transport"
         :instrument="instrument"
       ></piano-roll-sequencer>
     </dawg>
     `,
     data: () => ({
       notes: [],
-      part: new Part(),
+      transport: new Transport(),
       instrument: Instrument.default('TEST'),
     }),
     components: { PianoRollSequencer, Dawg },
@@ -74,13 +87,13 @@ storiesOf('PlaylistSequencer', module)
       style="height: 500px"
       :elements="elements"
       :prototype="element"
-      :part="part"
+      :transport="transport"
       :tracks="tracks"
     ></playlist-sequencer>
   </dawg>
   `,
   data: () => ({
-    part: new Part(),
+    transport: new Transport(),
     elements: [],
     buffer: null,
     element: patternElement,
@@ -88,16 +101,6 @@ storiesOf('PlaylistSequencer', module)
 
   }),
   components: { PlaylistSequencer, Dawg },
-  computed: {
-    placedSample() {
-      if (!this.buffer) {
-        return null;
-      }
-
-      // @ts-ignore
-      return PlacedSample.create(this.buffer);
-    },
-  },
   mounted,
 }));
 
@@ -115,6 +118,31 @@ storiesOf('Waveform', module)
     components: { Waveform },
     data: () => ({ buffer: null }),
     mounted,
+  }));
+
+const clip = AutomationClip.create(
+  1,
+  new Signal(new Tone.Signal()),
+  'instrument',
+  '',
+);
+
+storiesOf('AutomationClipElement', module)
+  .add('Standard', () => ({
+    template: `
+    <dawg>
+      <automation-clip-element
+        style="margin: 20px;"
+        :element="element"
+        :height="50"
+        :duration.sync="element.duration"
+      ></automation-clip-element>
+    </dawg>
+    `,
+    data: () => ({
+      clip,
+      element: PlacedAutomationClip.create(clip, 0, 0, 1),
+    }),
   }));
 
 storiesOf('SampleElement', module)
@@ -139,7 +167,11 @@ storiesOf('SampleElement', module)
         }
 
         // @ts-ignore
-        return PlacedSample.create(this.buffer);
+        const buffer: AudioBuffer = this.buffer;
+        const sample = new Sample();
+        sample.buffer = buffer;
+
+        return PlacedSample.create(sample);
       },
     },
   }));
@@ -213,4 +245,17 @@ storiesOf('resizable', module)
     `,
     data: () => ({ duration: 1 }),
     components: { Resizable, Dawg },
+  }));
+
+const Colored = colored(Tester);
+
+storiesOf('colored', module)
+  .add('default', () => ({
+    template: `
+    <colored
+      style="width: 100px; height: 50px"
+      value="HELLO"
+    ></colored>
+    `,
+    components: { Colored },
   }));

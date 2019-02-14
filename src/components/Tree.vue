@@ -14,18 +14,17 @@
         {{ fileName }}
       </drag>
     </div>
-      <ul v-if="showChildren && (!isLeaf || isWav)">
-        <tree
-          ref="trees"
-          v-for="(folder, i) in folders"
-          :key="folder"
-          :path="folder"
-          :children="children[folder]"
-          :depth="depth + 1"
-          :index="i"
-        ></tree>
-      </ul>
-
+    <ul v-if="showChildren && (!isLeaf || isWav)">
+      <tree
+        ref="trees"
+        v-for="(folder, i) in folders"
+        :key="folder"
+        :path="folder"
+        :children="children[folder]"
+        :depth="depth + 1"
+        :index="i"
+      ></tree>
+    </ul>
   </div>
 </template>
 
@@ -37,7 +36,7 @@ import fs from 'fs';
 import { Keys } from '@/utils';
 import { Component, Prop } from 'vue-property-decorator';
 import Key from '@/components/Key.vue';
-import { loadPlayer } from '@/modules/audio/utils';
+import { loadPlayer, loadBuffer } from '@/modules/wav/local';
 import { PlacedSample, Sample } from '@/schemas';
 
 @Component
@@ -123,7 +122,7 @@ export default class Tree extends Vue {
 
   public mounted() {
     if (!this.sample && this.isWav) {
-      this.sample = Sample.create(this.path);
+      this.sample = Sample.create(this.path, loadBuffer(this.path));
     }
 
     window.addEventListener('keydown', this.moveDown);
@@ -136,11 +135,9 @@ export default class Tree extends Vue {
   }
 
   get indent() {
-    let rotate = 0;
-    if (this.showChildren) { rotate = 45; }
     return {
       marginLeft: `${this.depth * 10}px`,
-      transform: `rotate(${rotate}deg)`,
+      transform: `rotate(${this.showChildren ? 45 : 0}deg)`,
     };
   }
 

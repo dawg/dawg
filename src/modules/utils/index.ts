@@ -7,14 +7,16 @@ export const createHOC = (component: VueConstructor, createElement: CreateElemen
   // 3. Listeners
   // 4. Slots
   const slots = Object.values(hoc.$slots);
+
   return createElement(component, {
     ...data,
-    props: {
-      ...hoc.$props,
-      ...data.props,
-    },
+    // props: {
+    //   ...hoc.$props,
+    //   ...data.props,
+    // },
     attrs: {
       ...hoc.$attrs,
+      ...hoc.$props,
       ...data.attrs,
     },
     on: {
@@ -22,4 +24,20 @@ export const createHOC = (component: VueConstructor, createElement: CreateElemen
       ...data.on,
     },
   }, slots);
+};
+
+export function* chain<T>(...arrays: T[][]) {
+  for (const array of arrays) {
+    for (const item of array) {
+      yield item;
+    }
+  }
+}
+
+export const makeLookup = <T>(array: Iterable<T>, keyFunc: (item: T) => string) => {
+  const lookup: { [k: string]: T } = {};
+  for (const item of array) {
+    lookup[keyFunc(item)] = item;
+  }
+  return lookup;
 };

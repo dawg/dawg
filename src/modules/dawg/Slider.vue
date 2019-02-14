@@ -24,7 +24,8 @@
       class="primary--fill"
       :style="style"
     ></rect>
-    <polygon 
+    <polygon
+      @contextmenu="contextmenu"
       :points="points" 
       class="level primary--fill" 
       :ref="dragRef"
@@ -35,6 +36,7 @@
 <script lang="ts">
 import { Component, Prop, Mixins } from 'vue-property-decorator';
 import { Draggable } from '@/modules/draggable';
+import { scale } from '@/utils';
 
 @Component
 export default class Slider extends Mixins(Draggable) {
@@ -43,6 +45,9 @@ export default class Slider extends Mixins(Draggable) {
   @Prop({ type: Number, required: true }) public right!: number;
   @Prop({ type: Number, required: true }) public left!: number;
   @Prop({ type: Number, required: true }) public value!: number;
+  @Prop({ type: Number, default: 1 }) public max!: number;
+  @Prop({ type: Number, default: 0 }) public min!: number;
+
   public style = { x: `${this.width + 2}px` };
   public bgClass = 'secondary--fill';
   public fg = '#3cb7d8';
@@ -62,12 +67,19 @@ export default class Slider extends Mixins(Draggable) {
 
     return `${left},${this.position} ${right},${this.position - (height / 2)} ${right},${this.position + (height / 2)}`;
   }
-  get position() {
-    return this.height - (this.height * this.value);
+
+  get scaled() {
+    return scale(this.value, [this.min, this.max], [0, 1]);
   }
+
+  get position() {
+    return this.height - (this.height * this.scaled);
+  }
+
   get rightHeight() {
     return this.right * this.height;
   }
+
   get leftHeight() {
     return this.left * this.height;
   }
@@ -76,11 +88,21 @@ export default class Slider extends Mixins(Draggable) {
     let volume = this.$refs.svg.getBoundingClientRect().top + this.height - e.clientY;
     volume /= this.height;
     volume = Math.max(Math.min(volume, 1), 0);
+    volume = scale(this.value, [0, 1], [this.min, this.max]);
     this.$emit('input', volume);
   }
 
   public getPosition(level: number) {
     return this.height - level;
+  }
+
+  public contextmenu(e: MouseEvent) {
+    this.$context(e, [
+      {
+        text: 'Create Automation Clip',
+        callback: () => this.$emit('automate'),
+      },
+    ]);
   }
 }
 </script>

@@ -1,6 +1,4 @@
 <template>
-  <!-- For some reason, @click isn't working on this component.
-  However, this works when we add $emit -->
   <div 
     class="synth-wrapper"
     style="position: relative; z-index: 10;"
@@ -14,7 +12,6 @@
       :style="synthStyle"
       @dblclick="expand = !expand"
       @click="$emit('click', $event)"
-      @contextmenu="$emit('contextmenu', $event)"
     >
       <dot-button
         class="mute"
@@ -23,20 +20,16 @@
       <knob
         class="knob"
         text-color="white"
-        :size="knobSize"
         :stroke-width="strokeWidth"
-        v-model="instrument.volume"
+        :value="instrument.volume.raw"
+        @input="volumeInput"
+        @automate="automateVolume"
       ></knob>
-      <knob
-        class="knob"
-        text-color="white"
-        :size="knobSize"
-        :min="-1"
-        :max="1"
-        :mid-value="0"
-        :stroke-width="strokeWidth"
-        v-model="instrument.pan"
-      ></knob>
+      <pan
+        :value="instrument.pan.raw"
+        @input="panInput"
+        @automate="automatePan"
+      ></pan>
       <div class="white--text name">{{ instrument.name }}</div>
       <mini-score :notes="notes"></mini-score>
       <channel-select 
@@ -62,7 +55,6 @@
 <script lang="ts">
 import Vue from 'vue';
 import Tone from 'tone';
-import Knob from '@/components/Knob.vue';
 import DotButton from '@/components/DotButton.vue';
 import MiniScore from '@/modules/dawg/MiniScore.vue';
 import ChannelSelect from '@/components/ChannelSelect.vue';
@@ -76,7 +68,7 @@ const TYPES = ['pwm', 'sine', 'triangle', 'fatsawtooth', 'square'];
 const oscillator = { type: 'fatsawtooth', spread: 30 };
 const envelope = { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 };
 
-@Component({ components: { Knob, DotButton, MiniScore, ChannelSelect } })
+@Component({ components: { DotButton, MiniScore, ChannelSelect } })
 export default class Synth extends Vue {
   @Prop({ type: Object, required: true }) public instrument!: Instrument;
   @Prop({ type: Number, default: 50 }) public height!: number;
@@ -87,7 +79,6 @@ export default class Synth extends Vue {
   public active = !this.instrument.mute;
   public expand = false;
   public strokeWidth = 2.5;
-  public knobSize = 30;
 
   get synthStyle() {
     return {
@@ -97,6 +88,22 @@ export default class Synth extends Vue {
 
   public setChannel(value: number | null) {
     this.$update('channel', value);
+  }
+
+  public volumeInput(value: number) {
+    this.instrument.volume.value = value;
+  }
+
+  public panInput(value: number) {
+    this.instrument.pan.value = value;
+  }
+
+  public automateVolume() {
+    this.$automate(this.instrument, 'volume');
+  }
+
+  public automatePan() {
+    this.$automate(this.instrument, 'pan');
   }
 
   @Watch<Synth>('active')

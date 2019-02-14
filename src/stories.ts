@@ -5,7 +5,6 @@ import DotButton from '@/components/DotButton.vue';
 import Key from '@/components/Key.vue';
 import Piano from '@/components/Piano.vue';
 import Tree from '@/components/Tree.vue';
-import Knob from '@/components/Knob.vue';
 import Mixer from '@/components/Mixer.vue';
 import Note from '@/components/Note.vue';
 import Bpm from '@/components/Bpm.vue';
@@ -124,7 +123,7 @@ storiesOf(Note.name, module)
     data: () => ({ length: 1 }),
   }));
 
-storiesOf(Knob.name, module)
+storiesOf('Knob', module)
   .add('Standard', () => ({
     template: `
       <div>
@@ -137,7 +136,6 @@ storiesOf(Knob.name, module)
         <div>{{ value }}</div>
       </div>
     `,
-    components: { Knob },
     data() {
       return { value: 0 };
     },

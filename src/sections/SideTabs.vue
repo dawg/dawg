@@ -28,7 +28,9 @@
             @update:folders="cache.setFolders"
           ></file-explorer>
         </side-bar>
-        <side-bar name="Audio Files" icon="queue_music"></side-bar>
+        <side-bar name="Audio Files" icon="queue_music">
+          <audio-files></audio-files>
+        </side-bar>
         <side-bar name="Patterns" icon="queue_play">
           <patterns 
             :value="specific.selectedPattern" 
@@ -36,7 +38,6 @@
             :patterns="project.patterns"
           ></patterns>
         </side-bar>
-        <side-bar name="Search" icon="search"></side-bar>
       </base-tabs>
     </vue-perfect-scrollbar>
   </div>
@@ -49,6 +50,7 @@ import FileExplorer from '@/components/FileExplorer.vue';
 import Patterns from '@/components/Patterns.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
 import SideBar from '@/components/SideBar.vue';
+import AudioFiles from '@/sections/AudioFiles.vue';
 import { project, cache, general, specific } from '@/store';
 import { Watch } from '@/modules/update';
 
@@ -64,6 +66,7 @@ interface Group {
     Patterns,
     BaseTabs,
     SideBar,
+    AudioFiles,
   },
 })
 export default class SideTabs extends Vue {

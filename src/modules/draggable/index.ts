@@ -1,5 +1,6 @@
-import Vue from 'vue';
-import { Component } from 'vue-property-decorator';
+import Vue, { CreateElement } from 'vue';
+import { Component, Prop, Mixins } from 'vue-property-decorator';
+import { Watch } from '../update';
 
 interface Point {
   x: number;
@@ -143,3 +144,40 @@ export class Draggable extends Vue {
     el.removeEventListener('click', this.stopClick);
   }
 }
+
+@Component
+export class DragElement extends Mixins(Draggable) {
+  @Prop({ type: String, default: 'div' }) public tag!: string;
+  @Prop({ type: String, default: 'auto' }) public curse!: string;
+
+  public move(e: MouseEvent) {
+    this.$emit('move', e);
+  }
+
+  public render(createElement: CreateElement) {
+    return createElement(this.tag, {
+      class: 'draggable',
+      on: {
+        wheel: this.mousewheel,
+        mousedown: this.addListeners,
+        mouseup: this.removeListeners,
+        mouseenter: this.onHover,
+        mouseleave: this.afterHover,
+        click: this.stopClick,
+      },
+    },
+    this.$slots.default);
+  }
+
+  @Watch<DragElement>('curse', { immediate: true })
+  public change() {
+    this.cursor = this.curse;
+  }
+}
+
+
+export default {
+  install() {
+    Vue.component('DragElement', DragElement);
+  },
+};

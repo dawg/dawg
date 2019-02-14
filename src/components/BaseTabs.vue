@@ -51,7 +51,7 @@ export default class BaseTabs extends Vue {
 
   @Watch<BaseTabs>('selectedTab')
   public doSelectTab() {
-    this.$log.info(`Tab change -> ${this.selectedTab}`);
+    this.$log.debug(`Tab change -> ${this.selectedTab}`);
     this.tabs.forEach((tab) => {
       tab.isActive = (tab.name === this.selectedTab);
     });

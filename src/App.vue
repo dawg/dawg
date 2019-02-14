@@ -16,7 +16,7 @@
             <split :initial="general.toolbarHeight" fixed>
               <toolbar
                 :height="general.toolbarHeight"
-                :part="part"
+                :transport="transport"
                 :context="general.applicationContext"
                 @update:context="general.setContext"
                 :play="general.play"
@@ -33,8 +33,10 @@
                 style="height: 100%"
                 :tracks="project.tracks" 
                 :elements="project.master.elements"
-                :part="project.master.part"
+                :transport="project.master.transport"
                 :play="general.playlistPlay"
+                :start.sync="masterStart"
+                :end.sync="masterEnd"
                 @new-prototype="checkPrototype"
               ></playlist-sequencer>
             </split>
@@ -65,39 +67,20 @@
 <script lang="ts">
 import fs from 'fs';
 import { Component, Vue } from 'vue-property-decorator';
-import SideBar from '@/components/SideBar.vue';
-import Foot from '@/components/Foot.vue';
-import FileExplorer from '@/components/FileExplorer.vue';
-import ActivityBar from '@/components/ActivityBar.vue';
-import PanelHeaders from '@/sections/PanelHeaders.vue';
-import Panels from '@/sections/Panels.vue';
-import Tabs from '@/components/Tabs.vue';
-import Tab from '@/components/Tab.vue';
-import Split from '@/modules/split/Split.vue';
-import BaseTabs from '@/components/BaseTabs.vue';
-import SideTabs from '@/sections/SideTabs.vue';
-import Notifications from '@/modules/notification/Notifications.vue';
 import { ipcRenderer } from 'electron';
 import { project, cache, general, specific } from '@/store';
 import { toTickTime, allKeys, Keys } from '@/utils';
-import Part from '@/modules/audio/part';
-import { Pattern, Score, Note, Instrument, PlacedPattern, PlacedSample } from '@/schemas';
-
+import Transport from '@/modules/audio/transport';
+import { automation } from '@/modules/knobs';
+import { Pattern, Score, Note, Instrument, PlacedPattern, PlacedSample, Automatable, AutomationClip } from '@/schemas';
+import Sidebar from '@/components/SideBar.vue';
+import SideTabs from '@/sections/SideTabs.vue';
+import Panels from '@/sections/Panels.vue';
+import PanelHeaders from '@/sections/PanelHeaders.vue';
+import Tone from 'tone';
 
 @Component({
-  components: {
-    SideBar,
-    Tabs,
-    Tab,
-    Foot,
-    Split,
-    BaseTabs,
-    Notifications,
-    Panels,
-    ActivityBar,
-    SideTabs,
-    PanelHeaders,
-  },
+  components: { SideTabs, Panels, PanelHeaders },
 })
 export default class App extends Vue {
   public project = project;
@@ -111,6 +94,11 @@ export default class App extends Vue {
   // ie. some components expect props to stay the same.
   public loaded = false;
 
+  // We need these to be able to keep track of the start and end of the playlist loop
+  // for creating automation clips
+  public masterStart = 0;
+  public masterEnd = 0;
+
   get openedFile() {
     if (!cache) { return null; }
     return cache.openedFile;
@@ -120,15 +108,16 @@ export default class App extends Vue {
     window.addEventListener('keypress', this.keydown);
     ipcRenderer.on('save', this.save);
     ipcRenderer.on('open', this.open);
+    automation.$on('automate', this.addAutomationClip);
 
     // tslint:disable-next-line:no-console
     console.info(project);
 
     // Make sure we load the cache first before loading the default project.
-    this.$log.info('Starting to read data.');
+    this.$log.debug('Starting to read data.');
     await cache.fromCacheFolder();
     await this.withErrorHandling(project.load);
-    this.$log.info('Finished reading data from the fs.');
+    this.$log.debug('Finished reading data from the fs.');
     this.loaded = true;
   }
 
@@ -145,7 +134,7 @@ export default class App extends Vue {
     }
   }
 
-  public clickActivityBar(tab: SideBar, $event: MouseEvent) {
+  public clickActivityBar(tab: Sidebar, $event: MouseEvent) {
     specific.setOpenedSideTab(tab.name);
   }
 
@@ -168,35 +157,35 @@ export default class App extends Vue {
     specific.write();
   }
 
-  get part() {
+  get transport() {
     if (general.applicationContext === 'pianoroll') {
       const pattern = specific.selectedPattern;
-      return pattern ? pattern.part : null;
+      return pattern ? pattern.transport : null;
     } else {
-      return project.master.part;
+      return project.master.transport;
     }
   }
 
   public playPause() {
-    let part: Part<any>;
+    let transport: Transport<any>;
     if (general.applicationContext === 'pianoroll') {
       const pattern = specific.selectedPattern;
       if (!pattern) {
         this.$notify.info('Select a pattern.');
         return;
       }
-      part = pattern.part;
+      transport = pattern.transport;
     } else {
-      part = project.master.part;
+      transport = project.master.transport;
     }
 
-    if (part.state === 'started') {
+    if (transport.state === 'started') {
       this.$log.debug('PAUSING');
-      part.stop();
+      transport.stop();
       general.pause();
     } else {
       this.$log.debug('PLAY');
-      part.start();
+      transport.start();
       general.start();
     }
   }
@@ -211,7 +200,23 @@ export default class App extends Vue {
       return;
     }
 
+    this.$log.info('Adding a sample!');
     project.addSample(sample);
+  }
+
+  public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T) {
+    const added = await project.createAutomationClip({
+      automatable,
+      key,
+      start: this.masterStart,
+      end: this.masterEnd,
+    });
+
+    if (!added) {
+      this.$notify.warning('Unable to create automation clip', {
+        detail: 'There are no free tracks. Move elements and try again.',
+      });
+    }
   }
 }
 </script>
