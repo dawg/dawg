@@ -7,3 +7,4 @@ export const APP_DATA = app.getPath('appData');
 export const APPLICATION_PATH = path.join(APP_DATA, app.getName());
 
 export type ApplicationContext = 'playlist' | 'pianoroll';
+export type SideTab = 'Explorer' | 'Audio Files' | 'Patterns';

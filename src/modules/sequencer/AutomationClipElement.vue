@@ -151,7 +151,6 @@ export default class AutomationClipElement extends Vue {
   }
 
   public pointContext(e: MouseEvent, i: number) {
-    console.log('HELLO');
     this.$context(e, [
       {
         text: 'Delete',

@@ -18,6 +18,7 @@ import Split from '@/modules/split';
 import Piano from '@/components/Piano.vue';
 import DTrack from '@/components/DTrack.vue';
 import DotButton from '@/components/DotButton.vue';
+import Palette from '@/modules/palette';
 
 export default function middleware() {
   Vue.use(Draggable);
@@ -40,4 +41,5 @@ export default function middleware() {
   Vue.component('Piano', Piano);
   Vue.component('DTrack', DTrack);
   Vue.component('DotButton', DotButton);
+  Vue.use(Palette);
 }

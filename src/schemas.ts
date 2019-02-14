@@ -134,9 +134,9 @@ export class PlacedPattern extends Element {
 }
 
 export class Sample {
-  public static create(path: string, buffer: AudioBuffer) {
+  public static create(samplePath: string, buffer: AudioBuffer) {
     const sample = new Sample();
-    sample.path = path;
+    sample.path = samplePath;
     sample.init(buffer);
     return sample;
   }

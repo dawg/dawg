@@ -61,6 +61,10 @@
     </dawg>
     <notifications></notifications>
     <context-menu></context-menu>
+    <palette 
+      palette-class="secondary"
+      :items="shortcuts"
+    ></palette>
   </v-app>
 </template>
 
@@ -78,6 +82,8 @@ import SideTabs from '@/sections/SideTabs.vue';
 import Panels from '@/sections/Panels.vue';
 import PanelHeaders from '@/sections/PanelHeaders.vue';
 import Tone from 'tone';
+import { SideTab } from '@/constants';
+import { PaletteItem } from '@/modules/palette';
 
 @Component({
   components: { SideTabs, Panels, PanelHeaders },
@@ -86,6 +92,33 @@ export default class App extends Vue {
   public project = project;
   public general = general;
   public specific = specific;
+
+  public shortcuts: PaletteItem[] = [
+    {
+      text: 'Open Piano Roll',
+      shortcut: ['Ctrl', 'P'],
+      callback: () => ({}),
+    },
+    {
+      text: 'Open File Explorer',
+      shortcut: ['Ctrl', 'E'],
+      callback: () => ({}),
+    },
+    {
+      text: 'Open Mixer',
+      shortcut: ['Ctrl', 'M'],
+      callback: () => ({}),
+    },
+    {
+      text: 'New Synthesizer',
+      shortcut: ['Ctrl', 'N'],
+      callback: () => ({}), // TODO missing when clause
+    },
+    { // TODO(jacob) remove this one
+      text: 'Ctrl+Shift+P',
+      callback: () => ({}),
+    },
+  ];
 
   // This loaded flag is important
   // Bugs can appear if we render before we load the project file
@@ -135,7 +168,7 @@ export default class App extends Vue {
   }
 
   public clickActivityBar(tab: Sidebar, $event: MouseEvent) {
-    specific.setOpenedSideTab(tab.name);
+    specific.setOpenedSideTab(tab.name as SideTab);
   }
 
   public async withErrorHandling(callback: () => Promise<void>) {
