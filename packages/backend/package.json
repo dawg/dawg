@@ -4,8 +4,8 @@
   "description": "The backend system for Cloud Backup",
   "main": "index.ts",
   "scripts": {
-    "test": "jest --coverage --runInBand",
-    "test:watch": "jest --coverage --runInBand --watch"
+    "test": "jest --runInBand",
+    "test:watch": "jest --runInBand --watch"
   },
   "repository": {
     "type": "git",
@@ -13,26 +13,18 @@
   },
   "author": "Jacob Smith",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/dawg/vusic/issues"
-  },
-  "homepage": "https://github.com/dawg/vusic#readme",
-  "directories": {
-    "lib": "lib",
-    "test": "__tests__"
-  },
-  "files": [
-    "lib"
-  ],
   "dependencies": {
     "@dawgjs/specification": "^0.1.0",
+    "body-parser": "^1.18.3",
     "express": "^4.16.4",
     "lowdb": "^1.0.0",
     "restyped-express-async": "^0.6.1"
   },
   "devDependencies": {
     "@types/jest": "^24.0.5",
+    "@types/supertest": "^2.0.7",
     "jest": "^24.1.0",
+    "supertest": "^3.4.2",
     "ts-jest": "^23.10.5",
     "typescript": "^3.3.3"
   }

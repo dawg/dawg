@@ -6,6 +6,12 @@ export interface ProjectInfo {
 }
 
 export interface BackupAPI {
+  '/health': {
+    GET: {
+      //
+    },
+  };
+
   '/projects/names': {
     GET: {
       response: ProjectInfo[],
@@ -24,6 +30,12 @@ export interface BackupAPI {
         id: string,
       },
       body: any,
+    },
+    DELETE: {
+      params: {
+        id: string,
+        body: any,
+      },
     },
   };
 
