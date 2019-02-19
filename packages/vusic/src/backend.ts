@@ -18,6 +18,7 @@ const getProjects = async (): Promise<Error | Projects> => {
   if (res.status !== 200) {
     return {
       type: 'error',
+      message: 'Server Error',
     };
   }
 
@@ -29,6 +30,7 @@ const getProjects = async (): Promise<Error | Projects> => {
 
 interface Error {
   type: 'error';
+  message: string;
 }
 
 interface Success {
@@ -56,32 +58,13 @@ const getProject = async (id: string): Promise<Error | ProjectFound | NotFound> 
   if (res.status !== 200) {
     return {
       type: 'error',
+      message: 'Server Error',
     };
   }
 
   return {
     type: 'found',
     project: res.data,
-  };
-};
-
-const createProject = async (id: string, name: string, project: any): Promise<Error | Success> => {
-  const res = await client.post<'/projects/:id/create'>(
-    `/projects/${id}/create`,
-    {
-      project,
-      name,
-    },
-  );
-
-  if (res.status !== 200) {
-    return {
-      type: 'error',
-    };
-  }
-
-  return {
-    type: 'success',
   };
 };
 
@@ -97,6 +80,7 @@ const deleteProject = async (id: string): Promise<NotFound | Error | Success> =>
   if (res.status !== 200) {
     return {
       type: 'error',
+      message: 'Server Error',
     };
   }
 
@@ -105,10 +89,31 @@ const deleteProject = async (id: string): Promise<NotFound | Error | Success> =>
   };
 };
 
+const updateProject = async (id: string, project: any): Promise<Error | Success> => {
+  try {
+    const res = await client.post<'/projects/:id'>(`/projects/${id}`, project);
+    if (res.status !== 200) {
+      return {
+        type: 'error',
+        message: 'Server Error',
+      };
+    }
+
+    return {
+      type: 'success',
+    };
+  } catch (e) {
+    return {
+      type: 'error',
+      message: e.message,
+    };
+  }
+};
+
 
 export default {
   getProjects,
   getProject,
-  createProject,
   deleteProject,
+  updateProject,
 };

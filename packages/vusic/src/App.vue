@@ -52,10 +52,7 @@
           </split>
         </split>
         <split :initial="20" fixed>
-          <foot
-            :height="20"
-            :opened-file="openedFile"
-          ></foot>
+          <status-bar></status-bar>
         </split>
       </split>
     </dawg>
@@ -78,6 +75,7 @@ import SideTabs from '@/sections/SideTabs.vue';
 import Panels from '@/sections/Panels.vue';
 import PanelHeaders from '@/sections/PanelHeaders.vue';
 import ActivityBar from '@/sections/ActivityBar.vue';
+import StatusBar from '@/sections/StatusBar.vue';
 import Tone from 'tone';
 
 @Component({
@@ -86,6 +84,7 @@ import Tone from 'tone';
     Panels,
     PanelHeaders,
     ActivityBar,
+    StatusBar,
   },
 })
 export default class App extends Vue {
@@ -104,11 +103,6 @@ export default class App extends Vue {
   // for creating automation clips
   public masterStart = 0;
   public masterEnd = 0;
-
-  get openedFile() {
-    if (!cache) { return null; }
-    return cache.openedFile;
-  }
 
   public async created() {
     window.addEventListener('keypress', this.keydown);
@@ -129,7 +123,7 @@ export default class App extends Vue {
 
   public destroyed() {
     window.removeEventListener('keypress', this.keydown);
-    ipcRenderer.removeListener('save', project.save);
+    ipcRenderer.removeListener('save', this.save);
     ipcRenderer.removeListener('open', this.open);
   }
 
@@ -154,9 +148,26 @@ export default class App extends Vue {
     this.withErrorHandling(project.open);
   }
 
-  public save() {
-    project.save();
-    specific.write();
+  public async save() {
+    if (specific.backup) {
+      general.set({ key: 'syncing', value: true });
+    }
+
+    const backupStatus = await project.save({ backup: specific.backup });
+    general.set({ key: 'syncing', value: false });
+
+    if (backupStatus) {
+      switch (backupStatus.type) {
+        case 'error':
+          this.$notify.error('Unable to backup', { detail: backupStatus.message });
+          general.set({ key: 'backupError', value: true });
+          break;
+        case 'success':
+          if (general.backupError) {
+            general.set({ key: 'backupError', value: false });
+          }
+      }
+    }
   }
 
   get transport() {

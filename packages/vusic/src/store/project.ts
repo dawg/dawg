@@ -32,6 +32,7 @@ import uuid from 'uuid';
 import { loadBuffer } from '@/modules/wav/local';
 import { makeLookup, chain } from '@/modules/utils';
 import { Signal } from '@/modules/audio';
+import backend from '@/backend';
 
 const { dialog } = remote;
 const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
@@ -57,7 +58,7 @@ export class Project extends VuexModule {
   }
 
   @Action
-  public save() {
+  public async save(opts: { backup: boolean }) {
     if (!cache.openedFile) {
       cache.setOpenedFile(dialog.showSaveDialog(remote.getCurrentWindow(), {}));
       // dialog.showSaveDialog can be null. Return type for showSaveDialog is wrong.
@@ -72,6 +73,11 @@ export class Project extends VuexModule {
       cache.openedFile,
       JSON.stringify(encoded, null, 4),
     );
+
+    if (opts.backup) {
+      const project = io.serialize(this, Project);
+      return await backend.updateProject(this.id, project);
+    }
   }
 
   @Action

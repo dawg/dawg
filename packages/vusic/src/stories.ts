@@ -15,7 +15,7 @@ import Tab from '@/components/Tab.vue';
 import Dawg from '@/modules/dawg/Dawg.vue';
 import ColorBlock from '@/components/ColorBlock.vue';
 import { StyleType, range, makeStyle } from '@/utils';
-import Foot from '@/components/Foot.vue';
+// import Foot from '@/components/Foot.vue';
 import Notifications from '@/modules/notification/Notifications.vue';
 import Synth from '@/components/Synth.vue';
 import Split from '@/modules/split/Split.vue';
@@ -295,13 +295,13 @@ storiesOf(Notifications.name, module)
     },
   }));
 
-storiesOf(Foot.name, module)
-  .add('Standard', () => ({
-    template: `
-    <foot></foot>
-    `,
-    components: { Foot },
-  }));
+// storiesOf(Foot.name, module)
+//   .add('Standard', () => ({
+//     template: `
+//     <foot></foot>
+//     `,
+//     components: { Foot },
+//   }));
 
 const NOTES = [
   {id: 44, time: 0, duration: 1},

@@ -2,10 +2,8 @@
   <div class="icon__wrapper">
     <v-tooltip :right="right" :left="left" :top="top" :bottom="bottom" z-index="100">
       <template slot="activator">
-        <div @click="$emit('click', $event)">
-          <icon v-if="fa" :name="icon" :style="style" v-bind="$attrs"></icon>
-          <v-icon v-else class="icon" :style="style" v-bind="$attrs">{{ icon }}</v-icon>
-        </div>
+        <icon v-if="fa" :name="icon" :style="style" v-bind="$attrs"></icon>
+        <v-icon v-else class="icon" :style="style" v-bind="$attrs">{{ icon }}</v-icon>
       </template>
       <span>{{ tooltip }}</span>
     </v-tooltip>
