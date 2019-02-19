@@ -1,4 +1,4 @@
-import fs from 'mz/fs';
+import fs from '@/fs';
 import path from 'path';
 
 import { Module as Mod } from 'vuex';
@@ -72,10 +72,6 @@ export class Specific extends VuexModule {
 
   @Action
   public async loadSpecific() {
-    if (!(await fs.exists(PROJECT_CACHE_PATH))) {
-      await fs.writeFile(PROJECT_CACHE_PATH, JSON.stringify({}));
-    }
-
     const json = await this.read();
     if (!json.hasOwnProperty(project.id)) {
       // tslint:disable-next-line:no-console
@@ -90,6 +86,7 @@ export class Specific extends VuexModule {
 
   @Action
   public async read() {
+    await fs.writeFileIfNonExistent(PROJECT_CACHE_PATH, '{}');
     const contents = (await fs.readFile(PROJECT_CACHE_PATH)).toString();
     return JSON.parse(contents) as ProjectCache;
   }
@@ -126,14 +123,10 @@ export class Specific extends VuexModule {
   public async write() {
     if (!project.id) { return; }
     const c = io.serialize(this, Specific);
-    const dir = path.dirname(PROJECT_CACHE_PATH);
-    if (!await fs.exists(dir)) {
-      await fs.mkdir(dir);
-    }
 
     const json = await this.read();
     json[project.id] = c;
-    return fs.writeFile(PROJECT_CACHE_PATH, JSON.stringify(json, null, 4));
+    await fs.writeFile(PROJECT_CACHE_PATH, JSON.stringify(json, null, 4));
   }
 
   @Mutation
