@@ -23,6 +23,7 @@ interface ProjectCache {
  */
 @Module({ dynamic: true, store, name: 'specific' })
 export class Specific extends VuexModule {
+  @io.autoserialize({ nullable: true }) public backup = false;
   @io.autoserialize({ nullable: true }) public selectedPatternId: string | null = null;
   @io.autoserialize({ nullable: true }) public selectedScoreId: string | null = null;
   @io.autoserialize({ nullable: true }) public openedPanel: string | null = null;
@@ -58,16 +59,19 @@ export class Specific extends VuexModule {
   @Action
   public setOpenedPanel(openedPanel: string) {
     this.set({ key: 'openedPanel', value: openedPanel });
+    this.write();
   }
 
   @Action
   public setOpenedSideTab(sideTab: string) {
     this.set({ key: 'openedSideTab', value: sideTab });
+    this.write();
   }
 
   @Action
   public setTab(tab: string) {
     this.set({ key: 'openedTab', value: tab });
+    this.write();
   }
 
   @Action
@@ -91,14 +95,15 @@ export class Specific extends VuexModule {
     return JSON.parse(contents) as ProjectCache;
   }
 
-  @Mutation
+  @Action
   public setPattern(pattern: Pattern | null) {
     if (pattern) {
-      this.selectedPatternId = pattern.id;
+      this.set({ key: 'selectedPatternId', value: pattern.id });
     } else {
-      this.selectedPatternId = null;
+      this.set({ key: 'selectedPatternId', value: null });
     }
 
+    this.write();
     if (!this.selectedScoreId || !this.scoreLookup) {
       return;
     }
@@ -107,16 +112,25 @@ export class Specific extends VuexModule {
       return;
     }
 
-    this.selectedScoreId = null;
+    this.set({ key: 'selectedScoreId', value: null });
+    this.write();
   }
 
-  @Mutation
+  @Action
   public setScore(score: Score | null) {
     if (score) {
+      this.set({ key: 'selectedScoreId', value: score.id });
       this.selectedScoreId = score.id;
     } else {
-      this.selectedScoreId = null;
+      this.set({ key: 'selectedScoreId', value: null });
     }
+    this.write();
+  }
+
+  @Action
+  public setBackup(backup: boolean) {
+    this.set({ key: 'backup', value: backup });
+    this.write();
   }
 
   @Action

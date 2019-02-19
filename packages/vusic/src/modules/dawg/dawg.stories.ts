@@ -40,6 +40,21 @@ storiesOf('Toolbar', module)
     template: `<v-app dark><toolbar></toolbar></v-app>`,
   }));
 
-
-
-
+storiesOf('Settings', module)
+  .add('default', () => ({
+    template: `
+    <v-app>
+      <settings
+        style="margin: 20px; width: 300px"
+        v-model="open"
+        :name.sync="name"
+        :backup.sync="backup"
+      ></settings>
+    </v-app>
+    `,
+    data: () => ({
+      open: true,
+      name: '',
+      backup: false,
+    }),
+  }));

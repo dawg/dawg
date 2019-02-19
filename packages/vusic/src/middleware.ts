@@ -1,6 +1,5 @@
 import Vue from 'vue';
 import { remote } from 'electron';
-import TooltipIcon from '@/components/TooltipIcon.vue';
 import Context from '@/modules/context';
 import Notification from '@/modules/notification';
 import storybook from '@/storybook';
@@ -23,7 +22,6 @@ const inspect = {
 const middleware = () => {
   Vue.use(Context, { default: [inspect] });
   Vue.use(Notification);
-  Vue.component('TooltipIcon', TooltipIcon);
 
   storybook();
 

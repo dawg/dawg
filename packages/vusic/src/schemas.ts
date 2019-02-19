@@ -1,4 +1,4 @@
-import path from 'path';
+import pth from 'path';
 import * as io from '@/modules/cerialize';
 import Tone from 'tone';
 import uuid from 'uuid';
@@ -165,7 +165,7 @@ export class Sample {
   }
 
   get name() {
-    return path.basename(this.path);
+    return pth.basename(this.path);
   }
 }
 

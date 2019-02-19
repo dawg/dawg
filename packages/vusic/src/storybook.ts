@@ -17,6 +17,7 @@ import Split from '@/modules/split';
 
 import Piano from '@/components/Piano.vue';
 import DTrack from '@/components/DTrack.vue';
+import TooltipIcon from '@/components/TooltipIcon.vue';
 import DotButton from '@/components/DotButton.vue';
 
 export default function middleware() {
@@ -40,4 +41,5 @@ export default function middleware() {
   Vue.component('Piano', Piano);
   Vue.component('DTrack', DTrack);
   Vue.component('DotButton', DotButton);
+  Vue.component('TooltipIcon', TooltipIcon);
 }

@@ -4,7 +4,7 @@
       <split direction="vertical">
         <split direction="horizontal" resizable>
           <split :initial="65" fixed>
-            <activity-bar :items="general.sideBarTabs" @click="clickActivityBar"></activity-bar>
+            <activity-bar></activity-bar>
           </split>
 
           <split :initial="250" collapsible :min-size="100">
@@ -77,10 +77,16 @@ import Sidebar from '@/components/SideBar.vue';
 import SideTabs from '@/sections/SideTabs.vue';
 import Panels from '@/sections/Panels.vue';
 import PanelHeaders from '@/sections/PanelHeaders.vue';
+import ActivityBar from '@/sections/ActivityBar.vue';
 import Tone from 'tone';
 
 @Component({
-  components: { SideTabs, Panels, PanelHeaders },
+  components: {
+    SideTabs,
+    Panels,
+    PanelHeaders,
+    ActivityBar,
+  },
 })
 export default class App extends Vue {
   public project = project;
@@ -132,10 +138,6 @@ export default class App extends Vue {
       e.preventDefault();
       this.playPause();
     }
-  }
-
-  public clickActivityBar(tab: Sidebar, $event: MouseEvent) {
-    specific.setOpenedSideTab(tab.name);
   }
 
   public async withErrorHandling(callback: () => Promise<void>) {
