@@ -139,7 +139,7 @@ export default class App extends Vue {
       await callback();
       await specific.loadSpecific();
     } catch (e) {
-      this.$notify.error('Unable to load project.');
+      this.$notify.error('Unable to load project.', { detail: e.message });
       this.$log.error(e);
     }
   }
@@ -149,13 +149,17 @@ export default class App extends Vue {
   }
 
   public async save() {
+    // If we are backing up, star the progress circle!
     if (specific.backup) {
       general.set({ key: 'syncing', value: true });
     }
 
     const backupStatus = await project.save({ backup: specific.backup });
+
+    // Always set the value back to false... you never know
     general.set({ key: 'syncing', value: false });
 
+    // backupStatus is true if specific.backup is also true
     if (backupStatus) {
       switch (backupStatus.type) {
         case 'error':
@@ -163,9 +167,11 @@ export default class App extends Vue {
           general.set({ key: 'backupError', value: true });
           break;
         case 'success':
+          // Make sure to set it back to false if there was an error previously
           if (general.backupError) {
             general.set({ key: 'backupError', value: false });
           }
+          break;
       }
     }
   }

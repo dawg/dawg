@@ -50,6 +50,7 @@ export default (db: DB<Schema>) => {
   });
 
   router.get('/projects/:id', async (req, res): Promise<NotFound | ProjectFound> => {
+    const time = Date.now();
     const project = collection.find({ id: req.params.id }).value();
 
     if (!project) {
@@ -65,28 +66,33 @@ export default (db: DB<Schema>) => {
     };
   });
 
-  router.post('/projects/:id', async (req, res): Promise<NotFound | Success> => {
+  router.post('/projects/:id', async (req): Promise<NotFound | Success> => {
     const time = Date.now();
     const project = collection.find({ id: req.params.id }).value();
 
 
     if (!project) {
-      res.status(400);
-      return {
-        type: 'not-found'
-      };
-    }
-
-    collection
+      if (!project) {
+        collection.push({
+          name: req.body.name,
+          id: req.params.id,
+          initialSaveTime: time,
+          lastUploadTime: time,
+          project: req.body,
+        }).write();
+      }
+    } else {
+      collection
       .find({ id: req.params.id })
       .assign({
         project: req.body,
         info: { lastUploadTime: time },
       }).write();
+    }
 
-      return {
-        type: 'success'
-      }
+    return {
+      type: 'success'
+    }
   });
 
   router.delete('/projects/:id', async (req, res): Promise<NotFound | Success> => {
