@@ -1,5 +1,5 @@
 import RestypedRouter from 'restyped-express-async';
-import { BackupAPI } from '@dawgjs/specification';
+import { BackupAPI, NotFound, ProjectFound, Error, Success } from '@dawgjs/specification';
 import express from 'express';
 import { DB } from 'lowdb';
 import { ProjectInfo } from '@dawgjs/specification';
@@ -8,7 +8,9 @@ import bodyParser from 'body-parser';
 // DB INTERFACE //
 // Add project attribute
 export interface Project extends ProjectInfo {
-  project: object;
+  project: {
+    name: string // TODO(jacob)
+  };
 }
 
 // tslint:disable-next-line:interface-over-type-literal
@@ -30,36 +32,49 @@ export default (db: DB<Schema>) => {
   const collection = db.get('projects');
 
   // ROUTES //
+  // You must specify the return type or else TS will complain
   router.get('/health', async () => {
     //
   });
 
   router.get('/projects/names', async () => {
-    const projects = collection.value();
-    return Object.values(projects).map(({ id, name, initialSaveTime, lastUploadTime }) => {
+    const all = collection.value();
+    const projects = Object.values(all).map(({ id, name, initialSaveTime, lastUploadTime }) => {
       return { id, name, initialSaveTime, lastUploadTime };
-    });
+    })
+
+    return {
+      type: 'success' as 'success',
+      projects,
+    }
   });
 
-  router.get('/projects/:id', async (req, res) => {
+  router.get('/projects/:id', async (req, res): Promise<NotFound | ProjectFound> => {
     const project = collection.find({ id: req.params.id }).value();
 
     if (!project) {
       res.status(404);
-      return null;
+      return {
+        type: 'not-found'
+      };
     }
 
-    return project.project;
+    return {
+      type: 'found',
+      project: project.project
+    };
   });
 
-  router.post('/projects/:id', async (req, res) => {
+  router.post('/projects/:id', async (req, res): Promise<NotFound | Success> => {
     const time = Date.now();
     const project = collection.find({ id: req.params.id }).value();
 
 
     if (!project) {
       res.status(400);
-      return;
+      return {
+        type: 'not-found'
+      };
     }
 
     collection
@@ -68,37 +83,29 @@ export default (db: DB<Schema>) => {
         project: req.body,
         info: { lastUploadTime: time },
       }).write();
+
+      return {
+        type: 'success'
+      }
   });
 
-  router.delete('/projects/:id', async (req, res) => {
+  router.delete('/projects/:id', async (req, res): Promise<NotFound | Success> => {
     const project = collection.find({ id: req.params.id }).value();
 
     if (!project) {
       res.status(404);
-      return;
+      return {
+        type: 'not-found'
+      };
     }
 
     collection
       .remove({ id: req.params.id })
       .write();
-  });
 
-  router.post('/projects/:id/create', async (req, res) => {
-    const time = Date.now();
-    const project = collection.find({ id: req.params.id }).value();
-
-    if (project) {
-      res.status(400);
-      return;
+    return {
+      type: 'success'
     }
-
-    collection.push({
-      name: req.body.name,
-      id: req.params.id,
-      initialSaveTime: time,
-      lastUploadTime: time,
-      project: req.body.project,
-    }).write();
   });
 
   return app;
