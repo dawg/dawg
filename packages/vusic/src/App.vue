@@ -139,7 +139,7 @@ export default class App extends Vue {
       await callback();
       await specific.loadSpecific();
     } catch (e) {
-      this.$notify.error('Unable to load project.', { detail: e.message });
+      this.$notify.error('Unable to load project.');
       this.$log.error(e);
     }
   }

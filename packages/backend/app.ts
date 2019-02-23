@@ -1,15 +1,16 @@
 import RestypedRouter from 'restyped-express-async';
-import { BackupAPI, NotFound, ProjectFound, Error, Success } from '@dawgjs/specification';
+import { BackupAPI, NotFound, ProjectFound, Success } from '@dawgjs/specification';
 import express from 'express';
 import { DB } from 'lowdb';
 import { ProjectInfo } from '@dawgjs/specification';
 import bodyParser from 'body-parser';
+import cors from 'cors';
 
 // DB INTERFACE //
 // Add project attribute
 export interface Project extends ProjectInfo {
   project: {
-    name: string // TODO(jacob)
+    name: string; // TODO(jacob)
   };
 }
 
@@ -20,6 +21,8 @@ export default (db: DB<Schema>) => {
   // SETUP FOR EXPRESS //
   const app = express();
   app.use(bodyParser.json());
+
+  app.use(cors());
 
   const apiRouter = express.Router();
   app.use('/', apiRouter);
@@ -34,7 +37,7 @@ export default (db: DB<Schema>) => {
   // ROUTES //
   // You must specify the return type or else TS will complain
   router.get('/health', async () => {
-    //
+    return 'OK'
   });
 
   router.get('/projects/names', async () => {

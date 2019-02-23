@@ -26,9 +26,9 @@
         <v-list-tile-title>Cloud Backup</v-list-tile-title>
         <v-list-tile-action>
           <v-switch 
-            :value="backup"
-            :error-messages="errors"
+            :input-value="backup"
             color="primary"
+            :disabled="!name"
             @change="updateCloud"
           ></v-switch>
         </v-list-tile-action>
@@ -47,8 +47,6 @@ export default class Settings extends Vue {
   @Prop(Nullable(String)) public name!: string;
   @Prop({ type: Boolean, required: true }) public backup!: boolean;
 
-  public errors: string[] = [];
-
   public close() {
     this.$emit('input', false);
   }
@@ -62,11 +60,6 @@ export default class Settings extends Vue {
   }
 
   public updateCloud(backup: boolean) {
-    if (backup && !this.name) {
-      this.errors = ['Please give name to project'];
-      return;
-    }
-
     this.$update('backup', backup);
   }
 }

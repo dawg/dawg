@@ -17,7 +17,7 @@ const insertSimple = (db: DB<Schema>) => {
     name: 'T1',
     lastUploadTime: time,
     initialSaveTime: time,
-    project: { a: 'project' },
+    project: { name: 'project' },
   };
 
   db.get('projects')
@@ -29,11 +29,6 @@ const insertSimple = (db: DB<Schema>) => {
 
 
 describe('server', () => {
-  it('can add two numbers', () => {
-    const sum: number = 2 + 2;
-    expect(sum).toBe(4);
-  });
-
   describe('/health', () => {
     it('should return 200 OK', async () => {
       const { request } = makeDefaults();
@@ -46,7 +41,7 @@ describe('server', () => {
     it('should return empty list', async () => {
       const { request } = makeDefaults();
       const result = await request.get('/projects/names');
-      expect(result.body).toEqual([]);
+      expect(result.body.projects).toEqual([]);
     });
 
     it('should return info', async () => {
@@ -54,7 +49,7 @@ describe('server', () => {
       const info = insertSimple(db);
       delete info.project;
       const result = await request.get('/projects/names');
-      expect(result.body).toEqual([info]);
+      expect(result.body.projects).toEqual([info]);
     });
   });
 
@@ -63,7 +58,21 @@ describe('server', () => {
       const { request, db } = makeDefaults();
       const project = insertSimple(db);
       const result = await request.get(`/projects/${project.id}`);
-      expect(result.body).toEqual(project.project);
+      expect(result.body.project).toEqual(project.project);
+    });
+
+    it('should create', async () => {
+      const { request, db } = makeDefaults();
+      await request.post(`/projects/theid`).send({ name: 'jacob' });
+
+      let project = db.get('projects').find({ id: 'theid' }).value();
+      expect(project).toBeDefined();
+
+      project = project as Project;
+      expect(project.name).toEqual('jacob');
+      expect(project.project).toEqual({ name: 'jacob' });
+      expect(project.id).toEqual('theid');
+      expect(project.lastUploadTime).toEqual(project.initialSaveTime);
     });
 
     it('should update project', async () => {
@@ -72,7 +81,7 @@ describe('server', () => {
       const url = `/projects/${project.id}`;
       await request.post(url).send({ project: 'a' });
       const result = await request.get(url);
-      expect(result.body).toEqual({ project: 'a' });
+      expect(result.body.project).toEqual({ project: 'a' });
     });
 
     it('should delete project', async () => {
@@ -81,22 +90,6 @@ describe('server', () => {
       const url = `/projects/${project.id}`;
       await request.delete(url);
       expect(db.get('projects').value()).toEqual([]);
-    });
-  });
-
-  describe('/projects/:id/create', async () => {
-    it('should create', async () => {
-      const { request, db } = makeDefaults();
-      await request.post(`/projects/theid/create`).send({ name: 'jacob', project: { a: 'project' } });
-
-      let project = db.get('projects').find({ id: 'theid' }).value();
-      expect(project).toBeDefined();
-
-      project = project as Project;
-      expect(project.name).toEqual('jacob');
-      expect(project.project).toEqual({ a: 'project' });
-      expect(project.id).toEqual('theid');
-      expect(project.lastUploadTime).toEqual(project.initialSaveTime);
     });
   });
 });
