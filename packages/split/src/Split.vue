@@ -6,7 +6,9 @@
       :style="gutterStyle"
       :curse="cursor"
       @move="move"
-    ></draggable>
+    >
+      <slot name="gutter"></slot>
+    </draggable>
     <slot></slot>
   </div>
 </template>
@@ -27,7 +29,7 @@ export default class Split extends Vue {
   @Prop(String) public direction?: Direction;
   @Prop(Boolean) public keep!: boolean;
   @Prop(Boolean) public fixed!: boolean;
-  @Prop(Boolean) public collapsible!: boolean; // TODO
+  @Prop(Boolean) public collapsible!: boolean;
   @Prop({type: Number, default: 10}) public minSize!: number;
   @Prop({type: Number, default: Infinity}) public maxSize!: number;
   @Prop(Number) public initial?: number;
@@ -45,6 +47,53 @@ export default class Split extends Vue {
   public after: Split[] = []; // Splits after gutter (right / bottom)
   public height: number = 0;
   public width: number = 0;
+
+  get isRoot() {
+    return !this.parent;
+  }
+
+  get size() {
+    if (this.parent!.direction === 'horizontal') {
+      return this.width;
+    } else {
+      return this.height;
+    }
+  }
+
+  get gutterStyle() {
+    if (!this.parent) { return; }
+
+    // The margin makes sure the gutter is centered on the line
+    if (this.parent.direction === 'horizontal') {
+      return {
+        height: '100%',
+        width: `${this.gutterSize}px`,
+        marginLeft: `${-this.gutterSize / 2}px`,
+      };
+    } else {
+      return {
+        width: '100%',
+        height: `${this.gutterSize}px`,
+        marginTop: `${-this.gutterSize / 2}px`,
+      };
+    }
+  }
+
+  get axes() {
+    if (!this.direction) {
+      return null;
+    }
+
+    return this.direction === 'horizontal' ? 'width' : 'height';
+  }
+
+  get childrenReversed() {
+    return this.children.slice().reverse();
+  }
+
+  get collapsed() {
+    return this.size < this.minSize;
+  }
 
   public mounted() {
     if (isSplit(this.$parent)) {
@@ -88,29 +137,6 @@ export default class Split extends Vue {
     this.calculatePositions([this], window.innerHeight - this.height, 'vertical');
   }
 
-  public get gutterStyle() {
-    if (!this.parent) { return; }
-
-    // The margin makes sure the gutter is centered on the line
-    if (this.parent.direction === 'horizontal') {
-      return {
-        height: '100%',
-        width: `${this.gutterSize}px`,
-        marginLeft: `${-this.gutterSize / 2}px`,
-      };
-    } else {
-      return {
-        width: '100%',
-        height: `${this.gutterSize}px`,
-        marginTop: `${-this.gutterSize / 2}px`,
-      };
-    }
-  }
-
-  get childrenReversed() {
-    return this.children.slice().reverse();
-  }
-
   public move(e: MouseEvent) {
     let px;
     if (this.parent!.direction === 'horizontal') {
@@ -133,24 +159,12 @@ export default class Split extends Vue {
     let pxInFront = 0;
     for (const split of inFront) {
       if (split.fixed) { continue; }
-      pxInFront += split.size - split.minSize;
+      pxInFront += split.size - (split.collapsible ? 0 : split.minSize);
     }
 
     px = Math.min(pxBehind, pxInFront, Math.abs(px)) * Math.sign(px);
-    this.calculatePositions(this.before, px, this.parent!.direction!);
+    px = this.calculatePositions(this.before, px, this.parent!.direction!, true);
     this.calculatePositions(this.after, -px, this.parent!.direction!);
-  }
-
-  public get isRoot() {
-    return !this.parent;
-  }
-
-  public get size() {
-    if (this.parent!.direction === 'horizontal') {
-      return this.width;
-    } else {
-      return this.height;
-    }
   }
 
   public setSize(size: number) {
@@ -161,41 +175,55 @@ export default class Split extends Vue {
     }
   }
 
-  public get axes() {
-    if (!this.direction) {
-      return null;
-    }
-
-    return this.direction === 'horizontal' ? 'width' : 'height';
-  }
-
-  public calculatePositions(splits: Split[], px: number, direction: Direction) {
+  /**
+   * Resize the splits taking into account which splits should be resized first and which are collapsible.
+   *
+   * @param splits The splits.
+   * @param px The amount of pixels to move. Either negative or positive.
+   * @param direction The direction to move.
+   * @returns The amount of pixels it actually moved.
+   */
+  public calculatePositions(splits: Split[], px: number, direction: Direction, print = false) {
     // First resize but don't include children that have keep flag
     // Then resize again but include the children with a keep flag
-    const pxRemaining = this.doResize(splits, px, false, direction);
-    this.doResize(splits, pxRemaining, true, direction);
+    let pxRemaining = this.doResize(splits, px, px, direction);
+    pxRemaining = this.doResize(splits, px, pxRemaining, direction, { keep: true });
+    pxRemaining = this.doResize(splits, px, pxRemaining, direction, { collapsible: true });
+    if (print) { console.log(px, pxRemaining); }
+    return px - pxRemaining;
   }
 
-  public doResize(splits: Split[], px: number, includeKeep: boolean, direction: Direction) {
+  public doResize(
+    splits: Split[], initPx: number, px: number, direction: Direction, opts?: { keep?: boolean, collapsible?: boolean },
+  ) {
+    const { keep = false, collapsible = false } = opts || {};
     if (splits.length === 0) { return px; }
     const child = splits[0]; // all children have the same parent
 
+    const negative = initPx < 0;
     if (child.parent && child.parent.direction === direction) {
       for (const split of splits) {
         if (px === 0) { break; }
+        if (negative && px > 0) { break; }
+        if (!negative && px < 0) { break; }
         if (split.fixed) { continue; }
-        if (split.keep && !includeKeep) { continue; }
+        if (split.keep && !keep) { continue; }
 
-        const newSize = Math.max(split.minSize, Math.min(split.size + px, split.maxSize));
+        let newSize = Math.max(split.minSize, Math.min(split.size + px, split.maxSize));
+        if (collapsible && newSize === split.size) {
+          newSize = px < 0 ? 0 : split.minSize;
+        }
+
         const diff = newSize - split.size;
-        this.doResize(split.childrenReversed, diff, includeKeep, direction);
+        this.doResize(split.childrenReversed, px, diff, direction, { keep, collapsible });
         split.setSize(newSize);
         // this.$log.debug('Changing', split.$el, 'by', diff, 'from', split.size, 'to', newSize);
+
         px -= diff;
       }
     } else {
       for (const split of splits) {
-        this.doResize(split.childrenReversed, px, includeKeep, direction);
+        this.doResize(split.childrenReversed, px, px, direction, { keep, collapsible });
         if (direction === 'horizontal') {
           const newSize = split.width + px;
           // this.$log.debug('Changing width of ', split.$el, 'by', px, 'from', split.width, 'to', newSize);
