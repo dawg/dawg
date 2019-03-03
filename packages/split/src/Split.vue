@@ -1,21 +1,19 @@
 <template>
-  <div class="split" :class="{resizable: direction, [direction]: true}">
-    <div 
-      class="gutter"  
+  <div class="split" :class="{ resizable: direction, [direction]: true }">
+    <draggable 
+      class="gutter"
       v-if="gutter"
       :style="gutterStyle"
-      @mousedown="addListeners"
-      @mouseup="removeListeners"
-      @mouseenter="onHover"
-      @mouseleave="afterHover"
-    ></div>
+      :curse="cursor"
+      @move="move"
+    ></draggable>
     <slot></slot>
   </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch, Mixins } from 'vue-property-decorator';
-import { Draggable } from '@/modules/draggable';
+import Draggable from '@dawgjs/draggable';
 
 export type Direction = 'horizontal' | 'vertical';
 
@@ -24,8 +22,8 @@ const isSplit = (vue: Vue) => {
   return vue.constructor.options.name === Split.name;
 };
 
-@Component
-export default class Split extends Mixins(Draggable) {
+@Component({ components: { Draggable } })
+export default class Split extends Vue {
   @Prop(String) public direction?: Direction;
   @Prop(Boolean) public keep!: boolean;
   @Prop(Boolean) public fixed!: boolean;
@@ -35,6 +33,7 @@ export default class Split extends Mixins(Draggable) {
   @Prop(Number) public initial?: number;
   @Prop({type: Number, default: 6}) public gutterSize!: number;
 
+  public cursor = 'auto';
   public $el!: HTMLElement;
   public children!: Split[];
   public parent: Split | null = null; // giving initial null makes parent reactive!
@@ -112,12 +111,12 @@ export default class Split extends Mixins(Draggable) {
     return this.children.slice().reverse();
   }
 
-  public move(e: MouseEvent, { changeY, changeX }: { changeY: number, changeX: number }) {
+  public move(e: MouseEvent) {
     let px;
     if (this.parent!.direction === 'horizontal') {
-      px = changeX;
+      px = e.movementX;
     } else {
-      px = changeY;
+      px = e.movementY;
     }
 
     if (!px) { return; }
@@ -191,7 +190,7 @@ export default class Split extends Mixins(Draggable) {
         const diff = newSize - split.size;
         this.doResize(split.childrenReversed, diff, includeKeep, direction);
         split.setSize(newSize);
-        this.$log.debug('Changing', split.$el, 'by', diff, 'from', split.size, 'to', newSize);
+        // this.$log.debug('Changing', split.$el, 'by', diff, 'from', split.size, 'to', newSize);
         px -= diff;
       }
     } else {
@@ -199,11 +198,11 @@ export default class Split extends Mixins(Draggable) {
         this.doResize(split.childrenReversed, px, includeKeep, direction);
         if (direction === 'horizontal') {
           const newSize = split.width + px;
-          this.$log.debug('Changing width of ', split.$el, 'by', px, 'from', split.width, 'to', newSize);
+          // this.$log.debug('Changing width of ', split.$el, 'by', px, 'from', split.width, 'to', newSize);
           split.width = split.width + px;
         } else {
           const newSize = split.height + px;
-          this.$log.debug('Changing height of ', split.$el, 'by', px, 'from', split.height, 'to', newSize);
+          // this.$log.debug('Changing height of ', split.$el, 'by', px, 'from', split.height, 'to', newSize);
           split.height = split.height + px;
         }
       }
@@ -232,7 +231,7 @@ export default class Split extends Mixins(Draggable) {
 
     const notInitialized = this.children.filter((child) => !child.initial);
     const size = remaining / notInitialized.length;
-    this.$log.debug('Initializing', this.$el, remaining, notInitialized.length, size);
+    // this.$log.debug('Initializing', this.$el, remaining, notInitialized.length, size);
     notInitialized.forEach((split) => { split.setSize(size); });
     this.children.forEach((split) => { split.init(); });
   }

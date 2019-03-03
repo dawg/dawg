@@ -1,6 +1,5 @@
 import Vue, { CreateElement } from 'vue';
-import { Component, Prop, Mixins } from 'vue-property-decorator';
-import { Watch } from '../update';
+import { Component, Prop, Mixins, Watch } from 'vue-property-decorator';
 
 interface Point {
   x: number;
@@ -145,6 +144,7 @@ export class Draggable extends Vue {
   }
 }
 
+// tslint:disable-next-line:max-classes-per-file
 @Component
 export class DragElement extends Mixins(Draggable) {
   @Prop({ type: String, default: 'div' }) public tag!: string;
@@ -169,7 +169,7 @@ export class DragElement extends Mixins(Draggable) {
     this.$slots.default);
   }
 
-  @Watch<DragElement>('curse', { immediate: true })
+  @Watch('curse', { immediate: true })
   public change() {
     this.cursor = this.curse;
   }
@@ -177,7 +177,8 @@ export class DragElement extends Mixins(Draggable) {
 
 
 export default {
-  install() {
+  // tslint:disable-next-line:no-shadowed-variable
+  install(Vue: any) {
     Vue.component('DragElement', DragElement);
   },
 };
