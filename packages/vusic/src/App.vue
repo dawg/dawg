@@ -58,6 +58,11 @@
     </dawg>
     <notifications></notifications>
     <context-menu></context-menu>
+    <project-modal 
+      v-model="backupModal" 
+      :projects="general.projects"
+      @open="openProject"
+    ></project-modal>
   </v-app>
 </template>
 
@@ -65,7 +70,7 @@
 import fs from 'fs';
 import { Component, Vue } from 'vue-property-decorator';
 import { ipcRenderer } from 'electron';
-import { project, cache, general, specific } from '@/store';
+import { project, cache, general, specific, Project } from '@/store';
 import { toTickTime, allKeys, Keys } from '@/utils';
 import Transport from '@/modules/audio/transport';
 import { automation } from '@/modules/knobs';
@@ -77,6 +82,12 @@ import PanelHeaders from '@/sections/PanelHeaders.vue';
 import ActivityBar from '@/sections/ActivityBar.vue';
 import StatusBar from '@/sections/StatusBar.vue';
 import Tone from 'tone';
+import { Watch } from '@/modules/update';
+import { ProjectInfo } from '@dawgjs/specification';
+import backend from '@/backend';
+import * as io from '@/modules/cerialize';
+import tmp from 'tmp';
+import { remote } from 'electron';
 
 @Component({
   components: {
@@ -99,15 +110,22 @@ export default class App extends Vue {
   // ie. some components expect props to stay the same.
   public loaded = false;
 
+  public backupModal = false;
+
   // We need these to be able to keep track of the start and end of the playlist loop
   // for creating automation clips
   public masterStart = 0;
   public masterEnd = 0;
 
+  get getProjectsErrorMessage() {
+    return general.getProjectsErrorMessage;
+  }
+
   public async created() {
     window.addEventListener('keypress', this.keydown);
     ipcRenderer.on('save', this.save);
     ipcRenderer.on('open', this.open);
+    ipcRenderer.on('openBackup', this.openBackup);
     automation.$on('automate', this.addAutomationClip);
 
     // tslint:disable-next-line:no-console
@@ -125,6 +143,15 @@ export default class App extends Vue {
     window.removeEventListener('keypress', this.keydown);
     ipcRenderer.removeListener('save', this.save);
     ipcRenderer.removeListener('open', this.open);
+    ipcRenderer.removeListener('openBackup', this.openBackup);
+  }
+
+  public openBackup() {
+    this.backupModal = true;
+
+    if (!general.projects.length) {
+      general.loadProjects();
+    }
   }
 
   public keydown(e: KeyboardEvent) {
@@ -235,6 +262,39 @@ export default class App extends Vue {
       this.$notify.warning('Unable to create automation clip', {
         detail: 'There are no free tracks. Move elements and try again.',
       });
+    }
+  }
+
+  public async openProject(info: ProjectInfo) {
+    const res = await backend.getProject(info.id);
+    if (res.type === 'not-found') {
+      this.$notify.warning('Uh, we were unable to find project');
+      return;
+    }
+
+    if (res.type === 'error') {
+      this.$notify.error('Unable to get project', { detail: res.message });
+      return;
+    }
+
+    const { name } = tmp.fileSync({ keep: true });
+    fs.writeFileSync(name, JSON.stringify(res.project, null, 4));
+
+    if (!fs.existsSync(name)) {
+      throw Error(name);
+    }
+
+    this.$log.info(`Writing ${name} as backup`);
+    cache.setBackupTempPath(name);
+
+    const window = remote.getCurrentWindow();
+    window.reload();
+  }
+
+  @Watch<App>('getProjectsErrorMessage')
+  public showNotification() {
+    if (this.getProjectsErrorMessage === 'error') {
+      this.$notify.error('Unable to get projects.', { detail: this.getProjectsErrorMessage });
     }
   }
 }

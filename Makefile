@@ -1,0 +1,2 @@
+bootstrap:
+	npx lerna bootstrap

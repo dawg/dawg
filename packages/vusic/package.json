@@ -16,6 +16,7 @@
   "dependencies": {
     "@dawgjs/specification": "^0.1.0",
     "@types/cors": "^2.8.4",
+    "@types/tmp": "0.0.34",
     "cors": "^2.8.5",
     "electron-context-menu": "^0.10.0",
     "lodash.throttle": "^4.1.1",
@@ -24,6 +25,7 @@
     "resize-observer-polyfill": "^1.5.0",
     "restyped-axios": "^2.0.0",
     "tinycolor2": "^1.4.1",
+    "tmp": "0.0.33",
     "tone": "^13.4.9",
     "typescript-collections": "^1.3.2",
     "uuid": "^3.3.2",

@@ -8,6 +8,7 @@
     "Positionable",
     "Schedulable",
     "Serializable",
+    "VUSIC",
     "Vuex",
     "autoserialize",
     "backend",

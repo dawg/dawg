@@ -99,12 +99,50 @@ export class Project extends VuexModule {
 
   @Action
   public async load() {
-    if (!cache.openedFile) { return; }
-    if (!await fs.exists(cache.openedFile)) { return; }
-    let contents = (await fs.readFile(cache.openedFile)).toString();
-    contents = JSON.parse(contents);
-    const result = io.deserialize(contents, Project);
-    this.reset(result);
+    let reset = false;
+    for (const path of [cache.backupTempPath, cache.openedFile]) {
+      if (!path) { continue; }
+
+      if (!await fs.exists(path)) {
+        // tslint:disable-next-line:no-console
+        console.warn(`${path} does not exist`);
+        continue;
+      }
+
+      // tslint:disable-next-line:no-console
+      console.info(`Loading from ${path}`);
+
+      let contents = fs.readFileSync(path).toString();
+      contents = JSON.parse(contents);
+      const result = io.deserialize(contents, Project);
+      this.reset(result);
+      reset = true;
+      break;
+    }
+
+    // Always reset to null if it is set
+    if (cache.backupTempPath) {
+      const path = cache.backupTempPath;
+      fs.exists(cache.backupTempPath, (err, exists) => {
+        if (err) {
+          // tslint:disable-next-line:no-console
+          console.error(err);
+          return;
+        }
+
+        if (!exists) {
+          return;
+        }
+
+        fs.unlink(path);
+      });
+
+      cache.setBackupTempPath(null);
+    }
+
+    if (!reset) {
+      return;
+    }
 
     this.samples.forEach((sample) => {
       const buffer = loadBuffer(sample.path);

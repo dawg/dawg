@@ -120,7 +120,6 @@ export class Specific extends VuexModule {
   public setScore(score: Score | null) {
     if (score) {
       this.set({ key: 'selectedScoreId', value: score.id });
-      this.selectedScoreId = score.id;
     } else {
       this.set({ key: 'selectedScoreId', value: null });
     }

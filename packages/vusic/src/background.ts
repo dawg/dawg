@@ -76,6 +76,12 @@ const setMainMenu = () => {
           },
         },
         {
+          label: 'Open From Backup',
+          click() {
+            mainWindow.webContents.send('openBackup');
+          },
+        },
+        {
           label: 'Add Folder to Project',
           click() {
             const folder = dialog.showOpenDialog({properties: ['openDirectory']}); // We only ever get one folder

@@ -17,6 +17,7 @@ const CACHE_PATH = path.join(APPLICATION_PATH, 'cache.json');
 @Module({ dynamic: true, store, name: 'cache' })
 export class Cache extends VuexModule {
   @io.autoserialize({ nullable: true }) public openedFile: string | null = null;
+  @io.autoserialize({ nullable: true }) public backupTempPath: string | null = null;
   @io.autoserialize public folders: string[] = [];
 
   constructor(module?: Mod<any, any>) {
@@ -50,6 +51,12 @@ export class Cache extends VuexModule {
     // This write call actually works.
     // I was worried it wouldn't work since this method is not async.
     return this.write();
+  }
+
+  @Action
+  public setBackupTempPath(tempPath: string | null) {
+    this.set({ key: 'backupTempPath', value: tempPath });
+    this.write();
   }
 
   @Action
