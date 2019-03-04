@@ -17,9 +17,11 @@
 import { Vue, Component, Prop, Watch, Mixins } from 'vue-property-decorator';
 import Draggable from '@dawgjs/draggable';
 
+// TODO Add sync variables for size (and collapsed?)
+
 export type Direction = 'horizontal' | 'vertical';
 
-const isSplit = (vue: Vue) => {
+const isSplit = (vue: Vue): vue is Split => {
   // @ts-ignore
   return vue.constructor.options.name === Split.name;
 };
@@ -34,8 +36,8 @@ export default class Split extends Vue {
   @Prop({type: Number, default: Infinity}) public maxSize!: number;
   @Prop(Number) public initial?: number;
   @Prop({type: Number, default: 6}) public gutterSize!: number;
+  @Prop({type: Number, default: 10}) public collapsePixels!: number;
 
-  public cursor = 'auto';
   public $el!: HTMLElement;
   public children!: Split[];
   public parent: Split | null = null; // giving initial null makes parent reactive!
@@ -45,8 +47,11 @@ export default class Split extends Vue {
   public gutter = false;
   public before: Split[] = []; // Splits before gutter (left / top)
   public after: Split[] = []; // Splits after gutter (right / bottom)
-  public height: number = 0;
-  public width: number = 0;
+  public height = 0;
+  public width = 0;
+
+  public mousePosition = 0;
+  public gutterPosition = 0;
 
   get isRoot() {
     return !this.parent;
@@ -95,18 +100,22 @@ export default class Split extends Vue {
     return this.size < this.minSize;
   }
 
-  public mounted() {
-    if (isSplit(this.$parent)) {
-      this.parent = this.$parent as Split;
-
+  get cursor() {
+    if (this.parent) {
       if (this.parent.axes === 'width') {
-        this.cursor = 'ew-resize';
-      } else if (this.parent.axes === 'height') {
-        this.cursor = 'ns-resize';
+        return 'ew-resize';
+      } else {
+        return 'ns-resize';
       }
     }
+  }
 
-    this.children = this.$children.filter(isSplit) as Split[];
+  public mounted() {
+    if (isSplit(this.$parent)) {
+      this.parent = this.$parent;
+    }
+
+    this.children = this.$children.filter(isSplit);
     this.children.map((child, i) => {
       child.before = this.children.slice(0, i).reverse();
       // After includes $children[i].
@@ -115,8 +124,8 @@ export default class Split extends Vue {
     });
 
     // There will never be a gutter for the first element
-    this.children.slice(1).forEach((child, i) => {
-      child.gutter = !this.children[i].fixed && !child.fixed;
+    this.children.slice(1).forEach((_, i) => {
+      this.children[i + 1].gutter = !this.children[i].fixed && !this.children[i + 1].fixed;
     });
 
     if (!this.isRoot) { return; }
@@ -138,13 +147,13 @@ export default class Split extends Vue {
   }
 
   public move(e: MouseEvent) {
-    let px;
     if (this.parent!.direction === 'horizontal') {
-      px = e.movementX;
+      this.mousePosition = e.clientX;
     } else {
-      px = e.movementY;
+      this.mousePosition = e.clientY;
     }
 
+    let px = this.mousePosition - this.gutterPosition;
     if (!px) { return; }
 
     const inFront = px > 0 ? this.after : this.before; // The splits in front of the movement
@@ -162,8 +171,14 @@ export default class Split extends Vue {
       pxInFront += split.size - (split.collapsible ? 0 : split.minSize);
     }
 
+    // The pixels to move
     px = Math.min(pxBehind, pxInFront, Math.abs(px)) * Math.sign(px);
-    px = this.calculatePositions(this.before, px, this.parent!.direction!, true);
+
+    // The actual pixels moved (they might be different if something collapsed)
+    px = this.calculatePositions(this.before, px, this.parent!.direction!);
+
+    this.gutterPosition += px;
+
     this.calculatePositions(this.after, -px, this.parent!.direction!);
   }
 
@@ -183,13 +198,13 @@ export default class Split extends Vue {
    * @param direction The direction to move.
    * @returns The amount of pixels it actually moved.
    */
-  public calculatePositions(splits: Split[], px: number, direction: Direction, print = false) {
+  public calculatePositions(splits: Split[], px: number, direction: Direction) {
     // First resize but don't include children that have keep flag
     // Then resize again but include the children with a keep flag
+    // Then resize anything that is collapsible
     let pxRemaining = this.doResize(splits, px, px, direction);
     pxRemaining = this.doResize(splits, px, pxRemaining, direction, { keep: true });
     pxRemaining = this.doResize(splits, px, pxRemaining, direction, { collapsible: true });
-    if (print) { console.log(px, pxRemaining); }
     return px - pxRemaining;
   }
 
@@ -210,8 +225,12 @@ export default class Split extends Vue {
         if (split.keep && !keep) { continue; }
 
         let newSize = Math.max(split.minSize, Math.min(split.size + px, split.maxSize));
-        if (collapsible && newSize === split.size) {
-          newSize = px < 0 ? 0 : split.minSize;
+        if (split.collapsed && px < split.minSize) {
+          newSize = 0;
+        }
+
+        if (collapsible && newSize === split.size && px < -this.collapsePixels) {
+          newSize = 0;
         }
 
         const diff = newSize - split.size;
@@ -243,8 +262,12 @@ export default class Split extends Vue {
   public init() {
     if (!this.direction) { return; }
 
+    if (!this.parent && this.collapsible) {
+      throw Error('The parent cannot be collapsible');
+    }
+
     let remaining = this.direction === 'horizontal' ? this.width : this.height;
-    this.children.forEach((split) => {
+    this.children.forEach((split, i) => {
       if (this.direction === 'horizontal') {
         split.height = this.height;
       } else {
@@ -272,6 +295,11 @@ export default class Split extends Vue {
   @Watch('width')
   public onWidthChange() {
     this.$el.style.width = this.width + 'px';
+  }
+
+  @Watch('before')
+  public setGutterPosition() {
+    this.gutterPosition = this.before.reduce((sum, child) => sum + child.size, 0) + this.gutterSize / 2;
   }
 }
 </script>

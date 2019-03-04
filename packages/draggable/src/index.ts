@@ -39,6 +39,8 @@ export class Draggable extends Vue {
     this.moving = true;
     this.previous = { x: e.clientX, y: e.clientY };
     this.mousemoveListener = (event) => this.startMove(event, ...args);
+
+    this.beforeMove();
     window.addEventListener('mousemove', this.mousemoveListener);
     window.addEventListener('mouseup', this.removeListeners);
   }
@@ -55,7 +57,12 @@ export class Draggable extends Vue {
     this.afterHover();
     this.afterMove();
   }
+
   public afterMove() {
+    //
+  }
+
+  public beforeMove() {
     //
   }
 
@@ -152,6 +159,14 @@ export class DragElement extends Mixins(Draggable) {
 
   public move(e: MouseEvent) {
     this.$emit('move', e);
+  }
+
+  public beforeMove() {
+    this.$emit('before-move');
+  }
+
+  public afterMove() {
+    this.$emit('after-move');
   }
 
   public render(createElement: CreateElement) {
