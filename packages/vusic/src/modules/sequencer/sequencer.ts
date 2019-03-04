@@ -1,7 +1,7 @@
 import Vue, { CreateElement, VueConstructor } from 'vue';
 import { Prop, Inject, Component, Mixins } from 'vue-property-decorator';
 import tinycolor from 'tinycolor2';
-import { Draggable } from '@/modules/draggable';
+import { Draggable } from '@dawgjs/draggable';
 import { createHOC } from '@/modules/utils';
 
 export const positionable = (component: VueConstructor) => {

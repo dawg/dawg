@@ -24,7 +24,7 @@
     "babel-core": "7.0.0-bridge.0",
     "ts-jest": "^23.0.0",
     "typescript": "^3.0.0",
-    "vue": "^2.6.6",
+    "vue": "^2.5.17",
     "vue-cli-plugin-storybook": "^0.5.2",
     "vue-template-compiler": "^2.5.21"
   },

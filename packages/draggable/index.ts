@@ -1,1 +1,1 @@
-export { DragElement as default } from './src';
+export { DragElement as default, Draggable } from './src';
