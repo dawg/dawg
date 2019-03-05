@@ -1,4 +1,4 @@
-import Split from '@/Split.vue';
+import Split from '@/modules/split/Split.vue';
 
 export default {
   install: (Vue: any) => {

@@ -1,5 +1,4 @@
 import { storiesOf } from '@storybook/vue';
-import { action } from '@storybook/addon-actions';
 import Tone from 'tone';
 import DotButton from '@/components/DotButton.vue';
 import Key from '@/components/Key.vue';
@@ -61,7 +60,7 @@ storiesOf(DotButton.name, module)
   .add('Standard', () => ({
     components: { DotButton },
     template: '<dot-button @click="click"></dot-button>',
-    methods: { click: action('clicked') },
+    methods: { click: () => ({}) },
   }));
 
 const TREE = {
@@ -184,7 +183,8 @@ storiesOf(PlayPause.name, module)
     components: { PlayPause },
     methods: {
       click(text: string) {
-        action(text)();
+        // tslint:disable-next-line:no-console
+        console.log(text);
         // @ts-ignore
         this.text = text;
       },

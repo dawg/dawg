@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import { storiesOf } from '@storybook/vue';
-import Split from '@/index';
+import Split from './index';
 
 Vue.use(Split);
 

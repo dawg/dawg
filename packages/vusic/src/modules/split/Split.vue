@@ -1,6 +1,6 @@
 <template>
   <div class="split" :class="{ resizable: direction, [direction]: true }">
-    <draggable 
+    <drag-element 
       class="gutter"
       v-if="gutter"
       :style="gutterStyle"
@@ -8,14 +8,14 @@
       @move="move"
     >
       <slot name="gutter"></slot>
-    </draggable>
+    </drag-element>
     <slot></slot>
   </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch, Mixins } from 'vue-property-decorator';
-import Draggable from '@dawgjs/draggable';
+import { Draggable } from '@/modules/draggable';
 
 // TODO Add sync variables for size (and collapsed?)
 

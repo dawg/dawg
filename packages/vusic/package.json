@@ -15,8 +15,6 @@
   },
   "dependencies": {
     "@dawgjs/specification": "^0.1.0",
-    "@dawgjs/draggable": "^0.1.0",
-    "@dawgjs/split": "^0.1.0",
     "@types/cors": "^2.8.4",
     "@types/tmp": "0.0.34",
     "cors": "^2.8.5",
@@ -45,6 +43,7 @@
     "wavesurfer.js": "^2.1.2"
   },
   "devDependencies": {
+    "@types/chai": "^4.1.7",
     "@types/lodash.throttle": "^4.1.4",
     "@types/mocha": "^5.2.5",
     "@types/mz": "0.0.32",

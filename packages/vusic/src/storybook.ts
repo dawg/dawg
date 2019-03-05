@@ -11,9 +11,9 @@ import Dawg from '@/modules/dawg';
 import DragNDrop from '@/modules/dragndrop';
 import '@/styles/global.sass';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
-import Draggable from '@dawgjs/draggable';
+import { DragElement } from '@/modules/draggable';
 import Knobs from '@/modules/knobs';
-import Split from '@dawgjs/split/src/Split.vue';
+import Split from '@/modules/split';
 
 import Piano from '@/components/Piano.vue';
 import DTrack from '@/components/DTrack.vue';
@@ -21,6 +21,7 @@ import TooltipIcon from '@/components/TooltipIcon.vue';
 import DotButton from '@/components/DotButton.vue';
 
 export default function middleware() {
+  Vue.use(Split);
   Vue.use(Theme);
   Vue.use(Update);
   Vue.use(DragNDrop);
@@ -41,6 +42,5 @@ export default function middleware() {
   Vue.component('DotButton', DotButton);
   Vue.component('TooltipIcon', TooltipIcon);
 
-  Vue.component('Draggable', Draggable);
-  Vue.component('Split', Split);
+  Vue.component('DragElement', DragElement);
 }
