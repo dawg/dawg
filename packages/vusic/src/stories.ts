@@ -59,8 +59,7 @@ storiesOf(Key.name, module)
 storiesOf(DotButton.name, module)
   .add('Standard', () => ({
     components: { DotButton },
-    template: '<dot-button @click="click"></dot-button>',
-    methods: { click: () => ({}) },
+    template: '<dot-button></dot-button>',
   }));
 
 const TREE = {
@@ -183,8 +182,6 @@ storiesOf(PlayPause.name, module)
     components: { PlayPause },
     methods: {
       click(text: string) {
-        // tslint:disable-next-line:no-console
-        console.log(text);
         // @ts-ignore
         this.text = text;
       },

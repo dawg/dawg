@@ -293,7 +293,7 @@ export default class App extends Vue {
 
   @Watch<App>('getProjectsErrorMessage')
   public showNotification() {
-    if (this.getProjectsErrorMessage === 'error') {
+    if (this.getProjectsErrorMessage) {
       this.$notify.error('Unable to get projects.', { detail: this.getProjectsErrorMessage });
     }
   }

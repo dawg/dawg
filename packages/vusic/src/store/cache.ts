@@ -46,7 +46,7 @@ export class Cache extends VuexModule {
   }
 
   @Action
-  public setOpenedFile(openedFile: string) {
+  public setOpenedFile(openedFile: string | null) {
     this.set({ key: 'openedFile', value: openedFile });
     // This write call actually works.
     // I was worried it wouldn't work since this method is not async.

@@ -15,7 +15,7 @@
       :key="action.icon"
       :tooltip="action.tooltip"
       bottom
-      @click="action.callback"
+      @click.native="action.callback"
     >
       {{ action.icon }}
     </tooltip-icon>

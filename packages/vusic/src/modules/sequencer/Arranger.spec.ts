@@ -27,6 +27,7 @@ describe(Arranger.name, () => {
         prototype: new Note({ row: 0, duration: 1, time: 0 }),
         rowHeight: 20,
         numRows: 20,
+        name: 'SDF',
       },
       provide: {
         noteHeight: 16,
@@ -50,7 +51,7 @@ describe(Arranger.name, () => {
       time: 0.5,
     });
 
-    expect(wrapper.emitted()['update:sequencerLoopEnd'][0][0]).to.equal(4);
+    expect(wrapper.emitted()['update:sequencerLoopEnd'][1][0]).to.equal(4);
   });
 
   it('should move correctly', () => {
