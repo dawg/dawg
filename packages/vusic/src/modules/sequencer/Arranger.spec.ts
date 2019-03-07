@@ -40,7 +40,7 @@ describe(Arranger.name, () => {
     vm = wrapper.vm as any;
   });
 
-  it.only('should add correctly', () => {
+  it('should add correctly', () => {
     vm.add({ clientX: 50, clientY: 20 });
     expect(vm.elements.length).to.equal(1);
     let note: Note = wrapper.emitted().added[0][0];
