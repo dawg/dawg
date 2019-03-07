@@ -60,9 +60,20 @@ export class Project extends VuexModule {
   @Action
   public async save(opts: { backup: boolean }) {
     if (!cache.openedFile) {
-      cache.setOpenedFile(dialog.showSaveDialog(remote.getCurrentWindow(), {}));
+      const openedFile: string | null = dialog.showSaveDialog(remote.getCurrentWindow(), {});
+
       // dialog.showSaveDialog can be null. Return type for showSaveDialog is wrong.
-      if (!cache.openedFile) { return; }
+      if (!openedFile) {
+        return;
+      }
+
+      cache.setOpenedFile(openedFile);
+
+      // This should never be true but we need to check
+      if (!cache.openedFile) {
+        return;
+      }
+
       if (!cache.openedFile.endsWith('.dg')) {
         cache.setOpenedFile(cache.openedFile + '.dg');
       }
@@ -118,6 +129,14 @@ export class Project extends VuexModule {
       this.reset(result);
       reset = true;
       break;
+    }
+
+    if (cache.openedFile) {
+      fs.exists(cache.openedFile, (err, exists) => {
+        if (!exists) {
+          cache.setOpenedFile(null);
+        }
+      });
     }
 
     // Always reset to null if it is set

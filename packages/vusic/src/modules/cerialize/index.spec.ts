@@ -26,7 +26,7 @@ class C {
 
 describe('cerialize', () => {
   context('attr', () => {
-    it.only('simple', () => {
+    it('simple', () => {
       class G {
         @attr('value') public element = {
           value: 5,
