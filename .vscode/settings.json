@@ -1,33 +1,6 @@
 {
-  "editor.tabSize": 2,
   "cSpell.words": [
-    "Automatable",
-    "DAWs",
-    "Deserializer",
-    "Hardcoded",
-    "Positionable",
-    "Schedulable",
-    "Serializable",
-    "Vuex",
-    "autoserialize",
-    "comparator",
-    "deserialize",
-    "deserialized",
-    "deserializes",
-    "deserializing",
-    "dismissible",
-    "dragndrop",
-    "fatsawtooth",
-    "hacky",
-    "mixins",
-    "monorepo",
-    "pianoroll",
-    "resizable",
-    "scrollbar",
-    "tinycolor",
-    "vuejs",
-    "vuetify",
-    "wheeldown",
-    "wheelup"
+    "dawgjs",
+    "lerna"
   ]
 }
