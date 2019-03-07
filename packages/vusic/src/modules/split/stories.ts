@@ -6,7 +6,7 @@ Vue.use(Split);
 
 
 storiesOf('Split', module)
-  .add('Horizontal', () => ({
+  .add('horizontal', () => ({
     template: `
     <split direction="horizontal" resizable>
       <split :min-size="100" style="background: grey">
@@ -30,14 +30,44 @@ storiesOf('Split', module)
       },
     }),
   }))
+  .add('vertical', () => ({
+    template: `
+    <split direction="vertical" resizable>
+      <split :min-size="100" style="background: grey">
+        panel top
+      </split>
+      <split :min-size="100" style="background: grey">
+        panel center
+        <div slot="gutter" :style="style"></div>
+      </split>
+      <split :min-size="100" style="background: grey">
+        panel bottom
+        <div slot="gutter" :style="style"></div>
+      </split>
+    </split>
+    `,
+    data: () => ({
+      style: {
+        height: '2px',
+        width: '100%',
+        background: 'black',
+      },
+    }),
+  }))
   .add('collapsible', () => ({
     template: `
     <split direction="horizontal" resizable>
       <split :min-size="100" style="background: grey" collapsible>
+        left
       </split>
-      <split :min-size="100" style="background: grey">
+      <split :min-size="100" style="background: grey" collapsible>
+        center
         <div slot="gutter" :style="style"></div>
       </split>
+      <!-- <split :min-size="100" style="background: grey">
+        right
+        <div slot="gutter" :style="style"></div>
+      </split> -->
     </split>
     `,
     data: () => ({
