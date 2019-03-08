@@ -17,12 +17,12 @@ if (isDevelopment) {
 }
 
 // global reference to mainWindow (necessary to prevent window from being garbage collected)
-let mainWindow: any;
+let mainWindow: null | BrowserWindow;
 
 // Standard scheme must be registered before the app is ready
 protocol.registerStandardSchemes(['app'], { secure: true });
 function createMainWindow() {
-  const window = new BrowserWindow({minHeight: 500, minWidth: 800});
+  const window = new BrowserWindow({ minHeight: 500, minWidth: 800 });
 
   if (isDevelopment) {
     // Load the url of the dev server if in development mode
@@ -51,83 +51,9 @@ function createMainWindow() {
     });
   });
 
-  setMainMenu();
-
+  window.setMenu(null);
   return window;
 }
-
-const setMainMenu = () => {
-  const template: Electron.MenuItemConstructorOptions[] = [
-    {
-      label: 'File',
-      submenu: [
-        {
-          label: 'Save',
-          accelerator: 'CmdOrCtrl+S',
-          click() {
-            mainWindow.webContents.send('save');
-          },
-        },
-        {
-          label: 'Open',
-          accelerator: 'CmdOrCtrl+O',
-          click() {
-            mainWindow.webContents.send('open');
-          },
-        },
-        {
-          label: 'Open From Backup',
-          click() {
-            mainWindow.webContents.send('openBackup');
-          },
-        },
-        {
-          label: 'Add Folder to Project',
-          click() {
-            const folder = dialog.showOpenDialog({properties: ['openDirectory']}); // We only ever get one folder
-            mainWindow.webContents.send('folder', folder);
-          },
-        },
-      ],
-    },
-    {
-      label: 'Edit',
-      submenu: [
-        {role: 'undo'},
-        {role: 'redo'},
-        {type: 'separator'},
-        {role: 'cut'},
-        {role: 'copy'},
-        {role: 'paste'},
-        {role: 'pasteandmatchstyle'},
-        {role: 'delete'},
-        {role: 'selectall'},
-      ],
-    },
-    {
-      label: 'View',
-      submenu: [
-        {
-          label: 'Reload',
-          accelerator: 'CommandOrControl+R',
-          click() {
-            mainWindow.reload();
-          },
-        },
-      ],
-    },
-    {
-      role: 'help',
-      submenu: [
-        {
-          label: 'Learn More',
-          click() { shell.openExternal('https://dawg.github.io/guide'); },
-        },
-      ],
-    },
-  ];
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
-};
 
 menu({
   labels: {

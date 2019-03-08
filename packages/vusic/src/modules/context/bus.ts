@@ -7,9 +7,18 @@ export interface Item {
 
 interface EventInterface {
   show: {
-    e: MouseEvent, items: Array<Item | null>,
+    e: MouseEvent | Position, items: Array<Item | null>,
   };
 }
+
+export interface Position {
+  left: number;
+  bottom: number;
+}
+
+export const isMouseEvent = (e: object): e is MouseEvent => {
+  return e.hasOwnProperty('target');
+};
 
 class Bus extends Vue {
   public $on<T extends keyof EventInterface>(name: T, callback: (payload: EventInterface[T]) => void) {

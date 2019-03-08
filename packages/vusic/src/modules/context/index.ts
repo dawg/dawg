@@ -1,9 +1,9 @@
 import Vue from 'vue';
 import ContextMenu from '@/modules/context/ContextMenu.vue';
-import bus, { Item } from '@/modules/context/bus';
+import bus, { Item, isMouseEvent, Position } from '@/modules/context/bus';
 
 
-type ContextFunction = (e: MouseEvent, items: Item[]) => void;
+type ContextFunction = (e: MouseEvent | Position, items: Item[]) => void;
 
 export interface ContextInterface {
   $context: ContextFunction;
@@ -16,17 +16,22 @@ interface Options {
 
 const context = {
   install(vue: any, options: Options = {}) {
-    Vue.component('ContextMenu', ContextMenu);
+    vue.component('ContextMenu', ContextMenu);
 
     const defaultItems = options.default || [];
     const contextFunction: ContextFunction = (e, items) => {
-      e.preventDefault();
-      e.stopPropagation();
+      if (isMouseEvent(e)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
       bus.$emit('show', { e, items: [...items, null, ...defaultItems] });
     };
 
     const menuFunction: ContextFunction = (e, items) => {
-      e.preventDefault();
+      if (isMouseEvent(e)) {
+        e.stopPropagation();
+      }
       bus.$emit('show', { e, items });
     };
 

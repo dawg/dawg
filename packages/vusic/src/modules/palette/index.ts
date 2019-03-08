@@ -3,11 +3,41 @@ import { CreateElement } from 'vue';
 import { Bus, Watch } from '@/modules/update';
 
 export const bus = new Bus<{ open: [] }>();
+export type Key =
+  'Shift' |
+  'Ctrl' |
+  'A' |
+  'B' |
+  'C' |
+  'D' |
+  'E' |
+  'F' |
+  'G' |
+  'H' |
+  'I' |
+  'J' |
+  'K' |
+  'L' |
+  'M' |
+  'N' |
+  'O' |
+  'P' |
+  'Q' |
+  'R' |
+  'S' |
+  'T' |
+  'U' |
+  'V' |
+  'W' |
+  'X' |
+  'Y' |
+  'Z' |
+  'Space';
 
 export interface PaletteItem {
   text: string;
   callback: () => void;
-  shortcut?: string[];
+  shortcut?: Key[];
 }
 
 @Component

@@ -8,7 +8,7 @@ import { VuexModule } from '@/store/utils';
 import * as io from '@/modules/cerialize';
 import store from '@/store/store';
 import project from '@/store/project';
-import { APPLICATION_PATH, SideTab } from '@/constants';
+import { APPLICATION_PATH, SideTab, Panels } from '@/constants';
 import { Score, Pattern } from '@/schemas';
 
 const PROJECT_CACHE_PATH = path.join(APPLICATION_PATH, 'project-cache.json');
@@ -26,7 +26,7 @@ export class Specific extends VuexModule {
   @io.autoserialize({ nullable: true }) public backup = false;
   @io.autoserialize({ nullable: true }) public selectedPatternId: string | null = null;
   @io.autoserialize({ nullable: true }) public selectedScoreId: string | null = null;
-  @io.autoserialize({ nullable: true }) public openedPanel: string | null = null;
+  @io.autoserialize({ nullable: true }) public openedPanel: Panels | null = null;
   @io.autoserialize({ nullable: true }) public openedSideTab: SideTab | null = null;
   @io.autoserialize({ nullable: true }) public openedTab: string | null = null;
   public projectId: string | null = null;
@@ -57,7 +57,7 @@ export class Specific extends VuexModule {
   }
 
   @Action
-  public setOpenedPanel(openedPanel: string) {
+  public setOpenedPanel(openedPanel: Panels) {
     this.set({ key: 'openedPanel', value: openedPanel });
     this.write();
   }

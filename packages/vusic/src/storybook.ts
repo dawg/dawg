@@ -20,6 +20,7 @@ import DTrack from '@/components/DTrack.vue';
 import TooltipIcon from '@/components/TooltipIcon.vue';
 import DotButton from '@/components/DotButton.vue';
 import Palette from '@/modules/palette';
+import MenuBar from '@/modules/menubar';
 
 export default function middleware() {
   Vue.use(Split);
@@ -29,6 +30,7 @@ export default function middleware() {
   Vue.use(Dawg);
   Vue.use(Palette);
   Vue.use(Knobs);
+  Vue.use(MenuBar);
   Vue.use(VueLogger, {
     logLevel: 'info',
   });

@@ -7,6 +7,7 @@
     v-model="open"
     :position-x="x"
     :position-y="y"
+    :close-on-click="false"
     :z-index="100"
     :min-width="250"
   >
@@ -32,8 +33,12 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 
-import bus, { Item } from '@/modules/context/bus';
+import bus, { Item, isMouseEvent, Position } from '@/modules/context/bus';
 import { Watch } from '@/modules/update';
+
+function hideOnClickOutside(element: Element, callback: () => void) {
+
+}
 
 @Component
 export default class ContextMenu extends Vue {
@@ -42,10 +47,46 @@ export default class ContextMenu extends Vue {
   public x = 0;
   public y = 0;
   public active: boolean[] = [];
-  public e: MouseEvent | null = null;
+  public e?: MouseEvent = undefined;
+
+  // This is set to true when we click on another element that activates a menu.
+  // We don't want to close the element. This flag is used to do that.
+  // Instead of closing, we just update the position and the items.
+  public keep = false;
+
+  // Is it the first time the click event has fired?
+  // For some reason, we need this. IDK why the click event is firred right away.
+  public first = false;
 
   public mounted() {
     bus.$on('show', this.show);
+  }
+
+  public destroyed() {
+    // Make sure to remove all stray listeners
+    bus.$off('show', this.show);
+    document.removeEventListener('click', this.outsideClickListener);
+  }
+
+  public outsideClickListener(event: MouseEvent) {
+    if (this.first) {
+      this.first = false;
+      return;
+    }
+
+    if (!event.target) {
+      return;
+    }
+
+    if (!this.$el.contains(event.target as Node)) {
+      if (this.keep) {
+        this.keep = false;
+      } else {
+        console.log('CLOSING');
+        this.open = false;
+        document.removeEventListener('click', this.outsideClickListener);
+      }
+    }
   }
 
   public mouseover(i: number) {
@@ -56,18 +97,33 @@ export default class ContextMenu extends Vue {
     Vue.set(this.active, i, false);
   }
 
-  public show(payload: { e: MouseEvent, items: Array<Item | null> }) {
-    this.e = payload.e;
+  public show(payload: { e: MouseEvent | Position, items: Array<Item | null> }) {
+    if (this.open) {
+      this.keep = true;
+    }
+
+    console.log('OPENING');
     this.open = true;
-    this.x = payload.e.pageX;
-    this.y = payload.e.pageY;
+    if (isMouseEvent(payload.e)) {
+      this.e = payload.e;
+      this.x = payload.e.pageX;
+      this.y = payload.e.pageY;
+    } else {
+      this.x = payload.e.left;
+      this.y = payload.e.bottom;
+    }
+
     this.items = payload.items;
+
+    this.first = true;
+    document.addEventListener('click', this.outsideClickListener);
   }
 
   @Watch<ContextMenu>('open')
   public onClose() {
     if (this.open) { return; }
     this.active = [];
+    this.e = undefined;
   }
 }
 </script>

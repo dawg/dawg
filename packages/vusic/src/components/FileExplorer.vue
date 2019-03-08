@@ -50,20 +50,6 @@ export default class Drawer extends Vue {
     return tree;
   }
 
-  public addFolder(_: any, [folder]: [string]) {
-    if (this.folders.indexOf(folder) === -1) {
-      this.$update('folders', [...this.folders, folder]);
-    }
-  }
-
-  public mounted() {
-    ipcRenderer.on('folder', this.addFolder);
-  }
-
-  public destroyed() {
-    ipcRenderer.removeListener('folder', this.addFolder);
-  }
-
   public isWav(fileName: string) {
     const extension = fileName.split('.').pop();
     return extension && extension.toLowerCase() === 'wav';

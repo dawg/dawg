@@ -25,7 +25,6 @@
         <side-bar :name="tabs.explorer" icon="folder">
           <file-explorer
             :folders="cache.folders"
-            @update:folders="cache.setFolders"
           ></file-explorer>
         </side-bar>
         <side-bar :name="tabs.audioFiles" icon="queue_music">
