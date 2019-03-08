@@ -21,7 +21,7 @@ export class MenuItem extends Vue {
 
   get style() {
     return {
-      padding: '2px 4px',
+      padding: '2px 8px',
       userSelect: 'none',
       height: '100%',
       display: 'flex',
@@ -34,7 +34,8 @@ export class MenuItem extends Vue {
   public render(h: CreateElement) {
     return h('div', {
       on: {
-        click: () => {
+        click: (e: MouseEvent) => {
+          e.stopPropagation();
           this.$menu(this.$el.getBoundingClientRect(), this.subMenu.items);
         },
         mouseover: () => {

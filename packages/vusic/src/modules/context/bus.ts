@@ -17,7 +17,7 @@ export interface Position {
 }
 
 export const isMouseEvent = (e: object): e is MouseEvent => {
-  return e.hasOwnProperty('target');
+  return e instanceof Event;
 };
 
 class Bus extends Vue {

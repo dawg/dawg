@@ -36,10 +36,6 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import bus, { Item, isMouseEvent, Position } from '@/modules/context/bus';
 import { Watch } from '@/modules/update';
 
-function hideOnClickOutside(element: Element, callback: () => void) {
-
-}
-
 @Component
 export default class ContextMenu extends Vue {
   public items: Array<Item | null> = [];
@@ -48,15 +44,6 @@ export default class ContextMenu extends Vue {
   public y = 0;
   public active: boolean[] = [];
   public e?: MouseEvent = undefined;
-
-  // This is set to true when we click on another element that activates a menu.
-  // We don't want to close the element. This flag is used to do that.
-  // Instead of closing, we just update the position and the items.
-  public keep = false;
-
-  // Is it the first time the click event has fired?
-  // For some reason, we need this. IDK why the click event is firred right away.
-  public first = false;
 
   public mounted() {
     bus.$on('show', this.show);
@@ -69,23 +56,13 @@ export default class ContextMenu extends Vue {
   }
 
   public outsideClickListener(event: MouseEvent) {
-    if (this.first) {
-      this.first = false;
-      return;
-    }
-
     if (!event.target) {
       return;
     }
 
     if (!this.$el.contains(event.target as Node)) {
-      if (this.keep) {
-        this.keep = false;
-      } else {
-        console.log('CLOSING');
-        this.open = false;
-        document.removeEventListener('click', this.outsideClickListener);
-      }
+      this.open = false;
+      document.removeEventListener('click', this.outsideClickListener);
     }
   }
 
@@ -98,11 +75,6 @@ export default class ContextMenu extends Vue {
   }
 
   public show(payload: { e: MouseEvent | Position, items: Array<Item | null> }) {
-    if (this.open) {
-      this.keep = true;
-    }
-
-    console.log('OPENING');
     this.open = true;
     if (isMouseEvent(payload.e)) {
       this.e = payload.e;
@@ -115,7 +87,6 @@ export default class ContextMenu extends Vue {
 
     this.items = payload.items;
 
-    this.first = true;
     document.addEventListener('click', this.outsideClickListener);
   }
 
