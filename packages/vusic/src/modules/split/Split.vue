@@ -1,14 +1,14 @@
 <template>
-  <div class="split" :class="{resizable: direction, [direction]: true}">
-    <div 
-      class="gutter"  
+  <div class="split" :class="{ resizable: direction, [direction]: true }">
+    <drag-element 
+      class="gutter"
       v-if="gutter"
       :style="gutterStyle"
-      @mousedown="addListeners"
-      @mouseup="removeListeners"
-      @mouseenter="onHover"
-      @mouseleave="afterHover"
-    ></div>
+      :curse="cursor"
+      @move="move"
+    >
+      <slot name="gutter"></slot>
+    </drag-element>
     <slot></slot>
   </div>
 </template>
@@ -17,23 +17,26 @@
 import { Vue, Component, Prop, Watch, Mixins } from 'vue-property-decorator';
 import { Draggable } from '@/modules/draggable';
 
+// TODO Add sync variables for size (and collapsed?)
+
 export type Direction = 'horizontal' | 'vertical';
 
-const isSplit = (vue: Vue) => {
+const isSplit = (vue: Vue): vue is Split => {
   // @ts-ignore
   return vue.constructor.options.name === Split.name;
 };
 
-@Component
-export default class Split extends Mixins(Draggable) {
+@Component({ components: { Draggable } })
+export default class Split extends Vue {
   @Prop(String) public direction?: Direction;
   @Prop(Boolean) public keep!: boolean;
   @Prop(Boolean) public fixed!: boolean;
-  @Prop(Boolean) public collapsible!: boolean; // TODO
+  @Prop(Boolean) public collapsible!: boolean;
   @Prop({type: Number, default: 10}) public minSize!: number;
   @Prop({type: Number, default: Infinity}) public maxSize!: number;
   @Prop(Number) public initial?: number;
   @Prop({type: Number, default: 6}) public gutterSize!: number;
+  @Prop({type: Number, default: 10}) public collapsePixels!: number;
 
   public $el!: HTMLElement;
   public children!: Split[];
@@ -44,21 +47,78 @@ export default class Split extends Mixins(Draggable) {
   public gutter = false;
   public before: Split[] = []; // Splits before gutter (left / top)
   public after: Split[] = []; // Splits after gutter (right / bottom)
-  public height: number = 0;
-  public width: number = 0;
+  public height = 0;
+  public width = 0;
+
+  public mousePosition = 0;
+
+  get gutterPosition() {
+    return this.before.reduce((sum, child) => sum + child.size, 0) - this.gutterSize / 2;
+  }
+
+  get isRoot() {
+    return !this.parent;
+  }
+
+  get size() {
+    if (this.parent!.direction === 'horizontal') {
+      return this.width;
+    } else {
+      return this.height;
+    }
+  }
+
+  get gutterStyle() {
+    if (!this.parent) { return; }
+
+    // The margin makes sure the gutter is centered on the line
+    if (this.parent.direction === 'horizontal') {
+      return {
+        height: '100%',
+        width: `${this.gutterSize}px`,
+        marginLeft: `${-this.gutterSize / 2}px`,
+      };
+    } else {
+      return {
+        width: '100%',
+        height: `${this.gutterSize}px`,
+        marginTop: `${-this.gutterSize / 2}px`,
+      };
+    }
+  }
+
+  get axes() {
+    if (!this.direction) {
+      return null;
+    }
+
+    return this.direction === 'horizontal' ? 'width' : 'height';
+  }
+
+  get childrenReversed() {
+    return this.children.slice().reverse();
+  }
+
+  get collapsed() {
+    return this.size < this.minSize;
+  }
+
+  get cursor() {
+    if (this.parent) {
+      if (this.parent.axes === 'width') {
+        return 'ew-resize';
+      } else {
+        return 'ns-resize';
+      }
+    }
+  }
 
   public mounted() {
     if (isSplit(this.$parent)) {
-      this.parent = this.$parent as Split;
-
-      if (this.parent.axes === 'width') {
-        this.cursor = 'ew-resize';
-      } else if (this.parent.axes === 'height') {
-        this.cursor = 'ns-resize';
-      }
+      this.parent = this.$parent;
     }
 
-    this.children = this.$children.filter(isSplit) as Split[];
+    this.children = this.$children.filter(isSplit);
     this.children.map((child, i) => {
       child.before = this.children.slice(0, i).reverse();
       // After includes $children[i].
@@ -67,8 +127,8 @@ export default class Split extends Mixins(Draggable) {
     });
 
     // There will never be a gutter for the first element
-    this.children.slice(1).forEach((child, i) => {
-      child.gutter = !this.children[i].fixed && !child.fixed;
+    this.children.slice(1).forEach((_, i) => {
+      this.children[i + 1].gutter = !this.children[i].fixed && !this.children[i + 1].fixed;
     });
 
     if (!this.isRoot) { return; }
@@ -89,69 +149,61 @@ export default class Split extends Mixins(Draggable) {
     this.calculatePositions([this], window.innerHeight - this.height, 'vertical');
   }
 
-  public get gutterStyle() {
-    if (!this.parent) { return; }
+  public move(e: MouseEvent) {
+    if (!this.parent) {
+      return;
+    }
 
-    // The margin makes sure the gutter is centered on the line
+    if (!this.parent.direction) {
+      return;
+    }
+
     if (this.parent.direction === 'horizontal') {
-      return {
-        height: '100%',
-        width: `${this.gutterSize}px`,
-        marginLeft: `${-this.gutterSize / 2}px`,
-      };
+      this.mousePosition = e.clientX;
     } else {
-      return {
-        width: '100%',
-        height: `${this.gutterSize}px`,
-        marginTop: `${-this.gutterSize / 2}px`,
-      };
-    }
-  }
-
-  get childrenReversed() {
-    return this.children.slice().reverse();
-  }
-
-  public move(e: MouseEvent, { changeY, changeX }: { changeY: number, changeX: number }) {
-    let px;
-    if (this.parent!.direction === 'horizontal') {
-      px = changeX;
-    } else {
-      px = changeY;
+      this.mousePosition = e.clientY;
     }
 
+    let px = this.mousePosition - this.gutterPosition;
     if (!px) { return; }
 
-    const inFront = px > 0 ? this.after : this.before; // The splits in front of the movement
-    const behind = px > 0 ? this.before : this.after; // The splits in behind of the movement
+    const min = (...args: number[]) => {
+      return Math.min(...args.map(Math.abs)) * Math.sign(px);
+    };
 
-    let pxBehind = 0;
-    for (const split of behind) {
-      if (split.fixed) { continue; }
-      pxBehind += split.maxSize - split.size;
-    }
+    const max = (arg: number, ...args: number[]) => {
+      let index: number = 0;
+      args = [arg, ...args];
+      args.forEach((value, i) => {
+        if (Math.abs(value) > Math.abs(index === 0 ? arg : args[index - 1])) {
+          index = i + 1;
+        }
+      });
 
-    let pxInFront = 0;
-    for (const split of inFront) {
-      if (split.fixed) { continue; }
-      pxInFront += split.size - split.minSize;
-    }
+      return index === 0 ? arg : args[index - 1];
+    };
 
-    px = Math.min(pxBehind, pxInFront, Math.abs(px)) * Math.sign(px);
-    this.calculatePositions(this.before, px, this.parent!.direction!);
-    this.calculatePositions(this.after, -px, this.parent!.direction!);
-  }
 
-  public get isRoot() {
-    return !this.parent;
-  }
+    // Do the dry runs!
+    const option1 = this.calculatePositions(this.before, px, this.parent.direction, true);
+    const option2 = this.calculatePositions(this.after, -px, this.parent.direction, true);
 
-  public get size() {
-    if (this.parent!.direction === 'horizontal') {
-      return this.width;
-    } else {
-      return this.height;
-    }
+    // Calculate the actual amount of pixels we are going to move!
+    px = min(
+      max(
+        option1,
+        this.calculatePositions(this.before, -option2, this.parent.direction, true),
+      ),
+      max(
+        option2,
+        this.calculatePositions(this.after, -option1, this.parent.direction, true),
+      ),
+    );
+
+
+    // The actual pixels moved (they might be different if something collapsed)
+    this.calculatePositions(this.before, px, this.parent.direction);
+    this.calculatePositions(this.after, -px, this.parent.direction);
   }
 
   public setSize(size: number) {
@@ -162,51 +214,104 @@ export default class Split extends Mixins(Draggable) {
     }
   }
 
-  public get axes() {
-    if (!this.direction) {
-      return null;
-    }
-
-    return this.direction === 'horizontal' ? 'width' : 'height';
-  }
-
-  public calculatePositions(splits: Split[], px: number, direction: Direction) {
+  /**
+   * Resize the splits taking into account which splits should be resized first and which are collapsible.
+   *
+   * @param splits The splits.
+   * @param px The amount of pixels to move. Either negative or positive.
+   * @param direction The direction to move.
+   * @returns The amount of pixels it actually moved.
+   */
+  public calculatePositions(splits: Split[], px: number, direction: Direction, dryRun = false) {
     // First resize but don't include children that have keep flag
     // Then resize again but include the children with a keep flag
-    const pxRemaining = this.doResize(splits, px, false, direction);
-    this.doResize(splits, pxRemaining, true, direction);
+    // Then resize anything that is collapsible
+    let pxRemaining = this.doResize(splits, px, direction, { dryRun });
+    pxRemaining = this.doResize(splits, pxRemaining, direction, { keep: true, dryRun });
+    pxRemaining = this.doResize(splits, pxRemaining, direction, { collapsible: true, dryRun });
+    return px - pxRemaining;
   }
 
-  public doResize(splits: Split[], px: number, includeKeep: boolean, direction: Direction) {
+  public doResize(
+    splits: Split[],
+    px: number,
+    direction: Direction,
+    opts?: { keep?: boolean, collapsible?: boolean, dryRun?: boolean },
+  ) {
+    const { keep = false, collapsible = false, dryRun = false } = opts || {};
     if (splits.length === 0) { return px; }
     const child = splits[0]; // all children have the same parent
 
+    // Just a helper method
+    const set = (s: Split, value: number, attr?: 'height' | 'width') => {
+      if (!dryRun) {
+        if (attr) {
+          s[attr] = value;
+        } else {
+          s.setSize(value);
+        }
+      }
+    };
+
     if (child.parent && child.parent.direction === direction) {
       for (const split of splits) {
-        if (px === 0) { break; }
-        if (split.fixed) { continue; }
-        if (split.keep && !includeKeep) { continue; }
+        // We're done if px === 0
+        if (px === 0) {
+          break;
+        }
 
-        const newSize = Math.max(split.minSize, Math.min(split.size + px, split.maxSize));
+        // Skip he fixed splits.
+        if (split.fixed) {
+          continue;
+        }
+
+        // If we aren't considering keep, skip the splits with `keep` flag
+        if (split.keep && !keep) {
+          continue;
+        }
+
+        // Trim the new size at the max and min. If collapsed, make sure that newSize stays at 0 until
+        // we reach the min size of the split.
+        let newSize = Math.max(split.minSize, Math.min(split.size + px, split.maxSize));
+        if (split.collapsed && px < split.minSize) {
+          newSize = 0;
+        }
+
+        // Check if we want to collapse
+        // There is a bit of weird logic going on
+        // Basically if
+        // 1. The split is actually collapsible
+        // 2. We are considering collapsible stuff
+        // 3. The new size is the current size
+        // 4. We've moved more than the amount of collapse pixels. This acts as a buffer.
+        // 5. If it's a dry run OR if we want to move our size exactly. This is probably the most confusing
+        // part and could maybe be refactored. This check is important though as we have to consider how much
+        // other splits can move.
+        if (split.collapsible && collapsible && newSize === split.size && px < -this.collapsePixels) {
+          if (dryRun || -px === split.size) {
+            newSize = 0;
+          }
+        }
+
         const diff = newSize - split.size;
-        this.doResize(split.childrenReversed, diff, includeKeep, direction);
-        split.setSize(newSize);
-        this.$log.debug('Changing', split.$el, 'by', diff, 'from', split.size, 'to', newSize);
+        this.doResize(split.childrenReversed, diff, direction, { keep, collapsible, dryRun });
+        set(split, newSize);
+
         px -= diff;
       }
     } else {
       for (const split of splits) {
-        this.doResize(split.childrenReversed, px, includeKeep, direction);
+        this.doResize(split.childrenReversed, px, direction, { keep, collapsible, dryRun });
         if (direction === 'horizontal') {
           const newSize = split.width + px;
-          this.$log.debug('Changing width of ', split.$el, 'by', px, 'from', split.width, 'to', newSize);
-          split.width = split.width + px;
+          set(split, newSize, 'width');
         } else {
           const newSize = split.height + px;
-          this.$log.debug('Changing height of ', split.$el, 'by', px, 'from', split.height, 'to', newSize);
-          split.height = split.height + px;
+          set(split, newSize, 'height');
         }
       }
+      // This is definitely a bug
+      // It won't appear until later though with embedded splits
       px = 0;
     }
 
@@ -216,8 +321,12 @@ export default class Split extends Mixins(Draggable) {
   public init() {
     if (!this.direction) { return; }
 
+    if (!this.parent && this.collapsible) {
+      throw Error('The parent cannot be collapsible');
+    }
+
     let remaining = this.direction === 'horizontal' ? this.width : this.height;
-    this.children.forEach((split) => {
+    this.children.forEach((split, i) => {
       if (this.direction === 'horizontal') {
         split.height = this.height;
       } else {
@@ -232,7 +341,7 @@ export default class Split extends Mixins(Draggable) {
 
     const notInitialized = this.children.filter((child) => !child.initial);
     const size = remaining / notInitialized.length;
-    this.$log.debug('Initializing', this.$el, remaining, notInitialized.length, size);
+    // this.$log.debug('Initializing', this.$el, remaining, notInitialized.length, size);
     notInitialized.forEach((split) => { split.setSize(size); });
     this.children.forEach((split) => { split.init(); });
   }

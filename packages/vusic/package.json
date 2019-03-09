@@ -43,12 +43,10 @@
     "wavesurfer.js": "^2.1.2"
   },
   "devDependencies": {
-    "@storybook/addon-actions": "4.0.0-alpha.20",
-    "@storybook/addon-links": "4.0.0-alpha.20",
+    "@types/chai": "^4.1.7",
     "@types/lodash.throttle": "^4.1.4",
     "@types/mocha": "^5.2.5",
     "@types/mz": "0.0.32",
-    "@types/storybook__addon-actions": "^3.4.1",
     "@types/storybook__vue": "^3.3.1",
     "@types/tinycolor2": "^1.4.1",
     "@types/uuid": "^3.4.4",

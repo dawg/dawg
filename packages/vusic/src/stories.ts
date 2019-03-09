@@ -17,7 +17,6 @@ import { StyleType, range, makeStyle } from '@/utils';
 // import Foot from '@/components/Foot.vue';
 import Notifications from '@/modules/notification/Notifications.vue';
 import Synth from '@/components/Synth.vue';
-import Split from '@/modules/split/Split.vue';
 
 import Timeline from '@/components/Timeline.vue';
 import ContextMenu from '@/modules/context/ContextMenu.vue';
@@ -333,25 +332,6 @@ storiesOf(Synth.name, module)
     },
     data: () => ({ notes: NOTES }),
     components: { Synth, Dawg },
-  }));
-
-
-storiesOf(Split.name, module)
-  .add('Horizontal', () => ({
-    template: `
-    <split direction="horizontal" resizable>
-        <split :min-size="100">
-            panel left
-        </split>
-        <split :min-size="100">
-            panel center
-        </split>
-        <split :min-size="300">
-            panel right
-        </split>
-    </split>
-    `,
-    components: { Split },
   }));
 
 storiesOf(Timeline.name, module)
