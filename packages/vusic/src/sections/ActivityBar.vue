@@ -45,6 +45,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { specific, general, project } from '@/store';
 import Sidebar from '@/components/SideBar.vue';
+import { PanelNames, SideTab } from '@/constants';
 
 @Component
 export default class ActivityBar extends Vue {
@@ -56,7 +57,8 @@ export default class ActivityBar extends Vue {
   public y = 0;
 
   public clickActivityBar(tab: Sidebar) {
-    specific.setOpenedSideTab(tab.name);
+    // TODO not the best
+    specific.setOpenedSideTab(tab.name as SideTab);
   }
 
   public openSettings(e: MouseEvent) {

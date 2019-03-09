@@ -1,13 +1,16 @@
 import Vue from 'vue';
+import { Key } from '../palette';
 
 export interface Item {
   text: string;
+  shortcut?: Key[];
   callback: (e: MouseEvent) => void;
 }
 
 interface EventInterface {
   show: {
-    e: MouseEvent | Position, items: Array<Item | null>,
+    e: MouseEvent | Position,
+    items: Array<Item | null>,
   };
 }
 

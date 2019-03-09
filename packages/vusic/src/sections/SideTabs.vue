@@ -95,6 +95,10 @@ export default class SideTabs extends Vue {
     patterns: 'Patterns',
   };
 
+  public mounted() {
+    general.setSideBarTabs(this.$refs.tabs.$children as SideBar[]);
+  }
+
   get actions(): Group[] {
     if (specific.openedSideTab === 'Patterns') {
       return this.patternActions;

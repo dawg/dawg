@@ -8,21 +8,24 @@
     :position-x="x"
     :position-y="y"
     :close-on-click="false"
-    :z-index="100"
+    :z-index="1000"
     :min-width="250"
   >
     <div class="items secondary-lighten-2 white--text">
-      <template v-for="(item, i) in items">
+      <template v-for="(item, i) in processed">
         <div
           v-if="item"
           :key="i"
           @click="item.callback(e)"
           class="item"
+          style="display: flex"
           :class="{ primary: active[i] }"
           @mouseover="mouseover(i)"
           @mouseleave="mouseleave(i)"
         >
-          {{ item.text }}
+          <div>{{ item.text }}</div>
+          <div style="flex: 1"></div>
+          <div class="shortcut">{{ item.shortcut }}</div>
         </div>
         <div v-else :key="i" class="break"></div>
       </template>
@@ -43,7 +46,20 @@ export default class ContextMenu extends Vue {
   public x = 0;
   public y = 0;
   public active: boolean[] = [];
-  public e?: MouseEvent = undefined;
+  public e: MouseEvent | null = null;
+
+  get processed() {
+    return this.items.map((item) => {
+      if (!item) {
+        return null;
+      }
+
+      return {
+        ...item,
+        shortcut: item.shortcut ? item.shortcut.join('+') : undefined,
+      };
+    });
+  }
 
   public mounted() {
     bus.$on('show', this.show);
@@ -94,7 +110,7 @@ export default class ContextMenu extends Vue {
   public onClose() {
     if (this.open) { return; }
     this.active = [];
-    this.e = undefined;
+    this.e = null;
   }
 }
 </script>
@@ -122,4 +138,7 @@ export default class ContextMenu extends Vue {
   width: 100%
   border-top: 1px solid #484848
   margin: 5px 0
+
+.shortcut
+  font-size: 12px
 </style>

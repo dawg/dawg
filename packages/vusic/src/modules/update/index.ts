@@ -23,8 +23,8 @@ export interface UpdateAugmentation {
 }
 
 export default {
-  install(Vue: any) {
-    Vue.prototype.$update = function(key: string, value: any) {
+  install(vue: any) {
+    vue.prototype.$update = function(key: string, value: any) {
       this.$emit(`update:${key}`, value);
     };
   },

@@ -92,7 +92,7 @@ import ActivityBar from '@/sections/ActivityBar.vue';
 import StatusBar from '@/sections/StatusBar.vue';
 import Tone from 'tone';
 import { SideTab } from '@/constants';
-import { PaletteItem } from '@/modules/palette';
+import { PaletteItem, bus } from '@/modules/palette';
 import { Watch } from '@/modules/update';
 import { ProjectInfo } from '@dawgjs/specification';
 import backend from '@/backend';
@@ -115,7 +115,7 @@ export default class App extends Vue {
   public general = general;
   public specific = specific;
 
-  public menuItems = {
+  public menuItems: {[k: string]: PaletteItem} = {
     save: {
       text: 'Save',
       shortcut: ['Ctrl', 'S'],
@@ -134,8 +134,15 @@ export default class App extends Vue {
       text: 'Add Folder to Project',
       callback: () => {
         const { dialog } = remote;
-        // We only ever get one folder
-        const [ folder ] = dialog.showOpenDialog({ properties: ['openDirectory'] });
+        const folders = dialog.showOpenDialog({ properties: ['openDirectory'] });
+
+        // We should only ever get undefiend or an array of length 1
+        if (!folders || folders.length === 0) {
+          return;
+        }
+
+
+        const folder = folders[0];
         cache.addFolder(folder);
       },
     },
@@ -175,6 +182,14 @@ export default class App extends Vue {
         window.reload();
       },
     },
+    palette: {
+      text: 'Command Palette',
+      shortcut: ['Ctrl', 'Shift', 'P'],
+      callback: () => {
+        bus.$emit('open');
+        // this.palette = true;
+      },
+    },
   };
 
   public menu: Menu = [
@@ -196,6 +211,7 @@ export default class App extends Vue {
     {
       name: 'View',
       items: [
+        this.menuItems.palette,
         this.menuItems.reload,
       ],
     },
@@ -221,26 +237,24 @@ export default class App extends Vue {
     {
       text: 'Open File Explorer',
       shortcut: ['Ctrl', 'E'],
-      callback: () => ({}),
+      callback: () => specific.setOpenedSideTab('Explorer'),
     },
     {
       text: 'Open Mixer',
       shortcut: ['Ctrl', 'M'],
-      callback: () => ({}),
+      callback: () => specific.setOpenedPanel('Mixer'),
     },
     {
       text: 'New Synthesizer',
       shortcut: ['Ctrl', 'N'],
-      callback: () => ({}), // TODO missing when clause
-    },
-    { // TODO(jacob) remove this one
-      text: 'Ctrl+Shift+P',
-      callback: () => ({}),
+      callback: project.addInstrument, // TODO missing when clause
     },
     {
-      text: 'Play / Pause',
+      text: 'Play/Pause',
+      shortcut: ['Space'],
       callback: this.playPause,
     },
+    ...Object.values(this.menuItems),
   ];
 
   // This loaded flag is important

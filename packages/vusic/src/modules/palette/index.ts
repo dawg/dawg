@@ -32,7 +32,43 @@ export type Key =
   'X' |
   'Y' |
   'Z' |
-  'Space';
+  'Space' |
+  'Del';
+
+type KeyCodeLookup = { [k in Key]: number };
+
+const codeLookup: KeyCodeLookup = {
+  Shift: 16,
+  Ctrl: 17,
+  A: 65,
+  B: 66,
+  C: 67,
+  D: 68,
+  E: 69,
+  F: 70,
+  G: 71,
+  H: 72,
+  I: 73,
+  J: 74,
+  K: 75,
+  L: 76,
+  M: 77,
+  N: 78,
+  O: 79,
+  P: 80,
+  Q: 81,
+  R: 82,
+  S: 83,
+  T: 84,
+  U: 85,
+  V: 86,
+  W: 87,
+  X: 88,
+  Y: 89,
+  Z: 90,
+  Space: 32,
+  Del: 46,
+};
 
 export interface PaletteItem {
   text: string;
@@ -41,26 +77,42 @@ export interface PaletteItem {
 }
 
 @Component
-export class Results extends Vue {
-  @Prop({ type: Array, required: true }) public items!: PaletteItem[];
+class Result extends Vue {
+  @Prop({ type: Object, required: true }) public item!: PaletteItem;
+  @Prop({ type: Boolean, required: true }) public selected!: boolean;
+
+  public hover = false;
+  public selectColor = 'rgba(255, 255, 255, 0.25)';
+  public hoverColor = 'rgba(255, 255, 255, 0.25)';
+
+  get style() {
+    return {
+      background: this.selected ? this.selectColor : this.hover ? this.hoverColor : undefined,
+      cursor: this.hover ? 'pointer' : undefined,
+      display: 'flex',
+      padding: '3px 6px',
+      color: '#ddd',
+    };
+  }
 
   public render(h: CreateElement) {
-    const children = this.items.map((item) => {
-      const shortcutText = (item.shortcut || []).join('+');
+    const shortcutText = (this.item.shortcut || []).join('+');
 
-      const text = h('span', item.text);
-      const spacer = h('div', { style: { flex: '1' } });
-      const shortcut = h('span', shortcutText);
+    const text = h('span', this.item.text);
+    const spacer = h('div', { style: { flex: '1' } });
+    const shortcut = h('span', shortcutText);
 
-      return h('div', {
-        style: {
-          display: 'flex',
-          padding: '3px 6px',
-          color: '#ddd',
+    return h('div', {
+      on: {
+        mouseover: () => {
+          this.hover = true;
         },
-      }, [text, spacer, shortcut]);
-    });
-    return h('div', children);
+        mouseleave: () => {
+          this.hover = false;
+        },
+      },
+      style: this.style,
+    }, [text, spacer, shortcut]);
   }
 }
 
@@ -112,6 +164,9 @@ class Palette extends Vue {
   @Prop({ type: Array, required: true }) public items!: PaletteItem[];
 
   public searchText = '';
+  public selected = 0;
+
+  public pressedKeys = new Set<number>();
 
   get tokenized() {
     return this.items.map((item) => {
@@ -119,33 +174,96 @@ class Palette extends Vue {
     });
   }
 
+  get searchWords() {
+    return this.searchText.toLowerCase().split(/ +/);
+  }
+
   get filtered() {
     if (!this.searchText) {
       return this.items;
     }
 
-    return this.tokenized.filter((tokens) => {
-      return tokens.some((token) => token.startsWith(this.searchText));
-    }).map((_, i) => this.items[i]);
+    return this.tokenized
+      .map((tokens, i) => {
+        if (this.searchWords.every((word) => {
+          return tokens.some((token) => token.startsWith(word));
+        })) {
+          return this.items[i];
+        }
+      }).filter((item) => item);
   }
 
   public open() {
     this.$emit('input', true);
   }
 
-  public close(e: KeyboardEvent) {
-    if (e.which === 27) {
+  public keydown(e: KeyboardEvent) {
+    this.pressedKeys.add(e.which);
+
+    if (e.which === 27) { // ESC
       e.preventDefault();
       this.$emit('input', false);
     }
+
+    if (e.which === 38) { // UP
+      this.selected = Math.max(this.selected - 1, 0);
+    } else if (e.which === 40) { // DOWN
+      this.selected = Math.min(this.selected + 1, this.filtered.length - 1);
+    }
+
+    if (e.which === 13) { // ENTER
+      const item = this.filtered[this.selected];
+      if (!item) {
+        return;
+      }
+
+      item.callback();
+      this.$emit('input', false);
+    }
+
+    this.items.forEach((item) => {
+      if (!item.shortcut) {
+        return;
+      }
+
+      if (this.pressedKeys.size !== item.shortcut.length) {
+        return;
+      }
+
+      if (!item.shortcut.every((key) => this.pressedKeys.has(codeLookup[key]))) {
+        return;
+      }
+
+      item.callback();
+    });
+  }
+
+  public keyup(e: KeyboardEvent) {
+    this.pressedKeys.delete(e.which);
   }
 
   public mounted() {
     bus.$on('open', this.open);
+    window.addEventListener('keydown', this.keydown);
+    window.addEventListener('keyup', this.keyup);
   }
 
   public destroyed() {
     bus.$off('open', this.open);
+    window.removeEventListener('keydown', this.keydown);
+    window.removeEventListener('keyup', this.keyup);
+  }
+
+  @Watch<Palette>('filtered')
+  public resetSelected() {
+    this.selected = 0;
+  }
+
+  @Watch<Palette>('value')
+  public resetSearch() {
+    if (this.value) {
+      this.searchText = '';
+    }
   }
 
   public render(h: CreateElement) {
@@ -161,14 +279,17 @@ class Palette extends Vue {
       },
     });
 
-    const results = h(Results, {
-      props: {
-        items: this.filtered,
-      },
-      style: {
-        margin: '0 5px',
-      },
+
+    const items = this.filtered.map((item, i) => {
+      return h(Result, {
+        props: {
+          item,
+          selected: this.selected === i,
+        },
+      });
     });
+
+    const results = h('div', { style: { margin: '5px' } }, items);
 
     const palette = h('div', {
       class: this.paletteClass,
@@ -191,7 +312,7 @@ class Palette extends Vue {
         right: '0',
         bottom: '0',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        zIndex: '2',
+        zIndex: '2000',
         color: '#ddd',
       },
       on: {
@@ -200,15 +321,6 @@ class Palette extends Vue {
         },
       },
     }, children);
-  }
-
-  @Watch<Palette>('value')
-  public addEscListener() {
-    if (this.value) {
-      window.addEventListener('keydown', this.close);
-    } else {
-      window.removeEventListener('keydown', this.close);
-    }
   }
 }
 
