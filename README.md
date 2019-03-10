@@ -60,7 +60,32 @@ npm run serve:storybook
 ```
 
 ### Building
-Currently, there is no process for deploying the actual application. However, we do deploy the `Storybook` page using `GitHub Pages`.
+All of the following commands assume you are running on a `Linux` subsystem. 
+
+#### Linux
+```
+npm run electron:build
+```
+
+#### Windows
+To build for windows, you must first install `Docker`. Once that has been complete, run the following docker command to start the `wine` container.
+
+```
+docker run --rm -ti \
+ --env-file <(env | grep -iE 'DEBUG|NODE_|ELECTRON_|YARN_|NPM_|CI|CIRCLE|TRAVIS_TAG|TRAVIS|TRAVIS_REPO_|TRAVIS_BUILD_|TRAVIS_BRANCH|TRAVIS_PULL_REQUEST_|APPVEYOR_|CSC_|GH_|GITHUB_|BT_|AWS_|STRIP|BUILD_') \
+ --env ELECTRON_CACHE="/root/.cache/electron" \
+ --env ELECTRON_BUILDER_CACHE="/root/.cache/electron-builder" \
+ -v ${PWD}:/project \
+ -v ${PWD}/node_modules:/project/node_modules \
+ -v ~/.cache/electron:/root/.cache/electron \
+ -v ~/.cache/electron-builder:/root/.cache/electron-builder \
+ electronuserland/builder:wine
+```
+
+This will load you into a bash shell in the `/project` folder. Once you are there, run the following command to the the `.exe` file:
+```
+npm run electron:build -- --win
+```
 
 #### Electron
 Currently, we are able to build the `Electron` application; however, deployment and auto-update mechanisms have yet to be created. To build the application, run the following command:
