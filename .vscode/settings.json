@@ -1,22 +1,7 @@
 {
-  "editor.tabSize": 2,
   "cSpell.words": [
-    "Hardcoded",
-    "Vuex",
-    "autoserialize",
-    "comparator",
-    "deserialize",
-    "deserializing",
-    "dismissible",
-    "fatsawtooth",
-    "hacky",
-    "mixins",
-    "resizable",
-    "scrollbar",
-    "tinycolor",
-    "vuejs",
-    "vuetify",
-    "wheeldown",
-    "wheelup"
+    "Scrollbar",
+    "dawgjs",
+    "lerna"
   ]
 }
