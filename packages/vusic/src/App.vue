@@ -1,6 +1,5 @@
 <template>
   <v-app class="app">
-    HELLO
     <dawg>
       <split direction="vertical">
         <split :initial="30" fixed>
@@ -9,17 +8,17 @@
 
         <split direction="horizontal" resizable>
           <split :initial="65" fixed>
-            <!-- <activity-bar></activity-bar> -->
+            <activity-bar></activity-bar>
           </split>
 
           <split :initial="250" collapsible :min-size="100">
-            <!-- <side-tabs v-if="loaded"></side-tabs> -->
+            <side-tabs v-if="loaded"></side-tabs>
           </split>
 
           <split direction="vertical" resizable>
 
-            <!-- <split :initial="general.toolbarHeight" fixed> -->
-              <!-- <toolbar
+            <split :initial="general.toolbarHeight" fixed>
+              <toolbar
                 :height="general.toolbarHeight"
                 :transport="transport"
                 :context="general.applicationContext"
@@ -29,11 +28,11 @@
                 style="border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
                 :bpm="project.bpm"
                 @update:bpm="project.setBpm"
-              ></toolbar> -->
-            <!-- </split> -->
+              ></toolbar>
+            </split>
 
             <split>
-              <!-- <playlist-sequencer
+              <playlist-sequencer
                 v-if="loaded"
                 style="height: 100%"
                 :tracks="project.tracks" 
@@ -43,36 +42,36 @@
                 :start.sync="masterStart"
                 :end.sync="masterEnd"
                 @new-prototype="checkPrototype"
-              ></playlist-sequencer> -->
+              ></playlist-sequencer>
             </split>
 
             <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`" keep>
               <split :initial="55" fixed>
-                <!-- <panel-headers></panel-headers> -->
+                <panel-headers></panel-headers>
               </split>
               <split>
-                <!-- <panels v-if="loaded"></panels> -->
+                <panels v-if="loaded"></panels>
               </split>
             </split>
           </split>
         </split>
         <split :initial="20" fixed>
-          <!-- <status-bar></status-bar> -->
+          <status-bar></status-bar>
         </split>
       </split>
     </dawg>
     <notifications></notifications>
     <context-menu></context-menu>
-    <!-- <palette 
+    <palette 
       v-model="palette"
       palette-class="secondary"
       :items="shortcuts"
-    ></palette> -->
-    <!-- <project-modal 
+    ></palette>
+    <project-modal 
       v-model="backupModal" 
       :projects="general.projects"
       @open="openProject"
-    ></project-modal> -->
+    ></project-modal>
   </v-app>
 </template>
 
@@ -80,18 +79,18 @@
 import fs from 'fs';
 import { Component, Vue } from 'vue-property-decorator';
 import { ipcRenderer, shell } from 'electron';
-// import { project, cache, general, specific, Project } from '@/store';
+import { project, cache, general, specific, Project } from '@/store';
 import { toTickTime, allKeys, Keys } from '@/utils';
 import Transport from '@/modules/audio/transport';
 import { automation } from '@/modules/knobs';
 import { Pattern, Score, Note, Instrument, PlacedPattern, PlacedSample, Automatable, AutomationClip } from '@/schemas';
-// import Sidebar from '@/components/SideBar.vue';
-// import SideTabs from '@/sections/SideTabs.vue';
-// import Panels from '@/sections/Panels.vue';
-// import PanelHeaders from '@/sections/PanelHeaders.vue';
-// import ActivityBar from '@/sections/ActivityBar.vue';
-// import StatusBar from '@/sections/StatusBar.vue';
-// import Tone from 'tone';
+import Sidebar from '@/components/SideBar.vue';
+import SideTabs from '@/sections/SideTabs.vue';
+import Panels from '@/sections/Panels.vue';
+import PanelHeaders from '@/sections/PanelHeaders.vue';
+import ActivityBar from '@/sections/ActivityBar.vue';
+import StatusBar from '@/sections/StatusBar.vue';
+import Tone from 'tone';
 import { SideTab } from '@/constants';
 import { PaletteItem, bus } from '@/modules/palette';
 import { Watch } from '@/modules/update';
@@ -104,32 +103,32 @@ import { Menu } from '@/modules/menubar';
 
 @Component({
   components: {
-    // SideTabs,
-    // Panels,
-    // PanelHeaders,
-    // ActivityBar,
-    // StatusBar,
+    SideTabs,
+    Panels,
+    PanelHeaders,
+    ActivityBar,
+    StatusBar,
   },
 })
 export default class App extends Vue {
-  // public project = project;
-  // public general = general;
-  // public specific = specific;
+  public project = project;
+  public general = general;
+  public specific = specific;
 
   public menuItems: {[k: string]: PaletteItem} = {
     save: {
       text: 'Save',
       shortcut: ['Ctrl', 'S'],
-      callback: () => ({}), // this.save,
+      callback: this.save,
     },
     open: {
       text: 'Open',
       shortcut: ['Ctrl', 'O'],
-      callback: () => ({}), // this.open,
+      callback: this.open,
     },
     backup: {
       text: 'Open From Backup',
-      callback: () => ({}), // this.openBackup,
+      callback: this.openBackup,
     },
     addFolder: {
       text: 'Add Folder to Project',
@@ -233,22 +232,22 @@ export default class App extends Vue {
     {
       text: 'Open Piano Roll',
       shortcut: ['Ctrl', 'P'],
-      callback: () => ({}), // specific.setOpenedPanel('Piano Roll'),
+      callback: () => specific.setOpenedPanel('Piano Roll'),
     },
     {
       text: 'Open File Explorer',
       shortcut: ['Ctrl', 'E'],
-      callback: () => ({}), //  => specific.setOpenedSideTab('Explorer'),
+      callback: () => specific.setOpenedSideTab('Explorer'),
     },
     {
       text: 'Open Mixer',
       shortcut: ['Ctrl', 'M'],
-      callback: () => ({}), //  => specific.setOpenedPanel('Mixer'),
+      callback: () => specific.setOpenedPanel('Mixer'),
     },
     {
       text: 'New Synthesizer',
       shortcut: ['Ctrl', 'N'],
-      callback: () => ({}), // project.addInstrument, // TODO missing when clause
+      callback: project.addInstrument, // TODO missing when clause
     },
     {
       text: 'Play/Pause',
@@ -273,9 +272,9 @@ export default class App extends Vue {
   public masterStart = 0;
   public masterEnd = 0;
 
-  // get getProjectsErrorMessage() {
-  //   return general.getProjectsErrorMessage;
-  // }
+  get getProjectsErrorMessage() {
+    return general.getProjectsErrorMessage;
+  }
 
   public async created() {
     ipcRenderer.on('save', this.save);
@@ -284,12 +283,12 @@ export default class App extends Vue {
     automation.$on('automate', this.addAutomationClip);
 
     // tslint:disable-next-line:no-console
-    // console.info(project);
+    console.info(project);
 
     // Make sure we load the cache first before loading the default project.
     this.$log.debug('Starting to read data.');
-    // await cache.fromCacheFolder();
-    // await this.withErrorHandling(project.load);
+    await cache.fromCacheFolder();
+    await this.withErrorHandling(project.load);
     this.$log.debug('Finished reading data from the fs.');
     this.loaded = true;
   }
@@ -303,84 +302,84 @@ export default class App extends Vue {
   public openBackup() {
     this.backupModal = true;
 
-    // if (!general.projects.length) {
-    //   general.loadProjects();
-    // }
+    if (!general.projects.length) {
+      general.loadProjects();
+    }
   }
 
   public async withErrorHandling(callback: () => Promise<void>) {
-    // try {
-    //   await callback();
-    //   await specific.loadSpecific();
-    // } catch (e) {
-    //   this.$notify.error('Unable to load project.');
-    //   this.$log.error(e);
-    // }
+    try {
+      await callback();
+      await specific.loadSpecific();
+    } catch (e) {
+      this.$notify.error('Unable to load project.');
+      this.$log.error(e);
+    }
   }
 
   public open() {
-    // this.withErrorHandling(project.open);
+    this.withErrorHandling(project.open);
   }
 
   public async save() {
-    // // If we are backing up, star the progress circle!
-    // if (specific.backup) {
-    //   general.set({ key: 'syncing', value: true });
-    // }
+    // If we are backing up, star the progress circle!
+    if (specific.backup) {
+      general.set({ key: 'syncing', value: true });
+    }
 
-    // const backupStatus = await project.save({ backup: specific.backup });
+    const backupStatus = await project.save({ backup: specific.backup });
 
-    // // Always set the value back to false... you never know
-    // general.set({ key: 'syncing', value: false });
+    // Always set the value back to false... you never know
+    general.set({ key: 'syncing', value: false });
 
-    // // backupStatus is true if specific.backup is also true
-    // if (backupStatus) {
-    //   switch (backupStatus.type) {
-    //     case 'error':
-    //       this.$notify.error('Unable to backup', { detail: backupStatus.message });
-    //       general.set({ key: 'backupError', value: true });
-    //       break;
-    //     case 'success':
-    //       // Make sure to set it back to false if there was an error previously
-    //       if (general.backupError) {
-    //         general.set({ key: 'backupError', value: false });
-    //       }
-    //       break;
-    //   }
-    // }
+    // backupStatus is true if specific.backup is also true
+    if (backupStatus) {
+      switch (backupStatus.type) {
+        case 'error':
+          this.$notify.error('Unable to backup', { detail: backupStatus.message });
+          general.set({ key: 'backupError', value: true });
+          break;
+        case 'success':
+          // Make sure to set it back to false if there was an error previously
+          if (general.backupError) {
+            general.set({ key: 'backupError', value: false });
+          }
+          break;
+      }
+    }
   }
 
-  // get transport() {
-  //   if (general.applicationContext === 'pianoroll') {
-  //     const pattern = specific.selectedPattern;
-  //     return pattern ? pattern.transport : null;
-  //   } else {
-  //     return project.master.transport;
-  //   }
-  // }
+  get transport() {
+    if (general.applicationContext === 'pianoroll') {
+      const pattern = specific.selectedPattern;
+      return pattern ? pattern.transport : null;
+    } else {
+      return project.master.transport;
+    }
+  }
 
   public playPause() {
-    // let transport: Transport<any>;
-    // if (general.applicationContext === 'pianoroll') {
-    //   const pattern = specific.selectedPattern;
-    //   if (!pattern) {
-    //     this.$notify.info('Select a pattern.');
-    //     return;
-    //   }
-    //   transport = pattern.transport;
-    // } else {
-    //   transport = project.master.transport;
-    // }
+    let transport: Transport<any>;
+    if (general.applicationContext === 'pianoroll') {
+      const pattern = specific.selectedPattern;
+      if (!pattern) {
+        this.$notify.info('Select a pattern.');
+        return;
+      }
+      transport = pattern.transport;
+    } else {
+      transport = project.master.transport;
+    }
 
-    // if (transport.state === 'started') {
-    //   this.$log.debug('PAUSING');
-    //   transport.stop();
-    //   general.pause();
-    // } else {
-    //   this.$log.debug('PLAY');
-    //   transport.start();
-    //   general.start();
-    // }
+    if (transport.state === 'started') {
+      this.$log.debug('PAUSING');
+      transport.stop();
+      general.pause();
+    } else {
+      this.$log.debug('PLAY');
+      transport.start();
+      general.start();
+    }
   }
 
   public checkPrototype(prototype: PlacedPattern | PlacedSample) {
@@ -388,28 +387,28 @@ export default class App extends Vue {
       return;
     }
 
-    // const sample = prototype.sample;
-    // if (sample.id in project.sampleLookup) {
-    //   return;
-    // }
+    const sample = prototype.sample;
+    if (sample.id in project.sampleLookup) {
+      return;
+    }
 
-    // this.$log.info('Adding a sample!');
-    // project.addSample(sample);
+    this.$log.info('Adding a sample!');
+    project.addSample(sample);
   }
 
   public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T) {
-    // const added = await project.createAutomationClip({
-    //   automatable,
-    //   key,
-    //   start: this.masterStart,
-    //   end: this.masterEnd,
-    // });
+    const added = await project.createAutomationClip({
+      automatable,
+      key,
+      start: this.masterStart,
+      end: this.masterEnd,
+    });
 
-    // if (!added) {
-    //   this.$notify.warning('Unable to create automation clip', {
-    //     detail: 'There are no free tracks. Move elements and try again.',
-    //   });
-    // }
+    if (!added) {
+      this.$notify.warning('Unable to create automation clip', {
+        detail: 'There are no free tracks. Move elements and try again.',
+      });
+    }
   }
 
   public async openProject(info: ProjectInfo) {
@@ -438,12 +437,12 @@ export default class App extends Vue {
     window.reload();
   }
 
-  // @Watch<App>('getProjectsErrorMessage')
-  // public showNotification() {
-  //   if (this.getProjectsErrorMessage) {
-  //     this.$notify.error('Unable to get projects.', { detail: this.getProjectsErrorMessage });
-  //   }
-  // }
+  @Watch<App>('getProjectsErrorMessage')
+  public showNotification() {
+    if (this.getProjectsErrorMessage) {
+      this.$notify.error('Unable to get projects.', { detail: this.getProjectsErrorMessage });
+    }
+  }
 }
 </script>
 
