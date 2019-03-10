@@ -2,6 +2,7 @@
 
 import { app, protocol, BrowserWindow } from 'electron';
 import menu from 'electron-context-menu';
+import path from 'path';
 import {
   createProtocol,
   installVueDevtools,
@@ -16,7 +17,14 @@ let win: BrowserWindow | null;
 protocol.registerStandardSchemes(['app'], { secure: true });
 function createWindow() {
   // Create the browser window.
-  win = new BrowserWindow({ width: 800, height: 600 });
+  win = new BrowserWindow({
+    width: 800,
+    height: 600,
+    minHeight: 600,
+    minWidth: 800,
+    // @ts-ignore
+    icon: path.join(__static, 'icon.png'),
+  });
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
