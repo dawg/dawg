@@ -42,16 +42,16 @@ const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
  */
 @Module({ dynamic: true, store, name: 'project' })
 export class Project extends VuexModule {
-  @io.autoserialize public bpm = 120;
-  @io.autoserialize({ nullable: true }) public name: string | null = null;
-  @io.autoserialize public id = uuid.v4();
-  @io.autoserializeAs(Pattern) public patterns: Pattern[] = [];
-  @io.autoserializeAs(Instrument) public instruments: Instrument[] = [];
+  @io.auto public bpm = 120;
+  @io.auto({ nullable: true }) public name: string | null = null;
+  @io.auto public id = uuid.v4();
+  @io.auto({ type: Pattern, optional: true, array: true }) public patterns: Pattern[] = [];
+  @io.auto({ type: Instrument, optional: true, array: true }) public instruments: Instrument[] = [];
   @io.autoserializeAs(Channel) public channels = range(10).map((i) => Channel.create(i));
   @io.autoserializeAs(Track) public tracks = range(21).map((i) => Track.create(i));
-  @io.autoserializeAs(Playlist) public master: Playlist = new Playlist();
-  @io.autoserialize({ type: Sample }) public samples: Sample[] = [];
-  @io.autoserialize({ type: AutomationClip }) public automationClips: AutomationClip[] = [];
+  @io.auto({ type: Playlist, optional: true }) public master: Playlist = new Playlist();
+  @io.auto({ type: Sample, optional: true, array: true }) public samples: Sample[] = [];
+  @io.auto({ type: AutomationClip, optional: true, array: true }) public automationClips: AutomationClip[] = [];
 
   constructor(module?: Mod<any, any>) {
     super(module || {});
@@ -79,14 +79,14 @@ export class Project extends VuexModule {
     }
 
     const encoded = io.serialize(this, Project);
+
     fs.writeFileSync(
       cache.openedFile,
       JSON.stringify(encoded, null, 4),
     );
 
     if (opts.backup) {
-      const project = io.serialize(this, Project);
-      return await backend.updateProject(this.id, project);
+      return await backend.updateProject(this.id, encoded);
     }
   }
 
@@ -111,7 +111,9 @@ export class Project extends VuexModule {
   public async load() {
     let reset = false;
     for (const path of [cache.backupTempPath, cache.openedFile]) {
-      if (!path) { continue; }
+      if (!path) {
+        continue;
+      }
 
       if (!await fs.exists(path)) {
         // tslint:disable-next-line:no-console
@@ -123,6 +125,13 @@ export class Project extends VuexModule {
       console.info(`Loading from ${path}`);
 
       let contents = fs.readFileSync(path).toString();
+
+      if (cache.backupTempPath === path) {
+        // Always reset to null
+        fs.unlink(path);
+        cache.setBackupTempPath(null);
+      }
+
       contents = JSON.parse(contents);
       const result = io.deserialize(contents, Project);
       this.reset(result);
@@ -131,31 +140,11 @@ export class Project extends VuexModule {
     }
 
     if (cache.openedFile) {
-      fs.exists(cache.openedFile, (err, exists) => {
+      fs.exists(cache.openedFile, (_, exists) => {
         if (!exists) {
           cache.setOpenedFile(null);
         }
       });
-    }
-
-    // Always reset to null if it is set
-    if (cache.backupTempPath) {
-      const path = cache.backupTempPath;
-      fs.exists(cache.backupTempPath, (err, exists) => {
-        if (err) {
-          // tslint:disable-next-line:no-console
-          console.error(err);
-          return;
-        }
-
-        if (!exists) {
-          return;
-        }
-
-        fs.unlink(path);
-      });
-
-      cache.setBackupTempPath(null);
     }
 
     if (!reset) {

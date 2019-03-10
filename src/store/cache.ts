@@ -16,9 +16,9 @@ const CACHE_PATH = path.join(APPLICATION_PATH, 'cache.json');
  */
 @Module({ dynamic: true, store, name: 'cache' })
 export class Cache extends VuexModule {
-  @io.autoserialize({ nullable: true }) public openedFile: string | null = null;
-  @io.autoserialize({ nullable: true }) public backupTempPath: string | null = null;
-  @io.autoserialize public folders: string[] = [];
+  @io.auto({ nullable: true }) public openedFile: string | null = null;
+  @io.auto({ nullable: true }) public backupTempPath: string | null = null;
+  @io.auto public folders: string[] = [];
 
   constructor(module?: Mod<any, any>) {
     super(module || {});

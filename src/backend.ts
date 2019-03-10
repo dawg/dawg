@@ -1,16 +1,62 @@
-import axios, { TypedAxiosRequestConfig } from 'restyped-axios';
-import { BackupAPI, Error, Project } from '@dawgjs/specification';
+import firebase from 'firebase/app';
 
-const isDev = process.env.NODE_ENV !== 'production';
-const baseURL = isDev ? 'http://localhost:3000/' : '';
-const client = axios.create<BackupAPI>({ baseURL });
+export interface ProjectInfo {
+  id: string;
+  name: string;
+  initialSaveTime: number;
+  lastUploadTime: number;
+}
 
-const send = async <T extends TypedAxiosRequestConfig<any, any, any>>(
+export interface SerializedProject {
+  name: string;
+}
+
+export interface Error {
+  type: 'error';
+  message: string;
+}
+
+export interface Success {
+  type: 'success';
+}
+
+export interface NotFound {
+  type: 'not-found';
+}
+
+export interface ProjectFound {
+  type: 'found';
+  project: SerializedProject;
+}
+
+export interface Projects {
+  type: 'success';
+  projects: ProjectInfo[];
+}
+
+export interface Project extends ProjectInfo {
+  project: SerializedProject;
+}
+
+export interface Schema {
+  [id: string]: Project;
+}
+
+let db: null | firebase.database.Database = null;
+
+const getRef = () => {
+  if (!db) {
+    db = firebase.database();
+  }
+
+  return db.ref('projects');
+};
+
+const withHandling = async <T>(
   f: () => Promise<T>,
-): Promise<T['data'] | Error> => {
+): Promise<T | Error> => {
   try {
-    const res = await f();
-    return res.data;
+    return await f();
   } catch (e) {
     return {
       type: 'error',
@@ -20,19 +66,77 @@ const send = async <T extends TypedAxiosRequestConfig<any, any, any>>(
 };
 
 const getProjects = async () => {
-  return send(() => client.request({ url: '/projects/names' }));
+  return withHandling(async (): Promise<Projects> => {
+    const snapshot = await getRef().orderByChild('lastUploadTime').once('value');
+
+    if (!snapshot.exists()) {
+      return {
+        type: 'success',
+        projects: [],
+      };
+    }
+
+    const projects: Schema = snapshot.val();
+    const info = Object.values(projects).map(({ id, name, initialSaveTime, lastUploadTime }) => {
+      return { id, name, initialSaveTime, lastUploadTime };
+    });
+
+    return {
+      type: 'success',
+      projects: info,
+    };
+  });
 };
 
 const getProject = async (id: string) => {
-  return send(() => client.get<'/projects/:id'>(`/projects/${id}`));
+  return withHandling(async (): Promise<NotFound | ProjectFound> => {
+    const snapshot = await getRef().child(id).once('value');
+
+    if (!snapshot.exists()) {
+      return {
+        type: 'not-found',
+      };
+    }
+
+    return {
+      type: 'found',
+      project: (snapshot.val() as Project).project,
+    };
+  });
 };
 
 const deleteProject = async (id: string) => {
-  return send(() => client.delete<'/projects/:id'>(`/projects/${id}`));
+  getRef().child(id).remove();
 };
 
-const updateProject = async (id: string, project: Project) => {
-  return send(() => client.post<'/projects/:id'>(`/projects/${id}`, project));
+const updateProject = async (id: string, project: SerializedProject) => {
+  return await withHandling(async (): Promise<Success> => {
+    const ref = getRef().child(id);
+    const snapshot = await ref.once('value');
+
+    const time = Date.now();
+
+    if (!snapshot.exists()) {
+      getRef().set({
+        [id]: {
+          name: project.name,
+          id,
+          initialSaveTime: time,
+          lastUploadTime: time,
+          project,
+        } as Project,
+      });
+    } else {
+      ref.update({
+        project,
+        lastUploadTime: time,
+      } as Partial<Project>);
+    }
+
+    return {
+      type: 'success',
+    };
+  });
 };
 
 

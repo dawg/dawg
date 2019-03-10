@@ -7,7 +7,7 @@
       class="pattern"
       :transfer-data="item.prototype"
       :class="{ selected: value && item.pattern.id === value.id }"
-      @click="click(item.pattern)"
+      @click.native="click(item.pattern)"
     >
       {{ item.pattern.name }}
     </drag>

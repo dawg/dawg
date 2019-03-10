@@ -51,7 +51,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { ProjectInfo } from '@dawgjs/specification';
+import { ProjectInfo } from '@/backend';
 
 @Component({
   filters: {

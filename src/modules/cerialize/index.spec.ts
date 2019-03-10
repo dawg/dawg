@@ -2,7 +2,7 @@ import {
   serialize as S,
   deserialize as D,
   autoserializeAs,
-  autoserialize,
+  auto,
   autoserializeIndexable,
   inheritSerialization,
   is,
@@ -11,8 +11,8 @@ import {
 import { expect } from 'chai';
 
 class A {
-  @autoserialize public a = 'test';
-  @autoserialize public b = 5;
+  @auto public a = 'test';
+  @auto public b = 5;
   public bad = '5';
 }
 
@@ -39,7 +39,7 @@ describe('cerialize', () => {
     });
   });
 
-  context('autoserialize', () => {
+  context('auto', () => {
     it('simple', () => {
       const a = new A();
       expect(S(a, A)).to.deep.equal({
@@ -135,8 +135,8 @@ describe('cerialize', () => {
   context('is', () => {
     it('simple', () => {
       class IS {
-        @autoserialize public a = 1;
-        @autoserialize public b = 1;
+        @auto public a = 1;
+        @auto public b = 1;
       }
 
       expect(is({ a: 1, b: 0 }, IS)).to.eq(true);

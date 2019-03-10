@@ -23,12 +23,12 @@ interface ProjectCache {
  */
 @Module({ dynamic: true, store, name: 'specific' })
 export class Specific extends VuexModule {
-  @io.autoserialize({ nullable: true }) public backup = false;
-  @io.autoserialize({ nullable: true }) public selectedPatternId: string | null = null;
-  @io.autoserialize({ nullable: true }) public selectedScoreId: string | null = null;
-  @io.autoserialize({ nullable: true }) public openedPanel: PanelNames | null = null;
-  @io.autoserialize({ nullable: true }) public openedSideTab: SideTab | null = null;
-  @io.autoserialize({ nullable: true }) public openedTab: string | null = null;
+  @io.auto({ nullable: true, optional: true }) public backup = false;
+  @io.auto({ nullable: true, optional: true }) public selectedPatternId: string | null = null;
+  @io.auto({ nullable: true, optional: true }) public selectedScoreId: string | null = null;
+  @io.auto({ nullable: true, optional: true }) public openedPanel: PanelNames | null = null;
+  @io.auto({ nullable: true, optional: true }) public openedSideTab: SideTab | null = null;
+  @io.auto({ nullable: true, optional: true }) public openedTab: string | null = null;
   public projectId: string | null = null;
 
   constructor(module?: Mod<any, any>) {
@@ -37,6 +37,7 @@ export class Specific extends VuexModule {
 
   get selectedPattern() {
     if (!this.selectedPatternId) { return null; }
+    if (!(this.selectedPatternId in project.patternLookup)) { return null; }
     return project.patternLookup[this.selectedPatternId];
   }
 
@@ -92,7 +93,18 @@ export class Specific extends VuexModule {
   public async read() {
     await fs.writeFileIfNonExistent(PROJECT_CACHE_PATH, '{}');
     const contents = (await fs.readFile(PROJECT_CACHE_PATH)).toString();
-    return JSON.parse(contents) as ProjectCache;
+
+    try {
+      return JSON.parse(contents);
+    } catch (e) {
+      // tslint:disable-next-line:no-console
+      console.warn(e.message);
+      // TODO We should handle this better
+      // Sometimes the file has invalid JSON for some reason
+      // We need to figure out why this happens.
+      // Since everything is optional, this is ok though
+      return {};
+    }
   }
 
   @Action

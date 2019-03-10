@@ -101,8 +101,7 @@ import Tone from 'tone';
 import { SideTab } from '@/constants';
 import { PaletteItem, bus } from '@/modules/palette';
 import { Watch } from '@/modules/update';
-import { ProjectInfo } from '@dawgjs/specification';
-import backend from '@/backend';
+import backend, { ProjectInfo } from '@/backend';
 import * as io from '@/modules/cerialize';
 import tmp from 'tmp';
 import { remote } from 'electron';
@@ -422,6 +421,7 @@ export default class App extends Vue {
       return;
     }
 
+
     const { name } = tmp.fileSync({ keep: true });
     fs.writeFileSync(name, JSON.stringify(res.project, null, 4));
 
@@ -430,7 +430,7 @@ export default class App extends Vue {
     }
 
     this.$log.info(`Writing ${name} as backup`);
-    // cache.setBackupTempPath(name);
+    cache.setBackupTempPath(name);
 
     const window = remote.getCurrentWindow();
     window.reload();

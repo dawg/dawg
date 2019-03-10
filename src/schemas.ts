@@ -44,7 +44,7 @@ export abstract class Element implements IElement {
    * Refers to row where the element is placed.
    * For notes, these are numbered 0 -> 87 and start from the higher frequencies.
    */
-  @io.autoserialize public row!: number;
+  @io.auto public row!: number;
 
   /**
    * Duration in beats.
@@ -52,7 +52,7 @@ export abstract class Element implements IElement {
   // tslint:disable-next-line:variable-name
   public _duration!: number;
 
-  @io.autoserialize
+  @io.auto
   get duration() {
     return this._duration;
   }
@@ -74,7 +74,7 @@ export abstract class Element implements IElement {
   /**
    * Time in beats.
    */
-  @io.autoserialize public time!: number;
+  @io.auto public time!: number;
 
   protected eventId?: string;
   protected transport?: Transport<any>;
@@ -115,7 +115,7 @@ export class PlacedPattern extends Element {
   public readonly component = 'pattern-element';
 
   public pattern!: Pattern;
-  @io.autoserialize public patternId!: string;
+  @io.auto public patternId!: string;
 
   public init(pattern: Pattern) {
     this.pattern = pattern;
@@ -141,8 +141,8 @@ export class Sample {
     return sample;
   }
 
-  @io.autoserialize public id = uuid.v4();
-  @io.autoserialize public path!: string;
+  @io.auto public id = uuid.v4();
+  @io.auto public path!: string;
   public buffer!: AudioBuffer;
   private player!: Tone.Player;
 
@@ -179,7 +179,7 @@ export class PlacedSample extends Element {
     return element;
   }
 
-  @io.autoserialize public sampleId!: string;
+  @io.auto public sampleId!: string;
   public readonly component = 'sample-element';
   public sample!: Sample;
 
@@ -251,7 +251,7 @@ export class PlacedAutomationClip extends Element {
   }
 
   public readonly component = 'automation-clip-element';
-  @io.autoserialize public automationId!: string;
+  @io.auto public automationId!: string;
   public clip!: AutomationClip;
 
   public init(clip: AutomationClip) {
@@ -280,8 +280,8 @@ export class Score {
     return score;
   }
   public instrument!: Instrument;
-  @io.autoserialize public id!: string;
-  @io.autoserialize public instrumentId!: string;
+  @io.auto public id!: string;
+  @io.auto public instrumentId!: string;
   @io.autoserializeAs(Note) public notes: Note[] = [];
 
   public init(lookup: { [k: string]: Instrument }) {
@@ -299,9 +299,9 @@ export class Pattern {
     pattern.name = name;
     return pattern;
   }
-  @io.autoserialize public id: string = uuid.v4();
-  @io.autoserialize public name!: string;
-  @io.autoserialize({ type: Score }) public scores: Score[] = [];
+  @io.auto public id: string = uuid.v4();
+  @io.auto public name!: string;
+  @io.auto({ type: Score }) public scores: Score[] = [];
   public transport = new Transport<Note>();
 
   get duration() {
@@ -340,8 +340,8 @@ export class Instrument {
       mute: false,
     });
   }
-  @io.autoserialize public name!: string;
-  @io.autoserialize public id!: string;
+  @io.auto public name!: string;
+  @io.auto public id!: string;
   private destination: Tone.AudioNode | null = Tone.Master;
   // tslint:disable-next-line:variable-name
   private _type!: string;
@@ -369,13 +369,13 @@ export class Instrument {
   get mute() {
     return this._mute;
   }
-  @io.autoserialize
+  @io.auto
   set mute(mute: boolean) {
     this._mute = mute;
     this.checkConnection();
   }
 
-  @io.autoserialize({ nullable: true })
+  @io.auto({ nullable: true, optional: true })
   get channel() {
     return this._channel;
   }
@@ -386,7 +386,7 @@ export class Instrument {
   get type() {
     return this._type;
   }
-  @io.autoserialize
+  @io.auto
   set type(type: string) {
     this._type = type;
     this.synth.set({ oscillator: { type } });
@@ -448,8 +448,8 @@ export class Point {
     return point;
   }
 
-  @io.autoserialize public time!: Beats;
-  @io.autoserialize public value!: number;
+  @io.auto public time!: Beats;
+  @io.auto public value!: number;
   public eventId!: string;
 
   public init(eventId: string) {
@@ -474,10 +474,10 @@ export class AutomationClip {
   }
 
   @io.autoserializeAs(Point) public points: Point[] = [];
-  @io.autoserialize public context!: ClipContext;
-  @io.autoserialize public contextId!: string;
-  @io.autoserialize public attr!: string;
-  @io.autoserialize public id = uuid.v4();
+  @io.auto public context!: ClipContext;
+  @io.auto public contextId!: string;
+  @io.auto public attr!: string;
+  @io.auto public id = uuid.v4();
 
   public signal!: Signal;
   public control!: Controller;
@@ -834,10 +834,10 @@ export class Effect<T extends EffectName> {
     return effect;
   }
 
-  @io.autoserialize public slot!: number; // 0 <= slot < maxSlots
-  @io.autoserialize public type!: T;
-  @io.autoserialize public options!: EffectOptions[T];
-  @io.autoserialize public id = uuid.v4();
+  @io.auto public slot!: number; // 0 <= slot < maxSlots
+  @io.auto public type!: T;
+  @io.auto public options!: EffectOptions[T];
+  @io.auto public id = uuid.v4();
 
   public effect!: EffectTones[T];
   private destination: Tone.AudioNode | null = null;
@@ -874,10 +874,10 @@ export class Channel {
     return channel;
   }
 
-  @io.autoserialize public number!: number;
-  @io.autoserialize public name!: string;
-  @io.autoserializeAs(Effect) public effects: AnyEffect[] = [];
-  @io.autoserialize public id = uuid.v4();
+  @io.auto public number!: number;
+  @io.auto public name!: string;
+  @io.auto({ type: Effect, optional: true, array: true }) public effects: AnyEffect[] = [];
+  @io.auto public id = uuid.v4();
 
   public left = new Tone.Meter();
   public right = new Tone.Meter();
@@ -903,7 +903,7 @@ export class Channel {
     this.split.right.connect(this.right);
   }
 
-  @io.autoserialize
+  @io.auto
   get mute() {
     return this.muted;
   }
@@ -943,13 +943,15 @@ export class Track {
     track.name = `Track ${i}`;
     return track;
   }
-  @io.autoserialize public name!: string;
-  @io.autoserialize public mute = false;
+  @io.auto public name!: string;
+  @io.auto public mute = false;
 }
 
 type PlaylistElements = PlacedPattern | PlacedSample | PlacedAutomationClip;
 export class Playlist {
-  @io.union(PlacedPattern, PlacedSample) public elements: PlaylistElements[] = [];
+  @io.auto({ types: [PlacedPattern, PlacedSample], optional: true, array: true })
+  public elements: PlaylistElements[] = [];
+
   public transport = new Transport<PlaylistElements>();
 
   public init() {

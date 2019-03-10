@@ -5,8 +5,7 @@ import BaseTabs from '@/components/BaseTabs.vue';
 import store from '@/store/store';
 import { ApplicationContext } from '@/constants';
 import { VuexModule } from '@/store/utils';
-import { ProjectInfo, Error } from '@dawgjs/specification';
-import backend from '@/backend';
+import backend, { ProjectInfo } from '@/backend';
 
 /**
  * This module is used to move data throughout the sections. It is not serialized in any way.

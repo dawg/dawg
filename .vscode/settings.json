@@ -10,7 +10,7 @@
     "Serializable",
     "VUSIC",
     "Vuex",
-    "autoserialize",
+    "auto",
     "backend",
     "comparator",
     "dawgjs",
