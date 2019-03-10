@@ -19,7 +19,7 @@ import Synth from '@/components/Synth.vue';
 import { Nullable } from '@/utils';
 import { Score, Instrument, Pattern } from '@/schemas';
 import { Watch } from '@/modules/update';
-import { project, specific } from '@/store';
+// import { project, specific } from '@/store';
 
 @Component({ components: { Synth } })
 export default class Synths extends Vue {
@@ -28,7 +28,7 @@ export default class Synths extends Vue {
   @Prop(Nullable(Object)) public selectedScore!: Score | null;
   @Prop(Nullable(Object)) public selectedPattern!: Pattern | null;
 
-  public project = project;
+  // public project = project;
 
   get scoreLookup() {
     const lookup: {[k: string]: Score} = {};
@@ -54,17 +54,17 @@ export default class Synths extends Vue {
 
     const instrument = this.instruments[i];
     if (!this.scoreLookup.hasOwnProperty(instrument.id)) {
-      project.addScore({ pattern: this.selectedPattern, instrument });
+      // project.addScore({ pattern: this.selectedPattern, instrument });
     }
 
     this.$update('selectedScore', this.scoreLookup[instrument.id]);
-    specific.setOpenedPanel('Piano Roll'); // TODO AHH Hardcoding
+    // specific.setOpenedPanel('Piano Roll'); // TODO AHH Hardcoding
   }
 
   public contextmenu(e: MouseEvent, i: number) {
     this.$context(e, [
       {
-        callback: () => project.deleteInstrument(i),
+        callback: () => ({}), // project.deleteInstrument(i),
         text: 'Delete',
       },
       {

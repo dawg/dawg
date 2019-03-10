@@ -60,9 +60,8 @@ export class Project extends VuexModule {
   @Action
   public async save(opts: { backup: boolean }) {
     if (!cache.openedFile) {
-      const openedFile: string | null = dialog.showSaveDialog(remote.getCurrentWindow(), {});
+      const openedFile = dialog.showSaveDialog(remote.getCurrentWindow(), {});
 
-      // dialog.showSaveDialog can be null. Return type for showSaveDialog is wrong.
       if (!openedFile) {
         return;
       }
