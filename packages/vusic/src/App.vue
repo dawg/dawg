@@ -13,6 +13,7 @@
 
           <split :initial="250" collapsible :min-size="100">
             <side-tabs v-if="loaded"></side-tabs>
+            <blank v-else></blank>
           </split>
 
           <split direction="vertical" resizable>
@@ -43,6 +44,7 @@
                 :end.sync="masterEnd"
                 @new-prototype="checkPrototype"
               ></playlist-sequencer>
+              <blank v-else></blank>              
             </split>
 
             <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`" keep>
@@ -51,6 +53,7 @@
               </split>
               <split>
                 <panels v-if="loaded"></panels>
+                <blank v-else></blank>
               </split>
             </split>
           </split>
@@ -72,13 +75,17 @@
       :projects="general.projects"
       @open="openProject"
     ></project-modal>
+    <loading 
+      class="secondary"
+      :value="!loaded"
+    ></loading>
   </v-app>
 </template>
 
 <script lang="ts">
 import fs from 'fs';
 import { Component, Vue } from 'vue-property-decorator';
-import { ipcRenderer, shell } from 'electron';
+import { shell } from 'electron';
 import { project, cache, general, specific, Project } from '@/store';
 import { toTickTime, allKeys, Keys } from '@/utils';
 import Transport from '@/modules/audio/transport';
@@ -277,26 +284,18 @@ export default class App extends Vue {
   }
 
   public async created() {
-    ipcRenderer.on('save', this.save);
-    ipcRenderer.on('open', this.open);
-    ipcRenderer.on('openBackup', this.openBackup);
     automation.$on('automate', this.addAutomationClip);
-
     // tslint:disable-next-line:no-console
     console.info(project);
 
-    // Make sure we load the cache first before loading the default project.
-    this.$log.debug('Starting to read data.');
-    await cache.fromCacheFolder();
-    await this.withErrorHandling(project.load);
-    this.$log.debug('Finished reading data from the fs.');
-    this.loaded = true;
-  }
-
-  public destroyed() {
-    ipcRenderer.removeListener('save', this.save);
-    ipcRenderer.removeListener('open', this.open);
-    ipcRenderer.removeListener('openBackup', this.openBackup);
+    setTimeout(async () => {
+      // Make sure we load the cache first before loading the default project.
+      this.$log.debug('Starting to read data.');
+      await cache.fromCacheFolder();
+      await this.withErrorHandling(project.load);
+      this.$log.debug('Finished reading data from the fs.');
+      this.loaded = true;
+    }, 500);
   }
 
   public openBackup() {

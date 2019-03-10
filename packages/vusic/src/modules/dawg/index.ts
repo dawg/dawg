@@ -5,6 +5,8 @@ import MiniScore from '@/modules/dawg/MiniScore.vue';
 import Dawg from '@/modules/dawg/Dawg.vue';
 import VerticalSwitch from '@/modules/dawg/VerticalSwitch.vue';
 import Settings from '@/modules/dawg/Settings.vue';
+import Blank from '@/modules/dawg/Blank.vue';
+import Loading from '@/modules/dawg/Loading.vue';
 
 export default  {
   install() {
@@ -14,6 +16,8 @@ export default  {
     Vue.component('Dawg', Dawg);
     Vue.component('VerticalSwitch', VerticalSwitch);
     Vue.component('Settings', Settings);
+    Vue.component('Blank', Blank);
+    Vue.component('Loading', Loading);
   },
 };
 

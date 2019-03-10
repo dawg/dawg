@@ -58,3 +58,11 @@ storiesOf('Settings', module)
       backup: false,
     }),
   }));
+
+
+storiesOf('Loading', module)
+  .add('default', () => ({
+    template: `
+    <loading style="height: 300px; width: 300px" :value="true"></loading>
+    `,
+  }));
