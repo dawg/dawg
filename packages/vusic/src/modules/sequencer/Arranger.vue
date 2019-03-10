@@ -338,7 +338,7 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
       newItem.time = newTime;
       newItem.row = item.row + rowDiff;
 
-      this.$put(this.elements, ind, newItem);
+      this.$set(this.elements, ind, newItem);
       this.$emit('removed', item, ind);
       this.$emit('added', newItem);
       this.checkLoopEnd();

@@ -22,16 +22,15 @@
         :selected-tab="specific.openedSideTab"
         @update:selected-tab="specific.setOpenedSideTab"
       >
-        <side-bar name="Explorer" icon="folder">
+        <side-bar :name="tabs.explorer" icon="folder">
           <file-explorer
             :folders="cache.folders"
-            @update:folders="cache.setFolders"
           ></file-explorer>
         </side-bar>
-        <side-bar name="Audio Files" icon="queue_music">
+        <side-bar :name="tabs.audioFiles" icon="queue_music">
           <audio-files></audio-files>
         </side-bar>
-        <side-bar name="Patterns" icon="queue_play">
+        <side-bar :name="tabs.patterns" icon="queue_play">
           <patterns 
             :value="specific.selectedPattern" 
             @input="specific.setPattern"
@@ -53,6 +52,7 @@ import SideBar from '@/components/SideBar.vue';
 import AudioFiles from '@/sections/AudioFiles.vue';
 import { project, cache, general, specific } from '@/store';
 import { Watch } from '@/modules/update';
+import { SideTab } from '@/constants';
 
 interface Group {
   icon: string;
@@ -74,9 +74,11 @@ export default class SideTabs extends Vue {
   public cache = cache;
   public specific = specific;
   public general = general;
+
   public $refs!: {
     tabs: BaseTabs,
   };
+
   public patternActions: Group[] = [
     {
       icon: 'add',
@@ -85,12 +87,19 @@ export default class SideTabs extends Vue {
     },
   ];
 
+  // For typing reasons
+  // Vue will give a compilation error if we use a wrong key
+  public tabs: { [k: string]: SideTab } = {
+    explorer: 'Explorer',
+    audioFiles: 'Audio Files',
+    patterns: 'Patterns',
+  };
+
   public mounted() {
     general.setSideBarTabs(this.$refs.tabs.$children as SideBar[]);
   }
 
   get actions(): Group[] {
-    // TODO No typing
     if (specific.openedSideTab === 'Patterns') {
       return this.patternActions;
     } else {
@@ -103,6 +112,7 @@ export default class SideTabs extends Vue {
       return specific.openedSideTab.toUpperCase();
     }
   }
+
 }
 </script>
 

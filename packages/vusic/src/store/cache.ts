@@ -66,6 +66,16 @@ export class Cache extends VuexModule {
   }
 
   @Action
+  public addFolder(folder: string) {
+    if (this.folders.indexOf(folder) !== -1) {
+      return;
+    }
+
+    this.set({ key: 'folders', value: [...this.folders, folder] });
+    return this.write();
+  }
+
+  @Action
   public async write() {
     const c = io.serialize(this, Cache);
     const dir = path.dirname(CACHE_PATH);

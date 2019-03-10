@@ -1,15 +1,27 @@
 import Vue from 'vue';
+import { Key } from '../palette';
 
 export interface Item {
   text: string;
+  shortcut?: Key[];
   callback: (e: MouseEvent) => void;
 }
 
 interface EventInterface {
   show: {
-    e: MouseEvent, items: Array<Item | null>,
+    e: MouseEvent | Position,
+    items: Array<Item | null>,
   };
 }
+
+export interface Position {
+  left: number;
+  bottom: number;
+}
+
+export const isMouseEvent = (e: object): e is MouseEvent => {
+  return e instanceof Event;
+};
 
 class Bus extends Vue {
   public $on<T extends keyof EventInterface>(name: T, callback: (payload: EventInterface[T]) => void) {

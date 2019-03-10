@@ -28,6 +28,7 @@ import BaseTabs from '@/components/BaseTabs.vue';
 import { Nullable } from '@/utils';
 import { project, cache, general, specific } from '@/store';
 import { Watch } from '@/modules/update';
+import { PanelNames } from '@/constants';
 
 interface Group {
   icon: string;
@@ -62,7 +63,7 @@ export default class PanelHeaders extends Vue {
     }
   }
 
-  public selectPanel(name: string) {
+  public selectPanel(name: PanelNames) {
     specific.setOpenedPanel(name);
   }
 }

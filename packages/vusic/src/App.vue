@@ -2,6 +2,10 @@
   <v-app class="app">
     <dawg>
       <split direction="vertical">
+        <split :initial="30" fixed>
+          <menu-bar :menu="menu"></menu-bar>
+        </split>
+
         <split direction="horizontal" resizable>
           <split :initial="65" fixed>
             <activity-bar></activity-bar>
@@ -58,6 +62,11 @@
     </dawg>
     <notifications></notifications>
     <context-menu></context-menu>
+    <palette 
+      v-model="palette"
+      palette-class="secondary"
+      :items="shortcuts"
+    ></palette>
     <project-modal 
       v-model="backupModal" 
       :projects="general.projects"
@@ -69,7 +78,7 @@
 <script lang="ts">
 import fs from 'fs';
 import { Component, Vue } from 'vue-property-decorator';
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, shell } from 'electron';
 import { project, cache, general, specific, Project } from '@/store';
 import { toTickTime, allKeys, Keys } from '@/utils';
 import Transport from '@/modules/audio/transport';
@@ -82,12 +91,15 @@ import PanelHeaders from '@/sections/PanelHeaders.vue';
 import ActivityBar from '@/sections/ActivityBar.vue';
 import StatusBar from '@/sections/StatusBar.vue';
 import Tone from 'tone';
+import { SideTab } from '@/constants';
+import { PaletteItem, bus } from '@/modules/palette';
 import { Watch } from '@/modules/update';
 import { ProjectInfo } from '@dawgjs/specification';
 import backend from '@/backend';
 import * as io from '@/modules/cerialize';
 import tmp from 'tmp';
 import { remote } from 'electron';
+import { Menu } from '@/modules/menubar';
 
 @Component({
   components: {
@@ -103,6 +115,148 @@ export default class App extends Vue {
   public general = general;
   public specific = specific;
 
+  public menuItems: {[k: string]: PaletteItem} = {
+    save: {
+      text: 'Save',
+      shortcut: ['Ctrl', 'S'],
+      callback: this.save,
+    },
+    open: {
+      text: 'Open',
+      shortcut: ['Ctrl', 'O'],
+      callback: this.open,
+    },
+    backup: {
+      text: 'Open From Backup',
+      callback: this.openBackup,
+    },
+    addFolder: {
+      text: 'Add Folder to Project',
+      callback: () => {
+        const { dialog } = remote;
+        const folders = dialog.showOpenDialog({ properties: ['openDirectory'] });
+
+        // We should only ever get undefiend or an array of length 1
+        if (!folders || folders.length === 0) {
+          return;
+        }
+
+
+        const folder = folders[0];
+        cache.addFolder(folder);
+      },
+    },
+    copy: {
+      text: 'Copy',
+      shortcut: ['Ctrl', 'C'],
+      callback: () => {
+        //
+      },
+    },
+    paste: {
+      text: 'Past',
+      shortcut: ['Ctrl', 'P'],
+      callback: () => {
+        //
+      },
+    },
+    cut: {
+      shortcut: ['Ctrl', 'X'],
+      text: 'Cut',
+      callback: () => {
+        //
+      },
+    },
+    delete: {
+      shortcut: ['Del'],
+      text: 'Delete',
+      callback: () => {
+        //
+      },
+    },
+    reload: {
+      text: 'Reload',
+      shortcut: ['Ctrl', 'R'],
+      callback: () => {
+        const window = remote.getCurrentWindow();
+        window.reload();
+      },
+    },
+    palette: {
+      text: 'Command Palette',
+      shortcut: ['Ctrl', 'Shift', 'P'],
+      callback: () => {
+        bus.$emit('open');
+        // this.palette = true;
+      },
+    },
+  };
+
+  public menu: Menu = [
+    {
+      name: 'File',
+      items: [
+        this.menuItems.save,
+      ],
+    },
+    {
+      name: 'Edit',
+      items: [
+        this.menuItems.cut,
+        this.menuItems.copy,
+        this.menuItems.paste,
+        this.menuItems.delete,
+      ],
+    },
+    {
+      name: 'View',
+      items: [
+        this.menuItems.palette,
+        this.menuItems.reload,
+      ],
+    },
+    {
+      name: 'Help',
+      items: [
+        {
+          text: 'Guide',
+          callback: () => {
+            shell.openExternal('https://dawg.github.io/guide');
+          },
+        },
+      ],
+    },
+  ];
+
+  public shortcuts: PaletteItem[] = [
+    {
+      text: 'Open Piano Roll',
+      shortcut: ['Ctrl', 'P'],
+      callback: () => specific.setOpenedPanel('Piano Roll'),
+    },
+    {
+      text: 'Open File Explorer',
+      shortcut: ['Ctrl', 'E'],
+      callback: () => specific.setOpenedSideTab('Explorer'),
+    },
+    {
+      text: 'Open Mixer',
+      shortcut: ['Ctrl', 'M'],
+      callback: () => specific.setOpenedPanel('Mixer'),
+    },
+    {
+      text: 'New Synthesizer',
+      shortcut: ['Ctrl', 'N'],
+      callback: project.addInstrument, // TODO missing when clause
+    },
+    {
+      text: 'Play/Pause',
+      shortcut: ['Space'],
+      callback: this.playPause,
+    },
+    ...Object.values(this.menuItems),
+  ];
+
   // This loaded flag is important
   // Bugs can appear if we render before we load the project file
   // This occurs because some components mutate objects
@@ -111,6 +265,7 @@ export default class App extends Vue {
   public loaded = false;
 
   public backupModal = false;
+  public palette = false;
 
   // We need these to be able to keep track of the start and end of the playlist loop
   // for creating automation clips
@@ -122,7 +277,6 @@ export default class App extends Vue {
   }
 
   public async created() {
-    window.addEventListener('keypress', this.keydown);
     ipcRenderer.on('save', this.save);
     ipcRenderer.on('open', this.open);
     ipcRenderer.on('openBackup', this.openBackup);
@@ -140,7 +294,6 @@ export default class App extends Vue {
   }
 
   public destroyed() {
-    window.removeEventListener('keypress', this.keydown);
     ipcRenderer.removeListener('save', this.save);
     ipcRenderer.removeListener('open', this.open);
     ipcRenderer.removeListener('openBackup', this.openBackup);
@@ -151,13 +304,6 @@ export default class App extends Vue {
 
     if (!general.projects.length) {
       general.loadProjects();
-    }
-  }
-
-  public keydown(e: KeyboardEvent) {
-    if (e.keyCode === Keys.SPACE) {
-      e.preventDefault();
-      this.playPause();
     }
   }
 

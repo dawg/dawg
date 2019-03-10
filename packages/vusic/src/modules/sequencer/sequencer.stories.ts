@@ -21,7 +21,7 @@ import {
 import { colored, resizable, Note, PatternElement, SampleElement, positionable } from '@/modules/sequencer';
 import Transport from '@/modules/audio/transport';
 import { range } from '@/utils';
-import { Signal } from '../audio';
+import { Signal } from '@/modules/audio';
 import Tone from 'tone';
 
 const Temp = Vue.extend({
