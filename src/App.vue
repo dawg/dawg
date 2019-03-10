@@ -3,7 +3,14 @@
     <dawg>
       <split direction="vertical">
         <split :initial="30" fixed>
-          <menu-bar :menu="menu"></menu-bar>
+          <menu-bar 
+            :menu="menu"
+            :maximized="maximized"
+            @close="closeApplication"
+            @minimize="minimizeApplication"
+            @maximize="maximizeApplication"
+            @restore="restoreApplication"
+          ></menu-bar>
         </split>
 
         <split direction="horizontal" resizable>
@@ -98,7 +105,7 @@ import PanelHeaders from '@/sections/PanelHeaders.vue';
 import ActivityBar from '@/sections/ActivityBar.vue';
 import StatusBar from '@/sections/StatusBar.vue';
 import Tone from 'tone';
-import { SideTab } from '@/constants';
+import { SideTab, FILTERS } from '@/constants';
 import { PaletteItem, bus } from '@/modules/palette';
 import { Watch } from '@/modules/update';
 import backend, { ProjectInfo } from '@/backend';
@@ -127,6 +134,11 @@ export default class App extends Vue {
       shortcut: ['Ctrl', 'S'],
       callback: this.save,
     },
+    saveAs: {
+      text: 'Save As',
+      shortcut: ['Ctrl', 'Shift', 'S'],
+      callback: () => this.save(true),
+    },
     open: {
       text: 'Open',
       shortcut: ['Ctrl', 'O'],
@@ -137,20 +149,13 @@ export default class App extends Vue {
       callback: this.openBackup,
     },
     addFolder: {
-      text: 'Add Folder to Project',
-      callback: () => {
-        const { dialog } = remote;
-        const folders = dialog.showOpenDialog({ properties: ['openDirectory'] });
-
-        // We should only ever get undefiend or an array of length 1
-        if (!folders || folders.length === 0) {
-          return;
-        }
-
-
-        const folder = folders[0];
-        // cache.addFolder(folder);
-      },
+      text: 'Add Folder to Workspace',
+      callback: cache.openFolder,
+    },
+    closeApplication: {
+      text: 'Close Application',
+      shortcut: ['Ctrl', 'W'],
+      callback: this.closeApplication,
     },
     copy: {
       text: 'Copy',
@@ -202,7 +207,13 @@ export default class App extends Vue {
     {
       name: 'File',
       items: [
+        this.menuItems.open,
+        this.menuItems.backup,
+        null,
+        this.menuItems.addFolder,
+        null,
         this.menuItems.save,
+        this.menuItems.saveAs,
       ],
     },
     {
@@ -273,6 +284,8 @@ export default class App extends Vue {
   public backupModal = false;
   public palette = false;
 
+  public maximized = false;
+
   // We need these to be able to keep track of the start and end of the playlist loop
   // for creating automation clips
   public masterStart = 0;
@@ -283,6 +296,10 @@ export default class App extends Vue {
   }
 
   public async created() {
+    const window = remote.getCurrentWindow();
+    window.addListener('maximize', this.maximize);
+    window.addListener('unmaximize', this.unmaximize);
+
     automation.$on('automate', this.addAutomationClip);
     // tslint:disable-next-line:no-console
     console.info(project);
@@ -295,6 +312,16 @@ export default class App extends Vue {
       this.$log.debug('Finished reading data from the fs.');
       this.loaded = true;
     }, 500);
+  }
+
+  public mounted() {
+    this.checkMaximize();
+  }
+
+  public destroyed() {
+    const window = remote.getCurrentWindow();
+    window.removeListener('maximize', this.maximize);
+    window.removeListener('unmaximize', this.unmaximize);
   }
 
   public openBackup() {
@@ -315,17 +342,30 @@ export default class App extends Vue {
     }
   }
 
-  public open() {
-    this.withErrorHandling(project.open);
+  public async open() {
+    // files can be undefined. There is an issue with the .d.ts files.
+    const files = remote.dialog.showOpenDialog(
+      remote.getCurrentWindow(),
+      { filters: FILTERS, properties: ['openFile'] },
+    );
+
+    if (!files) {
+      return;
+    }
+
+    const filePath = files[0];
+    await cache.setOpenedFile(filePath);
+    const window = remote.getCurrentWindow();
+    window.reload();
   }
 
-  public async save() {
+  public async save(forceDialog: boolean = false) {
     // If we are backing up, star the progress circle!
     if (specific.backup) {
       general.set({ key: 'syncing', value: true });
     }
 
-    const backupStatus = await project.save({ backup: specific.backup });
+    const backupStatus = await project.save({ backup: specific.backup, forceDialog });
 
     // Always set the value back to false... you never know
     general.set({ key: 'syncing', value: false });
@@ -434,6 +474,38 @@ export default class App extends Vue {
 
     const window = remote.getCurrentWindow();
     window.reload();
+  }
+
+  public closeApplication() {
+    const window = remote.getCurrentWindow();
+    window.close();
+  }
+
+  public minimizeApplication() {
+    const window = remote.getCurrentWindow();
+    window.minimize();
+  }
+
+  public maximizeApplication() {
+    const window = remote.getCurrentWindow();
+    window.maximize();
+  }
+
+  public restoreApplication() {
+    const window = remote.getCurrentWindow();
+    window.restore();
+  }
+
+  public checkMaximize() {
+    this.maximized = remote.getCurrentWindow().isMaximized();
+  }
+
+  public maximize() {
+    this.maximized = true;
+  }
+
+  public unmaximize() {
+    this.maximized = false;
   }
 
   @Watch<App>('getProjectsErrorMessage')

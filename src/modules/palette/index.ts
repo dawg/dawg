@@ -230,6 +230,11 @@ class Palette extends Vue {
         return;
       }
 
+      // Just to be sure. I think the previous if statement is fine though.
+      if (item.shortcut.length === 0) {
+        return;
+      }
+
       if (!item.shortcut.every((key) => this.pressedKeys.has(codeLookup[key]))) {
         return;
       }

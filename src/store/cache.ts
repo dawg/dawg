@@ -1,6 +1,7 @@
 import fs from 'mz/fs';
 import * as io from '@/modules/cerialize';
 import path from 'path';
+import { remote } from 'electron';
 
 import { Module as Mod } from 'vuex';
 import { Mutation, Action, Module, getModule } from 'vuex-module-decorators';
@@ -22,6 +23,21 @@ export class Cache extends VuexModule {
 
   constructor(module?: Mod<any, any>) {
     super(module || {});
+  }
+
+  @Action
+  public openFolder() {
+    const { dialog } = remote;
+    const folders = dialog.showOpenDialog({ properties: ['openDirectory'] });
+
+    // We should only ever get undefined or an array of length 1
+    if (!folders || folders.length === 0) {
+      return;
+    }
+
+
+    const folder = folders[0];
+    this.addFolder(folder);
   }
 
   /**

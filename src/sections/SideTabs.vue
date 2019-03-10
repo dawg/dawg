@@ -20,11 +20,12 @@
       <base-tabs
         ref="tabs"
         :selected-tab="specific.openedSideTab"
-        @update:selected-tab="specific.setOpenedSideTab"
+        @update:selectedTab="specific.setOpenedSideTab"
       >
         <side-bar :name="tabs.explorer" icon="folder">
           <file-explorer
             :folders="cache.folders"
+            @open-explorer="cache.openFolder"
           ></file-explorer>
         </side-bar>
         <side-bar :name="tabs.audioFiles" icon="queue_music">

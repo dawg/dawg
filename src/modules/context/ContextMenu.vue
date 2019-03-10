@@ -9,7 +9,7 @@
     :position-y="y"
     :close-on-click="false"
     :z-index="1000"
-    :min-width="250"
+    :min-width="300"
   >
     <div class="items secondary-lighten-2 white--text">
       <template v-for="(item, i) in processed">

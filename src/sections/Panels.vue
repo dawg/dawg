@@ -3,7 +3,7 @@
     class="tabs-panels secondary" 
     ref="panels"
     :selected-tab="specific.openedPanel"
-    @update:selected-tab="specific.setOpenedPanel"
+    @update:selectedTab="specific.setOpenedPanel"
   >
     <panel name="Instruments">
       <synths 
@@ -11,7 +11,6 @@
         :selected-score="specific.selectedScore"
         @update:selectedScore="specific.setScore"
         :selected-pattern="specific.selectedPattern"
-        @update:selected-pattern="specific.setPattern"
         :scores="specific.selectedScore"
       ></synths>
     </panel>

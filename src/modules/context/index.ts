@@ -3,7 +3,7 @@ import ContextMenu from '@/modules/context/ContextMenu.vue';
 import bus, { Item, isMouseEvent, Position } from '@/modules/context/bus';
 
 
-type ContextFunction = (e: MouseEvent | Position, items: Item[]) => void;
+type ContextFunction = (e: MouseEvent | Position, items: Array<Item | null>) => void;
 
 export interface ContextInterface {
   $context: ContextFunction;

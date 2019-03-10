@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-if="projects.length">
     <tree
       refs="trees"
       v-for="(project, i) in projects"
@@ -8,6 +8,17 @@
       :children="project[1]"
       :index="i"
     ></tree>
+  </div>
+  <div v-else class="button-wrapper">
+      <p class="white--text text">You do not have any opened folders.</p>
+      <v-btn 
+        @click="openExplorer" 
+        small 
+        block
+        class="primary button"
+      >
+        Open Folder
+      </v-btn>
   </div>
 </template>
 
@@ -54,8 +65,21 @@ export default class Drawer extends Vue {
     const extension = fileName.split('.').pop();
     return extension && extension.toLowerCase() === 'wav';
   }
+
+  public openExplorer() {
+    this.$emit('open-explorer');
+  }
 }
 </script>
 
 <style scoped>
+.button-wrapper {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 20px;
+}
+
+.text {
+  font-size: 0.9em;
+}
 </style>

@@ -35,7 +35,6 @@ import { Signal } from '@/modules/audio';
 import backend from '@/backend';
 
 const { dialog } = remote;
-const FILTERS = [{ name: 'DAWG Files', extensions: ['dg'] }];
 
 /**
  * This module represents the project. When a user saves the project, this file is serialized to the fs.
@@ -58,8 +57,8 @@ export class Project extends VuexModule {
   }
 
   @Action
-  public async save(opts: { backup: boolean }) {
-    if (!cache.openedFile) {
+  public async save(opts: { backup: boolean, forceDialog?: boolean }) {
+    if (!cache.openedFile || opts.forceDialog) {
       const openedFile = dialog.showSaveDialog(remote.getCurrentWindow(), {});
 
       if (!openedFile) {
@@ -88,23 +87,6 @@ export class Project extends VuexModule {
     if (opts.backup) {
       return await backend.updateProject(this.id, encoded);
     }
-  }
-
-  @Action
-  public async open() {
-    // files can be undefined. There is an issue with the .d.ts files.
-    const files = dialog.showOpenDialog(
-      remote.getCurrentWindow(),
-      { filters: FILTERS, properties: ['openFile'] },
-    );
-
-    if (!files) {
-      return;
-    }
-
-    const filePath = files[0];
-    cache.setOpenedFile(filePath);
-    return this.load();
   }
 
   @Action
