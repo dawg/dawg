@@ -88,7 +88,7 @@ export default class Slider extends Mixins(Draggable) {
     let volume = this.$refs.svg.getBoundingClientRect().top + this.height - e.clientY;
     volume /= this.height;
     volume = Math.max(Math.min(volume, 1), 0);
-    volume = scale(this.value, [0, 1], [this.min, this.max]);
+    volume = scale(volume, [0, 1], [this.min, this.max]);
     this.$emit('input', volume);
   }
 

@@ -899,6 +899,8 @@ export class Channel {
   private muted = false;
 
   constructor() {
+    // DEFAULTs
+    this.volume.value = 0.7;
     this.split.left.connect(this.left);
     this.split.right.connect(this.right);
   }
