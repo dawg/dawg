@@ -48,7 +48,9 @@ export default class Synths extends Vue {
 
   public async openScore(i: number) {
     if (!this.selectedPattern) {
-      this.$notify.warning('Please create a Pattern first.');
+      this.$notify.warning('Please select a Pattern first.', {
+        detail: 'You must select a pattern before you can open the Piano Roll',
+      });
       return;
     }
 

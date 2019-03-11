@@ -334,7 +334,9 @@ export class Project extends VuexModule {
 
   @Action
   public deleteEffect(payload: { channel: Channel, effect: AnyEffect }) {
-    const instruments = this.instrumentChannelLookup[payload.channel.number];
+    // instruments could be undefined
+    const instruments = this.instrumentChannelLookup[payload.channel.number] || [];
+
     const effects = payload.channel.effects;
     for (const [i, effect] of effects.entries()) {
       if (effect.slot !== payload.effect.slot) { continue; }
@@ -371,13 +373,8 @@ export class Project extends VuexModule {
       }
     }
 
-    const instruments = this.instrumentChannelLookup[payload.channel.number];
-
     // Instruments could be undefined if no instruments have been routed to this channel yet.
-    if (!instruments) {
-      return;
-    }
-
+    const instruments = this.instrumentChannelLookup[payload.channel.number] || [];
 
     let destination: Tone.AudioNode;
     let i: number;
