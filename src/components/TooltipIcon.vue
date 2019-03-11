@@ -1,6 +1,6 @@
 <template>
   <div class="icon__wrapper">
-    <v-tooltip :right="right" :left="left" :top="top" :bottom="bottom" z-index="100">
+    <v-tooltip :right="right" :left="left" :top="top" :bottom="bottom" z-index="2000">
       <template slot="activator">
         <icon v-if="fa" :name="icon" :style="style" v-bind="$attrs"></icon>
         <v-icon v-else class="icon" :style="style" v-bind="$attrs">{{ icon }}</v-icon>

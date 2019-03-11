@@ -33,13 +33,14 @@ export type Key =
   'Y' |
   'Z' |
   'Space' |
-  'Del';
+  'Del' |
+  'Tab';
 
-type KeyCodeLookup = { [k in Key]: number };
+type KeyCodeLookup = { [k in Key]: number | number[] };
 
 const codeLookup: KeyCodeLookup = {
   Shift: 16,
-  Ctrl: 17,
+  Ctrl: [17, 55], // 55 is the Mac command key
   A: 65,
   B: 66,
   C: 67,
@@ -68,6 +69,7 @@ const codeLookup: KeyCodeLookup = {
   Z: 90,
   Space: 32,
   Del: 46,
+  Tab: 9,
 };
 
 export interface PaletteItem {
@@ -235,7 +237,15 @@ class Palette extends Vue {
         return;
       }
 
-      if (!item.shortcut.every((key) => this.pressedKeys.has(codeLookup[key]))) {
+      const has = (keys: number | number[]) => {
+        if (typeof keys === 'number') {
+          keys = [keys];
+        }
+
+        return keys.some((key) => this.pressedKeys.has(key));
+      };
+
+      if (!item.shortcut.every((key) => has(codeLookup[key]))) {
         return;
       }
 
@@ -329,6 +339,7 @@ class Palette extends Vue {
   }
 }
 
+// TODO(jacob) use stack to store keyboard shortcut information??
 export default {
   install() {
     Vue.component('Palette', Palette);

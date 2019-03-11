@@ -201,6 +201,17 @@ export default class App extends Vue {
         this.palette = true;
       },
     },
+    switchContext: {
+      text: 'Switch Context',
+      shortcut: ['Ctrl', 'Tab'],
+      callback: () => {
+        if (general.applicationContext === 'pianoroll') {
+          general.setContext('playlist');
+        } else {
+          general.setContext('pianoroll');
+        }
+      },
+    },
   };
 
   public menu: Menu = [
@@ -239,6 +250,20 @@ export default class App extends Vue {
           text: 'Guide',
           callback: () => {
             shell.openExternal('https://dawg.github.io/guide');
+          },
+        },
+        {
+          text: 'Report an Issue',
+          callback: () => {
+            shell.openExternal('https://github.com/dawg/vusic/issues');
+          },
+        },
+        null,
+        {
+          text: 'Open Developer Tools',
+          callback: () => {
+            const window = remote.getCurrentWindow();
+            window.webContents.openDevTools();
           },
         },
       ],
@@ -401,7 +426,9 @@ export default class App extends Vue {
     if (general.applicationContext === 'pianoroll') {
       const pattern = specific.selectedPattern;
       if (!pattern) {
-        this.$notify.info('Select a pattern.');
+        this.$notify.info('Please a pattern.', {
+          detail: 'You haven\'t told me what to play yet.',
+        });
         return;
       }
       transport = pattern.transport;

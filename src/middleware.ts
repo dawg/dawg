@@ -20,7 +20,10 @@ const inspect = {
 };
 
 const middleware = () => {
-  Vue.use(Context, { default: [inspect] });
+  Vue.use(Context, {
+    // Only have inspect in development
+    default: process.env.NODE_ENV !== 'production' ? [inspect] : [],
+  });
   Vue.use(Notification);
 
   storybook();

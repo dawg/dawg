@@ -78,7 +78,7 @@ export const selectable = (component: VueConstructor) => {
     get style() {
       if (this.selected) {
         return {
-          backgroundColor: '#ff9999',
+          backgroundColor: '#ff9999!important',
         };
       }
     }

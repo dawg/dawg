@@ -79,6 +79,15 @@ export default class Toolbar extends Vue {
     }
   }
 
+  @Watch<Toolbar>('context')
+  public switchSlider() {
+    if (this.context === 'playlist') {
+      this.sliderTop = true;
+    } else {
+      this.sliderTop = false;
+    }
+  }
+
   @Watch<Toolbar>('sliderTop', { immediate: true })
   public switchContext() {
     if (this.sliderTop) {

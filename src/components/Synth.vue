@@ -31,8 +31,14 @@
         @automate="automatePan"
       ></pan>
       <div class="white--text name">{{ instrument.name }}</div>
-      <mini-score :notes="notes"></mini-score>
-      <channel-select 
+      <!-- TODO(jacob) dbclick open score -->
+      <mini-score
+        v-if="notes.length"
+        :notes="notes" 
+        class="score secondary"
+      ></mini-score>
+      <div style="flex: 1"></div>
+      <channel-select
         :value="channel"
         @input="setChannel"
       ></channel-select>
@@ -136,7 +142,6 @@ export default class Synth extends Vue {
 .name
   font-size: 1.2em
   min-width: 140px
-  margin: 0 auto
   display: block
   padding-left: 10px
   user-select: none
@@ -155,4 +160,10 @@ export default class Synth extends Vue {
 
 .expand
   height: 55px
+
+.score
+  margin: 5px 10px
+  padding: 2px 5px
+  height: 75%
+  border-radius: 3px
 </style>

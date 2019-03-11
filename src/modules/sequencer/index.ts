@@ -9,7 +9,7 @@ import N from '@/modules/sequencer/Note.vue';
 import { positionable, resizable, selectable, colored } from './sequencer';
 
 function hoc(o: VueConstructor) {
-  return positionable(selectable(resizable(o)));
+  return positionable(resizable(selectable(o)));
 }
 
 export const SampleElement = hoc(colored(SE));
