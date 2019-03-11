@@ -52,10 +52,6 @@ export default class Split extends Vue {
 
   public mousePosition = 0;
 
-  get gutterPosition() {
-    return this.before.reduce((sum, child) => sum + child.size, 0) - this.gutterSize / 2;
-  }
-
   get isRoot() {
     return !this.parent;
   }
@@ -144,6 +140,15 @@ export default class Split extends Vue {
     window.removeEventListener('resize', this.onResizeEvent);
   }
 
+  public gutterPosition() {
+    if (!this.parent) {
+      return 0;
+    }
+
+    const { left, top } = this.$el.getBoundingClientRect();
+    return this.parent.direction === 'horizontal' ? left : top;
+  }
+
   public onResizeEvent() {
     this.calculatePositions([this], window.innerWidth - this.width, 'horizontal');
     this.calculatePositions([this], window.innerHeight - this.height, 'vertical');
@@ -164,7 +169,7 @@ export default class Split extends Vue {
       this.mousePosition = e.clientY;
     }
 
-    let px = this.mousePosition - this.gutterPosition;
+    let px = this.mousePosition - this.gutterPosition();
     if (!px) { return; }
 
     const min = (...args: number[]) => {
