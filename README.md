@@ -121,13 +121,11 @@ There is also an `test:e2e` command; however, this test suite does not currently
 # TODO
 - Create common section to show to to work with the sequencer.
 - Add seeking mechanism
-- Add picture of timeline
 - Remove load on open folder
 - WAV file IDs
 - Delete patterns
 - Delete audio files
 - Handle non existent audio files
-- Warn people in the introduction
 - Add a way to delete files from the cloud.
 - Remove array: true, just use typescript default parameters
 - Add error reporting mechanism.

@@ -7,9 +7,10 @@
         group="arranger"
         :transfer-data="prototype"
         v-if="!isLeaf || isWav"
+        @mousedown.native="loadPrototype"
         @click.native="preview"
         @dblclick.native="sendToSampleTab"
-        :draggable="isWav"
+        :draggable="draggable"
       >
         {{ fileName }}
       </drag>
@@ -32,11 +33,10 @@
 import Vue from 'vue';
 import Tone from 'tone';
 import path from 'path';
-import fs from 'fs';
 import { Keys } from '@/utils';
 import { Component, Prop } from 'vue-property-decorator';
 import Key from '@/components/Key.vue';
-import { loadPlayer, loadBuffer } from '@/modules/wav/local';
+import { loadBuffer } from '@/modules/wav/local';
 import { PlacedSample, Sample } from '@/schemas';
 
 @Component
@@ -51,6 +51,7 @@ export default class Tree extends Vue {
   public selectedNode = false;
   public $refs!: { trees: Tree[] };
   public $parent!: Tree;
+  public prototype: null | PlacedSample = null;
 
   public click() {
     if (!this.isLeaf) {
@@ -105,12 +106,15 @@ export default class Tree extends Vue {
   }
 
   public playSong(songPath: string) {
-    this.sample!.start();
+    if (this.sample) {
+      this.sample.start();
+    }
   }
 
-  get prototype() {
-    if (this.sample) {
-      return PlacedSample.create(this.sample);
+  public loadPrototype() {
+    if (!this.sample && this.isWav) {
+      this.sample = Sample.create(this.path, loadBuffer(this.path));
+      this.prototype = PlacedSample.create(this.sample);
     }
   }
 
@@ -121,10 +125,6 @@ export default class Tree extends Vue {
   }
 
   public mounted() {
-    if (!this.sample && this.isWav) {
-      this.sample = Sample.create(this.path, loadBuffer(this.path));
-    }
-
     window.addEventListener('keydown', this.moveDown);
     window.addEventListener('keyup', this.moveUp);
   }
@@ -132,6 +132,10 @@ export default class Tree extends Vue {
   public destroyed() {
     window.removeEventListener('keydown', this.moveDown);
     window.removeEventListener('keyup', this.moveUp);
+  }
+
+  get draggable() {
+    return this.isWav && !!this.prototype;
   }
 
   get indent() {
@@ -178,6 +182,7 @@ export default class Tree extends Vue {
 <style lang="sass" scoped>
 .path
   margin-left: 8px
+  font-size: 0.85em
   user-select: none
 
 .node:hover

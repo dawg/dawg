@@ -1,8 +1,10 @@
 <template>
+  <!-- scale(-1, 1) flips the svg vertically -->
   <svg
     preserveAspectRatio="none"
     class="mini-score primary--text"
     :viewBox="viewBox"
+    transform="scale(-1,1)"
   >
     <rect
       v-for="rect in rects"
