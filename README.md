@@ -11,7 +11,7 @@
 Learning to use a DAW is often a painful process, even for experienced users. Additionally, the UI/UX in modern DAWs are  often lacking. We aim to change this by levering the web technology that is available today and focusing on the UI/UX during planning and development.
 
 #### Collaboration
-Music can be an  incredibly collaborative process. When two individuals are in the same room, collaboration is easy; however, this is often not possible as collaborators are often geographically separated. By taking advantage of the real-time collaboration technology available today, we hope to enable producers and musicians to simultaneously collaborate, even when they are located on different continents.
+Music can be an  incredibly collaborative process. When two individuals are in the same room, collaboration is easy; however this is often not possible as collaborators are often geographically separated. By taking advantage of the real-time collaboration technology available today, we hope to enable producers and musicians to simultaneously collaborate, even when they are located on different continents.
 
 #### Machine Learning
 With the advent of machine learning technology, several manual processes, such as vocal separation or audio to MIDI transcription, have the possibility to be completely automated. We aim to take advantage of this research to provide cutting-edge technology to musicians and producers today.
@@ -19,14 +19,15 @@ With the advent of machine learning technology, several manual processes, such a
 ### Tasks
 Here is an incomplete list of the major tasks that need to be completed. :runner: indicates active development.
 - [x] Application layout
-- [ ]   :runner: Piano roll + patterns
-- [ ] :runner: Basic synthesizers + integration with the piano roll
+- [x] Piano roll + patterns
+- [x] Basic synthesizers + integration with the piano roll
 - [ ] :runner: Automated vocal extraction
 - [ ] :runner: Automated piano note transcription
-- [ ] Playlist
-- [ ] Mixer + effects
-- [ ] Automation clips
-- [ ] Real-time collaboration
+- [x] Playlist
+- [x] Mixer + effects
+- [x] Automation clips
+- [ ] :runner: Real-time collaboration
+- [ ] :runner: VSTs
 
 ## Mockups
 <img src="https://i.ibb.co/4Y1nVXw/side.png" height="600px" alt="side"     border="0">
@@ -60,15 +61,18 @@ npm run serve:storybook
 ```
 
 ### Building
-All of the following commands assume you are running on a `Linux` subsystem. 
+All of the following commands assume you are running running a `Linux` subsystem. 
 
 #### Linux
 ```
 npm run electron:build
 ```
 
+#### MacOS
+You can only build for MacOS on MacOS.
+
 #### Windows
-To build for windows, you must first install `Docker`. Once that has been complete, run the following docker command to start the `wine` container.
+To build for windows, you must first install `Docker`. Once that has been complete, run the following docker command to start the `wine` container. Beware, you may run into sass issues.
 
 ```
 docker run --rm -ti \
@@ -113,3 +117,19 @@ There is also an `test:e2e` command; however, this test suite does not currently
 |:---:|:---:|:---:|:---:|
 | [Jacob Smith](https://github.com/jsmith) | [Matt DeSilva](https://github.com/desilvamatt) |[Amir Eldesoky](https://github.com/aeldesoky) | [Alex ODonnell](https://github.com/alexodonn)
 |<sup>Software Engineering</sup>|<sup>Software Engineering</sup>|<sup>Electrical Engineering</sup>|<sup>Electrical Engineering</sup>
+
+# TODO
+- Create common section to show to to work with the sequencer.
+- Add seeking mechanism
+- Add picture of timeline
+- Remove load on open folder
+- WAV file IDs
+- Delete patterns
+- Delete audio files
+- Handle non existent audio files
+- Warn people in the introduction
+- Add a way to delete files from the cloud.
+- Remove array: true, just use typescript default parameters
+- Add error reporting mechanism.
+- Add logo
+- Naming elements in the playlist
