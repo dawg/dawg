@@ -36,7 +36,7 @@ export default class PlaylistSequencer extends Vue {
   @Inject() public trackHeight!: number;
 
   @Prop({ type: Array, required: true }) public tracks!: Track[];
-  @Prop({ type: Object, required: true }) public transport!: Transport<Element>;
+  @Prop({ type: Object, required: true }) public transport!: Transport;
 
   public prototype = null;
 

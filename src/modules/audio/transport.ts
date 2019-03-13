@@ -54,10 +54,15 @@ Tone.TransportRepeatEvent.prototype.invoke = function(time, ticks) {
 
 type Event = Tone.TransportEvent | Tone.TransportRepeatEvent;
 
-export default class Transport<T> extends Tone.Emitter<Events> {
+export default class Transport extends Tone.Emitter<Events> {
   public loop = true;
   public timeline = new Tone.Timeline<Event>();
   public bpm: Tone.TickSignal;
+  /**
+   * Measured in ticks.
+   */
+  private startPosition = 0;
+
   private ppq = 192;
   // tslint:disable-next-line:variable-name
   private _loopStart = 0;
@@ -67,7 +72,6 @@ export default class Transport<T> extends Tone.Emitter<Events> {
     callback: this.processTick.bind(this),
     frequency: 0,
   });
-  private groups: Array<[Event, T]> = [];
   private scheduledEvents: { [id: string]: Event } = {};
 
   constructor() {
@@ -122,7 +126,7 @@ export default class Transport<T> extends Tone.Emitter<Events> {
     return this.addEvent(event);
   }
 
-  public embed(child: Transport<T>, time: TransportTime, duration: TransportTime) {
+  public embed(child: Transport, time: TransportTime, duration: TransportTime) {
     const t = new Tone.Time(time);
     const ticksOffset = t.toTicks();
 
@@ -131,15 +135,6 @@ export default class Transport<T> extends Tone.Emitter<Events> {
     };
 
     return this.scheduleRepeat(callback, '1i', time, duration);
-  }
-
-  public remove(o: T) {
-    this.groups.forEach(([event, other], i) => {
-      if (o === other) {
-        this.clear(event.id);
-        this.groups.splice(i, 1);
-      }
-    });
   }
 
   public clear(eventId: string) {
@@ -182,6 +177,7 @@ export default class Transport<T> extends Tone.Emitter<Events> {
    */
   public stop(time?: ContextTime) {
     this.clock.stop(time);
+    this.ticks = this.startPosition;
     return this;
   }
 
@@ -197,6 +193,7 @@ export default class Transport<T> extends Tone.Emitter<Events> {
 
   set loopStart(loopStart: number | string) {
     this._loopStart = this.toTicks(loopStart);
+    this.seconds = this.toSeconds(loopStart);
   }
 
   get seconds() {
@@ -233,6 +230,8 @@ export default class Transport<T> extends Tone.Emitter<Events> {
       } else {
         this.clock.setTicksAtTime(t, now);
       }
+
+      this.startPosition = t;
     }
   }
 

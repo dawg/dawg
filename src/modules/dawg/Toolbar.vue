@@ -43,7 +43,7 @@ export default class Toolbar extends Vue {
   @Prop({ type: String, required: true }) public context!: ApplicationContext;
   @Prop({ type: Number, required: true }) public bpm!: number;
   @Prop({ type: Boolean, required: true }) public play!: boolean;
-  @Prop(Nullable(Object)) public transport!: Transport<any> | null;
+  @Prop(Nullable(Object)) public transport!: Transport | null;
 
   public signal = new Signal(5);
 

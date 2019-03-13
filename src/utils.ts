@@ -176,3 +176,13 @@ export function clamp(value: number, min: number, max: number) {
 
 
 export type ConstructorOf<T> = new (...args: any[]) => T;
+
+export const disposeHelp = (o: { dispose: () => void }) => {
+  // Tone.js
+  try {
+    o.dispose();
+  } catch (e) {
+    // tslint:disable-next-line:no-console
+    console.info(`dispose failed for ${o} =>`, e.message);
+  }
+};

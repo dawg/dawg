@@ -12,11 +12,15 @@
           <icon :name="item.icon"></icon>
         </div>
         <div :class="notifyBodyClass(item)">
-          <div
-            v-if="item.title"
-            class="notification-title"
-            v-html="item.title"
-          ></div>
+          <div style="display: flex">
+            <div
+              v-if="item.title"
+              class="notification-title"
+              v-html="item.title"
+            ></div>
+            <div style="flex: 1"></div>
+            <v-icon small @click="destroy(item)">close</v-icon>
+          </div>
           <div
             class="notification-content"
             v-html="item.text"
@@ -191,7 +195,7 @@ export default class Notifications extends Vue {
   margin: 2px 10px;
   border-radius: 3px;
   overflow: hidden;
-  width: 20em;
+  width: 30em;
 }
 
 .notification-title {

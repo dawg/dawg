@@ -5,6 +5,7 @@
       group="arranger"
       :key="i"
       @click.native="start(item.sample)"
+      @contextmenu.native="context($event, i)"
       class="sample"
       :transfer-data="item.prototype"
     >
@@ -27,6 +28,15 @@ export default class AudioFiles extends Vue {
         sample,
       };
     });
+  }
+
+  public context(e: MouseEvent, i: number) {
+    this.$context(e, [
+      {
+        text: 'Delete',
+        callback: () => project.removeSample(i),
+      },
+    ]);
   }
 
   public start(sample: Sample) {

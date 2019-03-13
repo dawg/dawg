@@ -4,7 +4,7 @@ import Tone from 'tone';
 import uuid from 'uuid';
 
 import Transport from '@/modules/audio/transport';
-import { toTickTime, allKeys, ConstructorOf } from './utils';
+import { toTickTime, allKeys, ConstructorOf, disposeHelp } from './utils';
 import { Controller, Time, Signal } from '@/modules/audio';
 
 // These are all of the schemas for the project.
@@ -76,9 +76,12 @@ export abstract class Element implements IElement {
    */
   @io.auto public time!: number;
 
-  protected eventId?: string;
-  protected transport?: Transport<any>;
+  private eventId?: string;
+  private transport?: Transport;
 
+  get tickTime() {
+    return toTickTime(this.time);
+  }
 
   constructor(o?: IElement) {
     if (o) {
@@ -88,18 +91,25 @@ export abstract class Element implements IElement {
     }
   }
 
-  public remove(transport: Transport<any>) {
+  public remove(transport: Transport) {
     if (this.eventId !== undefined) {
       transport.clear(this.eventId);
     }
   }
 
-  public abstract schedule(transport: Transport<any>): void;
-  public abstract copy(): Element;
-
-  get tickTime() {
-    return toTickTime(this.time);
+  public schedule(transport: Transport) {
+    this.transport = transport;
+    this.eventId = this.add(transport);
   }
+
+  public dispose() {
+    if (this.transport && this.eventId !== undefined) {
+      this.transport.clear(this.eventId);
+    }
+  }
+
+  public abstract copy(): Element;
+  protected abstract add(transport: Transport): string;
 }
 
 @io.inheritSerialization(Element)
@@ -127,9 +137,8 @@ export class PlacedPattern extends Element {
     return pp;
   }
 
-  public schedule(transport: Transport<any>) {
-    this.transport = transport;
-    this.eventId = transport.embed(this.pattern.transport, this.tickTime, toTickTime(this._duration));
+  protected add(transport: Transport) {
+    return transport.embed(this.pattern.transport, this.tickTime, toTickTime(this._duration));
   }
 }
 
@@ -146,6 +155,15 @@ export class Sample {
   public buffer!: AudioBuffer;
   private player!: Tone.Player;
 
+  get beats() {
+    const minutes = this.buffer.length / this.buffer.sampleRate / 60;
+    return minutes * Tone.Transport.bpm.value;
+  }
+
+  get name() {
+    return pth.basename(this.path);
+  }
+
   public init(buffer: AudioBuffer) {
     this.buffer = buffer;
     this.player = new Tone.Player(this.buffer).toMaster();
@@ -159,13 +177,8 @@ export class Sample {
     this.player.stop();
   }
 
-  get beats() {
-    const minutes = this.buffer.length / this.buffer.sampleRate / 60;
-    return minutes * Tone.Transport.bpm.value;
-  }
-
-  get name() {
-    return pth.basename(this.path);
+  public dispose() {
+    disposeHelp(this.player);
   }
 }
 
@@ -193,16 +206,12 @@ export class PlacedSample extends Element {
     return pp;
   }
 
-  public callback() {
-    return ;
-  }
-
   public init(sample: Sample) {
     this.sample = sample;
   }
 
-  public schedule(transport: Transport<any>) {
-    this.eventId = transport.schedule((exact: number) => {
+  public add(transport: Transport) {
+    return transport.schedule((exact: number) => {
       const duration = toTickTime(this.duration);
       this.sample.start(exact, duration);
     }, this.tickTime);
@@ -216,7 +225,6 @@ export class Note extends Element {
     element.instrument = instrument;
     return element;
   }
-
   public readonly component = 'note';
   public instrument!: Instrument;
 
@@ -231,8 +239,8 @@ export class Note extends Element {
     return pp;
   }
 
-  public schedule(transport: Transport<any>) {
-    this.eventId = transport.schedule((exact: number) => {
+  public add(transport: Transport) {
+    return transport.schedule((exact: number) => {
       this.instrument.callback(exact, this);
     }, this.tickTime);
   }
@@ -265,9 +273,8 @@ export class PlacedAutomationClip extends Element {
     return pp;
   }
 
-  public schedule(transport: Transport<any>) {
-    this.transport = transport;
-    this.eventId = this.clip.control.sync(transport, this.tickTime, toTickTime(this.duration));
+  protected add(transport: Transport) {
+    return this.clip.control.sync(transport, this.tickTime, toTickTime(this.duration));
   }
 }
 
@@ -282,14 +289,14 @@ export class Score {
   public instrument!: Instrument;
   @io.auto public id!: string;
   @io.auto public instrumentId!: string;
-  @io.autoserializeAs(Note) public notes: Note[] = [];
+  @io.auto({ type: Note }) public notes: Note[] = [];
 
-  public init(lookup: { [k: string]: Instrument }) {
-    if (!(this.instrumentId in lookup)) {
-      throw Error(`${this.instrumentId} not in lookup`);
-    }
+  public init(instrument: Instrument) {
+    this.instrument = instrument;
+  }
 
-    this.instrument = lookup[this.instrumentId];
+  public dispose() {
+    this.notes.forEach((note) => note.dispose());
   }
 }
 
@@ -302,13 +309,27 @@ export class Pattern {
   @io.auto public id: string = uuid.v4();
   @io.auto public name!: string;
   @io.auto({ type: Score }) public scores: Score[] = [];
-  public transport = new Transport<Note>();
+  public transport = new Transport();
 
   get duration() {
     // TODO 4 is is hardcoded
     return this.scores.reduce((max, score) => {
       return Math.max(max, ...score.notes.map(({ time, duration }) => time + duration));
     }, 4);
+  }
+
+  public dispose() {
+    this.scores.forEach((score) => score.dispose());
+  }
+
+  public removeScores(condition: (score: Score) => boolean) {
+    const scores = this.scores.slice(0).reverse();
+    scores.forEach((score, i) => {
+      if (condition(score)) {
+        score.dispose();
+        this.scores.splice(i, 1);
+      }
+    });
   }
 }
 
@@ -428,6 +449,15 @@ export class Instrument {
     this.triggerAttackRelease(value, duration, time);
   }
 
+  public dispose() {
+    this.disconnect();
+    // For some reason, this causes internal issues in Tone.js
+    // disposeHelp(this.synth);
+    disposeHelp(this.panner);
+    disposeHelp(this.volume);
+    disposeHelp(this.pan);
+  }
+
   private checkConnection() {
     if (!this.destination) { return; }
     if (this.mute && this.connected) {
@@ -492,12 +522,6 @@ export class AutomationClip {
     this.points.forEach(this.schedule);
   }
 
-  public add(time: number, value: number) {
-    const point = Point.create(time, value);
-    this.schedule(point);
-    this.points.push(point);
-  }
-
   public change(index: number, value: number) {
     const point = this.points[index];
     this.control.change(point.eventId, value);
@@ -508,6 +532,12 @@ export class AutomationClip {
     const point = this.points[i];
     this.control.remove(point.eventId);
     this.points.splice(i, 1);
+  }
+
+  public add(time: number, value: number) {
+    const point = Point.create(time, value);
+    this.schedule(point);
+    this.points.push(point);
   }
 
   private schedule(point: Point) {
@@ -954,7 +984,7 @@ export class Playlist {
   @io.auto({ types: [PlacedPattern, PlacedSample], optional: true, array: true })
   public elements: PlaylistElements[] = [];
 
-  public transport = new Transport<PlaylistElements>();
+  public transport = new Transport();
 
   public init() {
     this.elements.forEach((element) => {

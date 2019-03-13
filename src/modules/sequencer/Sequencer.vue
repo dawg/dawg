@@ -10,6 +10,7 @@
         :loop-start="loopStart"
         :loop-end="loopEnd"
         :offset="offset"
+        @seek="seek"
       ></timeline>
     </div>
     <vue-perfect-scrollbar 
@@ -67,7 +68,7 @@ export default class Sequencer extends Vue {
   @Prop({ type: Number, default: 80 }) public sideWidth!: number;
   @Prop({ type: Array, required: true }) public elements!: Element[];
   @Prop({ type: Boolean, default: false }) public play!: boolean;
-  @Prop({ type: Object, required: true }) public transport!: Transport<Element>;
+  @Prop({ type: Object, required: true }) public transport!: Transport;
   @Prop(Number) public end!: number;
   @Prop(Number) public start!: number;
 
@@ -89,6 +90,12 @@ export default class Sequencer extends Vue {
     return {
       minWidth: `${this.sideWidth}px`,
     };
+  }
+
+  public seek(beat: number) {
+    const time = toTickTime(beat);
+    this.transport.seconds = new Tone.Time(time).toSeconds();
+    this.update();
   }
 
   public added(element: Element) {
@@ -124,7 +131,6 @@ export default class Sequencer extends Vue {
   public onLoopStartChange() {
     this.$log.debug(`loopStart being set to ${this.loopStart}`);
     const time = toTickTime(this.loopStart);
-    this.transport.seconds = new Tone.Time(time).toSeconds();
     this.transport.loopStart = time;
     this.$update('start', this.loopStart);
   }

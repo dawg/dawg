@@ -36,6 +36,7 @@
             :value="specific.selectedPattern" 
             @input="specific.setPattern"
             :patterns="project.patterns"
+            @remove="project.removePattern"
           ></patterns>
         </side-bar>
       </base-tabs>

@@ -69,7 +69,7 @@ describe('transport', () => {
   //     //
   //   }
 
-  //   const transport = new Transport<Class>();
+  //   const transport = new Transport();
   //   const a = new Class();
   //   const b = new Class();
 

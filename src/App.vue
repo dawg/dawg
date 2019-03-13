@@ -422,12 +422,12 @@ export default class App extends Vue {
   }
 
   public playPause() {
-    let transport: Transport<any>;
+    let transport: Transport;
     if (general.applicationContext === 'pianoroll') {
       const pattern = specific.selectedPattern;
       if (!pattern) {
-        this.$notify.info('Please a pattern.', {
-          detail: 'You haven\'t told me what to play yet.',
+        this.$notify.info('Please select a Pattern.', {
+          detail: 'Please create and select a Pattern first or switch the Playlist context.',
         });
         return;
       }

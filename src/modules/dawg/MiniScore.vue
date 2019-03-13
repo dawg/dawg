@@ -4,7 +4,6 @@
     preserveAspectRatio="none"
     class="mini-score primary--text"
     :viewBox="viewBox"
-    transform="scale(-1,1)"
   >
     <rect
       v-for="rect in rects"
@@ -66,7 +65,7 @@ export default class MiniScore extends Vue {
   }
   get rects() {
     return this.notes.map(({ row, time, duration }) => {
-      const actualRow = this.difference - (row - this.minRow);
+      const actualRow = row - this.minRow;
       const x = (time - this.offset) * this.columnWidth;
       const width = duration * this.columnWidth;
       if (x + width > 0 && x < this.width) {

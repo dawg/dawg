@@ -23,7 +23,7 @@ describe('schemas', () => {
       score.notes.push(new Note({row: 0, duration: 5, time: 5}));
       const serialized = serialize(score, Score);
       const deserialized = deserialize(serialized, Score);
-      deserialized.init({ [instrument.id]: instrument });
+      deserialized.init(instrument);
       expect(deserialized).to.deep.eq(score);
     });
   });

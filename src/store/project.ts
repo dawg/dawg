@@ -46,8 +46,8 @@ export class Project extends VuexModule {
   @io.auto public id = uuid.v4();
   @io.auto({ type: Pattern, optional: true, array: true }) public patterns: Pattern[] = [];
   @io.auto({ type: Instrument, optional: true, array: true }) public instruments: Instrument[] = [];
-  @io.autoserializeAs(Channel) public channels = range(10).map((i) => Channel.create(i));
-  @io.autoserializeAs(Track) public tracks = range(21).map((i) => Track.create(i));
+  @io.auto({ type: Channel }) public channels = range(10).map((i) => Channel.create(i));
+  @io.auto({ type: Track }) public tracks = range(21).map((i) => Track.create(i));
   @io.auto({ type: Playlist, optional: true }) public master: Playlist = new Playlist();
   @io.auto({ type: Sample, optional: true, array: true }) public samples: Sample[] = [];
   @io.auto({ type: AutomationClip, optional: true, array: true }) public automationClips: AutomationClip[] = [];
@@ -133,17 +133,30 @@ export class Project extends VuexModule {
       return;
     }
 
-    this.samples.forEach((sample) => {
+    const toRemove: number[] = [];
+    this.samples.forEach((sample, i) => {
+      if (!fs.existsSync(sample.path)) {
+        toRemove.push(i);
+        return;
+      }
+
       const buffer = loadBuffer(sample.path);
       sample.init(buffer);
     });
+
+    toRemove.reverse().map(this.removeSample);
 
     // This initializes the parts.
     // Since the parts are not serialized, we need to re-add stuff.
     // Ideally, we wouldn't have to do this, but I don't have a solution right now.
     this.patterns.forEach((pattern) => {
+      pattern.removeScores((score) => {
+        return !(score.instrumentId in this.instrumentLookup);
+      });
+
       pattern.scores.forEach((score) => {
-        score.init(this.instrumentLookup);
+        const instrument = this.instrumentLookup[score.instrumentId];
+        score.init(instrument);
         score.notes.forEach((note) => {
           note.init(score.instrument);
           note.schedule(pattern.transport);
@@ -233,12 +246,55 @@ export class Project extends VuexModule {
   }
 
   @Action
+  public removeSample(i: number) {
+    // TODO move to mutation
+    const sample = this.samples[i];
+
+    // This isn' the best solution
+    this.master.elements = this.master.elements.filter((element) => {
+      if (!(element instanceof PlacedSample)) {
+        return true;
+      }
+
+      if (element.sample !== sample) {
+        return true;
+      }
+
+      element.dispose();
+      return false;
+    });
+
+    sample.dispose();
+    this.samples.splice(i, 1);
+  }
+
+  @Action
+  public removePattern(i: number) {
+    const pattern = this.patterns[i];
+
+    this.master.elements = this.master.elements.filter((element) => {
+      if (!(element instanceof PlacedPattern)) {
+        return true;
+      }
+
+      if (element.pattern !== pattern) {
+        return true;
+      }
+
+      element.dispose();
+      return false;
+    });
+
+    // TODO move to mutation
+    pattern.dispose();
+    this.patterns.splice(i, 1);
+  }
+
+  @Action
   public createAutomationClip<T extends Automatable>(
     payload: { automatable: T, key: keyof T, end: number, start: number },
   ) {
     const { start, end, key, automatable } = payload;
-    // tslint:disable-next-line:no-console
-    console.info(automatable[key]);
     const signal = automatable[key] as any as Signal;
 
 
@@ -409,8 +465,16 @@ export class Project extends VuexModule {
 
   @Mutation
   public deleteInstrument(i: number) {
-    // TODO We may need to disconnect the node.
-    Vue.delete(this.instruments, i);
+    const instrument = this.instruments[i];
+
+    this.patterns.forEach((pattern) => {
+      pattern.removeScores((score) => {
+        return score.instrument === instrument;
+      });
+    });
+
+    instrument.dispose();
+    this.instruments.splice(i, 1);
   }
 
   /**

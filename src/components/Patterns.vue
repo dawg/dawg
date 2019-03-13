@@ -8,6 +8,7 @@
       :transfer-data="item.prototype"
       :class="{ selected: value && item.pattern.id === value.id }"
       @click.native="click(item.pattern)"
+      @contextmenu.native="context($event, i)"
     >
       {{ item.pattern.name }}
     </drag>
@@ -40,6 +41,15 @@ export default class Patterns extends Vue {
     } else {
       this.$emit('input', p);
     }
+  }
+
+  public context(e: MouseEvent, i: number) {
+    this.$context(e, [
+      {
+        text: 'Delete',
+        callback: () => this.$emit('remove', i),
+      },
+    ]);
   }
 
   @Watch<Patterns>('patterns')

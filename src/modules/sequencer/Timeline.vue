@@ -1,5 +1,10 @@
 <template>
-  <div class="timeline secondary" @mousedown="mousedown">
+  <div 
+    class="timeline secondary" 
+    @dblclick="remove"
+    @click="seek"
+    @mousedown="mousedown"
+  >
       <div class="loop" :style="loopStyle" @mousedown="mousedown($event, 'center')">
         <!-- The inner loop is where stuff is actually displayed -->
         <!-- The outer loop is used for a click area -->
@@ -69,35 +74,60 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   public selectedStart = false;
   public selectedEnd = false;
   public rendered = false;
+  public justDragged = false;
+
+  public remove() {
+    this.start = null;
+    this.end = null;
+    this.$emit('update:setLoopStart', null);
+    this.$emit('update:setLoopEnd', null);
+    this.inLoop = false;
+  }
 
   public mousedown(e: MouseEvent, location?: 'start' | 'end' | 'center') {
     if (e.button !== Button.LEFT) { return; }
 
     e.preventDefault();
-    if (!location) {
-      this.start = null;
-      this.end = null;
-      this.$emit('update:setLoopStart', null);
-      this.$emit('update:setLoopEnd', null);
-      this.inLoop = false;
-    } else {
+    if (location) {
+      e.stopPropagation();
       this.selectedStart = location === 'start';
       this.selectedEnd = location === 'end';
-      e.stopPropagation();
     }
 
     window.addEventListener('mousemove', this.mousemove);
     window.addEventListener('mouseup', this.removeMousemove);
   }
+
   public removeMousemove() {
     window.removeEventListener('mousemove', this.mousemove);
     window.removeEventListener('mouseup', this.removeMousemove);
   }
+
+  public seek(e: MouseEvent) {
+    if (this.justDragged) {
+      this.justDragged = false;
+      return;
+    }
+
+    const beat = this.getPosition(e);
+    if (beat > this.loopEnd) {
+      return;
+    }
+
+    this.$emit('seek', beat);
+  }
+
+  public getPosition(e: MouseEvent) {
+    const left = this.$el.getBoundingClientRect().left;
+    return (e.pageX - left) / this.pxPerBeat;
+  }
+
   public mousemove(e: MouseEvent) {
+    this.justDragged = true;
+
     if (!this.inLoop) {
       this.$log.debug('Starting loop!');
-      const left = this.$el.getBoundingClientRect().left;
-      const position = (e.pageX - left) / this.pxPerBeat;
+      const position = this.getPosition(e);
       this.inLoop = true;
       this.start = position;
       this.end = position;

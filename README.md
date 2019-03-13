@@ -116,12 +116,10 @@ There is also an `test:e2e` command; however, this test suite does not currently
 |[<img src="https://avatars1.githubusercontent.com/u/18077531?s=460&v=4" width="128">](https://github.com/jsmith) |[<img src="https://avatars1.githubusercontent.com/u/36887395?s=400&v=4" width="128">](https://github.com/desilvamatt) | [<img src="https://avatars3.githubusercontent.com/u/27429447?s=460&v=4" width="128">](https://github.com/aeldesoky) | [<img src="https://avatars0.githubusercontent.com/u/30574445?s=400&v=4" width="128">](https://github.com/alexodonn)
 |:---:|:---:|:---:|:---:|
 | [Jacob Smith](https://github.com/jsmith) | [Matt DeSilva](https://github.com/desilvamatt) |[Amir Eldesoky](https://github.com/aeldesoky) | [Alex ODonnell](https://github.com/alexodonn)
-|<sup>Software Engineering</sup>|<sup>Software Engineering</sup>|<sup>Electrical Engineering</sup>|<sup>Electrical Engineering</sup>
+|<sup>Software Engineering</sup>|<sup>Electrical Engineering</sup>|<sup>Electrical Engineering</sup>|<sup>Electrical Engineering</sup>
 
 # TODO
-- Create common section to show to to work with the sequencer.
 - Add seeking mechanism
-- Remove load on open folder
 - WAV file IDs
 - Delete patterns
 - Delete audio files
@@ -131,3 +129,4 @@ There is also an `test:e2e` command; however, this test suite does not currently
 - Add error reporting mechanism.
 - Add logo
 - Naming elements in the playlist
+- Add method to place information to replace tooltips.
