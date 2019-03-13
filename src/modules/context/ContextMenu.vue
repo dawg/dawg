@@ -77,9 +77,13 @@ export default class ContextMenu extends Vue {
     }
 
     if (!this.$el.contains(event.target as Node)) {
-      this.open = false;
-      document.removeEventListener('click', this.outsideClickListener);
+      this.close();
     }
+  }
+
+  public close() {
+    this.open = false;
+    document.removeEventListener('click', this.outsideClickListener);
   }
 
   public mouseover(i: number) {
@@ -102,6 +106,7 @@ export default class ContextMenu extends Vue {
     }
 
     this.items = payload.items;
+    this.$press(['Esc'], this.close);
 
     document.addEventListener('click', this.outsideClickListener);
   }

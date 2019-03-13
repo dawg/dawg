@@ -1,6 +1,7 @@
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import { CreateElement } from 'vue';
 import { Bus, Watch } from '@/modules/update';
+import { reverse } from '@/utils';
 
 export const bus = new Bus<{ open: [] }>();
 export type Key =
@@ -34,9 +35,12 @@ export type Key =
   'Z' |
   'Space' |
   'Del' |
+  'Esc' |
   'Tab';
 
 type KeyCodeLookup = { [k in Key]: number | number[] };
+
+const stack: Array<{ shortcut: Key[], callback: () => void }> = [];
 
 const codeLookup: KeyCodeLookup = {
   Shift: 16,
@@ -70,12 +74,38 @@ const codeLookup: KeyCodeLookup = {
   Space: 32,
   Del: 46,
   Tab: 9,
+  Esc: 27.,
 };
 
 export interface PaletteItem {
   text: string;
   callback: () => void;
   shortcut?: Key[];
+}
+
+function shortcutPressed(shortcut: Key[], pressedKeys: Set<number>) {
+  if (pressedKeys.size !== shortcut.length) {
+    return false;
+  }
+
+  // Just to be sure. I think the previous if statement is fine though.
+  if (shortcut.length === 0) {
+    return false;
+  }
+
+  const has = (keys: number | number[]) => {
+    if (typeof keys === 'number') {
+      keys = [keys];
+    }
+
+    return keys.some((key) => pressedKeys.has(key));
+  };
+
+  if (!shortcut.every((key) => has(codeLookup[key]))) {
+    return false;
+  }
+
+  return true;
 }
 
 @Component
@@ -223,33 +253,24 @@ class Palette extends Vue {
       this.$emit('input', false);
     }
 
+    let i = stack.length - 1;
+    for (const item of reverse(stack)) {
+      if (shortcutPressed(item.shortcut, this.pressedKeys)) {
+        item.callback();
+        stack.splice(i, 1);
+        return;
+      }
+      i--;
+    }
+
     this.items.forEach((item) => {
       if (!item.shortcut) {
         return;
       }
 
-      if (this.pressedKeys.size !== item.shortcut.length) {
-        return;
+      if (shortcutPressed(item.shortcut, this.pressedKeys)) {
+        item.callback();
       }
-
-      // Just to be sure. I think the previous if statement is fine though.
-      if (item.shortcut.length === 0) {
-        return;
-      }
-
-      const has = (keys: number | number[]) => {
-        if (typeof keys === 'number') {
-          keys = [keys];
-        }
-
-        return keys.some((key) => this.pressedKeys.has(key));
-      };
-
-      if (!item.shortcut.every((key) => has(codeLookup[key]))) {
-        return;
-      }
-
-      item.callback();
     });
   }
 
@@ -343,5 +364,15 @@ class Palette extends Vue {
 export default {
   install() {
     Vue.component('Palette', Palette);
+
+    Vue.prototype.$press = (shortcut: Key[], callback: () => void) => {
+      stack.push({ shortcut, callback });
+    };
   },
 };
+
+
+export interface PaletteAugmentation {
+  // TODO Rename this
+  $press(shortcut: Key[], callback: () => void): void;
+}
