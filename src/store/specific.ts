@@ -23,7 +23,7 @@ interface ProjectCache {
  */
 @Module({ dynamic: true, store, name: 'specific' })
 export class Specific extends VuexModule {
-  @io.auto({ nullable: true, optional: true }) public backup = false;
+  @io.auto({ optional: true }) public backup = false;
   @io.auto({ nullable: true, optional: true }) public selectedPatternId: string | null = null;
   @io.auto({ nullable: true, optional: true }) public selectedScoreId: string | null = null;
   @io.auto({ nullable: true, optional: true }) public openedPanel: PanelNames | null = null;

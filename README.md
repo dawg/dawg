@@ -119,14 +119,12 @@ There is also an `test:e2e` command; however, this test suite does not currently
 |<sup>Software Engineering</sup>|<sup>Electrical Engineering</sup>|<sup>Electrical Engineering</sup>|<sup>Electrical Engineering</sup>
 
 # TODO
-- Add seeking mechanism
 - WAV file IDs
-- Delete patterns
-- Delete audio files
-- Handle non existent audio files
 - Add a way to delete files from the cloud.
-- Remove array: true, just use typescript default parameters
 - Add error reporting mechanism.
 - Add logo
 - Naming elements in the playlist
 - Add method to place information to replace tooltips.
+- Test backup
+- Test delete audio files from fs
+- Test status text

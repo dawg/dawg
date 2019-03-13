@@ -7,6 +7,8 @@
     @input="$emit('input', $event)"
     v-bind="$attrs"
     v-on="$listeners"
+    :format="format"
+    name="Pan"
   ></knob>
 </template>
 
@@ -18,5 +20,17 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 @Component
 export default class Pan extends Vue {
   @Prop({ type: Number, required: true }) public value!: number;
+
+  public format(value: number) {
+    let text = (Math.round(Math.abs(this.value) * 100)) + '%';
+
+    if (this.value < 0) {
+      text += ' left';
+    } else if (this.value > 0) {
+      text += ' right';
+    }
+
+    return text;
+  }
 }
 </script>

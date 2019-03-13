@@ -43,7 +43,6 @@ export interface Options {
   type?: Constructor<any>;
   nullable?: boolean;
   optional?: boolean;
-  array?: boolean;
   types?: Array<Constructor<any>>;
 }
 
@@ -78,7 +77,6 @@ export function auto(targetOrOptions: Constructor<any> | Options, maybeKey?: str
         types,
         nullable: options.nullable,
         optional: options.optional,
-        array: options.array,
       });
     };
   }
@@ -124,7 +122,6 @@ interface IMetaData {
   types?: Type[];
   indexable?: boolean;
   nullable?: boolean;
-  array?: boolean;
   optional?: boolean;
   attribute?: string;
 }
@@ -133,20 +130,21 @@ interface IMetaData {
 // in a type tagged with a serialization annotation will contain an array of these
 // objects each describing one property
 class MetaData {
-  public key: string;    // the key name of the property this meta data describes
+  /**
+   * The key name of the property this meta data describes
+   */
+  public key: string;
   public types: Type[];
   public indexable: boolean;
   public nullable: boolean;
   public optional: boolean;
   public attribute?: string;
-  public array?: boolean;
 
   constructor(o: IMetaData) {
     this.indexable = o.indexable || false;
     this.types = o.types || [];
     this.key = o.key;
     this.optional = o.optional || false;
-    this.array = o.array || false;
     this.nullable = o.nullable || false;
     this.attribute = o.attribute;
   }
@@ -212,18 +210,10 @@ function deserializeObject(json: any, types: Array<Constructor<any>>): any {
   // for each tagged property on the source type, try to deserialize it
   for (const metadata of Object.values(metadataArray)) {
     const key = metadata.key;
-    let source = json[key];
+    const source = json[key];
     if (source === undefined) {
       if (metadata.optional) {
-        if (metadata.array) {
-          source = [];
-        } else if (metadata.nullable) {
-          source = null;
-        } else if (metadata.types.length !== 1) {
-          throw Error(`${key} does not exist`);
-        } else {
-          source = Serialize(new metadata.types[0](), metadata.types[0]);
-        }
+        continue;
       } else {
         throw Error(`${key} does not exist`);
       }

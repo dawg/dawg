@@ -14,6 +14,8 @@ import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { DragElement } from '@/modules/draggable';
 import Knobs from '@/modules/knobs';
 import Split from '@/modules/split';
+import Status from '@/modules/status';
+
 
 import Piano from '@/components/Piano.vue';
 import DTrack from '@/components/DTrack.vue';
@@ -31,6 +33,7 @@ export default function middleware() {
   Vue.use(Palette);
   Vue.use(Knobs);
   Vue.use(MenuBar);
+  Vue.use(Status);
   Vue.use(VueLogger, {
     logLevel: 'info',
   });

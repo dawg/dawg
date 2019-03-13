@@ -52,6 +52,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { ProjectInfo } from '@/backend';
+import { Watch } from '@/modules/update';
 
 @Component({
   filters: {
@@ -80,6 +81,11 @@ export default class ProjectModal extends Vue {
   public openProject(project: ProjectInfo) {
     this.$emit('open', project);
     this.close();
+  }
+
+  @Watch<ProjectModal>('value')
+  public addListener() {
+    this.$press(['Esc'], this.close);
   }
 }
 </script>

@@ -152,33 +152,46 @@ export class Sample {
 
   @io.auto public id = uuid.v4();
   @io.auto public path!: string;
-  public buffer!: AudioBuffer;
-  private player!: Tone.Player;
+  public buffer: AudioBuffer | null = null;
+  private player: Tone.Player | null = null;
 
   get beats() {
-    const minutes = this.buffer.length / this.buffer.sampleRate / 60;
-    return minutes * Tone.Transport.bpm.value;
+    if (this.buffer) {
+      const minutes = this.buffer.length / this.buffer.sampleRate / 60;
+      return minutes * Tone.Transport.bpm.value;
+    } else {
+      return 0;
+    }
   }
 
   get name() {
     return pth.basename(this.path);
   }
 
-  public init(buffer: AudioBuffer) {
+  public init(buffer: AudioBuffer | null) {
     this.buffer = buffer;
-    this.player = new Tone.Player(this.buffer).toMaster();
+
+    if (buffer) {
+      this.player = new Tone.Player(buffer).toMaster();
+    }
   }
 
   public start(exact?: number, ticks?: string) {
-    this.player.start(exact, undefined, ticks);
+    if (this.player) {
+      this.player.start(exact, undefined, ticks);
+    }
   }
 
   public stop() {
-    this.player.stop();
+    if (this.player) {
+      this.player.stop();
+    }
   }
 
   public dispose() {
-    disposeHelp(this.player);
+    if (this.player) {
+      disposeHelp(this.player);
+    }
   }
 }
 
@@ -906,7 +919,7 @@ export class Channel {
 
   @io.auto public number!: number;
   @io.auto public name!: string;
-  @io.auto({ type: Effect, optional: true, array: true }) public effects: AnyEffect[] = [];
+  @io.auto({ type: Effect, optional: true }) public effects: AnyEffect[] = [];
   @io.auto public id = uuid.v4();
 
   public left = new Tone.Meter();
@@ -981,7 +994,7 @@ export class Track {
 
 type PlaylistElements = PlacedPattern | PlacedSample | PlacedAutomationClip;
 export class Playlist {
-  @io.auto({ types: [PlacedPattern, PlacedSample], optional: true, array: true })
+  @io.auto({ types: [PlacedPattern, PlacedSample], optional: true })
   public elements: PlaylistElements[] = [];
 
   public transport = new Transport();

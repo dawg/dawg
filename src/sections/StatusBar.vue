@@ -4,6 +4,7 @@
       <div slot="activator" class="name item">{{ projectName }}</div>
       <div>Project Name</div>
     </v-tooltip>
+    <status-text class="item status-text"></status-text>
     <div style="flex: 1"></div>
     <tooltip-icon 
       v-if="general.backupError" 
@@ -73,4 +74,7 @@ export default class Foot extends Vue {
 .item
   margin: 0 4px
   padding-top: 1px
+
+.status-text
+  margin-left: 15px
 </style>

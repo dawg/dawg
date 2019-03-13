@@ -1,9 +1,13 @@
 <template>
   <waveform
+    v-if="buffer"
     :style="waveformStyle"
     :buffer="buffer"
     :height="height"
   ></waveform>
+  <div v-else>
+    <!-- Display nothing when the buffer is null -->
+  </div>
 </template>
 
 <script lang="ts">

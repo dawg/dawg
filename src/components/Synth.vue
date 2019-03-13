@@ -24,6 +24,7 @@
         :value="instrument.volume.raw"
         @input="volumeInput"
         @automate="automateVolume"
+        name="Volume"
       ></knob>
       <pan
         :value="instrument.pan.raw"

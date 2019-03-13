@@ -27,7 +27,6 @@ import {
 import { findUniqueName, range } from '@/utils';
 import store from '@/store/store';
 import cache from '@/store/cache';
-import Vue from 'vue';
 import uuid from 'uuid';
 import { loadBuffer } from '@/modules/wav/local';
 import { makeLookup, chain } from '@/modules/utils';
@@ -44,13 +43,13 @@ export class Project extends VuexModule {
   @io.auto public bpm = 120;
   @io.auto({ nullable: true }) public name: string | null = null;
   @io.auto public id = uuid.v4();
-  @io.auto({ type: Pattern, optional: true, array: true }) public patterns: Pattern[] = [];
-  @io.auto({ type: Instrument, optional: true, array: true }) public instruments: Instrument[] = [];
+  @io.auto({ type: Pattern, optional: true }) public patterns: Pattern[] = [];
+  @io.auto({ type: Instrument, optional: true }) public instruments: Instrument[] = [];
   @io.auto({ type: Channel }) public channels = range(10).map((i) => Channel.create(i));
   @io.auto({ type: Track }) public tracks = range(21).map((i) => Track.create(i));
   @io.auto({ type: Playlist, optional: true }) public master: Playlist = new Playlist();
-  @io.auto({ type: Sample, optional: true, array: true }) public samples: Sample[] = [];
-  @io.auto({ type: AutomationClip, optional: true, array: true }) public automationClips: AutomationClip[] = [];
+  @io.auto({ type: Sample, optional: true }) public samples: Sample[] = [];
+  @io.auto({ type: AutomationClip, optional: true }) public automationClips: AutomationClip[] = [];
 
   constructor(module?: Mod<any, any>) {
     super(module || {});
@@ -133,18 +132,16 @@ export class Project extends VuexModule {
       return;
     }
 
-    const toRemove: number[] = [];
     this.samples.forEach((sample, i) => {
+      let buffer: AudioBuffer | null = null;
       if (!fs.existsSync(sample.path)) {
-        toRemove.push(i);
-        return;
+        buffer = null;
+      } else {
+        buffer = loadBuffer(sample.path);
       }
 
-      const buffer = loadBuffer(sample.path);
       sample.init(buffer);
     });
-
-    toRemove.reverse().map(this.removeSample);
 
     // This initializes the parts.
     // Since the parts are not serialized, we need to re-add stuff.

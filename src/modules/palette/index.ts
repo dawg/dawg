@@ -374,5 +374,7 @@ export default {
 
 export interface PaletteAugmentation {
   // TODO Rename this
+  // Furthermore, this will cause issues when the callbacks are called another way
+  // THere must be some way to invalidate a callback
   $press(shortcut: Key[], callback: () => void): void;
 }

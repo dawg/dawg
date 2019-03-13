@@ -4,6 +4,8 @@
       class="rela-block knob-dial" 
       :style="knobStyle"
       @contextmenu="contextmenu"
+      @mouseenter="enter"
+      @mouseleave="leave"
     >
       <svg 
         class="dial-svg" 
@@ -66,6 +68,8 @@ import { Component, Prop, Mixins, Watch } from 'vue-property-decorator';
 @Component
 export default class Knob extends Mixins(Draggable) {
   @Prop({ type: Number }) public value!: number;
+  @Prop({ type: String }) public name?: string;
+  @Prop({ type: Function }) public format?: (value: number) => string;
   @Prop({ type: Number, default: 264 }) public range!: number;
   @Prop({ type: Number, default: 100 }) public max!: number;
   @Prop({ type: Number, default: 0 }) public min!: number;
@@ -90,46 +94,60 @@ export default class Knob extends Mixins(Draggable) {
     if (midValue === undefined) { midValue = this.min; }
     return this.mapRange(midValue, this.min, this.max, this.minDegrees, this.maxDegrees);
   }
+
   get minDegrees() {
     return 90 + this.angle;
   }
+
   get maxDegrees() {
     return 90 - this.angle;
   }
+
   get maxRadians() {
     return this.maxDegrees / 360 * 2 * Math.PI;
   }
+
   get minRadians() {
     return this.minDegrees / 360 * 2 * Math.PI;
   }
+
   get midRadians() {
     return this.midDegrees / 360 * 2 * Math.PI;
   }
+
   get minX() {
     return this.center + (Math.cos(this.minRadians) * this.r);
   }
+
   get minY() {
     return this.center - (Math.sin(this.minRadians) * this.r);
   }
+
   get maxX() {
     return this.center + (Math.cos(this.maxRadians) * this.r);
   }
+
   get maxY() {
     return this.center - (Math.sin(this.maxRadians) * this.r);
   }
+
   get midX() {
     return this.center + (Math.cos(this.midRadians) * this.r);
   }
+
   get midY() {
     return this.center - (Math.sin(this.midRadians) * this.r);
   }
+
   get angle() {
     return this.range / 2;
   }
-  public get center() {
+
+  get center() {
     return this.size / 2;
   }
-  public get r() {
+
+  get r() {
     // We have to take off half of the stroke width due to how svg arcs work.
     // If we were to tell an svg to create an arc with radius 10 and a stroke-width of 2
     // the actual radius would be 11 (measuring from outside the path).
@@ -146,7 +164,7 @@ export default class Knob extends Mixins(Draggable) {
   get transform() {
     return `rotate(${this.rotation} ${this.center} ${this.center})`;
   }
-  public get knobStyle() {
+  get knobStyle() {
     return {
       color: this.primaryColor,
       height: `${this.size}px`,
@@ -166,10 +184,10 @@ export default class Knob extends Mixins(Draggable) {
   get leftRangePath() {
     return `M ${this.midX} ${this.midY} A ${this.r} ${this.r} 0 ${this.leftLarge} 0 ${this.minX} ${this.minY}`;
   }
-  public get leftLength() {
+  get leftLength() {
     return (this.minRadians - this.midRadians) * this.r;
   }
-  public get leftRange() {
+  get leftRange() {
     return this.minDegrees - this.midDegrees;
   }
   get leftAngleBetween() {
@@ -192,22 +210,28 @@ export default class Knob extends Mixins(Draggable) {
   get rightLarge() {
     return this.rightRange > 180 ? 1 : 0;
   }
+
   get rightRangePath() {
     return `M ${this.midX} ${this.midY} A ${this.r} ${this.r} 0 ${this.rightLarge} 1 ${this.maxX} ${this.maxY}`;
   }
-  public get rightLength() {
+
+  get rightLength() {
     return (this.midRadians - this.maxRadians) * this.r;
   }
-  public get rightRange() {
+
+  get rightRange() {
     return this.midDegrees - this.maxDegrees;
   }
-  public get rightAngleBetween() {
+
+  get rightAngleBetween() {
     const angle = 90 - this.rotation; // Converting to start from +x axis
     return this.midDegrees - angle;
   }
-  public get showRight() {
+
+  get showRight() {
     return this.rightAngleBetween > 0;
   }
+
   get rightStrokeStyle() {
     let offset = this.rightRange - this.rightAngleBetween;
     offset = (offset / this.rightRange) * this.rightLength;
@@ -215,6 +239,23 @@ export default class Knob extends Mixins(Draggable) {
       'stroke-dasharray': this.rightLength,
       'stroke-dashoffset': offset,
     };
+  }
+
+  public defaultFormat() {
+    return '' + Math.round(this.value);
+  }
+
+  public enter() {
+    if (this.name) {
+      this.$status.set({
+        text: this.name,
+        value: this.format ? this.format(this.value) : this.defaultFormat(),
+      });
+    }
+  }
+
+  public leave() {
+    this.$status.clear();
   }
 
   public move(e: MouseEvent, { changeY }: { changeY: number }) {
@@ -225,6 +266,14 @@ export default class Knob extends Mixins(Draggable) {
     rotation = Math.max(-132, Math.min(this.angle, rotation));
     const value = this.mapRange(rotation, -this.angle, this.angle, this.min, this.max);
     this.$emit('input', value);
+    this.enter();
+  }
+
+  public afterMove() {
+    // This isn't ideal but it works
+    // For example, if they are still on the element, it will clear it
+    // Even though we probably still want to display the value
+    this.$status.clear();
   }
 
   public contextmenu(e: MouseEvent) {
