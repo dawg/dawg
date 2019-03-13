@@ -106,7 +106,21 @@ const getProject = async (id: string) => {
 };
 
 const deleteProject = async (id: string) => {
-  getRef().child(id).remove();
+  return await withHandling(async (): Promise<Success | NotFound> => {
+    const ref = getRef().child(id);
+    const snapshot = await ref.once('value');
+
+    if (!snapshot.exists()) {
+      return {
+        type: 'not-found',
+      };
+    }
+
+    ref.remove();
+    return {
+      type: 'success',
+    };
+  });
 };
 
 const updateProject = async (id: string, project: SerializedProject) => {

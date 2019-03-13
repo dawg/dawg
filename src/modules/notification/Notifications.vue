@@ -2,11 +2,10 @@
   <div class="notifications" :style="styles">
     <transition-group name="vn-fade">
       <div
-        v-for="item in list"
+        v-for="(item, i) in list"
         :class="notifyClass(item)"
         :style="notifyWrapperStyle(item)"
         :key="item.id"
-        @click="destroy(item)"
       >
         <div :class="notifyIconClass(item)">
           <icon :name="item.icon"></icon>
@@ -19,7 +18,16 @@
               v-html="item.title"
             ></div>
             <div style="flex: 1"></div>
-            <v-icon small @click="destroy(item)">close</v-icon>
+            <v-btn 
+              v-if="list.length > 1 && i === 0"
+              :class="buttonClass(item)"
+              @click="destroyAll"
+              flat
+              small
+            >
+              Close All
+            </v-btn>
+            <v-icon small @click="destroy(i)">close</v-icon>
           </div>
           <div
             class="notification-content"
@@ -34,6 +42,7 @@
 
 import { events, Notification } from './events';
 import { Vue, Component, Prop} from 'vue-property-decorator';
+import { reverse } from '@/utils';
 
 const directions = {
   x: ['left', 'center', 'right'],
@@ -51,11 +60,11 @@ interface NotificationItem {
 
 @Component
 export default class Notifications extends Vue {
-  @Prop({type: Number, default: 300}) public width!: number;
-  @Prop({type: Boolean, default: false}) public reverse!: boolean;
-  @Prop({type: Number, default: 5000}) public duration!: number;
-  @Prop({type: Number, default: 0}) public delay!: number;
-  @Prop({type: Number, default: Infinity}) public max!: number;
+  @Prop({ type: Number, default: 300 }) public width!: number;
+  @Prop({ type: Boolean, default: false }) public reverse!: boolean;
+  @Prop({ type: Number, default: 60000 }) public duration!: number;
+  @Prop({ type: Number, default: 0 }) public delay!: number;
+  @Prop({ type: Number, default: Infinity }) public max!: number;
   @Prop(Boolean) public bottom!: number;
   @Prop(Boolean) public left!: number;
 
@@ -109,7 +118,8 @@ export default class Notifications extends Vue {
 
     if (duration >= 0) {
       this.timers[item.id] = setTimeout(() => {
-        this.destroy(item);
+        const i = this.list.indexOf(item);
+        this.destroy(i);
       }, item.length);
     }
 
@@ -134,13 +144,20 @@ export default class Notifications extends Vue {
     }
 
     if (indexToDestroy !== -1) {
-      this.destroy(this.list[indexToDestroy]);
+      this.destroy(indexToDestroy);
     }
   }
 
   public notifyClass(item: NotificationItem) {
     return [
       'notification',
+      `${item.type}-darken-3--text`,
+    ];
+  }
+
+  public buttonClass(item: NotificationItem) {
+    return [
+      'close-all',
       `${item.type}-darken-3--text`,
     ];
   }
@@ -160,16 +177,20 @@ export default class Notifications extends Vue {
   }
 
   public notifyWrapperStyle(item: NotificationItem) {
-    return { transition: `all ${this.speed}ms` };
+    return {
+      transition: `all ${this.speed}ms`,
+    };
   }
 
-  public destroy(item: NotificationItem) {
-    clearTimeout(this.timers[item.id]);
-    Vue.delete(this.list, this.list.indexOf(item));
+  public destroy(i: number) {
+    clearTimeout(this.timers[this.list[i].id]);
+    this.list.splice(i, 1);
   }
 
   public destroyAll() {
-    this.list.forEach(this.destroy);
+    for (const index of reverse(this.list.map((_, i) => i))) {
+      this.destroy(index);
+    }
   }
 }
 
@@ -225,5 +246,10 @@ export default class Notifications extends Vue {
 .notification-content {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   padding: 5px;
+}
+
+.close-all {
+  background-color: transparent!important;
+  margin: 4px;
 }
 </style>

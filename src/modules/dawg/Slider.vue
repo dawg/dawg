@@ -26,6 +26,8 @@
     ></rect>
     <polygon
       @contextmenu="contextmenu"
+      @mouseenter="update"
+      @mouseleave="afterMove"
       :points="points" 
       class="level primary--fill" 
       :ref="dragRef"
@@ -90,6 +92,22 @@ export default class Slider extends Mixins(Draggable) {
     volume = Math.max(Math.min(volume, 1), 0);
     volume = scale(volume, [0, 1], [this.min, this.max]);
     this.$emit('input', volume);
+    this.update();
+  }
+
+  public getFormatted() {
+    return Math.round(this.value * 100) + '%';
+  }
+
+  public update() {
+    this.$status.set({
+      text: 'Volume',
+      value: this.getFormatted(),
+    });
+  }
+
+  public afterMove() {
+    this.$status.clear();
   }
 
   public getPosition(level: number) {

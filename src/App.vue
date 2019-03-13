@@ -81,6 +81,7 @@
       v-model="backupModal" 
       :projects="general.projects"
       @open="openProject"
+      @delete="deleteProject"
     ></project-modal>
     <loading 
       class="secondary"
@@ -457,7 +458,7 @@ export default class App extends Vue {
       return;
     }
 
-    this.$log.info('Adding a sample!');
+    this.$log.debug('Adding a sample!');
     project.addSample(sample);
   }
 
@@ -501,6 +502,20 @@ export default class App extends Vue {
 
     const window = remote.getCurrentWindow();
     window.reload();
+  }
+
+  public async deleteProject(info: ProjectInfo) {
+    const res = await backend.deleteProject(info.id);
+
+    if (res.type === 'success') {
+      // We are not taking advantage of firebase here
+      // Ideally firebase would send an event and we would update our project list
+      // Until we do that, this will suffice
+      const taget = general.projects.indexOf(info);
+      general.setProjects(
+        general.projects.filter((maybe) => maybe !== info),
+      );
+    }
   }
 
   public closeApplication() {

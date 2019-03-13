@@ -3,13 +3,21 @@
     class="secondary toolbar" 
     :height="height" 
   >
-    <v-btn icon><ico fa scale="2">circle-notch</ico></v-btn>
-    <h1 class="white--text">Vusic</h1>
+    <!-- <v-btn icon><ico fa scale="2">circle-notch</ico></v-btn> -->
+    <img 
+      src="@/assets/64x64.png" 
+      class="logo"
+      height="45px"
+      width="45px"
+    >
+    <!-- <h1 class="white--text">Vusic</h1> -->
     <div style="border-left: 1px solid #fff; height: 60%; margin: 20px"></div>
     
 
-    <time-display :raw="seconds"></time-display>
-    <bpm :value="bpm" @input="updateBpm"></bpm>
+    <time-display
+      style="margin-right: 10px"
+      :raw="seconds"></time-display>
+    <!-- <bpm :value="bpm" @input="updateBpm"></bpm> -->
 
     <v-spacer></v-spacer>
 
@@ -125,4 +133,7 @@ export default class Toolbar extends Vue {
 
 .toolbar
   box-shadow: none
+
+.logo
+  filter: brightness(6)
 </style>

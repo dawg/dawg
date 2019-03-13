@@ -3,7 +3,7 @@
     <span class="text">{{ minutes }}</span>
     <span class="text colon">:</span>
     <span class="text">{{ formattedSeconds }}</span>
-    <span class="small-text">. {{ formattedMillis }}</span>
+    <span class="small-text">.{{ formattedMillis }}</span>
   </div>
 </template>
 

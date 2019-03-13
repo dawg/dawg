@@ -21,6 +21,7 @@
             <v-list-tile
               :key="project.id"
               @click="openProject(project)"
+              @contextmenu="context(project, $event)"
             >
               <v-list-tile-content>
                 <v-list-tile-title>{{ project.name }}</v-list-tile-title>
@@ -81,6 +82,17 @@ export default class ProjectModal extends Vue {
   public openProject(project: ProjectInfo) {
     this.$emit('open', project);
     this.close();
+  }
+
+  public context(project: ProjectInfo, e: MouseEvent) {
+    this.$context(e, [
+      {
+        text: 'Delete',
+        callback: () => {
+          this.$emit('delete', project);
+        },
+      },
+    ]);
   }
 
   @Watch<ProjectModal>('value')
