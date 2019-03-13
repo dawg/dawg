@@ -9,11 +9,20 @@
     "test:unit": "vue-cli-service test:unit",
     "electron:build": "vue-cli-service electron:build",
     "electron:serve": "vue-cli-service electron:serve",
+    "electron:release": "vue-cli-service electron:build --publish onTagOrDraft",
     "electron:icons": "electron-icon-builder --input=./public/icon.png --output=build --flatten",
     "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps",
     "storybook:serve": "vue-cli-service serve:storybook -p 6006 -c config/storybook -s ./public",
     "storybook:build": "vue-cli-service build:storybook -c config/storybook -o docs"
+  },
+  "build": {
+    "appId": "dawg.dev.vusic",
+    "linux": {
+      "target": [
+        "deb"
+      ]
+    }
   },
   "dependencies": {
     "@types/cors": "^2.8.4",

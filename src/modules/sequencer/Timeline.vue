@@ -165,7 +165,7 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
     }
   }
 
-  public get loopStyle() {
+  get loopStyle() {
     if (this.inLoop) {
       const width = this.$el.getBoundingClientRect().width;
       return {
@@ -183,10 +183,20 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   public getWidth() {
     return this.rendered ? this.$el.getBoundingClientRect().width : 0;
   }
-  public get stepsPerMeasure() { return this.stepsPerBeat * this.beatsPerMeasure; }
-  public get beatsPerStep() { return 1 / this.stepsPerBeat; }
-  public get stepsDuration() { return Math.ceil(this.width / this.pxPerStep + 2); }
-  public get displaySteps() {
+
+  get stepsPerMeasure() {
+    return this.stepsPerBeat * this.beatsPerMeasure;
+  }
+
+  get beatsPerStep() {
+    return 1 / this.stepsPerBeat;
+  }
+
+  get stepsDuration() {
+    return Math.ceil(this.width / this.pxPerStep + 2);
+  }
+
+  get displaySteps() {
     const stepOffset = Math.floor(this.offset * this.stepsPerBeat);
     let em = -this.offset % this.beatsPerStep;
     return range(this.stepsDuration).map((i) => {
