@@ -12,6 +12,7 @@ matrix:
       language: generic
 
     - os: windows
+      node_js: "10"
       language: node_js
 
 cache:
