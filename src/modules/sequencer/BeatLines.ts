@@ -1,6 +1,8 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
+import { CreateElement } from 'vue';
 
 // Make this an actual component
+// TODO
 @Component
 export default class BeatLines extends Vue {
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;
@@ -12,7 +14,7 @@ export default class BeatLines extends Vue {
   public stepColor = 'rgba(0,0,0,.1)';
   public measureColor = 'rgb(0,0,0)';
 
-  public get viewBox() {
+  get viewBox() {
     return this.pxPerBeat * this.beatsPerMeasure;
   }
 
@@ -24,28 +26,15 @@ export default class BeatLines extends Vue {
     return step % this.beatsPerMeasure ? this.stepColor : this.beatColor;
   }
 
-  public get stepPx() {
+  get stepPx() {
     return this.pxPerBeat / this.stepsPerBeat;
   }
 
-  public get measureSteps() {
+  get measureSteps() {
     return this.stepsPerBeat * this.beatsPerMeasure;
   }
 
-  public mounted() {
-    let el = this.$refs.beatLines as HTMLElement;
-    if (el && !(el instanceof HTMLElement)) {
-      this.$log.warn('beatLines must be a HTMLElement');
-      return;
-    }
-
-    if (!el) { el = this.$el; }
-    el.classList.add('beat-lines');
-    // this.$el.style.height = '100%';
-    // this.$el.style.width = '100%';
-    el.style.backgroundRepeat = 'repeat';
-    el.style.backgroundAttachment = 'local';
-
+  get svg() {
     const steps = [ `<rect x='0' y='0' height='1px' width='1px' fill='${ this.measureColor }'/>` ];
 
     for ( let step = 1; step < this.measureSteps; step++ ) {
@@ -56,18 +45,26 @@ export default class BeatLines extends Vue {
 
     const x = this.stepPx + this.stepPx * ( this.measureSteps - 1 ) - .5;
     steps.push(`<rect y='0' height='1px' width='1px' fill='${this.measureColor}' x='${x}'/>`);
-    const svg =
-`<svg
-  preserveAspectRatio='none'
-  xmlns='http://www.w3.org/2000/svg'
-  viewBox='0 0 ${this.viewBox} 1'
->
-  ${steps.join('\n  ')}
-</svg>
-      `;
+    return `
+    <svg
+      preserveAspectRatio='none'
+      xmlns='http://www.w3.org/2000/svg'
+      viewBox='0 0 ${this.viewBox} 1'
+    >
+      ${steps.join('\n  ')}
+    </svg>
+    `;
+  }
 
-    el.style.backgroundImage = `url("data:image/svg+xml,${encodeURI(svg)}")`;
-    el.style.backgroundSize = `${this.viewBox}px 1px`;
-
+  public render(h: CreateElement) {
+    return h('div', {
+      class: 'beat-lines',
+      style: {
+        backgroundRepeat: 'repeat',
+        backgroundAttachment: 'local',
+        backgroundImage: `url("data:image/svg+xml,${encodeURI(this.svg)}")`,
+        backgroundSize: `${this.viewBox}px 1px`,
+      },
+    });
   }
 }

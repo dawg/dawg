@@ -112,6 +112,9 @@ export default class Toolbar extends Vue {
   border-bottom: 1px solid
   padding: 0
 
+.toolbar /deep/ .v-toolbar__content
+  padding: 0 20px
+
 .clock
   font-size: 30px
   font-family: var(--monospace)

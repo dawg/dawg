@@ -1,5 +1,5 @@
 dev:
-	npm run electron:serve
+	npm run serve
 
 storybook:
 	npm run storybook:serve

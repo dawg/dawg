@@ -27,7 +27,13 @@
         @mousedown="selectStart"
       ></div>
     </div>
-    <div :style="sequencerStyle" class="layer lines" ref="beatLines"></div>
+    <beat-lines
+      :px-per-beat="pxPerBeat"
+      :beats-per-measure="beatsPerMeasure"
+      :steps-per-beat="stepsPerBeat"
+      :style="sequencerStyle"
+      class="layer lines"
+    ></beat-lines>
     <component
       v-for="(component, i) in components"
       :is="component.name"
@@ -78,14 +84,18 @@ import { IElement, Element } from '@/schemas';
 
 
 @Component({
-  components: { Progression },
+  components: { Progression, BeatLines },
 })
-export default class Arranger extends Mixins(Draggable, BeatLines) {
+export default class Arranger extends Mixins(Draggable) {
   // name is used for debugging
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, required: true }) public rowHeight!: number;
   @Prop({ type: Array, required: true }) public elements!: Element[];
   @Prop({ type: Number, default: 0.25 }) public snap!: number;
+
+  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
+  @Prop({ type: Number, required: true }) public beatsPerMeasure!: number;
+  @Prop({ type: Number, required: true }) public stepsPerBeat!: number;
 
   @Prop({ type: Number, required: true }) public numRows!: number;
   @Prop({ type: Function, default: () => ({}) }) public rowStyle!: (row: number) => object;
@@ -458,6 +468,11 @@ export default class Arranger extends Mixins(Draggable, BeatLines) {
     if (this.selected.length !== this.elements.length) {
       this.selected = this.elements.map((_) => false);
     }
+  }
+
+  @Watch<Arranger>('pxPerBeat')
+  public temp() {
+    console.log(this.pxPerBeat);
   }
 }
 </script>

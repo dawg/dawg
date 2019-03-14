@@ -41,8 +41,8 @@ const { dialog } = remote;
 @Module({ dynamic: true, store, name: 'project' })
 export class Project extends VuexModule {
   @io.auto public bpm = 120;
-  @io.auto public stepsPerBeat = 4;
-  @io.auto public beatsPerMeasure = 4;
+  @io.auto({ optional: true }) public stepsPerBeat = 4;
+  @io.auto({ optional: true }) public beatsPerMeasure = 4;
   @io.auto({ nullable: true }) public name: string | null = null;
   @io.auto public id = uuid.v4();
   @io.auto({ type: Pattern, optional: true }) public patterns: Pattern[] = [];

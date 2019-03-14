@@ -4,6 +4,7 @@
     @dblclick="remove"
     @click="seek"
     @mousedown="mousedown"
+    @wheel="wheel"
   >
       <div class="loop" :style="loopStyle" @mousedown="mousedown($event, 'center')">
         <!-- The inner loop is where stuff is actually displayed -->
@@ -222,6 +223,15 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 
   public mounted() {
     this.rendered = true;
+  }
+
+  public wheel(e: MouseWheelEvent) {
+    if (!e.shiftKey) {
+      return;
+    }
+
+    const delta = e.wheelDelta > 0 ? 1 : -1;
+    this.$update('pxPerBeat', this.pxPerBeat + delta);
   }
 }
 </script>

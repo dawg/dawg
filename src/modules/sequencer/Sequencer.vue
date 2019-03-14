@@ -12,7 +12,7 @@
         :offset="offset"
         :steps-per-beat="stepsPerBeat"
         :beats-per-measure="beatsPerMeasure"
-        :px-per-beat="pxPerBeat"
+        :px-per-beat.sync="pxPerBeat"
         @seek="seek"
       ></timeline>
     </div>

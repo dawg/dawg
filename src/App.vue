@@ -337,7 +337,7 @@ export default class App extends Vue {
       await this.withErrorHandling(project.load);
       this.$log.debug('Finished reading data from the fs.');
       this.loaded = true;
-    }, 500);
+    }, 1500);
   }
 
   public mounted() {
