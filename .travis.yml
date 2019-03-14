@@ -1,20 +1,34 @@
-language: node_js
-sudo: false
-node_js:
-  - "10"
-addons:
-  chrome: stable
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode9.4
+      language: node_js
+      node_js: "10"
+      env:
+        - ELECTRON_CACHE=$HOME/.cache/electron
+        - ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder
 
-before_install:
- - export DISPLAY=:99.0
- - sh -e /etc/init.d/xvfb start
- - sleep 3 # give xvfb some time to start
+    - os: linux
+      language: generic
+
+    - os: windows
+      language: node_js
+
+cache:
+  directories:
+    - node_modules
+    - $HOME/.cache/electron
+    - $HOME/.cache/electron-builder
+
 install:
-  - npm i
+  npm i
+
 script:
-  - npm run test:unit
+  - npm run build
+
+before_cache:
+  - rm -rf $HOME/.cache/electron-builder/wine
 
 branches:
-  only:
-    - master
-    - develop
+  except:
+    - "/^v\\d+\\.\\d+\\.\\d+$/"

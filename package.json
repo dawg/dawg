@@ -8,7 +8,6 @@
     "test:unit": "vue-cli-service test:unit",
     "build": "vue-cli-service electron:build",
     "serve": "vue-cli-service electron:serve",
-    "clean:dist": "rimraf ./dist/*",
     "build:linux": "vue-cli-service electron:build --linux --x64 -p never",
     "build:mac": "vue-cli-service electron:build --mac -p never",
     "build:win": "vue-cli-service electron:build --win --x64 --ia32 -p never",
@@ -19,74 +18,7 @@
     "storybook:build": "vue-cli-service build:storybook -c config/storybook -o docs"
   },
   "build": {
-    "appId": "dev.dawg.vusic",
-    "copyright": "Copyright © 2019 DAWG",
-    "mac": {
-      "electronUpdaterCompatibility": ">=0.0.1",
-      "category": "public.app-category.productivity",
-      "target": [
-        "mas-dev",
-        "mas",
-        "dmg",
-        "zip"
-      ]
-    },
-    "win": {
-      "target": [
-        "nsis"
-      ]
-    },
-    "linux": {
-      "category": "Utility",
-      "synopsis": "A secure and free password manager for all of your devices.",
-      "target": [
-        "deb",
-        "AppImage"
-      ]
-    },
-    "dmg": {
-      "icon": "dmg.icns",
-      "contents": [
-        {
-          "x": 150,
-          "y": 185,
-          "type": "file"
-        },
-        {
-          "x": 390,
-          "y": 180,
-          "type": "link",
-          "path": "/Applications"
-        }
-      ],
-      "window": {
-        "width": 540,
-        "height": 380
-      }
-    },
-    "nsisWeb": {
-      "oneClick": false,
-      "perMachine": true,
-      "allowToChangeInstallationDirectory": true,
-      "artifactName": "${productName}-Installer-${version}.${ext}",
-      "uninstallDisplayName": "${productName}",
-      "deleteAppDataOnUninstall": true
-    },
-    "portable": {
-      "artifactName": "${productName}-Portable-${version}.${ext}"
-    },
-    "deb": {
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
-    },
-    "appImage": {
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
-    },
-    "rpm": {
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
-    },
-    "freebsd": {
-      "artifactName": "${productName}-${version}-${arch}.${ext}"
-    }
+    "appId": "dev.dawg.vusic"
   },
   "dependencies": {
     "@types/cors": "^2.8.4",
@@ -137,7 +69,6 @@
     "karma-chrome-launcher": "^2.2.0",
     "mocha": "^5.0.5",
     "node-sass": "^4.9.0",
-    "rimraf": "^2.6.2",
     "sass-loader": "^7.0.1",
     "typescript": "^3.0.0",
     "vue-cli-plugin-electron-builder": "^1.1.1",
