@@ -1,0 +1,82 @@
+# https://github.com/bitwarden/desktop
+# THANK YOU SO MUCH
+
+image:
+- Visual Studio 2017
+- Ubuntu1804
+
+branches:
+
+stack: node 10
+
+init:
+- sh: sudo apt-get update
+# - sh: sudo apt-get -y install pkg-config libxss-dev libsecret-1-dev rpm
+- ps: |
+    if($isWindows) {
+      Install-Product node 10
+    }
+
+install:
+- ps: |
+    $env:PACKAGE_VERSION = (Get-Content -Raw -Path .\package.json | ConvertFrom-Json).version
+    $env:PROD_DEPLOY = "false"
+    if($env:APPVEYOR_REPO_TAG -eq "true" -and $env:APPVEYOR_RE_BUILD -eq "True") {
+      $env:PROD_DEPLOY = "true"
+      echo "This is a production deployment."
+    }
+    if($isWindows) {
+      choco install cloc --no-progress
+      cloc --include-lang TypeScript,JavaScript,HTML,Sass,CSS --vcs git
+    }
+
+before_build:
+- node --version
+- npm --version
+- ps: |
+    if($isWindows -and $env:CHOCO_API_KEY -ne $null -and $env:PROD_DEPLOY -eq "true") {
+      choco apikey --key $env:CHOCO_API_KEY --source https://push.chocolatey.org/
+    }
+
+build_script:
+- npm install
+- ps: |
+    if($isLinux) {
+      npm run build:lin
+      Push-AppveyorArtifact ./dist_electron/Vusic-${env:PACKAGE_VERSION}-x86_64.AppImage
+      Push-AppveyorArtifact ./dist_electron/Vusic-${env:PACKAGE_VERSION}-amd64.deb
+    }
+    else {
+      npm run build:win
+      Push-AppveyorArtifact .\dist_electron\Vusic-${env:PACKAGE_VERSION}.exe
+    }
+
+after_build:
+- ps: |
+    if($env:PROD_DEPLOY -eq "true") {
+      if($isLinux) {
+        echo "Deploy Linux..."
+        ./scripts/snap-update.ps1 -version $env:PACKAGE_VERSION
+      }
+      else {
+        echo "Deploy Windows..."
+        ./scripts/choco-update.ps1 -version $env:PACKAGE_VERSION
+      }
+    }
+
+for:
+- 
+  matrix:
+    only:
+      - image: Visual Studio 2017
+  cache:
+  - '%LOCALAPPDATA%\electron -> appveyor.yml'
+  - '%LOCALAPPDATA%\electron-builder -> appveyor.yml'
+
+-
+  matrix:
+    only:
+      - image: Ubuntu1804
+  cache:
+  - '/home/appveyor/.cache/electron -> appveyor.yml'
+  - '/home/appveyor/.cache/electron-builder -> appveyor.yml'
