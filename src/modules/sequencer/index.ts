@@ -6,7 +6,7 @@ import PlaylistSequencer from '@/modules/sequencer/PlaylistSequencer.vue';
 import PianoRollSequencer from '@/modules/sequencer/PianoRollSequencer.vue';
 import ACE from '@/modules/sequencer/AutomationClipElement.vue';
 import N from '@/modules/sequencer/Note.vue';
-import { positionable, resizable, selectable, colored } from './sequencer';
+import { positionable, resizable, selectable, colored } from '@/modules/sequencer/sequencer';
 
 function hoc(o: VueConstructor) {
   return positionable(resizable(selectable(o)));

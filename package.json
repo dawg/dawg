@@ -17,9 +17,6 @@
     "storybook:serve": "vue-cli-service serve:storybook -p 6006 -c config/storybook -s ./public",
     "storybook:build": "vue-cli-service build:storybook -c config/storybook -o docs"
   },
-  "build": {
-    "appId": "dev.dawg.vusic"
-  },
   "dependencies": {
     "@types/cors": "^2.8.4",
     "@types/tmp": "0.0.34",

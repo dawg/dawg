@@ -15,7 +15,6 @@
     "ordered-imports": false,
     "object-literal-sort-keys": false,
     "no-consecutive-blank-lines": false,
-    "object-curly-spacing": [true, "always"],
     "max-classes-per-file": false
   }
 }
