@@ -76,7 +76,7 @@
       "artifactName": "${productName}-Portable-${version}.${ext}"
     },
     "deb": {
-      "artifactName": "${productName}-${version}-${arch}.${ext}",
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
     },
     "appImage": {
       "artifactName": "${productName}-${version}-${arch}.${ext}"
