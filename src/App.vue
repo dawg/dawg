@@ -1,75 +1,75 @@
 <template>
   <v-app class="app">
-    <dawg>
-      <split direction="vertical">
-        <split :initial="30" fixed>
-          <menu-bar 
-            :menu="menu"
-            :maximized="maximized"
-            @close="closeApplication"
-            @minimize="minimizeApplication"
-            @maximize="maximizeApplication"
-            @restore="restoreApplication"
-          ></menu-bar>
+    <split direction="vertical">
+      <split :initial="30" fixed>
+        <menu-bar 
+          :menu="menu"
+          :maximized="maximized"
+          @close="closeApplication"
+          @minimize="minimizeApplication"
+          @maximize="maximizeApplication"
+          @restore="restoreApplication"
+        ></menu-bar>
+      </split>
+
+      <split direction="horizontal" resizable>
+        <split :initial="65" fixed>
+          <activity-bar></activity-bar>
         </split>
 
-        <split direction="horizontal" resizable>
-          <split :initial="65" fixed>
-            <activity-bar></activity-bar>
+        <split :initial="250" collapsible :min-size="100">
+          <side-tabs v-if="loaded"></side-tabs>
+          <blank v-else></blank>
+        </split>
+
+        <split direction="vertical" resizable>
+
+          <split :initial="general.toolbarHeight" fixed>
+            <toolbar
+              :height="general.toolbarHeight"
+              :transport="transport"
+              :context="general.applicationContext"
+              @update:context="general.setContext"
+              :play="general.play"
+              @update:play="playPause"
+              style="border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
+              :bpm="project.bpm"
+              @update:bpm="project.setBpm"
+            ></toolbar>
           </split>
 
-          <split :initial="250" collapsible :min-size="100">
-            <side-tabs v-if="loaded"></side-tabs>
-            <blank v-else></blank>
+          <split>
+            <playlist-sequencer
+              v-if="loaded"
+              style="height: 100%"
+              :tracks="project.tracks" 
+              :elements="project.master.elements"
+              :transport="project.master.transport"
+              :play="general.playlistPlay"
+              :start.sync="masterStart"
+              :end.sync="masterEnd"
+              :steps-per-beat="project.stepsPerBeat"
+              :beats-per-measure="project.beatsPerMeasure"
+              @new-prototype="checkPrototype"
+            ></playlist-sequencer>
+            <blank v-else></blank>              
           </split>
 
-          <split direction="vertical" resizable>
-
-            <split :initial="general.toolbarHeight" fixed>
-              <toolbar
-                :height="general.toolbarHeight"
-                :transport="transport"
-                :context="general.applicationContext"
-                @update:context="general.setContext"
-                :play="general.play"
-                @update:play="playPause"
-                style="border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
-                :bpm="project.bpm"
-                @update:bpm="project.setBpm"
-              ></toolbar>
+          <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`" keep>
+            <split :initial="55" fixed>
+              <panel-headers></panel-headers>
             </split>
-
             <split>
-              <playlist-sequencer
-                v-if="loaded"
-                style="height: 100%"
-                :tracks="project.tracks" 
-                :elements="project.master.elements"
-                :transport="project.master.transport"
-                :play="general.playlistPlay"
-                :start.sync="masterStart"
-                :end.sync="masterEnd"
-                @new-prototype="checkPrototype"
-              ></playlist-sequencer>
-              <blank v-else></blank>              
-            </split>
-
-            <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`" keep>
-              <split :initial="55" fixed>
-                <panel-headers></panel-headers>
-              </split>
-              <split>
-                <panels v-if="loaded"></panels>
-                <blank v-else></blank>
-              </split>
+              <panels v-if="loaded"></panels>
+              <blank v-else></blank>
             </split>
           </split>
-        </split>
-        <split :initial="20" fixed>
-          <status-bar></status-bar>
         </split>
       </split>
-    </dawg>
+      <split :initial="20" fixed>
+        <status-bar></status-bar>
+      </split>
+    </split>
     <notifications></notifications>
     <context-menu></context-menu>
     <palette 

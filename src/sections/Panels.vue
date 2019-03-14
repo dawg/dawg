@@ -31,6 +31,8 @@
         :transport="transport"
         :instrument="instrument"
         :play="general.pianoRollPlay"
+        :steps-per-beat="project.stepsPerBeat"
+        :beats-per-measure="project.beatsPerMeasure"
       ></piano-roll-sequencer>
     </panel>
     <panel name="Sample">

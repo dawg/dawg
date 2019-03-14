@@ -21,7 +21,7 @@ import { PlacedSample } from '@/schemas';
   components: { Waveform },
 })
 export default class SampleElement extends Vue {
-  @Inject() public pxPerBeat!: number;
+  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
   @Prop({ type: Number, default: 100 }) public height!: number;
   @Prop({ type: Object, required: true }) public element!: PlacedSample;
 

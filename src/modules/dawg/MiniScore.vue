@@ -26,7 +26,7 @@ import { Note } from '@/schemas';
  */
 @Component
 export default class MiniScore extends Vue {
-  @Inject() public beatsPerMeasure!: number;
+  // @Prop({ type: Number, required: true }) public beatsPerMeasure!: number;
   @Prop({ type: Array, required: true }) public notes!: Note[];
   // The height and width are only used to set the aspect ratio.
   // Use css to actually define the height and width
@@ -55,7 +55,7 @@ export default class MiniScore extends Vue {
     return this.notes.map(({ time, duration }) => time + duration);
   }
   get totalDuration() {
-    return Math.max(...this.endTimes, this.beatsPerMeasure);
+    return Math.max(...this.endTimes); // , this.beatsPerMeasure
   }
   get rowHeight() {
     return this.height / this.difference;

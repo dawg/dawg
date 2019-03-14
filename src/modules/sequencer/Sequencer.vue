@@ -10,6 +10,9 @@
         :loop-start="loopStart"
         :loop-end="loopEnd"
         :offset="offset"
+        :steps-per-beat="stepsPerBeat"
+        :beats-per-measure="beatsPerMeasure"
+        :px-per-beat="pxPerBeat"
         @seek="seek"
       ></timeline>
     </div>
@@ -37,6 +40,9 @@
           :loop-end="loopEnd"
           :set-loop-start="setLoopStart"
           :set-loop-end="setLoopEnd"
+          :steps-per-beat="stepsPerBeat"
+          :beats-per-measure="beatsPerMeasure"
+          :px-per-beat="pxPerBeat"
           :progress="progress"
           :name="name"
           v-bind="$attrs"
@@ -62,7 +68,8 @@ import Timeline from '@/modules/sequencer/Timeline.vue';
   components: { Arranger, Timeline },
 })
 export default class Sequencer extends Vue {
-  @Inject() public pxPerBeat!: number;
+  @Prop({ type: Number, required: true }) public stepsPerBeat!: number;
+  @Prop({ type: Number, required: true }) public beatsPerMeasure!: number;
 
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, default: 80 }) public sideWidth!: number;
@@ -72,6 +79,7 @@ export default class Sequencer extends Vue {
   @Prop(Number) public end!: number;
   @Prop(Number) public start!: number;
 
+  public pxPerBeat = 80;
   public loopStart = 0;
   public loopEnd = 0;
   public scrollLeft = 0;

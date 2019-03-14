@@ -16,7 +16,7 @@ import { Note, PlacedPattern } from '@/schemas';
   components: { MiniScore },
 })
 export default class PatternElement extends Vue {
-  @Inject() public pxPerBeat!: number;
+  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
   @Prop({ type: Object, required: true }) public element!: PlacedPattern;
 
   public score: MiniScore | null = null;

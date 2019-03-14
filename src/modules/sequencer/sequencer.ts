@@ -7,8 +7,6 @@ import { createHOC } from '@/modules/utils';
 export const positionable = (component: VueConstructor) => {
   @Component
   class Positionable extends Vue {
-    @Inject() public pxPerBeat!: number;
-
     @Prop({ type: Number, default: 0 }) public left!: number;
     @Prop({ type: Number, default: 0 }) public top!: number;
 
@@ -96,8 +94,8 @@ export const selectable = (component: VueConstructor) => {
 export const resizable = (component: VueConstructor) => {
   @Component
   class Resizable extends Mixins(Draggable) {
-    @Inject() public snap!: number;
-    @Inject() public pxPerBeat!: number;
+    @Prop({ type: Number, required: true }) public snap!: number;
+    @Prop({ type: Number, required: true }) public pxPerBeat!: number;
 
     @Prop({ type: Number, required: true }) public height!: number;
     @Prop({ type: Number, required: true }) public duration!: number;

@@ -16,9 +16,7 @@ const NOTES = [
 storiesOf('MiniScore', module)
   .add('Standard', () => ({
     template: `
-    <dawg>
-      <mini-score :notes="notes" style="height: 50px; width: 400px"></mini-score>
-    </dawg>
+    <mini-score :notes="notes" style="height: 50px; width: 400px"></mini-score>
     `,
     data: () => ({
       notes: NOTES,

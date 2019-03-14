@@ -1,10 +1,11 @@
-import { Vue, Component, Prop, Mixins, Inject } from 'vue-property-decorator';
+import { Vue, Component, Prop } from 'vue-property-decorator';
 
+// Make this an actual component
 @Component
 export default class BeatLines extends Vue {
-  @Inject() public pxPerBeat!: number;
-  @Inject() public beatsPerMeasure!: number;
-  @Inject() public stepsPerBeat!: number;
+  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
+  @Prop({ type: Number, required: true }) public beatsPerMeasure!: number;
+  @Prop({ type: Number, required: true }) public stepsPerBeat!: number;
 
   public $el!: HTMLElement;
   public beatColor = 'rgba(0,0,0,.4)';

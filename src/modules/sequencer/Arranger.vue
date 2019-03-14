@@ -35,6 +35,8 @@
       :top="component.top"
       :row="component.row"
       :height="rowHeight"
+      :snap="snap"
+      :px-per-beat="pxPerBeat"
       style="position: absolute; z-index: 2"
       :key="i"
       :element="component.element"
@@ -50,6 +52,7 @@
       :loop-start="loopStart"
       :loop-end="loopEnd"
       :progress="progress"
+      :px-per-beat="pxPerBeat"
       class="progress-bar"
     ></progression>
     <div 
@@ -78,8 +81,6 @@ import { IElement, Element } from '@/schemas';
   components: { Progression },
 })
 export default class Arranger extends Mixins(Draggable, BeatLines) {
-  @Inject() public stepsPerBeat!: number;
-
   // name is used for debugging
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, required: true }) public rowHeight!: number;

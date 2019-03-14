@@ -33,7 +33,7 @@ import Transport from '@/modules/audio/transport';
   components: { Sequencer },
 })
 export default class PlaylistSequencer extends Vue {
-  @Inject() public trackHeight!: number;
+  public trackHeight = 40;
 
   @Prop({ type: Array, required: true }) public tracks!: Track[];
   @Prop({ type: Object, required: true }) public transport!: Transport;

@@ -24,7 +24,7 @@ import { Note as N } from '@/schemas';
 
 @Component
 export default class Note extends Vue {
-  @Inject() public pxPerBeat!: number;
+  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
 
   @Prop({ type: Object, required: true }) public element!: N;
   @Prop({ type: Number, required: true }) public height!: number;

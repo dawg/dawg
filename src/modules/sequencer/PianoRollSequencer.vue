@@ -2,14 +2,17 @@
   <sequencer
     v-on="$listeners"
     v-bind="$attrs"
-    :row-height="noteHeight"
+    :row-height="rowHeight"
     :num-rows="allKeys.length"
     :prototype.sync="note"
     :row-class="rowClass"
     name="Piano Roll"
   >
     <template slot="side">
-      <piano :synth="instrument"></piano>
+      <piano 
+        :synth="instrument"
+        :key-height="rowHeight"
+      ></piano>
     </template>
   </sequencer>
 </template>
@@ -24,8 +27,7 @@ import { Note, Instrument, Element } from '@/schemas';
   components: { Sequencer },
 })
 export default class PianoRollSequencer extends Vue {
-  @Inject() public noteHeight!: number;
-  @Inject() public pxPerBeat!: number;
+  public rowHeight = 16;
 
   @Prop({ type: Object, required: true }) public instrument!: Instrument;
 
