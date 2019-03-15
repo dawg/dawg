@@ -1,6 +1,6 @@
 {
   "name": "vusic",
-  "productName": "Vusic",
+  "author": "DAWG People <dawgpeople@gmail.com>",
   "version": "0.1.0",
   "private": true,
   "scripts": {

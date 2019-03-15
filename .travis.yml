@@ -33,3 +33,15 @@ before_cache:
 branches:
   except:
     - "/^v\\d+\\.\\d+\\.\\d+$/"
+
+deploy:
+  provider: releases
+  api_key: $GITHUB_TOKEN
+  file:
+    - "dist_electron/Vusic 0.1.0.AppImage"
+    - "dist_electron/vusic_0.1.0_amd64.deb"
+    - "dist_electron/Vusic-0.1.0.dmg"
+    - "dist_electron\Vusic Setup 0.1.0.exe"
+  skip_cleanup: true
+  on:
+    tags: true
