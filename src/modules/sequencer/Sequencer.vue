@@ -100,6 +100,12 @@ export default class Sequencer extends Vue {
   public setLoopStart: null | number = null;
   public setLoopEnd: null | number = null;
 
+  // The anchor is used to steady resizing
+  // Try resizing the width/height and you will notice that that the position
+  // under the mouse stays fixed. The anchor is what enables this to occur.
+  // It will contains a floating point number where the integer part represents
+  // the row/column and the floating point represens the exact location within
+  // the next/row column.
   public anchor = 0;
 
   public $refs!: {
@@ -155,33 +161,33 @@ export default class Sequencer extends Vue {
   ) {
     const rect = el.getBoundingClientRect();
 
-    let position: number;
+    let oldPosition: number;
     let increment: number;
     let scrollAttr: 'scrollTop' | 'scrollLeft';
     if (direction === 'horizontal') {
-      position = e.pageX - rect.left;
+      oldPosition = e.pageX - rect.left;
       increment =  this.pxPerStep;
       scrollAttr = 'scrollLeft';
     } else {
-      position = e.pageY - rect.top;
+      oldPosition = e.pageY - rect.top;
       increment = this.rowHeight;
       scrollAttr = 'scrollTop';
     }
 
-    // Adding scroll to position to get accurate posotion
-    position += el[scrollAttr];
+    // Adding scroll to position to get accurate posotion.
+    // The position will now be equal the distance from the top/left
+    // of the element (accounting for scrolling) to the mouse position.
+    oldPosition += el[scrollAttr];
 
-    // Apperent wheelDelta deson't exist but it does...
-    // @ts-ignore
-    const delta = e.wheelDelta > 0 ? 1 : -1;
+    const delta = e.deltaY > 0 ? 1 : -1;
     const newSize = clamp(increment + delta, 3, 80);
 
-    // This value could be very slightly negative sometimes (like -0.5)
-    const oldPosition = Math.max(0, position);
-    const row = Math.floor(this.anchor);
-    const extraPx = (this.anchor - row) * newSize;
-    const newPosition = newSize * row + extraPx;
+    const rowOrCol = Math.floor(this.anchor);
+    const extraPx = (this.anchor - rowOrCol) * newSize;
+    const newPosition = newSize * rowOrCol + extraPx;
 
+    // Get the diff between the desired position and the actual position
+    // then add that to the scroll position
     const diff = newPosition - oldPosition;
     el[scrollAttr] = Math.max(el[scrollAttr] + diff, 0);
     return newSize;
@@ -199,6 +205,9 @@ export default class Sequencer extends Vue {
 
   public wheelVertical(e: WheelEvent) {
     if (!e.ctrlKey) {
+      // When we scroll using the wheel, we want to update the position of the anchor
+      // Since the scroll hasn't actually happened, we need to account for the scrolling
+      // that will occur.
       this.setVerticalAnchor({
         pageY: e.pageY + e.deltaY,
       });
@@ -208,9 +217,7 @@ export default class Sequencer extends Vue {
     e.preventDefault();
     e.stopPropagation();
 
-    const scroller = this.$refs.scrollY as Vue;
-    const newHeight = this.calculateScrollPosition(e, scroller.$el, 'vertical');
-
+    const newHeight = this.calculateScrollPosition(e, this.$refs.scrollY.$el, 'vertical');
     this.$update('rowHeight', newHeight);
   }
 
@@ -220,12 +227,13 @@ export default class Sequencer extends Vue {
       // on the timeline by default
       this.$refs.scroller.$el.scrollLeft += e.deltaY;
       this.scrollLeft = this.$refs.scroller.$el.scrollLeft;
+
+      // Like above, we need to update the anchor
       this.setHorizontalAnchor(e);
       return;
     }
 
-    const scroller = this.$refs.scroller as Vue;
-    const pxPerStep = this.calculateScrollPosition(e, scroller.$el, 'horizontal');
+    const pxPerStep = this.calculateScrollPosition(e, this.$refs.scroller.$el, 'horizontal');
     this.$update('pxPerBeat', pxPerStep * this.stepsPerBeat);
   }
 
