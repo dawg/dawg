@@ -1,5 +1,5 @@
 dev:
-	npm run electron:serve
+	npm run serve
 
 storybook:
 	npm run storybook:serve
@@ -9,3 +9,6 @@ test:
 
 watch:
 	npx vue-cli-service test:unit --watch
+
+build:
+	npm run build
