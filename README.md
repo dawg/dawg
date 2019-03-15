@@ -120,4 +120,4 @@ There is also an `test:e2e` command; however, this test suite does not currently
 
 # TODO
 - Naming elements in the playlist
-- Remove Dawg component
+- Test specific write during exit

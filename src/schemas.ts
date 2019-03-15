@@ -7,6 +7,9 @@ import Transport from '@/modules/audio/transport';
 import { toTickTime, allKeys, ConstructorOf, disposeHelp } from './utils';
 import { Controller, Time, Signal } from '@/modules/audio';
 
+// This is my least favorite file
+// I'm sorry for anyone who has to read it
+
 // These are all of the schemas for the project.
 // Everything is annotated using `cerialize`.
 // This allows us to serialize and deserialize between a class & a JSON object.

@@ -469,11 +469,6 @@ export default class Arranger extends Mixins(Draggable) {
       this.selected = this.elements.map((_) => false);
     }
   }
-
-  @Watch<Arranger>('pxPerBeat')
-  public temp() {
-    console.log(this.pxPerBeat);
-  }
 }
 </script>
 

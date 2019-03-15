@@ -322,11 +322,18 @@ export default class App extends Vue {
   }
 
   public async created() {
-    const window = remote.getCurrentWindow();
-    window.addListener('maximize', this.maximize);
-    window.addListener('unmaximize', this.unmaximize);
+    // This is called before refresh / close
+    // I don't remove this listner because the window is closing anyway
+    // I'm not even sure onExit would be called if we removed it in the destroy method
+    window.addEventListener('beforeunload', this.onExit);
+
+    const w = remote.getCurrentWindow();
+    w.addListener('maximize', this.maximize);
+    w.addListener('unmaximize', this.unmaximize);
 
     automation.$on('automate', this.addAutomationClip);
+
+    // Log this for debugging purposes
     // tslint:disable-next-line:no-console
     console.info(project);
 
@@ -345,9 +352,13 @@ export default class App extends Vue {
   }
 
   public destroyed() {
-    const window = remote.getCurrentWindow();
-    window.removeListener('maximize', this.maximize);
-    window.removeListener('unmaximize', this.unmaximize);
+    const w = remote.getCurrentWindow();
+    w.removeListener('maximize', this.maximize);
+    w.removeListener('unmaximize', this.unmaximize);
+  }
+
+  public async onExit() {
+    await specific.write();
   }
 
   public openBackup() {

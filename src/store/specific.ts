@@ -60,19 +60,16 @@ export class Specific extends VuexModule {
   @Action
   public setOpenedPanel(openedPanel: PanelNames) {
     this.set({ key: 'openedPanel', value: openedPanel });
-    this.write();
   }
 
   @Action
   public setOpenedSideTab(sideTab: SideTab) {
     this.set({ key: 'openedSideTab', value: sideTab });
-    this.write();
   }
 
   @Action
   public setTab(tab: string) {
     this.set({ key: 'openedTab', value: tab });
-    this.write();
   }
 
   @Action
@@ -115,7 +112,6 @@ export class Specific extends VuexModule {
       this.set({ key: 'selectedPatternId', value: null });
     }
 
-    this.write();
     if (!this.selectedScoreId || !this.scoreLookup) {
       return;
     }
@@ -125,7 +121,6 @@ export class Specific extends VuexModule {
     }
 
     this.set({ key: 'selectedScoreId', value: null });
-    this.write();
   }
 
   @Action
@@ -135,13 +130,11 @@ export class Specific extends VuexModule {
     } else {
       this.set({ key: 'selectedScoreId', value: null });
     }
-    this.write();
   }
 
   @Action
   public setBackup(backup: boolean) {
     this.set({ key: 'backup', value: backup });
-    this.write();
   }
 
   @Action

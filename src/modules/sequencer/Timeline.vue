@@ -225,11 +225,13 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
     this.rendered = true;
   }
 
-  public wheel(e: MouseWheelEvent) {
+  public wheel(e: WheelEvent) {
     if (!e.shiftKey) {
       return;
     }
 
+    // Apperent wheelDelta deson't exist but it does...
+    // @ts-ignore
     const delta = e.wheelDelta > 0 ? 1 : -1;
     this.$update('pxPerBeat', this.pxPerBeat + delta);
   }
