@@ -3,7 +3,6 @@ import { Module, getModule, Mutation, Action } from 'vuex-module-decorators';
 import SideBar from '@/components/SideBar.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
 import store from '@/store/store';
-import { ApplicationContext } from '@/constants';
 import { VuexModule } from '@/store/utils';
 import backend, { ProjectInfo } from '@/backend';
 
@@ -18,22 +17,7 @@ export class General extends VuexModule {
   public play = false;
   public syncing = false;
   public backupError = false;
-  public applicationContext: ApplicationContext = 'pianoroll';
-
-  public projects: ProjectInfo[] = [
-    // {
-    //   id: 'akdsfjalsfjdlkfjsdakjfalsdjfkalsdfjkdls',
-    //   name: 'Jacob',
-    //   initialSaveTime: Date.now(),
-    //   lastUploadTime: Date.now(),
-    // },
-    // {
-    //   id: 'asdf',
-    //   name: 'Project Two',
-    //   initialSaveTime: Date.now(),
-    //   lastUploadTime: Date.now(),
-    // },
-  ];
+  public projects: ProjectInfo[] = [];
   public getProjectsErrorMessage: string | null = null;
 
   @Action
@@ -65,12 +49,6 @@ export class General extends VuexModule {
   }
 
   @Mutation
-  public setContext(context: ApplicationContext) {
-    this.applicationContext = context;
-    this.play = false;
-  }
-
-  @Mutation
   public setPanels(panels: BaseTabs) {
     this.panels = panels;
   }
@@ -83,14 +61,6 @@ export class General extends VuexModule {
   @Mutation
   public pause() {
     this.play = false;
-  }
-
-  get playlistPlay() {
-    return this.play && this.applicationContext === 'playlist';
-  }
-
-  get pianoRollPlay() {
-    return this.play && this.applicationContext === 'pianoroll';
   }
 }
 

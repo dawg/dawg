@@ -3,7 +3,7 @@
     v-on="$listeners"
     v-bind="$attrs"
     :num-rows="tracks.length"
-    :row-height="trackHeight"
+    :row-height="rowHeight"
     :row-class="() => 'secondary'"
     :row-style="rowStyle"
     :side-width="130"
@@ -13,7 +13,7 @@
   >
     <template slot="side">
       <d-track
-        :style="{ height: `${trackHeight}px` }"
+        :style="{ height: `${rowHeight}px` }"
         v-for="(track, i) in tracks" 
         :key="i" 
         :track="track"
@@ -33,8 +33,7 @@ import Transport from '@/modules/audio/transport';
   components: { Sequencer },
 })
 export default class PlaylistSequencer extends Vue {
-  public trackHeight = 40;
-
+  @Prop({ type: Number, required: true }) public rowHeight!: number;
   @Prop({ type: Array, required: true }) public tracks!: Track[];
   @Prop({ type: Object, required: true }) public transport!: Transport;
 

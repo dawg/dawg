@@ -27,9 +27,8 @@ import { Note, Instrument, Element } from '@/schemas';
   components: { Sequencer },
 })
 export default class PianoRollSequencer extends Vue {
-  public rowHeight = 16;
-
   @Prop({ type: Object, required: true }) public instrument!: Instrument;
+  @Prop({ type: Number, required: true }) public rowHeight!: number;
 
   public note = new Note({ row: -1, time: -1, duration: 1 }).init(this.instrument);
   public allKeys = allKeys;

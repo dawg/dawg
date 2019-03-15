@@ -4,7 +4,6 @@
     @dblclick="remove"
     @click="seek"
     @mousedown="mousedown"
-    @wheel="wheel"
   >
       <div class="loop" :style="loopStyle" @mousedown="mousedown($event, 'center')">
         <!-- The inner loop is where stuff is actually displayed -->
@@ -93,6 +92,14 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
     return Math.ceil(this.width / this.pxPerStep + 2);
   }
 
+  get displayStep() {
+    return this.pxPerBeat > 40;
+  }
+
+  get displayBeat() {
+    return this.pxPerBeat > 20;
+  }
+
   get displaySteps() {
     const stepOffset = Math.floor(this.offset * this.stepsPerBeat);
     let em = -this.offset % this.beatsPerStep;
@@ -103,7 +110,23 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
       const isStep = !isBeat && !isMeasure;
       const className = isMeasure ? 'measure' : isBeat ? 'beat' : 'step';
       const left = em * this.pxPerBeat + 'px';
-      const textContent = isStep ? '.' : Math.floor(1 + step / this.stepsPerBeat).toString();
+      let textContent: string;
+      // const textContent =
+
+      if (isStep) {
+        if (this.displayStep) {
+          textContent = '.';
+        } else {
+          textContent = '';
+        }
+      } else {
+        if (isBeat && !isMeasure && !this.displayBeat) {
+          textContent = '';
+        } else {
+          textContent = Math.floor(1 + step / this.stepsPerBeat).toString();
+        }
+      }
+
       em += this.beatsPerStep;
       return {
         className,
@@ -223,17 +246,6 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 
   public mounted() {
     this.rendered = true;
-  }
-
-  public wheel(e: WheelEvent) {
-    if (!e.shiftKey) {
-      return;
-    }
-
-    // Apperent wheelDelta deson't exist but it does...
-    // @ts-ignore
-    const delta = e.wheelDelta > 0 ? 1 : -1;
-    this.$update('pxPerBeat', this.pxPerBeat + delta);
   }
 }
 </script>

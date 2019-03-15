@@ -28,8 +28,8 @@
             <toolbar
               :height="general.toolbarHeight"
               :transport="transport"
-              :context="general.applicationContext"
-              @update:context="general.setContext"
+              :context="specific.applicationContext"
+              @update:context="setContext"
               :play="general.play"
               @update:play="playPause"
               style="border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
@@ -45,11 +45,15 @@
               :tracks="project.tracks" 
               :elements="project.master.elements"
               :transport="project.master.transport"
-              :play="general.playlistPlay"
+              :play="playlistPlay"
               :start.sync="masterStart"
               :end.sync="masterEnd"
               :steps-per-beat="project.stepsPerBeat"
               :beats-per-measure="project.beatsPerMeasure"
+              :row-height="specific.playlistRowHeight"
+              @update:rowHeight="specific.setPlaylistRowHeight"
+              :px-per-beat="specific.playlistBeatWidth"
+              @update:pxPerBeat="specific.setPlaylistBeatWidth"
               @new-prototype="checkPrototype"
             ></playlist-sequencer>
             <blank v-else></blank>              
@@ -106,7 +110,7 @@ import PanelHeaders from '@/sections/PanelHeaders.vue';
 import ActivityBar from '@/sections/ActivityBar.vue';
 import StatusBar from '@/sections/StatusBar.vue';
 import Tone from 'tone';
-import { SideTab, FILTERS } from '@/constants';
+import { SideTab, FILTERS, ApplicationContext } from '@/constants';
 import { PaletteItem, bus } from '@/modules/palette';
 import { Watch } from '@/modules/update';
 import backend, { ProjectInfo } from '@/backend';
@@ -206,10 +210,10 @@ export default class App extends Vue {
       text: 'Switch Context',
       shortcut: ['Ctrl', 'Tab'],
       callback: () => {
-        if (general.applicationContext === 'pianoroll') {
-          general.setContext('playlist');
+        if (specific.applicationContext === 'pianoroll') {
+          this.setContext('playlist');
         } else {
-          general.setContext('pianoroll');
+          this.setContext('pianoroll');
         }
       },
     },
@@ -321,6 +325,19 @@ export default class App extends Vue {
     return general.getProjectsErrorMessage;
   }
 
+  get transport() {
+    if (specific.applicationContext === 'pianoroll') {
+      const pattern = specific.selectedPattern;
+      return pattern ? pattern.transport : null;
+    } else {
+      return project.master.transport;
+    }
+  }
+
+  get playlistPlay() {
+    return general.play && specific.applicationContext === 'playlist';
+  }
+
   public async created() {
     // This is called before refresh / close
     // I don't remove this listner because the window is closing anyway
@@ -344,7 +361,7 @@ export default class App extends Vue {
       await this.withErrorHandling(project.load);
       this.$log.debug('Finished reading data from the fs.');
       this.loaded = true;
-    }, 1500);
+    }, 1250);
   }
 
   public mounted() {
@@ -424,18 +441,14 @@ export default class App extends Vue {
     }
   }
 
-  get transport() {
-    if (general.applicationContext === 'pianoroll') {
-      const pattern = specific.selectedPattern;
-      return pattern ? pattern.transport : null;
-    } else {
-      return project.master.transport;
-    }
+  public setContext(context: ApplicationContext) {
+    specific.setContext(context);
+    general.pause();
   }
 
   public playPause() {
     let transport: Transport;
-    if (general.applicationContext === 'pianoroll') {
+    if (specific.applicationContext === 'pianoroll') {
       const pattern = specific.selectedPattern;
       if (!pattern) {
         this.$notify.info('Please select a Pattern.', {

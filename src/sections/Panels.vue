@@ -30,9 +30,13 @@
         :elements="notes"
         :transport="transport"
         :instrument="instrument"
-        :play="general.pianoRollPlay"
+        :play="pianoRollPlay"
         :steps-per-beat="project.stepsPerBeat"
         :beats-per-measure="project.beatsPerMeasure"
+        :row-height="specific.pianoRollRowHeight"
+        @update:rowHeight="specific.setPianoRollRowHeight"
+        :px-per-beat="specific.pianoRollBeatWidth"
+        @update:pxPerBeat="specific.setPianoRollBeatWidth"
       ></piano-roll-sequencer>
     </panel>
     <!-- <panel name="Sample">
@@ -90,6 +94,10 @@ export default class Panels extends Vue {
     if (specific.selectedPattern) {
       return specific.selectedPattern.transport;
     }
+  }
+
+  get pianoRollPlay() {
+    return general.play && specific.applicationContext === 'pianoroll';
   }
 
   public mounted() {
