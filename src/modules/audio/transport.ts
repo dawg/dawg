@@ -6,7 +6,7 @@ import { ContextTime, TransportTime, Time } from './types';
 // An interface doesn't work for some reason
 // tslint:disable-next-line:interface-over-type-literal
 type Events = {
-  start: [number];
+  start: [number, number];
   stop: [number];
   pause: [number];
   loopStart: [number, number];
@@ -83,8 +83,9 @@ export default class Transport extends Tone.Emitter<Events> {
     this.bpm.value = 120;
 
 
-    this.clock.on('start', (time) => {
-      this.emit('start', time);
+    this.clock.on('start', (time, offset) => {
+      offset = new Tone.Ticks(offset).toSeconds();
+      this.emit('start', time, offset);
     });
 
     this.clock.on('stop', (time) => {
@@ -160,7 +161,6 @@ export default class Transport extends Tone.Emitter<Events> {
     }
 
     this.clock.start(time, offset);
-    this.emit('start', time);
     return this;
   }
 
@@ -226,7 +226,7 @@ export default class Transport extends Tone.Emitter<Events> {
         // restart it with the new time
         this.emit('stop', now);
         this.clock.setTicksAtTime(t, now);
-        this.emit('start', this.seconds);
+        this.emit('start', now, this.seconds);
       } else {
         this.clock.setTicksAtTime(t, now);
       }
@@ -275,6 +275,10 @@ export default class Transport extends Tone.Emitter<Events> {
       once : true,
     });
     return this.addEvent(event);
+  }
+
+  public getSecondsAtTime(time: Time) {
+    return this.clock.getSecondsAtTime(time);
   }
 
   private processTick(exact: ContextTime, ticks: number) {

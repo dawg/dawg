@@ -13,7 +13,7 @@ declare module 'tone' {
     toSeconds(time?: _TimeArg): number;
     toTicks(time: _TimeArg): number;
 
-
+    sampleTime: number;
     static connectSeries(...args: any[]): Tone;
     static dbToGain(db: number): number;
     static defaultArg(given: any, fallback: any): any;
@@ -68,6 +68,7 @@ declare module 'tone' {
     disconnect(output: number | AudioNode): this;
     chain(...nodes: AudioNode[]): this;
     connect(unit: Tone | AudioParam | AudioNode, outputNum?: number, inputNum?: number): this;
+    dispose(): void;
   }
 
   class AutoPanner extends Effect {
@@ -114,6 +115,25 @@ declare module 'tone' {
     set(buffer: any): Buffer; //TODO: change any to AudioBuffer | Buffer
   }
 
+  interface BufferSourceOptions {
+    onended?: (source: BufferSource) => void;
+    onload?: () => void;
+    loop?: boolean;
+    loopStart?: number;
+    loopEnd?: number;
+    fadeIn?: number;
+    fadeOut?: number;
+    playbackRate?: number;
+    buffer: AudioBuffer;
+  }
+    
+
+  class BufferSource extends AudioNode {
+    constructor(options: BufferSourceOptions)
+    start(startTime?: _TimeArg, offset?: _TimeArg, duration?: _TimeArg): this;
+    stop(time?: _TimeArg): void;
+  }
+
   class Chebyshev extends Effect {
     constructor(order: any); //TODO: Number || Object
     order: number;
@@ -142,7 +162,7 @@ declare module 'tone' {
     frequency: number,
   }
 
-  class Clock extends Emitter<{ start: [number], stop: [number], pause: [number] }> {
+  class Clock extends Emitter<{ start: [number, number], stop: [number], pause: [number] }> {
     constructor(options: _Clock);
     frequency: TickSignal;
     seconds: number;
@@ -327,13 +347,8 @@ declare module 'tone' {
   }
 
   class TimeBase {
-    set(exprString: string): TimeBase;
-    add(val: _TimeArg, units?: string): TimeBase;
-    sub(val: _TimeArg, units?: string): TimeBase;
-    mult(val: _TimeArg, units?: string): TimeBase;
-    div(val: _TimeArg, units?: string): TimeBase;
-    eval(): number;
-    dispose: TimeBase;
+    valueOf(): number; // returns seconds
+    dispose(): TimeBase;
   }
 
   class Frequency extends TimeBase {
@@ -905,10 +920,11 @@ declare module 'tone' {
     forEachBetween(startTime: number, endTime: number, callback: (e: T) => void): this;
     forEachFrom(time: number, callback: (event: T) => void): void;
     remove(event: T): void;
+    dispose(): void;
   }
 
-  class TimelineState extends Timeline<{ state: TransportState, time: Time }> {
-    constructor(initial: string);
+  class TimelineState<T extends { state: TransportState, time: Time }> extends Timeline<T> {
+    constructor(initial: TransportState);
     cancel(time: number): this;
     setStateAtTime(state: TransportState, time: number): this;
     getValueAtTime(time: number): TransportState;
@@ -940,6 +956,7 @@ declare module 'tone' {
     dispose(): this;
     nextBeat(subdivision?: string): number;
     pause(time: _TimeArg): Transport;
+    schedule(callback: (time: number) => void, time: _TimeArg): string;
     setInterval(callback: (e: any) => any, interval: _TimeArg): number;
     setLoopPoints(startPosition: _TimeArg, endPosition: _TimeArg): Transport;
     setTimeline(callback: (e: any) => any, timeout: _TimeArg): number;
@@ -997,6 +1014,11 @@ declare module 'tone' {
 
   class Type {
     static BPM: 'bpm';
+  }
+
+  class Volume extends AudioNode {
+    volume: Signal;
+    mute: boolean;
   }
 
   class WaveShaper extends SignalBase {
