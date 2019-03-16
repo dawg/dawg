@@ -46,7 +46,7 @@
       <vue-perfect-scrollbar
         class="sequencer sequencer-child" 
         @ps-scroll-x="scroll" 
-        ref="scroller"
+        ref="scrollX"
         style="height: fit-content"
         :settings="{ suppressScrollY: true, handlers: ['wheel'] }"
       >
@@ -112,16 +112,8 @@ export default class Sequencer extends Vue {
   public verticalScroller: Element | null = null;
   public horizontalScroller: Element | null = null;
 
-  // The anchor is used to steady resizing
-  // Try resizing the width/height and you will notice that that the position
-  // under the mouse stays fixed. The anchor is what enables this to occur.
-  // It will contains a floating point number where the integer part represents
-  // the row/column and the floating point represens the exact location within
-  // the next/row column.
-  public anchor = 0;
-
   public $refs!: {
-    scroller: Vue;
+    scrollX: Vue;
     scrollY: Vue;
   };
 
@@ -164,7 +156,7 @@ export default class Sequencer extends Vue {
 
   public scroll() {
     // This only handles horizontal scrolls!
-    this.scrollLeft = this.$refs.scroller.$el.scrollLeft;
+    this.scrollLeft = this.$refs.scrollX.$el.scrollLeft;
   }
 
   public setPxPerBeat(pxPerStep: number) {
@@ -176,7 +168,7 @@ export default class Sequencer extends Vue {
   }
 
   public mounted() {
-    this.horizontalScroller = this.$refs.scroller.$el;
+    this.horizontalScroller = this.$refs.scrollX.$el;
     this.verticalScroller = this.$refs.scrollY.$el;
   }
 
