@@ -2,21 +2,28 @@
   <div class="sequencer">
     <div style="display: flex">
       <div class="empty-block secondary" :style="style"></div>
-      <timeline 
-        v-model="progress" 
-        class="timeline"
-        :set-loop-end.sync="setLoopEnd"
-        :set-loop-start.sync="setLoopStart"
-        :loop-start="loopStart"
-        :loop-end="loopEnd"
-        :offset="offset"
-        :steps-per-beat="stepsPerBeat"
-        :beats-per-measure="beatsPerMeasure"
-        :px-per-beat.sync="pxPerBeat"
-        @seek="seek"
-        @wheel.native="wheelHorizaontal"
-        @mousemove.native="setHorizontalAnchor"
-      ></timeline>
+      <scroller
+        :scroller="horizontalScroller"
+        :increment="pxPerStep"
+        direction="horizontal"
+        @update:increment="setPxPerBeat"
+        style="width: 100%"
+        @scroll="scroll"
+      >
+        <timeline 
+          v-model="progress" 
+          class="timeline"
+          :set-loop-end.sync="setLoopEnd"
+          :set-loop-start.sync="setLoopStart"
+          :loop-start="loopStart"
+          :loop-end="loopEnd"
+          :offset="offset"
+          :steps-per-beat="stepsPerBeat"
+          :beats-per-measure="beatsPerMeasure"
+          :px-per-beat.sync="pxPerBeat"
+          @seek="seek"
+        ></timeline>
+      </scroller>
     </div>
     <vue-perfect-scrollbar 
       style="overflow-y: scroll; display: flex; height: calc(100% - 20px)"
@@ -24,16 +31,18 @@
       ref="scrollY"
     >
       <!-- Use a wrapper div to add width attribute -->
-      <div 
+      <scroller 
         :style="style" 
-        class="side-wrapper" 
-        @wheel="wheelVertical"
-        @mousemove="setVerticalAnchor"
+        class="side-wrapper"
+        direction="vertical"
+        :scroller="verticalScroller"
+        :increment="rowHeight"
+        @update:increment="setRowHeight"
       >
         <slot 
           name="side"
         ></slot>
-      </div>
+      </scroller>
       <vue-perfect-scrollbar
         class="sequencer sequencer-child" 
         @ps-scroll-x="scroll" 
@@ -100,6 +109,9 @@ export default class Sequencer extends Vue {
   public setLoopStart: null | number = null;
   public setLoopEnd: null | number = null;
 
+  public verticalScroller: Element | null = null;
+  public horizontalScroller: Element | null = null;
+
   // The anchor is used to steady resizing
   // Try resizing the width/height and you will notice that that the position
   // under the mouse stays fixed. The anchor is what enables this to occur.
@@ -150,91 +162,22 @@ export default class Sequencer extends Vue {
     this.progress = this.transport.progress;
   }
 
-  public scroll(e: UIEvent) {
+  public scroll() {
     // This only handles horizontal scrolls!
-    const scroller = this.$refs.scroller as Vue;
-    this.scrollLeft = scroller.$el.scrollLeft;
+    this.scrollLeft = this.$refs.scroller.$el.scrollLeft;
   }
 
-  public calculateScrollPosition(
-    e: WheelEvent, el: Element, direction: 'horizontal' | 'vertical',
-  ) {
-    const rect = el.getBoundingClientRect();
-
-    let oldPosition: number;
-    let increment: number;
-    let scrollAttr: 'scrollTop' | 'scrollLeft';
-    if (direction === 'horizontal') {
-      oldPosition = e.pageX - rect.left;
-      increment =  this.pxPerStep;
-      scrollAttr = 'scrollLeft';
-    } else {
-      oldPosition = e.pageY - rect.top;
-      increment = this.rowHeight;
-      scrollAttr = 'scrollTop';
-    }
-
-    // Adding scroll to position to get accurate posotion.
-    // The position will now be equal the distance from the top/left
-    // of the element (accounting for scrolling) to the mouse position.
-    oldPosition += el[scrollAttr];
-
-    const delta = e.deltaY > 0 ? 1 : -1;
-    const newSize = clamp(increment + delta, 3, 80);
-
-    const rowOrCol = Math.floor(this.anchor);
-    const extraPx = (this.anchor - rowOrCol) * newSize;
-    const newPosition = newSize * rowOrCol + extraPx;
-
-    // Get the diff between the desired position and the actual position
-    // then add that to the scroll position
-    const diff = newPosition - oldPosition;
-    el[scrollAttr] = Math.max(el[scrollAttr] + diff, 0);
-    return newSize;
-  }
-
-  public setHorizontalAnchor(e: { pageX: number }) {
-    const { left } = this.$refs.scroller.$el.getBoundingClientRect();
-    this.anchor = (e.pageX - left + this.$refs.scroller.$el.scrollLeft) / this.pxPerStep;
-  }
-
-  public setVerticalAnchor(e: { pageY: number }) {
-    const { top } = this.$refs.scrollY.$el.getBoundingClientRect();
-    this.anchor = (e.pageY - top + this.$refs.scrollY.$el.scrollTop) / this.rowHeight;
-  }
-
-  public wheelVertical(e: WheelEvent) {
-    if (!e.ctrlKey) {
-      // When we scroll using the wheel, we want to update the position of the anchor
-      // Since the scroll hasn't actually happened, we need to account for the scrolling
-      // that will occur.
-      this.setVerticalAnchor({
-        pageY: e.pageY + e.deltaY,
-      });
-      return;
-    }
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    const newHeight = this.calculateScrollPosition(e, this.$refs.scrollY.$el, 'vertical');
-    this.$update('rowHeight', newHeight);
-  }
-
-  public wheelHorizaontal(e: WheelEvent) {
-    if (!e.ctrlKey) {
-      // Here we are simulating scrolling since scrolling is not supported
-      // on the timeline by default
-      this.$refs.scroller.$el.scrollLeft += e.deltaY;
-      this.scrollLeft = this.$refs.scroller.$el.scrollLeft;
-
-      // Like above, we need to update the anchor
-      this.setHorizontalAnchor(e);
-      return;
-    }
-
-    const pxPerStep = this.calculateScrollPosition(e, this.$refs.scroller.$el, 'horizontal');
+  public setPxPerBeat(pxPerStep: number) {
     this.$update('pxPerBeat', pxPerStep * this.stepsPerBeat);
+  }
+
+  public setRowHeight(rowHeight: number) {
+    this.$update('rowHeight', rowHeight);
+  }
+
+  public mounted() {
+    this.horizontalScroller = this.$refs.scroller.$el;
+    this.verticalScroller = this.$refs.scrollY.$el;
   }
 
   @Watch<Sequencer>('loopEnd', { immediate: true })
