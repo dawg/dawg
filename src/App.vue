@@ -17,7 +17,12 @@
           <activity-bar></activity-bar>
         </split>
 
-        <split :initial="250" collapsible :min-size="100">
+        <split 
+          collapsible 
+          :min-size="100"
+          :initial="specific.sideBarSize"
+          @resize="specific.setSideBarSize"
+        >
           <side-tabs v-if="loaded"></side-tabs>
           <blank v-else></blank>
         </split>
@@ -59,7 +64,14 @@
             <blank v-else></blank>              
           </split>
 
-          <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`" keep>
+          <split
+            class="secondary" 
+            direction="vertical" 
+            :style="`border-top: 1px solid #111`" 
+            keep
+            :initial="specific.panelsSize"
+            @resize="specific.setPanelsSize"
+          >
             <split :initial="55" fixed>
               <panel-headers></panel-headers>
             </split>

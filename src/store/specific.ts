@@ -52,6 +52,8 @@ export class Specific extends VuexModule {
   @io.auto({ optional: true }) public pianoRollBeatWidth = 80;
   @io.auto({ optional: true }) public playlistRowHeight = 16;
   @io.auto({ optional: true }) public playlistBeatWidth = 80;
+  @io.auto({ optional: true }) public sideBarSize = 250;
+  @io.auto({ optional: true }) public panelsSize = 250;
 
   public projectId: string | null = null;
 
@@ -169,6 +171,15 @@ export class Specific extends VuexModule {
     this.set({ key: 'playlistBeatWidth', value });
   }
 
+  @Action
+  public setPanelsSize(value: number) {
+    this.set({ key: 'panelsSize', value });
+  }
+
+  @Action
+  public setSideBarSize(value: number) {
+    this.set({ key: 'sideBarSize', value });
+  }
 
   @Mutation
   public setContext(context: ApplicationContext) {
@@ -179,6 +190,7 @@ export class Specific extends VuexModule {
   private resetSpecific(payload: Specific) {
     Object.assign(this, payload);
   }
+
 }
 
 export default getModule(Specific);

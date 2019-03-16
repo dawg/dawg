@@ -169,23 +169,34 @@ export default class Split extends Vue {
       this.mousePosition = e.clientY;
     }
 
-    let px = this.mousePosition - this.gutterPosition();
+    const px = this.mousePosition - this.gutterPosition();
+    this.resize(px);
+  }
+
+  public resize(px: number) {
+    if (!this.parent) {
+      return;
+    }
+
+    if (!this.parent.direction) {
+      return;
+    }
+
     if (!px) { return; }
 
     const min = (...args: number[]) => {
       return Math.min(...args.map(Math.abs)) * Math.sign(px);
     };
 
-    const max = (arg: number, ...args: number[]) => {
-      let index: number = 0;
-      args = [arg, ...args];
+    const max = (...args: number[]) => {
+      let index = 0;
       args.forEach((value, i) => {
-        if (Math.abs(value) > Math.abs(index === 0 ? arg : args[index - 1])) {
-          index = i + 1;
+        if (Math.abs(value) > Math.abs(args[index])) {
+          index = i;
         }
       });
 
-      return index === 0 ? arg : args[index - 1];
+      return args[index];
     };
 
 
@@ -194,6 +205,7 @@ export default class Split extends Vue {
     const option2 = this.calculatePositions(this.after, -px, this.parent.direction, true);
 
     // Calculate the actual amount of pixels we are going to move!
+    // We are just doing "dry runs" here
     px = min(
       max(
         option1,
@@ -254,6 +266,7 @@ export default class Split extends Vue {
           s[attr] = value;
         } else {
           s.setSize(value);
+          s.$emit('resize', value);
         }
       }
     };
@@ -359,6 +372,33 @@ export default class Split extends Vue {
   @Watch('width')
   public onWidthChange() {
     this.$el.style.width = this.width + 'px';
+  }
+
+  @Watch('initial')
+  public changeSize() {
+    if (!this.parent) {
+      return;
+    }
+
+    if (this.initial === this.size) {
+      return;
+    }
+
+    if (this.initial === undefined) {
+      return;
+    }
+
+    // console.log(this.parent.direction, this.initial);
+    switch (this.parent.direction) {
+      case 'horizontal':
+        // TODO This is work around for my particular situation
+        // It won't work for other situations
+        this.after[1].resize(this.initial - this.width);
+        break;
+      case 'vertical':
+        this.resize(this.height - this.initial);
+        break;
+    }
   }
 }
 </script>
