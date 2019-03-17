@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/dawg/vusic.svg?branch=master)](https://travis-ci.org/dawg/vusic)
 > A DAW for the 21st century!
 
-<img src="https://i.ibb.co/bvp4VDK/web-1920-3.png" alt="Vusic Mockup" height="400">
+<img src="https://i.ibb.co/qRRVRwh/image.png" alt="Vusic Mockup" height="400">
 
 ## Roadmap
 `Vusic` is currently being developed as part of `ENGG 4000` (`Senior Design Project`). This means development will continue until at least April 2019; however, the project itself was started before the course began and will hopefully continue after its completion. Several core ideas have and continue to influence the development of the application:
@@ -93,6 +93,7 @@ There is also an `test:e2e` command; however, this test suite does not currently
 | [Jacob Smith](https://github.com/jsmith) | [Matt DeSilva](https://github.com/desilvamatt) |[Amir Eldesoky](https://github.com/aeldesoky) | [Alex ODonnell](https://github.com/alexodonn)
 |<sup>Software Engineering</sup>|<sup>Electrical Engineering</sup>|<sup>Electrical Engineering</sup>|<sup>Electrical Engineering</sup>
 
-# TODO
-- Naming elements in the playlist
-- Test specific write during exit
+# References
+[GridSound](https://gridsound.com) was a great reference during development. For example, components such as `Timeline.vue` and `BeatLines.vue` were based off similar component implementations from [gs-ui-components](https://github.com/gridsound/gs-ui-components).
+
+[VS Code](https://code.visualstudio.com/) was also used as a reference during development. We are big fans of the structure and navigation tools (Shortcuts, Command Palette, etc) and wanted to implement similar features within `Vusic`.
