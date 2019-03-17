@@ -62,7 +62,7 @@ interface NotificationItem {
 export default class Notifications extends Vue {
   @Prop({ type: Number, default: 300 }) public width!: number;
   @Prop({ type: Boolean, default: false }) public reverse!: boolean;
-  @Prop({ type: Number, default: 60000 }) public duration!: number;
+  @Prop({ type: Number, default: 6000 }) public duration!: number;
   @Prop({ type: Number, default: 0 }) public delay!: number;
   @Prop({ type: Number, default: Infinity }) public max!: number;
   @Prop(Boolean) public bottom!: number;
