@@ -76,7 +76,7 @@
 import { Component, Prop, Mixins, Inject, Vue } from 'vue-property-decorator';
 import { Draggable } from '@/modules/draggable';
 import { FactoryDictionary } from 'typescript-collections';
-import { range, Nullable, Keys } from '@/utils';
+import { range, Nullable, Keys, reverse } from '@/utils';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import Progression from '@/modules/sequencer/Progression.vue';
 import { Watch } from '@/modules/update';
@@ -338,7 +338,7 @@ export default class Arranger extends Mixins(Draggable) {
     if (this.selected[i]) {
       itemsToMove = this.elements.map((item, ind) => {
         return [item, ind] as [Element, number];
-      }).filter(([item, ind]) => this.selected[i]);
+      }).filter(([item, ind]) => this.selected[ind]);
     } else {
       itemsToMove = [[oldItem, i]];
     }
@@ -403,9 +403,10 @@ export default class Arranger extends Mixins(Draggable) {
     const createItem = (oldItem: Element) => {
       const newItem = oldItem.copy();
 
-      // We do this because `newNew` will have a heigher z-index
+      // We set selected to true because `newNew` will have a heigher z-index
       // Thus, it will be displayed on top (which we want)
-      this.selected.push(false);
+      // Try copying selected files and you will notice the selected notes stay on top
+      this.selected.push(true);
       this.elements.push(newItem);
       this.$emit('added', newItem);
     };
@@ -416,8 +417,20 @@ export default class Arranger extends Mixins(Draggable) {
 
       // If selected, copy all selected. If not, just copy the item that was clicked.
       if (this.selected[i]) {
-        selected = this.elements.filter((n, ind) => this.selected[ind] && n !== item);
-        targetIndex = this.elements.length; // A copy of `item` will be created at this index
+        // selected is all all selected except the element you pressed on
+        selected = this.elements.filter((el, ind) => {
+          if (this.selected[ind]) {
+            // See in `createItem` that we are setting all new elements to selected
+            // And accordingly we are setting selected to false here
+            this.selected[ind] = false;
+            return el !== item;
+          } else {
+            return false;
+          }
+        });
+        // A copy of `item` will be created at this index
+        // See the next line
+        targetIndex = this.elements.length;
         createItem(item);
       } else {
         selected = [item];
@@ -439,12 +452,13 @@ export default class Arranger extends Mixins(Draggable) {
       this.holdingShift = true;
     } else if (e.keyCode === Keys.DELETE || e.keyCode === Keys.BACKSPACE) {
       // Slice and reverse sItemince we will be deleting from the array as we go
-      const lastIndex = this.elements.length - 1;
-      this.elements.slice().reverse().forEach((item, i) => {
+      let i = this.elements.length;
+      for (const item of reverse(this.elements)) {
         if (this.selected[i]) {
-          this.removeAtIndex(lastIndex - i);
+          this.removeAtIndex(i);
         }
-      });
+        i--;
+      }
     }
   }
 
