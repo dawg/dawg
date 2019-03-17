@@ -32,8 +32,8 @@
           <settings
             :name="project.name"
             @update:name="project.setName"
-            :backup="specific.backup"
-            @update:backup="specific.setBackup"
+            :backup="workspace.backup"
+            @update:backup="workspace.setBackup"
           ></settings>
         </v-menu>
       </v-list-tile>
@@ -43,13 +43,13 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { specific, general, project } from '@/store';
+import { workspace, general, project } from '@/store';
 import Sidebar from '@/components/SideBar.vue';
 import { PanelNames, SideTab } from '@/constants';
 
 @Component
 export default class ActivityBar extends Vue {
-  public specific = specific;
+  public workspace = workspace;
   public general = general;
   public project = project;
   public open = false;
@@ -58,7 +58,7 @@ export default class ActivityBar extends Vue {
 
   public clickActivityBar(tab: Sidebar) {
     // TODO not the best
-    specific.setOpenedSideTab(tab.name as SideTab);
+    workspace.setOpenedSideTab(tab.name as SideTab);
   }
 
   public openSettings(e: MouseEvent) {

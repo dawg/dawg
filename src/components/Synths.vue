@@ -19,7 +19,7 @@ import Synth from '@/components/Synth.vue';
 import { Nullable } from '@/utils';
 import { Score, Instrument, Pattern } from '@/schemas';
 import { Watch } from '@/modules/update';
-import { project, specific } from '@/store';
+import { project, workspace } from '@/store';
 
 @Component({ components: { Synth } })
 export default class Synths extends Vue {
@@ -60,7 +60,7 @@ export default class Synths extends Vue {
     }
 
     this.$update('selectedScore', this.scoreLookup[instrument.id]);
-    specific.setOpenedPanel('Piano Roll');
+    workspace.setOpenedPanel('Piano Roll');
   }
 
   public contextmenu(e: MouseEvent, i: number) {

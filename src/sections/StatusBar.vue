@@ -31,7 +31,7 @@
 <script lang="ts">
 import path from 'path';
 import { Component, Vue, Prop } from 'vue-property-decorator';
-import { cache, specific, general } from '@/store';
+import { cache, workspace, general } from '@/store';
 
 @Component
 export default class Foot extends Vue {
@@ -45,7 +45,7 @@ export default class Foot extends Vue {
   }
 
   get icon() {
-    return specific.backup ? 'cloud_done' : 'cloud_off';
+    return workspace.backup ? 'cloud_done' : 'cloud_off';
   }
 
   get openedFile() {

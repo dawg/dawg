@@ -19,8 +19,8 @@
     <vue-perfect-scrollbar class="scrollbar" style="height: 100%">
       <base-tabs
         ref="tabs"
-        :selected-tab="specific.openedSideTab"
-        @update:selectedTab="specific.setOpenedSideTab"
+        :selected-tab="workspace.openedSideTab"
+        @update:selectedTab="workspace.setOpenedSideTab"
       >
         <side-bar :name="tabs.explorer" icon="folder">
           <file-explorer
@@ -33,8 +33,8 @@
         </side-bar>
         <side-bar :name="tabs.patterns" icon="queue_play">
           <patterns 
-            :value="specific.selectedPattern" 
-            @input="specific.setPattern"
+            :value="workspace.selectedPattern" 
+            @input="workspace.setPattern"
             :patterns="project.patterns"
             @remove="project.removePattern"
           ></patterns>
@@ -52,7 +52,7 @@ import Patterns from '@/components/Patterns.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
 import SideBar from '@/components/SideBar.vue';
 import AudioFiles from '@/sections/AudioFiles.vue';
-import { project, cache, general, specific } from '@/store';
+import { project, cache, general, workspace } from '@/store';
 import { Watch } from '@/modules/update';
 import { SideTab } from '@/constants';
 
@@ -74,7 +74,7 @@ interface Group {
 export default class SideTabs extends Vue {
   public project = project;
   public cache = cache;
-  public specific = specific;
+  public workspace = workspace;
   public general = general;
 
   public $refs!: {
@@ -102,7 +102,7 @@ export default class SideTabs extends Vue {
   }
 
   get actions(): Group[] {
-    if (specific.openedSideTab === 'Patterns') {
+    if (workspace.openedSideTab === 'Patterns') {
       return this.patternActions;
     } else {
       return [];
@@ -110,8 +110,8 @@ export default class SideTabs extends Vue {
   }
 
   get header() {
-    if (specific.openedSideTab) {
-      return specific.openedSideTab.toUpperCase();
+    if (workspace.openedSideTab) {
+      return workspace.openedSideTab.toUpperCase();
     }
   }
 

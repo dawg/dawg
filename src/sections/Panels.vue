@@ -2,16 +2,16 @@
   <base-tabs 
     class="tabs-panels secondary" 
     ref="panels"
-    :selected-tab="specific.openedPanel"
-    @update:selectedTab="specific.setOpenedPanel"
+    :selected-tab="workspace.openedPanel"
+    @update:selectedTab="workspace.setOpenedPanel"
   >
     <panel name="Instruments">
       <synths 
         :instruments="project.instruments"
-        :selected-score="specific.selectedScore"
-        @update:selectedScore="specific.setScore"
-        :selected-pattern="specific.selectedPattern"
-        :scores="specific.selectedScore"
+        :selected-score="workspace.selectedScore"
+        @update:selectedScore="workspace.setScore"
+        :selected-pattern="workspace.selectedPattern"
+        :scores="workspace.selectedScore"
       ></synths>
     </panel>
     <panel name="Mixer">
@@ -33,10 +33,10 @@
         :play="pianoRollPlay"
         :steps-per-beat="project.stepsPerBeat"
         :beats-per-measure="project.beatsPerMeasure"
-        :row-height="specific.pianoRollRowHeight"
-        @update:rowHeight="specific.setPianoRollRowHeight"
-        :px-per-beat="specific.pianoRollBeatWidth"
-        @update:pxPerBeat="specific.setPianoRollBeatWidth"
+        :row-height="workspace.pianoRollRowHeight"
+        @update:rowHeight="workspace.setPianoRollRowHeight"
+        :px-per-beat="workspace.pianoRollBeatWidth"
+        @update:pxPerBeat="workspace.setPianoRollBeatWidth"
       ></piano-roll-sequencer>
     </panel>
     <!-- <panel name="Sample">
@@ -48,7 +48,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 
-import { project, specific, general } from '@/store';
+import { project, workspace, general } from '@/store';
 import BaseTabs from '@/components/BaseTabs.vue';
 import Mixer from '@/components/Mixer.vue';
 import SampleViewer from '@/components/SampleViewer.vue';
@@ -68,36 +68,36 @@ import { Note, EffectName, Channel, EffectOptions } from '@/schemas';
 export default class Panels extends Vue {
   public project = project;
   public general = general;
-  public specific = specific;
+  public workspace = workspace;
 
   public $refs!: {
     panels: BaseTabs;
   };
 
   get notes() {
-    if (specific.selectedScore) {
-      return specific.selectedScore.notes;
+    if (workspace.selectedScore) {
+      return workspace.selectedScore.notes;
     }
   }
 
   get shouldRender() {
-    return !!specific.selectedScore;
+    return !!workspace.selectedScore;
   }
 
   get instrument() {
-    if (specific.selectedScore) {
-      return project.instrumentLookup[specific.selectedScore.instrumentId];
+    if (workspace.selectedScore) {
+      return project.instrumentLookup[workspace.selectedScore.instrumentId];
     }
   }
 
   get transport() {
-    if (specific.selectedPattern) {
-      return specific.selectedPattern.transport;
+    if (workspace.selectedPattern) {
+      return workspace.selectedPattern.transport;
     }
   }
 
   get pianoRollPlay() {
-    return general.play && specific.applicationContext === 'pianoroll';
+    return general.play && workspace.applicationContext === 'pianoroll';
   }
 
   public mounted() {

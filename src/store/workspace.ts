@@ -17,8 +17,27 @@ const PROJECT_CACHE_PATH = path.join(APPLICATION_PATH, 'project-cache.json');
  * This information contains information about a project that is specific to a user. For example, which tabs they have
  * open, which pattern they have selected, etc. This information is serialized, but the user does not see this file.
  */
-@Module({ dynamic: true, store, name: 'specific' })
+@Module({ dynamic: true, store, name: 'workspace' })
 export class Specific extends VuexModule {
+  @io.auto({ optional: true }) public backup = false;
+  @io.auto({ nullable: true, optional: true }) public selectedPatternId: string | null = null;
+  @io.auto({ nullable: true, optional: true }) public selectedScoreId: string | null = null;
+  @io.auto({ nullable: true, optional: true }) public openedPanel: PanelNames | null = null;
+  @io.auto({ nullable: true, optional: true }) public openedSideTab: SideTab | null = null;
+  @io.auto({ nullable: true, optional: true }) public openedTab: string | null = null;
+  @io.auto({ optional: true }) public applicationContext: ApplicationContext = 'pianoroll';
+  @io.auto({ optional: true }) public pianoRollRowHeight = 16;
+  @io.auto({ optional: true }) public pianoRollBeatWidth = 80;
+  @io.auto({ optional: true }) public playlistRowHeight = 40;
+  @io.auto({ optional: true }) public playlistBeatWidth = 80;
+  @io.auto({ optional: true }) public sideBarSize = 250;
+  @io.auto({ optional: true }) public panelsSize = 250;
+
+  public projectId: string | null = null;
+
+  constructor(module?: Mod<any, any>) {
+    super(module || {});
+  }
 
   get selectedPattern() {
     if (!this.selectedPatternId) { return null; }
@@ -40,25 +59,6 @@ export class Specific extends VuexModule {
       scores[score.id] = score;
     });
     return scores;
-  }
-  @io.auto({ optional: true }) public backup = false;
-  @io.auto({ nullable: true, optional: true }) public selectedPatternId: string | null = null;
-  @io.auto({ nullable: true, optional: true }) public selectedScoreId: string | null = null;
-  @io.auto({ nullable: true, optional: true }) public openedPanel: PanelNames | null = null;
-  @io.auto({ nullable: true, optional: true }) public openedSideTab: SideTab | null = null;
-  @io.auto({ nullable: true, optional: true }) public openedTab: string | null = null;
-  @io.auto({ optional: true }) public applicationContext: ApplicationContext = 'pianoroll';
-  @io.auto({ optional: true }) public pianoRollRowHeight = 16;
-  @io.auto({ optional: true }) public pianoRollBeatWidth = 80;
-  @io.auto({ optional: true }) public playlistRowHeight = 40;
-  @io.auto({ optional: true }) public playlistBeatWidth = 80;
-  @io.auto({ optional: true }) public sideBarSize = 250;
-  @io.auto({ optional: true }) public panelsSize = 250;
-
-  public projectId: string | null = null;
-
-  constructor(module?: Mod<any, any>) {
-    super(module || {});
   }
 
   @Action
