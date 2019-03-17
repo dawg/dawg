@@ -159,6 +159,8 @@ export class Sample {
   public buffer: AudioBuffer | null = null;
   public player!: Player;
 
+  private previewSource: Tone.BufferSource | null = null;
+
   get beats() {
     if (this.buffer) {
       const minutes = this.buffer.length / this.buffer.sampleRate / 60;
@@ -180,9 +182,13 @@ export class Sample {
     }
   }
 
-  public start(exact?: number, ticks?: string) {
-    if (this.player) {
-      this.player.start(exact, undefined, ticks);
+  public preview() {
+    this.previewSource = this.player.preview();
+  }
+
+  public stopPreview() {
+    if (this.previewSource) {
+      this.previewSource.stop();
     }
   }
 
@@ -229,17 +235,8 @@ export class PlacedSample extends Element {
 
   public add(transport: Transport) {
 
-    this.sample.player.sync(transport);
-    this.sample.player.start(this.tickTime);
-    // BIG HACK
-    return this.sample.player.scheduled[this.sample.player.scheduled.length - 1];
-
-
-
-    // return transport.schedule((exact: number) => {
-    //   const duration = toTickTime(this.duration);
-    //   this.sample.start(exact, duration);
-    // }, this.tickTime);
+    return this.sample.player.sync(transport, this.tickTime, undefined, this.duration);
+    // return this.sample.player.scheduled[this.sample.player.scheduled.length - 1];
   }
 }
 

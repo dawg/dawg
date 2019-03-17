@@ -1,22 +1,22 @@
 import Tone from 'tone';
-import { Time } from './types';
+import { Time, TransportTime } from './types';
 import Transport from './transport';
 
 interface Event {
   state: Tone.TransportState;
   time: Tone.Time;
   duration?: Time;
-  offset: Time;
+  offset?: Time;
 }
 
 export abstract class Source extends Tone.AudioNode {
   public volume: Tone.Signal;
-  public scheduled: string[] = [];
   protected output: Tone.AudioNode;
   // tslint:disable-next-line:variable-name
   protected _state = new Tone.TimelineState<Event>('stopped');
   // tslint:disable-next-line:variable-name
   private _volume: Tone.Volume;
+  private scheduled: string[] = [];
   private syncedTransport: Transport | null = null;
 
   constructor(options: { volume?: number, mute?: boolean } = {}) {
@@ -61,43 +61,46 @@ export abstract class Source extends Tone.AudioNode {
   }
 
   public abstract _start(startTime?: Time, offset?: Time, duration?: Time): this;
-  public abstract restart(startTime?: Time, offset?: Time, duration?: Time): this;
   public abstract _stop(time?: Time): this;
 
- public start(time?: Time, offset?: Time, duration?: Time) {
-    if (time === undefined && this.syncedTransport) {
-      time = this.syncedTransport.seconds;
-    } else {
-      time = this.toSeconds(time);
-    }
-
-    // if it's started, stop it and restart it
-    if (this._state.getValueAtTime(time) === 'started') {
-      this._state.cancel(time);
-      this._state.setStateAtTime('started', time);
-      this.restart(time, offset, duration);
-    } else {
-      this._state.setStateAtTime('started', time);
-      if (this.syncedTransport) {
-        // add the offset time to the event
-        const event = this._state.get(time);
-        event.offset = offset || 0;
-        event.duration = duration;
-
-        const id = this.syncedTransport.schedule((t: number) => {
-          this._start(t, offset, duration);
-        }, time);
-        this.scheduled.push(id);
-
-        // if it's already started
-        if (this.syncedTransport.state === 'started') {
-          this.syncedStart(Tone.Transport.context.now(), this.syncedTransport.seconds);
-        }
-      } else {
-        this._start(time, offset, duration);
-      }
-    }
+  public restart(startTime?: Time, offset?: Time, duration?: Time) {
+    this._stop(startTime);
+    this._start(startTime, offset, duration);
     return this;
+  }
+
+  public sync(transport: Transport, time: TransportTime, offset?: Time, duration?: Time) {
+    this.syncedTransport = transport;
+
+    transport.on('start', this.syncedStart.bind(this));
+    transport.on('loopStart', this.syncedStart.bind(this));
+    transport.on('stop', this.syncedStop.bind(this));
+    transport.on('pause', this.syncedStop.bind(this));
+    transport.on('loopEnd', this.syncedStop.bind(this));
+
+    time = this.toSeconds(time);
+
+    // I removed some code here that I thought was unnecessary
+    // I haven't seen any repercussions
+
+    this._state.setStateAtTime('started', time);
+
+    // add the offset time to the event
+    const event = this._state.get(time);
+    event.offset = offset || 0;
+    event.duration = duration;
+
+    const id = this.syncedTransport.schedule((t: number) => {
+      this._start(t, offset, duration);
+    }, time);
+    this.scheduled.push(id);
+
+    // if it's already started
+    if (this.syncedTransport.state === 'started') {
+      this.syncedStart(Tone.Transport.context.now(), this.syncedTransport.seconds);
+    }
+
+    return id;
   }
   public stop(time?: Time) {
     if (time === undefined && this.syncedTransport) {
@@ -147,20 +150,6 @@ export abstract class Source extends Tone.AudioNode {
     if (this._state.getValueAtTime(seconds) === 'started') {
       this._stop(time);
     }
-  }
-
-  public sync(transport: Transport) {
-    if (this.synced) {
-      return;
-    }
-
-    this.syncedTransport = transport;
-    transport.on('start', this.syncedStart.bind(this));
-    transport.on('loopStart', this.syncedStart.bind(this));
-    transport.on('stop', this.syncedStop.bind(this));
-    transport.on('pause', this.syncedStop.bind(this));
-    transport.on('loopEnd', this.syncedStop.bind(this));
-    return this;
   }
 
   public unsync() {

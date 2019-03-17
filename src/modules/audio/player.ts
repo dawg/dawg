@@ -24,13 +24,7 @@ export class Player extends Source {
     // get the start time
     startTime = this.toSeconds(startTime);
 
-    // make the source
-    const source = new Tone.BufferSource({
-      buffer: this.buffer,
-      onended: this.onSourceEnded.bind(this),
-      fadeOut: this.fadeOut,
-      // playbackRate: this.playbackRate,
-    }).connect(this.output);
+    const source = this.createSource();
 
     // if it's not looping, set the state change at the end of the sample
     this._state.setStateAtTime('stopped', startTime + computedDuration);
@@ -48,18 +42,28 @@ export class Player extends Source {
     return this;
   }
 
-  public restart(startTime?: Time, offset?: Time, duration?: Time) {
-    this._stop(startTime);
-    this._start(startTime, offset, duration);
-    return this;
-  }
-
   public _stop(time?: Time) {
     time = this.toSeconds(time);
     this.activeSources.forEach((source) => {
       source.stop(time);
     });
     return this;
+  }
+
+  public preview() {
+    const source = this.createSource();
+    source.start();
+    return source;
+  }
+
+  private createSource() {
+     // make the source
+     return new Tone.BufferSource({
+      buffer: this.buffer,
+      onended: this.onSourceEnded.bind(this),
+      fadeOut: this.fadeOut,
+      // playbackRate: this.playbackRate,
+    }).connect(this.output);
   }
 
   private onSourceEnded(source: Tone.BufferSource) {

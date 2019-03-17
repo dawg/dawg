@@ -48,9 +48,9 @@ export class Specific extends VuexModule {
   @io.auto({ nullable: true, optional: true }) public openedSideTab: SideTab | null = null;
   @io.auto({ nullable: true, optional: true }) public openedTab: string | null = null;
   @io.auto({ optional: true }) public applicationContext: ApplicationContext = 'pianoroll';
-  @io.auto({ optional: true }) public pianoRollRowHeight = 40;
+  @io.auto({ optional: true }) public pianoRollRowHeight = 16;
   @io.auto({ optional: true }) public pianoRollBeatWidth = 80;
-  @io.auto({ optional: true }) public playlistRowHeight = 16;
+  @io.auto({ optional: true }) public playlistRowHeight = 40;
   @io.auto({ optional: true }) public playlistBeatWidth = 80;
   @io.auto({ optional: true }) public sideBarSize = 250;
   @io.auto({ optional: true }) public panelsSize = 250;
