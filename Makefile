@@ -9,3 +9,6 @@ test:
 
 watch:
 	npx vue-cli-service test:unit --watch
+
+build:
+	npm run build
