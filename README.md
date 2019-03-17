@@ -2,7 +2,8 @@
 [![Build Status](https://travis-ci.org/dawg/vusic.svg?branch=master)](https://travis-ci.org/dawg/vusic)
 > A DAW for the 21st century!
 
-<img src="https://i.ibb.co/qRRVRwh/image.png" alt="Vusic Mockup" height="400">
+![Vusic](https://i.ibb.co/qRRVRwh/image.png)
+
 
 ## Roadmap
 `Vusic` is currently being developed as part of `ENGG 4000` (`Senior Design Project`). This means development will continue until at least April 2019; however, the project itself was started before the course began and will hopefully continue after its completion. Several core ideas have and continue to influence the development of the application:
