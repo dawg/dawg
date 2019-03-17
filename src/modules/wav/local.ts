@@ -30,8 +30,3 @@ export function loadBuffer(path: string) {
 
   return audioBuffer;
 }
-
-
-export function loadPlayer(path: string) {
-  return new Tone.Player(loadBuffer(path));
-}

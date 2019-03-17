@@ -8,6 +8,7 @@
       >
         <key
           :value="key.value"
+          :key-height="keyHeight"
           :synth="synth"
           :border="index !== allKeys.length - 1"
           @start="start"
@@ -30,6 +31,7 @@ import { Instrument } from '@/schemas';
   components: { Key },
 })
 export default class Piano extends Vue {
+  @Prop({ type: Number, required: true }) public keyHeight!: number;
   @Prop({ type: Object, required: true }) public synth!: Instrument;
   public allKeys = allKeys;
 

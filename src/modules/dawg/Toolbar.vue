@@ -19,7 +19,9 @@
       :raw="seconds"></time-display>
     <!-- <bpm :value="bpm" @input="updateBpm"></bpm> -->
 
-    <v-spacer></v-spacer>
+    <v-spacer
+      class="drag-area"
+    ></v-spacer>
 
     <v-btn icon style="margin: 0" @click="toggle">
       <icon :name="icon" class="white--text"></icon>
@@ -112,6 +114,9 @@ export default class Toolbar extends Vue {
   border-bottom: 1px solid
   padding: 0
 
+.toolbar /deep/ .v-toolbar__content
+  padding: 0 20px
+
 .clock
   font-size: 30px
   font-family: var(--monospace)
@@ -134,6 +139,12 @@ export default class Toolbar extends Vue {
 .toolbar
   box-shadow: none
 
+// Inverting the logo color!
 .logo
   filter: brightness(6)
+
+// See https://stackoverflow.com/questions/44818508/how-do-i-move-a-frameless-window-in-electron-without-using-webkit-app-region
+// This makes it a window drag area
+.drag-area
+  -webkit-app-region: drag
 </style>

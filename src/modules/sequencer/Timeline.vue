@@ -33,6 +33,7 @@
       :loop-end="loopEnd"
       :loop-start="loopStart"
       :offset="offset"
+      :px-per-beat="pxPerBeat"
       class="cursor-progress"
     >
       <svg class="cursor" width="16" height="10">
@@ -53,10 +54,9 @@ import Progression from '@/modules/sequencer/Progression.vue';
   components: { Progression },
 })
 export default class Timeline extends Mixins(ResponsiveMixin) {
-  @Inject() public stepsPerBeat!: number;
-  @Inject() public beatsPerMeasure!: number;
-  @Inject() public pxPerBeat!: number;
-  @Inject() public pxPerStep!: number;
+  @Prop({ type: Number, required: true }) public stepsPerBeat!: number;
+  @Prop({ type: Number, required: true }) public beatsPerMeasure!: number;
+  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
   @Prop({ type: Number, required: true }) public value!: number;
   @Prop(Nullable(Number)) public setLoopStart!: number;
   @Prop(Nullable(Number)) public setLoopEnd!: number;
@@ -75,6 +75,81 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   public selectedEnd = false;
   public rendered = false;
   public justDragged = false;
+
+  get pxPerStep() {
+    return this.pxPerBeat / this.stepsPerBeat;
+  }
+
+  get stepsPerMeasure() {
+    return this.stepsPerBeat * this.beatsPerMeasure;
+  }
+
+  get beatsPerStep() {
+    return 1 / this.stepsPerBeat;
+  }
+
+  get stepsDuration() {
+    return Math.ceil(this.width / this.pxPerStep + 2);
+  }
+
+  get displayStep() {
+    return this.pxPerBeat > 40;
+  }
+
+  get displayBeat() {
+    return this.pxPerBeat > 20;
+  }
+
+  get displaySteps() {
+    const stepOffset = Math.floor(this.offset * this.stepsPerBeat);
+    let em = -this.offset % this.beatsPerStep;
+    return range(this.stepsDuration).map((i) => {
+      const step = stepOffset + i;
+      const isBeat = !(step % this.stepsPerBeat);
+      const isMeasure = !(step % this.stepsPerMeasure);
+      const isStep = !isBeat && !isMeasure;
+      const className = isMeasure ? 'measure' : isBeat ? 'beat' : 'step';
+      const left = em * this.pxPerBeat + 'px';
+      let textContent: string;
+      // const textContent =
+
+      if (isStep) {
+        if (this.displayStep) {
+          textContent = '.';
+        } else {
+          textContent = '';
+        }
+      } else {
+        if (isBeat && !isMeasure && !this.displayBeat) {
+          textContent = '';
+        } else {
+          textContent = Math.floor(1 + step / this.stepsPerBeat).toString();
+        }
+      }
+
+      em += this.beatsPerStep;
+      return {
+        className,
+        left,
+        textContent,
+      };
+    });
+  }
+
+  get loopStyle() {
+    if (this.inLoop) {
+      const width = this.$el.getBoundingClientRect().width;
+      return {
+        display: 'block',
+        left: ( this.displayStart! - this.offset ) * this.pxPerBeat + 'px',
+        right: width - ( this.displayEnd! - this.offset ) * this.pxPerBeat + 'px',
+      };
+    } else {
+      return {
+        display: 'none',
+      };
+    }
+  }
 
   public remove() {
     this.start = null;
@@ -165,55 +240,8 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
     }
   }
 
-  get loopStyle() {
-    if (this.inLoop) {
-      const width = this.$el.getBoundingClientRect().width;
-      return {
-        display: 'block',
-        left: ( this.displayStart! - this.offset ) * this.pxPerBeat + 'px',
-        right: width - ( this.displayEnd! - this.offset ) * this.pxPerBeat + 'px',
-      };
-    } else {
-      return {
-        display: 'none',
-      };
-    }
-  }
-
   public getWidth() {
     return this.rendered ? this.$el.getBoundingClientRect().width : 0;
-  }
-
-  get stepsPerMeasure() {
-    return this.stepsPerBeat * this.beatsPerMeasure;
-  }
-
-  get beatsPerStep() {
-    return 1 / this.stepsPerBeat;
-  }
-
-  get stepsDuration() {
-    return Math.ceil(this.width / this.pxPerStep + 2);
-  }
-
-  get displaySteps() {
-    const stepOffset = Math.floor(this.offset * this.stepsPerBeat);
-    let em = -this.offset % this.beatsPerStep;
-    return range(this.stepsDuration).map((i) => {
-      const step = stepOffset + i;
-      const isBeat = !(step % this.stepsPerBeat);
-      const isMeasure = !(step % this.stepsPerMeasure);
-      const isStep = !isBeat && !isMeasure;
-      const className = isMeasure ? 'measure' : isBeat ? 'beat' : 'step';
-      const left = em * this.pxPerBeat + 'px';
-      const textContent = isStep ? '.' : Math.floor(1 + step / this.stepsPerBeat).toString();
-      em += this.beatsPerStep;
-      return {
-        className,
-        left,
-        textContent,
-      };
-    });
   }
 
   public mounted() {

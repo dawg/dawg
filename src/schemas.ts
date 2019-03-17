@@ -6,6 +6,10 @@ import uuid from 'uuid';
 import Transport from '@/modules/audio/transport';
 import { toTickTime, allKeys, ConstructorOf, disposeHelp } from './utils';
 import { Controller, Time, Signal } from '@/modules/audio';
+import { Player } from './modules/audio/player';
+
+// This is my least favorite file
+// I'm sorry for anyone who has to read it
 
 // These are all of the schemas for the project.
 // Everything is annotated using `cerialize`.
@@ -153,7 +157,9 @@ export class Sample {
   @io.auto public id = uuid.v4();
   @io.auto public path!: string;
   public buffer: AudioBuffer | null = null;
-  private player: Tone.Player | null = null;
+  public player!: Player;
+
+  private previewSource: Tone.BufferSource | null = null;
 
   get beats() {
     if (this.buffer) {
@@ -172,13 +178,17 @@ export class Sample {
     this.buffer = buffer;
 
     if (buffer) {
-      this.player = new Tone.Player(buffer).toMaster();
+      this.player = new Player(buffer).toMaster();
     }
   }
 
-  public start(exact?: number, ticks?: string) {
-    if (this.player) {
-      this.player.start(exact, undefined, ticks);
+  public preview() {
+    this.previewSource = this.player.preview();
+  }
+
+  public stopPreview() {
+    if (this.previewSource) {
+      this.previewSource.stop();
     }
   }
 
@@ -224,10 +234,9 @@ export class PlacedSample extends Element {
   }
 
   public add(transport: Transport) {
-    return transport.schedule((exact: number) => {
-      const duration = toTickTime(this.duration);
-      this.sample.start(exact, duration);
-    }, this.tickTime);
+
+    return this.sample.player.sync(transport, this.tickTime, undefined, this.duration);
+    // return this.sample.player.scheduled[this.sample.player.scheduled.length - 1];
   }
 }
 

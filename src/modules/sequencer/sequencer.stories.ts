@@ -45,9 +45,7 @@ const notes = [
 storiesOf(BeatLines.name, module)
   .add('Standard', () => ({
     template: `
-    <dawg>
-      <temp></temp>
-    </dawg>
+    <temp></temp>
     `,
     components: { Temp, Dawg },
   }));
@@ -55,14 +53,12 @@ storiesOf(BeatLines.name, module)
 storiesOf('PianoRollSequencer', module)
   .add('default', () => ({
     template: `
-    <dawg>
-      <piano-roll-sequencer
-        style="height: 500px"
-        :elements="notes"
-        :transport="transport"
-        :instrument="instrument"
-      ></piano-roll-sequencer>
-    </dawg>
+    <piano-roll-sequencer
+      style="height: 500px"
+      :elements="notes"
+      :transport="transport"
+      :instrument="instrument"
+    ></piano-roll-sequencer>
     `,
     data: () => ({
       notes: [],
@@ -82,15 +78,13 @@ const patternElement = PlacedPattern.create(pattern);
 storiesOf('PlaylistSequencer', module)
 .add('default', () => ({
   template: `
-  <dawg>
-    <playlist-sequencer
-      style="height: 500px"
-      :elements="elements"
-      :prototype="element"
-      :transport="transport"
-      :tracks="tracks"
-    ></playlist-sequencer>
-  </dawg>
+  <playlist-sequencer
+    style="height: 500px"
+    :elements="elements"
+    :prototype="element"
+    :transport="transport"
+    :tracks="tracks"
+  ></playlist-sequencer>
   `,
   data: () => ({
     transport: new Transport(),
@@ -130,14 +124,12 @@ const clip = AutomationClip.create(
 storiesOf('AutomationClipElement', module)
   .add('Standard', () => ({
     template: `
-    <dawg>
-      <automation-clip-element
-        style="margin: 20px;"
-        :element="element"
-        :height="50"
-        :duration.sync="element.duration"
-      ></automation-clip-element>
-    </dawg>
+    <automation-clip-element
+      style="margin: 20px;"
+      :element="element"
+      :height="50"
+      :duration.sync="element.duration"
+    ></automation-clip-element>
     `,
     data: () => ({
       clip,
@@ -148,14 +140,12 @@ storiesOf('AutomationClipElement', module)
 storiesOf('SampleElement', module)
   .add('default', () => ({
     template: `
-    <dawg>
-      <sample-element
-        v-if="element"
-        :height="40"
-        :element="element"
-        :duration.sync="duration"
-      ></sample-element>
-    </dawg>
+    <sample-element
+      v-if="element"
+      :height="40"
+      :element="element"
+      :duration.sync="duration"
+    ></sample-element>
     `,
     components: { SampleElement, Dawg },
     data: () => ({ buffer: null, duration: 1 }),
@@ -179,13 +169,12 @@ storiesOf('SampleElement', module)
 storiesOf('PatternElement', module)
   .add('default', () => ({
     template: `
-    <dawg>
-      <pattern-element
-        :duration.sync="duration"
-        :height="40"
-        :element="element"
-      ></pattern-element>
-    </dawg>`,
+    <pattern-element
+      :duration.sync="duration"
+      :height="40"
+      :element="element"
+    ></pattern-element>
+    `,
     components: { PatternElement, Dawg },
     data: () => ({ element: patternElement, duration: 2 }),
   }));
@@ -193,13 +182,12 @@ storiesOf('PatternElement', module)
 storiesOf('Note', module)
   .add('default', () => ({
     template: `
-    <dawg>
-      <note
-        :duration.sync="duration"
-        :height="18"
-        :element="element"
-      ></note>
-    </dawg>`,
+    <note
+      :duration.sync="duration"
+      :height="18"
+      :element="element"
+    ></note>
+    `,
     components: { Note, Dawg },
     data: () => ({ element: new NE({ row: 0, time: 0, duration: 0 }), duration: 2 }),
   }));
@@ -216,14 +204,12 @@ const WithPosition = positionable(Tester);
 storiesOf('positionable', module)
   .add('default', () => ({
     template: `
-    <dawg>
-      <with-position
-        :left="20"
-        :top="20"
-        :duration="2"
-        value="HELLO"
-      ></with-position>
-    </dawg>
+    <with-position
+      :left="20"
+      :top="20"
+      :duration="2"
+      value="HELLO"
+    ></with-position>
     `,
     components: { WithPosition, Dawg },
   }));
@@ -235,13 +221,11 @@ const Resizable = resizable(Tester);
 storiesOf('resizable', module)
   .add('default', () => ({
     template: `
-    <dawg>
-      <resizable
-        :duration.sync="duration"
-        :height="40"
-        value="HELLO"
-      ></resizable>
-    </dawg>
+    <resizable
+      :duration.sync="duration"
+      :height="40"
+      value="HELLO"
+    ></resizable>
     `,
     data: () => ({ duration: 1 }),
     components: { Resizable, Dawg },

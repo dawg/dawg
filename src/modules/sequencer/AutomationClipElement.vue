@@ -3,7 +3,7 @@
     class="envelope-visualizer" 
     :viewBox="viewBox" 
     preserveAspectRatio="xMinYMid slice"
-    :height="trackHeight"
+    :height="height"
     :width="width"
     @click="addPoint"
   >
@@ -39,10 +39,10 @@ import { scale } from '@/utils';
 
 @Component
 export default class AutomationClipElement extends Vue {
-  @Inject() public pxPerBeat!: number;
-  // TODO small bug trackHeight !== height
-  @Inject() public trackHeight!: number;
-  @Inject() public snap!: number;
+  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
+  // TODO small bug height !== true height
+  @Prop({ type: Number, required: true }) public height!: number;
+  @Prop({ type: Number, required: true }) public snap!: number;
 
   @Prop({ type: Number, default: 4 }) public radius!: number;
   @Prop({ type: Object, required: true }) public element!: PlacedAutomationClip;
@@ -71,7 +71,7 @@ export default class AutomationClipElement extends Vue {
     return this.points.sort(this.sort).map((point) => {
       return {
         cx: point.time * this.pxPerBeat,
-        cy: scale(point.value, this.fromRange, [0, 1]) * this.trackHeight,
+        cy: scale(point.value, this.fromRange, [0, 1]) * this.height,
       };
     });
   }
@@ -89,7 +89,7 @@ export default class AutomationClipElement extends Vue {
   }
 
   get viewBox() {
-    return `0 0 ${this.width} ${this.trackHeight}`;
+    return `0 0 ${this.width} ${this.height}`;
   }
 
   get path() {
@@ -112,7 +112,7 @@ export default class AutomationClipElement extends Vue {
     let time = x / this.pxPerBeat;
 
     time = Math.round(time / this.snap) * this.snap;
-    const value = (e.clientY - rect.top) / this.trackHeight;
+    const value = (e.clientY - rect.top) / this.height;
 
     return {
       time,

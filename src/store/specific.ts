@@ -8,14 +8,10 @@ import { VuexModule } from '@/store/utils';
 import * as io from '@/modules/cerialize';
 import store from '@/store/store';
 import project from '@/store/project';
-import { APPLICATION_PATH, SideTab, PanelNames } from '@/constants';
+import { APPLICATION_PATH, SideTab, PanelNames, ApplicationContext } from '@/constants';
 import { Score, Pattern } from '@/schemas';
 
 const PROJECT_CACHE_PATH = path.join(APPLICATION_PATH, 'project-cache.json');
-
-interface ProjectCache {
-  [k: string]: object;
-}
 
 /**
  * This information contains information about a project that is specific to a user. For example, which tabs they have
@@ -23,17 +19,6 @@ interface ProjectCache {
  */
 @Module({ dynamic: true, store, name: 'specific' })
 export class Specific extends VuexModule {
-  @io.auto({ optional: true }) public backup = false;
-  @io.auto({ nullable: true, optional: true }) public selectedPatternId: string | null = null;
-  @io.auto({ nullable: true, optional: true }) public selectedScoreId: string | null = null;
-  @io.auto({ nullable: true, optional: true }) public openedPanel: PanelNames | null = null;
-  @io.auto({ nullable: true, optional: true }) public openedSideTab: SideTab | null = null;
-  @io.auto({ nullable: true, optional: true }) public openedTab: string | null = null;
-  public projectId: string | null = null;
-
-  constructor(module?: Mod<any, any>) {
-    super(module || {});
-  }
 
   get selectedPattern() {
     if (!this.selectedPatternId) { return null; }
@@ -56,23 +41,39 @@ export class Specific extends VuexModule {
     });
     return scores;
   }
+  @io.auto({ optional: true }) public backup = false;
+  @io.auto({ nullable: true, optional: true }) public selectedPatternId: string | null = null;
+  @io.auto({ nullable: true, optional: true }) public selectedScoreId: string | null = null;
+  @io.auto({ nullable: true, optional: true }) public openedPanel: PanelNames | null = null;
+  @io.auto({ nullable: true, optional: true }) public openedSideTab: SideTab | null = null;
+  @io.auto({ nullable: true, optional: true }) public openedTab: string | null = null;
+  @io.auto({ optional: true }) public applicationContext: ApplicationContext = 'pianoroll';
+  @io.auto({ optional: true }) public pianoRollRowHeight = 16;
+  @io.auto({ optional: true }) public pianoRollBeatWidth = 80;
+  @io.auto({ optional: true }) public playlistRowHeight = 40;
+  @io.auto({ optional: true }) public playlistBeatWidth = 80;
+  @io.auto({ optional: true }) public sideBarSize = 250;
+  @io.auto({ optional: true }) public panelsSize = 250;
+
+  public projectId: string | null = null;
+
+  constructor(module?: Mod<any, any>) {
+    super(module || {});
+  }
 
   @Action
   public setOpenedPanel(openedPanel: PanelNames) {
     this.set({ key: 'openedPanel', value: openedPanel });
-    this.write();
   }
 
   @Action
   public setOpenedSideTab(sideTab: SideTab) {
     this.set({ key: 'openedSideTab', value: sideTab });
-    this.write();
   }
 
   @Action
   public setTab(tab: string) {
     this.set({ key: 'openedTab', value: tab });
-    this.write();
   }
 
   @Action
@@ -115,7 +116,6 @@ export class Specific extends VuexModule {
       this.set({ key: 'selectedPatternId', value: null });
     }
 
-    this.write();
     if (!this.selectedScoreId || !this.scoreLookup) {
       return;
     }
@@ -125,7 +125,6 @@ export class Specific extends VuexModule {
     }
 
     this.set({ key: 'selectedScoreId', value: null });
-    this.write();
   }
 
   @Action
@@ -135,13 +134,11 @@ export class Specific extends VuexModule {
     } else {
       this.set({ key: 'selectedScoreId', value: null });
     }
-    this.write();
   }
 
   @Action
   public setBackup(backup: boolean) {
     this.set({ key: 'backup', value: backup });
-    this.write();
   }
 
   @Action
@@ -154,10 +151,46 @@ export class Specific extends VuexModule {
     await fs.writeFile(PROJECT_CACHE_PATH, JSON.stringify(json, null, 4));
   }
 
+  @Action
+  public setPianoRollRowHeight(value: number) {
+    this.set({ key: 'pianoRollRowHeight', value });
+  }
+
+  @Action
+  public setPianoRollBeatWidth(value: number) {
+    this.set({ key: 'pianoRollBeatWidth', value });
+  }
+
+  @Action
+  public setPlaylistRowHeight(value: number) {
+    this.set({ key: 'playlistRowHeight', value });
+  }
+
+  @Action
+  public setPlaylistBeatWidth(value: number) {
+    this.set({ key: 'playlistBeatWidth', value });
+  }
+
+  @Action
+  public setPanelsSize(value: number) {
+    this.set({ key: 'panelsSize', value });
+  }
+
+  @Action
+  public setSideBarSize(value: number) {
+    this.set({ key: 'sideBarSize', value });
+  }
+
+  @Mutation
+  public setContext(context: ApplicationContext) {
+    this.applicationContext = context;
+  }
+
   @Mutation
   private resetSpecific(payload: Specific) {
     Object.assign(this, payload);
   }
+
 }
 
 export default getModule(Specific);

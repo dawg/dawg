@@ -107,7 +107,7 @@ export default class Tree extends Vue {
 
   public playSong(songPath: string) {
     if (this.sample) {
-      this.sample.start();
+      this.sample.preview();
     }
   }
 
@@ -120,7 +120,7 @@ export default class Tree extends Vue {
 
   public stopSong() {
     if (this.sample) {
-      this.sample.stop();
+      this.sample.stopPreview();
     }
   }
 

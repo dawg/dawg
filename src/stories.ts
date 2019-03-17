@@ -27,12 +27,10 @@ const synth = new Tone.Synth().toMaster();
 storiesOf(Piano.name, module)
   .add('Standard', () => ({
     template: `
-    <dawg>
-      <piano
-        :synth="synth"
-        style="overflow-y: scroll; height: 500px"
-      ></piano>
-    </dawg>
+    <piano
+      :synth="synth"
+      style="overflow-y: scroll; height: 500px"
+    ></piano>
     `,
     data: () => ({ synth }),
     components: { Piano, Dawg },
@@ -41,17 +39,13 @@ storiesOf(Piano.name, module)
 storiesOf(Key.name, module)
   .add('White', () => ({
     template: `
-    <dawg>
-      <key value="C4"></key>
-    </dawg>
+    <key value="C4"></key>
     `,
     components: { Key, Dawg },
   }))
   .add('Black', () => ({
     template: `
-    <dawg>
-      <key value="C#4"></key>
-    </dawg>
+    <key value="C#4"></key>
     `,
     components: { Key, Dawg },
   }));
@@ -112,9 +106,7 @@ storiesOf(TimeDisplay.name, module)
 storiesOf(Note.name, module)
   .add('Standard', () => ({
     template: `
-    <dawg>
-      <note v-model="length" :id="0" :start="0"></note>
-    </dawg>
+    <note v-model="length" :id="0" :start="0"></note>
     `,
     components: { Dawg, Note },
     data: () => ({ length: 1 }),
@@ -316,9 +308,7 @@ storiesOf(Synth.name, module)
   .add('Standard', () => ({
     template: `
     <v-app>
-      <dawg>
-        <synth ref="synth" name="Tester" :notes="notes"></synth>
-      </dawg>
+      <synth ref="synth" name="Tester" :notes="notes"></synth>
       <div>
         <v-btn @click="playme">Play</v-btn>
       </div>
@@ -337,21 +327,19 @@ storiesOf(Synth.name, module)
 storiesOf(Timeline.name, module)
   .add('Standard', () => ({
     template: `
-    <dawg>
-      <timeline
-        :loop-start="start"
-        :loop-end="end"
-        v-model="time"
-        style="width: 400px; height: 20px"
-      ></timeline>
-    </dawg>
+    <timeline
+      :loop-start="start"
+      :loop-end="end"
+      v-model="time"
+      style="width: 400px; height: 20px"
+    ></timeline>
     `,
     data: () => ({ time: 0, start: 0, end: 2 }), // TODO change to 8 for beats
     components: { Timeline, Dawg },
   }))
   .add('With Offset', () => ({
     template: `
-    <dawg>
+    <div>
       <timeline
         :loop-start="start"
         :loop-end="end"
@@ -363,7 +351,7 @@ storiesOf(Timeline.name, module)
         <input type="range" id="start" name="volume" min="0" max="100" v-model="pixels">
         <label for="volume">Pixel Offset</label>
       </div>
-    </dawg>
+    </div>
     `,
     data: () => ({
       time: 0,

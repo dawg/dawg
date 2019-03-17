@@ -21,6 +21,8 @@ import { PlacedSample, Sample } from '@/schemas';
 
 @Component
 export default class AudioFiles extends Vue {
+  public currentlyPlaying: Sample | null = null;
+
   get items() {
     return project.samples.map((sample) => {
       return {
@@ -40,7 +42,12 @@ export default class AudioFiles extends Vue {
   }
 
   public start(sample: Sample) {
-    sample.start();
+    if (this.currentlyPlaying) {
+      this.currentlyPlaying.stopPreview();
+    }
+
+    sample.preview();
+    this.currentlyPlaying = sample;
   }
 }
 </script>

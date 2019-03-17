@@ -6,6 +6,7 @@ import PlaylistSequencer from '@/modules/sequencer/PlaylistSequencer.vue';
 import PianoRollSequencer from '@/modules/sequencer/PianoRollSequencer.vue';
 import ACE from '@/modules/sequencer/AutomationClipElement.vue';
 import N from '@/modules/sequencer/Note.vue';
+import Scroller from '@/modules/sequencer/Scroller.vue';
 import { positionable, resizable, selectable, colored } from '@/modules/sequencer/helpers';
 
 function hoc(o: VueConstructor) {
@@ -34,5 +35,6 @@ export default {
     Vue.component('PlaylistSequencer', PlaylistSequencer);
     Vue.component('PianoRollSequencer', PianoRollSequencer);
     Vue.component('AutomationClipElement', AutomationClipElement);
+    Vue.component('Scroller', Scroller);
   },
 };

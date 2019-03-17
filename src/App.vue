@@ -1,75 +1,91 @@
 <template>
   <v-app class="app">
-    <dawg>
-      <split direction="vertical">
-        <split :initial="30" fixed>
-          <menu-bar 
-            :menu="menu"
-            :maximized="maximized"
-            @close="closeApplication"
-            @minimize="minimizeApplication"
-            @maximize="maximizeApplication"
-            @restore="restoreApplication"
-          ></menu-bar>
+    <split direction="vertical">
+      <split :initial="30" fixed>
+        <menu-bar 
+          :menu="menu"
+          :maximized="maximized"
+          @close="closeApplication"
+          @minimize="minimizeApplication"
+          @maximize="maximizeApplication"
+          @restore="restoreApplication"
+        ></menu-bar>
+      </split>
+
+      <split direction="horizontal" resizable>
+        <split :initial="65" fixed>
+          <activity-bar></activity-bar>
         </split>
 
-        <split direction="horizontal" resizable>
-          <split :initial="65" fixed>
-            <activity-bar></activity-bar>
+        <split 
+          collapsible 
+          :min-size="100"
+          :initial="specific.sideBarSize"
+          @resize="specific.setSideBarSize"
+        >
+          <side-tabs v-if="loaded"></side-tabs>
+          <blank v-else></blank>
+        </split>
+
+        <split direction="vertical" resizable>
+
+          <split :initial="general.toolbarHeight" fixed>
+            <toolbar
+              :height="general.toolbarHeight"
+              :transport="transport"
+              :context="specific.applicationContext"
+              @update:context="setContext"
+              :play="general.play"
+              @update:play="playPause"
+              style="border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
+              :bpm="project.bpm"
+              @update:bpm="project.setBpm"
+            ></toolbar>
           </split>
 
-          <split :initial="250" collapsible :min-size="100">
-            <side-tabs v-if="loaded"></side-tabs>
-            <blank v-else></blank>
+          <split>
+            <playlist-sequencer
+              v-if="loaded"
+              style="height: 100%"
+              :tracks="project.tracks" 
+              :elements="project.master.elements"
+              :transport="project.master.transport"
+              :play="playlistPlay"
+              :start.sync="masterStart"
+              :end.sync="masterEnd"
+              :steps-per-beat="project.stepsPerBeat"
+              :beats-per-measure="project.beatsPerMeasure"
+              :row-height="specific.playlistRowHeight"
+              @update:rowHeight="specific.setPlaylistRowHeight"
+              :px-per-beat="specific.playlistBeatWidth"
+              @update:pxPerBeat="specific.setPlaylistBeatWidth"
+              @new-prototype="checkPrototype"
+            ></playlist-sequencer>
+            <blank v-else></blank>              
           </split>
 
-          <split direction="vertical" resizable>
-
-            <split :initial="general.toolbarHeight" fixed>
-              <toolbar
-                :height="general.toolbarHeight"
-                :transport="transport"
-                :context="general.applicationContext"
-                @update:context="general.setContext"
-                :play="general.play"
-                @update:play="playPause"
-                style="border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
-                :bpm="project.bpm"
-                @update:bpm="project.setBpm"
-              ></toolbar>
+          <split
+            class="secondary" 
+            direction="vertical" 
+            :style="`border-top: 1px solid #111`" 
+            keep
+            :initial="specific.panelsSize"
+            @resize="specific.setPanelsSize"
+          >
+            <split :initial="55" fixed>
+              <panel-headers></panel-headers>
             </split>
-
             <split>
-              <playlist-sequencer
-                v-if="loaded"
-                style="height: 100%"
-                :tracks="project.tracks" 
-                :elements="project.master.elements"
-                :transport="project.master.transport"
-                :play="general.playlistPlay"
-                :start.sync="masterStart"
-                :end.sync="masterEnd"
-                @new-prototype="checkPrototype"
-              ></playlist-sequencer>
-              <blank v-else></blank>              
-            </split>
-
-            <split class="secondary" direction="vertical" :style="`border-top: 1px solid #111`" keep>
-              <split :initial="55" fixed>
-                <panel-headers></panel-headers>
-              </split>
-              <split>
-                <panels v-if="loaded"></panels>
-                <blank v-else></blank>
-              </split>
+              <panels v-if="loaded"></panels>
+              <blank v-else></blank>
             </split>
           </split>
-        </split>
-        <split :initial="20" fixed>
-          <status-bar></status-bar>
         </split>
       </split>
-    </dawg>
+      <split :initial="20" fixed>
+        <status-bar></status-bar>
+      </split>
+    </split>
     <notifications></notifications>
     <context-menu></context-menu>
     <palette 
@@ -106,7 +122,7 @@ import PanelHeaders from '@/sections/PanelHeaders.vue';
 import ActivityBar from '@/sections/ActivityBar.vue';
 import StatusBar from '@/sections/StatusBar.vue';
 import Tone from 'tone';
-import { SideTab, FILTERS } from '@/constants';
+import { SideTab, FILTERS, ApplicationContext } from '@/constants';
 import { PaletteItem, bus } from '@/modules/palette';
 import { Watch } from '@/modules/update';
 import backend, { ProjectInfo } from '@/backend';
@@ -206,10 +222,10 @@ export default class App extends Vue {
       text: 'Switch Context',
       shortcut: ['Ctrl', 'Tab'],
       callback: () => {
-        if (general.applicationContext === 'pianoroll') {
-          general.setContext('playlist');
+        if (specific.applicationContext === 'pianoroll') {
+          this.setContext('playlist');
         } else {
-          general.setContext('pianoroll');
+          this.setContext('pianoroll');
         }
       },
     },
@@ -321,12 +337,32 @@ export default class App extends Vue {
     return general.getProjectsErrorMessage;
   }
 
+  get transport() {
+    if (specific.applicationContext === 'pianoroll') {
+      const pattern = specific.selectedPattern;
+      return pattern ? pattern.transport : null;
+    } else {
+      return project.master.transport;
+    }
+  }
+
+  get playlistPlay() {
+    return general.play && specific.applicationContext === 'playlist';
+  }
+
   public async created() {
-    const window = remote.getCurrentWindow();
-    window.addListener('maximize', this.maximize);
-    window.addListener('unmaximize', this.unmaximize);
+    // This is called before refresh / close
+    // I don't remove this listner because the window is closing anyway
+    // I'm not even sure onExit would be called if we removed it in the destroy method
+    window.addEventListener('beforeunload', this.onExit);
+
+    const w = remote.getCurrentWindow();
+    w.addListener('maximize', this.maximize);
+    w.addListener('unmaximize', this.unmaximize);
 
     automation.$on('automate', this.addAutomationClip);
+
+    // Log this for debugging purposes
     // tslint:disable-next-line:no-console
     console.info(project);
 
@@ -337,7 +373,7 @@ export default class App extends Vue {
       await this.withErrorHandling(project.load);
       this.$log.debug('Finished reading data from the fs.');
       this.loaded = true;
-    }, 500);
+    }, 1250);
   }
 
   public mounted() {
@@ -345,9 +381,13 @@ export default class App extends Vue {
   }
 
   public destroyed() {
-    const window = remote.getCurrentWindow();
-    window.removeListener('maximize', this.maximize);
-    window.removeListener('unmaximize', this.unmaximize);
+    const w = remote.getCurrentWindow();
+    w.removeListener('maximize', this.maximize);
+    w.removeListener('unmaximize', this.unmaximize);
+  }
+
+  public async onExit() {
+    await specific.write();
   }
 
   public openBackup() {
@@ -413,18 +453,14 @@ export default class App extends Vue {
     }
   }
 
-  get transport() {
-    if (general.applicationContext === 'pianoroll') {
-      const pattern = specific.selectedPattern;
-      return pattern ? pattern.transport : null;
-    } else {
-      return project.master.transport;
-    }
+  public setContext(context: ApplicationContext) {
+    specific.setContext(context);
+    general.pause();
   }
 
   public playPause() {
     let transport: Transport;
-    if (general.applicationContext === 'pianoroll') {
+    if (specific.applicationContext === 'pianoroll') {
       const pattern = specific.selectedPattern;
       if (!pattern) {
         this.$notify.info('Please select a Pattern.', {

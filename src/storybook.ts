@@ -16,7 +16,6 @@ import Knobs from '@/modules/knobs';
 import Split from '@/modules/split';
 import Status from '@/modules/status';
 
-
 import Piano from '@/components/Piano.vue';
 import DTrack from '@/components/DTrack.vue';
 import TooltipIcon from '@/components/TooltipIcon.vue';

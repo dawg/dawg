@@ -9,7 +9,7 @@ import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 
 @Component
 export default class Progression extends Vue {
-  @Inject() public pxPerBeat!: number;
+  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
   // Range from 0 to 1
   @Prop({ type: Number, required: true }) public progress!: number;
   @Prop({ type: Number, default: 0 }) public offset!: number; // TODO I'm not sure this is needed

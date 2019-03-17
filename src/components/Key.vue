@@ -15,7 +15,7 @@ import Tone from 'tone';
 
 @Component
 export default class Key extends Vue {
-  @Inject() public noteHeight!: number;
+  @Prop({ type: Number, required: true }) public keyHeight!: number;
   @Prop({ type: String, required: true }) public value!: string;
   @Prop({ type: Object, required: false }) public synth?: Tone.Synth;
   @Prop({ type: Number, default: 80 }) public width!: number;
@@ -30,7 +30,7 @@ export default class Key extends Vue {
   }
 
   get height() {
-    return this.noteHeight * (12 / 7);  // all keys / white keys
+    return this.keyHeight * (12 / 7);  // all keys / white keys
   }
 
   get keyClass() {
