@@ -1,0 +1,24 @@
+productName: "Vusic"
+appId: "dev.dawg.vusic"
+
+# Mac OS configuration
+mac:
+  icon: "build/icons/icon.icns"
+
+# Windows configuration
+win:
+  icon: "build/icons/icon.ico"
+  target:
+    - "nsis"
+
+# Config for the windows installer
+nsis:
+  oneClick: true
+  perMachine: true
+
+# Linux configuration
+linux:
+  category: Audio
+  target:
+    - "AppImage"
+    - "deb"
