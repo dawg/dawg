@@ -97,6 +97,7 @@
       palette-class="secondary"
       :items="paletteCommands"
     ></palette>
+    <keyboard-shortcuts :items="paletteCommands"></keyboard-shortcuts>
     <palette 
       v-model="themePalette"
       palette-class="secondary"

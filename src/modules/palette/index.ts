@@ -194,6 +194,7 @@ class Palette extends Vue {
   @Prop({ type: String, required: false }) public paletteClass?: string;
   @Prop({ type: Array, required: true }) public items!: PaletteItem[];
 
+  // TODO Change the name of this prop
   /**
    * Whether to call the callback when selected using the arrow keys.
    */
@@ -201,8 +202,6 @@ class Palette extends Vue {
 
   public searchText = '';
   public selected = 0;
-
-  public pressedKeys = new Set<number>();
 
   get tokenized() {
     return this.items.map((item) => {
@@ -231,34 +230,6 @@ class Palette extends Vue {
 
   public open() {
     this.$emit('input', true);
-  }
-
-  public keydown(e: KeyboardEvent) {
-    this.pressedKeys.add(e.which);
-
-    let i = stack.length - 1;
-    for (const item of reverse(stack)) {
-      if (shortcutPressed(item.shortcut, this.pressedKeys)) {
-        item.callback();
-        stack.splice(i, 1);
-        return;
-      }
-      i--;
-    }
-
-    this.items.forEach((item) => {
-      if (!item.shortcut) {
-        return;
-      }
-
-      if (shortcutPressed(item.shortcut, this.pressedKeys)) {
-        item.callback();
-      }
-    });
-  }
-
-  public keyup(e: KeyboardEvent) {
-    this.pressedKeys.delete(e.which);
   }
 
   public checkEnterEsc(e: KeyboardEvent) {
@@ -291,16 +262,6 @@ class Palette extends Vue {
       item.callback();
       this.$emit('input', false);
     }
-  }
-
-  public mounted() {
-    window.addEventListener('keydown', this.keydown);
-    window.addEventListener('keyup', this.keyup);
-  }
-
-  public destroyed() {
-    window.removeEventListener('keydown', this.keydown);
-    window.removeEventListener('keyup', this.keyup);
   }
 
   @Watch<Palette>('filtered')
@@ -389,10 +350,56 @@ class Palette extends Vue {
   }
 }
 
+@Component
+export class KeyboardShortcuts extends Vue {
+  @Prop({ type: Array, required: true }) public items!: PaletteItem[];
+
+  public pressedKeys = new Set<number>();
+
+  public mounted() {
+    window.addEventListener('keydown', this.keydown);
+    window.addEventListener('keyup', this.keyup);
+  }
+
+  public destroyed() {
+    window.removeEventListener('keydown', this.keydown);
+    window.removeEventListener('keyup', this.keyup);
+  }
+
+  public keydown(e: KeyboardEvent) {
+    this.pressedKeys.add(e.which);
+
+    let i = stack.length - 1;
+    for (const item of reverse(stack)) {
+      if (shortcutPressed(item.shortcut, this.pressedKeys)) {
+        item.callback();
+        stack.splice(i, 1);
+        return;
+      }
+      i--;
+    }
+
+    this.items.forEach((item) => {
+      if (!item.shortcut) {
+        return;
+      }
+
+      if (shortcutPressed(item.shortcut, this.pressedKeys)) {
+        item.callback();
+      }
+    });
+  }
+
+  public keyup(e: KeyboardEvent) {
+    this.pressedKeys.delete(e.which);
+  }
+}
+
 // TODO(jacob) use stack to store keyboard shortcut information??
 export default {
   install() {
     Vue.component('Palette', Palette);
+    Vue.component('KeyboardShortcuts', KeyboardShortcuts);
 
     Vue.prototype.$press = (shortcut: Key[], callback: () => void) => {
       stack.push({ shortcut, callback });
