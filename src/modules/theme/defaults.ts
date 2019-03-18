@@ -19,10 +19,10 @@ export const defaults = {
     success: '2ba143',
     warning: 'ad7c0b',
   },
-  'White Christmas': {
-    foreground: '000',
-    primary: '1976D2',
-    secondary: 'e0e0e0',
+  'Red Rover': {
+    foreground: 'c30000',
+    primary: 'ff9595',
+    secondary: 'b19696',
     accent: '8d82ff',
     error: 'd13b2e',
     info: '007bff',
