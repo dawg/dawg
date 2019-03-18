@@ -2,7 +2,7 @@
   <div class="aside secondary" style="display: flex; flex-direction: column">
     <div
       class="section-header foreground--text"
-      :style="`min-height: ${general.toolbarHeight + 1}px; display: flex; align-items: center`"
+      :style="headerStyle"
     >
       <div class="aside--title">{{ header }}</div>
       <div style="flex-grow: 1"></div>
@@ -81,6 +81,15 @@ export default class SideTabs extends Vue {
     tabs: BaseTabs,
   };
 
+  get headerStyle() {
+    return {
+      borderBottom: `1px solid ${this.$theme.background}`,
+      minHeight: `${general.toolbarHeight + 1}px`,
+      display: 'flex',
+      alignItems: 'center',
+    };
+  }
+
   public patternActions: Group[] = [
     {
       icon: 'add',
@@ -123,11 +132,9 @@ export default class SideTabs extends Vue {
   height: 100%
   width: 100%
   z-index: 3
-  border-right: 1px solid
 
 .section-header
   font-size: 15px !important
-  border-bottom: 1px solid rgba(0, 0, 0, 0.3)
   padding: 0 20px
 
 .scrollbar >>> .ps__scrollbar-y-rail

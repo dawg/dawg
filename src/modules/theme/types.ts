@@ -4,6 +4,7 @@ export interface Classes {
 
 export interface Theme {
   foreground: string;
+  background: string;
   primary: string;
   secondary: string;
   accent: string;

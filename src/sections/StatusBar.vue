@@ -8,7 +8,7 @@
     <div style="flex: 1"></div>
     <tooltip-icon 
       v-if="general.backupError" 
-      color="white" 
+      :color="$theme.foreground" 
       size="18" 
       tooltip="Cloud Backup Error"
       top
@@ -22,7 +22,7 @@
       :width="2"
       indeterminate
     ></v-progress-circular>
-    <v-icon v-else color="white" size="20">
+    <v-icon v-else :color="$theme.foreground" size="20">
       {{ icon }}
     </v-icon>
   </div>

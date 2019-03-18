@@ -23,7 +23,10 @@
           :initial="workspace.sideBarSize"
           @resize="workspace.setSideBarSize"
         >
-          <side-tabs v-if="loaded"></side-tabs>
+          <side-tabs 
+            v-if="loaded"
+            :style="border('right')"
+          ></side-tabs>
           <blank v-else></blank>
         </split>
 
@@ -31,13 +34,14 @@
 
           <split :initial="general.toolbarHeight" fixed>
             <toolbar
+              class="toolbar"
               :height="general.toolbarHeight"
               :transport="transport"
               :context="workspace.applicationContext"
               @update:context="setContext"
               :play="general.play"
               @update:play="playPause"
-              style="border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
+              :style="border('bottom')"
               :bpm="project.bpm"
               @update:bpm="project.setBpm"
             ></toolbar>
@@ -66,8 +70,8 @@
 
           <split
             class="secondary" 
-            direction="vertical" 
-            :style="`border-top: 1px solid #111`" 
+            direction="vertical"
+            :style="border('top')"
             keep
             :initial="workspace.panelsSize"
             @resize="workspace.setPanelsSize"
@@ -422,6 +426,10 @@ export default class App extends Vue {
     this.themePalette = true;
   }
 
+  public border(side: 'left' | 'right' | 'top' | 'bottom') {
+    return `border-${side}: 1px solid ${this.$theme.background}`;
+  }
+
   public loadTheme(themeName: string | null) {
     const isThemeKey = (key: string | null): key is keyof typeof theme.defaults => {
       return !!key && theme.defaults.hasOwnProperty(key);
@@ -653,5 +661,8 @@ export default class App extends Vue {
 .app
   display: flex
   flex-direction: column
+
+.toolbar
+  z-index: 10
 </style>
 

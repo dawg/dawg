@@ -26,16 +26,15 @@
     <panel name="Piano Roll">
       <piano-roll-sequencer
         style="height: 100%"
-        v-if="shouldRender"
-        :elements="notes"
-        :transport="transport"
-        :instrument="instrument"
+        v-if="workspace.selectedScore"
+        :pattern="workspace.selectedPattern"
+        :score="workspace.selectedScore"
         :play="pianoRollPlay"
         :steps-per-beat="project.stepsPerBeat"
         :beats-per-measure="project.beatsPerMeasure"
         :row-height="workspace.pianoRollRowHeight"
-        @update:rowHeight="workspace.setPianoRollRowHeight"
         :px-per-beat="workspace.pianoRollBeatWidth"
+        @update:rowHeight="workspace.setPianoRollRowHeight"
         @update:pxPerBeat="workspace.setPianoRollBeatWidth"
       ></piano-roll-sequencer>
     </panel>
@@ -73,28 +72,6 @@ export default class Panels extends Vue {
   public $refs!: {
     panels: BaseTabs;
   };
-
-  get notes() {
-    if (workspace.selectedScore) {
-      return workspace.selectedScore.notes;
-    }
-  }
-
-  get shouldRender() {
-    return !!workspace.selectedScore;
-  }
-
-  get instrument() {
-    if (workspace.selectedScore) {
-      return project.instrumentLookup[workspace.selectedScore.instrumentId];
-    }
-  }
-
-  get transport() {
-    if (workspace.selectedPattern) {
-      return workspace.selectedPattern.transport;
-    }
-  }
 
   get pianoRollPlay() {
     return general.play && workspace.applicationContext === 'pianoroll';

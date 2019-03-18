@@ -11,6 +11,7 @@ export interface ThemeAugmentation {
 @Component
 class Bus extends Vue implements Theme {
   public foreground = '';
+  public background = '';
   public primary = '';
   public secondary = '';
   public accent = '';
@@ -87,6 +88,7 @@ body {
   style = document.body.appendChild(node);
 
   bus.foreground = hex.foreground;
+  bus.background = hex.background;
   bus.primary = hex.primary;
   bus.secondary = hex.secondary;
   bus.accent = hex.accent;
