@@ -23,7 +23,7 @@
           v-show="showRight"
           :d="rightRangePath" 
           fill="none" 
-          :stroke="primaryColor"
+          :stroke="$theme.primary"
           :stroke-width="strokeWidth"
           :style="rightStrokeStyle"
         ></path>
@@ -31,7 +31,7 @@
           v-show="showLeft"
           :d="leftRangePath"
           fill="none" 
-          :stroke="primaryColor"
+          :stroke="$theme.primary"
           :stroke-width="strokeWidth"
           :style="lefStrokeStyle"
         ></path>
@@ -39,7 +39,7 @@
           :width="rectWidth"
           :x="center - rectWidth / 2"
           :height="rectHeight"
-          :fill="primaryColor"
+          :fill="$theme.primary"
           :transform="transform"
         ></rect>
       </svg>
@@ -166,7 +166,7 @@ export default class Knob extends Mixins(Draggable) {
   }
   get knobStyle() {
     return {
-      color: this.primaryColor,
+      color: this.$theme.primary,
       height: `${this.size}px`,
       width: `${this.size}px`,
     };

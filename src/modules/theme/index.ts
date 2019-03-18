@@ -1,9 +1,28 @@
+import Vue from 'vue';
+import { Theme, Classes } from '@/modules/theme/types';
 import tinycolor from 'tinycolor2';
+import { defaults } from './defaults';
+import Component from 'vue-class-component';
+
+export interface ThemeAugmentation {
+  $theme: Theme;
+}
+
+@Component
+class Bus extends Vue implements Theme {
+  public foreground = '';
+  public primary = '';
+  public secondary = '';
+  public accent = '';
+  public error = '';
+  public info = '';
+  public success = '';
+  public warning = '';
+}
+
+const bus = new Bus();
 
 const PERCENTAGES = [2, 4, 8, 12, 20, 32];
-
-interface Classes {[k: string]: string; }
-type Theme = Classes;
 
 const add = (classes: Classes, name: string, color: string, suffix = '') => {
   classes[`${name}${suffix}`] = `background-color: #${color}!important;`;
@@ -14,9 +33,9 @@ const add = (classes: Classes, name: string, color: string, suffix = '') => {
 
 function createClasses(theme: Theme) {
   const classes: Classes = {};
-  Object.entries(theme).map(([name, color]) => {
+  Object.entries(theme).forEach(([name, color]) => {
     add(classes, name, color);
-    return PERCENTAGES.map((percentage, n) => {
+    return PERCENTAGES.forEach((percentage, n) => {
       add(classes, name, tinycolor(color).darken(percentage).toHex(), `-darken-${n}`);
       add(classes, name, tinycolor(color).lighten(percentage).toHex(), `-lighten-${n}`);
     });
@@ -36,36 +55,55 @@ function classesToString(classes: Classes) {
   return css.join('\n');
 }
 
-const THEME: Theme = {
-  primary: '1976D2',
-  secondary: '21242B',
-  accent: '82B1FF',
-  error: 'd13b2e',
-  info: '007bff',
-  success: '2ba143',
-  warning: 'ad7c0b',
-};
+let style: Node | null = null;
+const v: any = null;
 
-interface Options {
-  theme?: Partial<Theme>;
+export function insertTheme(theme: Theme) {
+  if (style) {
+    document.body.removeChild(style);
+    style = null;
+  }
+
+  const hex: { [k: string]: string } = {};
+  Object.keys(theme).forEach((key) => {
+    hex[key] = `#${theme[key as keyof Theme]}`;
+  });
+
+  const variables = Object.entries(theme).map(([name, color]) => {
+    return `--${name}: #${color};`;
+  });
+
+  const node = document.createElement('style');
+  const classes = createClasses(theme);
+  let css = classesToString(classes);
+  css += '\n';
+  css += `
+body {
+  ${variables.join('  \n')}
+}
+  `;
+
+  node.innerHTML = css;
+  style = document.body.appendChild(node);
+
+  bus.foreground = hex.foreground;
+  bus.primary = hex.primary;
+  bus.secondary = hex.secondary;
+  bus.accent = hex.accent;
+  bus.error = hex.error;
+  bus.info = hex.info;
+  bus.success = hex.success;
+  bus.warning = hex.warning;
 }
 
 
 const Theme = {
-  install(Vue: any, options?: Options) {
-    const theme: Theme = JSON.parse(JSON.stringify(THEME));
-    if (options && options.theme) {
-      Object.entries(options.theme).forEach(([name, color]) => {
-        if  (!color) { return; }
-        theme[name] = color;
-      });
-    }
-
-    const node = document.createElement('style');
-    const classes = createClasses(THEME);
-    node.innerHTML = classesToString(classes);
-    document.body.appendChild(node);
+  install(vue: any) {
+    vue.prototype.$theme = bus;
+    insertTheme(defaults.Default);
   },
+  insertTheme,
+  defaults,
 };
 
 export default Theme;

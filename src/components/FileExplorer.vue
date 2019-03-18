@@ -10,7 +10,7 @@
     ></tree>
   </div>
   <div v-else class="button-wrapper">
-      <p class="white--text text">You do not have any opened folders.</p>
+      <p class="foreground--text text">You do not have any opened folders.</p>
       <v-btn 
         @click="openExplorer" 
         small 

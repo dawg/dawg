@@ -10,7 +10,7 @@
       height="45px"
       width="45px"
     >
-    <!-- <h1 class="white--text">Vusic</h1> -->
+    <!-- <h1 class="foreground--text">Vusic</h1> -->
     <div style="border-left: 1px solid #fff; height: 60%; margin: 20px"></div>
     
 
@@ -24,7 +24,7 @@
     ></v-spacer>
 
     <v-btn icon style="margin: 0" @click="toggle">
-      <icon :name="icon" class="white--text"></icon>
+      <icon :name="icon" class="foreground--text"></icon>
     </v-btn>
     <v-btn icon style="margin: 0"><ico fa>stop</ico></v-btn>
     <vertical-switch :top.sync="sliderTop"></vertical-switch>

@@ -91,7 +91,14 @@
     <palette 
       v-model="palette"
       palette-class="secondary"
-      :items="shortcuts"
+      :items="paletteCommands"
+    ></palette>
+    <palette 
+      v-model="themePalette"
+      palette-class="secondary"
+      :items="themeCommands"
+      automatic
+      @cancel="restoreTheme"
     ></palette>
     <project-modal 
       v-model="backupModal" 
@@ -123,13 +130,15 @@ import ActivityBar from '@/sections/ActivityBar.vue';
 import StatusBar from '@/sections/StatusBar.vue';
 import Tone from 'tone';
 import { SideTab, FILTERS, ApplicationContext } from '@/constants';
-import { PaletteItem, bus } from '@/modules/palette';
+import { PaletteItem } from '@/modules/palette';
 import { Watch } from '@/modules/update';
 import backend, { ProjectInfo } from '@/backend';
 import * as io from '@/modules/cerialize';
 import tmp from 'tmp';
 import { remote } from 'electron';
 import { Menu } from '@/modules/menubar';
+import theme from '@/modules/theme';
+import { Theme } from '@/modules/theme/types';
 
 @Component({
   components: {
@@ -213,10 +222,7 @@ export default class App extends Vue {
     palette: {
       text: 'Command Palette',
       shortcut: ['Ctrl', 'Shift', 'P'],
-      callback: () => {
-        bus.$emit('open');
-        this.palette = true;
-      },
+      callback: this.openPalette,
     },
     switchContext: {
       text: 'Switch Context',
@@ -287,7 +293,19 @@ export default class App extends Vue {
     },
   ];
 
-  public shortcuts: PaletteItem[] = [
+  get themeCommands(): PaletteItem[] {
+    return Object.entries(theme.defaults).map(([name, theDefault]) => {
+      return {
+        text: name,
+        callback: () => {
+          workspace.setTheme(name);
+          theme.insertTheme(theDefault);
+        },
+      };
+    });
+  }
+
+  public paletteCommands: PaletteItem[] = [
     {
       text: 'Open Piano Roll',
       shortcut: ['Ctrl', 'P'],
@@ -306,12 +324,16 @@ export default class App extends Vue {
     {
       text: 'New Synthesizer',
       shortcut: ['Ctrl', 'N'],
-      callback: project.addInstrument, // TODO missing when clause
+      callback: project.addInstrument,
     },
     {
       text: 'Play/Pause',
       shortcut: ['Space'],
       callback: this.playPause,
+    },
+    {
+      text: 'Change Theme',
+      callback: this.openThemePalette,
     },
     ...Object.values(this.menuItems),
   ];
@@ -325,6 +347,8 @@ export default class App extends Vue {
 
   public backupModal = false;
   public palette = false;
+  public themePalette = false;
+  public themeMomento: string | null = null;
 
   public maximized = false;
 
@@ -371,6 +395,9 @@ export default class App extends Vue {
       this.$log.debug('Starting to read data.');
       await cache.fromCacheFolder();
       await this.withErrorHandling(project.load);
+
+      this.loadTheme(workspace.themeName);
+
       this.$log.debug('Finished reading data from the fs.');
       this.loaded = true;
     }, 1250);
@@ -386,6 +413,25 @@ export default class App extends Vue {
     w.removeListener('unmaximize', this.unmaximize);
   }
 
+  public openPalette() {
+    this.palette = true;
+  }
+
+  public openThemePalette() {
+    this.themeMomento = workspace.themeName;
+    this.themePalette = true;
+  }
+
+  public loadTheme(themeName: string | null) {
+    const isThemeKey = (key: string | null): key is keyof typeof theme.defaults => {
+      return !!key && theme.defaults.hasOwnProperty(key);
+    };
+
+    if (isThemeKey(themeName)) {
+      theme.insertTheme(theme.defaults[themeName]);
+    }
+  }
+
   public async onExit() {
     await workspace.write();
   }
@@ -396,6 +442,10 @@ export default class App extends Vue {
     if (!general.projects.length) {
       general.loadProjects();
     }
+  }
+
+  public restoreTheme() {
+    this.loadTheme(this.themeMomento);
   }
 
   public async withErrorHandling(callback: () => Promise<void>) {

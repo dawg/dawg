@@ -1,5 +1,5 @@
 <template>
-  <div class="primary footer position white--text" :style="style">
+  <div class="primary footer position foreground--text" :style="style">
     <v-tooltip top>
       <div slot="activator" class="name item">{{ projectName }}</div>
       <div>Project Name</div>

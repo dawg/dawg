@@ -119,7 +119,7 @@ export class MenuBar extends Vue {
         height: this.height,
         alignItems: 'stretch',
       },
-      class: 'secondary-lighten-3 white--text',
+      class: 'secondary-lighten-3 foreground--text',
     }, submenus);
   }
 }

@@ -32,6 +32,7 @@ export class Specific extends VuexModule {
   @io.auto({ optional: true }) public playlistBeatWidth = 80;
   @io.auto({ optional: true }) public sideBarSize = 250;
   @io.auto({ optional: true }) public panelsSize = 250;
+  @io.auto({ optional: true }) public themeName: string | null = null;
 
   public projectId: string | null = null;
 
@@ -93,6 +94,9 @@ export class Specific extends VuexModule {
   @Action
   public async read() {
     await fs.writeFileIfNonExistent(PROJECT_CACHE_PATH, '{}');
+
+    // tslint:disable-next-line:no-console
+    console.log('Reading from ' + PROJECT_CACHE_PATH);
     const contents = (await fs.readFile(PROJECT_CACHE_PATH)).toString();
 
     try {
@@ -184,6 +188,11 @@ export class Specific extends VuexModule {
   @Mutation
   public setContext(context: ApplicationContext) {
     this.applicationContext = context;
+  }
+
+  @Action
+  public setTheme(name: string) {
+    this.set({ key: 'themeName', value: name });
   }
 
   @Mutation

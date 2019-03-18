@@ -10,13 +10,20 @@
         :key="item.name"
         @click="clickActivityBar(item)"
       >
-        <tooltip-icon medium color="white" :tooltip="item.name" right>{{ item.icon }}</tooltip-icon>
+        <tooltip-icon 
+          medium 
+          :color="$theme.foreground" 
+          :tooltip="item.name" 
+          right
+        >
+          {{ item.icon }}
+        </tooltip-icon>
       </v-list-tile>
       <div style="flex-grow: 1"></div>
       <v-list-tile>
         <v-icon 
           medium
-          color="white"
+          :color="$theme.foreground"
           @click="openSettings"
         >
           settings

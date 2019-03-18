@@ -1,9 +1,8 @@
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import { CreateElement } from 'vue';
-import { Bus, Watch } from '@/modules/update';
+import { Watch } from '@/modules/update';
 import { reverse } from '@/utils';
 
-export const bus = new Bus<{ open: [] }>();
 export type Key =
   'Shift' |
   'Ctrl' |
@@ -123,7 +122,6 @@ class Result extends Vue {
       cursor: this.hover ? 'pointer' : undefined,
       display: 'flex',
       padding: '3px 6px',
-      color: '#ddd',
     };
   }
 
@@ -144,6 +142,7 @@ class Result extends Vue {
         },
       },
       style: this.style,
+      class: 'foreground--text',
     }, [text, spacer, shortcut]);
   }
 }
@@ -195,6 +194,11 @@ class Palette extends Vue {
   @Prop({ type: String, required: false }) public paletteClass?: string;
   @Prop({ type: Array, required: true }) public items!: PaletteItem[];
 
+  /**
+   * Whether to call the callback when selected using the arrow keys.
+   */
+  @Prop({ type: Boolean, default: true }) public automatic!: boolean;
+
   public searchText = '';
   public selected = 0;
 
@@ -232,27 +236,6 @@ class Palette extends Vue {
   public keydown(e: KeyboardEvent) {
     this.pressedKeys.add(e.which);
 
-    if (e.which === 27) { // ESC
-      e.preventDefault();
-      this.$emit('input', false);
-    }
-
-    if (e.which === 38) { // UP
-      this.selected = Math.max(this.selected - 1, 0);
-    } else if (e.which === 40) { // DOWN
-      this.selected = Math.min(this.selected + 1, this.filtered.length - 1);
-    }
-
-    if (e.which === 13) { // ENTER
-      const item = this.filtered[this.selected];
-      if (!item) {
-        return;
-      }
-
-      item.callback();
-      this.$emit('input', false);
-    }
-
     let i = stack.length - 1;
     for (const item of reverse(stack)) {
       if (shortcutPressed(item.shortcut, this.pressedKeys)) {
@@ -278,14 +261,44 @@ class Palette extends Vue {
     this.pressedKeys.delete(e.which);
   }
 
+  public checkEnterEsc(e: KeyboardEvent) {
+    if (e.which === 27) { // ESC
+      e.preventDefault();
+      this.$emit('cancel');
+      this.$emit('input', false);
+    }
+
+    let newIndex: null | number = null;
+
+    if (e.which === 38) { // UP
+      newIndex = this.selected - 1;
+    } else if (e.which === 40) { // DOWN
+      newIndex = this.selected + 1;
+    }
+
+    if (newIndex !== null) {
+      if (newIndex >= 0 && newIndex < this.filtered.length) {
+        this.selected = newIndex;
+      }
+    }
+
+    if (e.which === 13) { // ENTER
+      const item = this.filtered[this.selected];
+      if (!item) {
+        return;
+      }
+
+      item.callback();
+      this.$emit('input', false);
+    }
+  }
+
   public mounted() {
-    bus.$on('open', this.open);
     window.addEventListener('keydown', this.keydown);
     window.addEventListener('keyup', this.keyup);
   }
 
   public destroyed() {
-    bus.$off('open', this.open);
     window.removeEventListener('keydown', this.keydown);
     window.removeEventListener('keyup', this.keyup);
   }
@@ -295,10 +308,25 @@ class Palette extends Vue {
     this.selected = 0;
   }
 
-  @Watch<Palette>('value')
+  @Watch<Palette>('value', { immediate: true })
   public resetSearch() {
     if (this.value) {
+      window.addEventListener('keydown', this.checkEnterEsc);
       this.searchText = '';
+    } else {
+      window.removeEventListener('keydown', this.checkEnterEsc);
+    }
+  }
+
+  @Watch<Palette>('selected', { immediate: true })
+  public doAutomatic() {
+    if (!this.automatic) {
+      return;
+    }
+
+    const item = this.filtered[this.selected];
+    if (item) {
+      item.callback();
     }
   }
 
@@ -349,13 +377,14 @@ class Palette extends Vue {
         bottom: '0',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         zIndex: '2000',
-        color: '#ddd',
       },
       on: {
         click: () => {
+          this.$emit('cancel');
           this.$emit('input', false);
         },
       },
+      class: 'foreground--text',
     }, children);
   }
 }

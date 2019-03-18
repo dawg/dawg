@@ -1,7 +1,7 @@
 <template>
   <div class="aside secondary" style="display: flex; flex-direction: column">
     <div
-      class="section-header white--text"
+      class="section-header foreground--text"
       :style="`min-height: ${general.toolbarHeight + 1}px; display: flex; align-items: center`"
     >
       <div class="aside--title">{{ header }}</div>
