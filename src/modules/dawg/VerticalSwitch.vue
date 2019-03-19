@@ -28,7 +28,7 @@ export default class VerticalSwitch extends Vue {
     if (this.top) {
       return 'primary';
     } else {
-      return 'primary-lighten-4';
+      return 'primary-lighten-6';
     }
   }
 
@@ -36,7 +36,7 @@ export default class VerticalSwitch extends Vue {
     if (this.bottom) {
       return 'primary';
     } else {
-      return 'primary-lighten-4';
+      return 'primary-lighten-6';
     }
   }
 

@@ -393,6 +393,10 @@ export class KeyboardShortcuts extends Vue {
   public keyup(e: KeyboardEvent) {
     this.pressedKeys.delete(e.which);
   }
+
+  public render() {
+    return null;
+  }
 }
 
 // TODO(jacob) use stack to store keyboard shortcut information??

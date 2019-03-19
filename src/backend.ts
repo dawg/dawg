@@ -1,4 +1,4 @@
-import firebase from 'firebase/app';
+import firebase, { User } from 'firebase/app';
 
 export interface ProjectInfo {
   id: string;
@@ -44,12 +44,12 @@ export interface Schema {
 
 let db: null | firebase.database.Database = null;
 
-const getRef = () => {
+const getRef = (user: User) => {
   if (!db) {
     db = firebase.database();
   }
 
-  return db.ref('projects');
+  return db.ref(`projects`).child(user.uid);
 };
 
 const withHandling = async <T>(
@@ -65,9 +65,9 @@ const withHandling = async <T>(
   }
 };
 
-const getProjects = async () => {
+const getProjects = async (user: User) => {
   return withHandling(async (): Promise<Projects> => {
-    const snapshot = await getRef().orderByChild('lastUploadTime').once('value');
+    const snapshot = await getRef(user).orderByChild('lastUploadTime').once('value');
 
     if (!snapshot.exists()) {
       return {
@@ -88,9 +88,9 @@ const getProjects = async () => {
   });
 };
 
-const getProject = async (id: string) => {
+const getProject = async (user: User, id: string) => {
   return withHandling(async (): Promise<NotFound | ProjectFound> => {
-    const snapshot = await getRef().child(id).once('value');
+    const snapshot = await getRef(user).child(id).once('value');
 
     if (!snapshot.exists()) {
       return {
@@ -105,9 +105,9 @@ const getProject = async (id: string) => {
   });
 };
 
-const deleteProject = async (id: string) => {
+const deleteProject = async (user: User, id: string) => {
   return await withHandling(async (): Promise<Success | NotFound> => {
-    const ref = getRef().child(id);
+    const ref = getRef(user).child(id);
     const snapshot = await ref.once('value');
 
     if (!snapshot.exists()) {
@@ -123,15 +123,15 @@ const deleteProject = async (id: string) => {
   });
 };
 
-const updateProject = async (id: string, project: SerializedProject) => {
+const updateProject = async (user: User, id: string, project: SerializedProject) => {
   return await withHandling(async (): Promise<Success> => {
-    const ref = getRef().child(id);
+    const ref = getRef(user).child(id);
     const snapshot = await ref.once('value');
 
     const time = Date.now();
 
     if (!snapshot.exists()) {
-      getRef().set({
+      getRef(user).set({
         [id]: {
           name: project.name,
           id,

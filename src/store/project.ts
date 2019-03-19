@@ -32,6 +32,7 @@ import { loadBuffer } from '@/modules/wav/local';
 import { makeLookup, chain } from '@/modules/utils';
 import { Signal } from '@/modules/audio';
 import backend from '@/backend';
+import { User } from 'firebase';
 
 const { dialog } = remote;
 
@@ -58,7 +59,7 @@ export class Project extends VuexModule {
   }
 
   @Action
-  public async save(opts: { backup: boolean, forceDialog?: boolean }) {
+  public async save(opts: { backup: boolean, user: User | null, forceDialog?: boolean }) {
     if (!cache.openedFile || opts.forceDialog) {
       const openedFile = dialog.showSaveDialog(remote.getCurrentWindow(), {});
 
@@ -85,8 +86,9 @@ export class Project extends VuexModule {
       JSON.stringify(encoded, null, 4),
     );
 
-    if (opts.backup) {
-      return await backend.updateProject(this.id, encoded);
+    // I don't think this is the best place to put this.
+    if (opts.backup && opts.user) {
+      return await backend.updateProject(opts.user, this.id, encoded);
     }
   }
 

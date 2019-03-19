@@ -5,6 +5,7 @@ import BaseTabs from '@/components/BaseTabs.vue';
 import store from '@/store/store';
 import { VuexModule } from '@/store/utils';
 import backend, { ProjectInfo } from '@/backend';
+import { User } from 'firebase';
 
 /**
  * This module is used to move data throughout the sections. It is not serialized in any way.
@@ -19,10 +20,20 @@ export class General extends VuexModule {
   public backupError = false;
   public projects: ProjectInfo[] = [];
   public getProjectsErrorMessage: string | null = null;
+  public user: User | null = null;
+
+  get authenticated() {
+    return !!this.user;
+  }
 
   @Action
-  public async loadProjects() {
-    const res =  await backend.getProjects();
+  public setUser(user: User | null) {
+    this.set({ key: 'user', value: user });
+  }
+
+  @Action
+  public async loadProjects(user: User) {
+    const res =  await backend.getProjects(user);
 
     if (res.type === 'success') {
       this.setProjects(res.projects);

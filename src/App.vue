@@ -144,6 +144,8 @@ import { remote } from 'electron';
 import { Menu } from '@/modules/menubar';
 import theme from '@/modules/theme';
 import { Theme } from '@/modules/theme/types';
+import auth from '@/auth';
+import { User } from 'firebase';
 
 @Component({
   components: {
@@ -391,6 +393,13 @@ export default class App extends Vue {
 
     automation.$on('automate', this.addAutomationClip);
 
+    auth.watchUser({
+      authenticated: general.setUser,
+      unauthenticated: () => {
+        general.setUser(null);
+      },
+    });
+
     // Log this for debugging purposes
     // tslint:disable-next-line:no-console
     console.info(project);
@@ -446,11 +455,10 @@ export default class App extends Vue {
   }
 
   public openBackup() {
-    this.backupModal = true;
-
-    if (!general.projects.length) {
-      general.loadProjects();
-    }
+    this.handleUnauthenticated(async (user) => {
+      this.backupModal = true;
+      general.loadProjects(user);
+    });
   }
 
   public restoreTheme() {
@@ -490,7 +498,11 @@ export default class App extends Vue {
       general.set({ key: 'syncing', value: true });
     }
 
-    const backupStatus = await project.save({ backup: workspace.backup, forceDialog });
+    const backupStatus = await project.save({
+      backup: workspace.backup,
+      user: general.user,
+      forceDialog,
+    });
 
     // Always set the value back to false... you never know
     general.set({ key: 'syncing', value: false });
@@ -573,44 +585,58 @@ export default class App extends Vue {
   }
 
   public async openProject(info: ProjectInfo) {
-    const res = await backend.getProject(info.id);
-    if (res.type === 'not-found') {
-      this.$notify.warning('Uh, we were unable to find project');
-      return;
-    }
+    this.handleUnauthenticated(async (user) => {
+      const res = await backend.getProject(user, info.id);
+      if (res.type === 'not-found') {
+        this.$notify.warning('Uh, we were unable to find project');
+        return;
+      }
 
-    if (res.type === 'error') {
-      this.$notify.error('Unable to get project', { detail: res.message });
-      return;
-    }
+      if (res.type === 'error') {
+        this.$notify.error('Unable to get project', { detail: res.message });
+        return;
+      }
 
 
-    const { name } = tmp.fileSync({ keep: true });
-    fs.writeFileSync(name, JSON.stringify(res.project, null, 4));
+      const { name } = tmp.fileSync({ keep: true });
+      fs.writeFileSync(name, JSON.stringify(res.project, null, 4));
 
-    if (!fs.existsSync(name)) {
-      throw Error(name);
-    }
+      if (!fs.existsSync(name)) {
+        throw Error(name);
+      }
 
-    this.$log.info(`Writing ${name} as backup`);
-    cache.setBackupTempPath(name);
+      this.$log.info(`Writing ${name} as backup`);
+      cache.setBackupTempPath(name);
 
-    const window = remote.getCurrentWindow();
-    window.reload();
+      const window = remote.getCurrentWindow();
+      window.reload();
+    });
   }
 
-  public async deleteProject(info: ProjectInfo) {
-    const res = await backend.deleteProject(info.id);
-
-    if (res.type === 'success') {
-      // We are not taking advantage of firebase here
-      // Ideally firebase would send an event and we would update our project list
-      // Until we do that, this will suffice
-      const taget = general.projects.indexOf(info);
-      general.setProjects(
-        general.projects.filter((maybe) => maybe !== info),
-      );
+  public handleUnauthenticated(authenticated: (user: User) => void) {
+    if (general.user === null) {
+      // TODO dulication
+      this.$notify.info('Please login first', { detail: 'Use the settings icon in the Activity Bar.' });
+      return;
     }
+
+    authenticated(general.user);
+  }
+
+  public deleteProject(info: ProjectInfo) {
+    this.handleUnauthenticated(async (user) => {
+      const res = await backend.deleteProject(user, info.id);
+
+      if (res.type === 'success') {
+        // We are not taking advantage of firebase here
+        // Ideally firebase would send an event and we would update our project list
+        // Until we do that, this will suffice
+        const taget = general.projects.indexOf(info);
+        general.setProjects(
+          general.projects.filter((maybe) => maybe !== info),
+        );
+      }
+    });
   }
 
   public closeApplication() {
