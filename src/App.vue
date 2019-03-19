@@ -183,7 +183,7 @@ export default class App extends Vue {
     },
     addFolder: {
       text: 'Add Folder to Workspace',
-      callback: cache.openFolder,
+      callback: this.openFolder,
     },
     closeApplication: {
       text: 'Close Application',
@@ -431,6 +431,14 @@ export default class App extends Vue {
     this.palette = true;
   }
 
+  public openFolder() {
+    // TODO
+    // the showFileDialog messes with the keyup events
+    // This is a temporary solution
+    cache.openFolder();
+    this.$shortcuts.clear();
+  }
+
   public openThemePalette() {
     this.themeMomento = workspace.themeName;
     this.themePalette = true;
@@ -481,6 +489,11 @@ export default class App extends Vue {
       remote.getCurrentWindow(),
       { filters: FILTERS, properties: ['openFile'] },
     );
+
+    // TODO
+    // the showFileDialog messes with the keyup events
+    // This is a temporary solution
+    this.$shortcuts.clear();
 
     if (!files) {
       return;

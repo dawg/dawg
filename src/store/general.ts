@@ -22,6 +22,11 @@ export class General extends VuexModule {
   public getProjectsErrorMessage: string | null = null;
   public user: User | null = null;
 
+  /**
+   * The actual file that is currently opened. This is not the same as the opened file in the cache.
+   */
+  public openedFile: string | null = null;
+
   get authenticated() {
     return !!this.user;
   }
@@ -72,6 +77,11 @@ export class General extends VuexModule {
   @Mutation
   public pause() {
     this.play = false;
+  }
+
+  @Mutation
+  public setOpenedFile(file: string) {
+    this.openedFile = file;
   }
 }
 

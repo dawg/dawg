@@ -27,6 +27,7 @@ import {
 import { findUniqueName, range } from '@/utils';
 import store from '@/store/store';
 import cache from '@/store/cache';
+import general from '@/store/general';
 import uuid from 'uuid';
 import { loadBuffer } from '@/modules/wav/local';
 import { makeLookup, chain } from '@/modules/utils';
@@ -60,9 +61,11 @@ export class Project extends VuexModule {
 
   @Action
   public async save(opts: { backup: boolean, user: User | null, forceDialog?: boolean }) {
-    if (!cache.openedFile || opts.forceDialog) {
-      const openedFile = dialog.showSaveDialog(remote.getCurrentWindow(), {});
+    let openedFile = general.openedFile;
+    if (!openedFile || opts.forceDialog) {
+      openedFile = dialog.showSaveDialog(remote.getCurrentWindow(), {}) || null;
 
+      // If the user cancels the dialog
       if (!openedFile) {
         return;
       }
@@ -82,7 +85,7 @@ export class Project extends VuexModule {
     const encoded = io.serialize(this, Project);
 
     fs.writeFileSync(
-      cache.openedFile,
+      openedFile,
       JSON.stringify(encoded, null, 4),
     );
 
@@ -115,6 +118,9 @@ export class Project extends VuexModule {
         // Always reset to null
         fs.unlink(path);
         cache.setBackupTempPath(null);
+      } else {
+        // This means that we are opening the cache file
+        general.setOpenedFile(path);
       }
 
       contents = JSON.parse(contents);

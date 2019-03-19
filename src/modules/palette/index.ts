@@ -1,7 +1,9 @@
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import { CreateElement } from 'vue';
-import { Watch } from '@/modules/update';
+import { Watch, Bus } from '@/modules/update';
 import { reverse } from '@/utils';
+
+const bus = new Bus<{ clear: [] }>();
 
 export type Key =
   'Shift' |
@@ -198,7 +200,7 @@ class Palette extends Vue {
   /**
    * Whether to call the callback when selected using the arrow keys.
    */
-  @Prop({ type: Boolean, default: true }) public automatic!: boolean;
+  @Prop({ type: Boolean, default: false }) public automatic!: boolean;
 
   public searchText = '';
   public selected = 0;
@@ -357,17 +359,27 @@ export class KeyboardShortcuts extends Vue {
   public pressedKeys = new Set<number>();
 
   public mounted() {
+    bus.$on('clear', this.clear);
     window.addEventListener('keydown', this.keydown);
     window.addEventListener('keyup', this.keyup);
   }
 
   public destroyed() {
+    bus.$off('clear', this.clear);
     window.removeEventListener('keydown', this.keydown);
     window.removeEventListener('keyup', this.keyup);
   }
 
+  public clear() {
+    this.pressedKeys.clear();
+  }
+
   public keydown(e: KeyboardEvent) {
-    this.pressedKeys.add(e.which);
+    // We do not add the enter key since it will never be used in a shortcut and causes bugs
+    // For example, if we open the file dialog, keyup is never fired for enter.
+    if (e.which !== 13) { // ENTER
+      this.pressedKeys.add(e.which);
+    }
 
     let i = stack.length - 1;
     for (const item of reverse(stack)) {
@@ -408,11 +420,19 @@ export default {
     Vue.prototype.$press = (shortcut: Key[], callback: () => void) => {
       stack.push({ shortcut, callback });
     };
+    Vue.prototype.$shortcuts = {
+      clear() {
+        bus.$emit('clear');
+      },
+    };
   },
 };
 
 
 export interface PaletteAugmentation {
+  $shortcuts: {
+    clear(): void;
+  };
   // TODO Rename this
   // Furthermore, this will cause issues when the callbacks are called another way
   // THere must be some way to invalidate a callback

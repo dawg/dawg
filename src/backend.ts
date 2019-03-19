@@ -142,6 +142,7 @@ const updateProject = async (user: User, id: string, project: SerializedProject)
       });
     } else {
       ref.update({
+        name: project.name,
         project,
         lastUploadTime: time,
       } as Partial<Project>);
