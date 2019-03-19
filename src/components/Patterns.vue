@@ -55,7 +55,7 @@ export default class Patterns extends Vue {
   public border(pattern: Pattern) {
     if (pattern === this.value) {
       return {
-        border: `1px solid ${this.$theme.foreground}`,
+        border: `1px solid ${this.$theme.foreground + '30'}`,
       };
     }
   }

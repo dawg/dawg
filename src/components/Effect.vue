@@ -5,6 +5,7 @@
       <knob
         class="option"
         v-for="key in keys"
+        :name="key"
         :key="key"
         :label="key | titleCase"
         stroke-class="secondary-lighten-2--stroke"

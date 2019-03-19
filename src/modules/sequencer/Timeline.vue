@@ -2,6 +2,7 @@
   <div 
     class="timeline secondary" 
     @dblclick="remove"
+    :style="timelineStyle"
     @click="seek"
     @mousedown="mousedown"
   >
@@ -75,6 +76,12 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   public selectedEnd = false;
   public rendered = false;
   public justDragged = false;
+
+  get timelineStyle() {
+    return {
+      color: `${this.$theme.foreground}90`,
+    };
+  }
 
   get pxPerStep() {
     return this.pxPerBeat / this.stepsPerBeat;
@@ -255,7 +262,6 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 	position: relative;
 	overflow: hidden;
 	font: 14px monospace;
-	color: var(--foreground);
 	cursor: default;
   border-bottom: 1px solid var(--background);
 }
