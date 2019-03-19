@@ -575,17 +575,17 @@ export class AutomationClip {
 export type EffectName = keyof EffectOptions;
 
 export const EffectMap = {
-  wah: Tone.AutoWah,
-  reverb: Tone.Freeverb,
-  phaser: Tone.Phaser,
-  bitCrusher: Tone.BitCrusher,
-  pingPongDelay: Tone.PingPongDelay,
-  compressor: Tone.Compressor,
-  EQ3: Tone.EQ3,
-  limiter: Tone.Phaser,
-  chorus: Tone.Chorus,
-  tremolo: Tone.Tremolo,
-  distortion: Tone.Distortion,
+  'Wah': Tone.AutoWah,
+  'Reverb': Tone.Freeverb,
+  'Phaser': Tone.Phaser,
+  'Bit Crusher': Tone.BitCrusher,
+  'Ping Pong Delay': Tone.PingPongDelay,
+  'Compressor': Tone.Compressor,
+  'EQ3': Tone.EQ3,
+  'Limiter': Tone.Phaser,
+  'Chorus': Tone.Chorus,
+  'Tremolo': Tone.Tremolo,
+  'Distortion': Tone.Distortion,
 };
 
 export interface Constraints {
@@ -656,37 +656,37 @@ interface DistortionOptions {
 }
 
 export interface EffectTones {
-  wah: Tone.AutoWah;
-  reverb: Tone.Freeverb;
-  phaser: Tone.Phaser;
-  bitCrusher: Tone.BitCrusher;
-  pingPongDelay: Tone.PingPongDelay;
-  compressor: Tone.Compressor;
+  Wah: Tone.AutoWah;
+  Reverb: Tone.Freeverb;
+  Phaser: Tone.Phaser;
+  'Bit Crusher': Tone.BitCrusher;
+  'Ping Pong Delay': Tone.PingPongDelay;
+  Compressor: Tone.Compressor;
   EQ3: Tone.EQ3;
-  limiter: Tone.Limiter;
-  chorus: Tone.Chorus;
-  tremolo: Tone.Tremolo;
-  distortion: Tone.Distortion;
+  Limiter: Tone.Limiter;
+  Chorus: Tone.Chorus;
+  Tremolo: Tone.Tremolo;
+  Distortion: Tone.Distortion;
 }
 
 export interface EffectOptions {
-  wah: WahOptions;
-  reverb: ReverbOptions;
-  phaser: PhaserOptions;
-  bitCrusher: BitCrusherOptions;
-  pingPongDelay: PingPongDelayOptions;
-  compressor: CompressorOptions;
+  Wah: WahOptions;
+  Reverb: ReverbOptions;
+  Phaser: PhaserOptions;
+  'Bit Crusher': BitCrusherOptions;
+  'Ping Pong Delay': PingPongDelayOptions;
+  Compressor: CompressorOptions;
   EQ3: EQ3Options;
-  limiter: LimiterOptions;
-  chorus: ChorusOptions;
-  tremolo: TremoloOptions;
-  distortion: DistortionOptions;
+  Limiter: LimiterOptions;
+  Chorus: ChorusOptions;
+  Tremolo: TremoloOptions;
+  Distortion: DistortionOptions;
 }
 
 export type EffectConstrainsType = { [K in keyof EffectOptions]: { [E in keyof EffectOptions[K]]: Constraints } };
 
 export const EffectConstrains: EffectConstrainsType = {
-  wah: {
+  'Wah': {
     baseFrequency: {
       min: 0,
       max: 1000,
@@ -700,7 +700,7 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 0,
     },
   },
-  reverb: {
+  'Reverb': {
     decay: {
       min: 0,
       max: 24,
@@ -710,7 +710,7 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 24,
     },
   },
-  phaser: {
+  'Phaser': {
     frequency: {
       min: 0,
       max: 10,
@@ -728,13 +728,13 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 1000,
     },
   },
-  bitCrusher: {
+  'Bit Crusher': {
     bits: {
       min: 0,
       max: 10,
     },
   },
-  pingPongDelay: {
+  'Ping Pong Delay': {
     delayTime: {
       min: 0,
       max: 10,
@@ -744,7 +744,7 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 0,
     },
   },
-  compressor: {
+  'Compressor': {
     ratio: {
       min: 0,
       max: 20,
@@ -766,7 +766,7 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 50,
     },
   },
-  EQ3: {
+  'EQ3': {
     low: {
       min: -10,
       max: 10,
@@ -788,13 +788,13 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 8000,
     },
   },
-  limiter: {
+  'Limiter': {
     threshold: {
       min: -10,
       max: 2,
     },
   },
-  chorus: {
+  'Chorus': {
     frequency: {
       min: 0,
       max: 0,
@@ -808,7 +808,7 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 0,
     },
   },
-  tremolo: {
+  'Tremolo': {
     frequency: {
       min: 0,
       max: 20,
@@ -818,7 +818,7 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 1,
     },
   },
-  distortion: {
+  'Distortion': {
     depth: {
       min: 0,
       max: 1,
@@ -827,55 +827,55 @@ export const EffectConstrains: EffectConstrainsType = {
 };
 
 const EffectDefaults: EffectOptions = {
-  wah: {
+  'Wah': {
     octaves: 3,
     baseFrequency: 350,
     sensitivity: 0,
   },
-  reverb: {
+  'Reverb': {
     decay: 1.5,
     preDelay: 0.01,
   },
-  phaser: {
+  'Phaser': {
     frequency: 0.5,
     octaves: 3,
     Q: 10,
     baseFrequency: 350,
   },
-  bitCrusher: {
+  'Bit Crusher': {
     bits: 4,
   },
-  pingPongDelay: {
+  'Ping Pong Delay': {
     delayTime: 0.25,
     feedback: 1,
   },
-  compressor: {
+  'Compressor': {
     ratio: 1,
     threshold: -2,
     release: 0.2,
     attack: 0.00,
     knee: 30,
   },
-  EQ3: {
+  'EQ3': {
     low: 0,
     mid: 0,
     high: 0,
     lowFrequency: 400,
     highFrequency: 2500,
   },
-  limiter: {
+  'Limiter': {
     threshold: -12,
   },
-  chorus: {
+  'Chorus': {
     frequency: 1.5,
     delayTime: 3.5,
     depth: 0.7,
   },
-  tremolo: {
+  'Tremolo': {
     depth: 0.5,
     frequency: 10,
   },
-  distortion: {
+  'Distortion': {
     depth: 0.4,
   },
 };

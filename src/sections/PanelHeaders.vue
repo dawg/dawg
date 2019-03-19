@@ -14,6 +14,7 @@
       v-for="action in actions"
       :key="action.icon"
       :tooltip="action.tooltip"
+      :color="$theme.foreground"
       bottom
       @click.native="action.callback"
     >

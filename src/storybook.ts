@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Vuetify from 'vuetify';
 import 'vue-awesome/icons';
 import 'vuetify/dist/vuetify.css';
+import '@/styles/material.css';
 import Icon from 'vue-awesome/components/Icon.vue';
 import VueLogger from 'vuejs-logger';
 import Update from '@/modules/update';
