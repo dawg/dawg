@@ -1,4 +1,4 @@
-import firebase, { User } from 'firebase';
+import firebase, { User } from 'firebase/app';
 
 export const watchUser = (o: { authenticated: (user: User) => void, unauthenticated: () => void }) => {
   firebase.auth().onAuthStateChanged((user) => {

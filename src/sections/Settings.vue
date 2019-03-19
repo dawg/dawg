@@ -1,20 +1,12 @@
 <template>
   <v-card dark class="settings secondary">
-    <!-- <v-list class="secondary">
-      <v-list-tile avatar>
-        <v-list-tile-content>
-          <v-list-tile-title>Settings</v-list-tile-title>
-        </v-list-tile-content>
-      </v-list-tile>
-    </v-list> -->
-
-
     <v-list class="secondary" style="padding-top: 20px">
+
       <v-list-tile-sub-title 
         v-if="general.authenticated"
         style="font-size: 0.9em; padding: 5px 15px;"
       >
-        Signed in as {{ general.user.displayName }}
+        Signed in as {{ name }}
       </v-list-tile-sub-title>
       
       <v-list-tile>
@@ -75,6 +67,12 @@ export default class Settings extends Vue {
       return 'Sign Out';
     } else {
       return 'Sign in with Google';
+    }
+  }
+
+  get name() {
+    if (general.user) {
+      return general.user.displayName;
     }
   }
 

@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import firebase from 'firebase/app';
 import 'firebase/database';
+import 'firebase/auth';
 import App from '@/App.vue';
 import middleware from '@/middleware';
 import store from '@/store';
