@@ -1,7 +1,10 @@
 <template>
   <div style="display: contents">
-    <div @click="click" style="display: flex" v-bind:class="nodeClass" v-if="!isLeaf || isWav">
-      <ico fa class="icon" :scale="scale" :style="indent">{{ icon }}</ico>
+    <div @click="click" style="display: flex" :class="nodeClass" :style="textStyle" v-if="!isLeaf || isWav">
+      <wav-icon v-if="isLeaf"></wav-icon>
+      <ico v-else fa class="icon" :style="iconStyle">
+        caret-right
+      </ico>
       <drag
         class="white--text path"
         group="arranger"
@@ -15,7 +18,7 @@
         {{ fileName }}
       </drag>
     </div>
-    <ul v-if="showChildren && (!isLeaf || isWav)">
+    <div v-if="showChildren && (!isLeaf || isWav)">
       <tree
         ref="trees"
         v-for="(folder, i) in folders"
@@ -25,7 +28,7 @@
         :depth="depth + 1"
         :index="i"
       ></tree>
-    </ul>
+    </div>
   </div>
 </template>
 
@@ -59,7 +62,7 @@ export default class Tree extends Vue {
     }
   }
 
-  public async moveDown(event: KeyboardEvent) {
+  public moveDown(event: KeyboardEvent) {
     if (event.keyCode === Keys.DOWN && this.selectedNode) {
       event.stopImmediatePropagation();
       if (this.index + 1 < this.$parent.$refs.trees.length) {
@@ -72,7 +75,7 @@ export default class Tree extends Vue {
     }
   }
 
-  public async moveUp(event: KeyboardEvent) {
+  public moveUp(event: KeyboardEvent) {
       if (event.keyCode === Keys.UP && this.selectedNode) {
         if (this.index - 1 >= 0) {
           if (this.$parent.$refs.trees[this.index - 1].isWav) {
@@ -138,10 +141,20 @@ export default class Tree extends Vue {
     return this.isWav && !!this.prototype;
   }
 
-  get indent() {
+  get marginLeft() {
+    return `${this.depth * 10 + 4}px`;
+  }
+
+  get iconStyle() {
     return {
-      marginLeft: `${this.depth * 10}px`,
+      marginLeft: this.marginLeft,
       transform: `rotate(${this.showChildren ? 45 : 0}deg)`,
+    };
+  }
+
+  get textStyle() {
+    return {
+      paddingLeft: this.marginLeft,
     };
   }
 
@@ -162,7 +175,7 @@ export default class Tree extends Vue {
   }
 
   get icon() {
-    return this.isLeaf ? 'file' : 'caret-right';
+    return this.isLeaf ? 'music' : 'caret-right';
   }
 
   get scale() {
@@ -184,6 +197,9 @@ export default class Tree extends Vue {
   margin-left: 8px
   font-size: 0.85em
   user-select: none
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
 
 .node:hover
   background: rgba(255,255,255,0.12)

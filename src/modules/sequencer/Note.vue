@@ -53,6 +53,7 @@ export default class Note extends Vue {
 
 .text
   left: 3px
+  user-select: none
 
 .body
   width: 100%

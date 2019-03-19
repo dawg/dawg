@@ -2,7 +2,8 @@
 [![Build Status](https://travis-ci.org/dawg/vusic.svg?branch=master)](https://travis-ci.org/dawg/vusic)
 > A DAW for the 21st century!
 
-<img src="https://i.ibb.co/bvp4VDK/web-1920-3.png" alt="Vusic Mockup" height="400">
+![Vusic](https://i.ibb.co/qRRVRwh/image.png)
+
 
 ## Roadmap
 `Vusic` is currently being developed as part of `ENGG 4000` (`Senior Design Project`). This means development will continue until at least April 2019; however, the project itself was started before the course began and will hopefully continue after its completion. Several core ideas have and continue to influence the development of the application:
@@ -61,34 +62,9 @@ npm run serve:storybook
 ```
 
 ### Building
-All of the following commands assume you are running running a `Linux` subsystem. 
-
-#### Linux
+The following command will build `Vusic` for your current operating system. It is not very easy to build cross-platform. As such, we use `Travis CI` to build for Linux, MacOS, and Windows at the same time. See the `.travis.yml` file for more information.
 ```
-npm run electron:build
-```
-
-#### MacOS
-You can only build for MacOS on MacOS.
-
-#### Windows
-To build for windows, you must first install `Docker`. Once that has been complete, run the following docker command to start the `wine` container. Beware, you may run into sass issues.
-
-```
-docker run --rm -ti \
- --env-file <(env | grep -iE 'DEBUG|NODE_|ELECTRON_|YARN_|NPM_|CI|CIRCLE|TRAVIS_TAG|TRAVIS|TRAVIS_REPO_|TRAVIS_BUILD_|TRAVIS_BRANCH|TRAVIS_PULL_REQUEST_|APPVEYOR_|CSC_|GH_|GITHUB_|BT_|AWS_|STRIP|BUILD_') \
- --env ELECTRON_CACHE="/root/.cache/electron" \
- --env ELECTRON_BUILDER_CACHE="/root/.cache/electron-builder" \
- -v ${PWD}:/project \
- -v ${PWD}/node_modules:/project/node_modules \
- -v ~/.cache/electron:/root/.cache/electron \
- -v ~/.cache/electron-builder:/root/.cache/electron-builder \
- electronuserland/builder:wine
-```
-
-This will load you into a bash shell in the `/project` folder. Once you are there, run the following command to the the `.exe` file:
-```
-npm run electron:build -- --win
+npm run build
 ```
 
 #### Electron
@@ -118,6 +94,7 @@ There is also an `test:e2e` command; however, this test suite does not currently
 | [Jacob Smith](https://github.com/jsmith) | [Matt DeSilva](https://github.com/desilvamatt) |[Amir Eldesoky](https://github.com/aeldesoky) | [Alex ODonnell](https://github.com/alexodonn)
 |<sup>Software Engineering</sup>|<sup>Electrical Engineering</sup>|<sup>Electrical Engineering</sup>|<sup>Electrical Engineering</sup>
 
-# TODO
-- Naming elements in the playlist
-- Test specific write during exit
+# References
+[GridSound](https://gridsound.com) was a great reference during development. For example, components such as `Timeline.vue` and `BeatLines.vue` were based off similar component implementations from [gs-ui-components](https://github.com/gridsound/gs-ui-components).
+
+[VS Code](https://code.visualstudio.com/) was also used as a reference during development. We are big fans of the structure and navigation tools (Shortcuts, Command Palette, etc) and wanted to implement similar features within `Vusic`.
