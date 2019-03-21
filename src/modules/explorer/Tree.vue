@@ -1,6 +1,12 @@
 <template>
   <div style="display: contents">
-    <div @click="click" style="display: flex" :class="nodeClass" :style="textStyle" v-if="!isLeaf || isWav">
+    <div 
+      v-if="!isLeaf || isWav"
+      @click="click" 
+      style="display: flex" 
+      :class="nodeClass" 
+      :style="textStyle" 
+    >
       <wav-icon v-if="isLeaf"></wav-icon>
       <ico v-else fa class="icon" :style="iconStyle">
         caret-right
@@ -12,19 +18,19 @@
         v-if="!isLeaf || isWav"
         @mousedown.native="loadPrototype"
         @click.native="preview"
-        @dblclick.native="sendToSampleTab"
+        @dblclick.native="doubleClick"
         :draggable="draggable"
       >
         {{ fileName }}
       </drag>
     </div>
-    <div v-if="showChildren && (!isLeaf || isWav)">
+    <div v-if="showChildren">
       <tree
         ref="trees"
         v-for="(folder, i) in folders"
         :key="folder"
         :path="folder"
-        :children="children[folder]"
+        :tree="tree[folder]"
         :depth="depth + 1"
         :index="i"
       ></tree>
@@ -41,20 +47,85 @@ import { Component, Prop } from 'vue-property-decorator';
 import Key from '@/components/Key.vue';
 import { loadBuffer } from '@/modules/wav/local';
 import { PlacedSample, Sample } from '@/schemas';
+import { FileTree, EventBus } from '@/modules/explorer/types';
 
 @Component
 export default class Tree extends Vue {
-  @Prop({ type: Object, required: true }) public children!: object;
+  @Prop({ type: Object, required: true }) public tree!: FileTree | string;
   @Prop({ type: String, required: true }) public path!: string;
+
+  /**
+   * The event bus to communicate with the root.
+   */
+  @Prop({ type: Object, required: true }) public bus!: EventBus;
+
+  /**
+   * The depth. You don't need to set this.
+   */
   @Prop({ type: Number, default: 0 }) public depth!: number;
   @Prop({ type: Number, default: 0 }) public index!: number;
-  public sample: Sample | null = null;
 
+  public sample: Sample | null = null;
   public showChildren = false;
   public selectedNode = false;
   public $refs!: { trees: Tree[] };
   public $parent!: Tree;
   public prototype: null | PlacedSample = null;
+
+  get draggable() {
+    return this.isWav && !!this.prototype;
+  }
+
+  get marginLeft() {
+    return `${this.depth * 10 + 4}px`;
+  }
+
+  get iconStyle() {
+    return {
+      marginLeft: this.marginLeft,
+      transform: `rotate(${this.showChildren ? 45 : 0}deg)`,
+    };
+  }
+
+  get textStyle() {
+    return {
+      paddingLeft: this.marginLeft,
+    };
+  }
+
+  get isLeaf() {
+    return typeof this.tree === 'string';
+  }
+
+  get folders() {
+    if (this.isLeaf) {
+      // The folders attribute should never be used if this is a leaf.
+      // If it is, and empty list will be returned.
+      return [];
+    } else {
+      return Object.keys(this.tree);
+    }
+  }
+
+  get nodeClass() {
+    return this.selectedNode ? 'selected-node' : 'node';
+  }
+
+  get fileName() {
+    return path.basename(this.path);
+  }
+
+  get icon() {
+    return this.isLeaf ? 'music' : 'caret-right';
+  }
+
+  get isWav() {
+    const extension = this.path.split('.').pop();
+    if (extension) {
+      return extension.toLowerCase() === 'wav';
+    }
+    return false;
+  }
 
   public click() {
     if (!this.isLeaf) {
@@ -63,32 +134,36 @@ export default class Tree extends Vue {
   }
 
   public moveDown(event: KeyboardEvent) {
-    if (event.keyCode === Keys.DOWN && this.selectedNode) {
-      event.stopImmediatePropagation();
-      if (this.index + 1 < this.$parent.$refs.trees.length) {
-        if (this.$parent.$refs.trees[this.index + 1].isWav) {
-          this.selectOneNode(this.$parent.$refs.trees, this.index + 1);
-          this.stopSong();
-          this.playSong(this.$parent.$refs.trees[this.index + 1].path);
-        }
+    if (!this.selectedNode) {
+      return;
+    }
+
+    event.stopImmediatePropagation();
+    if (this.index + 1 < this.$parent.$refs.trees.length) {
+      if (this.$parent.$refs.trees[this.index + 1].isWav) {
+        this.selectOneNode(this.$parent.$refs.trees, this.index + 1);
+        this.stopSong();
+        this.playSong(this.$parent.$refs.trees[this.index + 1].path);
       }
     }
   }
 
   public moveUp(event: KeyboardEvent) {
-      if (event.keyCode === Keys.UP && this.selectedNode) {
-        if (this.index - 1 >= 0) {
-          if (this.$parent.$refs.trees[this.index - 1].isWav) {
-            this.selectOneNode(this.$parent.$refs.trees, this.index - 1);
-            this.stopSong();
-            this.playSong(this.$parent.$refs.trees[this.index - 1].path);
-          }
-        }
+    if (!this.selectedNode) {
+      return;
+    }
+
+    if (this.index - 1 >= 0) {
+      if (this.$parent.$refs.trees[this.index - 1].isWav) {
+        this.selectOneNode(this.$parent.$refs.trees, this.index - 1);
+        this.stopSong();
+        this.playSong(this.$parent.$refs.trees[this.index - 1].path);
       }
+    }
   }
 
-  public sendToSampleTab(event: MouseEvent) {
-    // TODO: From here we can send this.path to sample viewer
+  public doubleClick(event: MouseEvent) {
+    this.bus.$emit('dblclick', event);
   }
 
   public preview(event: MouseEvent) {
@@ -128,66 +203,13 @@ export default class Tree extends Vue {
   }
 
   public mounted() {
-    window.addEventListener('keydown', this.moveDown);
-    window.addEventListener('keyup', this.moveUp);
+    this.bus.$on('up', this.moveUp);
+    this.bus.$on('down', this.moveDown);
   }
 
   public destroyed() {
-    window.removeEventListener('keydown', this.moveDown);
-    window.removeEventListener('keyup', this.moveUp);
-  }
-
-  get draggable() {
-    return this.isWav && !!this.prototype;
-  }
-
-  get marginLeft() {
-    return `${this.depth * 10 + 4}px`;
-  }
-
-  get iconStyle() {
-    return {
-      marginLeft: this.marginLeft,
-      transform: `rotate(${this.showChildren ? 45 : 0}deg)`,
-    };
-  }
-
-  get textStyle() {
-    return {
-      paddingLeft: this.marginLeft,
-    };
-  }
-
-  get isLeaf() {
-    return this.folders.length === 0;
-  }
-
-  get folders() {
-    return Object.keys(this.children);
-  }
-
-  get nodeClass() {
-    return this.selectedNode ? 'selected-node' : 'node';
-  }
-
-  get fileName() {
-    return path.basename(this.path);
-  }
-
-  get icon() {
-    return this.isLeaf ? 'music' : 'caret-right';
-  }
-
-  get scale() {
-    return this.isLeaf ? 0.8 : 1;
-  }
-
-  get isWav() {
-    const extension = this.path.split('.').pop();
-    if (extension) {
-      return extension.toLowerCase() === 'wav';
-    }
-    return false;
+    this.bus.$off('up', this.moveUp);
+    this.bus.$off('down', this.moveDown);
   }
 }
 </script>

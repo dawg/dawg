@@ -4,7 +4,7 @@ import {
   autoserializeAs,
   auto,
   autoserializeIndexable,
-  inheritSerialization,
+  inherit,
   is,
   attr,
 } from '@/modules/cerialize';
@@ -115,9 +115,9 @@ describe('cerialize', () => {
     });
   });
 
-  context('inheritSerialization', () => {
+  context('inherit', () => {
     it('simple', () => {
-      @inheritSerialization(A)
+      @inherit(A)
       class AA extends A {
         //
       }

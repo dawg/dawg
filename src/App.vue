@@ -484,6 +484,9 @@ export default class App extends Vue {
     }
   }
 
+  /**
+   * Whenever we add a sample, if it hasn't been imported before, add it the the list of project samples.
+   */
   public checkPrototype(prototype: PlacedPattern | PlacedSample) {
     if (!(prototype instanceof PlacedSample)) {
       return;
@@ -551,6 +554,10 @@ export default class App extends Vue {
       general.setProjects(
         general.projects.filter((maybe) => maybe !== info),
       );
+    } else if (res.type === 'not-found') {
+      this.$notify.info(`Unable to delete ${info.name}`, { detail: 'The project was not found.' });
+    } else {
+      this.$notify.info(`Unable to delete ${info.name}`, { detail: res.message });
     }
   }
 

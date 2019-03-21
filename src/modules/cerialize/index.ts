@@ -13,7 +13,7 @@ interface AnyObject { [k: string]: any; }
 // because types are stored in a JS Map keyed by constructor, serialization is not inherited by default
 // keeping this seperate by default also allows sub classes to serialize differently than their parent
 // tslint:disable-next-line:ban-types
-export function inheritSerialization<T>(parentType: Function & { prototype: T }): any {
+export function inherit<T>(parentType: Function & { prototype: T }): any {
   return (childType: any) => {
     const parentMetaData = TypeMap.get(parentType) || {};
     const childMetaData = TypeMap.get(childType) || {};
