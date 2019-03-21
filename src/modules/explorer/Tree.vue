@@ -1,8 +1,9 @@
 <template>
   <div style="display: contents">
     <div 
-      v-if="!isLeaf || isWav"
+      @mousedown="loadPrototype"
       @click="click" 
+      @dblclick="doubleClick"
       style="display: flex" 
       :class="nodeClass" 
       :style="textStyle" 
@@ -13,12 +14,8 @@
       </ico>
       <drag
         class="white--text path"
-        group="arranger"
-        :transfer-data="prototype"
-        v-if="!isLeaf || isWav"
-        @mousedown.native="loadPrototype"
-        @click.native="preview"
-        @dblclick.native="doubleClick"
+        :group="dragGroup"
+        :transfer-data="transferData"
         :draggable="draggable"
       >
         {{ fileName }}
@@ -44,15 +41,18 @@ import Tone from 'tone';
 import path from 'path';
 import { Keys } from '@/utils';
 import { Component, Prop } from 'vue-property-decorator';
-import Key from '@/components/Key.vue';
-import { loadBuffer } from '@/modules/wav/local';
-import { PlacedSample, Sample } from '@/schemas';
-import { FileTree, EventBus } from '@/modules/explorer/types';
+import { FileTree, EventBus, Playable, Extensions, Extension, ExtensionData } from '@/modules/explorer/types';
+import { Watch } from '@/modules/update';
 
 @Component
 export default class Tree extends Vue {
   @Prop({ type: Object, required: true }) public tree!: FileTree | string;
   @Prop({ type: String, required: true }) public path!: string;
+
+  /**
+   * See the FileExplorer.
+   */
+  @Prop({ type: Object, required: true }) public extensions!: Extensions;
 
   /**
    * The event bus to communicate with the root.
@@ -65,15 +65,23 @@ export default class Tree extends Vue {
   @Prop({ type: Number, default: 0 }) public depth!: number;
   @Prop({ type: Number, default: 0 }) public index!: number;
 
-  public sample: Sample | null = null;
+  // public sample: Sample | null = null;
   public showChildren = false;
-  public selectedNode = false;
-  public $refs!: { trees: Tree[] };
+  public isSelected = false;
+
+  public $refs!: {
+    trees: Tree[],
+  };
+
+  // Event though the root Trees won't have Trees as parents, they will have the FileExplorer as a parent
+  // The ref on FileExplorer is also called trees
   public $parent!: Tree;
-  public prototype: null | PlacedSample = null;
+
+  public data: any = null;
+  public transferData: any = null;
 
   get draggable() {
-    return this.isWav && !!this.prototype;
+    return !!this.transferData;
   }
 
   get marginLeft() {
@@ -108,98 +116,114 @@ export default class Tree extends Vue {
   }
 
   get nodeClass() {
-    return this.selectedNode ? 'selected-node' : 'node';
+    return this.isSelected ? 'selected-node' : 'node';
   }
 
   get fileName() {
     return path.basename(this.path);
   }
 
-  get icon() {
-    return this.isLeaf ? 'music' : 'caret-right';
+  get extension(): Extension | null {
+    if (this.isLeaf) {
+      const parts = this.path.split('.');
+
+      // This is ok because we filter
+      return parts[parts.length - 1] as Extension;
+    } else {
+      return null;
+    }
   }
 
-  get isWav() {
-    const extension = this.path.split('.').pop();
-    if (extension) {
-      return extension.toLowerCase() === 'wav';
+  get extensionData(): ExtensionData<any, any> {
+    if (!this.extension) {
+      return {
+        dragGroup: '',
+        load: () => ({}),
+        createTransferData: () => ({}),
+        preview: () => ({}),
+        stopPreview: () => ({}),
+      };
     }
-    return false;
+
+    return this.extensions[this.extension];
   }
+
+  get preview() {
+    return this.extensionData.preview;
+  }
+
+  get stopPreview() {
+    return this.extensionData.stopPreview;
+  }
+
+  get dragGroup() {
+    return this.extensionData.dragGroup;
+  }
+
+  get load() {
+    return this.extensionData.load;
+  }
+
+  get createTransferData() {
+    return this.extensionData.createTransferData;
+  }
+
 
   public click() {
-    if (!this.isLeaf) {
+    if (this.isLeaf) {
+      this.select(this.index);
+    } else {
       this.showChildren = !this.showChildren;
     }
   }
 
   public moveDown(event: KeyboardEvent) {
-    if (!this.selectedNode) {
+    if (!this.isSelected) {
       return;
     }
 
     event.stopImmediatePropagation();
-    if (this.index + 1 < this.$parent.$refs.trees.length) {
-      if (this.$parent.$refs.trees[this.index + 1].isWav) {
-        this.selectOneNode(this.$parent.$refs.trees, this.index + 1);
-        this.stopSong();
-        this.playSong(this.$parent.$refs.trees[this.index + 1].path);
-      }
-    }
+    this.select(this.index + 1);
   }
 
   public moveUp(event: KeyboardEvent) {
-    if (!this.selectedNode) {
+    if (!this.isSelected) {
       return;
     }
 
-    if (this.index - 1 >= 0) {
-      if (this.$parent.$refs.trees[this.index - 1].isWav) {
-        this.selectOneNode(this.$parent.$refs.trees, this.index - 1);
-        this.stopSong();
-        this.playSong(this.$parent.$refs.trees[this.index - 1].path);
-      }
-    }
+    this.select(this.index - 1);
   }
 
   public doubleClick(event: MouseEvent) {
     this.bus.$emit('dblclick', event);
   }
 
-  public preview(event: MouseEvent) {
-    if (this.isWav) {
-      this.selectOneNode(this.$parent.$refs.trees, this.index);
-      this.playSong(this.path);
+  public select(index: number) {
+    const trees = this.$parent.$refs.trees;
+    if (index < 0 || index >= trees.length) {
+      return;
     }
-  }
 
-  public selectOneNode(trees: Tree[], index: number) {
-    for (let i = 0; i < trees.length; i++) {
+    if (!trees[index].isLeaf) {
+      return;
+    }
+
+    trees.forEach((tree, i) => {
       if (i === index) {
-        trees[i].selectedNode = true;
+        tree.isSelected = true;
       } else {
-        trees[i].selectedNode = false;
+        tree.isSelected = false;
       }
-    }
-  }
-
-  public playSong(songPath: string) {
-    if (this.sample) {
-      this.sample.preview();
-    }
+    });
   }
 
   public loadPrototype() {
-    if (!this.sample && this.isWav) {
-      this.sample = Sample.create(this.path, loadBuffer(this.path));
-      this.prototype = PlacedSample.create(this.sample);
+    if (this.data) {
+      return;
     }
-  }
 
-  public stopSong() {
-    if (this.sample) {
-      this.sample.stopPreview();
-    }
+    this.data = this.load(this.path);
+    this.transferData = this.createTransferData(this.data);
   }
 
   public mounted() {
@@ -210,6 +234,15 @@ export default class Tree extends Vue {
   public destroyed() {
     this.bus.$off('up', this.moveUp);
     this.bus.$off('down', this.moveDown);
+  }
+
+  @Watch<Tree>('isSelected')
+  public startAndStop() {
+    if (this.isSelected) {
+      this.preview(this.data);
+    } else {
+      this.stopPreview(this.data);
+    }
   }
 }
 </script>

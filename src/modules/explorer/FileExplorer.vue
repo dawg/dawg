@@ -8,6 +8,7 @@
       :children="project[1]"
       :index="i"
       :bus="bus"
+      :extensions="extensions"
       @contextmenu="context"
     ></tree>
   </div>
@@ -45,7 +46,7 @@ export default class FileEplorer extends Vue {
    * The extensions. The keys represent the case-insensitive extensions (without the `.`) and the
    * values represent the drag identifier.
    */
-  @Prop({ type: Object, required: true }) public extensions!: Extensions;
+  @Prop({ type: Object, required: true }) public extensions!: Extensions<any, any>;
 
   public trees: Array<[string, FileTree]> = [];
 

@@ -23,10 +23,10 @@
         @update:selectedTab="specific.setOpenedSideTab"
       >
         <side-bar :name="tabs.explorer" icon="folder">
-          <file-explorer
+          <smart-file-explorer
             :folders="cache.folders"
             @open-explorer="cache.openFolder"
-          ></file-explorer>
+          ></smart-file-explorer>
         </side-bar>
         <side-bar :name="tabs.audioFiles" icon="queue_music">
           <audio-files></audio-files>
@@ -55,6 +55,7 @@ import AudioFiles from '@/sections/AudioFiles.vue';
 import { project, cache, general, specific } from '@/store';
 import { Watch } from '@/modules/update';
 import { SideTab } from '@/constants';
+import SmartFileExplorer from '@/smart/SmartFileExplorer.vue';
 
 interface Group {
   icon: string;
@@ -69,6 +70,7 @@ interface Group {
     BaseTabs,
     SideBar,
     AudioFiles,
+    SmartFileExplorer,
   },
 })
 export default class SideTabs extends Vue {
@@ -88,6 +90,8 @@ export default class SideTabs extends Vue {
       callback: project.addPattern,
     },
   ];
+
+
 
   // For typing reasons
   // Vue will give a compilation error if we use a wrong key
