@@ -93,6 +93,7 @@ export default class PianoRollSequencer extends Vue {
         duration: iNote.duration,
         time: iNote.start,
       }).init(this.instrument);
+      note.velocity = iNote.velocity;
 
       // TODO Refactor this
       this.notes.push(note);
