@@ -1,6 +1,9 @@
 <template>
   <div class="channel-select screen secondary" ref="drag">
-    <div style="line-height: 38px">{{ display }}</div>
+    <div 
+      style="line-height: 38px"
+      class="foreground--text"
+    >{{ display }}</div>
   </div>
 </template>
 

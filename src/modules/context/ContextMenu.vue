@@ -11,7 +11,7 @@
     :z-index="1000"
     :min-width="300"
   >
-    <div class="items secondary-lighten-2 white--text">
+    <div class="items secondary-lighten-2 foreground--text">
       <template v-for="(item, i) in processed">
         <div
           v-if="item"

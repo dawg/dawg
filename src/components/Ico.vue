@@ -1,7 +1,7 @@
 <template>
   <div class="icon__wrapper center--vertial">
-    <icon v-if="fa" :name="icon" v-bind="$attrs" v-on="$listeners" class="white--text"></icon>
-    <v-icon v-else v-bind="$attrs" v-on="$listeners" class="white--text">
+    <icon v-if="fa" :name="icon" v-bind="$attrs" v-on="$listeners" class="foreground--text"></icon>
+    <v-icon v-else v-bind="$attrs" v-on="$listeners" class="foreground--text">
       {{ icon }}
     </v-icon>  
   </div>

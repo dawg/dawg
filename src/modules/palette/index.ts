@@ -1,9 +1,10 @@
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import { CreateElement } from 'vue';
-import { Bus, Watch } from '@/modules/update';
+import { Watch, Bus } from '@/modules/update';
 import { reverse } from '@/utils';
 
-export const bus = new Bus<{ open: [] }>();
+const bus = new Bus<{ clear: [] }>();
+
 export type Key =
   'Shift' |
   'Ctrl' |
@@ -123,7 +124,6 @@ class Result extends Vue {
       cursor: this.hover ? 'pointer' : undefined,
       display: 'flex',
       padding: '3px 6px',
-      color: '#ddd',
     };
   }
 
@@ -144,6 +144,7 @@ class Result extends Vue {
         },
       },
       style: this.style,
+      class: 'foreground--text',
     }, [text, spacer, shortcut]);
   }
 }
@@ -195,10 +196,14 @@ class Palette extends Vue {
   @Prop({ type: String, required: false }) public paletteClass?: string;
   @Prop({ type: Array, required: true }) public items!: PaletteItem[];
 
+  // TODO Change the name of this prop
+  /**
+   * Whether to call the callback when selected using the arrow keys.
+   */
+  @Prop({ type: Boolean, default: false }) public automatic!: boolean;
+
   public searchText = '';
   public selected = 0;
-
-  public pressedKeys = new Set<number>();
 
   get tokenized() {
     return this.items.map((item) => {
@@ -229,18 +234,25 @@ class Palette extends Vue {
     this.$emit('input', true);
   }
 
-  public keydown(e: KeyboardEvent) {
-    this.pressedKeys.add(e.which);
-
+  public checkEnterEsc(e: KeyboardEvent) {
     if (e.which === 27) { // ESC
       e.preventDefault();
+      this.$emit('cancel');
       this.$emit('input', false);
     }
 
+    let newIndex: null | number = null;
+
     if (e.which === 38) { // UP
-      this.selected = Math.max(this.selected - 1, 0);
+      newIndex = this.selected - 1;
     } else if (e.which === 40) { // DOWN
-      this.selected = Math.min(this.selected + 1, this.filtered.length - 1);
+      newIndex = this.selected + 1;
+    }
+
+    if (newIndex !== null) {
+      if (newIndex >= 0 && newIndex < this.filtered.length) {
+        this.selected = newIndex;
+      }
     }
 
     if (e.which === 13) { // ENTER
@@ -252,42 +264,6 @@ class Palette extends Vue {
       item.callback();
       this.$emit('input', false);
     }
-
-    let i = stack.length - 1;
-    for (const item of reverse(stack)) {
-      if (shortcutPressed(item.shortcut, this.pressedKeys)) {
-        item.callback();
-        stack.splice(i, 1);
-        return;
-      }
-      i--;
-    }
-
-    this.items.forEach((item) => {
-      if (!item.shortcut) {
-        return;
-      }
-
-      if (shortcutPressed(item.shortcut, this.pressedKeys)) {
-        item.callback();
-      }
-    });
-  }
-
-  public keyup(e: KeyboardEvent) {
-    this.pressedKeys.delete(e.which);
-  }
-
-  public mounted() {
-    bus.$on('open', this.open);
-    window.addEventListener('keydown', this.keydown);
-    window.addEventListener('keyup', this.keyup);
-  }
-
-  public destroyed() {
-    bus.$off('open', this.open);
-    window.removeEventListener('keydown', this.keydown);
-    window.removeEventListener('keyup', this.keyup);
   }
 
   @Watch<Palette>('filtered')
@@ -295,10 +271,25 @@ class Palette extends Vue {
     this.selected = 0;
   }
 
-  @Watch<Palette>('value')
+  @Watch<Palette>('value', { immediate: true })
   public resetSearch() {
     if (this.value) {
+      window.addEventListener('keydown', this.checkEnterEsc);
       this.searchText = '';
+    } else {
+      window.removeEventListener('keydown', this.checkEnterEsc);
+    }
+  }
+
+  @Watch<Palette>('selected', { immediate: true })
+  public doAutomatic() {
+    if (!this.automatic) {
+      return;
+    }
+
+    const item = this.filtered[this.selected];
+    if (item) {
+      item.callback();
     }
   }
 
@@ -349,14 +340,74 @@ class Palette extends Vue {
         bottom: '0',
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         zIndex: '2000',
-        color: '#ddd',
       },
       on: {
         click: () => {
+          this.$emit('cancel');
           this.$emit('input', false);
         },
       },
+      class: 'foreground--text',
     }, children);
+  }
+}
+
+@Component
+export class KeyboardShortcuts extends Vue {
+  @Prop({ type: Array, required: true }) public items!: PaletteItem[];
+
+  public pressedKeys = new Set<number>();
+
+  public mounted() {
+    bus.$on('clear', this.clear);
+    window.addEventListener('keydown', this.keydown);
+    window.addEventListener('keyup', this.keyup);
+  }
+
+  public destroyed() {
+    bus.$off('clear', this.clear);
+    window.removeEventListener('keydown', this.keydown);
+    window.removeEventListener('keyup', this.keyup);
+  }
+
+  public clear() {
+    this.pressedKeys.clear();
+  }
+
+  public keydown(e: KeyboardEvent) {
+    // We do not add the enter key since it will never be used in a shortcut and causes bugs
+    // For example, if we open the file dialog, keyup is never fired for enter.
+    if (e.which !== 13) { // ENTER
+      this.pressedKeys.add(e.which);
+    }
+
+    let i = stack.length - 1;
+    for (const item of reverse(stack)) {
+      if (shortcutPressed(item.shortcut, this.pressedKeys)) {
+        item.callback();
+        stack.splice(i, 1);
+        return;
+      }
+      i--;
+    }
+
+    this.items.forEach((item) => {
+      if (!item.shortcut) {
+        return;
+      }
+
+      if (shortcutPressed(item.shortcut, this.pressedKeys)) {
+        item.callback();
+      }
+    });
+  }
+
+  public keyup(e: KeyboardEvent) {
+    this.pressedKeys.delete(e.which);
+  }
+
+  public render() {
+    return null;
   }
 }
 
@@ -364,15 +415,24 @@ class Palette extends Vue {
 export default {
   install() {
     Vue.component('Palette', Palette);
+    Vue.component('KeyboardShortcuts', KeyboardShortcuts);
 
     Vue.prototype.$press = (shortcut: Key[], callback: () => void) => {
       stack.push({ shortcut, callback });
+    };
+    Vue.prototype.$shortcuts = {
+      clear() {
+        bus.$emit('clear');
+      },
     };
   },
 };
 
 
 export interface PaletteAugmentation {
+  $shortcuts: {
+    clear(): void;
+  };
   // TODO Rename this
   // Furthermore, this will cause issues when the callbacks are called another way
   // THere must be some way to invalidate a callback

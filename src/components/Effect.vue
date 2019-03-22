@@ -1,6 +1,6 @@
 <template>
   <div class="phaser secondary">
-    <div class="title white--text">{{ name | upper }}</div>
+    <div class="title foreground--text">{{ name | upper }}</div>
     <div style="display: flex; flex-direction: column">
       <knob
         class="option"

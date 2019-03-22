@@ -27,11 +27,13 @@ import {
 import { findUniqueName, range } from '@/utils';
 import store from '@/store/store';
 import cache from '@/store/cache';
+import general from '@/store/general';
 import uuid from 'uuid';
 import { loadBuffer } from '@/modules/wav/local';
 import { makeLookup, chain } from '@/modules/utils';
 import { Signal } from '@/modules/audio';
 import backend from '@/backend';
+import { User } from 'firebase';
 
 const { dialog } = remote;
 
@@ -58,10 +60,12 @@ export class Project extends VuexModule {
   }
 
   @Action
-  public async save(opts: { backup: boolean, forceDialog?: boolean }) {
-    if (!cache.openedFile || opts.forceDialog) {
-      const openedFile = dialog.showSaveDialog(remote.getCurrentWindow(), {});
+  public async save(opts: { backup: boolean, user: User | null, forceDialog?: boolean }) {
+    let openedFile = general.openedFile;
+    if (!openedFile || opts.forceDialog) {
+      openedFile = dialog.showSaveDialog(remote.getCurrentWindow(), {}) || null;
 
+      // If the user cancels the dialog
       if (!openedFile) {
         return;
       }
@@ -81,12 +85,13 @@ export class Project extends VuexModule {
     const encoded = io.serialize(this, Project);
 
     fs.writeFileSync(
-      cache.openedFile,
+      openedFile,
       JSON.stringify(encoded, null, 4),
     );
 
-    if (opts.backup) {
-      return await backend.updateProject(this.id, encoded);
+    // I don't think this is the best place to put this.
+    if (opts.backup && opts.user) {
+      return await backend.updateProject(opts.user, this.id, encoded);
     }
   }
 
@@ -113,6 +118,9 @@ export class Project extends VuexModule {
         // Always reset to null
         fs.unlink(path);
         cache.setBackupTempPath(null);
+      } else {
+        // This means that we are opening the cache file
+        general.setOpenedFile(path);
       }
 
       contents = JSON.parse(contents);

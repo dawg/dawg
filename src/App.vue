@@ -20,10 +20,13 @@
         <split 
           collapsible 
           :min-size="100"
-          :initial="specific.sideBarSize"
-          @resize="specific.setSideBarSize"
+          :initial="workspace.sideBarSize"
+          @resize="workspace.setSideBarSize"
         >
-          <side-tabs v-if="loaded"></side-tabs>
+          <side-tabs 
+            v-if="loaded"
+            :style="border('right')"
+          ></side-tabs>
           <blank v-else></blank>
         </split>
 
@@ -31,13 +34,14 @@
 
           <split :initial="general.toolbarHeight" fixed>
             <toolbar
+              class="toolbar"
               :height="general.toolbarHeight"
               :transport="transport"
-              :context="specific.applicationContext"
+              :context="workspace.applicationContext"
               @update:context="setContext"
               :play="general.play"
               @update:play="playPause"
-              style="border-bottom: 1px solid rgba(0, 0, 0, 0.3); z-index: 500"
+              :style="border('bottom')"
               :bpm="project.bpm"
               @update:bpm="project.setBpm"
             ></toolbar>
@@ -55,10 +59,10 @@
               :end.sync="masterEnd"
               :steps-per-beat="project.stepsPerBeat"
               :beats-per-measure="project.beatsPerMeasure"
-              :row-height="specific.playlistRowHeight"
-              @update:rowHeight="specific.setPlaylistRowHeight"
-              :px-per-beat="specific.playlistBeatWidth"
-              @update:pxPerBeat="specific.setPlaylistBeatWidth"
+              :row-height="workspace.playlistRowHeight"
+              @update:rowHeight="workspace.setPlaylistRowHeight"
+              :px-per-beat="workspace.playlistBeatWidth"
+              @update:pxPerBeat="workspace.setPlaylistBeatWidth"
               @new-prototype="checkPrototype"
             ></playlist-sequencer>
             <blank v-else></blank>              
@@ -66,11 +70,11 @@
 
           <split
             class="secondary" 
-            direction="vertical" 
-            :style="`border-top: 1px solid #111`" 
+            direction="vertical"
+            :style="border('top')"
             keep
-            :initial="specific.panelsSize"
-            @resize="specific.setPanelsSize"
+            :initial="workspace.panelsSize"
+            @resize="workspace.setPanelsSize"
           >
             <split :initial="55" fixed>
               <panel-headers></panel-headers>
@@ -91,7 +95,15 @@
     <palette 
       v-model="palette"
       palette-class="secondary"
-      :items="shortcuts"
+      :items="paletteCommands"
+    ></palette>
+    <keyboard-shortcuts :items="paletteCommands"></keyboard-shortcuts>
+    <palette 
+      v-model="themePalette"
+      palette-class="secondary"
+      :items="themeCommands"
+      automatic
+      @cancel="restoreTheme"
     ></palette>
     <project-modal 
       v-model="backupModal" 
@@ -110,7 +122,7 @@
 import fs from 'fs';
 import { Component, Vue } from 'vue-property-decorator';
 import { shell } from 'electron';
-import { project, cache, general, specific, Project } from '@/store';
+import { project, cache, general, workspace, Project } from '@/store';
 import { toTickTime, allKeys, Keys } from '@/utils';
 import Transport from '@/modules/audio/transport';
 import { automation } from '@/modules/knobs';
@@ -123,13 +135,17 @@ import ActivityBar from '@/sections/ActivityBar.vue';
 import StatusBar from '@/sections/StatusBar.vue';
 import Tone from 'tone';
 import { SideTab, FILTERS, ApplicationContext } from '@/constants';
-import { PaletteItem, bus } from '@/modules/palette';
+import { PaletteItem } from '@/modules/palette';
 import { Watch } from '@/modules/update';
 import backend, { ProjectInfo } from '@/backend';
 import * as io from '@/modules/cerialize';
 import tmp from 'tmp';
 import { remote } from 'electron';
 import { Menu } from '@/modules/menubar';
+import theme from '@/modules/theme';
+import { Theme } from '@/modules/theme/types';
+import auth from '@/auth';
+import { User } from 'firebase';
 
 @Component({
   components: {
@@ -143,7 +159,7 @@ import { Menu } from '@/modules/menubar';
 export default class App extends Vue {
   public project = project;
   public general = general;
-  public specific = specific;
+  public workspace = workspace;
 
   public menuItems: {[k: string]: PaletteItem} = {
     save: {
@@ -167,7 +183,7 @@ export default class App extends Vue {
     },
     addFolder: {
       text: 'Add Folder to Workspace',
-      callback: cache.openFolder,
+      callback: this.openFolder,
     },
     closeApplication: {
       text: 'Close Application',
@@ -215,16 +231,13 @@ export default class App extends Vue {
     palette: {
       text: 'Command Palette',
       shortcut: ['Ctrl', 'Shift', 'P'],
-      callback: () => {
-        bus.$emit('open');
-        this.palette = true;
-      },
+      callback: this.openPalette,
     },
     switchContext: {
       text: 'Switch Context',
       shortcut: ['Ctrl', 'Tab'],
       callback: () => {
-        if (specific.applicationContext === 'pianoroll') {
+        if (workspace.applicationContext === 'pianoroll') {
           this.setContext('playlist');
         } else {
           this.setContext('pianoroll');
@@ -291,31 +304,47 @@ export default class App extends Vue {
     },
   ];
 
-  public shortcuts: PaletteItem[] = [
+  get themeCommands(): PaletteItem[] {
+    return Object.entries(theme.defaults).map(([name, theDefault]) => {
+      return {
+        text: name,
+        callback: () => {
+          workspace.setTheme(name);
+          theme.insertTheme(theDefault);
+        },
+      };
+    });
+  }
+
+  public paletteCommands: PaletteItem[] = [
     {
       text: 'Open Piano Roll',
       shortcut: ['Ctrl', 'P'],
-      callback: () => specific.setOpenedPanel('Piano Roll'),
+      callback: () => workspace.setOpenedPanel('Piano Roll'),
     },
     {
       text: 'Open File Explorer',
       shortcut: ['Ctrl', 'E'],
-      callback: () => specific.setOpenedSideTab('Explorer'),
+      callback: () => workspace.setOpenedSideTab('Explorer'),
     },
     {
       text: 'Open Mixer',
       shortcut: ['Ctrl', 'M'],
-      callback: () => specific.setOpenedPanel('Mixer'),
+      callback: () => workspace.setOpenedPanel('Mixer'),
     },
     {
       text: 'New Synthesizer',
       shortcut: ['Ctrl', 'N'],
-      callback: project.addInstrument, // TODO missing when clause
+      callback: project.addInstrument,
     },
     {
       text: 'Play/Pause',
       shortcut: ['Space'],
       callback: this.playPause,
+    },
+    {
+      text: 'Change Theme',
+      callback: this.openThemePalette,
     },
     ...Object.values(this.menuItems),
   ];
@@ -329,6 +358,8 @@ export default class App extends Vue {
 
   public backupModal = false;
   public palette = false;
+  public themePalette = false;
+  public themeMomento: string | null = null;
 
   public maximized = false;
 
@@ -342,8 +373,8 @@ export default class App extends Vue {
   }
 
   get transport() {
-    if (specific.applicationContext === 'pianoroll') {
-      const pattern = specific.selectedPattern;
+    if (workspace.applicationContext === 'pianoroll') {
+      const pattern = workspace.selectedPattern;
       return pattern ? pattern.transport : null;
     } else {
       return project.master.transport;
@@ -351,7 +382,7 @@ export default class App extends Vue {
   }
 
   get playlistPlay() {
-    return general.play && specific.applicationContext === 'playlist';
+    return general.play && workspace.applicationContext === 'playlist';
   }
 
   public async created() {
@@ -366,6 +397,13 @@ export default class App extends Vue {
 
     automation.$on('automate', this.addAutomationClip);
 
+    auth.watchUser({
+      authenticated: general.setUser,
+      unauthenticated: () => {
+        general.setUser(null);
+      },
+    });
+
     // Log this for debugging purposes
     // tslint:disable-next-line:no-console
     console.info(project);
@@ -375,6 +413,9 @@ export default class App extends Vue {
       this.$log.debug('Starting to read data.');
       await cache.fromCacheFolder();
       await this.withErrorHandling(project.load);
+
+      this.loadTheme(workspace.themeName);
+
       this.$log.debug('Finished reading data from the fs.');
       this.loaded = true;
     }, 1250);
@@ -390,22 +431,56 @@ export default class App extends Vue {
     w.removeListener('unmaximize', this.unmaximize);
   }
 
+  public openPalette() {
+    this.palette = true;
+  }
+
+  public openFolder() {
+    // TODO
+    // the showFileDialog messes with the keyup events
+    // This is a temporary solution
+    cache.openFolder();
+    this.$shortcuts.clear();
+  }
+
+  public openThemePalette() {
+    this.themeMomento = workspace.themeName;
+    this.themePalette = true;
+  }
+
+  public border(side: 'left' | 'right' | 'top' | 'bottom') {
+    return `border-${side}: 1px solid ${this.$theme.background}`;
+  }
+
+  public loadTheme(themeName: string | null) {
+    const isThemeKey = (key: string | null): key is keyof typeof theme.defaults => {
+      return !!key && theme.defaults.hasOwnProperty(key);
+    };
+
+    if (isThemeKey(themeName)) {
+      theme.insertTheme(theme.defaults[themeName]);
+    }
+  }
+
   public async onExit() {
-    await specific.write();
+    await workspace.write();
   }
 
   public openBackup() {
-    this.backupModal = true;
+    this.handleUnauthenticated(async (user) => {
+      this.backupModal = true;
+      general.loadProjects(user);
+    });
+  }
 
-    if (!general.projects.length) {
-      general.loadProjects();
-    }
+  public restoreTheme() {
+    this.loadTheme(this.themeMomento);
   }
 
   public async withErrorHandling(callback: () => Promise<void>) {
     try {
       await callback();
-      await specific.loadSpecific();
+      await workspace.loadSpecific();
     } catch (e) {
       this.$notify.error('Unable to load project.');
       this.$log.error(e);
@@ -419,6 +494,11 @@ export default class App extends Vue {
       { filters: FILTERS, properties: ['openFile'] },
     );
 
+    // TODO
+    // the showFileDialog messes with the keyup events
+    // This is a temporary solution
+    this.$shortcuts.clear();
+
     if (!files) {
       return;
     }
@@ -431,16 +511,20 @@ export default class App extends Vue {
 
   public async save(forceDialog: boolean = false) {
     // If we are backing up, star the progress circle!
-    if (specific.backup) {
+    if (workspace.backup) {
       general.set({ key: 'syncing', value: true });
     }
 
-    const backupStatus = await project.save({ backup: specific.backup, forceDialog });
+    const backupStatus = await project.save({
+      backup: workspace.backup,
+      user: general.user,
+      forceDialog,
+    });
 
     // Always set the value back to false... you never know
     general.set({ key: 'syncing', value: false });
 
-    // backupStatus is true if specific.backup is also true
+    // backupStatus is true if workspace.backup is also true
     if (backupStatus) {
       switch (backupStatus.type) {
         case 'error':
@@ -458,14 +542,14 @@ export default class App extends Vue {
   }
 
   public setContext(context: ApplicationContext) {
-    specific.setContext(context);
+    workspace.setContext(context);
     general.pause();
   }
 
   public playPause() {
     let transport: Transport;
-    if (specific.applicationContext === 'pianoroll') {
-      const pattern = specific.selectedPattern;
+    if (workspace.applicationContext === 'pianoroll') {
+      const pattern = workspace.selectedPattern;
       if (!pattern) {
         this.$notify.info('Please select a Pattern.', {
           detail: 'Please create and select a Pattern first or switch the Playlist context.',
@@ -521,48 +605,61 @@ export default class App extends Vue {
   }
 
   public async openProject(info: ProjectInfo) {
-    const res = await backend.getProject(info.id);
-    if (res.type === 'not-found') {
-      this.$notify.warning('Uh, we were unable to find project');
-      return;
-    }
+    this.handleUnauthenticated(async (user) => {
+      const res = await backend.getProject(user, info.id);
+      if (res.type === 'not-found') {
+        this.$notify.warning('Uh, we were unable to find project');
+        return;
+      }
 
-    if (res.type === 'error') {
-      this.$notify.error('Unable to get project', { detail: res.message });
-      return;
-    }
+      if (res.type === 'error') {
+        this.$notify.error('Unable to get project', { detail: res.message });
+        return;
+      }
 
 
-    const { name } = tmp.fileSync({ keep: true });
-    fs.writeFileSync(name, JSON.stringify(res.project, null, 4));
+      const { name } = tmp.fileSync({ keep: true });
+      fs.writeFileSync(name, JSON.stringify(res.project, null, 4));
 
-    if (!fs.existsSync(name)) {
-      throw Error(name);
-    }
+      if (!fs.existsSync(name)) {
+        throw Error(name);
+      }
 
-    this.$log.info(`Writing ${name} as backup`);
-    cache.setBackupTempPath(name);
+      this.$log.info(`Writing ${name} as backup`);
+      cache.setBackupTempPath(name);
 
-    const window = remote.getCurrentWindow();
-    window.reload();
+      const window = remote.getCurrentWindow();
+      window.reload();
+    });
   }
 
-  public async deleteProject(info: ProjectInfo) {
-    const res = await backend.deleteProject(info.id);
-
-    if (res.type === 'success') {
-      // We are not taking advantage of firebase here
-      // Ideally firebase would send an event and we would update our project list
-      // Until we do that, this will suffice
-      const taget = general.projects.indexOf(info);
-      general.setProjects(
-        general.projects.filter((maybe) => maybe !== info),
-      );
-    } else if (res.type === 'not-found') {
-      this.$notify.info(`Unable to delete ${info.name}`, { detail: 'The project was not found.' });
-    } else {
-      this.$notify.info(`Unable to delete ${info.name}`, { detail: res.message });
+  public handleUnauthenticated(authenticated: (user: User) => void) {
+    if (general.user === null) {
+      // TODO dulication
+      this.$notify.info('Please login first', { detail: 'Use the settings icon in the Activity Bar.' });
+      return;
     }
+
+    authenticated(general.user);
+  }
+
+  public deleteProject(info: ProjectInfo) {
+    this.handleUnauthenticated(async (user) => {
+      const res = await backend.deleteProject(user, info.id);
+
+      if (res.type === 'success') {
+        // We are not taking advantage of firebase here
+        // Ideally firebase would send an event and we would update our project list
+        // Until we do that, this will suffice
+        general.setProjects(
+          general.projects.filter((maybe) => maybe !== info),
+        );
+      } else if (res.type === 'not-found') {
+        this.$notify.info(`Unable to delete ${info.name}`, { detail: 'The project was not found.' });
+      } else {
+        this.$notify.info(`Unable to delete ${info.name}`, { detail: res.message });
+      }
+    });
   }
 
   public async newProject() {
@@ -624,5 +721,8 @@ export default class App extends Vue {
 .app
   display: flex
   flex-direction: column
+
+.toolbar
+  z-index: 10
 </style>
 
