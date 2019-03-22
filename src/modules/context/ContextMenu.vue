@@ -1,7 +1,6 @@
 <template>
   <v-menu
     class="menu"
-    transition="slide-x-transition"
     bottom
     right
     v-model="open"

@@ -33,7 +33,7 @@ import { PanelNames } from '@/constants';
 interface Group {
   icon: string;
   tooltip: string;
-  callback: () => void;
+  callback: (e: MouseEvent) => void;
 }
 
 @Component
@@ -42,12 +42,11 @@ export default class PanelHeaders extends Vue {
     {
       icon: 'add',
       tooltip: 'Add Instrument',
-      callback: project.addInstrument,
+      callback: this.addInstrument,
     },
   ];
 
   get actions() {
-    // TODO NO Type Checking
     if (specific.openedPanel === 'Instruments') {
       return this.synthActions;
     } else {
@@ -65,6 +64,19 @@ export default class PanelHeaders extends Vue {
 
   public selectPanel(name: PanelNames) {
     specific.setOpenedPanel(name);
+  }
+
+  public addInstrument(e: MouseEvent) {
+    this.$context(e, [
+      {
+        text: 'Synth',
+        callback: project.addInstrument,
+      },
+      {
+        text: 'Soundfont',
+        callback: project.addInstrument,
+      },
+    ]);
   }
 }
 </script>

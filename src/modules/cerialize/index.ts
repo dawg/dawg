@@ -334,3 +334,8 @@ export const serialize = <T>(o: T, c: Constructor<T>): any => {
 
 // expose the type map
 export { TypeMap as __TypeMap };
+
+export default {
+  auto,
+  attr,
+};

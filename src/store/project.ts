@@ -239,8 +239,9 @@ export class Project extends VuexModule {
   }
 
   @Mutation
-  public addInstrument() {
-    const name = findUniqueName(this.instruments, 'Instrument');
+  public addInstrument(type: 'Synth' | 'Soundfont') {
+    const name = findUniqueName(this.instruments, type);
+
     this.instruments.push(Instrument.default(name));
   }
 

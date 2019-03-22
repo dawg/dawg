@@ -30,6 +30,7 @@
     "node-wav": "0.0.2",
     "npm": "^6.9.0",
     "resize-observer-polyfill": "^1.5.0",
+    "soundfont-player": "github:dawg/soundfont-player",
     "tinycolor2": "^1.4.1",
     "tmp": "0.0.33",
     "tone": "^13.8.3",
