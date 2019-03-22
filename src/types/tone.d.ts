@@ -715,10 +715,10 @@ declare module 'tone' {
     dispose(): this;
     get(params?: any[]): any;
     set(params: Object): void;
-    setPreset(presetName: string): PolySynth;
-    triggerAttack(notes: any, time?: _TimeArg, velocity?: number): PolySynth; //todo: string | number | Object| string[] | number[]
-    triggerAttackRelease(notes: any, duration: _TimeArg, time?: _TimeArg, velocity?: number): PolySynth; //todo: string | number | Object | string[] | number[]
-    triggerRelease(value: string | string[], time?: _TimeArg): PolySynth; //todo: string | number | Object | string[] | number[]
+    setPreset(presetName: string): this;
+    triggerAttack(notes: any, time?: _TimeArg, velocity?: number): this; //todo: string | number | Object| string[] | number[]
+    triggerAttackRelease(notes: any, duration: _TimeArg, time?: _TimeArg, velocity?: number): this; //todo: string | number | Object | string[] | number[]
+    triggerRelease(value: string | string[], time?: _TimeArg): this; //todo: string | number | Object | string[] | number[]
   }
 
   class Pow extends SignalBase {

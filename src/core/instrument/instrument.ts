@@ -1,18 +1,18 @@
 import Tone from 'tone';
-import Audio, { Time } from '@/modules/audio';
+import * as Audio from '@/modules/audio';
 import io from '@/modules/cerialize';
 import uuid from 'uuid';
 import { disposeHelp } from '@/utils';
 import { AnyEffect, Effect } from '@/schemas';
 
-export abstract class Source {
+export abstract class Instrument<T> {
   @io.auto public name!: string;
   @io.auto public id = uuid.v4();
 
   @io.auto({ nullable: true, optional: true })
   public channel: number | null = null;
 
-  protected source: Tone.Instrument;
+  protected source: Audio.Source<T>;
   private destination: Tone.AudioNode | null = Tone.Master;
   private muted!: boolean;
   // tslint:disable-next-line:member-ordering
@@ -21,11 +21,14 @@ export abstract class Source {
 
   // tslint:disable-next-line:member-ordering
   @io.attr('value')
-  public volume = new Audio.Signal(this.source.volume);
+  public pan = new Audio.Signal(this.panner.pan);
+
+  // TODO for the gain
+  private gainNode = new Tone.Gain().connect(this.panner);
 
   // tslint:disable-next-line:member-ordering
   @io.attr('value')
-  public pan = new Audio.Signal(this.panner.pan);
+  public volume = new Audio.Signal(this.gainNode.gain);
 
   get mute() {
     return this.muted;
@@ -37,11 +40,11 @@ export abstract class Source {
     this.checkConnection();
   }
 
-  constructor(source: Tone.Instrument) {
-    this.source = source.connect(this.panner);
+  constructor(source: Audio.Source<T>) {
+    this.source = source.connect(this.gainNode);
   }
 
-  public triggerAttackRelease(note: string, duration: Time, time: number, velocity?: number) {
+  public triggerAttackRelease(note: string, duration: Audio.Time, time: number, velocity?: number) {
     this.source.triggerAttackRelease(note, duration, time, velocity);
   }
 
@@ -71,8 +74,8 @@ export abstract class Source {
     }
   }
 
-  public init() {
-    this.volume = new Audio.Signal(this.source.volume);
+  public set<K extends keyof T>(o: { key: K, value: T[K] }) {
+    this.source.set(o);
   }
 
   public dispose() {
