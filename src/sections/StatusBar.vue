@@ -49,8 +49,7 @@ export default class Foot extends Vue {
   }
 
   get openedFile() {
-    if (!cache) { return null; }
-    return cache.openedFile;
+    return general.openedFile;
   }
 
   get projectName() {

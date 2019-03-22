@@ -25,7 +25,7 @@
         <side-bar :name="tabs.explorer" icon="folder">
           <file-explorer
             :folders="cache.folders"
-            @open-explorer="cache.openFolder"
+            @open-explorer="openFolder"
           ></file-explorer>
         </side-bar>
         <side-bar :name="tabs.audioFiles" icon="queue_music">
@@ -108,6 +108,13 @@ export default class SideTabs extends Vue {
 
   public mounted() {
     general.setSideBarTabs(this.$refs.tabs.$children as SideBar[]);
+  }
+
+  public openFolder() {
+    // the showFileDialog messes with the keyup events
+    // This is a temporary solution
+    cache.openFolder();
+    this.$shortcuts.clear();
   }
 
   get actions(): Group[] {

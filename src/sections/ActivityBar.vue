@@ -36,12 +36,7 @@
           right
           top
         >
-          <settings
-            :name="project.name"
-            @update:name="project.setName"
-            :backup="workspace.backup"
-            @update:backup="workspace.setBackup"
-          ></settings>
+          <settings></settings>
         </v-menu>
       </v-list-tile>
     </v-list>
@@ -53,8 +48,11 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import { workspace, general, project } from '@/store';
 import Sidebar from '@/components/SideBar.vue';
 import { PanelNames, SideTab } from '@/constants';
+import Settings from '@/sections/Settings.vue';
 
-@Component
+@Component({
+  components: { Settings },
+})
 export default class ActivityBar extends Vue {
   public workspace = workspace;
   public general = general;
