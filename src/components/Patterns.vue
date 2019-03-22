@@ -43,13 +43,16 @@ export default class Patterns extends Vue {
     }
   }
 
-  public context(e: MouseEvent, i: number) {
-    this.$context(e, [
-      {
-        text: 'Delete',
-        callback: () => this.$emit('remove', i),
-      },
-    ]);
+  public context(event: MouseEvent, i: number) {
+    this.$context({
+      event,
+      items: [
+        {
+          text: 'Delete',
+          callback: () => this.$emit('remove', i),
+        },
+      ],
+    });
   }
 
   @Watch<Patterns>('patterns')

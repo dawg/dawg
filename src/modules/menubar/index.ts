@@ -74,7 +74,10 @@ export class MenuItem extends Vue {
       nativeOn: {
         click: (e: MouseEvent) => {
           e.stopPropagation();
-          this.$menu(this.$el.getBoundingClientRect(), this.subMenu.items);
+          this.$menu({
+            event: this.$el.getBoundingClientRect(),
+            items: this.subMenu.items,
+          });
         },
       },
     }, this.subMenu.name);

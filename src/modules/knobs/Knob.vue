@@ -276,17 +276,20 @@ export default class Knob extends Mixins(Draggable) {
     this.$status.clear();
   }
 
-  public contextmenu(e: MouseEvent) {
+  public contextmenu(event: MouseEvent) {
     if (this.disableAutomation) {
       return;
     }
 
-    this.$context(e, [
-      {
-        text: 'Create Automation Clip',
-        callback: () => this.$emit('automate'),
-      },
-    ]);
+    this.$context({
+      event,
+      items: [
+        {
+          text: 'Create Automation Clip',
+          callback: () => this.$emit('automate'),
+        },
+      ],
+    });
   }
 }
 </script>

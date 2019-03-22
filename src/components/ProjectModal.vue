@@ -84,15 +84,18 @@ export default class ProjectModal extends Vue {
     this.close();
   }
 
-  public context(project: ProjectInfo, e: MouseEvent) {
-    this.$context(e, [
-      {
-        text: 'Delete',
-        callback: () => {
-          this.$emit('delete', project);
+  public context(project: ProjectInfo, event: MouseEvent) {
+    this.$context({
+      event,
+      items: [
+        {
+          text: 'Delete',
+          callback: () => {
+            this.$emit('delete', project);
+          },
         },
-      },
-    ]);
+      ],
+    });
   }
 
   @Watch<ProjectModal>('value')

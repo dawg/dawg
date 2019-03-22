@@ -150,13 +150,16 @@ export default class AutomationClipElement extends Vue {
     this.clip.remove(i);
   }
 
-  public pointContext(e: MouseEvent, i: number) {
-    this.$context(e, [
-      {
-        text: 'Delete',
-        callback: () => this.delete(i),
-      },
-    ]);
+  public pointContext(event: MouseEvent, i: number) {
+    this.$context({
+      event,
+      items: [
+        {
+          text: 'Delete',
+          callback: () => this.delete(i),
+        },
+      ],
+    });
   }
 }
 </script>

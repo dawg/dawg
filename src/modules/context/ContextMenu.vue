@@ -1,15 +1,5 @@
 <template>
-  <v-menu
-    class="menu"
-    bottom
-    right
-    v-model="open"
-    :position-x="x"
-    :position-y="y"
-    :close-on-click="false"
-    :z-index="1000"
-    :min-width="300"
-  >
+  <div v-if="open" class="menu" :style="style">
     <div class="items secondary-lighten-2 foreground--text">
       <template v-for="(item, i) in processed">
         <div
@@ -29,22 +19,32 @@
         <div v-else :key="i" class="break"></div>
       </template>
     </div>
-  </v-menu>
+  </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 
-import bus, { Item, isMouseEvent, Position } from '@/modules/context/bus';
+import bus, { Item, isMouseEvent, Position, ContextPayload } from '@/modules/context/bus';
 import { Watch } from '@/modules/update';
 
 @Component
 export default class ContextMenu extends Vue {
+  /**
+   * The default width of the menu.
+   */
+  @Prop({ type: Number, default: 300 }) public width!: number;
+
   public items: Array<Item | null> = [];
   public open = false;
   public x = 0;
   public y = 0;
+
+  /**
+   * To help show shadows.
+   */
   public active: boolean[] = [];
+
   public e: MouseEvent | null = null;
 
   get processed() {
@@ -58,6 +58,14 @@ export default class ContextMenu extends Vue {
         shortcut: item.shortcut ? item.shortcut.join('+') : undefined,
       };
     });
+  }
+
+  get style() {
+    return {
+      left: `${this.x}px`,
+      top: `${this.y}px`,
+      minWidth: `${this.width}px`,
+    };
   }
 
   public mounted() {
@@ -93,15 +101,19 @@ export default class ContextMenu extends Vue {
     Vue.set(this.active, i, false);
   }
 
-  public show(payload: { e: MouseEvent | Position, items: Array<Item | null> }) {
+  public show(payload: ContextPayload) {
     this.open = true;
-    if (isMouseEvent(payload.e)) {
-      this.e = payload.e;
-      this.x = payload.e.pageX;
-      this.y = payload.e.pageY;
+    if (isMouseEvent(payload.event)) {
+      this.e = payload.event;
+      this.x = payload.event.pageX;
+      this.y = payload.event.pageY;
     } else {
-      this.x = payload.e.left;
-      this.y = payload.e.bottom;
+      this.x = payload.event.left;
+      this.y = payload.event.bottom;
+    }
+
+    if (payload.left) {
+      this.x -= this.width;
     }
 
     this.items = payload.items;
@@ -133,11 +145,6 @@ export default class ContextMenu extends Vue {
 .items
   padding: 5px 0
 
-.menu
-  position: absolute
-  left: 0
-  top: 0
-
 .break
   width: 100%
   border-top: 1px solid #484848
@@ -145,4 +152,9 @@ export default class ContextMenu extends Vue {
 
 .shortcut
   font-size: 12px
+
+.menu
+  z-index: 1000
+  position: absolute
+  box-shadow: 0px 8px 33px -17px rgba(0,0,0,0.75)
 </style>

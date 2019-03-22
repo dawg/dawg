@@ -67,17 +67,21 @@ export default class PanelHeaders extends Vue {
     workspace.setOpenedPanel(name);
   }
 
-  public addInstrument(e: MouseEvent) {
-    this.$context(e, [
-      {
-        text: 'Synth',
-        callback: project.addInstrument,
-      },
-      {
-        text: 'Soundfont',
-        callback: project.addInstrument,
-      },
-    ]);
+  public addInstrument(event: MouseEvent) {
+    this.$context({
+      event,
+      items: [
+        {
+          text: 'Synth',
+          callback: () => project.addInstrument('Synth'),
+        },
+        {
+          text: 'Soundfont',
+          callback: () => project.addInstrument('Soundfont'),
+        },
+      ],
+      left: true,
+    });
   }
 }
 </script>

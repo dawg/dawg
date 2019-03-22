@@ -114,13 +114,16 @@ export default class Slider extends Mixins(Draggable) {
     return this.height - level;
   }
 
-  public contextmenu(e: MouseEvent) {
-    this.$context(e, [
-      {
-        text: 'Create Automation Clip',
-        callback: () => this.$emit('automate'),
-      },
-    ]);
+  public contextmenu(event: MouseEvent) {
+    this.$context({
+      event,
+      items: [
+        {
+          text: 'Create Automation Clip',
+          callback: () => this.$emit('automate'),
+        },
+      ],
+    });
   }
 }
 </script>

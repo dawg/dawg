@@ -113,13 +113,16 @@ export default class FileEplorer extends Vue {
     this.$emit('dbclick', e);
   }
 
-  public context(folder: string, e: MouseEvent) {
-    this.$context(e, [
-      {
-        text: 'Remove Folder From Workspace',
-        callback: () => this.remove(folder),
-      },
-    ]);
+  public context(folder: string, event: MouseEvent) {
+    this.$context({
+      event,
+      items: [
+        {
+          text: 'Remove Folder From Workspace',
+          callback: () => this.remove(folder),
+        },
+      ],
+    });
   }
 
   public remove(folder: string) {

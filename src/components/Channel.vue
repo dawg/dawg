@@ -88,25 +88,31 @@ export default class Channel extends Vue {
     return Object.keys(EffectMap) as EffectName[];
   }
 
-  public showEffects(e: MouseEvent, i: number) {
+  public showEffects(event: MouseEvent, i: number) {
     const items = this.options.map((option) => ({ text: option, callback: () => this.addEffect(option, i) }));
-    this.$menu(e, items);
+    this.$menu({
+      event,
+      items,
+    });
   }
 
   public addEffect(effect: EffectName, i: number) {
     this.$emit('add', { effect, index: i });
   }
 
-  public select(e: MouseEvent, effect: AnyEffect) {
-    e.stopPropagation();
+  public select(event: MouseEvent, effect: AnyEffect) {
+    event.stopPropagation();
     this.$emit('select', effect);
   }
 
-  public contextmenu(e: MouseEvent, effect: AnyEffect) {
-    this.$context(e, [{
-      text: 'Delete',
-      callback: () => this.$emit('delete', effect),
-    }]);
+  public contextmenu(event: MouseEvent, effect: AnyEffect) {
+    this.$context({
+      event,
+      items: [{
+        text: 'Delete',
+        callback: () => this.$emit('delete', effect),
+      }],
+    });
   }
 
   public mute() {

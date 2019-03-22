@@ -63,17 +63,20 @@ export default class Synths extends Vue {
     workspace.setOpenedPanel('Piano Roll');
   }
 
-  public contextmenu(e: MouseEvent, i: number) {
-    this.$context(e, [
-      {
-        callback: () => project.deleteInstrument(i),
-        text: 'Delete',
-      },
-      {
-        callback: () => this.openScore(i),
-        text: 'Open In Piano Roll',
-      },
-    ]);
+  public contextmenu(event: MouseEvent, i: number) {
+    this.$context({
+      event,
+      items: [
+        {
+          callback: () => project.deleteInstrument(i),
+          text: 'Delete',
+        },
+        {
+          callback: () => this.openScore(i),
+          text: 'Open In Piano Roll',
+        },
+      ],
+    });
   }
 
   @Watch<Synths>('selectedPattern', { immediate: true })

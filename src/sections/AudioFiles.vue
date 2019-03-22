@@ -32,13 +32,16 @@ export default class AudioFiles extends Vue {
     });
   }
 
-  public context(e: MouseEvent, i: number) {
-    this.$context(e, [
-      {
-        text: 'Delete',
-        callback: () => project.removeSample(i),
-      },
-    ]);
+  public context(event: MouseEvent, i: number) {
+    this.$context({
+      event,
+      items: [
+        {
+          text: 'Delete',
+          callback: () => project.removeSample(i),
+        },
+      ],
+    });
   }
 
   public start(sample: Sample) {
