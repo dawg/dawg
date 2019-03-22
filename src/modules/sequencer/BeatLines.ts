@@ -10,9 +10,19 @@ export default class BeatLines extends Vue {
   @Prop({ type: Number, required: true }) public stepsPerBeat!: number;
 
   public $el!: HTMLElement;
-  public beatColor = 'rgba(0,0,0,.4)';
-  public stepColor = 'rgba(0,0,0,.1)';
-  public measureColor = 'rgb(0,0,0)';
+
+  get measureColor() {
+    return this.$theme.background;
+  }
+
+  get stepColor() {
+    return this.$theme.background + '50';
+  }
+
+  get beatColor() {
+  // public beatColor = 'rgba(0,0,0,.2)';
+    return this.$theme.background;
+  }
 
   get viewBox() {
     return this.pxPerBeat * this.beatsPerMeasure;
@@ -35,7 +45,7 @@ export default class BeatLines extends Vue {
   }
 
   get svg() {
-    const steps = [ `<rect x='0' y='0' height='1px' width='1px' fill='${ this.measureColor }'/>` ];
+    const steps = [ `<rect x='0' y='0' height='1px' width='1.5px' fill='${ this.measureColor }'/>` ];
 
     for ( let step = 1; step < this.measureSteps; step++ ) {
       const rectX = this.stepPx + this.stepPx * ( step - 1 ) - .5;
@@ -44,7 +54,7 @@ export default class BeatLines extends Vue {
     }
 
     const x = this.stepPx + this.stepPx * ( this.measureSteps - 1 ) - .5;
-    steps.push(`<rect y='0' height='1px' width='1px' fill='${this.measureColor}' x='${x}'/>`);
+    steps.push(`<rect y='0' height='1px' width='1.5px' fill='${this.measureColor}' x='${x}'/>`);
     return `
     <svg
       preserveAspectRatio='none'

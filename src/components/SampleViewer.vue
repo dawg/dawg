@@ -9,7 +9,7 @@
       >
       </wav-scope>
     </div>
-    <div class="sample-controls white--text">
+    <div class="sample-controls foreground--text">
       <span class="control">
         <play-pause
           @play="playSample"

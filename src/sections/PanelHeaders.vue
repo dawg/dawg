@@ -6,7 +6,7 @@
       :class="{ 'is-active': tab.isActive }"
       class="tabs-header"
     >
-      <div @click="selectPanel(tab.name)" class="text white--text">{{ tab.name }}</div>
+      <div @click="selectPanel(tab.name)" class="text foreground--text">{{ tab.name }}</div>
     </li>
     <div style="flex-grow: 1"></div>
     <tooltip-icon
@@ -26,7 +26,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import BaseTabs from '@/components/BaseTabs.vue';
 import { Nullable } from '@/utils';
-import { project, cache, general, specific } from '@/store';
+import { project, cache, general, workspace } from '@/store';
 import { Watch } from '@/modules/update';
 import { PanelNames } from '@/constants';
 
@@ -47,7 +47,8 @@ export default class PanelHeaders extends Vue {
   ];
 
   get actions() {
-    if (specific.openedPanel === 'Instruments') {
+    // TODO NO Type Checking
+    if (workspace.openedPanel === 'Instruments') {
       return this.synthActions;
     } else {
       return [];
@@ -63,7 +64,7 @@ export default class PanelHeaders extends Vue {
   }
 
   public selectPanel(name: PanelNames) {
-    specific.setOpenedPanel(name);
+    workspace.setOpenedPanel(name);
   }
 
   public addInstrument(e: MouseEvent) {

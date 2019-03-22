@@ -4,7 +4,13 @@
     :class="keyClass" 
     :style="keyStyle" 
     @mousedown="mousedown"
+    @mouseenter="enter"
+    @mouseleave="exit"
   >
+    <div
+      :style="keyOverlay"
+      class="overlay"
+    ></div>
     <div v-if="text" class="text">{{ text }}</div>
   </div>
 </template>
@@ -24,6 +30,7 @@ export default class Key extends Vue {
   @Prop(Boolean) public borderBottom!: boolean;
 
   public down = false;
+  public hover = false;
 
   get color() {
     return this.value.includes('#') ? 'black' : 'white';
@@ -49,6 +56,17 @@ export default class Key extends Vue {
     if (this.isC) {
       return this.value;
     }
+  }
+
+  get percentage() {
+    return this.hover ? 50 : this.isC ? 30 : 10;
+  }
+
+  get keyOverlay() {
+    return {
+      backgroundColor: this.$theme.primary + this.percentage,
+      borderBottom: `1px solid ${this.$theme.primary + (this.percentage + 1)}`,
+    };
   }
 
   get keyStyle() {
@@ -77,6 +95,14 @@ export default class Key extends Vue {
     this.down = false;
     this.$emit('stop', this.value);
   }
+
+  public enter() {
+    this.hover = true;
+  }
+
+  public exit() {
+    this.hover = false;
+  }
 }
 </script>
 
@@ -84,8 +110,16 @@ export default class Key extends Vue {
 $color_white: #eee
 $color_black: #3b3b3b
 
+.overlay
+  position: absolute
+  left: 0
+  right: 0
+  top: 0
+  bottom: 0
+  
 .text
   position: absolute
+  user-select: none
   right: 0
   bottom: 0
   font-size: 0.8em
@@ -95,7 +129,6 @@ $color_black: #3b3b3b
 
 .key--white
   background-color: $color_white
-  border-bottom: 1px solid #ddd
 
   &:hover
     background-color: darken($color_white, 6)

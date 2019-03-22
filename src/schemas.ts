@@ -87,6 +87,10 @@ export abstract class Element {
     return toTickTime(this.time);
   }
 
+  get endBeat() {
+    return this.time + this.duration;
+  }
+
   constructor(o?: IElement) {
     if (o) {
       this.row = o.row;
@@ -356,7 +360,7 @@ export class Pattern {
     scores.forEach((score, i) => {
       if (condition(score)) {
         score.dispose();
-        this.scores.splice(i, 1);
+        scores.splice(i, 1);
       }
     });
   }

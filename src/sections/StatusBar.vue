@@ -1,5 +1,5 @@
 <template>
-  <div class="primary footer position white--text" :style="style">
+  <div class="primary footer position foreground--text" :style="style">
     <v-tooltip top>
       <div slot="activator" class="name item">{{ projectName }}</div>
       <div>Project Name</div>
@@ -8,7 +8,7 @@
     <div style="flex: 1"></div>
     <tooltip-icon 
       v-if="general.backupError" 
-      color="white" 
+      :color="$theme.foreground" 
       size="18" 
       tooltip="Cloud Backup Error"
       top
@@ -22,7 +22,7 @@
       :width="2"
       indeterminate
     ></v-progress-circular>
-    <v-icon v-else color="white" size="20">
+    <v-icon v-else :color="$theme.foreground" size="20">
       {{ icon }}
     </v-icon>
   </div>
@@ -31,7 +31,7 @@
 <script lang="ts">
 import path from 'path';
 import { Component, Vue, Prop } from 'vue-property-decorator';
-import { cache, specific, general } from '@/store';
+import { cache, workspace, general } from '@/store';
 
 @Component
 export default class Foot extends Vue {
@@ -45,12 +45,11 @@ export default class Foot extends Vue {
   }
 
   get icon() {
-    return specific.backup ? 'cloud_done' : 'cloud_off';
+    return workspace.backup ? 'cloud_done' : 'cloud_off';
   }
 
   get openedFile() {
-    if (!cache) { return null; }
-    return cache.openedFile;
+    return general.openedFile;
   }
 
   get projectName() {

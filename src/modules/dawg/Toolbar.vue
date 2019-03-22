@@ -3,20 +3,20 @@
     class="secondary toolbar" 
     :height="height" 
   >
-    <!-- <v-btn icon><ico fa scale="2">circle-notch</ico></v-btn> -->
-    <img 
-      src="@/assets/64x64.png" 
-      class="logo"
-      height="45px"
-      width="45px"
-    >
-    <!-- <h1 class="white--text">Vusic</h1> -->
-    <div style="border-left: 1px solid #fff; height: 60%; margin: 20px"></div>
+    <logo
+      :color="$theme.foreground"
+    ></logo>
+    <!-- <h1 class="foreground--text">Vusic</h1> -->
+    <div 
+      class="tall-line"
+      :style="lineStyle"
+    ></div>
     
 
     <time-display
       style="margin-right: 10px"
-      :raw="seconds"></time-display>
+      :raw="seconds"
+    ></time-display>
     <!-- <bpm :value="bpm" @input="updateBpm"></bpm> -->
 
     <v-spacer
@@ -24,7 +24,7 @@
     ></v-spacer>
 
     <v-btn icon style="margin: 0" @click="toggle">
-      <icon :name="icon" class="white--text"></icon>
+      <icon :name="icon" class="foreground--text"></icon>
     </v-btn>
     <v-btn icon style="margin: 0"><ico fa>stop</ico></v-btn>
     <vertical-switch :top.sync="sliderTop"></vertical-switch>
@@ -62,6 +62,10 @@ export default class Toolbar extends Vue {
 
   get icon() {
     return this.play ? 'pause' : 'play';
+  }
+
+  get lineStyle() {
+    return `border-left: 1px solid ${this.$theme.foreground}`;
   }
 
   public toggle() {
@@ -136,12 +140,12 @@ export default class Toolbar extends Vue {
 .small-text
   font-size: .5em
 
+.tall-line
+  height: 60% 
+  margin: 20px
+
 .toolbar
   box-shadow: none
-
-// Inverting the logo color!
-.logo
-  filter: brightness(6)
 
 // See https://stackoverflow.com/questions/44818508/how-do-i-move-a-frameless-window-in-electron-without-using-webkit-app-region
 // This makes it a window drag area

@@ -13,8 +13,8 @@
         <timeline 
           v-model="progress" 
           class="timeline"
-          :set-loop-end.sync="setLoopEnd"
-          :set-loop-start.sync="setLoopStart"
+          :set-loop-end.sync="userLoopEnd"
+          :set-loop-start.sync="userLoopStart"
           :loop-start="loopStart"
           :loop-end="loopEnd"
           :offset="offset"
@@ -57,8 +57,8 @@
           :sequencer-loop-end.sync="sequencerLoopEnd"
           :loop-start="loopStart"
           :loop-end="loopEnd"
-          :set-loop-start="setLoopStart"
-          :set-loop-end="setLoopEnd"
+          :set-loop-start="userLoopStart"
+          :set-loop-end="userLoopEnd"
           :steps-per-beat="stepsPerBeat"
           :beats-per-measure="beatsPerMeasure"
           :px-per-beat="pxPerBeat"
@@ -98,16 +98,29 @@ export default class Sequencer extends Vue {
   @Prop({ type: Array, required: true }) public elements!: El[];
   @Prop({ type: Boolean, default: false }) public play!: boolean;
   @Prop({ type: Object, required: true }) public transport!: Transport;
+
+  /**
+   * Set this if you want to control the end of the loop. This will be ignored if set to 0.
+   */
+  @Prop({ type: Number, required: false }) public setLoopEnd!: number;
+
+  /**
+   * This will be synced with the end of the end of the loop.
+   */
   @Prop(Number) public end!: number;
+
+  /**
+   * This will be synced with the start of the loop.
+   */
   @Prop(Number) public start!: number;
 
-  public loopStart = 0;
-  public loopEnd = 0;
   public scrollLeft = 0;
   public progress = 0;
   public sequencerLoopEnd = 0;
-  public setLoopStart: null | number = null;
-  public setLoopEnd: null | number = null;
+
+  // The loop start/end set by the user using the timeline.
+  public userLoopStart: null | number = null;
+  public userLoopEnd: null | number = null;
 
   public verticalScroller: Element | null = null;
   public horizontalScroller: Element | null = null;
@@ -133,6 +146,26 @@ export default class Sequencer extends Vue {
     return this.pxPerBeat / this.stepsPerBeat;
   }
 
+  get loopEnd() {
+    // Prioritize the loop end set by the user
+    // Then check if a specific loop end has been given
+    // Then fallback to the calculated loop end
+
+    if (this.userLoopEnd) {
+      return this.userLoopEnd;
+    }
+
+    if (this.setLoopEnd) {
+      return this.setLoopEnd;
+    }
+
+    return this.sequencerLoopEnd;
+  }
+
+  get loopStart() {
+    return this.userLoopStart || 0;
+  }
+
   public seek(beat: number) {
     const time = toTickTime(beat);
     this.transport.seconds = new Tone.Time(time).toSeconds();
@@ -142,11 +175,13 @@ export default class Sequencer extends Vue {
   public added(element: El) {
     this.$log.debug(`Adding element at ${element.time}`);
     element.schedule(this.transport);
+    this.$emit('added', element);
   }
 
   public removed(element: El) {
     this.$log.debug(`Removing element at ${element.time}`);
     element.remove(this.transport);
+    this.$emit('removed', element);
   }
 
   public update() {
@@ -187,31 +222,10 @@ export default class Sequencer extends Vue {
     this.$update('start', this.loopStart);
   }
 
-  @Watch<Sequencer>('setLoopStart')
-  public changeLoopStart() {
-    this.loopStart = this.setLoopStart || 0;
-  }
-
-  @Watch<Sequencer>('setLoopEnd')
-  public changeLoopEnd() {
-    if (this.setLoopEnd) {
-      this.loopEnd = this.setLoopEnd;
-    } else {
-      this.loopEnd = this.sequencerLoopEnd;
-    }
-  }
-
-  @Watch<Sequencer>('sequencerLoopEnd', { immediate: true })
-  public changeSeqLoopEnd() {
-    if (!this.setLoopEnd) {
-      this.loopEnd = this.sequencerLoopEnd;
-    }
-  }
-
   @Watch<Sequencer>('transport')
   public resetLoop() {
-    this.setLoopStart = null;
-    this.setLoopEnd = null;
+    this.userLoopStart = null;
+    this.userLoopEnd = null;
   }
 
   @Watch<Sequencer>('play', { immediate: true })

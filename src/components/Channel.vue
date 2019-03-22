@@ -9,7 +9,7 @@
           v-if="effect"
           @click="select($event, effect)"
           @contextmenu="contextmenu($event, effect)"
-          class="effect secondary white--text"
+          class="effect secondary foreground--text"
         >
           {{ effect.type }}
         </div>
@@ -35,7 +35,7 @@
           ></pan>
           <div style="flex-grow: 1"></div>
           <div 
-            class="mute white--text"
+            class="mute foreground--text"
             :class="{ 'primary-lighten-2': !channel.mute }"
             @click="mute"
           >

@@ -31,7 +31,7 @@
         @input="panInput"
         @automate="automatePan"
       ></pan>
-      <div class="white--text name">{{ instrument.name }}</div>
+      <div class="foreground--text name">{{ instrument.name }}</div>
       <!-- TODO(jacob) dbclick open score -->
       <mini-score
         v-if="notes.length"

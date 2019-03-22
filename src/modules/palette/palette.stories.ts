@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import { storiesOf } from '@storybook/vue';
-import Palette, { PaletteItem, bus } from '@/modules/palette';
+import Palette, { PaletteItem } from '@/modules/palette';
 
 Vue.use(Palette);
 
@@ -30,7 +30,7 @@ const items: PaletteItem[] = [
 
 function open(e: KeyboardEvent) {
   if (e.which === 112) { // 112 == 'p'
-    bus.$emit('open');
+    //
   }
 }
 

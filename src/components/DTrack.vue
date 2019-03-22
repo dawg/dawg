@@ -1,5 +1,5 @@
 <template>
-  <div class="track white--text secondary">
+  <div class="track foreground--text secondary">
     <dot-button
       v-model="active"
     ></dot-button>

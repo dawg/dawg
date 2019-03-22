@@ -3,12 +3,12 @@
     <div 
       class="upper"
       @click="selectTop"
-      :class="{ 'primary-lighten-3': top }"
+      :class="topClass"
     ></div>
     <div
       class="lower" 
       @click="selectBottom"
-      :class="{ 'primary-lighten-3': bottom }"
+      :class="bottomClass"
     ></div>
   </div>
 </template>
@@ -22,6 +22,22 @@ export default class VerticalSwitch extends Vue {
 
   get bottom() {
     return !this.top;
+  }
+
+  get topClass() {
+    if (this.top) {
+      return 'primary';
+    } else {
+      return 'primary-lighten-6';
+    }
+  }
+
+  get bottomClass() {
+    if (this.bottom) {
+      return 'primary';
+    } else {
+      return 'primary-lighten-6';
+    }
   }
 
   public selectTop() {
