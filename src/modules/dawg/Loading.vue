@@ -43,13 +43,12 @@ export default class Loading extends Vue {
   z-index: 2000;
 }
 
-/* TODO The colors should use the Theme!! */
 .bar {
   display: block;
   bottom: 0px;
   width: 9px;
   height: 5px;
-  background: #9b59b6;
+  background: var(--accent);
   margin: 0 1px;
   animation: audio-wave 1.5s infinite ease-in-out;
 }
@@ -60,22 +59,22 @@ export default class Loading extends Vue {
   
   0% {
     height: 5px;
-    background: #9b59b6;
+    background: var(--accent);
   }
 
   25% {
     height: 40px;
-    background: #3498db;
+    background: var(--primary);
   }
 
   50% {
     height: 5px;
-    background: #9b59b6;
+    background: var(--accent);
   }
 
   100% {
     height: 5px;
-    background: #9b59b6;
+    background: var(--accent);
   }
 }
 

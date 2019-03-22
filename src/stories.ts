@@ -216,7 +216,7 @@ storiesOf(ContextMenu.name, module)
   .add('Standard', () => ({
     template: `
     <div
-      class="secondary white--text"
+      class="secondary foreground--text"
       @contextmenu="contextmenu"
       style="
         height: 200px;

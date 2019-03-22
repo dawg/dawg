@@ -6,7 +6,7 @@
         caret-right
       </ico>
       <drag
-        class="white--text path"
+        class="foreground--text path"
         group="arranger"
         :transfer-data="prototype"
         v-if="!isLeaf || isWav"

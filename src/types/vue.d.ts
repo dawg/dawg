@@ -7,13 +7,14 @@ import { KnobAugmentation } from '@/modules/knobs';
 import { Automatable } from '@/schemas';
 import { PaletteAugmentation } from '@/modules/palette';
 import { StatusAugmentation } from '@/modules/status';
+import { ThemeAugmentation } from '@/modules/theme';
 
 // 2. Specify a file with the types you want to augment
 //    Vue has the constructor type in types/vue.d.ts
 declare module 'vue/types/vue' {
   // 3. Declare augmentation for Vue
   // I'm not sure that this is the best way to do things...
-  interface Vue extends UpdateAugmentation, NotifyInterface, ContextInterface, KnobAugmentation<Automatable>, PaletteAugmentation, StatusAugmentation {
+  interface Vue extends UpdateAugmentation, NotifyInterface, ContextInterface, KnobAugmentation<Automatable>, PaletteAugmentation, StatusAugmentation, ThemeAugmentation {
     $log: {
       debug(...args: any[]): void,
       info(...args: any[]): void,
