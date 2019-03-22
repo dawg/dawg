@@ -295,7 +295,6 @@ export default class Arranger extends Mixins(Draggable) {
     this.selected.push(false);
     this.elements.push(item);
     this.$emit('added', item);
-    this.checkLoopEnd();
   }
 
   public move(e: MouseEvent, i: number) {
@@ -352,7 +351,6 @@ export default class Arranger extends Mixins(Draggable) {
       this.$set(this.elements, ind, newItem);
       this.$emit('removed', item, ind);
       this.$emit('added', newItem);
-      this.checkLoopEnd();
     });
   }
 
@@ -366,7 +364,6 @@ export default class Arranger extends Mixins(Draggable) {
     this.$delete(this.selected, i);
     this.$delete(this.elements, i);
     this.$emit('removed', item, i);
-    this.checkLoopEnd();
   }
 
   public checkLoopEnd() {
@@ -482,6 +479,7 @@ export default class Arranger extends Mixins(Draggable) {
     if (this.selected.length !== this.elements.length) {
       this.selected = this.elements.map((_) => false);
     }
+    this.checkLoopEnd();
   }
 }
 </script>

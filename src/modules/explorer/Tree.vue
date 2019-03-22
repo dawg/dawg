@@ -1,17 +1,26 @@
 <template>
   <div style="display: contents">
     <div 
-      @mousedown="loadPrototype"
+      @mousedown="loadData"
       @click="click" 
       @dblclick="doubleClick"
       style="display: flex" 
       :class="nodeClass" 
       :style="textStyle" 
     >
-      <wav-icon v-if="isLeaf"></wav-icon>
-      <ico v-else fa class="icon" :style="iconStyle">
+      <component
+        v-if="isLeaf"
+        :is="iconComponent"
+      ></component>
+      <ico
+        v-else 
+        fa 
+        class="icon" 
+        :style="iconStyle"
+      >
         caret-right
       </ico>
+      
       <drag
         class="white--text path"
         :group="dragGroup"
@@ -20,6 +29,7 @@
       >
         {{ fileName }}
       </drag>
+
     </div>
     <div v-if="showChildren">
       <tree
@@ -28,6 +38,8 @@
         :key="folder"
         :path="folder"
         :tree="tree[folder]"
+        :extensions="extensions"
+        :bus="bus"
         :depth="depth + 1"
         :index="i"
       ></tree>
@@ -41,12 +53,16 @@ import Tone from 'tone';
 import path from 'path';
 import { Keys } from '@/utils';
 import { Component, Prop } from 'vue-property-decorator';
-import { FileTree, EventBus, Playable, Extensions, Extension, ExtensionData } from '@/modules/explorer/types';
+import { FileTree, EventBus, Extensions, Extension, ExtensionData } from '@/modules/explorer/types';
 import { Watch } from '@/modules/update';
 
 @Component
 export default class Tree extends Vue {
-  @Prop({ type: Object, required: true }) public tree!: FileTree | string;
+  @Prop({ type: [Object, String], required: true }) public tree!: FileTree | string;
+
+  /**
+   * The full path to folder or file.
+   */
   @Prop({ type: String, required: true }) public path!: string;
 
   /**
@@ -60,10 +76,14 @@ export default class Tree extends Vue {
   @Prop({ type: Object, required: true }) public bus!: EventBus;
 
   /**
-   * The depth. You don't need to set this.
+   * The depth. You don't need to set this as it will be set automatically.
    */
   @Prop({ type: Number, default: 0 }) public depth!: number;
-  @Prop({ type: Number, default: 0 }) public index!: number;
+
+  /**
+   * The index of the tree.
+   */
+  @Prop({ type: Number, required: true }) public index!: number;
 
   // public sample: Sample | null = null;
   public showChildren = false;
@@ -138,6 +158,7 @@ export default class Tree extends Vue {
     if (!this.extension) {
       return {
         dragGroup: '',
+        iconComponent: '',
         load: () => ({}),
         createTransferData: () => ({}),
         preview: () => ({}),
@@ -148,16 +169,32 @@ export default class Tree extends Vue {
     return this.extensions[this.extension];
   }
 
+  get dragGroup() {
+    return this.extensionData.dragGroup;
+  }
+
+  get iconComponent() {
+    return this.extensionData.iconComponent;
+  }
+
   get preview() {
-    return this.extensionData.preview;
+    if (this.extensionData.preview) {
+      return this.extensionData.preview;
+    }
+
+    return () => {
+      // nothing by default
+    };
   }
 
   get stopPreview() {
-    return this.extensionData.stopPreview;
-  }
+    if (this.extensionData.stopPreview) {
+      return this.extensionData.stopPreview;
+    }
 
-  get dragGroup() {
-    return this.extensionData.dragGroup;
+    return () => {
+      // nothing by default
+    };
   }
 
   get load() {
@@ -165,7 +202,11 @@ export default class Tree extends Vue {
   }
 
   get createTransferData() {
-    return this.extensionData.createTransferData;
+    if (this.extensionData.createTransferData) {
+      return this.extensionData.createTransferData;
+    }
+
+    return (data: any) => data;
   }
 
 
@@ -210,6 +251,11 @@ export default class Tree extends Vue {
 
     trees.forEach((tree, i) => {
       if (i === index) {
+        // If it's already selected, stop and start the preview
+        if (tree.isSelected) {
+          this.startAndStop();
+        }
+
         tree.isSelected = true;
       } else {
         tree.isSelected = false;
@@ -217,12 +263,13 @@ export default class Tree extends Vue {
     });
   }
 
-  public loadPrototype() {
+  public async loadData() {
     if (this.data) {
       return;
     }
 
-    this.data = this.load(this.path);
+    // always await
+    this.data = await this.load(this.path);
     this.transferData = this.createTransferData(this.data);
   }
 
@@ -236,8 +283,13 @@ export default class Tree extends Vue {
     this.bus.$off('down', this.moveDown);
   }
 
-  @Watch<Tree>('isSelected')
   public startAndStop() {
+    this.stopPreview(this.data);
+    this.preview(this.data);
+  }
+
+  @Watch<Tree>('isSelected')
+  public startOrStop() {
     if (this.isSelected) {
       this.preview(this.data);
     } else {

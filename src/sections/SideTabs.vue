@@ -47,7 +47,6 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 
-import FileExplorer from '@/components/FileExplorer.vue';
 import Patterns from '@/components/Patterns.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
 import SideBar from '@/components/SideBar.vue';
@@ -65,7 +64,6 @@ interface Group {
 
 @Component({
   components: {
-    FileExplorer,
     Patterns,
     BaseTabs,
     SideBar,

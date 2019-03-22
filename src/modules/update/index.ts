@@ -9,6 +9,12 @@ export class Bus<E extends Events> extends Vue {
   public $on<T extends keyof E & string>(name: T, callback: (...payload: E[T]) => void) {
     return super.$on(name, callback);
   }
+  public $off<T extends keyof E & string>(name: T, callback: (...payload: E[T]) => void) {
+    return super.$on(name, callback);
+  }
+  public $once<T extends keyof E & string>(name: T, callback: (...payload: E[T]) => void) {
+    return super.$on(name, callback);
+  }
   public $emit<T extends keyof E & string>(name: T, ...payload: E[T]) {
     return super.$emit(name, payload);
   }

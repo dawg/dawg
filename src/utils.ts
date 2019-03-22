@@ -80,19 +80,23 @@ interface OctaveKey {
 
 const octaveKeys = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'].reverse();
 export const allKeys: OctaveKey[] = [];
+export const keyLookup: { [key: string]: OctaveKey } = {};
 let noteNumber = -octaveKeys.length + 1;  // A bit hacky but we want to start at C8 and end at A0
 range(0, 9).reverse().forEach((value) => {
   octaveKeys.forEach((key) => {
     if (noteNumber >= 0 && noteNumber < 88) {
+      const keyString = `${key}${value}`;
       allKeys.push({
-        value: `${key}${value}`,
+        value: keyString,
         color: key.endsWith('#') ? 'black' : 'white',
         id: noteNumber,
       });
+      keyLookup[keyString] = allKeys[allKeys.length - 1];
     }
     noteNumber += 1;
   });
 });
+
 
 
 export const copy = <T>(o: T): T => {

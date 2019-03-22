@@ -188,7 +188,12 @@ export class Sample {
 
   public stopPreview() {
     if (this.previewSource) {
-      this.previewSource.stop();
+      try {
+        this.previewSource.stop();
+      } catch (e) {
+        // DO nothing
+        // BufferSource will throw an error if it is already stopped
+      }
     }
   }
 

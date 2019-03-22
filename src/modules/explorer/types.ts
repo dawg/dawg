@@ -1,17 +1,21 @@
 import { Bus } from '../update';
+import { PropOptions } from 'vue';
 
 export interface FileTree {
   [fullPath: string]: FileTree | string;
 }
 
-export type Playable = 'wav';
-export type Extension = Playable | 'midi' | 'mid';
-export interface ExtensionData<T, V> {
+export type Extension = 'wav' | 'midi' | 'mid';
+export interface ExtensionData<T, V = T> {
+  /**
+   * The drag group. This must match the desired acceptor.
+   */
   dragGroup: string;
-  load: (path: string) => T;
-  createTransferData: (item: T) => V;
-  preview: (item: T) => void;
-  stopPreview: (item: T) => void;
+  load: (path: string) => T | Promise<T>;
+  iconComponent: string;
+  createTransferData?: (item: T) => V;
+  preview?: (item: T) => void;
+  stopPreview?: (item: T) => void;
 }
 
 export interface Extensions {

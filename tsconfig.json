@@ -19,6 +19,9 @@
     "paths": {
       "@/*": [
         "src/*"
+      ],
+      "@tonejs/midi": [
+        "src/types/tonejs__midi.d.ts"
       ]
     },
     "lib": [

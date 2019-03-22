@@ -202,13 +202,15 @@ export default class App extends Vue {
         //
       },
     },
+    new: {
+      shortcut: ['Ctrl', 'N'],
+      text: 'New Project',
+      callback: this.newProject,
+    },
     reload: {
       text: 'Reload',
       shortcut: ['Ctrl', 'R'],
-      callback: () => {
-        const window = remote.getCurrentWindow();
-        window.reload();
-      },
+      callback: this.reload,
     },
     palette: {
       text: 'Command Palette',
@@ -235,6 +237,8 @@ export default class App extends Vue {
     {
       name: 'File',
       items: [
+        this.menuItems.new,
+        null,
         this.menuItems.open,
         this.menuItems.backup,
         null,
@@ -559,6 +563,16 @@ export default class App extends Vue {
     } else {
       this.$notify.info(`Unable to delete ${info.name}`, { detail: res.message });
     }
+  }
+
+  public async newProject() {
+    await cache.setOpenedFile(null);
+    this.reload();
+  }
+
+  public reload() {
+      const window = remote.getCurrentWindow();
+      window.reload();
   }
 
   public closeApplication() {
