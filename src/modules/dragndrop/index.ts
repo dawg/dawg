@@ -17,7 +17,18 @@ export const accepting = (component: VueConstructor) => {
     }
 
     public handleDragover(_: any, e: DragEvent) {
-      if (this.group !== dragging && e.dataTransfer) {
+      if (!e.dataTransfer) {
+        return;
+      }
+
+      if (this.group === dragging) {
+        // We need to stop immediate propagation
+        // If there is a no drop zone inside a drop zone, the no drop zone will overwrite the drop
+        // if we don't stop propagation
+        e.stopPropagation();
+
+        e.dataTransfer.dropEffect = 'copy';
+      } else {
         e.dataTransfer.dropEffect = 'none';
       }
     }

@@ -1,32 +1,40 @@
 <template>
-  <sequencer
-    v-on="$listeners"
-    v-bind="$attrs"
-    :beats-per-measure="beatsPerMeasure"
-    :row-height="rowHeight"
-    :elements="notes"
-    :transport="transport"
-    :num-rows="allKeys.length"
-    :prototype.sync="note"
-    :row-class="rowClass"
-    :set-loop-end="setLoopEnd"
-    name="Piano Roll"
-    @added="added"
-    @removed="removed"
+  <drop
+    group="midi"
+    @drop="addNotes"
   >
-    <template slot="side">
-      <piano 
-        :synth="instrument"
-        :key-height="rowHeight"
-      ></piano>
-    </template>
-  </sequencer>
+    <sequencer
+      style="height: 100%"
+      v-on="$listeners"
+      v-bind="$attrs"
+      :beats-per-measure="beatsPerMeasure"
+      :row-height="rowHeight"
+      :elements="notes"
+      :transport="transport"
+      :num-rows="allKeys.length"
+      :prototype.sync="note"
+      :row-class="rowClass"
+      :set-loop-end="setLoopEnd"
+      name="Piano Roll"
+      @added="added"
+      @removed="removed"
+    >
+      <template slot="side">
+        <piano 
+          :synth="instrument"
+          :key-height="rowHeight"
+        ></piano>
+      </template>
+    </sequencer>
+  </drop>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import Sequencer from '@/modules/sequencer/Sequencer.vue';
-import { allKeys, toTickTime } from '@/utils';
+import { allKeys, toTickTime, keyLookup } from '@/utils';
+import { INotes } from '@/midi-parser';
+import Transport from '@/modules/audio/transport';
 import { Note, Instrument, Element, Playlist, Pattern, Score } from '@/schemas';
 import { Watch } from '@/modules/update';
 
@@ -74,6 +82,23 @@ export default class PianoRollSequencer extends Vue {
   public rowClass(i: number) {
     const key = allKeys[i].value;
     return key.includes('#') ? 'secondary-darken-1' : 'secondary';
+  }
+
+  public addNotes(notes: INotes) {
+    notes.forEach((iNote) => {
+      // Transform the interfaces into actual note classes
+      const row = keyLookup[iNote.name].id;
+      const note = new Note({
+        row,
+        duration: iNote.duration,
+        time: iNote.start,
+      }).init(this.instrument);
+      note.velocity = iNote.velocity;
+
+      // TODO Refactor this
+      this.notes.push(note);
+      note.schedule(this.transport);
+    });
   }
 
   public added(el: Note) {

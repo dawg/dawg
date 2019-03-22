@@ -218,13 +218,15 @@ export default class App extends Vue {
         //
       },
     },
+    new: {
+      shortcut: ['Ctrl', 'N'],
+      text: 'New Project',
+      callback: this.newProject,
+    },
     reload: {
       text: 'Reload',
       shortcut: ['Ctrl', 'R'],
-      callback: () => {
-        const window = remote.getCurrentWindow();
-        window.reload();
-      },
+      callback: this.reload,
     },
     palette: {
       text: 'Command Palette',
@@ -248,6 +250,8 @@ export default class App extends Vue {
     {
       name: 'File',
       items: [
+        this.menuItems.new,
+        null,
         this.menuItems.open,
         this.menuItems.backup,
         null,
@@ -568,6 +572,9 @@ export default class App extends Vue {
     }
   }
 
+  /**
+   * Whenever we add a sample, if it hasn't been imported before, add it the the list of project samples.
+   */
   public checkPrototype(prototype: PlacedPattern | PlacedSample) {
     if (!(prototype instanceof PlacedSample)) {
       return;
@@ -644,12 +651,25 @@ export default class App extends Vue {
         // We are not taking advantage of firebase here
         // Ideally firebase would send an event and we would update our project list
         // Until we do that, this will suffice
-        const taget = general.projects.indexOf(info);
         general.setProjects(
           general.projects.filter((maybe) => maybe !== info),
         );
+      } else if (res.type === 'not-found') {
+        this.$notify.info(`Unable to delete ${info.name}`, { detail: 'The project was not found.' });
+      } else {
+        this.$notify.info(`Unable to delete ${info.name}`, { detail: res.message });
       }
     });
+  }
+
+  public async newProject() {
+    await cache.setOpenedFile(null);
+    this.reload();
+  }
+
+  public reload() {
+      const window = remote.getCurrentWindow();
+      window.reload();
   }
 
   public closeApplication() {

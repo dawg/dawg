@@ -32,7 +32,7 @@ export interface IElement {
 }
 
 // TODO Consolidate all Element classes!
-export abstract class Element implements IElement {
+export abstract class Element {
 
   public static copy<T extends Element>(element: T, cls: ConstructorOf<T>): T {
     const newElement = new cls();
@@ -120,7 +120,7 @@ export abstract class Element implements IElement {
   protected abstract add(transport: Transport): string;
 }
 
-@io.inheritSerialization(Element)
+@io.inherit(Element)
 export class PlacedPattern extends Element {
   public static create(pattern: Pattern) {
     const element = new PlacedPattern();
@@ -192,7 +192,12 @@ export class Sample {
 
   public stopPreview() {
     if (this.previewSource) {
-      this.previewSource.stop();
+      try {
+        this.previewSource.stop();
+      } catch (e) {
+        // DO nothing
+        // BufferSource will throw an error if it is already stopped
+      }
     }
   }
 
@@ -209,7 +214,7 @@ export class Sample {
   }
 }
 
-@io.inheritSerialization(Element)
+@io.inherit(Element)
 export class PlacedSample extends Element {
   public static create(sample: Sample) {
     const element = new PlacedSample();
@@ -238,19 +243,19 @@ export class PlacedSample extends Element {
   }
 
   public add(transport: Transport) {
-
     return this.sample.player.sync(transport, this.tickTime, undefined, this.duration);
-    // return this.sample.player.scheduled[this.sample.player.scheduled.length - 1];
   }
 }
 
-@io.inheritSerialization(Element)
+@io.inherit(Element)
 export class Note extends Element {
   public static create(instrument: Instrument) {
     const element = new Note();
     element.instrument = instrument;
     return element;
   }
+
+  @io.auto({ optional: true }) public velocity = 1;
   public readonly component = 'note';
   public instrument!: Instrument;
 
@@ -267,12 +272,14 @@ export class Note extends Element {
 
   public add(transport: Transport) {
     return transport.schedule((exact: number) => {
-      this.instrument.callback(exact, this);
+      const duration = toTickTime(this.duration);
+      const value = allKeys[this.row].value;
+      this.instrument.triggerAttackRelease(value, duration, exact, this.velocity);
     }, this.tickTime);
   }
 }
 
-@io.inheritSerialization(Element)
+@io.inherit(Element)
 export class PlacedAutomationClip extends Element {
   public static create(clip: AutomationClip, time: number, row: number, duration: number) {
     const element = new PlacedAutomationClip();
@@ -416,6 +423,7 @@ export class Instrument {
   get mute() {
     return this._mute;
   }
+
   @io.auto
   set mute(mute: boolean) {
     this._mute = mute;
@@ -426,6 +434,7 @@ export class Instrument {
   get channel() {
     return this._channel;
   }
+
   set channel(channel: number | null) {
     this._channel = channel;
   }
@@ -433,14 +442,15 @@ export class Instrument {
   get type() {
     return this._type;
   }
+
   @io.auto
   set type(type: string) {
     this._type = type;
     this.synth.set({ oscillator: { type } });
   }
 
-  public triggerAttackRelease(note: string, duration: Time, time: number) {
-    this.synth.triggerAttackRelease(note, duration, time);
+  public triggerAttackRelease(note: string, duration: Time, time: number, velocity?: number) {
+    this.synth.triggerAttackRelease(note, duration, time, velocity);
   }
 
   public triggerRelease(note: string) {
@@ -469,12 +479,6 @@ export class Instrument {
     }
   }
 
-  public callback(time: number, note: Note) {
-    const duration = toTickTime(note.duration);
-    const value = allKeys[note.row].value;
-    this.triggerAttackRelease(value, duration, time);
-  }
-
   public dispose() {
     this.disconnect();
     // For some reason, this causes internal issues in Tone.js
@@ -485,7 +489,10 @@ export class Instrument {
   }
 
   private checkConnection() {
-    if (!this.destination) { return; }
+    if (!this.destination) {
+      return;
+    }
+
     if (this.mute && this.connected) {
       this.panner.disconnect(this.destination);
       this.connected = false;
@@ -529,7 +536,7 @@ export class AutomationClip {
     return ac;
   }
 
-  @io.autoserializeAs(Point) public points: Point[] = [];
+  @io.auto({ type: Point }) public points: Point[] = [];
   @io.auto public context!: ClipContext;
   @io.auto public contextId!: string;
   @io.auto public attr!: string;
