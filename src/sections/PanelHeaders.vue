@@ -68,7 +68,7 @@ export default class PanelHeaders extends Vue {
   }
 
   public addInstrument(event: MouseEvent) {
-    this.$context({
+    this.$menu({
       event,
       items: [
         {

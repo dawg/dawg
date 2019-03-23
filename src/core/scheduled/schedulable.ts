@@ -81,7 +81,7 @@ export abstract class Schedulable {
     this.transport = transport;
 
     const eventId = this.add(transport);
-    if (eventId) {
+    if (eventId !== undefined && eventId !== null) {
       this.eventId = eventId;
     }
   }

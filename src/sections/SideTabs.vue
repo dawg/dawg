@@ -36,7 +36,7 @@
             :value="workspace.selectedPattern" 
             @input="workspace.setPattern"
             :patterns="general.project.patterns"
-            @remove="general.project.removePattern.bind(general.project)"
+            @remove="(i) => general.project.removePattern(i)"
           ></patterns>
         </side-bar>
       </base-tabs>

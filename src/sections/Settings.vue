@@ -28,8 +28,7 @@
           <v-text-field 
             class="text-field"
             label="Project Name"
-            :value="general.project.name"
-            @input="general.project.setName.bind(general.project)"
+            v-model="general.project.name"
           ></v-text-field>
         </v-list-tile-action>
       </v-list-tile>

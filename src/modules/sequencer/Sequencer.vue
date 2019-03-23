@@ -50,7 +50,7 @@
         style="height: fit-content"
         :settings="{ suppressScrollY: true, handlers: ['wheel'] }"
       >
-        <arranger
+        <sequencer-grid
           @added="added"
           @removed="removed"
           :elements="elements"
@@ -67,7 +67,7 @@
           :name="name"
           v-bind="$attrs"
           v-on="$listeners"
-        ></arranger>
+        ></sequencer-grid>
       </vue-perfect-scrollbar>
 
     </vue-perfect-scrollbar>
@@ -81,11 +81,11 @@ import { Watch } from '@/modules/update';
 import { Schedulable } from '@/core';
 import Transport from '@/modules/audio/transport';
 import { toTickTime, clamp } from '@/utils';
-import Arranger from '@/modules/sequencer/Arranger.vue';
+import SequencerGrid from '@/modules/sequencer/SequencerGrid.vue';
 import Timeline from '@/modules/sequencer/Timeline.vue';
 
 @Component({
-  components: { Arranger, Timeline },
+  components: { SequencerGrid, Timeline },
 })
 export default class Sequencer extends Vue {
   @Prop({ type: Number, required: true }) public stepsPerBeat!: number;

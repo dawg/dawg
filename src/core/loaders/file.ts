@@ -19,7 +19,7 @@ export class FileLoader<T> extends Loader<T, { path: string }> {
 
     let contents: string;
     try {
-      contents = await fs.readFile(this.path).toString();
+      contents = (await fs.readFile(this.path)).toString();
     } catch (e) {
       return {
         type: 'error',

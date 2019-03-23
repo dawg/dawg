@@ -35,7 +35,9 @@ export class Soundfont implements Source<SoundfontOptions> {
   }
 
   public connect(node: Tone.AudioNode): this {
-    this.player.connect(node);
+    // @ts-ignore
+    // TODO A bit of a hacky solution to make Tone.js work with soundfonts
+    this.player.connect(node.output);
     return this;
   }
 

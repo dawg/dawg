@@ -43,7 +43,7 @@
               @update:play="playPause"
               :style="border('bottom')"
               :bpm="general.project.bpm"
-              @update:bpm="general.project.setBpm.bind(general.project)"
+              @update:bpm="(bpm) => general.project.setBpm(bpm)"
             ></toolbar>
           </split>
 
@@ -510,7 +510,7 @@ export default class App extends Vue {
   public async save(forceDialog: boolean = false) {
     // If we are backing up, star the progress circle!
     if (workspace.backup) {
-      general.syncing = true;
+      general.set({ key: 'syncing', value: true })
     }
 
     const backupStatus = await general.saveProject({
@@ -520,20 +520,18 @@ export default class App extends Vue {
     });
 
     // Always set the value back to false... you never know
-    general.syncing = false;
+    general.set({ key: 'syncing', value: false })
 
     // backupStatus is true if workspace.backup is also true
     if (backupStatus) {
       switch (backupStatus.type) {
         case 'error':
           this.$notify.error('Unable to backup', { detail: backupStatus.message });
-          general.backupError = true;
+          general.set({ key: 'backupError', value: true });
           break;
         case 'success':
           // Make sure to set it back to false if there was an error previously
-          if (general.backupError) {
-            general.backupError = false;
-          }
+          general.set({ key: 'backupError', value: false });
           break;
       }
     }

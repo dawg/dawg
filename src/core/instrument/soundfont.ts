@@ -23,7 +23,10 @@ export type Soundfonts = ISoundfont['soundfont'];
 
 export class Soundfont extends Instrument<Audio.SoundfontOptions> implements Serializable<ISoundfont> {
   public static async create(soundfont: Soundfonts, name: string) {
-    const context = Tone.context as unknown as AudioContext;
+    // @ts-ignore
+    // TODO A bit of a hacky solution to make Tone.js work with soundfonts
+    const context = Tone.context._context as unknown as AudioContext;
+
     const player = await soundfonts.instrument(context, soundfont);
     return new Soundfont(new Audio.Soundfont(player), Tone.Master, {
       soundfont: 'acoustic_grand_piano', // TODO(jacob)

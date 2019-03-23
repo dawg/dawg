@@ -28,6 +28,8 @@ export default class Synths extends Vue {
   @Prop(Nullable(Object)) public selectedScore!: Score | null;
   @Prop(Nullable(Object)) public selectedPattern!: Pattern | null;
 
+  public general = general;
+
   get scoreLookup() {
     const lookup: {[k: string]: Score} = {};
     if (this.selectedPattern) {
