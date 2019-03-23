@@ -1,31 +1,11 @@
 import fs from 'mz/fs';
 import Tone from 'tone';
+import soundfonts from 'soundfont-player';
 import * as io from '@/modules/cerialize';
-import { VuexModule, Mutation, Module, getModule, Action } from 'vuex-module-decorators';
-import { Module as Mod } from 'vuex';
+import { Mutation, getModule, Action } from 'vuex-module-decorators';
 import { remote } from 'electron';
-import {
-  Pattern,
-  Instrument,
-  Score,
-  Channel,
-  EffectName,
-  Effect,
-  AnyEffect,
-  EffectOptions,
-  EffectTones,
-  Track,
-  Playlist,
-  PlacedPattern,
-  PlacedSample,
-  Sample,
-  AutomationClip,
-  PlacedAutomationClip,
-  ClipContext,
-  Automatable,
-} from '@/schemas';
-import { findUniqueName, range } from '@/utils';
-import store from '@/store/store';
+import { findUniqueName, range, UnreachableCaseError } from '@/utils';
+import * as Audio from '@/modules/audio';
 import cache from '@/store/cache';
 import general from '@/store/general';
 import uuid from 'uuid';
@@ -33,30 +13,160 @@ import { loadBuffer } from '@/modules/wav/local';
 import { makeLookup, chain } from '@/modules/utils';
 import { Signal } from '@/modules/audio';
 import backend from '@/backend';
+import * as t from 'io-ts';
 import { User } from 'firebase';
+import { PatternType, Pattern } from '@/core/pattern';
+import { SynthType, Synth } from '@/core/instrument/synth';
+import { SoundfontType, Soundfont } from '@/core/instrument/soundfont';
+import { ChannelType, Channel } from '@/core/channel';
+import { TrackType, Track } from '@/core/track';
+import { PlaylistType, Playlist } from '@/core/playlist';
+import { SampleType, Sample } from '@/core/sample';
+import { AutomationType, AutomationClip } from '@/core/automation';
+import { ScheduledAutomation } from '@/core/scheduled/automation';
+import { ScheduledPattern } from '@/core/scheduled/pattern';
+import { ScheduledSample } from '@/core/scheduled/sample';
 
 const { dialog } = remote;
+
+const ProjectTypeRequired = t.type({
+  id: t.string,
+  bpm: t.number,
+  master: PlaylistType,
+});
+
+const ProjectTypePartial = t.partial({
+  stepsPerBeat: t.number,
+  beatsPerMeasure: t.number,
+  name: t.string,
+  patterns: t.array(PatternType),
+  instruments: t.array(t.union([SynthType, SoundfontType])),
+  channels: t.array(ChannelType),
+  tracks: t.array(TrackType),
+  samples: t.array(SampleType),
+  automationClips: t.array(AutomationType),
+});
+
+export const ProjectType = t.intersection([ProjectTypeRequired, ProjectTypePartial]);
+
+export type IProject = t.TypeOf<typeof ProjectType>;
 
 /**
  * This module represents the project. When a user saves the project, this file is serialized to the fs.
  */
-@Module({ dynamic: true, store, name: 'project' })
-export class Project extends VuexModule {
-  @io.auto public bpm = 120;
-  @io.auto({ optional: true }) public stepsPerBeat = 4;
-  @io.auto({ optional: true }) public beatsPerMeasure = 4;
-  @io.auto({ nullable: true }) public name: string | null = null;
-  @io.auto public id = uuid.v4();
-  @io.auto({ type: Pattern, optional: true }) public patterns: Pattern[] = [];
-  @io.auto({ type: Instrument, optional: true }) public instruments: Instrument[] = [];
-  @io.auto({ type: Channel }) public channels = range(10).map((i) => Channel.create(i));
-  @io.auto({ type: Track }) public tracks = range(21).map((i) => Track.create(i));
-  @io.auto({ type: Playlist, optional: true }) public master: Playlist = new Playlist();
-  @io.auto({ type: Sample, optional: true }) public samples: Sample[] = [];
-  @io.auto({ type: AutomationClip, optional: true }) public automationClips: AutomationClip[] = [];
+export class Project {
+  public static newProject() {
+    return new Project({
+      id: uuid.v4(),
+      bpm: 120,
+      master: {},
+    });
+  }
 
-  constructor(module?: Mod<any, any>) {
-    super(module || {});
+  public static async load(i: IProject) {
+    const instruments = await (i.instruments || []).map(async (iInstrument) => {
+      switch (iInstrument.instrument) {
+        case 'soundfont':
+          const context = Tone.context as unknown as AudioContext;
+          const player = await soundfonts.instrument(context, name);
+          const soundfont = new Audio.Soundfont(player);
+          return new Soundfont(soundfont, iInstrument);
+        case 'synth':
+          return new Synth(iInstrument);
+      }
+    });
+
+    const samples = (i.samples || []).map(async (iSample) => {
+      const buffer = await loadBuffer(iSample.path);
+      return new Sample(buffer, iSample);
+    });
+  }
+
+  public bpm: number;
+  public stepsPerBeat: number;
+  public beatsPerMeasure: number;
+  public name: string | null;
+  public id: string;
+  public patterns: Pattern[];
+  public instruments: Array<Synth | Soundfont> = [];
+  public channels: Channel[];
+  public tracks: Track[];
+  public master: Playlist;
+  public samples: Sample[];
+  public automationClips: AutomationClip[];
+
+  constructor(i: IProject) {
+    this.bpm = i.bpm;
+    this.stepsPerBeat = i.stepsPerBeat || 4;
+    this.beatsPerMeasure = i.beatsPerMeasure || 4;
+    this.name = i.name || null;
+    this.id = i.id;
+
+    if (i.channels) {
+      this.channels = (i.channels || []).map((iChannel) => {
+        return new Channel(iChannel);
+      });
+    } else {
+      this.channels = range(10).map((index) => Channel.create(index));
+    }
+
+    if (i.tracks) {
+      this.tracks = i.tracks.map((iTrack) => new Track(iTrack));
+    } else {
+      this.tracks = range(21).map((index) => Track.create(index));
+    }
+
+    // I don't like this at all
+    // But I can't think of a better way to serialize / deserialize automation clips
+    // We should figure out how othinit(init(init(er DAWs serialize automation clips
+    this.automationClips = (i.automationClips || []).map((iAutomationClip) => {
+      let signal: Signal;
+      if (iAutomationClip.context === 'channel') {
+        // TODO(jacob) remove this
+        // @ts-ignore
+        signal = this.channelLookup[clip.contextId][clip.attr];
+      } else {
+        // @ts-ignore
+        signal = this.instrumentLookup[clip.contextId][clip.attr];
+      }
+
+      return new AutomationClip(signal, iAutomationClip);
+    });
+
+    const elements = (i.master.elements || []).map((iElement) => {
+      switch (iElement.type) {
+        case 'automation':
+          return new ScheduledAutomation(clip, iElement);
+        case 'pattern':
+          return new ScheduledPattern(pattern, iElement);
+        case 'sample':
+          return new ScheduledSample(sample, iElement);
+      }
+    });
+    this.master = new Playlist(elements);
+
+    this.patterns = (i.patterns || []).map((iPattern) => {
+      // iPattern.removeScores((score) => {
+      //   return !(score.instrumentId in this.instrumentLookup);
+      // });
+      // pattern.scores.forEach((score) => {
+      //   const instrument = this.instrumentLookup[score.instrumentId];
+      //   score.init(instrument);
+      //   score.notes.forEach((note) => {
+      //     note.init(score.instrument);
+      //     note.schedule(pattern.transport);
+      //   });
+      // });
+
+      (iPattern.scores || []).map((iScore) => {
+        if (iScore.instrumentId) {
+
+        return new Score(iScore);
+        }
+      });
+
+      return new Pattern(iPattern);
+    });
   }
 
   @Action

@@ -196,3 +196,16 @@ export function* reverse <T>(arr: T[]) {
     yield arr[i];
   }
 }
+
+export type Primitive = string | number | boolean | undefined | null;
+
+export function literal<T extends Primitive>(value: T): T {
+  return value;
+}
+
+
+export class UnreachableCaseError extends Error {
+  constructor(value: never) {
+    super(`Unreachable case: ${value}`);
+  }
+}

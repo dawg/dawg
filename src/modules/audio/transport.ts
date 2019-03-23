@@ -312,3 +312,7 @@ export default class Transport extends Tone.Emitter<Events> {
     return (freq / this.PPQ) * 60;
   }
 }
+
+export {
+  Transport,
+};
