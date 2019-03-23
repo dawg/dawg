@@ -57,7 +57,7 @@ export class Pattern implements Serializable<IPattern> {
     return {
       name: this.name,
       id: this.id,
-      scores: this.scores,
+      scores: this.scores.map((score) => score.serialize()),
     };
   }
 }

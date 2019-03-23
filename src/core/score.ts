@@ -41,7 +41,7 @@ export class Score implements Serializable<IScore> {
     return {
       instrumentId: this.instrumentId,
       id: this.id,
-      notes: this.notes,
+      notes: this.notes.map((note) => note.serialize()),
     };
   }
 

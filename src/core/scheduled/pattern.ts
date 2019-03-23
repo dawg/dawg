@@ -3,7 +3,7 @@ import * as Audio from '@/modules/audio';
 import { SchedulableType, Schedulable } from './schedulable';
 import { Pattern } from '@/core/pattern';
 import { Serializable } from '../serializable';
-import { toTickTime } from '@/utils';
+import { toTickTime, literal } from '@/utils';
 
 export const ScheduledPatternType = t.intersection([
   t.type({
@@ -48,6 +48,7 @@ export class ScheduledPattern extends Schedulable implements Serializable<ISched
       duration: this.duration,
       time: this.time,
       patternId: this.patternId,
+      type: literal('pattern'),
     };
   }
 

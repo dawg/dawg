@@ -7,17 +7,17 @@ import Waveform from '@/modules/sequencer/Waveform.vue';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import { loadFromUrl } from '@/modules/wav/web';
 import {
-  PlacedPattern,
+  ScheduledPattern,
   Pattern,
   Score,
   Note as NE,
-  PlacedSample,
+  ScheduledSample,
   Instrument,
   Track,
   Sample,
   AutomationClip,
-  PlacedAutomationClip,
-} from '@/schemas';
+  ScheduledAutomation,
+} from '@/core';
 import { colored, resizable, Note, PatternElement, SampleElement, positionable } from '@/modules/sequencer';
 import Transport from '@/modules/audio/transport';
 import { range } from '@/utils';
@@ -63,17 +63,17 @@ storiesOf('PianoRollSequencer', module)
     data: () => ({
       notes: [],
       transport: new Transport(),
-      instrument: Instrument.default('TEST'),
+      instrument: null, // Instrument.default('TEST'),
     }),
     components: { PianoRollSequencer, Dawg },
   }));
 
 
-const pattern = Pattern.create('Test Pattern');
-const score = Score.create(Instrument.default('sdklfjsdf'));
-pattern.scores = [score];
-score.notes = notes.map((note) => new NE(note));
-const patternElement = PlacedPattern.create(pattern);
+// const pattern = Pattern.create('Test Pattern');
+// const score = Score.create(Instrument.default('wow'));
+// pattern.scores = [score];
+// score.notes = notes.map((note) => new NE(note));
+// const patternElement = ScheduledPattern.create(pattern);
 
 storiesOf('PlaylistSequencer', module)
 .add('default', () => ({
@@ -90,7 +90,7 @@ storiesOf('PlaylistSequencer', module)
     transport: new Transport(),
     elements: [],
     buffer: null,
-    element: patternElement,
+    element: null, // patternElement,
     tracks: range(21).map((i) => Track.create(i)),
 
   }),
@@ -133,7 +133,7 @@ storiesOf('AutomationClipElement', module)
     `,
     data: () => ({
       clip,
-      element: PlacedAutomationClip.create(clip, 0, 0, 1),
+      element: ScheduledAutomation.create(clip, 0, 0, 1),
     }),
   }));
 
@@ -158,10 +158,9 @@ storiesOf('SampleElement', module)
 
         // @ts-ignore
         const buffer: AudioBuffer = this.buffer;
-        const sample = new Sample();
-        sample.buffer = buffer;
+        const sample = Sample.create('', buffer);
 
-        return PlacedSample.create(sample);
+        return ScheduledSample.create(sample);
       },
     },
   }));
@@ -176,7 +175,10 @@ storiesOf('PatternElement', module)
     ></pattern-element>
     `,
     components: { PatternElement, Dawg },
-    data: () => ({ element: patternElement, duration: 2 }),
+    data: () => ({
+      element: null, // patternElement,
+      duration: 2,
+    }),
   }));
 
 storiesOf('Note', module)
@@ -189,7 +191,7 @@ storiesOf('Note', module)
     ></note>
     `,
     components: { Note, Dawg },
-    data: () => ({ element: new NE({ row: 0, time: 0, duration: 0 }), duration: 2 }),
+    data: () => ({ element: { row: 0, time: 0, duration: 0 } }),
   }));
 
 const Tester = Vue.component('Tester', {

@@ -7,7 +7,7 @@
       :instrument="instrument"
       :notes="getNotes(instrument)"
       :channel="instrument.channel"
-      @update:channel="project.setChannel({ instrument, channel: $event })"
+      @update:channel="general.project.setChannel({ instrument, channel: $event })"
     ></synth>
   </div>
 </template>
@@ -17,18 +17,16 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import Tone from 'tone';
 import Synth from '@/components/Synth.vue';
 import { Nullable } from '@/utils';
-import { Score, Instrument, Pattern } from '@/schemas';
+import { Score, Instrument, Pattern } from '@/core';
 import { Watch } from '@/modules/update';
-import { project, workspace } from '@/store';
+import { workspace, general } from '@/store';
 
 @Component({ components: { Synth } })
 export default class Synths extends Vue {
   // TODO remove these, this component can just import the store
-  @Prop({ type: Array, required: true }) public instruments!: Instrument[];
+  @Prop({ type: Array, required: true }) public instruments!: Instrument<any>[];
   @Prop(Nullable(Object)) public selectedScore!: Score | null;
   @Prop(Nullable(Object)) public selectedPattern!: Pattern | null;
-
-  public project = project;
 
   get scoreLookup() {
     const lookup: {[k: string]: Score} = {};
@@ -40,7 +38,7 @@ export default class Synths extends Vue {
     return lookup;
   }
 
-  public getNotes(instrument: Instrument) {
+  public getNotes(instrument: Instrument<any>) {
     if (instrument.id in this.scoreLookup) {
       return this.scoreLookup[instrument.id].notes;
     }
@@ -56,7 +54,7 @@ export default class Synths extends Vue {
 
     const instrument = this.instruments[i];
     if (!this.scoreLookup.hasOwnProperty(instrument.id)) {
-      project.addScore({ pattern: this.selectedPattern, instrument });
+      general.project.addScore({ pattern: this.selectedPattern, instrument });
     }
 
     this.$update('selectedScore', this.scoreLookup[instrument.id]);
@@ -68,7 +66,7 @@ export default class Synths extends Vue {
       event,
       items: [
         {
-          callback: () => project.deleteInstrument(i),
+          callback: () => general.project.deleteInstrument(i),
           text: 'Delete',
         },
         {

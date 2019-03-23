@@ -9,7 +9,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { loadBuffer } from '@/modules/wav/local';
-import { PlacedSample, Sample } from '@/schemas';
+import { ScheduledSample, Sample } from '@/core';
 import { Extensions, ExtensionData } from '@/modules/explorer/types';
 import parser, { INotes } from '@/midi-parser';
 import fs from 'mz/fs';
@@ -37,13 +37,14 @@ export default class SmartFileExplorer extends Vue {
     },
   };
 
-  public loadWav(path: string) {
-    const sample = Sample.create(path, loadBuffer(path));
+  public async loadWav(path: string) {
+    const buffer = await loadBuffer(path);
+    const sample = Sample.create(path, buffer);
     return sample;
   }
 
   public createPrototype(sample: Sample) {
-    return PlacedSample.create(sample);
+    return ScheduledSample.create(sample);
   }
 
   public previewWav(sample: Sample) {

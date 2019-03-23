@@ -7,9 +7,9 @@ import { VuexModule } from '@/store/utils';
 
 import * as io from '@/modules/cerialize';
 import store from '@/store/store';
-import project from '@/store/project';
 import { APPLICATION_PATH, SideTab, PanelNames, ApplicationContext } from '@/constants';
-import { Score, Pattern } from '@/schemas';
+import { Score, Pattern } from '@/core';
+import general from './general';
 
 const PROJECT_CACHE_PATH = path.join(APPLICATION_PATH, 'project-cache.json');
 
@@ -40,10 +40,14 @@ export class Specific extends VuexModule {
     super(module || {});
   }
 
+  get project() {
+    return general.project;
+  }
+
   get selectedPattern() {
     if (!this.selectedPatternId) { return null; }
-    if (!(this.selectedPatternId in project.patternLookup)) { return null; }
-    return project.patternLookup[this.selectedPatternId];
+    if (!(this.selectedPatternId in this.project.patternLookup)) { return null; }
+    return this.project.patternLookup[this.selectedPatternId];
   }
 
   get selectedScore() {
@@ -80,13 +84,13 @@ export class Specific extends VuexModule {
   @Action
   public async loadSpecific() {
     const json = await this.read();
-    if (!json.hasOwnProperty(project.id)) {
+    if (!json.hasOwnProperty(this.project.id)) {
       // tslint:disable-next-line:no-console
-      console.info(`${project.id} does not exist in the project cache`);
+      console.info(`${this.project.id} does not exist in the project cache`);
       return;
     }
 
-    const projectStuff = json[project.id];
+    const projectStuff = json[this.project.id];
     const decoded = io.deserialize(projectStuff, Specific);
     this.resetSpecific(decoded);
   }
@@ -147,11 +151,11 @@ export class Specific extends VuexModule {
 
   @Action
   public async write() {
-    if (!project.id) { return; }
+    if (!this.project.id) { return; }
     const c = io.serialize(this, Specific);
 
     const json = await this.read();
-    json[project.id] = c;
+    json[this.project.id] = c;
     await fs.writeFile(PROJECT_CACHE_PATH, JSON.stringify(json, null, 4));
   }
 

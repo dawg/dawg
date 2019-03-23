@@ -16,6 +16,16 @@ export const ScheduledSampleType = t.intersection([
 export type IScheduledSample = t.TypeOf<typeof ScheduledSampleType>;
 
 export class ScheduledSample extends Schedulable implements Serializable<IScheduledSample> {
+  public static create(sample: Sample) {
+    return new ScheduledSample(sample, {
+      sampleId: sample.id,
+      row: 0,
+      time: 0,
+      duration: 0,
+      type: 'sample',
+    });
+  }
+
   public sampleId: string;
   public readonly component = 'sample-element';
   public sample: Sample;

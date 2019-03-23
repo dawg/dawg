@@ -7,7 +7,7 @@
   >
     <panel name="Instruments">
       <synths 
-        :instruments="project.instruments"
+        :instruments="general.project.instruments"
         :selected-score="workspace.selectedScore"
         @update:selectedScore="workspace.setScore"
         :selected-pattern="workspace.selectedPattern"
@@ -16,11 +16,11 @@
     </panel>
     <panel name="Mixer">
       <mixer 
-        :channels="project.channels"
+        :channels="general.project.channels"
         :play="general.play"
-        @add="project.addEffect"
-        @delete="project.deleteEffect"
-        @set="project.setOption"
+        @add="general.project.addEffect"
+        @delete="general.project.deleteEffect"
+        @set="general.project.setOption"
       ></mixer>
     </panel>
     <panel name="Piano Roll">
@@ -30,8 +30,8 @@
         :pattern="workspace.selectedPattern"
         :score="workspace.selectedScore"
         :play="pianoRollPlay"
-        :steps-per-beat="project.stepsPerBeat"
-        :beats-per-measure="project.beatsPerMeasure"
+        :steps-per-beat="general.project.stepsPerBeat"
+        :beats-per-measure="general.project.beatsPerMeasure"
         :row-height="workspace.pianoRollRowHeight"
         :px-per-beat="workspace.pianoRollBeatWidth"
         @update:rowHeight="workspace.setPianoRollRowHeight"
@@ -47,13 +47,13 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 
-import { project, workspace, general } from '@/store';
+import { workspace, general } from '@/store';
 import BaseTabs from '@/components/BaseTabs.vue';
 import Mixer from '@/components/Mixer.vue';
 import SampleViewer from '@/components/SampleViewer.vue';
 import Synths from '@/components/Synths.vue';
 import Panel from '@/components/Panel.vue';
-import { Note, EffectName, Channel, EffectOptions } from '@/schemas';
+import { Note, EffectName, Channel, EffectOptions } from '@/core';
 
 @Component({
   components: {
@@ -65,7 +65,6 @@ import { Note, EffectName, Channel, EffectOptions } from '@/schemas';
   },
 })
 export default class Panels extends Vue {
-  public project = project;
   public general = general;
   public workspace = workspace;
 

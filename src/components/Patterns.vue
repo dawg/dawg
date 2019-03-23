@@ -17,7 +17,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { Pattern, PlacedPattern } from '@/schemas';
+import { Pattern, ScheduledPattern } from '@/core';
 import { Nullable } from '@/utils';
 import { Watch } from '@/modules/update';
 
@@ -29,7 +29,7 @@ export default class Patterns extends Vue {
   get items() {
     return this.patterns.map((pattern) => {
       return {
-        prototype: PlacedPattern.create(pattern),
+        prototype: ScheduledPattern.create(pattern),
         pattern,
       };
     });

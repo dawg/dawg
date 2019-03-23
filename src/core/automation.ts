@@ -3,6 +3,9 @@ import { PointType, IPoint, Point } from '@/core/automation/point';
 import uuid from 'uuid';
 import * as Audio from '@/modules/audio';
 import { toTickTime } from '@/utils';
+import { Serializable } from './serializable';
+import { Channel } from './channel';
+import { Instrument } from './instrument/instrument';
 
 export const AutomationType = t.type({
   context: t.union([t.literal('channel'), t.literal('instrument')]),
@@ -15,9 +18,9 @@ export const AutomationType = t.type({
 export type IAutomation = t.TypeOf<typeof AutomationType>;
 
 export type ClipContext = IAutomation['context'];
-export type Automatable = Channel | Instrument;
+export type Automatable = Channel | Instrument<any>;
 
-export class AutomationClip {
+export class AutomationClip implements Serializable<IAutomation> {
   public static create(length: number, signal: Audio.Signal, context: ClipContext, id: string) {
     const ac = new AutomationClip(signal, {
       id: uuid.v4(),
@@ -73,6 +76,16 @@ export class AutomationClip {
 
   public add(time: number, value: number) {
     this.points.push(this.schedule({ time, value }));
+  }
+
+  public serialize() {
+    return {
+      context: this.context,
+      contextId: this.contextId,
+      attr: this.attr,
+      id: this.id,
+      points: this.points.map((point) => point.serialize()),
+    };
   }
 
   private schedule(iPoint: IPoint) {

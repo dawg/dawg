@@ -1,21 +1,13 @@
 import fs from 'mz/fs';
-import { Component, Vue } from 'vue-property-decorator';
 import Tone from 'tone';
 import soundfonts from 'soundfont-player';
-import * as io from '@/modules/cerialize';
-import { Mutation, getModule, Action } from 'vuex-module-decorators';
-import { remote } from 'electron';
-import { findUniqueName, range, UnreachableCaseError } from '@/utils';
+import { findUniqueName, range } from '@/utils';
 import * as Audio from '@/modules/audio';
-import cache from '@/store/cache';
-import general from '@/store/general';
 import uuid from 'uuid';
 import { loadBuffer } from '@/modules/wav/local';
 import { makeLookup, chain } from '@/modules/utils';
 import { Signal } from '@/modules/audio';
-import backend from '@/backend';
 import * as t from 'io-ts';
-import { User } from 'firebase';
 import { PatternType, Pattern } from '@/core/pattern';
 import { SynthType, Synth } from '@/core/instrument/synth';
 import { SoundfontType, Soundfont } from '@/core/instrument/soundfont';
@@ -30,13 +22,17 @@ import { ScheduledSample } from '@/core/scheduled/sample';
 import { Score } from '@/core/score';
 import { EffectName, EffectOptions, EffectTones } from '@/core/filters/effects';
 import { Effect, AnyEffect } from '@/core/filters/effect';
-
-const { dialog } = remote;
+import { Serializable } from '@/core/serializable';
+import { FileLoader } from '@/core/loaders/file';
+import { Error } from '@/core/loaders/loader';
+import { Instrument } from '@/core/instrument/instrument';
 
 const ProjectTypeRequired = t.type({
   id: t.string,
   bpm: t.number,
   master: PlaylistType,
+  channels: t.array(ChannelType),
+  tracks: t.array(TrackType),
 });
 
 const ProjectTypePartial = t.partial({
@@ -45,8 +41,6 @@ const ProjectTypePartial = t.partial({
   name: t.string,
   patterns: t.array(PatternType),
   instruments: t.array(t.union([SynthType, SoundfontType])),
-  channels: t.array(ChannelType),
-  tracks: t.array(TrackType),
   samples: t.array(SampleType),
   automationClips: t.array(AutomationType),
 });
@@ -55,16 +49,14 @@ export const ProjectType = t.intersection([ProjectTypeRequired, ProjectTypeParti
 
 export type IProject = t.TypeOf<typeof ProjectType>;
 
-type Instrument = Synth | Soundfont;
-
 export interface IProjectConstructor {
   id: string;
   bpm: number;
-  stepsPerBeat: number;
-  beatsPerMeasure: number;
-  name: string;
+  stepsPerBeat?: number;
+  beatsPerMeasure?: number;
+  name?: string;
   patterns: Pattern[];
-  instruments: Instrument[];
+  instruments: Array<Instrument<any>>;
   channels: Channel[];
   tracks: Track[];
   samples: Sample[];
@@ -72,27 +64,46 @@ export interface IProjectConstructor {
   master: Playlist;
 }
 
+export interface ProjectLoaded {
+  type: 'success';
+  project: Project;
+}
+
 /**
  * This module represents the project. When a user saves the project, this file is serialized to the fs.
  */
-export class Project extends Vue {
+export class Project implements Serializable<IProject> {
   public static newProject() {
-    return Project.load({
+    return new Project({
       id: uuid.v4(),
       bpm: 120,
-      master: {},
+      master: new Playlist([]),
+      patterns: [],
+      instruments: [],
+      channels: range(10).map((index) => Channel.create(index)),
+      tracks: range(21).map((index) => Track.create(index)),
+      samples: [],
+      automationClips: [],
     });
   }
 
-  public static async load(i: IProject) {
-    let channels: Channel[];
-    if (i.channels) {
-      channels = (i.channels || []).map((iChannel) => {
-        return new Channel(iChannel);
-      });
-    } else {
-      channels = range(10).map((index) => Channel.create(index));
+  public static async fromFile(path: string): Promise<Error | ProjectLoaded> {
+    const loader = new FileLoader(ProjectType, { path });
+    const result = await loader.load();
+    if (result.type === 'error') {
+      return result;
     }
+
+    return {
+      type: 'success',
+      project: await Project.load(result.decoded),
+    };
+  }
+
+  public static async load(i: IProject) {
+    const channels =  (i.channels || []).map((iChannel) => {
+      return new Channel(iChannel);
+    });
 
     const instruments = await Promise.all((i.instruments || []).map(async (iInstrument) => {
       let destination: Tone.AudioNode = Tone.Master;
@@ -128,16 +139,11 @@ export class Project extends Vue {
       return new Sample(buffer, iSample);
     }));
 
-    let tracks: Track[];
-    if (i.tracks) {
-      tracks = i.tracks.map((iTrack) => new Track(iTrack));
-    } else {
-      tracks = range(21).map((index) => Track.create(index));
-    }
+    const tracks = i.tracks.map((iTrack) => new Track(iTrack));
 
     // I don't like this at all
     // But I can't think of a better way to serialize / deserialize automation clips
-    // We should figure out how othinit(init(init(er DAWs serialize automation clips
+    // We should figure out how other DAWs serialize automation clips
     const automationClips = (i.automationClips || []).map((iAutomationClip) => {
       let signal: Signal;
       if (iAutomationClip.context === 'channel') {
@@ -199,8 +205,8 @@ export class Project extends Vue {
 
     return new Project({
       ...i,
-      stepsPerBeat: i.stepsPerBeat || 4,
-      beatsPerMeasure: i.beatsPerMeasure || 4,
+      stepsPerBeat: i.stepsPerBeat,
+      beatsPerMeasure: i.beatsPerMeasure,
       name,
       patterns,
       instruments,
@@ -215,7 +221,7 @@ export class Project extends Vue {
   public bpm: number;
   public stepsPerBeat: number;
   public beatsPerMeasure: number;
-  public name: string | null;
+  public name?: string;
   public id: string;
   public patterns: Pattern[];
   public instruments: Array<Synth | Soundfont> = [];
@@ -226,10 +232,9 @@ export class Project extends Vue {
   public automationClips: AutomationClip[];
 
   constructor(i: IProjectConstructor) {
-    super();
     this.bpm = i.bpm;
-    this.stepsPerBeat = i.stepsPerBeat;
-    this.beatsPerMeasure = i.beatsPerMeasure;
+    this.stepsPerBeat = i.stepsPerBeat || 4;
+    this.beatsPerMeasure = i.beatsPerMeasure || 4;
     this.name = i.name;
     this.id = i.id;
     this.patterns = i.patterns;
@@ -241,90 +246,9 @@ export class Project extends Vue {
 
   }
 
-  public async save(opts: { backup: boolean, user: User | null, forceDialog?: boolean }) {
-    let openedFile = general.openedFile;
-    if (!openedFile || opts.forceDialog) {
-      openedFile = dialog.showSaveDialog(remote.getCurrentWindow(), {}) || null;
-
-      // If the user cancels the dialog
-      if (!openedFile) {
-        return;
-      }
-
-      cache.setOpenedFile(openedFile);
-
-      // This should never be true but we need to check
-      if (!cache.openedFile) {
-        return;
-      }
-
-      if (!cache.openedFile.endsWith('.dg')) {
-        cache.setOpenedFile(cache.openedFile + '.dg');
-      }
-    }
-
-    const encoded = io.serialize(this, Project);
-
-    fs.writeFileSync(
-      openedFile,
-      JSON.stringify(encoded, null, 4),
-    );
-
-    // I don't think this is the best place to put this.
-    if (opts.backup && opts.user) {
-      return await backend.updateProject(opts.user, this.id, encoded);
-    }
-  }
-
-  public async load() {
-    let reset = false;
-    for (const path of [cache.backupTempPath, cache.openedFile]) {
-      if (!path) {
-        continue;
-      }
-
-      if (!await fs.exists(path)) {
-        // tslint:disable-next-line:no-console
-        console.warn(`${path} does not exist`);
-        continue;
-      }
-
-      // tslint:disable-next-line:no-console
-      console.info(`Loading from ${path}`);
-
-      let contents = fs.readFileSync(path).toString();
-
-      if (cache.backupTempPath === path) {
-        // Always reset to null
-        fs.unlink(path);
-        cache.setBackupTempPath(null);
-      } else {
-        // This means that we are opening the cache file
-        general.setOpenedFile(path);
-      }
-
-      contents = JSON.parse(contents);
-      const result = io.deserialize(contents, Project);
-      this.reset(result);
-      reset = true;
-      break;
-    }
-
-    if (cache.openedFile) {
-      fs.exists(cache.openedFile, (_, exists) => {
-        if (!exists) {
-          cache.setOpenedFile(null);
-        }
-      });
-    }
-
-    if (!reset) {
-      return;
-    }
-  }
-
-  public reset(payload: Project) {
-    Object.assign(this, payload);
+  public async save(path: string) {
+    const encoded = this.serialize();
+    await fs.writeFile(path, JSON.stringify(encoded, null, 4));
   }
 
   public setOption<T extends EffectName, V extends keyof EffectOptions[T] & keyof EffectTones[T]>(
@@ -464,7 +388,7 @@ export class Project extends Vue {
     payload.placed.schedule(this.master.transport);
   }
 
-  public addScore(payload: { pattern: Pattern, instrument: Instrument} ) {
+  public addScore(payload: { pattern: Pattern, instrument: Instrument<any>} ) {
     payload.pattern.scores.forEach((pattern) => {
       if (pattern.instrumentId === payload.instrument.id) {
         throw Error(`An score already exists for ${payload.instrument.id}`);
@@ -487,7 +411,7 @@ export class Project extends Vue {
   }
 
   get instrumentChannelLookup() {
-    const lookup: { [k: number]: Instrument[] } = {};
+    const lookup: { [k: number]: Array<Instrument<any>> } = {};
     this.instruments.forEach((instrument) => {
       if (instrument.channel !== null) {
         if (!(instrument.channel in lookup)) {
@@ -590,7 +514,7 @@ export class Project extends Vue {
    * Sets the channel of the instrument to the given channel. If no channel is given, the instrument will be connected
    * to channel (useful for reconnecting to channel after re-initialization from the fs).
    */
-  public setChannel(payload: { instrument: Instrument, channel?: number | null }) {
+  public setChannel(payload: { instrument: Instrument<any>, channel?: number | null }) {
     const instrument = payload.instrument;
     let channel = payload.channel;
     if (instrument.channel === channel) {
@@ -640,6 +564,23 @@ export class Project extends Vue {
 
   get channelLookup() {
     return makeLookup(this.channels);
+  }
+
+  public serialize() {
+    return {
+      id: this.id,
+      bpm: this.bpm,
+      stepsPerBeat: this.stepsPerBeat,
+      beatsPerMeasure: this.beatsPerMeasure,
+      name: this.name,
+      patterns: this.patterns.map((pattern) => pattern.serialize()),
+      instruments: this.instruments.map((instrument) => instrument.serialize()),
+      channels: this.channels.map((channel) => channel.serialize()),
+      tracks: this.tracks.map((track) => track.serialize()),
+      samples: this.samples.map((sample) => sample.serialize()),
+      automationClips: this.automationClips.map((clip) => clip.serialize()),
+      master: this.master.serialize(),
+    };
   }
 }
 

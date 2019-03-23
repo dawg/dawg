@@ -4,7 +4,7 @@ import Arranger from '@/modules/sequencer/Arranger.vue';
 import Vue from 'vue';
 import Update from '@/modules/update';
 import VueLogger from 'vuejs-logger';
-import { Note } from '@/schemas';
+import { Note } from '@/core';
 import * as io from '@/modules/cerialize';
 
 Vue.use(VueLogger);
@@ -24,7 +24,7 @@ describe(Arranger.name, () => {
         setLoopEnd: 0,
         elements: [],
         sequencerLoopEnd: 0,
-        prototype: new Note({ row: 0, duration: 1, time: 0 }),
+        // prototype: new Note({ row: 0, duration: 1, time: 0 }),
         rowHeight: 20,
         numRows: 20,
         name: 'SDF',

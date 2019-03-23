@@ -21,14 +21,9 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import {
-  EffectConstrains,
-  EffectName,
-  Effect as E,
-  AnyEffect,
-  EffectOptions,
-  EffectConstrainsType,
-} from '@/schemas';
+import { EffectName } from '@/core/filters/effects';
+import { EffectConstrainsType, EffectConstrains } from '@/core/filters/bounds';
+import { Effect as E } from '@/core/filters/effect';
 
 @Component({
   filters: {

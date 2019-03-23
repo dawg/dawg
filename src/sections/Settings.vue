@@ -28,8 +28,8 @@
           <v-text-field 
             class="text-field"
             label="Project Name"
-            :value="project.name"
-            @input="project.setName"
+            :value="general.project.name"
+            @input="general.project.setName"
           ></v-text-field>
         </v-list-tile-action>
       </v-list-tile>
@@ -40,7 +40,7 @@
           <v-switch 
             :input-value="workspace.backup"
             color="primary"
-            :disabled="!project.name || !general.authenticated"
+            :disabled="!general.project.name || !general.authenticated"
             @change="workspace.setBackup"
           ></v-switch>
         </v-list-tile-action>
@@ -53,12 +53,11 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Nullable } from '@/utils';
-import { project, workspace, general } from '@/store';
+import { workspace, general } from '@/store';
 import auth from '@/auth';
 
 @Component
 export default class Settings extends Vue {
-  public project = project;
   public workspace = workspace;
   public general = general;
 

@@ -78,7 +78,7 @@
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import Tone from 'tone';
 import { Watch } from '@/modules/update';
-import { Element as El } from '@/schemas';
+import { Schedulable } from '@/core';
 import Transport from '@/modules/audio/transport';
 import { toTickTime, clamp } from '@/utils';
 import Arranger from '@/modules/sequencer/Arranger.vue';
@@ -95,7 +95,7 @@ export default class Sequencer extends Vue {
 
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, default: 80 }) public sideWidth!: number;
-  @Prop({ type: Array, required: true }) public elements!: El[];
+  @Prop({ type: Array, required: true }) public elements!: Schedulable[];
   @Prop({ type: Boolean, default: false }) public play!: boolean;
   @Prop({ type: Object, required: true }) public transport!: Transport;
 
@@ -172,13 +172,13 @@ export default class Sequencer extends Vue {
     this.update();
   }
 
-  public added(element: El) {
+  public added(element: Schedulable) {
     this.$log.debug(`Adding element at ${element.time}`);
     element.schedule(this.transport);
     this.$emit('added', element);
   }
 
-  public removed(element: El) {
+  public removed(element: Schedulable) {
     this.$log.debug(`Removing element at ${element.time}`);
     element.remove(this.transport);
     this.$emit('removed', element);

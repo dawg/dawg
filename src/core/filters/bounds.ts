@@ -1,11 +1,11 @@
-import { EffectOptions } from '@/core/filters/effect';
+import { EffectOptions } from './effects';
 
 interface Constraints {
   min: number;
   max: number;
 }
 
-type EffectConstrainsType = { [K in keyof EffectOptions]: { [E in keyof EffectOptions[K]]: Constraints } };
+export type EffectConstrainsType = { [K in keyof EffectOptions]: { [E in keyof EffectOptions[K]]: Constraints } };
 
 export const EffectConstrains: EffectConstrainsType = {
   wah: {

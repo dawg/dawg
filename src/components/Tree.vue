@@ -40,7 +40,7 @@ import { Keys } from '@/utils';
 import { Component, Prop } from 'vue-property-decorator';
 import Key from '@/components/Key.vue';
 import { loadBuffer } from '@/modules/wav/local';
-import { PlacedSample, Sample } from '@/schemas';
+import { ScheduledSample, Sample } from '@/core';
 
 @Component
 export default class Tree extends Vue {
@@ -54,7 +54,7 @@ export default class Tree extends Vue {
   public selectedNode = false;
   public $refs!: { trees: Tree[] };
   public $parent!: Tree;
-  public prototype: null | PlacedSample = null;
+  public prototype: null | ScheduledSample = null;
 
   public click() {
     if (!this.isLeaf) {
@@ -114,10 +114,11 @@ export default class Tree extends Vue {
     }
   }
 
-  public loadPrototype() {
+  public async loadPrototype() {
     if (!this.sample && this.isWav) {
-      this.sample = Sample.create(this.path, loadBuffer(this.path));
-      this.prototype = PlacedSample.create(this.sample);
+      const buffer = await loadBuffer(this.path);
+      this.sample = Sample.create(this.path, buffer);
+      this.prototype = ScheduledSample.create(this.sample);
     }
   }
 

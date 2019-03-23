@@ -16,17 +16,17 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { project, cache, general, workspace } from '@/store';
-import { PlacedSample, Sample } from '@/schemas';
+import { cache, general, workspace } from '@/store';
+import { ScheduledSample, Sample } from '@/core';
 
 @Component
 export default class AudioFiles extends Vue {
   public currentlyPlaying: Sample | null = null;
 
   get items() {
-    return project.samples.map((sample) => {
+    return general.project.samples.map((sample) => {
       return {
-        prototype: PlacedSample.create(sample),
+        prototype: ScheduledSample.create(sample),
         sample,
       };
     });
@@ -38,7 +38,7 @@ export default class AudioFiles extends Vue {
       items: [
         {
           text: 'Delete',
-          callback: () => project.removeSample(i),
+          callback: () => general.project.removeSample(i),
         },
       ],
     });

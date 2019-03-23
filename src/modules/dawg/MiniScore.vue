@@ -18,7 +18,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
-import { Note } from '@/schemas';
+import { Note } from '@/core';
 
 /**
  * This class is used in the synth components to show the score associated with that synth.

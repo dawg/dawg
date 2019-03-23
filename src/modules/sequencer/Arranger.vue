@@ -80,7 +80,7 @@ import { range, Nullable, Keys, reverse } from '@/utils';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import Progression from '@/modules/sequencer/Progression.vue';
 import { Watch } from '@/modules/update';
-import { IElement, Element } from '@/schemas';
+import { Schedulable } from '@/core';
 
 
 @Component({
@@ -90,7 +90,7 @@ export default class Arranger extends Mixins(Draggable) {
   // name is used for debugging
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, required: true }) public rowHeight!: number;
-  @Prop({ type: Array, required: true }) public elements!: Element[];
+  @Prop({ type: Array, required: true }) public elements!: Schedulable[];
   @Prop({ type: Number, default: 0.25 }) public snap!: number;
 
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;
@@ -114,7 +114,7 @@ export default class Arranger extends Mixins(Draggable) {
   @Prop({ type: Number, required: true }) public progress!: number;
 
   // TODO edge case -> what happens if the element is deleted?
-  @Prop(Nullable(Object)) public prototype!: Element | null;
+  @Prop(Nullable(Object)) public prototype!: Schedulable | null;
 
   public cursor = 'move';
   public rows!: HTMLElement;
@@ -333,10 +333,10 @@ export default class Arranger extends Mixins(Draggable) {
     const timeDiff = time - oldItem.time;
     const rowDiff = row - oldItem.row;
 
-    let itemsToMove: Array<[Element, number]>;
+    let itemsToMove: Array<[Schedulable, number]>;
     if (this.selected[i]) {
       itemsToMove = this.elements.map((item, ind) => {
-        return [item, ind] as [Element, number];
+        return [item, ind] as [Schedulable, number];
       }).filter(([item, ind]) => this.selected[ind]);
     } else {
       itemsToMove = [[oldItem, i]];
@@ -397,7 +397,7 @@ export default class Arranger extends Mixins(Draggable) {
       this.elements.forEach((_, ind) => this.selected[ind] = false);
     }
 
-    const createItem = (oldItem: Element) => {
+    const createItem = (oldItem: Schedulable) => {
       const newItem = oldItem.copy();
 
       // We set selected to true because `newNew` will have a heigher z-index
@@ -410,7 +410,7 @@ export default class Arranger extends Mixins(Draggable) {
 
     let targetIndex = i;
     if (this.holdingShift) {
-      let selected: Element[];
+      let selected: Schedulable[];
 
       // If selected, copy all selected. If not, just copy the item that was clicked.
       if (this.selected[i]) {
@@ -463,7 +463,7 @@ export default class Arranger extends Mixins(Draggable) {
     if (e.keyCode === Keys.SHIFT) { this.holdingShift = false; }
   }
 
-  public handleDrop(prototype: Element, event: MouseEvent) {
+  public handleDrop(prototype: Schedulable, event: MouseEvent) {
     this.$update('prototype', prototype);
     this.$nextTick(() => this.add(event));
     this.$emit('new-prototype', prototype);

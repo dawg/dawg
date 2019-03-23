@@ -115,7 +115,7 @@ export class Channel implements Serializable<IChannel> {
       number: this.number,
       name: this.name,
       id: this.id,
-      effects: this.effects,
+      effects: this.effects.map((effect) => effect.serialize()),
       panner: this.panner.value,
       volume: this.volume.value,
       mute: this.mute,

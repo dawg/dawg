@@ -58,9 +58,11 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { Channel as C, EffectMap, EffectName, AnyEffect } from '@/schemas';
 import { range, scale, clamp } from '@/utils';
 import { Watch } from '@/modules/update';
+import { AnyEffect } from '@/core/filters/effect';
+import { Channel as C } from '@/core/channel';
+import { EffectMap, EffectName } from '@/core';
 
 // Beware, we are modifying data in the store directly here.
 // We will want to change this evetually.
