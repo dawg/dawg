@@ -65,7 +65,6 @@ export class Channel implements Serializable<IChannel> {
     this.name = i.name;
     this.id = i.id;
 
-    // DEFAULTs
     this.volume.value = i.volume;
     this.panner.value = i.panner;
 

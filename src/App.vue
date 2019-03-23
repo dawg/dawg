@@ -510,7 +510,7 @@ export default class App extends Vue {
   public async save(forceDialog: boolean = false) {
     // If we are backing up, star the progress circle!
     if (workspace.backup) {
-      general.set({ key: 'syncing', value: true })
+      general.set({ key: 'syncing', value: true });
     }
 
     const backupStatus = await general.saveProject({
@@ -520,7 +520,7 @@ export default class App extends Vue {
     });
 
     // Always set the value back to false... you never know
-    general.set({ key: 'syncing', value: false })
+    general.set({ key: 'syncing', value: false });
 
     // backupStatus is true if workspace.backup is also true
     if (backupStatus) {

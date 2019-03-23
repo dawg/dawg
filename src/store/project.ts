@@ -56,7 +56,7 @@ export interface IProjectConstructor {
   beatsPerMeasure?: number;
   name?: string;
   patterns: Pattern[];
-  instruments: Array<Instrument<any, any>>;
+  instruments: Array<Synth | Soundfont>;
   channels: Channel[];
   tracks: Track[];
   samples: Sample[];
@@ -121,8 +121,7 @@ export class Project implements Serializable<IProject> {
 
       switch (iInstrument.instrument) {
         case 'soundfont':
-          const context = Tone.context as unknown as AudioContext;
-          const player = await soundfonts.instrument(context, name);
+          const player = await soundfonts.instrument(Audio.context, iInstrument.soundfont);
           const soundfont = new Audio.Soundfont(player);
           return new Soundfont(soundfont, destination, iInstrument);
         case 'synth':
@@ -224,7 +223,7 @@ export class Project implements Serializable<IProject> {
   public name?: string;
   public id: string;
   public patterns: Pattern[];
-  public instruments: Array<Synth | Soundfont> = [];
+  public instruments: Array<Synth | Soundfont>;
   public channels: Channel[];
   public tracks: Track[];
   public master: Playlist;
@@ -239,6 +238,7 @@ export class Project implements Serializable<IProject> {
     this.id = i.id;
     this.patterns = i.patterns;
     this.channels = i.channels;
+    this.instruments = i.instruments;
     this.tracks = i.tracks;
     this.master = i.master;
     this.samples = i.samples;
