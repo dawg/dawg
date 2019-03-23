@@ -26,7 +26,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import BaseTabs from '@/components/BaseTabs.vue';
 import { Nullable } from '@/utils';
-import { project, cache, general, workspace } from '@/store';
+import { cache, general, workspace } from '@/store';
 import { Watch } from '@/modules/update';
 import { PanelNames } from '@/constants';
 
@@ -73,11 +73,11 @@ export default class PanelHeaders extends Vue {
       items: [
         {
           text: 'Synth',
-          callback: () => project.addInstrument('Synth'),
+          callback: () => general.project.addInstrument('Synth'),
         },
         {
           text: 'Soundfont',
-          callback: () => project.addInstrument('Soundfont'),
+          callback: () => general.project.addInstrument('Soundfont'),
         },
       ],
       left: true,

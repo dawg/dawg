@@ -1,4 +1,4 @@
-import { EffectOptions } from '@/core/filters/effect';
+import { EffectOptions } from '@/core/filters/effects';
 
 export const EffectDefaults: EffectOptions = {
   wah: {

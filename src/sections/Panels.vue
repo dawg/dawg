@@ -18,9 +18,9 @@
       <mixer 
         :channels="general.project.channels"
         :play="general.play"
-        @add="general.project.addEffect"
-        @delete="general.project.deleteEffect"
-        @set="general.project.setOption"
+        @add="general.project.addEffect.bind(general.project)"
+        @delete="general.project.deleteEffect.bind(general.project)"
+        @set="general.project.setOption.bind(general.project)"
       ></mixer>
     </panel>
     <panel name="Piano Roll">

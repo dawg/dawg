@@ -356,13 +356,6 @@ export class Project implements Serializable<IProject> {
       }
     }
 
-    // return project.createAutomationClip({
-    //   start: this.masterStart,
-    //   end: this.masterEnd,
-    //   signal: currentValue,
-    //   row: i,
-    // });
-
     if (row === null) {
       return false;
     }

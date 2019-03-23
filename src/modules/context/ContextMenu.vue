@@ -5,7 +5,7 @@
         <div
           v-if="item"
           :key="i"
-          @click="item.callback(e)"
+          @click="doCallback(item.callback)"
           class="item"
           style="display: flex"
           :class="{ primary: active[i] }"
@@ -120,6 +120,11 @@ export default class ContextMenu extends Vue {
     this.$press(['Esc'], this.close);
 
     document.addEventListener('click', this.outsideClickListener);
+  }
+
+  public doCallback(callback: (e: MouseEvent | null) => void) {
+    this.open = false;
+    callback(this.e);
   }
 
   @Watch<ContextMenu>('open')

@@ -21,7 +21,7 @@
           collapsible 
           :min-size="100"
           :initial="workspace.sideBarSize"
-          @resize="workspace.setSideBarSize"
+          @resize="workspace.setSideBarSize.bind(workspace)"
         >
           <side-tabs 
             v-if="loaded"
@@ -43,7 +43,7 @@
               @update:play="playPause"
               :style="border('bottom')"
               :bpm="general.project.bpm"
-              @update:bpm="general.project.setBpm"
+              @update:bpm="general.project.setBpm.bind(general.project)"
             ></toolbar>
           </split>
 
@@ -60,9 +60,9 @@
               :steps-per-beat="general.project.stepsPerBeat"
               :beats-per-measure="general.project.beatsPerMeasure"
               :row-height="workspace.playlistRowHeight"
-              @update:rowHeight="workspace.setPlaylistRowHeight"
+              @update:rowHeight="workspace.setPlaylistRowHeight.bind(workspace)"
               :px-per-beat="workspace.playlistBeatWidth"
-              @update:pxPerBeat="workspace.setPlaylistBeatWidth"
+              @update:pxPerBeat="workspace.setPlaylistBeatWidth.bind(workspace)"
               @new-prototype="checkPrototype"
             ></playlist-sequencer>
             <blank v-else></blank>              
@@ -74,7 +74,7 @@
             :style="border('top')"
             keep
             :initial="workspace.panelsSize"
-            @resize="workspace.setPanelsSize"
+            @resize="workspace.setPanelsSize.bind(workspace)"
           >
             <split :initial="55" fixed>
               <panel-headers></panel-headers>
@@ -485,16 +485,6 @@ export default class App extends Vue {
     this.loadTheme(this.themeMomento);
   }
 
-  public async withErrorHandling(callback: () => Promise<void>) {
-    try {
-      await callback();
-      await workspace.loadSpecific();
-    } catch (e) {
-      this.$notify.error('Unable to load project.');
-      this.$log.error(e);
-    }
-  }
-
   public async open() {
     // files can be undefined. There is an issue with the .d.ts files.
     const files = remote.dialog.showOpenDialog(
@@ -520,7 +510,7 @@ export default class App extends Vue {
   public async save(forceDialog: boolean = false) {
     // If we are backing up, star the progress circle!
     if (workspace.backup) {
-      general.set({ key: 'syncing', value: true });
+      general.syncing = true;
     }
 
     const backupStatus = await general.saveProject({
@@ -530,19 +520,19 @@ export default class App extends Vue {
     });
 
     // Always set the value back to false... you never know
-    general.set({ key: 'syncing', value: false });
+    general.syncing = false;
 
     // backupStatus is true if workspace.backup is also true
     if (backupStatus) {
       switch (backupStatus.type) {
         case 'error':
           this.$notify.error('Unable to backup', { detail: backupStatus.message });
-          general.set({ key: 'backupError', value: true });
+          general.backupError = true;
           break;
         case 'success':
           // Make sure to set it back to false if there was an error previously
           if (general.backupError) {
-            general.set({ key: 'backupError', value: false });
+            general.backupError = false;
           }
           break;
       }

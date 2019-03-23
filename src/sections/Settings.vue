@@ -29,7 +29,7 @@
             class="text-field"
             label="Project Name"
             :value="general.project.name"
-            @input="general.project.setName"
+            @input="general.project.setName.bind(general.project)"
           ></v-text-field>
         </v-list-tile-action>
       </v-list-tile>

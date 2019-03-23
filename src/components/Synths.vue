@@ -24,7 +24,7 @@ import { workspace, general } from '@/store';
 @Component({ components: { Synth } })
 export default class Synths extends Vue {
   // TODO remove these, this component can just import the store
-  @Prop({ type: Array, required: true }) public instruments!: Instrument<any>[];
+  @Prop({ type: Array, required: true }) public instruments!: Array<Instrument<any>>;
   @Prop(Nullable(Object)) public selectedScore!: Score | null;
   @Prop(Nullable(Object)) public selectedPattern!: Pattern | null;
 

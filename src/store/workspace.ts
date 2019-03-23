@@ -40,14 +40,10 @@ export class Specific extends VuexModule {
     super(module || {});
   }
 
-  get project() {
-    return general.project;
-  }
-
   get selectedPattern() {
     if (!this.selectedPatternId) { return null; }
-    if (!(this.selectedPatternId in this.project.patternLookup)) { return null; }
-    return this.project.patternLookup[this.selectedPatternId];
+    if (!(this.selectedPatternId in general.project.patternLookup)) { return null; }
+    return general.project.patternLookup[this.selectedPatternId];
   }
 
   get selectedScore() {
@@ -84,13 +80,13 @@ export class Specific extends VuexModule {
   @Action
   public async loadSpecific() {
     const json = await this.read();
-    if (!json.hasOwnProperty(this.project.id)) {
+    if (!json.hasOwnProperty(general.project.id)) {
       // tslint:disable-next-line:no-console
-      console.info(`${this.project.id} does not exist in the project cache`);
+      console.info(`${general.project.id} does not exist in the project cache`);
       return;
     }
 
-    const projectStuff = json[this.project.id];
+    const projectStuff = json[general.project.id];
     const decoded = io.deserialize(projectStuff, Specific);
     this.resetSpecific(decoded);
   }
@@ -151,11 +147,11 @@ export class Specific extends VuexModule {
 
   @Action
   public async write() {
-    if (!this.project.id) { return; }
+    if (!general.project.id) { return; }
     const c = io.serialize(this, Specific);
 
     const json = await this.read();
-    json[this.project.id] = c;
+    json[general.project.id] = c;
     await fs.writeFile(PROJECT_CACHE_PATH, JSON.stringify(json, null, 4));
   }
 

@@ -36,7 +36,7 @@
             :value="workspace.selectedPattern" 
             @input="workspace.setPattern"
             :patterns="general.project.patterns"
-            @remove="general.project.removePattern"
+            @remove="general.project.removePattern.bind(general.project)"
           ></patterns>
         </side-bar>
       </base-tabs>
@@ -93,7 +93,7 @@ export default class SideTabs extends Vue {
     {
       icon: 'add',
       tooltip: 'Add Pattern',
-      callback: general.project.addPattern,
+      callback: () => general.project.addPattern(),
     },
   ];
 
