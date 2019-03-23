@@ -19,19 +19,17 @@ export type IPattern = t.TypeOf<typeof PatternType>;
 
 export class Pattern implements Serializable<IPattern> {
   public static create(name: string) {
-    return new Pattern({ name, id: uuid.v4() });
+    return new Pattern({ name, id: uuid.v4() }, []);
   }
   public id: string;
   public name: string;
   public scores: Score[];
   public transport = new Audio.Transport();
 
-  constructor(i: IPattern) {
+  constructor(i: IPattern, scores: Score[]) {
     this.id = i.id;
     this.name = i.name;
-    this.scores = (i.scores || []).map((iScore) => {
-      return new Score(iScore);
-    });
+    this.scores = scores;
   }
 
   get duration() {

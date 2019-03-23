@@ -1,16 +1,21 @@
 import Tone from 'tone';
 import * as Audio from '@/modules/audio';
+import uuid from 'uuid';
 import * as t from 'io-ts';
 import { disposeHelp } from '@/utils';
 
-export const InstrumentType = t.type({
-  name: t.string,
-  id: t.string,
-  channel: t.union([t.null, t.number]),
-  pan: t.number,
-  volume: t.number,
-  mute: t.boolean,
-});
+export const InstrumentType = t.intersection([
+  t.type({
+    name: t.string,
+  }),
+  t.partial({
+    channel: t.union([t.null, t.number]),
+    id: t.string,
+    pan: t.number,
+    volume: t.number,
+    mute: t.boolean,
+  }),
+]);
 
 export type IInstrument = t.TypeOf<typeof InstrumentType>;
 
@@ -36,15 +41,16 @@ export abstract class Instrument<T> {
   // tslint:disable-next-line:member-ordering
   public volume = new Audio.Signal(this.gainNode.gain);
 
-  constructor(source: Audio.Source<T>, i: IInstrument) {
+  constructor(source: Audio.Source<T>, destination: Tone.AudioNode, i: IInstrument) {
     this.source = source.connect(this.gainNode);
     this.name = i.name;
-    this.id = i.id;
-    this.channel = i.channel;
-    this.muted = i.mute;
-    this.mute = i.mute; // TODO(jacob)
-    this.pan.value = i.pan;
-    this.volume.value = i.volume;
+    this.id = i.id || uuid.v4();
+    this.channel = i.channel === undefined ? null : i.channel;
+    this.muted = !!i.mute;
+    this.mute = !!i.mute; // TODO(jacob)
+    this.pan.value = i.pan || 0;
+    this.volume.value = i.volume === undefined ? 0.8 : i.volume;
+    this.connect(destination);
   }
 
   get mute() {

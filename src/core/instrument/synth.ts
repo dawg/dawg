@@ -8,18 +8,34 @@ import { literal } from '@/utils';
 export const SynthType = t.intersection([
   t.type({
     instrument: t.literal('synth'),
-    type: t.string,
+    type: t.union([
+      t.literal('fatsawtooth'),
+      t.literal('sine'),
+      t.literal('square'),
+      t.literal('sawtooth'),
+      // TOOD(jacob)
+    ]),
   }),
   InstrumentType,
 ]);
 
+export type Oscillators = ISynth['type'];
+
 export type ISynth = t.TypeOf<typeof SynthType>;
 
 export class Synth extends Instrument<Audio.SynthOptions> implements Serializable<ISynth> {
-  private oscillatorType: string;
+  public static create(name: string) {
+    return new Synth(Tone.Master, {
+      instrument: 'synth',
+      type: 'fatsawtooth',
+      name,
+    });
+  }
 
-  constructor(i: ISynth) {
-    super(new Tone.PolySynth(8, Tone.Synth), i);
+  private oscillatorType: Oscillators;
+
+  constructor(destination: Tone.AudioNode, i: ISynth) {
+    super(new Tone.PolySynth(8, Tone.Synth), destination, i);
     this.oscillatorType = i.type;
     this.type = i.type;
     this.set({ key: 'envelope', value: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 } });
@@ -29,7 +45,7 @@ export class Synth extends Instrument<Audio.SynthOptions> implements Serializabl
     return this.oscillatorType;
   }
 
-  set type(type: string) {
+  set type(type: Oscillators) {
     this.oscillatorType = type;
     this.set({ key: 'oscillator', value: { type } });
   }

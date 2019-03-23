@@ -5,7 +5,7 @@ import { EffectOptions, EffectName, EffectTones, EffectMap } from '@/core/filter
 import { EffectDefaults } from '@/core/filters/defaults';
 import { Serializable } from '../serializable';
 
-export const ChannelType = t.type({
+export const EffectType = t.type({
   slot: t.number,
   type: t.union([
     t.literal('wah'),
@@ -24,9 +24,9 @@ export const ChannelType = t.type({
   id: t.string,
 });
 
-export type IChannel = t.TypeOf<typeof ChannelType>;
+export type IEffect = t.TypeOf<typeof EffectType>;
 
-export class Effect<T extends EffectName> implements Serializable<IChannel> {
+export class Effect<T extends EffectName> implements Serializable<IEffect> {
   public static create<E extends EffectName>(slot: number, type: E) {
     const effect = new Effect<E>({
       slot,
@@ -45,7 +45,7 @@ export class Effect<T extends EffectName> implements Serializable<IChannel> {
   public effect!: EffectTones[T];
   private destination: Tone.AudioNode | null = null;
 
-  constructor(i: IChannel) {
+  constructor(i: IEffect) {
     this.slot = i.slot;
     this.id = i.id;
     this.type = i.type as T;

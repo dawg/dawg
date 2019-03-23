@@ -1,31 +1,38 @@
 import * as t from 'io-ts';
+import uuid from 'uuid';
 import Tone from 'tone';
+import * as Audio from '@/modules/audio';
 import { Serializable } from './serializable';
+import { EffectType, AnyEffect, Effect } from '@/core/filters/effect';
 
 export const ChannelType = t.type({
-  number: t.Int,
+  number: t.number,
   name: t.string,
   id: t.string,
-  effects: t.array(),
+  effects: t.array(EffectType),
+  panner: t.number,
+  volume: t.number,
+  mute: t.boolean,
 });
 
 export type IChannel = t.TypeOf<typeof ChannelType>;
 
 export class Channel implements Serializable<IChannel> {
   public static create(num: number) {
-    const channel = new Channel();
-    channel.number = num;
-    channel.name = `Channel ${num}`;
-    return channel;
-  }
-
-  public static deserialize(i: IChannel) {
-    return new Channel();
+    return new Channel({
+      number: num,
+      name: `Channel ${num}`,
+      id: uuid.v4(),
+      effects: [],
+      panner: 0,
+      volume: 0.7,
+      mute: false,
+    });
   }
 
   public number: number;
   public name: string;
-  @io.auto({ type: Effect, optional: true }) public effects: AnyEffect[] = [];
+  public effects: AnyEffect[];
   public id: string;
 
   public left = new Tone.Meter();
@@ -33,28 +40,55 @@ export class Channel implements Serializable<IChannel> {
   public split = new Tone.Split();
 
   private pannerNode = new Tone.Panner().toMaster().connect(this.split);
+
+  /**
+   * The panner for the channel.
+   */
   // tslint:disable-next-line:member-ordering
-  @io.attr('value')
-  public panner = new Signal(this.pannerNode.pan);
+  public panner = new Audio.Signal(this.pannerNode.pan);
 
   private gainNode = new Tone.Gain().connect(this.pannerNode);
+
+  /**
+   * The volume for the channel.
+   */
   // tslint:disable-next-line:member-ordering
-  @io.attr('value')
-  public volume = new Signal(this.gainNode.gain);
+  public volume = new Audio.Signal(this.gainNode.gain);
 
   // tslint:disable-next-line:member-ordering
   public destination = this.gainNode;
   private connected = true;
-  private muted = false;
+  private muted: boolean;
 
   constructor(i: IChannel) {
     this.number = i.number;
     this.name = i.name;
-    this.id = i.id || uuid.v4();
+    this.id = i.id;
+
     // DEFAULTs
-    this.volume.value = 0.7;
+    this.volume.value = i.volume;
+    this.panner.value = i.panner;
+
+    this.muted = i.mute;
+    this.mute = i.mute;
+
+    // Connecting the visualizers
     this.split.left.connect(this.left);
     this.split.right.connect(this.right);
+
+    this.effects = i.effects.map((iEffect) => {
+      return new Effect(iEffect);
+    });
+
+    if (this.effects.length === 0) {
+      return;
+    }
+
+    for (const [index, effect] of this.effects.slice(1).entries()) {
+      this.effects[index - 1].connect(effect);
+    }
+
+    this.effects[this.effects.length - 1].connect(this.destination);
   }
 
   get mute() {
@@ -72,19 +106,19 @@ export class Channel implements Serializable<IChannel> {
     }
   }
 
-  public init() {
-    const effects = this.effects;
-    effects.forEach(
-      (effect) => effect.init());
+  get input() {
+    return this.effects.length ? this.effects[0].effect : this.destination;
+  }
 
-    if (effects.length === 0) {
-      return;
-    }
-
-    for (const [i, effect] of effects.slice(1).entries()) {
-      effects[i - 1].connect(effect);
-    }
-
-    effects[effects.length - 1].connect(this.destination);
+  public serialize() {
+    return {
+      number: this.number,
+      name: this.name,
+      id: this.id,
+      effects: this.effects,
+      panner: this.panner.value,
+      volume: this.volume.value,
+      mute: this.mute,
+    };
   }
 }

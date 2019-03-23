@@ -1,5 +1,5 @@
 import wav from 'node-wav';
-import fs from 'fs/mz';
+import fs from 'mz/fs';
 import Tone from 'tone';
 
 function createBuffer(sampleRate: number, buffer: number[][]) {

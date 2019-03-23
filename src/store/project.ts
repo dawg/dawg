@@ -1,4 +1,5 @@
 import fs from 'mz/fs';
+import { Component, Vue } from 'vue-property-decorator';
 import Tone from 'tone';
 import soundfonts from 'soundfont-player';
 import * as io from '@/modules/cerialize';
@@ -22,10 +23,13 @@ import { ChannelType, Channel } from '@/core/channel';
 import { TrackType, Track } from '@/core/track';
 import { PlaylistType, Playlist } from '@/core/playlist';
 import { SampleType, Sample } from '@/core/sample';
-import { AutomationType, AutomationClip } from '@/core/automation';
+import { AutomationType, AutomationClip, ClipContext, Automatable } from '@/core/automation';
 import { ScheduledAutomation } from '@/core/scheduled/automation';
 import { ScheduledPattern } from '@/core/scheduled/pattern';
 import { ScheduledSample } from '@/core/scheduled/sample';
+import { Score } from '@/core/score';
+import { EffectName, EffectOptions, EffectTones } from '@/core/filters/effects';
+import { Effect, AnyEffect } from '@/core/filters/effect';
 
 const { dialog } = remote;
 
@@ -51,12 +55,29 @@ export const ProjectType = t.intersection([ProjectTypeRequired, ProjectTypeParti
 
 export type IProject = t.TypeOf<typeof ProjectType>;
 
+type Instrument = Synth | Soundfont;
+
+export interface IProjectConstructor {
+  id: string;
+  bpm: number;
+  stepsPerBeat: number;
+  beatsPerMeasure: number;
+  name: string;
+  patterns: Pattern[];
+  instruments: Instrument[];
+  channels: Channel[];
+  tracks: Track[];
+  samples: Sample[];
+  automationClips: AutomationClip[];
+  master: Playlist;
+}
+
 /**
  * This module represents the project. When a user saves the project, this file is serialized to the fs.
  */
-export class Project {
+export class Project extends Vue {
   public static newProject() {
-    return new Project({
+    return Project.load({
       id: uuid.v4(),
       bpm: 120,
       master: {},
@@ -64,21 +85,130 @@ export class Project {
   }
 
   public static async load(i: IProject) {
-    const instruments = await (i.instruments || []).map(async (iInstrument) => {
+    let channels: Channel[];
+    if (i.channels) {
+      channels = (i.channels || []).map((iChannel) => {
+        return new Channel(iChannel);
+      });
+    } else {
+      channels = range(10).map((index) => Channel.create(index));
+    }
+
+    const instruments = await Promise.all((i.instruments || []).map(async (iInstrument) => {
+      let destination: Tone.AudioNode = Tone.Master;
+      if (iInstrument.channel !== null && iInstrument.channel !== undefined) {
+        if (iInstrument.channel >= channels.length) {
+          throw Error(
+            `Channel of instrument ${iInstrument.id} (${iInstrument.channel}) ` +
+            `exceeds channel count ${channels.length}.`,
+          );
+        }
+
+        const channel = channels[iInstrument.channel];
+        destination = channel.input;
+      }
+
       switch (iInstrument.instrument) {
         case 'soundfont':
           const context = Tone.context as unknown as AudioContext;
           const player = await soundfonts.instrument(context, name);
           const soundfont = new Audio.Soundfont(player);
-          return new Soundfont(soundfont, iInstrument);
+          return new Soundfont(soundfont, destination, iInstrument);
         case 'synth':
-          return new Synth(iInstrument);
+          return new Synth(destination, iInstrument);
       }
+    }));
+
+    const samples = await Promise.all((i.samples || []).map(async (iSample) => {
+      let buffer: AudioBuffer | null = null;
+      if (await fs.exists(iSample.path)) {
+        buffer = await loadBuffer(iSample.path);
+      }
+
+      return new Sample(buffer, iSample);
+    }));
+
+    let tracks: Track[];
+    if (i.tracks) {
+      tracks = i.tracks.map((iTrack) => new Track(iTrack));
+    } else {
+      tracks = range(21).map((index) => Track.create(index));
+    }
+
+    // I don't like this at all
+    // But I can't think of a better way to serialize / deserialize automation clips
+    // We should figure out how othinit(init(init(er DAWs serialize automation clips
+    const automationClips = (i.automationClips || []).map((iAutomationClip) => {
+      let signal: Signal;
+      if (iAutomationClip.context === 'channel') {
+        // TODO(jacob) remove this
+        // @ts-ignore
+        signal = this.channelLookup[clip.contextId][clip.attr];
+      } else {
+        // @ts-ignore
+        signal = this.instrumentLookup[clip.contextId][clip.attr];
+      }
+
+      return new AutomationClip(signal, iAutomationClip);
     });
 
-    const samples = (i.samples || []).map(async (iSample) => {
-      const buffer = await loadBuffer(iSample.path);
-      return new Sample(buffer, iSample);
+    const instrumentLookup = makeLookup(instruments);
+    const patterns = (i.patterns || []).map((iPattern) => {
+      const scores = (iPattern.scores || []).map((iScore) => {
+        if (!(iScore.instrumentId in instrumentLookup)) {
+          throw Error(`Instrument from score ${iScore.id} was not found in instrument list.`);
+        }
+
+        const instrument = instrumentLookup[iScore.instrumentId];
+        return new Score(instrument, iScore);
+      });
+
+      return new Pattern(iPattern, scores);
+    });
+
+    const clipLookup = makeLookup(automationClips);
+    const patternLookup = makeLookup(patterns);
+    const sampleLookup = makeLookup(samples);
+
+    const elements = (i.master.elements || []).map((iElement) => {
+      switch (iElement.type) {
+        case 'automation':
+          if (!(iElement.automationId in clipLookup)) {
+            throw Error(`An Automation clip from the Playlist was not found (${iElement.automationId}).`);
+          }
+
+          const clip = clipLookup[iElement.automationId];
+          return new ScheduledAutomation(clip, iElement);
+        case 'pattern':
+          if (!(iElement.patternId in patternLookup)) {
+            throw Error(`A Pattern from the Playlist was not found (${iElement.patternId}).`);
+          }
+
+          const pattern = patternLookup[iElement.patternId];
+          return new ScheduledPattern(pattern, iElement);
+        case 'sample':
+          if (!(iElement.sampleId in sampleLookup)) {
+            throw Error(`A Sample from the Playlist was not found (${iElement.sampleId}).`);
+          }
+
+          const sample = sampleLookup[iElement.sampleId];
+          return new ScheduledSample(sample, iElement);
+      }
+    });
+    const master = new Playlist(elements);
+
+    return new Project({
+      ...i,
+      stepsPerBeat: i.stepsPerBeat || 4,
+      beatsPerMeasure: i.beatsPerMeasure || 4,
+      name,
+      patterns,
+      instruments,
+      channels,
+      tracks,
+      samples,
+      automationClips,
+      master,
     });
   }
 
@@ -95,81 +225,22 @@ export class Project {
   public samples: Sample[];
   public automationClips: AutomationClip[];
 
-  constructor(i: IProject) {
+  constructor(i: IProjectConstructor) {
+    super();
     this.bpm = i.bpm;
-    this.stepsPerBeat = i.stepsPerBeat || 4;
-    this.beatsPerMeasure = i.beatsPerMeasure || 4;
-    this.name = i.name || null;
+    this.stepsPerBeat = i.stepsPerBeat;
+    this.beatsPerMeasure = i.beatsPerMeasure;
+    this.name = i.name;
     this.id = i.id;
+    this.patterns = i.patterns;
+    this.channels = i.channels;
+    this.tracks = i.tracks;
+    this.master = i.master;
+    this.samples = i.samples;
+    this.automationClips = i.automationClips;
 
-    if (i.channels) {
-      this.channels = (i.channels || []).map((iChannel) => {
-        return new Channel(iChannel);
-      });
-    } else {
-      this.channels = range(10).map((index) => Channel.create(index));
-    }
-
-    if (i.tracks) {
-      this.tracks = i.tracks.map((iTrack) => new Track(iTrack));
-    } else {
-      this.tracks = range(21).map((index) => Track.create(index));
-    }
-
-    // I don't like this at all
-    // But I can't think of a better way to serialize / deserialize automation clips
-    // We should figure out how othinit(init(init(er DAWs serialize automation clips
-    this.automationClips = (i.automationClips || []).map((iAutomationClip) => {
-      let signal: Signal;
-      if (iAutomationClip.context === 'channel') {
-        // TODO(jacob) remove this
-        // @ts-ignore
-        signal = this.channelLookup[clip.contextId][clip.attr];
-      } else {
-        // @ts-ignore
-        signal = this.instrumentLookup[clip.contextId][clip.attr];
-      }
-
-      return new AutomationClip(signal, iAutomationClip);
-    });
-
-    const elements = (i.master.elements || []).map((iElement) => {
-      switch (iElement.type) {
-        case 'automation':
-          return new ScheduledAutomation(clip, iElement);
-        case 'pattern':
-          return new ScheduledPattern(pattern, iElement);
-        case 'sample':
-          return new ScheduledSample(sample, iElement);
-      }
-    });
-    this.master = new Playlist(elements);
-
-    this.patterns = (i.patterns || []).map((iPattern) => {
-      // iPattern.removeScores((score) => {
-      //   return !(score.instrumentId in this.instrumentLookup);
-      // });
-      // pattern.scores.forEach((score) => {
-      //   const instrument = this.instrumentLookup[score.instrumentId];
-      //   score.init(instrument);
-      //   score.notes.forEach((note) => {
-      //     note.init(score.instrument);
-      //     note.schedule(pattern.transport);
-      //   });
-      // });
-
-      (iPattern.scores || []).map((iScore) => {
-        if (iScore.instrumentId) {
-
-        return new Score(iScore);
-        }
-      });
-
-      return new Pattern(iPattern);
-    });
   }
 
-  @Action
   public async save(opts: { backup: boolean, user: User | null, forceDialog?: boolean }) {
     let openedFile = general.openedFile;
     if (!openedFile || opts.forceDialog) {
@@ -205,7 +276,6 @@ export class Project {
     }
   }
 
-  @Action
   public async load() {
     let reset = false;
     for (const path of [cache.backupTempPath, cache.openedFile]) {
@@ -251,88 +321,12 @@ export class Project {
     if (!reset) {
       return;
     }
-
-    this.samples.forEach((sample, i) => {
-      let buffer: AudioBuffer | null = null;
-      if (!fs.existsSync(sample.path)) {
-        buffer = null;
-      } else {
-        buffer = loadBuffer(sample.path);
-      }
-
-      sample.init(buffer);
-    });
-
-    // This initializes the parts.
-    // Since the parts are not serialized, we need to re-add stuff.
-    // Ideally, we wouldn't have to do this, but I don't have a solution right now.
-    this.patterns.forEach((pattern) => {
-      pattern.removeScores((score) => {
-        return !(score.instrumentId in this.instrumentLookup);
-      });
-
-      pattern.scores.forEach((score) => {
-        const instrument = this.instrumentLookup[score.instrumentId];
-        score.init(instrument);
-        score.notes.forEach((note) => {
-          note.init(score.instrument);
-          note.schedule(pattern.transport);
-        });
-      });
-    });
-
-    // Same thing with the mixer.
-    // Reconnect all of the channels
-    this.channels.forEach((channel) => {
-      channel.init();
-    });
-
-    // Reconnect the instruments to their channels
-    this.instruments.forEach((instrument) => {
-      this.setChannel({ instrument });
-    });
-
-    // I don't like this at all
-    // But I can't think of a better way to serialize / deserialize automation clips
-    // We should figure out how othinit(init(init(er DAWs serialize automation clips
-    this.automationClips.forEach((clip) => {
-      let signal: Signal;
-      if (clip.context === 'channel') {
-        // @ts-ignore
-        signal = this.channelLookup[clip.contextId][clip.attr];
-      } else {
-        // @ts-ignore
-        signal = this.instrumentLookup[clip.contextId][clip.attr];
-      }
-
-      if (!signal) {
-        throw Error(`Unable to deserialize automation clip: ${clip.context} -> ${clip.contextId} -> ${clip.attr}`);
-      }
-
-      clip.init(signal);
-    });
-
-    this.master.elements.forEach((element) => {
-      if (element instanceof PlacedPattern) {
-        element.init(this.patternLookup[element.patternId]);
-      } else if (element instanceof PlacedSample) {
-        element.init(this.sampleLookup[element.sampleId]);
-      } else if (element instanceof PlacedAutomationClip) {
-        element.init(this.automationLookup[element.automationId]);
-      }
-    });
-
-    // Init the master after all of the elements
-    // have been initialized
-    this.master.init();
   }
 
-  @Mutation
   public reset(payload: Project) {
     Object.assign(this, payload);
   }
 
-  @Mutation
   public setOption<T extends EffectName, V extends keyof EffectOptions[T] & keyof EffectTones[T]>(
     payload: { effect: Effect<T>, key: V, value: EffectOptions[T][V] & EffectTones[T][V] },
   ) {
@@ -340,37 +334,39 @@ export class Project {
     payload.effect.effect[payload.key] = payload.value;
   }
 
-  @Mutation
   public setBpm(bpm: number) {
     this.bpm = bpm;
   }
 
-  @Mutation
   public setName(name: string) {
     this.name = name;
   }
 
-  @Mutation
   public addPattern() {
     const name = findUniqueName(this.patterns, 'Pattern');
     this.patterns.push(Pattern.create(name));
   }
 
-  @Mutation
-  public addInstrument(type: 'Synth' | 'Soundfont') {
+  public async addInstrument(type: 'Synth' | 'Soundfont') {
     const name = findUniqueName(this.instruments, type);
 
-    this.instruments.push(Instrument.default(name));
+    if (type === 'Synth') {
+      this.instruments.push(Synth.create(name));
+    } else {
+      this.instruments.push(await Soundfont.create('acoustic_grand_piano', name));
+    }
   }
 
-  @Action
   public removeSample(i: number) {
-    // TODO move to mutation
+    if (i >= this.samples.length) {
+      throw Error(`Unable to remove sample ${i}. Out of bounds.`);
+    }
+
     const sample = this.samples[i];
 
     // This isn' the best solution
     this.master.elements = this.master.elements.filter((element) => {
-      if (!(element instanceof PlacedSample)) {
+      if (!(element instanceof ScheduledSample)) {
         return true;
       }
 
@@ -386,12 +382,15 @@ export class Project {
     this.samples.splice(i, 1);
   }
 
-  @Action
   public removePattern(i: number) {
+    if (i >= this.patterns.length) {
+      throw Error(`Unable to pattern sample ${i}. Out of bounds.`);
+    }
+
     const pattern = this.patterns[i];
 
     this.master.elements = this.master.elements.filter((element) => {
-      if (!(element instanceof PlacedPattern)) {
+      if (!(element instanceof ScheduledPattern)) {
         return true;
       }
 
@@ -408,7 +407,6 @@ export class Project {
     this.patterns.splice(i, 1);
   }
 
-  @Action
   public createAutomationClip<T extends Automatable>(
     payload: { automatable: T, key: keyof T, end: number, start: number },
   ) {
@@ -454,20 +452,18 @@ export class Project {
 
     const length = payload.end - payload.start;
     const clip = AutomationClip.create(length, signal, context, automatable.id);
-    const placed = PlacedAutomationClip.create(clip, payload.start, row, length);
+    const placed = ScheduledAutomation.create(clip, payload.start, row, length);
     this.pushAutomationClip({ clip, placed });
 
     return true;
   }
 
-  @Mutation
-  public pushAutomationClip(payload: { clip: AutomationClip, placed: PlacedAutomationClip }) {
+  public pushAutomationClip(payload: { clip: AutomationClip, placed: ScheduledAutomation }) {
     this.automationClips.push(payload.clip);
     this.master.elements.push(payload.placed);
     payload.placed.schedule(this.master.transport);
   }
 
-  @Mutation
   public addScore(payload: { pattern: Pattern, instrument: Instrument} ) {
     payload.pattern.scores.forEach((pattern) => {
       if (pattern.instrumentId === payload.instrument.id) {
@@ -478,7 +474,6 @@ export class Project {
     payload.pattern.scores.push(Score.create(payload.instrument));
   }
 
-  @Action
   public addSample(payload: Sample) {
     if (payload.id in this.sampleLookup) {
       throw Error(`${payload.id} already exists`);
@@ -487,7 +482,6 @@ export class Project {
     this.pushSample(payload);
   }
 
-  @Mutation
   public pushSample(payload: Sample) {
     this.samples.push(payload);
   }
@@ -506,7 +500,6 @@ export class Project {
     return lookup;
   }
 
-  @Action
   public deleteEffect(payload: { channel: Channel, effect: AnyEffect }) {
     // instruments could be undefined
     const instruments = this.instrumentChannelLookup[payload.channel.number] || [];
@@ -532,7 +525,6 @@ export class Project {
     throw Error(`Unable to delete effect ${payload.effect.slot} from channel ${payload.channel.number}`);
   }
 
-  @Action
   public addEffect(payload: { channel: Channel, effect: EffectName, index: number } ) {
     const effects = payload.channel.effects;
     let toInsert: null | number = null;
@@ -565,7 +557,7 @@ export class Project {
     if (i === 0) {
       instruments.forEach((instrument) => {
         instrument.disconnect();
-        instrument.connect(newEffect);
+        instrument.connect(newEffect.effect);
       });
     } else {
       effects[i - 1].disconnect();
@@ -581,7 +573,6 @@ export class Project {
     }
   }
 
-  @Mutation
   public deleteInstrument(i: number) {
     const instrument = this.instruments[i];
 
@@ -599,7 +590,6 @@ export class Project {
    * Sets the channel of the instrument to the given channel. If no channel is given, the instrument will be connected
    * to channel (useful for reconnecting to channel after re-initialization from the fs).
    */
-  @Mutation
   public setChannel(payload: { instrument: Instrument, channel?: number | null }) {
     const instrument = payload.instrument;
     let channel = payload.channel;
@@ -627,30 +617,29 @@ export class Project {
   }
 
   get patternLookup() {
-    return makeLookup(this.patterns, (pattern) => pattern.id);
+    return makeLookup(this.patterns);
   }
 
   get sampleLookup() {
-    return makeLookup(this.samples, (sample) => sample.id);
+    return makeLookup(this.samples);
   }
 
   get instrumentLookup() {
-    return makeLookup(this.instruments, (instrument) => instrument.id);
+    return makeLookup(this.instruments);
   }
 
   get automationLookup() {
-    return makeLookup(this.automationClips, (clip) => clip.id);
+    return makeLookup(this.automationClips);
   }
 
   get effectLookup() {
     const effects = this.channels.map((channel) => channel.effects);
     const iterable = chain(...effects);
-    return makeLookup(iterable, (effect) => effect.id);
+    return makeLookup(iterable);
   }
 
   get channelLookup() {
-    return makeLookup(this.channels, (channel) => channel.id);
+    return makeLookup(this.channels);
   }
 }
 
-export default getModule(Project);

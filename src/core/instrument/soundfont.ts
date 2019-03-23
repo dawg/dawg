@@ -1,4 +1,4 @@
-import soundfont from 'soundfont-player';
+import soundfonts from 'soundfont-player';
 import Tone from 'tone';
 import * as t from 'io-ts';
 import * as Audio from '@/modules/audio';
@@ -19,22 +19,23 @@ export const SoundfontType = t.intersection([
 
 export type ISoundfont = t.TypeOf<typeof SoundfontType>;
 
+export type Soundfonts = ISoundfont['soundfont'];
+
 export class Soundfont extends Instrument<Audio.SoundfontOptions> implements Serializable<ISoundfont> {
-  public static async create(i: ISoundfont) {
+  public static async create(soundfont: Soundfonts, name: string) {
     const context = Tone.context as unknown as AudioContext;
-
-    const player = await soundfont.instrument(
-      context,
+    const player = await soundfonts.instrument(context, soundfont);
+    return new Soundfont(new Audio.Soundfont(player), Tone.Master, {
+      soundfont: 'acoustic_grand_piano', // TODO(jacob)
+      instrument: 'soundfont',
       name,
-    );
-
-    return new Soundfont(new Audio.Soundfont(player), i);
+    });
   }
 
   public soundfont: ISoundfont['soundfont'];
 
-  constructor(player: Audio.Soundfont, i: ISoundfont) {
-    super(player, i);
+  constructor(player: Audio.Soundfont, destination: Tone.AudioNode, i: ISoundfont) {
+    super(player, destination, i);
     this.soundfont = i.soundfont;
   }
 
