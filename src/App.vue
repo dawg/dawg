@@ -191,34 +191,6 @@ export default class App extends Vue {
       shortcut: ['Ctrl', 'W'],
       callback: this.closeApplication,
     },
-    copy: {
-      text: 'Copy',
-      shortcut: ['Ctrl', 'C'],
-      callback: () => {
-        //
-      },
-    },
-    paste: {
-      text: 'Past',
-      shortcut: ['Ctrl', 'P'],
-      callback: () => {
-        //
-      },
-    },
-    cut: {
-      shortcut: ['Ctrl', 'X'],
-      text: 'Cut',
-      callback: () => {
-        //
-      },
-    },
-    delete: {
-      shortcut: ['Del'],
-      text: 'Delete',
-      callback: () => {
-        //
-      },
-    },
     new: {
       shortcut: ['Ctrl', 'N'],
       text: 'New Project',
@@ -291,6 +263,12 @@ export default class App extends Vue {
           text: 'Report an Issue',
           callback: () => {
             shell.openExternal('https://github.com/dawg/vusic/issues');
+          },
+        },
+        {
+          text: 'Trello Board',
+          callback: () => {
+            shell.openExternal('https://trello.com/b/ZOLQJGSv/vusic-feature-requests');
           },
         },
         null,
@@ -471,6 +449,11 @@ export default class App extends Vue {
   }
 
   public async onExit() {
+    // If we don't have a file open, don't write the workspace information
+    if (!general.openedFile) {
+      return;
+    }
+
     await workspace.write();
   }
 

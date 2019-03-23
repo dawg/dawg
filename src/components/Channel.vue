@@ -11,7 +11,7 @@
           @contextmenu="contextmenu($event, effect)"
           class="effect secondary foreground--text"
         >
-          {{ effect.type }}
+          {{ effect.type | sentenceCase }}
         </div>
         <v-icon 
           v-else
@@ -64,9 +64,19 @@ import { AnyEffect } from '@/core/filters/effect';
 import { Channel as C } from '@/core/channel';
 import { EffectMap, EffectName } from '@/core';
 
+function sentenceCase(text: string) {
+  // const result = text.replace( /([A-Z])/g, ' $1' );
+  // return result.charAt(0).toUpperCase() + result.slice(1);
+  return text;
+}
+
 // Beware, we are modifying data in the store directly here.
 // We will want to change this evetually.
-@Component
+@Component({
+  filters: {
+    sentenceCase,
+  },
+})
 export default class Channel extends Vue {
   @Prop({ type: Object, required: true }) public channel!: C;
   @Prop({ type: Boolean, required: true }) public play!: boolean;
@@ -91,7 +101,10 @@ export default class Channel extends Vue {
   }
 
   public showEffects(event: MouseEvent, i: number) {
-    const items = this.options.map((option) => ({ text: option, callback: () => this.addEffect(option, i) }));
+    const items = this.options.map((option) => ({
+      text: sentenceCase(option), callback: () => this.addEffect(option, i),
+    }));
+
     this.$menu({
       event,
       items,
@@ -239,4 +252,7 @@ ul
   line-height: 23px
   width: 100%
   text-align: center
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
 </style>

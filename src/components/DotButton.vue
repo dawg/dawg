@@ -1,6 +1,6 @@
 <template>
   <v-btn icon @click="thing" class="dot-button">
-    <icon name="circle" scale="0.4" :class="{'primary--text': value}"></icon>
+    <icon name="circle" scale="0.4" :class="color"></icon>
   </v-btn>
 </template>
 
@@ -10,6 +10,14 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 @Component
 export default class DotButton extends Vue {
   @Prop({type: Boolean, required: true}) public value!: boolean;
+
+  get color() {
+    if (this.value) {
+      return 'primary--text';
+    } else {
+      return 'background--text';
+    }
+  }
 
   public thing(e: MouseEvent) {
     e.stopPropagation();

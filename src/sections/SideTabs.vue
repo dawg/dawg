@@ -11,6 +11,7 @@
         :key="action.icon"
         :tooltip="action.tooltip"
         bottom
+        :color="$theme.foreground"
         @click.native="action.callback"
       >
         {{ action.icon }}
@@ -112,6 +113,7 @@ export default class SideTabs extends Vue {
   }
 
   public openFolder() {
+    // TODO
     // the showFileDialog messes with the keyup events
     // This is a temporary solution
     cache.openFolder();

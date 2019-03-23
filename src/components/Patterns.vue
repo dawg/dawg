@@ -4,9 +4,9 @@
       group="arranger"
       v-for="(item, i) in items"
       :key="i"
-      class="pattern"
+      class="pattern foreground--text"
       :transfer-data="item.prototype"
-      :class="{ selected: value && item.pattern.id === value.id }"
+      :style="border(item.pattern)"
       @click.native="click(item.pattern)"
       @contextmenu.native="context($event, i)"
     >
@@ -55,6 +55,14 @@ export default class Patterns extends Vue {
     });
   }
 
+  public border(pattern: Pattern) {
+    if (pattern === this.value) {
+      return {
+        border: `1px solid ${this.$theme.foreground + '30'}`,
+      };
+    }
+  }
+
   @Watch<Patterns>('patterns')
   public selectFirstPatternIfNoPatternIsSelected() {
     if (this.value) { return; }
@@ -67,13 +75,9 @@ export default class Patterns extends Vue {
 <style lang="sass" scoped>
 .pattern
   padding: 10px 20px
-  color: white
   border: 1px solid rgba(0,0,0,0)
 
   &:hover
     box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.1)
     cursor: pointer
-
-.selected
-  border: 1px solid rgba(255, 255, 255, 0.36)
 </style>

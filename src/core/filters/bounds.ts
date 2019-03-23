@@ -8,7 +8,7 @@ interface Constraints {
 export type EffectConstrainsType = { [K in keyof EffectOptions]: { [E in keyof EffectOptions[K]]: Constraints } };
 
 export const EffectConstrains: EffectConstrainsType = {
-  wah: {
+  'Wah': {
     baseFrequency: {
       min: 0,
       max: 1000,
@@ -22,7 +22,7 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 0,
     },
   },
-  reverb: {
+  'Reverb': {
     decay: {
       min: 0,
       max: 24,
@@ -32,7 +32,7 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 24,
     },
   },
-  phaser: {
+  'Phaser': {
     frequency: {
       min: 0,
       max: 10,
@@ -50,13 +50,13 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 1000,
     },
   },
-  bitCrusher: {
+  'Bit Crusher': {
     bits: {
       min: 0,
       max: 10,
     },
   },
-  pingPongDelay: {
+  'Ping Pong Delay': {
     delayTime: {
       min: 0,
       max: 10,
@@ -66,7 +66,7 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 0,
     },
   },
-  compressor: {
+  'Compressor': {
     ratio: {
       min: 0,
       max: 20,
@@ -88,7 +88,7 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 50,
     },
   },
-  EQ3: {
+  'EQ3': {
     low: {
       min: -10,
       max: 10,
@@ -110,13 +110,13 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 8000,
     },
   },
-  limiter: {
+  'Limiter': {
     threshold: {
       min: -10,
       max: 2,
     },
   },
-  chorus: {
+  'Chorus': {
     frequency: {
       min: 0,
       max: 0,
@@ -130,7 +130,7 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 0,
     },
   },
-  tremolo: {
+  'Tremolo': {
     frequency: {
       min: 0,
       max: 20,
@@ -140,7 +140,7 @@ export const EffectConstrains: EffectConstrainsType = {
       max: 1,
     },
   },
-  distortion: {
+  'Distortion': {
     depth: {
       min: 0,
       max: 1,

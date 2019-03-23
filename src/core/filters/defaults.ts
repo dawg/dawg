@@ -1,29 +1,29 @@
 import { EffectOptions } from '@/core/filters/effects';
 
 export const EffectDefaults: EffectOptions = {
-  wah: {
+  Wah: {
     octaves: 3,
     baseFrequency: 350,
     sensitivity: 0,
   },
-  reverb: {
+  Reverb: {
     decay: 1.5,
     preDelay: 0.01,
   },
-  phaser: {
+  Phaser: {
     frequency: 0.5,
     octaves: 3,
     Q: 10,
     baseFrequency: 350,
   },
-  bitCrusher: {
+  'Bit Crusher': {
     bits: 4,
   },
-  pingPongDelay: {
+  'Ping Pong Delay': {
     delayTime: 0.25,
     feedback: 1,
   },
-  compressor: {
+  Compressor: {
     ratio: 1,
     threshold: -2,
     release: 0.2,
@@ -37,19 +37,19 @@ export const EffectDefaults: EffectOptions = {
     lowFrequency: 400,
     highFrequency: 2500,
   },
-  limiter: {
+  Limiter: {
     threshold: -12,
   },
-  chorus: {
+  Chorus: {
     frequency: 1.5,
     delayTime: 3.5,
     depth: 0.7,
   },
-  tremolo: {
+  Tremolo: {
     depth: 0.5,
     frequency: 10,
   },
-  distortion: {
+  Distortion: {
     depth: 0.4,
   },
 };

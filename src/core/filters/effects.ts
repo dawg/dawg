@@ -3,17 +3,17 @@ import Tone from 'tone';
 export type EffectName = keyof EffectOptions;
 
 export const EffectMap = {
-  wah: Tone.AutoWah,
-  reverb: Tone.Freeverb,
-  phaser: Tone.Phaser,
-  bitCrusher: Tone.BitCrusher,
-  pingPongDelay: Tone.PingPongDelay,
-  compressor: Tone.Compressor,
+  Wah: Tone.AutoWah,
+  Reverb: Tone.Freeverb,
+  Phaser: Tone.Phaser,
+  'Bit Crusher': Tone.BitCrusher,
+  'Ping Pong Delay': Tone.PingPongDelay,
+  Compressor: Tone.Compressor,
   EQ3: Tone.EQ3,
-  limiter: Tone.Phaser,
-  chorus: Tone.Chorus,
-  tremolo: Tone.Tremolo,
-  distortion: Tone.Distortion,
+  Limiter: Tone.Phaser,
+  Chorus: Tone.Chorus,
+  Tremolo: Tone.Tremolo,
+  Distortion: Tone.Distortion,
 };
 
 interface PhaserOptions {
@@ -79,29 +79,29 @@ interface DistortionOptions {
 }
 
 export interface EffectTones {
-  wah: Tone.AutoWah;
-  reverb: Tone.Freeverb;
-  phaser: Tone.Phaser;
-  bitCrusher: Tone.BitCrusher;
-  pingPongDelay: Tone.PingPongDelay;
-  compressor: Tone.Compressor;
+  Wah: Tone.AutoWah;
+  Reverb: Tone.Freeverb;
+  Phaser: Tone.Phaser;
+  'Bit Crusher': Tone.BitCrusher;
+  'Ping Pong Delay': Tone.PingPongDelay;
+  Compressor: Tone.Compressor;
   EQ3: Tone.EQ3;
-  limiter: Tone.Limiter;
-  chorus: Tone.Chorus;
-  tremolo: Tone.Tremolo;
-  distortion: Tone.Distortion;
+  Limiter: Tone.Limiter;
+  Chorus: Tone.Chorus;
+  Tremolo: Tone.Tremolo;
+  Distortion: Tone.Distortion;
 }
 
 export interface EffectOptions {
-  wah: WahOptions;
-  reverb: ReverbOptions;
-  phaser: PhaserOptions;
-  bitCrusher: BitCrusherOptions;
-  pingPongDelay: PingPongDelayOptions;
-  compressor: CompressorOptions;
+  Wah: WahOptions;
+  Reverb: ReverbOptions;
+  Phaser: PhaserOptions;
+  'Bit Crusher': BitCrusherOptions;
+  'Ping Pong Delay': PingPongDelayOptions;
+  Compressor: CompressorOptions;
   EQ3: EQ3Options;
-  limiter: LimiterOptions;
-  chorus: ChorusOptions;
-  tremolo: TremoloOptions;
-  distortion: DistortionOptions;
+  Limiter: LimiterOptions;
+  Chorus: ChorusOptions;
+  Tremolo: TremoloOptions;
+  Distortion: DistortionOptions;
 }

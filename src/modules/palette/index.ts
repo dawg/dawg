@@ -397,6 +397,9 @@ export class KeyboardShortcuts extends Vue {
       }
 
       if (shortcutPressed(item.shortcut, this.pressedKeys)) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        e.stopPropagation();
         item.callback();
       }
     });

@@ -1,10 +1,11 @@
 <template>
-  <div class="phaser secondary">
+  <div class="effect secondary">
     <div class="title foreground--text">{{ name | upper }}</div>
     <div style="display: flex; flex-direction: column">
       <knob
         class="option"
         v-for="key in keys"
+        :name="key"
         :key="key"
         :label="key | titleCase"
         stroke-class="secondary-lighten-2--stroke"
@@ -63,7 +64,7 @@ export default class Effect<T extends EffectName> extends Vue {
   font-size: 30px
   margin: 0 0 15px
 
-.phaser
+.effect
   margin: 5px
   padding: 9px 5px
   border-radius: 5px

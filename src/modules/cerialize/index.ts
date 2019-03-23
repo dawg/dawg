@@ -192,6 +192,9 @@ function deserializeObject(json: any, types: Array<Constructor<any>>): any {
         break;
       }
     }
+  } else {
+    // Just return the object as is if there is no type provideds
+    return json;
   }
 
   if (!theType) {
