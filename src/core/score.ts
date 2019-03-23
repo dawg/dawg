@@ -18,7 +18,7 @@ export const ScoreType = t.intersection([ScoreTypeRequired, ScoreTypePartial]);
 export type IScore = t.TypeOf<typeof ScoreType>;
 
 export class Score implements Serializable<IScore> {
-  public static create(instrument: Instrument<any>) {
+  public static create(instrument: Instrument<any, any>) {
     const score = new Score(instrument, {
       id: uuid.v4(),
       instrumentId: instrument.id,
@@ -29,7 +29,7 @@ export class Score implements Serializable<IScore> {
   public instrumentId: string;
   public notes: Note[];
 
-  constructor(public instrument: Instrument<any>, i: IScore) {
+  constructor(public instrument: Instrument<any, any>, i: IScore) {
     this.id = i.id;
     this.instrumentId = i.instrumentId;
     this.notes = (i.notes || []).map((iNote) => {

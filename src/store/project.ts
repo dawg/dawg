@@ -56,7 +56,7 @@ export interface IProjectConstructor {
   beatsPerMeasure?: number;
   name?: string;
   patterns: Pattern[];
-  instruments: Array<Instrument<any>>;
+  instruments: Array<Instrument<any, any>>;
   channels: Channel[];
   tracks: Track[];
   samples: Sample[];
@@ -381,7 +381,7 @@ export class Project implements Serializable<IProject> {
     payload.placed.schedule(this.master.transport);
   }
 
-  public addScore(payload: { pattern: Pattern, instrument: Instrument<any>} ) {
+  public addScore(payload: { pattern: Pattern, instrument: Instrument<any, any>} ) {
     payload.pattern.scores.forEach((pattern) => {
       if (pattern.instrumentId === payload.instrument.id) {
         throw Error(`An score already exists for ${payload.instrument.id}`);
@@ -404,7 +404,7 @@ export class Project implements Serializable<IProject> {
   }
 
   get instrumentChannelLookup() {
-    const lookup: { [k: number]: Array<Instrument<any>> } = {};
+    const lookup: { [k: number]: Array<Instrument<any, any>> } = {};
     this.instruments.forEach((instrument) => {
       if (instrument.channel !== null) {
         if (!(instrument.channel in lookup)) {
@@ -507,7 +507,7 @@ export class Project implements Serializable<IProject> {
    * Sets the channel of the instrument to the given channel. If no channel is given, the instrument will be connected
    * to channel (useful for reconnecting to channel after re-initialization from the fs).
    */
-  public setChannel(payload: { instrument: Instrument<any>, channel?: number | null }) {
+  public setChannel(payload: { instrument: Instrument<any, any>, channel?: number | null }) {
     const instrument = payload.instrument;
     let channel = payload.channel;
     if (instrument.channel === channel) {

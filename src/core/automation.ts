@@ -18,7 +18,7 @@ export const AutomationType = t.type({
 export type IAutomation = t.TypeOf<typeof AutomationType>;
 
 export type ClipContext = IAutomation['context'];
-export type Automatable = Channel | Instrument<any>;
+export type Automatable = Channel | Instrument<any, any>;
 
 export class AutomationClip implements Serializable<IAutomation> {
   public static create(length: number, signal: Audio.Signal, context: ClipContext, id: string) {

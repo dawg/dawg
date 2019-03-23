@@ -17,9 +17,9 @@ export type INote = t.TypeOf<typeof NoteType>;
 export class Note extends Schedulable implements Serializable<INote> {
   public velocity: number;
   public readonly component = 'note';
-  public instrument: Instrument<any>;
+  public instrument: Instrument<any, any>;
 
-  constructor(instrument: Instrument<any>, i: INote) {
+  constructor(instrument: Instrument<any, any>, i: INote) {
     super(i);
     this.instrument = instrument;
     this.velocity = i.velocity === undefined ? 1 : i.velocity;

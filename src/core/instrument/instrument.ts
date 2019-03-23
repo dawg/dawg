@@ -19,9 +19,19 @@ export const InstrumentType = t.intersection([
 
 export type IInstrument = t.TypeOf<typeof InstrumentType>;
 
-export abstract class Instrument<T> {
+export abstract class Instrument<T, V extends string> {
   public name: string;
   public id: string;
+
+  /**
+   * A type variable. For example, oscillator or soundfont.
+   */
+  public abstract type: V;
+
+  /**
+   * All of the possible options.
+   */
+  public abstract types: V[];
 
   public channel: number | null;
 
@@ -96,6 +106,12 @@ export abstract class Instrument<T> {
     // disposeHelp(this.source);
     disposeHelp(this.volume);
     disposeHelp(this.pan);
+  }
+
+  protected setSource(source: Audio.Source<T>) {
+    this.source.disconnect(this.gainNode);
+    this.source = source;
+    this.source.connect(this.gainNode);
   }
 
   private checkConnection() {

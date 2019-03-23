@@ -41,6 +41,12 @@ export class Soundfont implements Source<SoundfontOptions> {
     return this;
   }
 
+  public disconnect(node: Tone.AudioNode) {
+    // We can't disconnect right now
+    // That option isn't available to us
+    return this;
+  }
+
   public set<K extends keyof SoundfontOptions>(o: { key: K, value: SoundfontOptions[K] }) {
     this[o.key] = o.value;
   }

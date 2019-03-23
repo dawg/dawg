@@ -32,7 +32,7 @@ import { Instrument } from '@/core';
 })
 export default class Piano extends Vue {
   @Prop({ type: Number, required: true }) public keyHeight!: number;
-  @Prop({ type: Object, required: true }) public synth!: Instrument<any>;
+  @Prop({ type: Object, required: true }) public synth!: Instrument<any, any>;
   public allKeys = allKeys;
 
   public start(value: string) {
