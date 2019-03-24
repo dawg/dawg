@@ -162,7 +162,7 @@ export default class App extends Vue {
   public general = general;
   public workspace = workspace;
 
-  public menuItems: {[k: string]: PaletteItem} = {
+  public menuItems = {
     save: {
       text: 'Save',
       shortcut: ['Ctrl', 'S'],
@@ -235,15 +235,6 @@ export default class App extends Vue {
       ],
     },
     {
-      name: 'Edit',
-      items: [
-        this.menuItems.cut,
-        this.menuItems.copy,
-        this.menuItems.paste,
-        this.menuItems.delete,
-      ],
-    },
-    {
       name: 'View',
       items: [
         this.menuItems.palette,
@@ -310,11 +301,6 @@ export default class App extends Vue {
       text: 'Open Mixer',
       shortcut: ['Ctrl', 'M'],
       callback: () => workspace.setOpenedPanel('Mixer'),
-    },
-    {
-      text: 'New Synthesizer',
-      shortcut: ['Ctrl', 'N'],
-      callback: () => general.project.addInstrument('Synth'),
     },
     {
       text: 'Play/Pause',

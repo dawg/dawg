@@ -13,8 +13,9 @@
         <tooltip-icon 
           medium 
           :color="$theme.foreground" 
-          :tooltip="item.name" 
+          :tooltip="item.name"
           right
+          v-bind="item.iconProps"
         >
           {{ item.icon }}
         </tooltip-icon>

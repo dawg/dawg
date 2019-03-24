@@ -122,7 +122,7 @@ export const resizable = (component: VueConstructor) => {
     }
 
     get width() {
-      return this.duration * this.pxPerBeat;
+      return Math.max(this.duration * this.pxPerBeat, 2);
     }
 
     get componentStyle() {
