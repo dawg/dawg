@@ -11,11 +11,8 @@ export const EffectType = t.type({
     t.literal('Wah'),
     t.literal('Reverb'),
     t.literal('Phaser'),
-    t.literal(''Bit Crusher''),
-    t.literal(''Ping Pong Delay''),
-    t.literal('Compressor'),
-    t.literal('EQ3'),
-    t.literal('Limiter'),
+    t.literal('Bit Crusher'),
+    t.literal('Ping Pong Delay'),
     t.literal('Chorus'),
     t.literal('Tremolo'),
     t.literal('Distortion'),
@@ -52,6 +49,11 @@ export class Effect<T extends EffectName> implements Serializable<IEffect> {
     // TODO Remove any cast
     this.options = i.options as any;
     this.effect = new EffectMap[this.type]();
+    // TODO actually set options
+  }
+
+  get wet() {
+    return this.effect.wet;
   }
 
   public connect(effect: AnyEffect | Tone.AudioNode) {
@@ -78,6 +80,13 @@ export class Effect<T extends EffectName> implements Serializable<IEffect> {
       id: this.id,
       options: this.options,
     };
+  }
+
+  public set<K extends keyof EffectOptions[T] & keyof EffectTones[T]>(
+    o: { key: K, value: EffectOptions[T][K] & EffectTones[T][K] },
+  ) {
+    this.options[o.key] = o.value;
+    this.effect[o.key] = o.value;
   }
 }
 

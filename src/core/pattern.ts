@@ -30,6 +30,13 @@ export class Pattern implements Serializable<IPattern> {
     this.id = i.id;
     this.name = i.name;
     this.scores = scores;
+
+    // TODO is this the best place
+    this.scores.forEach((score) => {
+      score.notes.forEach((note) => {
+        note.schedule(this.transport);
+      });
+    });
   }
 
   get duration() {

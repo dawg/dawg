@@ -246,10 +246,32 @@ export default class Arranger extends Mixins(Draggable) {
   }
 
   public updateDuration(i: number, value: number) {
-    // Ok so we update both the duration of getter and the duraion of the element
-    // This DEfinitely might not be needed
-    this.components[i].duration = value;
-    this.elements[i].duration = value;
+    const item = this.elements[i];
+    const diff = value - item.duration;
+
+    const updateDuration = (index: number) => {
+      // Ok so we update both the duration of getter and the duraion of the element
+      // This DEfinitely might not be needed
+      this.components[index].duration += diff;
+      this.elements[index].duration += diff;
+    };
+
+    const toUpdate = [i];
+    if (this.selected[i]) {
+      this.selected.forEach((selected, ind) => {
+        if (selected && ind !== i) {
+          toUpdate.push(ind);
+        }
+      });
+    }
+
+    // If the diff is less than zero, make sure we aren't settings the length of
+    // any of the elments to <= 0
+    if (diff < 0 && toUpdate.some((ind) => this.elements[ind].duration + diff <= 0)) {
+      return;
+    }
+
+    toUpdate.forEach(updateDuration);
 
     // Make sure to check the loop end when the duration of an element has been changed!!
     this.checkLoopEnd();
@@ -449,7 +471,7 @@ export default class Arranger extends Mixins(Draggable) {
       this.holdingShift = true;
     } else if (e.keyCode === Keys.DELETE || e.keyCode === Keys.BACKSPACE) {
       // Slice and reverse sItemince we will be deleting from the array as we go
-      let i = this.elements.length;
+      let i = this.elements.length - 1;
       for (const item of reverse(this.elements)) {
         if (this.selected[i]) {
           this.removeAtIndex(i);

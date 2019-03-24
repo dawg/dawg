@@ -20,7 +20,6 @@
         :play="general.play"
         @add="(payload) => general.project.addEffect(payload)"
         @delete="(payload) => general.project.deleteEffect(payload)"
-        @set="(payload) => general.project.setOption(payload)"
       ></mixer>
     </panel>
     <panel name="Piano Roll">

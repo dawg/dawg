@@ -21,7 +21,7 @@
           collapsible 
           :min-size="100"
           :initial="workspace.sideBarSize"
-          @resize="workspace.setSideBarSize.bind(workspace)"
+          @resize="workspace.setSideBarSize"
         >
           <side-tabs 
             v-if="loaded"
@@ -60,9 +60,9 @@
               :steps-per-beat="general.project.stepsPerBeat"
               :beats-per-measure="general.project.beatsPerMeasure"
               :row-height="workspace.playlistRowHeight"
-              @update:rowHeight="workspace.setPlaylistRowHeight.bind(workspace)"
+              @update:rowHeight="workspace.setPlaylistRowHeight"
               :px-per-beat="workspace.playlistBeatWidth"
-              @update:pxPerBeat="workspace.setPlaylistBeatWidth.bind(workspace)"
+              @update:pxPerBeat="workspace.setPlaylistBeatWidth"
               @new-prototype="checkPrototype"
             ></playlist-sequencer>
             <blank v-else></blank>              
@@ -74,7 +74,7 @@
             :style="border('top')"
             keep
             :initial="workspace.panelsSize"
-            @resize="workspace.setPanelsSize.bind(workspace)"
+            @resize="workspace.setPanelsSize"
           >
             <split :initial="55" fixed>
               <panel-headers></panel-headers>

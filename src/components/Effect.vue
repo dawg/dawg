@@ -10,11 +10,22 @@
         :label="key | titleCase"
         stroke-class="secondary-lighten-2--stroke"
         :value="options[key]"
-        @input="$emit('set', { key, value: $event })"
+        @input="effect.set({ key, value: $event })"
         :min="constraints(key).min"
         :max="constraints(key).max"
         :size="size"
         disable-automation
+      ></knob>
+      <knob
+        class="option"
+        name="Wet"
+        label="Wet"
+        stroke-class="secondary-lighten-2--stroke"
+        v-model="effect.wet.value"
+        :min="0"
+        :max="1"
+        :size="size"
+        disable-automation      
       ></knob>
     </div>
   </div>

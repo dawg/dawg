@@ -52,10 +52,7 @@ export default class PianoRollSequencer extends Vue {
   // This is the prototype
   // row and time are overwritten so they can be set to 0 here
   public allKeys = allKeys;
-
-  get note() {
-    return new Note(this.instrument, { row: 0, time: 0, duration: 1 });
-  }
+  public note: Note | null = null;
 
   get instrument() {
     return this.score.instrument;
@@ -132,6 +129,11 @@ export default class PianoRollSequencer extends Vue {
   @Watch<PianoRollSequencer>('pattern')
   public checkPattern() {
     this.checkAll();
+  }
+
+  @Watch<PianoRollSequencer>('instrument', { immediate: true })
+  public setPrototype() {
+    this.note = new Note(this.instrument, { row: 0, time: 0, duration: 1 });
   }
 }
 </script>

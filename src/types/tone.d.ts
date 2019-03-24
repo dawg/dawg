@@ -746,6 +746,11 @@ declare module 'tone' {
     dispose(): this;
   }
 
+  class Reverb extends Effect {
+    decay: Signal;
+    preDelay: Signal;
+  }
+
   class Route extends SignalBase {
     constructor(outputCount?: number);
     gate: Signal;

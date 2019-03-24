@@ -251,13 +251,6 @@ export class Project implements Serializable<IProject> {
     await fs.writeFile(path, JSON.stringify(encoded, null, 4));
   }
 
-  public setOption<T extends EffectName, V extends keyof EffectOptions[T] & keyof EffectTones[T]>(
-    payload: { effect: Effect<T>, key: V, value: EffectOptions[T][V] & EffectTones[T][V] },
-  ) {
-    payload.effect.options[payload.key] = payload.value;
-    payload.effect.effect[payload.key] = payload.value;
-  }
-
   public setBpm(bpm: number) {
     this.bpm = bpm;
   }
