@@ -20,7 +20,7 @@ import { ScheduledAutomation } from '@/core/scheduled/automation';
 import { ScheduledPattern } from '@/core/scheduled/pattern';
 import { ScheduledSample } from '@/core/scheduled/sample';
 import { Score } from '@/core/score';
-import { EffectName, EffectOptions, EffectTones } from '@/core/filters/effects';
+import { EffectName } from '@/core/filters/effects';
 import { Effect, AnyEffect } from '@/core/filters/effect';
 import { Serializable } from '@/core/serializable';
 import { FileLoader } from '@/core/loaders/file';
@@ -168,7 +168,10 @@ export class Project implements Serializable<IProject> {
         return new Score(instrument, iScore);
       });
 
-      return new Pattern(iPattern, scores);
+      const pattern = new Pattern(iPattern, scores);
+      // Make sure we set the bpm because the transports will not remember
+      pattern.transport.bpm.value = i.bpm;
+      return pattern;
     });
 
     const clipLookup = makeLookup(automationClips);
@@ -253,6 +256,11 @@ export class Project implements Serializable<IProject> {
 
   public setBpm(bpm: number) {
     this.bpm = bpm;
+    // We have to keep all of the transports in sync
+    this.master.transport.bpm.value = bpm;
+    this.patterns.forEach((pattern) => {
+      pattern.transport.bpm.value = bpm;
+    });
   }
 
   public setName(name: string) {
@@ -261,7 +269,10 @@ export class Project implements Serializable<IProject> {
 
   public addPattern() {
     const name = findUniqueName(this.patterns, 'Pattern');
-    this.patterns.push(Pattern.create(name));
+    const pattern = Pattern.create(name);
+    // We also have to make sure new transports of the same bpm
+    pattern.transport.bpm.value = this.bpm;
+    this.patterns.push(pattern);
   }
 
   public async addInstrument(type: 'Synth' | 'Soundfont') {
@@ -281,7 +292,8 @@ export class Project implements Serializable<IProject> {
 
     const sample = this.samples[i];
 
-    // This isn' the best solution
+    // This isn' the best solution but it works
+    // There must be a better pattern / object oriented way
     this.master.elements = this.master.elements.filter((element) => {
       if (!(element instanceof ScheduledSample)) {
         return true;
@@ -319,7 +331,6 @@ export class Project implements Serializable<IProject> {
       return false;
     });
 
-    // TODO move to mutation
     pattern.dispose();
     this.patterns.splice(i, 1);
   }

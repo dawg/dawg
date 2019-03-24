@@ -17,7 +17,7 @@
       style="margin-right: 10px"
       :raw="seconds"
     ></time-display>
-    <!-- <bpm :value="bpm" @input="updateBpm"></bpm> -->
+    <bpm :value="bpm" @input="updateBpm"></bpm>
 
     <v-spacer
       class="drag-area"

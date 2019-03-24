@@ -1,5 +1,5 @@
 <template>
-  <div class="screen" :ref="dragRef">
+  <div class="screen foreground--text" :ref="dragRef">
     <div class="text">{{ value }}</div>
     <div class="small-text">bpm</div>
   </div>
