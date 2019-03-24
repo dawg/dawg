@@ -54,22 +54,27 @@ export class General extends VuexModule {
         continue;
       }
 
+      const result = await Project.fromFile(path);
+
+      // We always complete the following action, even if there is an error
       if (cache.backupTempPath === path) {
         // Always reset to null
         fs.unlink(path);
         cache.setBackupTempPath(null);
-      } else {
-        // This means that we are opening the cache file
-        this.setOpenedFile(path);
       }
 
-      const result = await Project.fromFile(path);
       if (result.type === 'error') {
         return {
           type: 'error',
           message: result.message,
           project: await Project.newProject(),
         };
+      }
+
+      // Only set this if we've actually opened a project successfully
+      if (cache.openedFile === path) {
+        // This means that we are opening the cache file
+        this.setOpenedFile(path);
       }
 
       return {

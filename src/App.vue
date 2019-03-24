@@ -376,7 +376,7 @@ export default class App extends Vue {
 
       const result = await general.loadProject();
       if (result.type === 'error') {
-        this.$notify.info('Unable to load project.', { detail: result.message });
+        this.$notify.info('Unable to load project.', { detail: result.message, duration: Infinity });
       }
 
       general.setProject(result.project);
