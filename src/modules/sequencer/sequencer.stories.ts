@@ -133,7 +133,7 @@ storiesOf('AutomationClipElement', module)
     `,
     data: () => ({
       clip,
-      element: ScheduledAutomation.create(clip, 0, 0, 1),
+      element: ScheduledAutomation.create(clip, 0, 0),
     }),
   }));
 

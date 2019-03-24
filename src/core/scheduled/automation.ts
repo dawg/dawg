@@ -16,12 +16,12 @@ export const ScheduledAutomationType = t.intersection([
 export type IScheduledAutomation = t.TypeOf<typeof ScheduledAutomationType>;
 
 export class ScheduledAutomation extends Schedulable implements Serializable<IScheduledAutomation> {
-  public static create(clip: AutomationClip, time: number, row: number, duration: number) {
+  public static create(clip: AutomationClip, time: number, row: number) {
     return new ScheduledAutomation(clip, {
       time,
       row,
       type: 'automation',
-      duration,
+      duration: clip.duration,
       automationId: clip.id,
     });
   }

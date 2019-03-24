@@ -257,6 +257,9 @@ export class Project implements Serializable<IProject> {
   public setBpm(bpm: number) {
     this.bpm = bpm;
     // We have to keep all of the transports in sync
+    // There must be a pattern for this
+    // I want it to be reactive
+    // Sub/pub ??
     this.master.transport.bpm.value = bpm;
     this.patterns.forEach((pattern) => {
       pattern.transport.bpm.value = bpm;
@@ -373,7 +376,7 @@ export class Project implements Serializable<IProject> {
 
     const length = payload.end - payload.start;
     const clip = AutomationClip.create(length, signal, context, automatable.id);
-    const placed = ScheduledAutomation.create(clip, payload.start, row, length);
+    const placed = ScheduledAutomation.create(clip, payload.start, row);
     this.pushAutomationClip({ clip, placed });
 
     return true;
@@ -396,7 +399,7 @@ export class Project implements Serializable<IProject> {
   }
 
   public addSample(payload: Sample) {
-    if (payload.id in this.sampleLookup) {
+    if (this.samples.indexOf(payload) !== -1) {
       throw Error(`${payload.id} already exists`);
     }
 
@@ -537,20 +540,34 @@ export class Project implements Serializable<IProject> {
     instrument.connect(destination);
   }
 
+  public remoteAutomation(i: number) {
+    if (i >= this.automationClips.length) {
+      throw Error(`Unable to remove sample ${i}. Out of bounds.`);
+    }
+
+    const clip = this.automationClips[i];
+
+    // This isn' the best solution but it works
+    // There must be a better pattern / object oriented way
+    this.master.elements = this.master.elements.filter((element) => {
+      if (element.component !== 'automation-clip-element') {
+        return true;
+      }
+
+      if (element.clip !== clip) {
+        return true;
+      }
+
+      element.dispose();
+      return false;
+    });
+
+    clip.dispose();
+    this.automationClips.splice(i, 1);
+  }
+
   get patternLookup() {
     return makeLookup(this.patterns);
-  }
-
-  get sampleLookup() {
-    return makeLookup(this.samples);
-  }
-
-  get instrumentLookup() {
-    return makeLookup(this.instruments);
-  }
-
-  get automationLookup() {
-    return makeLookup(this.automationClips);
   }
 
   get effectLookup() {

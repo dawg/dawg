@@ -28,6 +28,7 @@ export class Controller extends Tone.Signal {
   private lastValue: number;
   private output: Signal;
   private callback: (time: number) => void;
+  private transports: { [id: string]: Transport } = {};
   private scheduledEvents: { [id: string]: AutomationEvent } = {};
   // tslint:disable-next-line:variable-name
   private _events: Tone.Timeline<AutomationEvent>;
@@ -49,7 +50,9 @@ export class Controller extends Tone.Signal {
 
   public sync(transport: Transport, time: TransportTime, duration: TransportTime) {
     transport.on('start', this.callback).on('stop', this.callback).on('pause', this.callback);
-    return transport.scheduleRepeat(this.onTick.bind(this), '1i', time, duration);
+    const eventId = transport.scheduleRepeat(this.onTick.bind(this), '1i', time, duration);
+    this.transports[eventId] = transport;
+    return eventId;
   }
 
   public onTick(time: number, ticks: number) {
@@ -90,11 +93,13 @@ export class Controller extends Tone.Signal {
   }
 
   public dispose() {
-    // this.transport.clear(this.synced);
-    // this.transport.off('start', this.callback).off('stop', this.callback).off('pause', this.callback);
+    // I'm not a huge fan of this. There must be a better pattern.
+    Object.values(this.transports).forEach((transport) => {
+      transport.off('start', this.callback).off('stop', this.callback).off('pause', this.callback);
+    });
+
     this._events.cancel(0);
     super.dispose.call(this);
-    this.output.dispose();
     return this;
   }
 

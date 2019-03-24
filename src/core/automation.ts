@@ -52,7 +52,6 @@ export class AutomationClip implements Serializable<IAutomation> {
   public control: Audio.Controller;
 
   constructor(signal: Audio.Signal, i: IAutomation) {
-    this.points = i.points.map(this.schedule);
     this.context = i.context;
     this.contextId = i.contextId;
     this.attr = i.attr;
@@ -60,6 +59,18 @@ export class AutomationClip implements Serializable<IAutomation> {
 
     this.signal = signal;
     this.control = new Audio.Controller(signal);
+
+    this.points = i.points.map((point) => {
+      return this.schedule(point);
+    });
+  }
+
+  get duration() {
+    if (!this.points.length) {
+      return 0;
+    }
+
+    return this.points[this.points.length - 1].time;
   }
 
   public change(index: number, value: number) {
@@ -86,6 +97,10 @@ export class AutomationClip implements Serializable<IAutomation> {
       id: this.id,
       points: this.points.map((point) => point.serialize()),
     };
+  }
+
+  public dispose() {
+    this.control.dispose();
   }
 
   private schedule(iPoint: IPoint) {

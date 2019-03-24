@@ -40,6 +40,9 @@
             @remove="(i) => general.project.removePattern(i)"
           ></patterns>
         </side-bar>
+        <side-bar :name="tabs.automationClips" icon="share">
+          <automation-clips></automation-clips>
+        </side-bar>
       </base-tabs>
     </vue-perfect-scrollbar>
   </div>
@@ -56,6 +59,7 @@ import { cache, general, workspace } from '@/store';
 import { Watch } from '@/modules/update';
 import { SideTab } from '@/constants';
 import SmartFileExplorer from '@/smart/SmartFileExplorer.vue';
+import AutomationClips from '@/sections/AutomationClips.vue';
 
 interface Group {
   icon: string;
@@ -70,6 +74,7 @@ interface Group {
     SideBar,
     AudioFiles,
     SmartFileExplorer,
+    AutomationClips,
   },
 })
 export default class SideTabs extends Vue {
@@ -98,14 +103,13 @@ export default class SideTabs extends Vue {
     },
   ];
 
-
-
   // For typing reasons
   // Vue will give a compilation error if we use a wrong key
   public tabs: { [k: string]: SideTab } = {
     explorer: 'Explorer',
     audioFiles: 'Audio Files',
     patterns: 'Patterns',
+    automationClips: 'Automation Clips',
   };
 
   public mounted() {
