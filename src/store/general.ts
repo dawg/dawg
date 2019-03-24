@@ -9,6 +9,7 @@ import { User } from 'firebase';
 import { Project } from './project';
 import { remote } from 'electron';
 import cache from './cache';
+import { Sample } from '@/core';
 
 export interface InitializationError {
   type: 'error';
@@ -36,6 +37,11 @@ export class General extends VuexModule {
   public projects: ProjectInfo[] = [];
   public getProjectsErrorMessage: string | null = null;
   public user: User | null = null;
+
+  /**
+   * The sample that is currently opened in the sample panel.
+   */
+  public openedSample: Sample | null = null;
 
   /**
    * The actual file that is currently opened. This is not the same as the opened file in the cache.
@@ -180,6 +186,11 @@ export class General extends VuexModule {
   @Mutation
   public setOpenedFile(file: string) {
     this.openedFile = file;
+  }
+
+  @Mutation
+  public setSample(sample: Sample) {
+    this.openedSample = sample;
   }
 }
 

@@ -6,6 +6,7 @@ import Dawg from '@/modules/dawg/Dawg.vue';
 import VerticalSwitch from '@/modules/dawg/VerticalSwitch.vue';
 import Blank from '@/modules/dawg/Blank.vue';
 import Loading from '@/modules/dawg/Loading.vue';
+import WaveformV2 from '@/modules/dawg/WaveformV2.vue';
 
 export default  {
   install() {
@@ -16,6 +17,7 @@ export default  {
     Vue.component('VerticalSwitch', VerticalSwitch);
     Vue.component('Blank', Blank);
     Vue.component('Loading', Loading);
+    Vue.component('WaveformV2', WaveformV2);
   },
 };
 

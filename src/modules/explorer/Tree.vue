@@ -97,6 +97,7 @@ export default class Tree extends Vue {
   // The ref on FileExplorer is also called trees
   public $parent!: Tree;
 
+  // TODO make better types
   public data: any = null;
   public transferData: any = null;
 
@@ -187,6 +188,16 @@ export default class Tree extends Vue {
     };
   }
 
+  get open() {
+    if (this.extensionData.open) {
+      return this.extensionData.open;
+    }
+
+    return () => {
+      // nothing by default
+    };
+  }
+
   get stopPreview() {
     if (this.extensionData.stopPreview) {
       return this.extensionData.stopPreview;
@@ -236,7 +247,7 @@ export default class Tree extends Vue {
   }
 
   public doubleClick(event: MouseEvent) {
-    this.bus.$emit('dblclick', event);
+    this.open(this.data);
   }
 
   public select(index: number) {

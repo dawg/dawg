@@ -37,9 +37,11 @@
         @update:pxPerBeat="workspace.setPianoRollBeatWidth"
       ></piano-roll-sequencer>
     </panel>
-    <!-- <panel name="Sample">
-      <sample-viewer url="thing.wav"></sample-viewer>
-    </panel> -->
+    <panel name="Sample">
+      <sample-viewer 
+      :sample="general.openedSample"
+    ></sample-viewer>
+    </panel>
   </base-tabs>
 </template>
 

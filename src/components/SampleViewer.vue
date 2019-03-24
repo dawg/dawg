@@ -3,11 +3,14 @@
     class="sample-viewer secondary"
   >
     <div class="sample">    
-      <wav-scope
-        ref="scope"
-        :url=url
-      >
-      </wav-scope>
+      <!-- <waveform
+        :buffer="buffer"
+      ></waveform> -->
+      <waveform-v2
+        v-if="buffer"
+        :offset="0"
+        :buffer="buffer"
+      ></waveform-v2>
     </div>
     <div class="sample-controls foreground--text">
       <span class="control">
@@ -40,21 +43,31 @@ import WavScope from '@/components/WavScope.vue';
 import PlayPause from '@/components/PlayPause.vue';
 import Tone from 'tone';
 import { Watch } from '@/modules/update';
+import { Sample } from '@/core';
+import { Nullable } from '@/utils';
 
 @Component({components: { WavScope, PlayPause }})
 export default class SampleViewer extends Vue {
-  @Prop({ type: String, required: true }) public url?: string;
+  @Prop(Nullable(Object)) public sample!: Sample | null;
 
-  public $refs!: {
-    scope: WavScope;
-  };
+  get buffer() {
+    if (this.sample) {
+      return this.sample.buffer;
+    } else {
+      return null;
+    }
+  }
 
   public playSample() {
-    this.$refs.scope.play();
+    if (this.sample) {
+      this.sample.preview();
+    }
   }
 
   public pauseSample() {
-    this.$refs.scope.pause();
+    if (this.sample) {
+      this.sample.stopPreview();
+    }
   }
 }
 </script>

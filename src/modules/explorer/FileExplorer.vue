@@ -109,10 +109,6 @@ export default class FileEplorer extends Vue {
     this.bus.$emit('down', event);
   }
 
-  public dbclick(e: MouseEvent) {
-    this.$emit('dbclick', e);
-  }
-
   public context(folder: string, event: MouseEvent) {
     this.$context({
       event,
@@ -132,13 +128,11 @@ export default class FileEplorer extends Vue {
   public mounted() {
     window.addEventListener('keydown', this.keydown);
     window.addEventListener('keyup', this.keyup);
-    this.bus.$on('dblclick', this.dbclick);
   }
 
   public destroyed() {
     window.removeEventListener('keydown', this.keydown);
     window.removeEventListener('keyup', this.keyup);
-    this.bus.$off('dblclick', this.dbclick);
   }
 
   @Watch<FileEplorer>('folders', { immediate: true })
