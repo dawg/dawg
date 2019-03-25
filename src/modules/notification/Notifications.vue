@@ -29,10 +29,10 @@
             </v-btn>
             <v-icon small @click="destroy(i)">close</v-icon>
           </div>
-          <div
+          <vue-perfect-scrollbar
             class="notification-content"
             v-html="item.text"
-          ></div>
+          ></vue-perfect-scrollbar>
         </div>
       </div>
     </transition-group>
@@ -92,20 +92,8 @@ export default class Notifications extends Vue {
   }
 
   public addItem(event: Notification) {
-    // TODO: Need to put this back
-    // if (event.clean || event.clear) {
-    //   this.destroyAll();
-    //   return
-    // }
-
-    // const duration = typeof event.duration === 'number'
-    //   ? event.duration
-    //   : this.duration;
-
-    const duration = this.duration;
-
     const { message, params, type, icon } = event;
-    const { detail, dismissible = false } = params;
+    const { detail, dismissible = false, duration = this.duration } = params;
 
     const item = {
       id: Id(),
@@ -116,7 +104,7 @@ export default class Notifications extends Vue {
       length: duration + 2 * this.speed,
     };
 
-    if (duration >= 0) {
+    if (duration !== Infinity && duration >= 0) {
       this.timers[item.id] = setTimeout(() => {
         const i = this.list.indexOf(item);
         this.destroy(i);
@@ -246,6 +234,7 @@ export default class Notifications extends Vue {
 .notification-content {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   padding: 5px;
+  max-height: 150px;
 }
 
 .close-all {

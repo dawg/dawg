@@ -15,7 +15,7 @@ import { Vue, Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 import Waveform from '@/modules/sequencer/Waveform.vue';
 import { Nullable } from '@/utils';
 import Tone from 'tone';
-import { PlacedSample } from '@/schemas';
+import { ScheduledSample } from '@/core';
 
 @Component({
   components: { Waveform },
@@ -23,7 +23,7 @@ import { PlacedSample } from '@/schemas';
 export default class SampleElement extends Vue {
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;
   @Prop({ type: Number, default: 100 }) public height!: number;
-  @Prop({ type: Object, required: true }) public element!: PlacedSample;
+  @Prop({ type: Object, required: true }) public element!: ScheduledSample;
 
   get buffer() {
     return this.element.sample.buffer;
@@ -36,7 +36,7 @@ export default class SampleElement extends Vue {
   }
 
   get bufferWidth() {
-    return this.element.beats * this.pxPerBeat;
+    return this.element.duration * this.pxPerBeat;
   }
 }
 </script>

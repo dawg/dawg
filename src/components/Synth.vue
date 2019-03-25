@@ -52,7 +52,7 @@
         class="synth-dropdown"
         dense
         dark
-        :items="types"
+        :items="instrument.types"
         v-model="instrument.type"
       ></v-select>
     </div>
@@ -66,23 +66,17 @@ import DotButton from '@/components/DotButton.vue';
 import MiniScore from '@/modules/dawg/MiniScore.vue';
 import ChannelSelect from '@/components/ChannelSelect.vue';
 import { Component, Prop } from 'vue-property-decorator';
-import { Note, Instrument } from '@/schemas';
+import { Note, Instrument } from '@/core';
 import { Watch } from '@/modules/update';
 import { Nullable } from '@/utils';
 
-const TYPES = ['pwm', 'sine', 'triangle', 'fatsawtooth', 'square'];
-
-const oscillator = { type: 'fatsawtooth', spread: 30 };
-const envelope = { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 };
-
 @Component({ components: { DotButton, MiniScore, ChannelSelect } })
 export default class Synth extends Vue {
-  @Prop({ type: Object, required: true }) public instrument!: Instrument;
+  @Prop({ type: Object, required: true }) public instrument!: Instrument<any, any>;
   @Prop({ type: Number, default: 50 }) public height!: number;
   @Prop({ type: Array, default: () => [] }) public notes!: Note[];
   @Prop(Nullable(Number)) public channel!: number | null;
 
-  public types = TYPES;
   public active = !this.instrument.mute;
   public expand = false;
   public strokeWidth = 2.5;

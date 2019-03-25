@@ -1,5 +1,5 @@
 <template>
-  <div class="screen" :ref="dragRef">
+  <div class="screen foreground--text" :ref="dragRef">
     <div class="text">{{ value }}</div>
     <div class="small-text">bpm</div>
   </div>
@@ -16,7 +16,7 @@ export default class Bpm extends Mixins(Draggable) {
   public cursor = 'ns-resize';
 
   public move(e: Event, { changeY }: { changeY: number }) {
-    this.$emit('input', this.value - changeY);
+    this.$emit('input', Math.max(0, this.value - changeY));
   }
 }
 </script>

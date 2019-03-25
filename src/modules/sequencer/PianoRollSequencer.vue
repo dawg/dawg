@@ -35,7 +35,7 @@ import Sequencer from '@/modules/sequencer/Sequencer.vue';
 import { allKeys, toTickTime, keyLookup } from '@/utils';
 import { INotes } from '@/midi-parser';
 import Transport from '@/modules/audio/transport';
-import { Note, Instrument, Element, Playlist, Pattern, Score } from '@/schemas';
+import { Note, Instrument, Playlist, Pattern, Score } from '@/core';
 import { Watch } from '@/modules/update';
 
 @Component({
@@ -51,8 +51,8 @@ export default class PianoRollSequencer extends Vue {
 
   // This is the prototype
   // row and time are overwritten so they can be set to 0 here
-  public note = new Note({ row: 0, time: 0, duration: 1 }).init(this.instrument);
   public allKeys = allKeys;
+  public note: Note | null = null;
 
   get instrument() {
     return this.score.instrument;
@@ -88,12 +88,12 @@ export default class PianoRollSequencer extends Vue {
     notes.forEach((iNote) => {
       // Transform the interfaces into actual note classes
       const row = keyLookup[iNote.name].id;
-      const note = new Note({
+      const note = new Note(this.instrument, {
         row,
         duration: iNote.duration,
         time: iNote.start,
-      }).init(this.instrument);
-      note.velocity = iNote.velocity;
+        velocity: iNote.velocity,
+      });
 
       // TODO Refactor this
       this.notes.push(note);
@@ -129,6 +129,11 @@ export default class PianoRollSequencer extends Vue {
   @Watch<PianoRollSequencer>('pattern')
   public checkPattern() {
     this.checkAll();
+  }
+
+  @Watch<PianoRollSequencer>('instrument', { immediate: true })
+  public setPrototype() {
+    this.note = new Note(this.instrument, { row: 0, time: 0, duration: 1 });
   }
 }
 </script>

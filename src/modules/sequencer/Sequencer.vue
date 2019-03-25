@@ -50,7 +50,7 @@
         style="height: fit-content"
         :settings="{ suppressScrollY: true, handlers: ['wheel'] }"
       >
-        <arranger
+        <sequencer-grid
           @added="added"
           @removed="removed"
           :elements="elements"
@@ -67,7 +67,7 @@
           :name="name"
           v-bind="$attrs"
           v-on="$listeners"
-        ></arranger>
+        ></sequencer-grid>
       </vue-perfect-scrollbar>
 
     </vue-perfect-scrollbar>
@@ -78,14 +78,14 @@
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import Tone from 'tone';
 import { Watch } from '@/modules/update';
-import { Element as El } from '@/schemas';
+import { Schedulable } from '@/core';
 import Transport from '@/modules/audio/transport';
 import { toTickTime, clamp } from '@/utils';
-import Arranger from '@/modules/sequencer/Arranger.vue';
+import SequencerGrid from '@/modules/sequencer/SequencerGrid.vue';
 import Timeline from '@/modules/sequencer/Timeline.vue';
 
 @Component({
-  components: { Arranger, Timeline },
+  components: { SequencerGrid, Timeline },
 })
 export default class Sequencer extends Vue {
   @Prop({ type: Number, required: true }) public stepsPerBeat!: number;
@@ -95,7 +95,7 @@ export default class Sequencer extends Vue {
 
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, default: 80 }) public sideWidth!: number;
-  @Prop({ type: Array, required: true }) public elements!: El[];
+  @Prop({ type: Array, required: true }) public elements!: Schedulable[];
   @Prop({ type: Boolean, default: false }) public play!: boolean;
   @Prop({ type: Object, required: true }) public transport!: Transport;
 
@@ -172,13 +172,13 @@ export default class Sequencer extends Vue {
     this.update();
   }
 
-  public added(element: El) {
+  public added(element: Schedulable) {
     this.$log.debug(`Adding element at ${element.time}`);
     element.schedule(this.transport);
     this.$emit('added', element);
   }
 
-  public removed(element: El) {
+  public removed(element: Schedulable) {
     this.$log.debug(`Removing element at ${element.time}`);
     element.remove(this.transport);
     this.$emit('removed', element);

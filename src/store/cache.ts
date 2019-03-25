@@ -12,6 +12,7 @@ import { VuexModule } from '@/store/utils';
 
 const CACHE_PATH = path.join(APPLICATION_PATH, 'cache.json');
 
+// TODO Remove store stuff
 /**
  * This module contains information about the application that does not change between projects.
  */
@@ -64,8 +65,6 @@ export class Cache extends VuexModule {
   @Action
   public setOpenedFile(openedFile: string | null) {
     this.set({ key: 'openedFile', value: openedFile });
-    // This write call actually works.
-    // I was worried it wouldn't work since this method is not async.
     return this.write();
   }
 

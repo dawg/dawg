@@ -9,8 +9,8 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { Track as T } from '@/schemas';
 import { Watch } from '@/modules/update';
+import { Track as T } from '@/core/track';
 
 @Component
 export default class Track extends Vue {

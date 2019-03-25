@@ -13,7 +13,6 @@
     </vue-perfect-scrollbar>
     <effect 
       v-if="openedEffect"
-      @set="$emit('set', combine({ effect: openedEffect }, $event))"
       :effect="openedEffect"
     ></effect>
   </div>
@@ -22,9 +21,9 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import Channel from '@/components/Channel.vue';
-import { Channel as C, Effect, AnyEffect } from '@/schemas';
 import { Watch } from '@/modules/update';
 import { range } from '@/utils';
+import { AnyEffect, Channel as C } from '@/core';
 
 @Component({
   components: { Channel },
@@ -48,13 +47,6 @@ export default class Mixer extends Vue {
 
   public deleteEffect(channel: Channel, effect: AnyEffect) {
     this.$emit('delete', { channel, effect });
-  }
-
-  public combine(a: object, b: object) {
-    return {
-      ...a,
-      ...b,
-    };
   }
 }
 </script>

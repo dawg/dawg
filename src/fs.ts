@@ -1,6 +1,10 @@
 import path from 'path';
 import fs from 'mz/fs';
 
+// TODO Remove this eventually
+// Or change the name
+// And make everything that accesses fs use this file
+
 const mkdirRecursive = (dir: string) => {
   if (!fs.existsSync(dir)) {
     mkdirRecursive(path.join(dir, '..'));

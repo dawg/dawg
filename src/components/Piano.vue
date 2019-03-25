@@ -25,14 +25,14 @@ import Tone from 'tone';
 import { Component, Prop } from 'vue-property-decorator';
 import { allKeys } from '@/utils';
 import Key from '@/components/Key.vue';
-import { Instrument } from '@/schemas';
+import { Instrument } from '@/core';
 
 @Component({
   components: { Key },
 })
 export default class Piano extends Vue {
   @Prop({ type: Number, required: true }) public keyHeight!: number;
-  @Prop({ type: Object, required: true }) public synth!: Instrument;
+  @Prop({ type: Object, required: true }) public synth!: Instrument<any, any>;
   public allKeys = allKeys;
 
   public start(value: string) {

@@ -235,13 +235,16 @@ storiesOf(ContextMenu.name, module)
       count: 0,
     }),
     methods: {
-      contextmenu(e: MouseEvent) {
-        this.$context(e, [{
-          // tslint:disable-next-line:no-console
-          // @ts-ignore
-          callback: () => this.count += 1,
-          text: 'Increment',
-        }]);
+      contextmenu(event: MouseEvent) {
+        this.$context({
+          event,
+          items: [{
+            // tslint:disable-next-line:no-console
+            // @ts-ignore
+            callback: () => this.count += 1,
+            text: 'Increment',
+          }],
+        });
       },
     },
   }));

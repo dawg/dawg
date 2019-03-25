@@ -42,8 +42,8 @@
               :play="general.play"
               @update:play="playPause"
               :style="border('bottom')"
-              :bpm="project.bpm"
-              @update:bpm="project.setBpm"
+              :bpm="general.project.bpm"
+              @update:bpm="(bpm) => general.project.setBpm(bpm)"
             ></toolbar>
           </split>
 
@@ -51,14 +51,14 @@
             <playlist-sequencer
               v-if="loaded"
               style="height: 100%"
-              :tracks="project.tracks" 
-              :elements="project.master.elements"
-              :transport="project.master.transport"
+              :tracks="general.project.tracks" 
+              :elements="general.project.master.elements"
+              :transport="general.project.master.transport"
               :play="playlistPlay"
               :start.sync="masterStart"
               :end.sync="masterEnd"
-              :steps-per-beat="project.stepsPerBeat"
-              :beats-per-measure="project.beatsPerMeasure"
+              :steps-per-beat="general.project.stepsPerBeat"
+              :beats-per-measure="general.project.beatsPerMeasure"
               :row-height="workspace.playlistRowHeight"
               @update:rowHeight="workspace.setPlaylistRowHeight"
               :px-per-beat="workspace.playlistBeatWidth"
@@ -122,11 +122,10 @@
 import fs from 'fs';
 import { Component, Vue } from 'vue-property-decorator';
 import { shell } from 'electron';
-import { project, cache, general, workspace, Project } from '@/store';
+import { cache, general, workspace, Project } from '@/store';
 import { toTickTime, allKeys, Keys } from '@/utils';
 import Transport from '@/modules/audio/transport';
 import { automation } from '@/modules/knobs';
-import { Pattern, Score, Note, Instrument, PlacedPattern, PlacedSample, Automatable, AutomationClip } from '@/schemas';
 import Sidebar from '@/components/SideBar.vue';
 import SideTabs from '@/sections/SideTabs.vue';
 import Panels from '@/sections/Panels.vue';
@@ -146,6 +145,9 @@ import theme from '@/modules/theme';
 import { Theme } from '@/modules/theme/types';
 import auth from '@/auth';
 import { User } from 'firebase';
+import { ScheduledPattern } from '@/core/scheduled/pattern';
+import { ScheduledSample } from '@/core/scheduled/sample';
+import { Automatable } from '@/core/automation';
 
 @Component({
   components: {
@@ -157,11 +159,10 @@ import { User } from 'firebase';
   },
 })
 export default class App extends Vue {
-  public project = project;
   public general = general;
   public workspace = workspace;
 
-  public menuItems: {[k: string]: PaletteItem} = {
+  public menuItems = {
     save: {
       text: 'Save',
       shortcut: ['Ctrl', 'S'],
@@ -189,34 +190,6 @@ export default class App extends Vue {
       text: 'Close Application',
       shortcut: ['Ctrl', 'W'],
       callback: this.closeApplication,
-    },
-    copy: {
-      text: 'Copy',
-      shortcut: ['Ctrl', 'C'],
-      callback: () => {
-        //
-      },
-    },
-    paste: {
-      text: 'Past',
-      shortcut: ['Ctrl', 'P'],
-      callback: () => {
-        //
-      },
-    },
-    cut: {
-      shortcut: ['Ctrl', 'X'],
-      text: 'Cut',
-      callback: () => {
-        //
-      },
-    },
-    delete: {
-      shortcut: ['Del'],
-      text: 'Delete',
-      callback: () => {
-        //
-      },
     },
     new: {
       shortcut: ['Ctrl', 'N'],
@@ -262,15 +235,6 @@ export default class App extends Vue {
       ],
     },
     {
-      name: 'Edit',
-      items: [
-        this.menuItems.cut,
-        this.menuItems.copy,
-        this.menuItems.paste,
-        this.menuItems.delete,
-      ],
-    },
-    {
       name: 'View',
       items: [
         this.menuItems.palette,
@@ -290,6 +254,12 @@ export default class App extends Vue {
           text: 'Report an Issue',
           callback: () => {
             shell.openExternal('https://github.com/dawg/vusic/issues');
+          },
+        },
+        {
+          text: 'Trello Board',
+          callback: () => {
+            shell.openExternal('https://trello.com/b/ZOLQJGSv/vusic-feature-requests');
           },
         },
         null,
@@ -333,11 +303,6 @@ export default class App extends Vue {
       callback: () => workspace.setOpenedPanel('Mixer'),
     },
     {
-      text: 'New Synthesizer',
-      shortcut: ['Ctrl', 'N'],
-      callback: project.addInstrument,
-    },
-    {
       text: 'Play/Pause',
       shortcut: ['Space'],
       callback: this.playPause,
@@ -377,7 +342,7 @@ export default class App extends Vue {
       const pattern = workspace.selectedPattern;
       return pattern ? pattern.transport : null;
     } else {
-      return project.master.transport;
+      return general.project.master.transport;
     }
   }
 
@@ -404,15 +369,22 @@ export default class App extends Vue {
       },
     });
 
-    // Log this for debugging purposes
-    // tslint:disable-next-line:no-console
-    console.info(project);
-
     setTimeout(async () => {
       // Make sure we load the cache first before loading the default project.
       this.$log.debug('Starting to read data.');
       await cache.fromCacheFolder();
-      await this.withErrorHandling(project.load);
+
+      const result = await general.loadProject();
+      if (result.type === 'error') {
+        this.$notify.info('Unable to load project.', { detail: result.message, duration: Infinity });
+      }
+
+      general.setProject(result.project);
+      await workspace.loadSpecific();
+
+      // Log this for debugging purposes
+      // tslint:disable-next-line:no-console
+      console.info(general.project);
 
       this.loadTheme(workspace.themeName);
 
@@ -463,6 +435,11 @@ export default class App extends Vue {
   }
 
   public async onExit() {
+    // If we don't have a file open, don't write the workspace information
+    if (!general.openedFile) {
+      return;
+    }
+
     await workspace.write();
   }
 
@@ -475,16 +452,6 @@ export default class App extends Vue {
 
   public restoreTheme() {
     this.loadTheme(this.themeMomento);
-  }
-
-  public async withErrorHandling(callback: () => Promise<void>) {
-    try {
-      await callback();
-      await workspace.loadSpecific();
-    } catch (e) {
-      this.$notify.error('Unable to load project.');
-      this.$log.error(e);
-    }
   }
 
   public async open() {
@@ -515,7 +482,7 @@ export default class App extends Vue {
       general.set({ key: 'syncing', value: true });
     }
 
-    const backupStatus = await project.save({
+    const backupStatus = await general.saveProject({
       backup: workspace.backup,
       user: general.user,
       forceDialog,
@@ -533,9 +500,7 @@ export default class App extends Vue {
           break;
         case 'success':
           // Make sure to set it back to false if there was an error previously
-          if (general.backupError) {
-            general.set({ key: 'backupError', value: false });
-          }
+          general.set({ key: 'backupError', value: false });
           break;
       }
     }
@@ -558,7 +523,7 @@ export default class App extends Vue {
       }
       transport = pattern.transport;
     } else {
-      transport = project.master.transport;
+      transport = general.project.master.transport;
     }
 
     if (transport.state === 'started') {
@@ -575,22 +540,22 @@ export default class App extends Vue {
   /**
    * Whenever we add a sample, if it hasn't been imported before, add it the the list of project samples.
    */
-  public checkPrototype(prototype: PlacedPattern | PlacedSample) {
-    if (!(prototype instanceof PlacedSample)) {
+  public checkPrototype(prototype: ScheduledPattern | ScheduledSample) {
+    if (!(prototype instanceof ScheduledSample)) {
       return;
     }
 
     const sample = prototype.sample;
-    if (sample.id in project.sampleLookup) {
+    if (general.project.samples.indexOf(prototype.sample) >= 0) {
       return;
     }
 
     this.$log.debug('Adding a sample!');
-    project.addSample(sample);
+    general.project.addSample(sample);
   }
 
   public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T) {
-    const added = await project.createAutomationClip({
+    const added = await general.project.createAutomationClip({
       automatable,
       key,
       start: this.masterStart,

@@ -7,10 +7,18 @@ interface Events {
 
 export class Bus<E extends Events> extends Vue {
   public $on<T extends keyof E & string>(name: T, callback: (...payload: E[T]) => void) {
-    return super.$on(name, callback);
+    return super.$on(name, (...args: E[T]) => {
+      if (args.length === 1) {
+        // @ts-ignore
+        callback(args[0][0]);
+        return;
+      }
+
+      return callback(...args);
+    });
   }
   public $off<T extends keyof E & string>(name: T, callback: (...payload: E[T]) => void) {
-    return super.$on(name, callback);
+    return super.$off(name, callback);
   }
   public $once<T extends keyof E & string>(name: T, callback: (...payload: E[T]) => void) {
     return super.$on(name, callback);

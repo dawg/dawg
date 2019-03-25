@@ -20,7 +20,7 @@ import { Draggable } from '@/modules/draggable';
 import { Mixins, Prop, Component, Inject, Vue } from 'vue-property-decorator';
 import { allKeys } from '@/utils';
 import { Watch } from '@/modules/update';
-import { Note as N } from '@/schemas';
+import { Note as N } from '@/core';
 
 @Component
 export default class Note extends Vue {

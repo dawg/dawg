@@ -34,7 +34,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
-import { Point, PlacedAutomationClip } from '@/schemas';
+import { Point, ScheduledAutomation } from '@/core';
 import { scale } from '@/utils';
 
 @Component
@@ -45,7 +45,7 @@ export default class AutomationClipElement extends Vue {
   @Prop({ type: Number, required: true }) public snap!: number;
 
   @Prop({ type: Number, default: 4 }) public radius!: number;
-  @Prop({ type: Object, required: true }) public element!: PlacedAutomationClip;
+  @Prop({ type: Object, required: true }) public element!: ScheduledAutomation;
 
   get clip() {
     return this.element.clip;
@@ -150,13 +150,16 @@ export default class AutomationClipElement extends Vue {
     this.clip.remove(i);
   }
 
-  public pointContext(e: MouseEvent, i: number) {
-    this.$context(e, [
-      {
-        text: 'Delete',
-        callback: () => this.delete(i),
-      },
-    ]);
+  public pointContext(event: MouseEvent, i: number) {
+    this.$context({
+      event,
+      items: [
+        {
+          text: 'Delete',
+          callback: () => this.delete(i),
+        },
+      ],
+    });
   }
 }
 </script>

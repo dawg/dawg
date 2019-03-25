@@ -13,8 +13,9 @@
         <tooltip-icon 
           medium 
           :color="$theme.foreground" 
-          :tooltip="item.name" 
+          :tooltip="item.name"
           right
+          v-bind="item.iconProps"
         >
           {{ item.icon }}
         </tooltip-icon>
@@ -45,7 +46,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { workspace, general, project } from '@/store';
+import { workspace, general } from '@/store';
 import Sidebar from '@/components/SideBar.vue';
 import { PanelNames, SideTab } from '@/constants';
 import Settings from '@/sections/Settings.vue';
@@ -56,7 +57,6 @@ import Settings from '@/sections/Settings.vue';
 export default class ActivityBar extends Vue {
   public workspace = workspace;
   public general = general;
-  public project = project;
   public open = false;
   public x = 0;
   public y = 0;

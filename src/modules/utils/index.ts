@@ -34,10 +34,10 @@ export function* chain<T>(...arrays: T[][]) {
   }
 }
 
-export const makeLookup = <T>(array: Iterable<T>, keyFunc: (item: T) => string) => {
+export const makeLookup = <T extends { id: string }>(array: Iterable<T>) => {
   const lookup: { [k: string]: T } = {};
   for (const item of array) {
-    lookup[keyFunc(item)] = item;
+    lookup[item.id] = item;
   }
   return lookup;
 };

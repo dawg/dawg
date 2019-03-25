@@ -192,6 +192,9 @@ function deserializeObject(json: any, types: Array<Constructor<any>>): any {
         break;
       }
     }
+  } else {
+    // Just return the object as is if there is no type provideds
+    return json;
   }
 
   if (!theType) {
@@ -334,3 +337,8 @@ export const serialize = <T>(o: T, c: Constructor<T>): any => {
 
 // expose the type map
 export { TypeMap as __TypeMap };
+
+export default {
+  auto,
+  attr,
+};

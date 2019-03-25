@@ -1,5 +1,5 @@
 <template>
-  <div class="rela-inline knob" :ref="dragRef">
+  <drag-element class="rela-inline knob" @move="move" @after-move="afterMove">
     <div 
       class="rela-block knob-dial" 
       :style="knobStyle"
@@ -51,7 +51,7 @@
     >
       {{ label }}
     </div>
-  </div>
+  </drag-element>
 </template>
 
 <script lang="ts">
@@ -78,7 +78,6 @@ export default class Knob extends Mixins(Draggable) {
   @Prop(String) public label?: string;
   @Prop({ type: Number, default: 2.5 }) public strokeWidth!: number;
   @Prop(Number) public midValue?: number;
-  @Prop({ type: String, default: '#55595C' }) public strokeColor!: string;
   @Prop(String) public strokeClass?: string;
   @Prop(Boolean) public disableAutomation!: boolean;
 
@@ -87,6 +86,10 @@ export default class Knob extends Mixins(Draggable) {
 
   get rotation() {
     return this.mapRange(this.value, this.min, this.max, -this.angle, this.angle);
+  }
+
+  get strokeColor() {
+    return this.$theme.background + '60';
   }
 
   get midDegrees() {
@@ -258,11 +261,11 @@ export default class Knob extends Mixins(Draggable) {
     this.$status.clear();
   }
 
-  public move(e: MouseEvent, { changeY }: { changeY: number }) {
+  public move(e: MouseEvent) {
     // Multiply by a factor to get better speed.
     // This factor should eventually be computed by the changeX
     // For example, as they move farther away from their inital x position, the factor decreases
-    let rotation = this.rotation - changeY * 1.5;
+    let rotation = this.rotation - e.movementY * 1.5;
     rotation = Math.max(-132, Math.min(this.angle, rotation));
     const value = this.mapRange(rotation, -this.angle, this.angle, this.min, this.max);
     this.$emit('input', value);
@@ -276,17 +279,20 @@ export default class Knob extends Mixins(Draggable) {
     this.$status.clear();
   }
 
-  public contextmenu(e: MouseEvent) {
+  public contextmenu(event: MouseEvent) {
     if (this.disableAutomation) {
       return;
     }
 
-    this.$context(e, [
-      {
-        text: 'Create Automation Clip',
-        callback: () => this.$emit('automate'),
-      },
-    ]);
+    this.$context({
+      event,
+      items: [
+        {
+          text: 'Create Automation Clip',
+          callback: () => this.$emit('automate'),
+        },
+      ],
+    });
   }
 }
 </script>

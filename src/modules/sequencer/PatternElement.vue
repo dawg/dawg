@@ -10,14 +10,14 @@
 <script lang="ts">
 import { Vue, Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 import MiniScore from '@/modules/dawg/MiniScore.vue';
-import { Note, PlacedPattern } from '@/schemas';
+import { Note, ScheduledPattern } from '@/core';
 
 @Component({
   components: { MiniScore },
 })
 export default class PatternElement extends Vue {
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;
-  @Prop({ type: Object, required: true }) public element!: PlacedPattern;
+  @Prop({ type: Object, required: true }) public element!: ScheduledPattern;
 
   public score: MiniScore | null = null;
 

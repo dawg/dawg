@@ -19,7 +19,9 @@ export class Draggable extends Vue {
   public $refs!: {
     drag: HTMLElement,
   };
+
   public mousemoveListener: (e: MouseEvent) => void = () => ({});
+
   public showCursor() {
     if (document.documentElement) {
       document.documentElement.style.cursor = this.cursor;
@@ -30,6 +32,7 @@ export class Draggable extends Vue {
       document.documentElement.style.cursor = 'auto';
     }
   }
+
   public addListeners(e: MouseEvent, ...args: any[]) {
     if (e.which !== 1) { return; } // if not left click
     if (this.disabled) { return; }
@@ -44,6 +47,7 @@ export class Draggable extends Vue {
     window.addEventListener('mousemove', this.mousemoveListener);
     window.addEventListener('mouseup', this.removeListeners);
   }
+
   public removeListeners(e?: MouseEvent) {
     if (this.disabled) { return; }
     if (e) { this.prevent(e); }
@@ -109,24 +113,29 @@ export class Draggable extends Vue {
   public squash(v: number, low: number, high: number) {
     return Math.max(low, Math.min(high, v));
   }
+
   public mapRange(x: number, inMin: number, inMax: number, outMin: number, outMax: number) {
     return (((x - inMin) * (outMax - outMin)) / (inMax - inMin)) + outMin;
   }
+
   public prevent(e: Event) {
     if (e && e.preventDefault) { e.preventDefault(); }
     if (e && e.stopPropagation) { e.stopPropagation(); }
   }
+
   public onHover() {
     if (this.moving) { return; }
     this.in = true;
     this.showCursor();
   }
+
   public afterHover() {
     if (this.moving) { return; }
     this.in = false;
     this.mousewheelPosition = null;
     this.resetCursor();
   }
+
   public mounted() {
     const el = this.$refs.drag;
     if (!el) { return; }
@@ -137,10 +146,16 @@ export class Draggable extends Vue {
     el.addEventListener('mouseleave', this.afterHover);
     el.addEventListener('click', this.stopClick);
   }
+
   public stopClick(e: MouseEvent) {
     e.stopPropagation();
   }
+
   public destroyed() {
+    // Always reset when destroyed
+    // We can get into weird states where the component is destroyed while hovering
+    this.afterHover();
+
     const el = this.$refs.drag;
     if (!el) { return; }
     el.removeEventListener('mousedown', this.addListeners);
@@ -151,7 +166,6 @@ export class Draggable extends Vue {
   }
 }
 
-// tslint:disable-next-line:max-classes-per-file
 @Component
 export class DragElement extends Mixins(Draggable) {
   @Prop({ type: String, default: 'div' }) public tag!: string;
@@ -175,7 +189,6 @@ export class DragElement extends Mixins(Draggable) {
       on: {
         wheel: this.mousewheel,
         mousedown: this.addListeners,
-        mouseup: this.removeListeners,
         mouseenter: this.onHover,
         mouseleave: this.afterHover,
         click: this.stopClick,

@@ -1,17 +1,33 @@
 import { Module, getModule, Mutation, Action } from 'vuex-module-decorators';
-
 import SideBar from '@/components/SideBar.vue';
+import fs from 'mz/fs';
 import BaseTabs from '@/components/BaseTabs.vue';
 import store from '@/store/store';
 import { VuexModule } from '@/store/utils';
 import backend, { ProjectInfo } from '@/backend';
 import { User } from 'firebase';
+import { Project } from './project';
+import { remote } from 'electron';
+import cache from './cache';
+import { DG_EXTENSION } from '@/constants';
+
+export interface InitializationError {
+  type: 'error';
+  message: string;
+  project: Project;
+}
+
+export interface InitializationSuccess {
+  type: 'success';
+  project: Project;
+}
 
 /**
  * This module is used to move data throughout the sections. It is not serialized in any way.
  */
 @Module({ dynamic: true, store, name: 'general' })
 export class General extends VuexModule {
+  public project = Project.newProject();
   public sideBarTabs: SideBar[] = [];
   public panels: BaseTabs | null = null;
   public toolbarHeight = 64;
@@ -29,6 +45,93 @@ export class General extends VuexModule {
 
   get authenticated() {
     return !!this.user;
+  }
+
+  @Action
+  public async loadProject(): Promise<InitializationError | InitializationSuccess> {
+    for (const path of [cache.backupTempPath, cache.openedFile]) {
+      if (!path) {
+        continue;
+      }
+
+      const result = await Project.fromFile(path);
+
+      // We always complete the following action, even if there is an error
+      if (cache.backupTempPath === path) {
+        // Always reset to null
+        fs.unlink(path);
+        cache.setBackupTempPath(null);
+      }
+
+      if (result.type === 'error') {
+        return {
+          type: 'error',
+          message: result.message,
+          project: await Project.newProject(),
+        };
+      }
+
+      // Only set this if we've actually opened a project successfully
+      if (cache.openedFile === path) {
+        // This means that we are opening the cache file
+        this.setOpenedFile(path);
+      }
+
+      return {
+        type: 'success',
+        project: result.project,
+      };
+    }
+
+    if (cache.openedFile) {
+      fs.exists(cache.openedFile, (_, exists) => {
+        if (!exists) {
+          cache.setOpenedFile(null);
+        }
+      });
+    }
+
+    return {
+      type: 'success',
+      project: await Project.newProject(),
+    };
+  }
+
+  @Action
+  public async saveProject(opts: { backup: boolean, user: User | null, forceDialog?: boolean }) {
+    let openedFile = this.openedFile;
+    if (!openedFile || opts.forceDialog) {
+      openedFile = remote.dialog.showSaveDialog(remote.getCurrentWindow(), {}) || null;
+
+      // If the user cancels the dialog
+      if (!openedFile) {
+        return;
+      }
+
+      if (!openedFile.endsWith(DG_EXTENSION)) {
+        openedFile = openedFile + DG_EXTENSION;
+      }
+
+      // Make sure we set the cache and the general
+      // The cache is what is written to the filesystem
+      // and the general is the file that is currently opened
+      cache.setOpenedFile(openedFile);
+      this.setOpenedFile(openedFile);
+
+      // This should never be true but we need to check
+      if (!cache.openedFile) {
+        return;
+      }
+    }
+
+    const encoded = this.project.serialize();
+
+    await fs.writeFile(openedFile, JSON.stringify(encoded, null, 4));
+
+    // I don't think this is the best place to put this.
+    if (opts.backup && opts.user && encoded.name) {
+      return await backend.updateProject(opts.user, this.project.id, encoded as any);
+    }
   }
 
   @Action
@@ -52,6 +155,11 @@ export class General extends VuexModule {
   @Mutation
   public setProjects(projects: ProjectInfo[]) {
     this.projects = projects;
+  }
+
+  @Mutation
+  public setProject(project: Project) {
+    this.project = project;
   }
 
   @Mutation

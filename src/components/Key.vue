@@ -65,7 +65,7 @@ export default class Key extends Vue {
   get keyOverlay() {
     return {
       backgroundColor: this.$theme.primary + this.percentage,
-      borderBottom: `1px solid ${this.$theme.primary + (this.percentage + 1)}`,
+      borderBottom: `1px solid ${this.$theme.primary + 10}`,
     };
   }
 

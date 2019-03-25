@@ -1,5 +1,5 @@
 import wav from 'node-wav';
-import fs from 'fs';
+import fs from 'mz/fs';
 import Tone from 'tone';
 
 function createBuffer(sampleRate: number, buffer: number[][]) {
@@ -19,8 +19,8 @@ function createBuffer(sampleRate: number, buffer: number[][]) {
   return audioBuffer;
 }
 
-export function loadBuffer(path: string) {
-  const buffer = fs.readFileSync(path);
+export async function loadBuffer(path: string) {
+  const buffer = await fs.readFile(path);
   const result = wav.decode(buffer);
 
   const audioBuffer = createBuffer(

@@ -25,7 +25,7 @@
 <script lang="ts">
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import Sequencer from '@/modules/sequencer/Sequencer.vue';
-import { Track, Element, PlacedPattern, PlacedSample } from '@/schemas';
+import { Track } from '@/core';
 import { toTickTime } from '@/utils';
 import Transport from '@/modules/audio/transport';
 

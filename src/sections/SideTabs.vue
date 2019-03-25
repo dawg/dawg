@@ -11,6 +11,7 @@
         :key="action.icon"
         :tooltip="action.tooltip"
         bottom
+        :color="$theme.foreground"
         @click.native="action.callback"
       >
         {{ action.icon }}
@@ -35,9 +36,16 @@
           <patterns 
             :value="workspace.selectedPattern" 
             @input="workspace.setPattern"
-            :patterns="project.patterns"
-            @remove="project.removePattern"
+            :patterns="general.project.patterns"
+            @remove="(i) => general.project.removePattern(i)"
           ></patterns>
+        </side-bar>
+        <side-bar 
+          :name="tabs.automationClips" 
+          icon="share"
+          :icon-props="{ style: 'transform: rotate(-90deg)' }"
+        >
+          <automation-clips></automation-clips>
         </side-bar>
       </base-tabs>
     </vue-perfect-scrollbar>
@@ -51,10 +59,11 @@ import Patterns from '@/components/Patterns.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
 import SideBar from '@/components/SideBar.vue';
 import AudioFiles from '@/sections/AudioFiles.vue';
-import { project, cache, general, workspace } from '@/store';
+import { cache, general, workspace } from '@/store';
 import { Watch } from '@/modules/update';
 import { SideTab } from '@/constants';
 import SmartFileExplorer from '@/smart/SmartFileExplorer.vue';
+import AutomationClips from '@/sections/AutomationClips.vue';
 
 interface Group {
   icon: string;
@@ -69,10 +78,10 @@ interface Group {
     SideBar,
     AudioFiles,
     SmartFileExplorer,
+    AutomationClips,
   },
 })
 export default class SideTabs extends Vue {
-  public project = project;
   public cache = cache;
   public workspace = workspace;
   public general = general;
@@ -94,11 +103,9 @@ export default class SideTabs extends Vue {
     {
       icon: 'add',
       tooltip: 'Add Pattern',
-      callback: project.addPattern,
+      callback: () => general.project.addPattern(),
     },
   ];
-
-
 
   // For typing reasons
   // Vue will give a compilation error if we use a wrong key
@@ -106,6 +113,7 @@ export default class SideTabs extends Vue {
     explorer: 'Explorer',
     audioFiles: 'Audio Files',
     patterns: 'Patterns',
+    automationClips: 'Automation Clips',
   };
 
   public mounted() {
@@ -113,6 +121,7 @@ export default class SideTabs extends Vue {
   }
 
   public openFolder() {
+    // TODO
     // the showFileDialog messes with the keyup events
     // This is a temporary solution
     cache.openFolder();

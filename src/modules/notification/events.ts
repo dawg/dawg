@@ -3,6 +3,7 @@ export const events = new Vue();
 
 export interface NotificationConfig {
   detail?: string;
+  duration?: number;
   dismissible?: boolean;
 }
 

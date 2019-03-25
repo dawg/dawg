@@ -1,5 +1,5 @@
-import Vue from 'vue';
-import { Key } from '../palette';
+import { Key } from '@/modules/palette';
+import { Bus } from '@/modules/update';
 
 export interface Item {
   text: string;
@@ -7,11 +7,10 @@ export interface Item {
   callback: (e: MouseEvent) => void;
 }
 
-interface EventInterface {
-  show: {
-    e: MouseEvent | Position,
-    items: Array<Item | null>,
-  };
+export interface ContextPayload {
+  event: MouseEvent | Position;
+  items: Array<Item | null>;
+  left?: boolean;
 }
 
 export interface Position {
@@ -23,13 +22,4 @@ export const isMouseEvent = (e: object): e is MouseEvent => {
   return e instanceof Event;
 };
 
-class Bus extends Vue {
-  public $on<T extends keyof EventInterface>(name: T, callback: (payload: EventInterface[T]) => void) {
-    return super.$on(name, callback);
-  }
-  public $emit<T extends keyof EventInterface>(name: T, payload: EventInterface[T]) {
-    return super.$emit(name, payload);
-  }
-}
-
-export default new Bus();
+export default new Bus<{ show: [ContextPayload] }>();

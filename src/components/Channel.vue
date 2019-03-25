@@ -11,7 +11,7 @@
           @contextmenu="contextmenu($event, effect)"
           class="effect secondary foreground--text"
         >
-          {{ effect.type }}
+          {{ effect.type | sentenceCase }}
         </div>
         <v-icon 
           v-else
@@ -58,13 +58,25 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { Channel as C, EffectMap, EffectName, AnyEffect } from '@/schemas';
 import { range, scale, clamp } from '@/utils';
 import { Watch } from '@/modules/update';
+import { AnyEffect } from '@/core/filters/effect';
+import { Channel as C } from '@/core/channel';
+import { EffectMap, EffectName } from '@/core';
+
+function sentenceCase(text: string) {
+  // const result = text.replace( /([A-Z])/g, ' $1' );
+  // return result.charAt(0).toUpperCase() + result.slice(1);
+  return text;
+}
 
 // Beware, we are modifying data in the store directly here.
 // We will want to change this evetually.
-@Component
+@Component({
+  filters: {
+    sentenceCase,
+  },
+})
 export default class Channel extends Vue {
   @Prop({ type: Object, required: true }) public channel!: C;
   @Prop({ type: Boolean, required: true }) public play!: boolean;
@@ -88,25 +100,34 @@ export default class Channel extends Vue {
     return Object.keys(EffectMap) as EffectName[];
   }
 
-  public showEffects(e: MouseEvent, i: number) {
-    const items = this.options.map((option) => ({ text: option, callback: () => this.addEffect(option, i) }));
-    this.$menu(e, items);
+  public showEffects(event: MouseEvent, i: number) {
+    const items = this.options.map((option) => ({
+      text: sentenceCase(option), callback: () => this.addEffect(option, i),
+    }));
+
+    this.$menu({
+      event,
+      items,
+    });
   }
 
   public addEffect(effect: EffectName, i: number) {
     this.$emit('add', { effect, index: i });
   }
 
-  public select(e: MouseEvent, effect: AnyEffect) {
-    e.stopPropagation();
+  public select(event: MouseEvent, effect: AnyEffect) {
+    event.stopPropagation();
     this.$emit('select', effect);
   }
 
-  public contextmenu(e: MouseEvent, effect: AnyEffect) {
-    this.$context(e, [{
-      text: 'Delete',
-      callback: () => this.$emit('delete', effect),
-    }]);
+  public contextmenu(event: MouseEvent, effect: AnyEffect) {
+    this.$context({
+      event,
+      items: [{
+        text: 'Delete',
+        callback: () => this.$emit('delete', effect),
+      }],
+    });
   }
 
   public mute() {
@@ -231,4 +252,7 @@ ul
   line-height: 23px
   width: 100%
   text-align: center
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
 </style>

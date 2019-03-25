@@ -2,8 +2,9 @@
   <div 
     class="timeline secondary" 
     @dblclick="remove"
-    @click="seek"
+    :style="timelineStyle"
     @mousedown="mousedown"
+    @contextmenu="disable"
   >
       <div class="loop" :style="loopStyle" @mousedown="mousedown($event, 'center')">
         <!-- The inner loop is where stuff is actually displayed -->
@@ -50,6 +51,8 @@ import { Button } from '@/utils';
 import { range, Nullable } from '@/utils';
 import Progression from '@/modules/sequencer/Progression.vue';
 
+type Location = 'start' | 'end' | 'center';
+
 @Component({
   components: { Progression },
 })
@@ -75,6 +78,12 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   public selectedEnd = false;
   public rendered = false;
   public justDragged = false;
+
+  get timelineStyle() {
+    return {
+      color: `${this.$theme.foreground}90`,
+    };
+  }
 
   get pxPerStep() {
     return this.pxPerBeat / this.stepsPerBeat;
@@ -159,10 +168,32 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
     this.inLoop = false;
   }
 
-  public mousedown(e: MouseEvent, location?: 'start' | 'end' | 'center') {
-    if (e.button !== Button.LEFT) { return; }
-
+  public disable(e: MouseEvent) {
     e.preventDefault();
+  }
+
+  public mousedown(e: MouseEvent, location?: Location) {
+    e.preventDefault();
+    switch (e.button) {
+      case Button.LEFT:
+        this.seek(e);
+        return this.startCursorDrag();
+      case Button.RIGHT:
+        return this.doLoop(e, location);
+    }
+  }
+
+  public startCursorDrag() {
+    window.addEventListener('mousemove', this.seek);
+    window.addEventListener('mouseup', this.removeSeekListeners);
+  }
+
+  public removeSeekListeners() {
+    window.removeEventListener('mousemove', this.seek);
+    window.removeEventListener('mouseup', this.removeSeekListeners);
+  }
+
+  public doLoop(e: MouseEvent, location?: Location) {
     if (location) {
       e.stopPropagation();
       this.selectedStart = location === 'start';
@@ -184,17 +215,14 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
       return;
     }
 
-    const beat = this.getPosition(e);
-    if (beat > this.loopEnd) {
-      return;
-    }
-
+    const beat = Math.min(this.getPosition(e), this.loopEnd);
     this.$emit('seek', beat);
   }
 
   public getPosition(e: MouseEvent) {
     const left = this.$el.getBoundingClientRect().left;
-    return (e.pageX - left) / this.pxPerBeat;
+    const position = (e.pageX - left) / this.pxPerBeat + this.offset;
+    return Math.max(0, position);
   }
 
   public mousemove(e: MouseEvent) {
@@ -255,7 +283,6 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 	position: relative;
 	overflow: hidden;
 	font: 14px monospace;
-	color: var(--foreground);
 	cursor: default;
   border-bottom: 1px solid var(--background);
 }

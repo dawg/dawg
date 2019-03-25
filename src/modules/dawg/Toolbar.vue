@@ -17,7 +17,7 @@
       style="margin-right: 10px"
       :raw="seconds"
     ></time-display>
-    <!-- <bpm :value="bpm" @input="updateBpm"></bpm> -->
+    <bpm :value="bpm" @input="updateBpm"></bpm>
 
     <v-spacer
       class="drag-area"
@@ -38,7 +38,6 @@ import { Component, Prop } from 'vue-property-decorator';
 import Bpm from '@/components/Bpm.vue';
 import TimeDisplay from '@/components/TimeDisplay.vue';
 import { Watch } from '@/modules/update';
-import { Element } from '@/schemas';
 import Transport from '@/modules/audio/transport';
 import { ApplicationContext } from '@/constants';
 import { Nullable } from '@/utils';

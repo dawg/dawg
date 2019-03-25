@@ -4,9 +4,9 @@
       group="arranger"
       v-for="(item, i) in items"
       :key="i"
-      class="pattern"
+      class="pattern foreground--text"
       :transfer-data="item.prototype"
-      :class="{ selected: value && item.pattern.id === value.id }"
+      :style="border(item.pattern)"
       @click.native="click(item.pattern)"
       @contextmenu.native="context($event, i)"
     >
@@ -17,7 +17,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { Pattern, PlacedPattern } from '@/schemas';
+import { Pattern, ScheduledPattern } from '@/core';
 import { Nullable } from '@/utils';
 import { Watch } from '@/modules/update';
 
@@ -29,7 +29,7 @@ export default class Patterns extends Vue {
   get items() {
     return this.patterns.map((pattern) => {
       return {
-        prototype: PlacedPattern.create(pattern),
+        prototype: ScheduledPattern.create(pattern),
         pattern,
       };
     });
@@ -43,13 +43,24 @@ export default class Patterns extends Vue {
     }
   }
 
-  public context(e: MouseEvent, i: number) {
-    this.$context(e, [
-      {
-        text: 'Delete',
-        callback: () => this.$emit('remove', i),
-      },
-    ]);
+  public context(event: MouseEvent, i: number) {
+    this.$context({
+      event,
+      items: [
+        {
+          text: 'Delete',
+          callback: () => this.$emit('remove', i),
+        },
+      ],
+    });
+  }
+
+  public border(pattern: Pattern) {
+    if (pattern === this.value) {
+      return {
+        border: `1px solid ${this.$theme.foreground + '30'}`,
+      };
+    }
   }
 
   @Watch<Patterns>('patterns')
@@ -64,13 +75,9 @@ export default class Patterns extends Vue {
 <style lang="sass" scoped>
 .pattern
   padding: 10px 20px
-  color: white
   border: 1px solid rgba(0,0,0,0)
 
   &:hover
     box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.1)
     cursor: pointer
-
-.selected
-  border: 1px solid rgba(255, 255, 255, 0.36)
 </style>

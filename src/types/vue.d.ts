@@ -4,7 +4,7 @@ import { UpdateAugmentation } from '@/modules/update';
 import { NotifyInterface } from '@/modules/notification';
 import { ContextInterface } from '@/modules/context';
 import { KnobAugmentation } from '@/modules/knobs';
-import { Automatable } from '@/schemas';
+import { Automatable } from '@/core';
 import { PaletteAugmentation } from '@/modules/palette';
 import { StatusAugmentation } from '@/modules/status';
 import { ThemeAugmentation } from '@/modules/theme';

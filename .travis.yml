@@ -15,20 +15,31 @@ matrix:
       node_js: "10"
       language: node_js
 
+// https://github.com/dawg/vusic/blob/76a7e2fb54be22b992ebc6db1c6756904ef03364/.travis.yml
+// https://cloud.google.com/solutions/continuous-delivery-with-travis-ci
+
+# addons:
+#   chrome: stable
+
 cache:
   directories:
     - node_modules
     - $HOME/.cache/electron
     - $HOME/.cache/electron-builder
 
+# before_install:
+#  - export DISPLAY=:99.0
+#  - sh -e /etc/init.d/xvfb start
+#  - sleep 3 # give xvfb some time to start
+
 install:
   npm i
 
-script:
-  - npm run build
+# script:
+#   - npm run test:unit
 
-before_cache:
-  - rm -rf $HOME/.cache/electron-builder/wine
+before_deploy:
+  - npm run build
 
 branches:
   except:
@@ -45,3 +56,4 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
+    branch: master

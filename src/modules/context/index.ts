@@ -1,9 +1,9 @@
 import Vue from 'vue';
 import ContextMenu from '@/modules/context/ContextMenu.vue';
-import bus, { Item, isMouseEvent, Position } from '@/modules/context/bus';
+import bus, { Item, isMouseEvent, ContextPayload } from '@/modules/context/bus';
 
 
-type ContextFunction = (e: MouseEvent | Position, items: Array<Item | null>) => void;
+type ContextFunction = (opts: ContextPayload) => void;
 
 export interface ContextInterface {
   $context: ContextFunction;
@@ -19,20 +19,20 @@ const context = {
     vue.component('ContextMenu', ContextMenu);
 
     const defaultItems = options.default || [];
-    const contextFunction: ContextFunction = (e, items) => {
-      if (isMouseEvent(e)) {
-        e.preventDefault();
-        e.stopPropagation();
+    const contextFunction: ContextFunction = (opts) => {
+      if (isMouseEvent(opts.event)) {
+        opts.event.preventDefault();
+        opts.event.stopPropagation();
       }
 
-      bus.$emit('show', { e, items: [...items, null, ...defaultItems] });
+      bus.$emit('show', { ...opts, items: [...opts.items, null, ...defaultItems] });
     };
 
-    const menuFunction: ContextFunction = (e, items) => {
-      if (isMouseEvent(e)) {
-        e.stopPropagation();
+    const menuFunction: ContextFunction = (opts) => {
+      if (isMouseEvent(opts.event)) {
+        opts.event.stopPropagation();
       }
-      bus.$emit('show', { e, items });
+      bus.$emit('show', opts);
     };
 
     Vue.prototype.$context = contextFunction;

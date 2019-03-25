@@ -14,6 +14,7 @@
       v-for="action in actions"
       :key="action.icon"
       :tooltip="action.tooltip"
+      :color="$theme.foreground"
       bottom
       @click.native="action.callback"
     >
@@ -26,14 +27,14 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import BaseTabs from '@/components/BaseTabs.vue';
 import { Nullable } from '@/utils';
-import { project, cache, general, workspace } from '@/store';
+import { cache, general, workspace } from '@/store';
 import { Watch } from '@/modules/update';
 import { PanelNames } from '@/constants';
 
 interface Group {
   icon: string;
   tooltip: string;
-  callback: () => void;
+  callback: (e: MouseEvent) => void;
 }
 
 @Component
@@ -42,7 +43,7 @@ export default class PanelHeaders extends Vue {
     {
       icon: 'add',
       tooltip: 'Add Instrument',
-      callback: project.addInstrument,
+      callback: this.addInstrument,
     },
   ];
 
@@ -65,6 +66,23 @@ export default class PanelHeaders extends Vue {
 
   public selectPanel(name: PanelNames) {
     workspace.setOpenedPanel(name);
+  }
+
+  public addInstrument(event: MouseEvent) {
+    this.$menu({
+      event,
+      items: [
+        {
+          text: 'Synth',
+          callback: () => general.project.addInstrument('Synth'),
+        },
+        {
+          text: 'Soundfont',
+          callback: () => general.project.addInstrument('Soundfont'),
+        },
+      ],
+      left: true,
+    });
   }
 }
 </script>
