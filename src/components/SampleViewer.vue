@@ -6,29 +6,30 @@
       <wav-scope
         ref="scope"
         :url=url
+        @click.native="playSample"
       >
       </wav-scope>
     </div>
     <div class="sample-controls foreground--text">
+      <div style="flex: 1"></div>
       <span class="control">
-        <play-pause
-          @play="playSample"
-          @stop="pauseSample"
-        ></play-pause>
-      </span>
-      <span class="control">
-        <button   
-          class="button" 
+        <v-btn   
+          class="button foreground--text" 
+          small
+          flat
         >
           Separate
-        </button>
+        </v-btn>
       </span>
       <span class="control">
-        <button   
-          class="button" 
+        <v-btn   
+          class="button foreground--text" 
+          small
+          flat
+          :color="$theme.secondary + 60"
         >
           Transcribe
-        </button>
+        </v-btn>
       </span>
     </div>
   </div>
@@ -66,14 +67,12 @@ export default class SampleViewer extends Vue {
   padding: 40px
 
 .sample-controls
-  // text-align: center
-  padding-top: 20px
+  display: flex
+  padding-top: 5px
 
 .control
   margin-right: 10px
 
 .button
-  border: solid 1px #111
-  padding: 5px
-  border-radius: 5px
+  margin: 5px 0
 </style>

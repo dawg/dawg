@@ -86,8 +86,8 @@
           </split>
         </split>
       </split>
-      <split :initial="20" fixed>
-        <status-bar></status-bar>
+      <split :initial="25" fixed>
+        <status-bar :height="25"></status-bar>
       </split>
     </split>
     <notifications></notifications>
