@@ -395,6 +395,7 @@ export default class App extends Vue {
 
   public mounted() {
     this.checkMaximize();
+    this.$busy('The is a test', { estimate: 20 });
   }
 
   public destroyed() {

@@ -41,7 +41,7 @@
           :color="$theme.foreground"
           class="linear"
           :height="4"
-          :value="provider.progress"
+          v-model="provider.progress"
           :indeterminate="provider.progress === null"
         ></v-progress-linear>
         
@@ -97,7 +97,7 @@ export default class BusySignal extends Vue {
   }
 
   public mounted() {
-    bus.$on('start', this.addProvider);
+    bus.on('start', this.addProvider);
   }
 
   public addProvider(provider: Provider) {
@@ -105,7 +105,7 @@ export default class BusySignal extends Vue {
       return;
     }
 
-    provider.$on('dispose', this.removeProvider);
+    provider.on('dispose', this.removeProvider);
     this.providers.push(provider);
   }
 
@@ -115,7 +115,7 @@ export default class BusySignal extends Vue {
       return;
     }
 
-    provider.$off('dispose', this.removeProvider);
+    provider.off('dispose', this.removeProvider);
     this.providers.splice(index, 1);
   }
 }
