@@ -121,8 +121,7 @@ export class Project implements Serializable<IProject> {
 
       switch (iInstrument.instrument) {
         case 'soundfont':
-          const player = await soundfonts.instrument(Audio.context, iInstrument.soundfont);
-          const soundfont = new Audio.Soundfont(player);
+          const soundfont = await Audio.Soundfont.load(iInstrument.soundfont);
           return new Soundfont(soundfont, destination, iInstrument);
         case 'synth':
           return new Synth(destination, iInstrument);
