@@ -86,8 +86,8 @@
           </split>
         </split>
       </split>
-      <split :initial="20" fixed>
-        <status-bar></status-bar>
+      <split :initial="25" fixed>
+        <status-bar :height="25"></status-bar>
       </split>
     </split>
     <notifications></notifications>
@@ -148,6 +148,7 @@ import { User } from 'firebase';
 import { ScheduledPattern } from '@/core/scheduled/pattern';
 import { ScheduledSample } from '@/core/scheduled/sample';
 import { Automatable } from '@/core/automation';
+import { win32 } from 'path';
 
 @Component({
   components: {
@@ -395,12 +396,41 @@ export default class App extends Vue {
 
   public mounted() {
     this.checkMaximize();
+
+    window.addEventListener('offline', this.offline);
+    window.addEventListener('online', this.online);
+
+    // The offline event is not fired if initially disconnected
+    if (!navigator.onLine) {
+      this.offline();
+    }
   }
 
   public destroyed() {
     const w = remote.getCurrentWindow();
     w.removeListener('maximize', this.maximize);
     w.removeListener('unmaximize', this.unmaximize);
+
+    window.removeEventListener('offline', this.offline);
+    window.removeEventListener('online', this.online);
+  }
+
+  public online() {
+    // Ok so this delay exists because we can still get connection errors even once we get back online
+    // 8000 was just a random number, but it works. It's probably longer than necessary
+    setTimeout(() => {
+      general.project.instruments.forEach((instrument) => {
+        this.$notify.info('Connection has been restored');
+        instrument.online();
+      });
+    }, 8000);
+  }
+
+  public offline() {
+    this.$notify.warning('You are disconnected', {
+      detail: 'Soundfonts and cloud syncing will not work as expected.',
+      duration: 20000,
+    });
   }
 
   public openPalette() {
