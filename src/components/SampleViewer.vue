@@ -6,7 +6,7 @@
       <!-- <waveform
         :buffer="buffer"
       ></waveform> -->
-      <waveform-v2
+      <waveform-v2 class="wave" 
         v-if="buffer"
         :offset="0"
         :buffer="buffer"
@@ -78,9 +78,21 @@ export default class SampleViewer extends Vue {
   height: 100%
   padding: 40px
 
+.sample
+  height: 100%
+  width: 100%
+  padding-bottom: 15px
+
+.wave
+  height: 100%
+  width: 100%
+  
+
 .sample-controls
   // text-align: center
   padding-top: 20px
+  position: fixed
+  bottom: 35px
 
 .control
   margin-right: 10px

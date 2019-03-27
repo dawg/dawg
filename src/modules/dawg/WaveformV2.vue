@@ -1,7 +1,8 @@
 <template>
   <svg class="waveform" preserveAspectRatio="none" :viewBox="viewBox">
     <polygon
-      :points="points"
+      :points="points" 
+      style="stroke:white;fill-rule:evenodd;fill:black;stroke-width:0.1;shape-rendering: geometricPrecision"
     ></polygon>
   </svg>
 </template>
@@ -25,7 +26,7 @@ export default class WaveformV2 extends Vue {
   public points = '';
 
   get viewBox() {
-    return '0 0 ' + this.height + ' ' + this.width;
+    return '0 0 ' + this.width + ' ' + this.height;
   }
 
   public remove() {
