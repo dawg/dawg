@@ -2,7 +2,7 @@
   <svg class="waveform" preserveAspectRatio="none" :viewBox="viewBox">
     <polygon
       :points="points" 
-      style="stroke:white;fill-rule:evenodd;fill:black;stroke-width:0.1;shape-rendering: geometricPrecision"
+      style="stroke:white;fill:white;stroke-width:0.1;shape-rendering: geometricPrecision"
     ></polygon>
   </svg>
 </template>
@@ -26,7 +26,7 @@ export default class WaveformV2 extends Vue {
   public points = '';
 
   get viewBox() {
-    return '0 0 ' + this.width + ' ' + this.height;
+    return '0 0 ' + this.width * 100 + ' ' + this.height;
   }
 
   public remove() {
@@ -44,20 +44,20 @@ export default class WaveformV2 extends Vue {
     const duration = this.buffer.duration - this.offset;
 
     let p;
-    const w = this.width;
+    const w = this.width * 100;
     const h = this.height;
     const h2 = h / 2;
     const dataLen = data0.length;
-    const ind = ~~( this.offset / this.buffer.duration * dataLen );
+    const ind = Math.floor(( this.offset / this.buffer.duration ) * dataLen );
     const step = duration / this.buffer.duration * dataLen / w;
     let dots0 = '0,' + ( h2 + data0[ ind ] * h2 );
     let dots1 = '0,' + ( h2 + data1[ ind ] * h2 );
-    const iinc = ~~Math.max( 1, step / 100 );
+    const iinc = Math.floor(Math.max( 1, step / 100));
 
-    for ( p = 1; p < w; ++p ) {
+    for ( p = 1; p < w; p += 1 ) {
       let lmin = Infinity;
       let rmax = -Infinity;
-      let i = ~~( ind + ( p - 1 ) * step );
+      let i = Math.floor( ind + ( p - 1 ) * step );
       const iend = i + step;
 
       for ( ; i < iend; i += iinc ) {
