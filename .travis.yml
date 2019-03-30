@@ -41,10 +41,6 @@ install:
 before_deploy:
   - npm run build
 
-branches:
-  except:
-    - "/^v\\d+\\.\\d+\\.\\d+$/"
-
 deploy:
   provider: releases
   api_key: $GITHUB_TOKEN
@@ -56,3 +52,4 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
+    # branch: master
