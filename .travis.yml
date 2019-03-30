@@ -15,8 +15,8 @@ matrix:
       node_js: "10"
       language: node_js
 
-// https://github.com/dawg/vusic/blob/76a7e2fb54be22b992ebc6db1c6756904ef03364/.travis.yml
-// https://github.com/travis-ci/travis-ci/issues/3897
+# https://github.com/dawg/vusic/blob/76a7e2fb54be22b992ebc6db1c6756904ef03364/.travis.yml
+# https://github.com/travis-ci/travis-ci/issues/3897
 
 # addons:
 #   chrome: stable
