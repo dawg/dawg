@@ -35,9 +35,9 @@ export default class Spectrogram extends Vue {
 // this._ctx.clearRect( 0, 0, this.rootElement.width, 1 );
   }
 
-  get data() {
-    return TODO;
-  }
+  // get data() {
+  //   //return TODO;
+  // }
 
   public mounted() {
     const datalen = this.data.length;
