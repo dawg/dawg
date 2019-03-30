@@ -1,10 +1,9 @@
 <template>
-  <waveform
+  <waveform-v2
     v-if="buffer"
     :style="waveformStyle"
     :buffer="buffer"
-    :height="height"
-  ></waveform>
+  ></waveform-v2>
   <div v-else>
     <!-- Display nothing when the buffer is null -->
   </div>
@@ -32,6 +31,7 @@ export default class SampleElement extends Vue {
   get waveformStyle() {
     return {
       width: `${this.bufferWidth}px`,
+      height: `${this.height}px`,
     };
   }
 

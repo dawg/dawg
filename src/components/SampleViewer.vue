@@ -3,12 +3,8 @@
     class="sample-viewer secondary"
   >
     <div class="sample">    
-      <!-- <waveform
-        :buffer="buffer"
-      ></waveform> -->
       <waveform-v2 class="wave" 
         v-if="buffer"
-        :offset="0"
         :buffer="buffer"
       ></waveform-v2>
     </div>
@@ -39,14 +35,13 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import WavScope from '@/components/WavScope.vue';
 import PlayPause from '@/components/PlayPause.vue';
 import Tone from 'tone';
 import { Watch } from '@/modules/update';
 import { Sample } from '@/core';
 import { Nullable } from '@/utils';
 
-@Component({components: { WavScope, PlayPause }})
+@Component({components: { PlayPause }})
 export default class SampleViewer extends Vue {
   @Prop(Nullable(Object)) public sample!: Sample | null;
 
@@ -74,7 +69,7 @@ export default class SampleViewer extends Vue {
 
 <style lang="sass" scoped>
 .sample-viewer
-  border-top: 1px solid #111
+  border-top: 1px color "$theme.foreground"
   height: 100%
   padding: 40px
 
@@ -98,7 +93,7 @@ export default class SampleViewer extends Vue {
   margin-right: 10px
 
 .button
-  border: solid 1px #111
+  border: solid 1px 
   padding: 5px
   border-radius: 5px
 </style>
