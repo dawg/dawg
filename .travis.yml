@@ -1,35 +1,55 @@
---- 
-cache: 
-  directories: 
+matrix:
+  include:
+    - os: osx
+      osx_image: xcode9.4
+      language: node_js
+      node_js: "10"
+      env:
+        - ELECTRON_CACHE=$HOME/.cache/electron
+        - ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder
+
+    - os: linux
+      language: generic
+
+    - os: windows
+      node_js: "10"
+      language: node_js
+
+# https://github.com/dawg/vusic/blob/76a7e2fb54be22b992ebc6db1c6756904ef03364/.travis.yml
+# https://github.com/travis-ci/travis-ci/issues/3897
+
+# addons:
+#   chrome: stable
+
+cache:
+  directories:
     - node_modules
     - $HOME/.cache/electron
     - $HOME/.cache/electron-builder
-deploy: 
-  api_key: $GITHUB_TOKEN
-  file: 
-    - "dist_electron/Vusic 0.1.0.AppImage"
-    - dist_electron/vusic_0.1.0_amd64.deb
-    - dist_electron/Vusic-0.1.0.dmg
-    - "dist_electron\\Vusic Setup 0.1.0.exe"
+
+# before_install:
+#  - export DISPLAY=:99.0
+#  - sh -e /etc/init.d/xvfb start
+#  - sleep 3 # give xvfb some time to start
+
+install:
+  npm i
+
+# script:
+#   - npm run test:unit
+
+script:
+  - npm run build
+
+deploy:
   provider: releases
+  api_key: $GITHUB_TOKEN
+  file:
+    - "dist_electron/Vusic 0.1.0.AppImage"
+    - "dist_electron/vusic_0.1.0_amd64.deb"
+    - "dist_electron/Vusic-0.1.0.dmg"
+    - "dist_electron\\Vusic Setup 0.1.0.exe"
   skip_cleanup: true
-install: "npm i"
-matrix: 
-  include: 
-    - 
-      env: 
-        - ELECTRON_CACHE=$HOME/.cache/electron
-        - ELECTRON_BUILDER_CACHE=$HOME/.cache/electron-builder
-      language: node_js
-      node_js: "10"
-      os: osx
-      osx_image: xcode9.4
-    - 
-      language: generic
-      os: linux
-    - 
-      language: node_js
-      node_js: "10"
-      os: windows
-script: 
-  - "npm run build"
+  # on:
+  #   tags: true
+    # branch: master
