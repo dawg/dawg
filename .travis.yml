@@ -16,7 +16,7 @@ matrix:
       language: node_js
 
 // https://github.com/dawg/vusic/blob/76a7e2fb54be22b992ebc6db1c6756904ef03364/.travis.yml
-// https://cloud.google.com/solutions/continuous-delivery-with-travis-ci
+// https://github.com/travis-ci/travis-ci/issues/3897
 
 # addons:
 #   chrome: stable
@@ -38,12 +38,8 @@ install:
 # script:
 #   - npm run test:unit
 
-before_deploy:
+script:
   - npm run build
-
-branches:
-  except:
-    - "/^v\\d+\\.\\d+\\.\\d+$/"
 
 deploy:
   provider: releases
@@ -54,5 +50,6 @@ deploy:
     - "dist_electron/Vusic-0.1.0.dmg"
     - "dist_electron\Vusic Setup 0.1.0.exe"
   skip_cleanup: true
-  on:
-    tags: true
+  # on:
+  #   tags: true
+    # branch: master
