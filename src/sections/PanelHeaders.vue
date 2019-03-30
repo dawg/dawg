@@ -14,7 +14,7 @@
       v-for="action in actions"
       :key="action.icon"
       :tooltip="action.tooltip"
-      :color="$theme.foreground"
+      v-bind="action.props"
       bottom
       @click.native="action.callback"
     >
@@ -30,27 +30,45 @@ import { Nullable } from '@/utils';
 import { cache, general, workspace } from '@/store';
 import { Watch } from '@/modules/update';
 import { PanelNames } from '@/constants';
+import webmidi, { INoteParam, IMidiChannel } from 'webmidi';
+import { error } from 'util';
 
 interface Group {
   icon: string;
   tooltip: string;
+  props?: {[key: string]: any};
   callback: (e: MouseEvent) => void;
 }
 
 @Component
 export default class PanelHeaders extends Vue {
-  public synthActions: Group[] = [
-    {
+
+  public isRecording: boolean = false;
+  public navigator = require('jzz');
+
+  get synthActions(): Group[] {
+    return [{
       icon: 'add',
       tooltip: 'Add Instrument',
       callback: this.addInstrument,
-    },
-  ];
+    }];
+  }
+
+  get pianoRollActions(): Group[] {
+    return [{
+      icon: 'fiber_manual_record',
+      tooltip: this.isRecording ? 'Stop Recording' : 'Start Recording',
+      callback: this.isRecording ? this.stopRecording : this.startRecording,
+      props: {color: this.isRecording ? this.$theme.error : this.$theme.foreground},
+    }];
+  }
 
   get actions() {
     // TODO NO Type Checking
     if (workspace.openedPanel === 'Instruments') {
       return this.synthActions;
+    } else if (workspace.openedPanel === 'Piano Roll') {
+      return this.pianoRollActions;
     } else {
       return [];
     }
@@ -83,6 +101,75 @@ export default class PanelHeaders extends Vue {
       ],
       left: true,
     });
+  }
+
+  public startRecording(event: MouseEvent) {
+    this.isRecording = !this.isRecording;
+
+    webmidi.enable((err) => {
+      if (err) {
+        console.log('WebMidi could not be enabled.', err);
+      } else {
+        console.log('WebMidi enabled!');
+      }
+    });
+
+    console.log('inputs', webmidi.inputs);
+    console.log(webmidi.outputs);
+  }
+  //   if (this.navigator.requestMIDIAccess) {
+  //     this.navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+  //   }
+
+  //   function onMIDISuccess(midiAccess: any) {
+  //     const inputs = midiAccess.inputs;
+  //     const outputs = midiAccess.outputs;
+
+  //     // Attach MIDI event "listeners" to each input
+  //     for (const input of midiAccess.inputs.values()) {
+  //         input.onmidimessage = getMIDIMessage;
+  //     }
+  //   }
+
+  //   function onMIDIFailure() {
+  //     console.log('Could not access your MIDI devices.');
+  //   }
+
+  //   function getMIDIMessage(message: any) {
+  //     console.log(message);
+  //     const command = message.data[0];
+  //     const note = message.data[1];
+  //     const velocity = (message.data.length > 2) ? message.data[2] : 0;
+
+  //     switch (command) {
+  //         case 144: // note on
+  //             if (velocity > 0) {
+  //                 noteOn(note);
+  //             } else {
+  //                 noteOff(note);
+  //             }
+  //             break;
+  //     }
+  //   }
+
+  //   // Function to handle noteOn messages (ie. key is pressed)
+  //   // Think of this like an 'onkeydown' event
+  //   function noteOn(note: any) {
+  //     console.log('on', note);
+  //   }
+
+  //   // Function to handle noteOff messages (ie. key is released)
+  //   // Think of this like an 'onkeyup' event
+  //   function noteOff(note: any) {
+  //    console.log('off', note);
+  //   }
+
+  //   this.navigator.close();
+
+  // }
+
+  public stopRecording(event: MouseEvent) {
+    this.isRecording = !this.isRecording;
   }
 }
 </script>
