@@ -20,6 +20,7 @@ const CACHE_PATH = path.join(APPLICATION_PATH, 'cache.json');
 export class Cache extends VuexModule {
   @io.auto({ nullable: true }) public openedFile: string | null = null;
   @io.auto({ nullable: true }) public backupTempPath: string | null = null;
+  @io.auto({ nullable: true, optional: true }) public microphoneIn: string | null = null;
   @io.auto public folders: string[] = [];
 
   constructor(module?: Mod<any, any>) {

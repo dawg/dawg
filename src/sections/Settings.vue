@@ -45,6 +45,20 @@
         </v-list-tile-action>
       </v-list-tile>
 
+      <v-list-tile>
+        <v-list-tile-title>Microphone In</v-list-tile-title>
+          <v-list-tile-action>
+          <v-select
+          class="device-dropdown"
+          dense
+          dark
+          label="Device Name"
+          :items="devices"
+          v-model="cache.microphoneIn"
+          ></v-select>
+        </v-list-tile-action>
+      </v-list-tile>
+
     </v-list>
   </v-card>
 </template>
@@ -52,13 +66,39 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Nullable } from '@/utils';
-import { workspace, general } from '@/store';
+import { cache, workspace, general } from '@/store';
 import auth from '@/auth';
+
+interface Navigator {
+    getUserMedia(
+        options: { video?: bool; audio?: bool; },
+        success: (stream: any) => void,
+        error?: (error: string) => void,
+        ): void;
+}
+
+navigator.getUserMedia(
+    {video: true, audio: true},
+    function(stream) {  },
+    function(error) {  },
+);
 
 @Component
 export default class Settings extends Vue {
+  public cache = cache;
   public workspace = workspace;
   public general = general;
+  public devices: string[] = [];
+
+  public mounted() {
+    navigator.mediaDevices.enumerateDevices().then((media) => {
+      media.forEach((device) => {
+        if (device.kind === 'audioinput') {
+          this.devices.push(device.label);
+        }
+      });
+    });
+  }
 
   get text() {
     if (general.authenticated) {
@@ -112,4 +152,7 @@ export default class Settings extends Vue {
 
 .settings
   padding: 0 0 10px 0
+
+.device-dropdown /deep/ .v-input__slot
+  margin: 0!important
 </style>

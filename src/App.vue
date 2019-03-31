@@ -386,7 +386,9 @@ export default class App extends Vue {
     setTimeout(async () => {
       // Make sure we load the cache first before loading the default project.
       this.$log.debug('Starting to read data.');
-      await cache.fromCacheFolder();
+
+      // FIXME?
+      // await cache.fromCacheFolder();
 
       const result = await general.loadProject();
       if (result.type === 'error') {
