@@ -60,7 +60,6 @@ export default class PanelHeaders extends Vue {
       if (input) {
         input.addListener('noteon', 'all',
           (e) => {
-            this.$log.info('Note on', e.note.name + e.note.octave);
             if (general.isRecording) {
               this.recordedNotes[e.note.name + e.note.octave] = e;
               const transportLocation = this.transport.progress * (this.transport.loopEnd - this.transport.loopStart);
@@ -75,7 +74,6 @@ export default class PanelHeaders extends Vue {
 
         input.addListener('noteoff', 'all',
           (e) => {
-            this.$log.info('Note off', e.note.name + e.note.octave);
             if (general.isRecording) {
               const noteOn = this.recordedNotes[e.note.name + e.note.octave];
               delete this.recordedNotes[e.note.name + e.note.octave];

@@ -13,6 +13,8 @@ export interface SoundfontOptions {
  * A soundfont source. Uses `soundfont-player` under the hood.
  */
 export class Soundfont implements Source<SoundfontOptions> {
+  private playingNotes: {[key: string]: Player} = {};
+
   constructor(private player: Player) {}
 
   public triggerAttackRelease(note: string, duration: Time, time: ContextTime, velocity?: number) {
@@ -25,12 +27,15 @@ export class Soundfont implements Source<SoundfontOptions> {
   }
 
   public triggerAttack(note: string, velocity?: number): this {
-    this.player.play(note, undefined, {gain: velocity});
+    this.playingNotes[note] = this.player.play(note, undefined, {gain: velocity});
     return this;
   }
 
   public triggerRelease(note: string): this {
-    this.player.stop();
+    if (note in this.playingNotes) {
+      this.playingNotes[note].stop();
+      delete this.playingNotes[note];
+    }
     return this;
   }
 
