@@ -80,8 +80,8 @@ export abstract class Instrument<T, V extends string> {
     this.source.triggerRelease(note);
   }
 
-  public triggerAttack(note: string) {
-    this.source.triggerAttack(note);
+  public triggerAttack(note: string, velocity?: number) {
+    this.source.triggerAttack(note, velocity);
   }
 
   public connect(effect: Tone.AudioNode) {

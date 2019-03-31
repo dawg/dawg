@@ -49,10 +49,13 @@ interface Group {
 @Component
 export default class PanelHeaders extends Vue {
 
-  public isRecording: boolean = false;
   public recordedNotes: {[key: string]: InputEventNoteon} = {};
-  public transportLocations: {[key: string]: number} = {};
+  public notesStartTimes: {[key: string]: number} = {};
   public transport: Transport = new Audio.Transport();
+
+  public mounted() {
+    webmidi.enable();
+  }
 
   get synthActions(): Group[] {
     return [{
@@ -62,14 +65,13 @@ export default class PanelHeaders extends Vue {
     }];
   }
 
-  get pianoRollActions(): Group[] {
-    webmidi.enable();
 
+  get pianoRollActions(): Group[] {
     return [{
       icon: 'fiber_manual_record',
-      tooltip: this.isRecording ? 'Stop Recording' : 'Start Recording',
-      callback: this.isRecording ? this.stopRecording : this.startRecording,
-      props: {color: this.isRecording ? this.$theme.error : this.$theme.foreground},
+      tooltip: general.isRecording ? 'Stop Recording' : 'Start Recording',
+      callback: general.isRecording ? this.stopRecording : this.startRecording,
+      props: {color: general.isRecording ? this.$theme.error : this.$theme.foreground},
     }];
   }
 
@@ -121,7 +123,7 @@ export default class PanelHeaders extends Vue {
       return;
     }
 
-    this.isRecording = !this.isRecording;
+    general.toggleRecording();
 
     if (workspace.selectedPattern) {
       this.transport = workspace.selectedPattern.transport;
@@ -134,32 +136,39 @@ export default class PanelHeaders extends Vue {
     if (input) {
       input.addListener('noteon', 'all',
         (e) => {
-          console.log(e.note.name + e.note.octave);
-          // Here for debugging
-          if (e.note.name in this.recordedNotes) {
-            console.log('bug');
+          console.log('note on', e.note.name + e.note.octave);
+          this.recordedNotes[e.note.name + e.note.octave] = e;
+          const transportLocation = this.transport.progress * (this.transport.loopEnd - this.transport.loopStart);
+          this.notesStartTimes[e.note.name + e.note.octave] = transportLocation / 60  * general.project.bpm;
+
+          if (workspace.selectedScore) {
+            workspace.selectedScore.instrument.triggerAttack(e.note.name + e.note.octave, e.rawVelocity);
           }
-          this.recordedNotes[e.note.name] = e;
-          // console.log('Received "noteon" message (' + e.note.name + e.note.octave + ').');
         },
       );
 
       input.addListener('noteoff', 'all',
         (e) => {
-          const noteOn = this.recordedNotes[e.note.name];
-          delete this.recordedNotes[e.note.name];
+          console.log('note off', e.note.name + e.note.octave);
+          const noteOn = this.recordedNotes[e.note.name + e.note.octave];
+          delete this.recordedNotes[e.note.name + e.note.octave];
+
+          const noteStartTime = this.notesStartTimes[e.note.name + e.note.octave];
+          delete this.notesStartTimes[e.note.name + e.note.octave];
+
+          if (workspace.selectedScore) {
+            workspace.selectedScore.instrument.triggerRelease(e.note.name + e.note.octave);
+          }
           const noteDuration = e.timestamp - noteOn.timestamp;
-          const transportLocation = this.transport.progress * (this.transport.loopEnd - this.transport.loopStart);
 
           if (workspace.selectedScore) {
             const note = new Note(workspace.selectedScore.instrument, {
               row: keyLookup[e.note.name + e.note.octave].id,
               duration: noteDuration / 1000 / 60 * general.project.bpm,
-              time: transportLocation / 60  * general.project.bpm,
+              time: noteStartTime,
               velocity: noteOn.rawVelocity,
             });
 
-            console.log(transportLocation * general.project.bpm);
             workspace.selectedScore.notes.push(note);
 
             if (workspace.selectedPattern) {
@@ -172,7 +181,7 @@ export default class PanelHeaders extends Vue {
   }
 
   public stopRecording(event: MouseEvent) {
-    this.isRecording = !this.isRecording;
+    general.toggleRecording();
     const input = webmidi.inputs[0];
 
     if (input) {
@@ -210,6 +219,7 @@ export default class PanelHeaders extends Vue {
 
 .action
   padding: .75em 1em
+  user-select: none
 
 .text
   align-items: center

@@ -24,8 +24,8 @@ export class Soundfont implements Source<SoundfontOptions> {
     return this;
   }
 
-  public triggerAttack(note: string): this {
-    this.player.play(note);
+  public triggerAttack(note: string, velocity?: number): this {
+    this.player.play(note, undefined, {gain: velocity});
     return this;
   }
 
