@@ -84,6 +84,11 @@ export class Cache extends VuexModule {
   }
 
   @Action
+  public setMicrophoneIn(label: string) {
+    this.set({ key: 'microphoneIn', value: label});
+  }
+
+  @Action
   public addFolder(folder: string) {
     if (this.folders.indexOf(folder) !== -1) {
       return;

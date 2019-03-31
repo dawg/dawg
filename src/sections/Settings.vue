@@ -49,12 +49,13 @@
         <v-list-tile-title>Microphone In</v-list-tile-title>
           <v-list-tile-action>
           <v-select
-          class="device-dropdown"
-          dense
-          dark
-          label="Device Name"
-          :items="devices"
-          v-model="cache.microphoneIn"
+            class="device-dropdown"
+            dense
+            dark
+            label="Device Name"
+            :items="devices"
+            :value="cache.microphoneIn"
+            @input="cache.setMicrophoneIn"
           ></v-select>
         </v-list-tile-action>
       </v-list-tile>
@@ -69,19 +70,19 @@ import { Nullable } from '@/utils';
 import { cache, workspace, general } from '@/store';
 import auth from '@/auth';
 
-interface Navigator {
-    getUserMedia(
-        options: { video?: bool; audio?: bool; },
-        success: (stream: any) => void,
-        error?: (error: string) => void,
-        ): void;
-}
+// interface Navigator {
+//     getUserMedia(
+//         options: { video?: bool; audio?: bool; },
+//         success: (stream: any) => void,
+//         error?: (error: string) => void,
+//         ): void;
+// }
 
-navigator.getUserMedia(
-    {video: true, audio: true},
-    function(stream) {  },
-    function(error) {  },
-);
+// navigator.getUserMedia(
+//     {video: true, audio: true},
+//     function(stream) {  },
+//     function(error) {  },
+// );
 
 @Component
 export default class Settings extends Vue {
