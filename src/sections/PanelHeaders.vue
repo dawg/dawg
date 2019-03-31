@@ -51,6 +51,7 @@ export default class PanelHeaders extends Vue {
 
   public isRecording: boolean = false;
   public recordedNotes: {[key: string]: InputEventNoteon} = {};
+  public transportLocations: {[key: string]: number} = {};
   public transport: Transport = new Audio.Transport();
 
   get synthActions(): Group[] {
@@ -133,7 +134,7 @@ export default class PanelHeaders extends Vue {
     if (input) {
       input.addListener('noteon', 'all',
         (e) => {
-
+          console.log(e.note.name + e.note.octave);
           // Here for debugging
           if (e.note.name in this.recordedNotes) {
             console.log('bug');
@@ -148,15 +149,17 @@ export default class PanelHeaders extends Vue {
           const noteOn = this.recordedNotes[e.note.name];
           delete this.recordedNotes[e.note.name];
           const noteDuration = e.timestamp - noteOn.timestamp;
+          const transportLocation = this.transport.progress * (this.transport.loopEnd - this.transport.loopStart);
 
           if (workspace.selectedScore) {
             const note = new Note(workspace.selectedScore.instrument, {
-              row: e.note.octave,
-              duration: noteDuration / 1000, // Double check that this should be in seconds
-              time: 2, // TODO figure out how to convert tranpsport ticks to time here
+              row: keyLookup[e.note.name + e.note.octave].id,
+              duration: noteDuration / 1000 / 60 * general.project.bpm,
+              time: transportLocation / 60  * general.project.bpm,
               velocity: noteOn.rawVelocity,
             });
 
+            console.log(transportLocation * general.project.bpm);
             workspace.selectedScore.notes.push(note);
 
             if (workspace.selectedPattern) {

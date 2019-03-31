@@ -210,7 +210,8 @@ export default class Sequencer extends Vue {
   @Watch<Sequencer>('loopEnd', { immediate: true })
   public onLoopEndChange() {
     this.$log.debug(`${this.name} -> loodEnd being set to ${this.loopEnd}`);
-    this.transport.loopEnd = toTickTime(this.loopEnd);
+    const time = toTickTime(this.loopEnd);
+    this.transport.loopEnd = new Tone.TransportTime(time).toSeconds();
     this.$update('end', this.loopEnd);
   }
 
@@ -218,7 +219,7 @@ export default class Sequencer extends Vue {
   public onLoopStartChange() {
     this.$log.debug(`loopStart being set to ${this.loopStart}`);
     const time = toTickTime(this.loopStart);
-    this.transport.loopStart = time;
+    this.transport.loopStart = new Tone.TransportTime(time).toSeconds();
     this.$update('start', this.loopStart);
   }
 
