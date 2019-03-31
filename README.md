@@ -94,6 +94,20 @@ There is also an `test:e2e` command; however, this test suite does not currently
 | [Jacob Smith](https://github.com/jsmith) | [Matt DeSilva](https://github.com/desilvamatt) |[Amir Eldesoky](https://github.com/aeldesoky) | [Alex ODonnell](https://github.com/alexodonn)
 |<sup>Software Engineering</sup>|<sup>Electrical Engineering</sup>|<sup>Electrical Engineering</sup>|<sup>Electrical Engineering</sup>
 
+# Releasing
+Change all of the version references in `package.json` and `.travis.yml` to the new version. Make sure to change the paths in the `deploy` section of the `.travis.yml`. Add and commit your changes and then tag your release:
+```
+git tag -a vX.X.X -m "YOUR MESSAGE HERE"
+```
+
+Then, push the commits and tags:
+```
+git push
+git push --tags
+```
+
+*For now, this will need to be done directly on master (I think).*
+
 # References
 [GridSound](https://gridsound.com) was a great reference during development. For example, components such as `Timeline.vue` and `BeatLines.vue` were based off similar component implementations from [gs-ui-components](https://github.com/gridsound/gs-ui-components).
 
