@@ -1,11 +1,12 @@
 <template>
-  <canvas class="myCanvas secondary" ref="canvas" :width="width">
+  <canvas class="myCanvas" ref="canvas" :width="width" backgroundColor="white">
   </canvas>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
 import Tone from 'tone';
+import tinycolor from 'tinycolor2';
 import * as Audio from '@/modules/audio';
 import { Component, Prop } from 'vue-property-decorator';
 
@@ -15,37 +16,37 @@ export default class SpectrogramV2 extends Vue {
   public context: CanvasRenderingContext2D | null = null;
   public analyserNode = Audio.context.createAnalyser();
   public analyserData = new Uint8Array(512);
+  @Prop({ type: Number, default: 50}) public height!: number;
+  @Prop({ type: String, required: true}) public color!: string;
 
   public $refs!: {
     canvas: HTMLCanvasElement;
   };
 
+  get tiny() {
+    return tinycolor(this.color).toRgb();
+  }
+
   public mounted() {
+    console.log(this);
     this.context = this.$refs.canvas.getContext('2d');
     this.analyserNode.fftSize = 1024;
     // @ts-ignore
     const output = Tone.Master.output as AudioNode;
     output.connect(this.analyserNode);
     requestAnimationFrame(this.doRender);
-    // this.analyserData[200] = 150;
-    // this.analyserData[201] = 150;
-    // this.analyserData[202] = 150;
-    // this.analyserData[203] = 150;
-    // this.analyserData[204] = 150;
-    // this.analyserData[205] = 150;
-    // this.doRender();
   }
 
-  // public destroyed() {
-  //   Audio.context.destination.disconnect(this.analyserNode);
-  // }
+  public destroyed() {
+    // @ts-ignore
+    const output = Tone.Master.output as AudioNode;
+    output.connect(this.analyserNode);
+  }
 
   public doRender() {
     if (!this.context) {
       return;
     }
-
-    // const data = this.fft.getValue();
     this.analyserNode.getByteFrequencyData( this.analyserData );
     // console.log(this.analyserData.slice(0, 100));
     const img = this.context.createImageData(this.analyserData.length, 1);
@@ -102,13 +103,13 @@ export default class SpectrogramV2 extends Vue {
         b = col[2] * datum;
       }
 
+      r = this.tiny.r + r;
+      g = this.tiny.g + g;
+      b = this.tiny.b + b;
 
-      this.context.fillStyle = 'rgb('
-        + Math.floor(r) + ','
-        + Math.floor(g) + ','
-        + Math.floor(b) + ')';
-
-      this.context.fillRect( x, 0, arr[ i ], 1 );
+      this.context.fillStyle = `rgba(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)}, ${datum})`;
+      this.context.clearRect( x, 0, arr[ i ], this.height * 3 );
+      this.context.fillRect( x, 0, arr[ i ], this.height * 3 );
       x += arr[ i ];
       // console.log(arr);
     }
@@ -131,7 +132,6 @@ const colors = [
 
 <style scoped lang="sass">
 .myCanvas
-  border: 1px solid #FFFFFF
   height: 60%
   width:  25%
 

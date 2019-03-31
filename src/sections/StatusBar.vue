@@ -1,9 +1,14 @@
 <template>
   <div class="primary footer position foreground--text" :style="style">
+    
     <v-tooltip top>
       <div slot="activator" class="name item">{{ projectName }}</div>
       <div>Project Name</div>
     </v-tooltip>
+    <spectrogram-v2
+      class="item"
+      :color="$theme.secondary"
+    ></spectrogram-v2>
     <status-text class="item status-text"></status-text>
     <div style="flex: 1"></div>
     <tooltip-icon 
