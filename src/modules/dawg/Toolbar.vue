@@ -19,8 +19,8 @@
     ></time-display>
     <bpm :value="bpm" @input="updateBpm"></bpm>
 
-    <!-- <spectrogram
-    ></spectrogram> -->
+    <spectrogram-v2
+    ></spectrogram-v2>
 
     <v-spacer
       class="drag-area"

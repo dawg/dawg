@@ -10,18 +10,11 @@ import * as Audio from '@/modules/audio';
 import { Component, Prop } from 'vue-property-decorator';
 
 @Component({components: { }})
-export default class Spectrogram extends Vue {
-  // @Prop({ type: Number, default: 50}) public height!: number;
-  // @Prop({ type: Number, default: 100 }) public width!: number;
-
-  public width = 0;
-
+export default class SpectrogramV2 extends Vue {
+  public width = 100;
   public context: CanvasRenderingContext2D | null = null;
-  // public fft = new Tone.FFT(256);
-
-// public analyserNode = Audio.context.createAnalyser();
   public analyserNode = Audio.context.createAnalyser();
-  public analyserData: number[] = Array(512).fill(0);
+  public analyserData = new Uint8Array(512);
 
   public $refs!: {
     canvas: HTMLCanvasElement;
@@ -29,18 +22,18 @@ export default class Spectrogram extends Vue {
 
   public mounted() {
     this.context = this.$refs.canvas.getContext('2d');
-    // this.analyserNode.fftSize = 1024;
+    this.analyserNode.fftSize = 1024;
     // @ts-ignore
-    // const output = Tone.Master.output as AudioNode;
-    // output.connect(this.analyserNode);
-    // requestAnimationFrame(this.doRender);
-    this.analyserData[200] = 150;
-    this.analyserData[201] = 150;
-    this.analyserData[202] = 150;
-    this.analyserData[203] = 150;
-    this.analyserData[204] = 150;
-    this.analyserData[205] = 150;
-    this.doRender();
+    const output = Tone.Master.output as AudioNode;
+    output.connect(this.analyserNode);
+    requestAnimationFrame(this.doRender);
+    // this.analyserData[200] = 150;
+    // this.analyserData[201] = 150;
+    // this.analyserData[202] = 150;
+    // this.analyserData[203] = 150;
+    // this.analyserData[204] = 150;
+    // this.analyserData[205] = 150;
+    // this.doRender();
   }
 
   // public destroyed() {
@@ -48,25 +41,32 @@ export default class Spectrogram extends Vue {
   // }
 
   public doRender() {
-    console.log('HELLO');
     if (!this.context) {
       return;
     }
 
     // const data = this.fft.getValue();
-    // this.analyserNode.getByteFrequencyData( this.analyserData );
-    console.log(this.analyserData.slice(0, 100));
+    this.analyserNode.getByteFrequencyData( this.analyserData );
+    // console.log(this.analyserData.slice(0, 100));
     const img = this.context.createImageData(this.analyserData.length, 1);
 
-    this.width = this.analyserData.length;
+    // this.width = this.analyserData.length;
     const datalen = this.analyserData.length;
-    // const img = ctx.createImageData( datalen, 1 );
 
-    for ( let i = 0, x = 0; i < datalen; ++i, x += 4 ) {
+    const arr = ( new Array( datalen ) ).fill( 0 );
+    const sum = arr.reduce( ( sum, _, i, arr ) => (
+      sum += arr[ i ] = Math.log( datalen / ( i + 1 ) )
+    ), 0);
+    arr.forEach( ( val, i, arr ) => {
+      arr[ i ] = val / sum * this.width;
+    });
+
+
+    for ( let i = 0, x = 0; i < datalen; ++i ) {
       let r;
       let g;
       let b;
-      let datum = 1 - Math.cos(this.analyserData[i] / 255 * Math.PI / 2);
+      let datum = 1 - Math.cos( this.analyserData[ i ] / 255 * Math.PI / 2 );
 
       if ( datum < .05 ) {
         r = 4 + 10 * datum;
@@ -96,21 +96,23 @@ export default class Spectrogram extends Vue {
           colId = 8;
         }
 
-        col = colors[colId];
+        col = colors[ colId ];
         r = col[0] * datum;
         g = col[1] * datum;
         b = col[2] * datum;
       }
 
-      img.data[x] = Math.floor(r);
-      img.data[x + 1] = Math.floor(g);
-      img.data[x + 2] = Math.floor(b);
-      img.data[x + 3] = 255;
-    }
 
-    console.log(img);
-    this.context.putImageData(img, 0, 0);
-    // requestAnimationFrame(this.doRender);
+      this.context.fillStyle = 'rgb('
+        + Math.floor(r) + ','
+        + Math.floor(g) + ','
+        + Math.floor(b) + ')';
+
+      this.context.fillRect( x, 0, arr[ i ], 1 );
+      x += arr[ i ];
+      // console.log(arr);
+    }
+    requestAnimationFrame(this.doRender);
   }
 }
 

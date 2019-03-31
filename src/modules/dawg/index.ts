@@ -7,6 +7,7 @@ import VerticalSwitch from '@/modules/dawg/VerticalSwitch.vue';
 import Blank from '@/modules/dawg/Blank.vue';
 import Loading from '@/modules/dawg/Loading.vue';
 import WaveformV2 from '@/modules/dawg/WaveformV2.vue';
+import SpectrogramV2 from '@/modules/dawg/SpectrogramV2.vue';
 
 export default  {
   install() {
@@ -18,6 +19,7 @@ export default  {
     Vue.component('Blank', Blank);
     Vue.component('Loading', Loading);
     Vue.component('WaveformV2', WaveformV2);
+    Vue.component('SpectrogramV2', SpectrogramV2);
   },
 };
 

@@ -106,14 +106,6 @@ function mounted() {
     });
 }
 
-storiesOf('Waveform', module)
-  .add('default', () => ({
-    template: `<waveform :buffer="buffer" style="width: 200px"></waveform>`,
-    components: { Waveform },
-    data: () => ({ buffer: null }),
-    mounted,
-  }));
-
 const clip = AutomationClip.create(
   1,
   new Signal(new Tone.Signal()),

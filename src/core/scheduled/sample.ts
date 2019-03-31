@@ -21,7 +21,7 @@ export class ScheduledSample extends Schedulable implements Serializable<ISchedu
       sampleId: sample.id,
       row: 0,
       time: 0,
-      duration: 0,
+      duration: sample.beats,
       type: 'sample',
     });
   }

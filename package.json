@@ -42,6 +42,7 @@
     "vue-draggable-resizable": "^1.7.1",
     "vue-perfect-scrollbar": "^0.1.0",
     "vue-property-decorator": "^7.0.0",
+    "vue-svg-pan-zoom": "^0.1.0",
     "vuejs-logger": "^1.5.3",
     "vuetify": "^1.5.5",
     "vuex": "^3.0.1",
