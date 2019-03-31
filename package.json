@@ -26,7 +26,6 @@
     "electron-context-menu": "^0.10.0",
     "firebase": "^5.8.6",
     "io-ts": "^1.8.3",
-    "jzz": "^0.7.2",
     "lodash.throttle": "^4.1.1",
     "mz": "^2.7.0",
     "node-wav": "0.0.2",
