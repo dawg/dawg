@@ -159,7 +159,6 @@ export default class Sequencer extends Vue {
     }
 
     if (this.isRecording) {
-      console.log('update loop end', this.displayLoopEnd);
       return this.displayLoopEnd;
     }
 

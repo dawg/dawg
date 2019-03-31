@@ -38,6 +38,7 @@ import { constants } from 'fs';
 import Transport from '@/modules/audio/transport';
 import * as Audio from '@/modules/audio';
 import { None } from 'fp-ts/lib/Option';
+import { Player } from 'soundfont-player';
 
 interface Group {
   icon: string;
@@ -54,7 +55,58 @@ export default class PanelHeaders extends Vue {
   public transport: Transport = new Audio.Transport();
 
   public mounted() {
-    webmidi.enable();
+    webmidi.enable((err) => {
+      const input = webmidi.inputs[0];
+      if (input) {
+        input.addListener('noteon', 'all',
+          (e) => {
+            this.$log.info('Note on', e.note.name + e.note.octave);
+            if (general.isRecording) {
+              this.recordedNotes[e.note.name + e.note.octave] = e;
+              const transportLocation = this.transport.progress * (this.transport.loopEnd - this.transport.loopStart);
+              this.notesStartTimes[e.note.name + e.note.octave] = transportLocation / 60  * general.project.bpm;
+            }
+
+            if (workspace.selectedScore) {
+              workspace.selectedScore.instrument.triggerAttack(e.note.name + e.note.octave, e.rawVelocity);
+            }
+          },
+        );
+
+        input.addListener('noteoff', 'all',
+          (e) => {
+            this.$log.info('Note off', e.note.name + e.note.octave);
+            if (general.isRecording) {
+              const noteOn = this.recordedNotes[e.note.name + e.note.octave];
+              delete this.recordedNotes[e.note.name + e.note.octave];
+
+              const noteStartTime = this.notesStartTimes[e.note.name + e.note.octave];
+              delete this.notesStartTimes[e.note.name + e.note.octave];
+              const noteDuration = e.timestamp - noteOn.timestamp;
+
+              if (workspace.selectedScore) {
+                const note = new Note(workspace.selectedScore.instrument, {
+                  row: keyLookup[e.note.name + e.note.octave].id,
+                  duration: noteDuration / 1000 / 60 * general.project.bpm,
+                  time: noteStartTime,
+                  velocity: noteOn.rawVelocity,
+                });
+
+                workspace.selectedScore.notes.push(note);
+
+                if (workspace.selectedPattern) {
+                  note.schedule(this.transport);
+                }
+              }
+            }
+
+            if (workspace.selectedScore) {
+              workspace.selectedScore.instrument.triggerRelease(e.note.name + e.note.octave);
+            }
+          },
+        );
+      }
+    });
   }
 
   get synthActions(): Group[] {
@@ -64,7 +116,6 @@ export default class PanelHeaders extends Vue {
       callback: this.addInstrument,
     }];
   }
-
 
   get pianoRollActions(): Group[] {
     return [{
@@ -130,66 +181,20 @@ export default class PanelHeaders extends Vue {
       this.transport.start();
       general.start();
     }
-
-    const input = webmidi.inputs[0];
-
-    if (input) {
-      input.addListener('noteon', 'all',
-        (e) => {
-          console.log('note on', e.note.name + e.note.octave);
-          this.recordedNotes[e.note.name + e.note.octave] = e;
-          const transportLocation = this.transport.progress * (this.transport.loopEnd - this.transport.loopStart);
-          this.notesStartTimes[e.note.name + e.note.octave] = transportLocation / 60  * general.project.bpm;
-
-          if (workspace.selectedScore) {
-            workspace.selectedScore.instrument.triggerAttack(e.note.name + e.note.octave, e.rawVelocity);
-          }
-        },
-      );
-
-      input.addListener('noteoff', 'all',
-        (e) => {
-          console.log('note off', e.note.name + e.note.octave);
-          const noteOn = this.recordedNotes[e.note.name + e.note.octave];
-          delete this.recordedNotes[e.note.name + e.note.octave];
-
-          const noteStartTime = this.notesStartTimes[e.note.name + e.note.octave];
-          delete this.notesStartTimes[e.note.name + e.note.octave];
-
-          if (workspace.selectedScore) {
-            workspace.selectedScore.instrument.triggerRelease(e.note.name + e.note.octave);
-          }
-          const noteDuration = e.timestamp - noteOn.timestamp;
-
-          if (workspace.selectedScore) {
-            const note = new Note(workspace.selectedScore.instrument, {
-              row: keyLookup[e.note.name + e.note.octave].id,
-              duration: noteDuration / 1000 / 60 * general.project.bpm,
-              time: noteStartTime,
-              velocity: noteOn.rawVelocity,
-            });
-
-            workspace.selectedScore.notes.push(note);
-
-            if (workspace.selectedPattern) {
-              note.schedule(this.transport);
-            }
-          }
-        },
-      );
-    }
   }
 
   public stopRecording(event: MouseEvent) {
     general.toggleRecording();
+    this.transport.pause();
+    general.pause();
+  }
+
+  public destroyed() {
     const input = webmidi.inputs[0];
 
     if (input) {
       input.removeListener();
     }
-
-    this.transport.pause();
-    general.pause();
   }
 }
 
