@@ -46,13 +46,12 @@
       </v-list-tile>
 
       <v-list-tile>
-        <v-list-tile-title>Microphone In</v-list-tile-title>
           <v-list-tile-action>
           <v-select
             class="device-dropdown"
             dense
             dark
-            label="Device Name"
+            label="Microphone"
             :items="devices"
             :value="cache.microphoneIn"
             @input="cache.setMicrophoneIn"
@@ -156,4 +155,13 @@ export default class Settings extends Vue {
 
 .device-dropdown /deep/ .v-input__slot
   margin: 0!important
+  max-width: 250px
+
+.device-dropdown /deep/ .v-select__selection
+  margin: 0!important
+  max-width: 220px
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
+
 </style>
