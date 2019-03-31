@@ -16,18 +16,14 @@
         ></play-pause>
       </span>
       <span class="control">
-        <button   
-          class="button" 
-        >
-          Separate
-        </button>
+        <separation
+          :samplePath="samplePath"
+        ></separation>
       </span>
       <span class="control">
-        <button   
-          class="button" 
-        >
-          Transcribe
-        </button>
+        <transcription
+          :samplePath="samplePath"
+        ></transcription>
       </span>
     </div>
   </div>
@@ -50,6 +46,12 @@ export default class SampleViewer extends Vue {
       return this.sample.buffer;
     } else {
       return null;
+    }
+  }
+
+  get samplePath() {
+    if (this.sample) {
+      return this.sample.path;
     }
   }
 
