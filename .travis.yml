@@ -52,6 +52,6 @@ deploy:
     - "dist_electron/Vusic-0.1.0.dmg"
     - "dist_electron\\Vusic Setup 0.1.0.exe"
   skip_cleanup: true
-  # on:
-  #   tags: true
-    # branch: master
+  on:
+    tags: true
+    branch: master
