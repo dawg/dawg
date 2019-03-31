@@ -41,7 +41,6 @@ import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import Bpm from '@/components/Bpm.vue';
 import TimeDisplay from '@/components/TimeDisplay.vue';
-import Spectrogram from '@/modules/dawg/Spectrogram.vue';
 import { Watch } from '@/modules/update';
 import Transport from '@/modules/audio/transport';
 import { ApplicationContext } from '@/constants';
@@ -49,7 +48,7 @@ import { Nullable } from '@/utils';
 import { Signal } from 'tone';
 
 @Component({
-  components: { TimeDisplay, Bpm, Spectrogram },
+  components: { TimeDisplay, Bpm },
 })
 export default class Toolbar extends Vue {
   @Prop(Number) public height!: number;

@@ -1,9 +1,9 @@
 <template>
-  <waveform-v2
+  <waveform
     v-if="buffer"
     :style="waveformStyle"
     :buffer="buffer"
-  ></waveform-v2>
+  ></waveform>
   <div v-else>
     <!-- Display nothing when the buffer is null -->
   </div>
@@ -11,7 +11,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Mixins, Inject } from 'vue-property-decorator';
-import Waveform from '@/modules/sequencer/Waveform.vue';
+import Waveform from '@/modules/dawg/Waveform.vue';
 import { Nullable } from '@/utils';
 import Tone from 'tone';
 import { ScheduledSample } from '@/core';
