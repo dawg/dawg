@@ -3,7 +3,6 @@
     v-if="buffer"
     :style="waveformStyle"
     :buffer="buffer"
-    :height="height"
   ></waveform>
   <div v-else>
     <!-- Display nothing when the buffer is null -->
@@ -12,7 +11,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Mixins, Inject } from 'vue-property-decorator';
-import Waveform from '@/modules/sequencer/Waveform.vue';
+import Waveform from '@/modules/dawg/Waveform.vue';
 import { Nullable } from '@/utils';
 import Tone from 'tone';
 import { ScheduledSample } from '@/core';
@@ -32,11 +31,12 @@ export default class SampleElement extends Vue {
   get waveformStyle() {
     return {
       width: `${this.bufferWidth}px`,
+      height: `${this.height}px`,
     };
   }
 
   get bufferWidth() {
-    return this.element.duration * this.pxPerBeat;
+    return this.element.sample.beats * this.pxPerBeat;
   }
 }
 </script>

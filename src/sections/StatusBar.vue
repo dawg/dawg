@@ -1,9 +1,14 @@
 <template>
   <div class="primary footer position foreground--text" :style="style">
+    
     <v-tooltip top>
       <div slot="activator" class="name item">{{ projectName }}</div>
       <div>Project Name</div>
     </v-tooltip>
+    <spectrogram
+      class="item"
+      :color="$theme.foreground"
+    ></spectrogram>
     <status-text class="item status-text"></status-text>
     <div style="flex: 1"></div>
     <busy-signal
@@ -74,7 +79,7 @@ export default class Foot extends Vue {
   align-items: center
 
 .item
-  margin: 0 4px
+  margin: 0 6px
   padding-top: 1px
 
 .status-text

@@ -2,7 +2,7 @@
   <v-tooltip
     class="busy-signal"
     top
-    :min-width="200"
+    :min-width="300"
   >
 
     <div slot="activator">

@@ -29,4 +29,5 @@ export default class PlayPause extends Vue {
     border: solid 1px
     padding: 5px
     border-radius: 5px
+    user-select: none
 </style>

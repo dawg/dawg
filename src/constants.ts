@@ -11,4 +11,4 @@ export const FILTERS = [{ name: 'DAWG Files', extensions: [DG] }];
 
 export type ApplicationContext = 'playlist' | 'pianoroll';
 export type SideTab = 'Explorer' | 'Audio Files' | 'Patterns' | 'Automation Clips';
-export type PanelNames = 'Piano Roll' | 'Mixer' | 'Instruments';
+export type PanelNames = 'Piano Roll' | 'Mixer' | 'Instruments' | 'Sample';

@@ -22,6 +22,7 @@
     "@tonejs/midi": "^1.2.2",
     "@types/cors": "^2.8.4",
     "@types/tmp": "0.0.34",
+    "@types/webmidi": "^2.0.3",
     "cors": "^2.8.5",
     "electron-context-menu": "^0.10.0",
     "firebase": "^5.8.6",
@@ -29,6 +30,7 @@
     "lodash.throttle": "^4.1.1",
     "mz": "^2.7.0",
     "node-wav": "0.0.2",
+    "python-shell": "^1.0.7",
     "resize-observer-polyfill": "^1.5.0",
     "soundfont-player": "github:dawg/soundfont-player",
     "strict-event-emitter-types": "^2.0.0",
@@ -48,7 +50,8 @@
     "vuetify": "^1.5.5",
     "vuex": "^3.0.1",
     "vuex-module-decorators": "^0.9.7",
-    "wavesurfer.js": "^2.1.2"
+    "wavesurfer.js": "^2.1.2",
+    "webmidi": "^2.3.3"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",

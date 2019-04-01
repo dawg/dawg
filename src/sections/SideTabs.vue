@@ -27,6 +27,7 @@
           <smart-file-explorer
             :folders="cache.folders"
             @open-explorer="openFolder"
+            @open-sample="openSample"
           ></smart-file-explorer>
         </side-bar>
         <side-bar :name="tabs.audioFiles" icon="queue_music">
@@ -64,6 +65,7 @@ import { Watch } from '@/modules/update';
 import { SideTab } from '@/constants';
 import SmartFileExplorer from '@/smart/SmartFileExplorer.vue';
 import AutomationClips from '@/sections/AutomationClips.vue';
+import { Sample } from '@/core';
 
 interface Group {
   icon: string;
@@ -126,6 +128,11 @@ export default class SideTabs extends Vue {
     // This is a temporary solution
     cache.openFolder();
     this.$shortcuts.clear();
+  }
+
+  public openSample(sample: Sample) {
+    general.setSample(sample);
+    workspace.setOpenedPanel('Sample');
   }
 
   get actions(): Group[] {

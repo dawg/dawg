@@ -3,7 +3,7 @@ import { storiesOf } from '@storybook/vue';
 import Dawg from '@/modules/dawg/Dawg.vue';
 import PianoRollSequencer from '@/modules/sequencer/PianoRollSequencer.vue';
 import PlaylistSequencer from '@/modules/sequencer/PlaylistSequencer.vue';
-import Waveform from '@/modules/sequencer/Waveform.vue';
+import Waveform from '@/modules/dawg/Waveform.vue';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import { loadFromUrl } from '@/modules/wav/web';
 import {
@@ -105,14 +105,6 @@ function mounted() {
       this.buffer = buffer;
     });
 }
-
-storiesOf('Waveform', module)
-  .add('default', () => ({
-    template: `<waveform :buffer="buffer" style="width: 200px"></waveform>`,
-    components: { Waveform },
-    data: () => ({ buffer: null }),
-    mounted,
-  }));
 
 const clip = AutomationClip.create(
   1,

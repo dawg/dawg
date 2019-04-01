@@ -54,4 +54,15 @@ export const defaults = {
     success: '2ba143',
     warning: 'ad7c0b',
   },
+  'Dark Knight': {
+    foreground: 'ffffff',
+    background: '43464b',
+    primary: '43464b',
+    secondary: '000000',
+    accent: 'ffffff',
+    error: 'd13b2e',
+    info: '007bff',
+    success: '2ba143',
+    warning: 'ad7c0b',
+  },
 };

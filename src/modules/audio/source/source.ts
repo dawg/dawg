@@ -6,7 +6,7 @@ import Tone from 'tone';
  */
 export interface Source<T> {
   triggerAttackRelease(note: string, duration: Time, time: number, velocity?: number): this;
-  triggerAttack(note: string): this;
+  triggerAttack(note: string, velocity?: number): this;
   triggerRelease(note: string): this;
   disconnect(node: Tone.AudioNode): this;
   connect(node: Tone.AudioNode): this;

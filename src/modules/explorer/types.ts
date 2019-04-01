@@ -16,6 +16,7 @@ export interface ExtensionData<T, V = T> {
   createTransferData?: (item: T) => V;
   preview?: (item: T) => void;
   stopPreview?: (item: T) => void;
+  open?: (item: T) => void;
 }
 
 export interface Extensions {

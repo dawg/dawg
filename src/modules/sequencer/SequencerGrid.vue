@@ -82,7 +82,6 @@ import Progression from '@/modules/sequencer/Progression.vue';
 import { Watch } from '@/modules/update';
 import { Schedulable } from '@/core';
 
-
 @Component({
   components: { Progression, BeatLines },
 })
@@ -115,6 +114,8 @@ export default class Arranger extends Mixins(Draggable) {
 
   // TODO edge case -> what happens if the element is deleted?
   @Prop(Nullable(Object)) public prototype!: Schedulable | null;
+
+  @Prop({ type: Number, required: true }) public displayLoopEnd!: number;
 
   public cursor = 'move';
   public rows!: HTMLElement;
@@ -168,8 +169,8 @@ export default class Arranger extends Mixins(Draggable) {
   get displayBeats() {
     return Math.max(
       this.minDisplayMeasures * this.beatsPerMeasure,
-      this.itemLoopEnd || 0,
-    ) * this.stepsPerBeat;
+      (this.itemLoopEnd || 0) + this.beatsPerMeasure * 2,
+    );
   }
 
   get selectStyle() {
@@ -502,6 +503,11 @@ export default class Arranger extends Mixins(Draggable) {
       this.selected = this.elements.map((_) => false);
     }
     this.checkLoopEnd();
+  }
+
+  @Watch<Arranger>('displayBeats', { immediate: true })
+  public updateDisplayLoopEnd() {
+    this.$update('displayLoopEnd', this.displayBeats);
   }
 }
 </script>

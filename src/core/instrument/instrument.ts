@@ -88,9 +88,9 @@ export abstract class Instrument<T, V extends string> {
     }
   }
 
-  public triggerAttack(note: string) {
+  public triggerAttack(note: string, velocity?: number) {
     if (this.source) {
-      this.source.triggerAttack(note);
+      this.source.triggerAttack(note, velocity);
     }
   }
 

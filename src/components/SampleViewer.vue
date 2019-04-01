@@ -3,33 +3,28 @@
     class="sample-viewer secondary"
   >
     <div class="sample">    
-      <wav-scope
-        ref="scope"
-        :url=url
-        @click.native="playSample"
-      >
-      </wav-scope>
+      <waveform class="wave" 
+        v-if="buffer"
+        :buffer="buffer"
+      ></waveform>
     </div>
     <div class="sample-controls foreground--text">
       <div style="flex: 1"></div>
       <span class="control">
-        <v-btn   
-          class="button foreground--text" 
-          small
-          flat
-        >
-          Separate
-        </v-btn>
+        <play-pause
+          @play="playSample"
+          @stop="pauseSample"
+        ></play-pause>
       </span>
       <span class="control">
-        <v-btn   
-          class="button foreground--text" 
-          small
-          flat
-          :color="$theme.secondary + 60"
-        >
-          Transcribe
-        </v-btn>
+        <separation
+          :samplePath="samplePath"
+        ></separation>
+      </span>
+      <span class="control">
+        <transcription
+          :samplePath="samplePath"
+        ></transcription>
       </span>
     </div>
   </div>
@@ -37,42 +32,72 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import WavScope from '@/components/WavScope.vue';
 import PlayPause from '@/components/PlayPause.vue';
 import Tone from 'tone';
 import { Watch } from '@/modules/update';
+import { Sample } from '@/core';
+import { Nullable } from '@/utils';
 
-@Component({components: { WavScope, PlayPause }})
+@Component({components: { PlayPause }})
 export default class SampleViewer extends Vue {
-  @Prop({ type: String, required: true }) public url?: string;
+  @Prop(Nullable(Object)) public sample!: Sample | null;
 
-  public $refs!: {
-    scope: WavScope;
-  };
+  get buffer() {
+    if (this.sample) {
+      return this.sample.buffer;
+    } else {
+      return null;
+    }
+  }
+
+  get samplePath() {
+    if (this.sample) {
+      return this.sample.path;
+    }
+  }
 
   public playSample() {
-    this.$refs.scope.play();
+    if (this.sample) {
+      this.sample.preview();
+    }
   }
 
   public pauseSample() {
-    this.$refs.scope.pause();
+    if (this.sample) {
+      this.sample.stopPreview();
+    }
   }
 }
 </script>
 
 <style lang="sass" scoped>
 .sample-viewer
-  border-top: 1px solid #111
   height: 100%
-  padding: 40px
+  padding-bottom: 70px
+  padding-top: 5px
+  padding-left: 40px
+  padding-right: 40px
+
+.sample
+  height: 100%
+  width: 100%
+
+.wave
+  height: 100%
+  width: 100%
+  
 
 .sample-controls
-  display: flex
-  padding-top: 5px
+  // text-align: center
+  padding-top: 20px
+  position: fixed
+  bottom: 35px
 
 .control
   margin-right: 10px
 
 .button
-  margin: 5px 0
+  border: solid 1px 
+  padding: 5px
+  border-radius: 5px
 </style>

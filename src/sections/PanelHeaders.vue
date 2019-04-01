@@ -14,7 +14,7 @@
       v-for="action in actions"
       :key="action.icon"
       :tooltip="action.tooltip"
-      :color="$theme.foreground"
+      v-bind="action.props"
       bottom
       @click.native="action.callback"
     >
@@ -30,27 +30,106 @@ import { Nullable } from '@/utils';
 import { cache, general, workspace } from '@/store';
 import { Watch } from '@/modules/update';
 import { PanelNames } from '@/constants';
+import { keyLookup } from '@/utils';
+import { Note } from '@/core';
+import webmidi, { INoteParam, IMidiChannel, InputEventNoteon } from 'webmidi';
+import { error } from 'util';
+import { constants } from 'fs';
+import Transport from '@/modules/audio/transport';
+import * as Audio from '@/modules/audio';
+import { None } from 'fp-ts/lib/Option';
+import { Player } from 'soundfont-player';
 
 interface Group {
   icon: string;
   tooltip: string;
+  props?: {[key: string]: any};
   callback: (e: MouseEvent) => void;
 }
 
 @Component
 export default class PanelHeaders extends Vue {
-  public synthActions: Group[] = [
-    {
+
+  public recordedNotes: {[key: string]: InputEventNoteon} = {};
+  public notesStartTimes: {[key: string]: number} = {};
+  public transport: Transport = new Audio.Transport();
+
+  public mounted() {
+    webmidi.enable((err) => {
+      const input = webmidi.inputs[0];
+      if (input) {
+        input.addListener('noteon', 'all',
+          (e) => {
+            if (general.isRecording) {
+              this.recordedNotes[e.note.name + e.note.octave] = e;
+              const transportLocation = this.transport.progress * (this.transport.loopEnd - this.transport.loopStart);
+              this.notesStartTimes[e.note.name + e.note.octave] = transportLocation / 60  * general.project.bpm;
+            }
+
+            if (workspace.selectedScore) {
+              workspace.selectedScore.instrument.triggerAttack(e.note.name + e.note.octave, e.rawVelocity);
+            }
+          },
+        );
+
+        input.addListener('noteoff', 'all',
+          (e) => {
+            if (general.isRecording) {
+              const noteOn = this.recordedNotes[e.note.name + e.note.octave];
+              delete this.recordedNotes[e.note.name + e.note.octave];
+
+              const noteStartTime = this.notesStartTimes[e.note.name + e.note.octave];
+              delete this.notesStartTimes[e.note.name + e.note.octave];
+              const noteDuration = e.timestamp - noteOn.timestamp;
+
+              if (workspace.selectedScore) {
+                const note = new Note(workspace.selectedScore.instrument, {
+                  row: keyLookup[e.note.name + e.note.octave].id,
+                  duration: noteDuration / 1000 / 60 * general.project.bpm,
+                  time: noteStartTime,
+                  velocity: noteOn.rawVelocity,
+                });
+
+                workspace.selectedScore.notes.push(note);
+
+                if (workspace.selectedPattern) {
+                  note.schedule(this.transport);
+                }
+              }
+            }
+
+            if (workspace.selectedScore) {
+              workspace.selectedScore.instrument.triggerRelease(e.note.name + e.note.octave);
+            }
+          },
+        );
+      }
+    });
+  }
+
+  get synthActions(): Group[] {
+    return [{
       icon: 'add',
       tooltip: 'Add Instrument',
       callback: this.addInstrument,
-    },
-  ];
+    }];
+  }
+
+  get pianoRollActions(): Group[] {
+    return [{
+      icon: 'fiber_manual_record',
+      tooltip: general.isRecording ? 'Stop Recording' : 'Start Recording',
+      callback: general.isRecording ? this.stopRecording : this.startRecording,
+      props: {color: general.isRecording ? this.$theme.error : this.$theme.foreground},
+    }];
+  }
 
   get actions() {
     // TODO NO Type Checking
     if (workspace.openedPanel === 'Instruments') {
       return this.synthActions;
+    } else if (workspace.openedPanel === 'Piano Roll') {
+      return this.pianoRollActions;
     } else {
       return [];
     }
@@ -84,7 +163,39 @@ export default class PanelHeaders extends Vue {
       left: true,
     });
   }
+
+  public startRecording(event: MouseEvent) {
+    if (!workspace.selectedScore) {
+      this.$notify.warning('No Score Found', {
+        detail: 'Please create a score before you start recording',
+      });
+      return;
+    }
+
+    general.toggleRecording();
+
+    if (workspace.selectedPattern) {
+      this.transport = workspace.selectedPattern.transport;
+      this.transport.start();
+      general.start();
+    }
+  }
+
+  public stopRecording(event: MouseEvent) {
+    general.toggleRecording();
+    this.transport.pause();
+    general.pause();
+  }
+
+  public destroyed() {
+    const input = webmidi.inputs[0];
+
+    if (input) {
+      input.removeListener();
+    }
+  }
 }
+
 </script>
 
 <style lang="sass" scoped>
@@ -111,6 +222,7 @@ export default class PanelHeaders extends Vue {
 
 .action
   padding: .75em 1em
+  user-select: none
 
 .text
   align-items: center

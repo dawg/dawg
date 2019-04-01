@@ -33,12 +33,15 @@
         :beats-per-measure="general.project.beatsPerMeasure"
         :row-height="workspace.pianoRollRowHeight"
         :px-per-beat="workspace.pianoRollBeatWidth"
+        :is-recording="general.isRecording"
         @update:rowHeight="workspace.setPianoRollRowHeight"
         @update:pxPerBeat="workspace.setPianoRollBeatWidth"
       ></piano-roll-sequencer>
     </panel>
     <panel name="Sample">
-      <sample-viewer url="thing.wav"></sample-viewer>
+      <sample-viewer 
+      :sample="general.openedSample"
+    ></sample-viewer>
     </panel>
   </base-tabs>
 </template>

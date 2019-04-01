@@ -24,6 +24,7 @@ export default class SmartFileExplorer extends Vue {
       createTransferData: this.createPrototype,
       preview: this.previewWav,
       stopPreview: this.stopPreview,
+      open: this.openWav,
     },
     mid: {
       dragGroup: 'midi',
@@ -64,6 +65,10 @@ export default class SmartFileExplorer extends Vue {
     });
 
     return parser.parse(ab);
+  }
+
+  public openWav(sample: Sample) {
+    this.$emit('open-sample', sample);
   }
 }
 </script>
