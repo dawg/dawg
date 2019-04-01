@@ -75,7 +75,6 @@
 <script lang="ts">
 import { Component, Prop, Mixins, Inject, Vue } from 'vue-property-decorator';
 import { Draggable } from '@/modules/draggable';
-import { FactoryDictionary } from 'typescript-collections';
 import { range, Nullable, Keys, reverse } from '@/utils';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import Progression from '@/modules/sequencer/Progression.vue';

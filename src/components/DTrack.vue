@@ -29,6 +29,7 @@ export default class Track extends Vue {
 .track
   display: flex
   border: 0 solid
+  user-select: none
   border-width: 1px 0
   border-top-color: rgba(255, 255, 255, .07)
   border-bottom-color: rgba(255, 255, 255, .07)

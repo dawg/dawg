@@ -32,9 +32,9 @@ export class Specific extends VuexModule {
   @io.auto({ optional: true }) public playlistBeatWidth = 80;
   @io.auto({ optional: true }) public sideBarSize = 250;
   @io.auto({ optional: true }) public panelsSize = 250;
-  @io.auto({ optional: true }) public themeName: string | null = null;
-  @io.auto({ optional: true }) public pythonPath: string | null = null;
-  @io.auto({ optional: true }) public modelsPath: string | null = null;
+  @io.auto({ nullable: true }) public themeName: string | null = null;
+  @io.auto({ nullable: true }) public pythonPath: string | null = null;
+  @io.auto({ nullable: true }) public modelsPath: string | null = null;
 
   public projectId: string | null = null;
 
