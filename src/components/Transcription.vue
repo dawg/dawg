@@ -13,6 +13,7 @@ export default class Transcription extends Vue {
 
   public click() {
     if (this.samplePath) {
+
       const options: Options = {
         mode: 'text',
         pythonPath: workspace.pythonPath,
@@ -20,7 +21,7 @@ export default class Transcription extends Vue {
         args: [this.samplePath],
       };
 
-      PythonShell.run('vusic/transcription/scripts/infer.py.py', options, (err?: Error) => {
+      PythonShell.run('vusic/transcription/scripts/infer.py', options, (err?: Error) => {
         if (err) { throw err; }
         console.log('success');
       });

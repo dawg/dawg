@@ -44,12 +44,11 @@ export default class Spectrogram extends Vue {
         color.g,
         color.b,
         color.a,
-      ]
-    })
+      ];
+    });
   }
 
   public mounted() {
-    console.log(this);
     this.context = this.$refs.canvas.getContext('2d');
     this.analyserNode.fftSize = 1024;
     // @ts-ignore

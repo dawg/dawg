@@ -49,7 +49,7 @@
           <v-text-field 
             class="text-field"
             label="Models Path"
-            :python-path="workspace.modelsPath"
+            :models-path="workspace.modelsPath"
             @input="workspace.setModelsPath"
           ></v-text-field>
         </v-list-tile-action>
