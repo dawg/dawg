@@ -145,9 +145,4 @@ export default class Toolbar extends Vue {
 
 .toolbar
   box-shadow: none
-
-// See https://stackoverflow.com/questions/44818508/how-do-i-move-a-frameless-window-in-electron-without-using-webkit-app-region
-// This makes it a window drag area
-.drag-area
-  -webkit-app-region: drag
 </style>
