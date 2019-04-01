@@ -6,34 +6,35 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { workspace } from '@/store';
 import {PythonShell, Options} from 'python-shell';
+import { runModel } from '@/models';
+import path from 'path';
 
 @Component
 export default class Separation extends Vue {
   @Prop({type: String}) public samplePath!: string;
 
   public click() {
-    if (this.samplePath) {
-      if (workspace.pythonPath === null) {
-        this.$notify.error('Python Path Not Found', {
-          detail: 'Please specify your python path in settings',
-        });
-      } else if (workspace.modelsPath == null) {
-        this.$notify.error('Models Path Not Found', {
-          detail: 'Please specify your the path to the models repo in settings',
-        });
-      } else {
-        const options: Options = {
-          mode: 'text',
-          pythonPath: workspace.pythonPath,
-          scriptPath: workspace.modelsPath,
-          args: [this.samplePath],
-        };
+    const provider = this.$busy(`Extracting vocals from ${path.basename(this.samplePath)}`);
 
-        PythonShell.run('vusic/separation/scripts/separate.py', options, (err?: Error) => {
-          if (err) { throw err; }
-        });
-      }
-    }
+    runModel({
+      pythonPath: workspace.pythonPath,
+      modelsPath: workspace.modelsPath,
+      scriptPath: 'vusic/separation/scripts/separate.py',
+      samplePath: this.samplePath,
+      cb: (result) => {
+        provider.dispose();
+        if (result.type === 'error') {
+          this.$notify.error(result.message, {
+            detail: result.details,
+            duration: Infinity,
+          });
+        }
+
+        if (result.type === 'success') {
+          this.$notify.success(result.message, {detail: result.details});
+        }
+      },
+    });
   }
 }
 </script>
