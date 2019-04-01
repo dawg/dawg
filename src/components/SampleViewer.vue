@@ -3,10 +3,10 @@
     class="sample-viewer secondary"
   >
     <div class="sample">    
-      <waveform-v2 class="wave" 
+      <waveform class="wave" 
         v-if="buffer"
         :buffer="buffer"
-      ></waveform-v2>
+      ></waveform>
     </div>
     <div class="sample-controls foreground--text">
       <span class="control">
@@ -71,14 +71,15 @@ export default class SampleViewer extends Vue {
 
 <style lang="sass" scoped>
 .sample-viewer
-  border-top: 1px color "$theme.foreground"
   height: 100%
-  padding: 40px
+  padding-bottom: 70px
+  padding-top: 5px
+  padding-left: 40px
+  padding-right: 40px
 
 .sample
   height: 100%
   width: 100%
-  padding-bottom: 15px
 
 .wave
   height: 100%

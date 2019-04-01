@@ -1,72 +1,95 @@
 <template>
-  <canvas class="myCanvas secondary" ref="canvas" :width="width">
+  <canvas class="myCanvas" ref="canvas" :width="width" backgroundColor="white">
   </canvas>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
 import Tone from 'tone';
+import tinycolor from 'tinycolor2';
 import * as Audio from '@/modules/audio';
 import { Component, Prop } from 'vue-property-decorator';
 
 @Component({components: { }})
 export default class Spectrogram extends Vue {
-  // @Prop({ type: Number, default: 50}) public height!: number;
-  // @Prop({ type: Number, default: 100 }) public width!: number;
-
-  public width = 0;
-
+  public width = 100;
   public context: CanvasRenderingContext2D | null = null;
-  // public fft = new Tone.FFT(256);
-
-// public analyserNode = Audio.context.createAnalyser();
   public analyserNode = Audio.context.createAnalyser();
-  public analyserData: number[] = Array(512).fill(0);
+  public analyserData = new Uint8Array(512);
+  @Prop({ type: Number, default: 50}) public height!: number;
+  @Prop({ type: String, required: true}) public color!: string;
 
   public $refs!: {
     canvas: HTMLCanvasElement;
   };
 
-  public mounted() {
-    this.context = this.$refs.canvas.getContext('2d');
-    // this.analyserNode.fftSize = 1024;
-    // @ts-ignore
-    // const output = Tone.Master.output as AudioNode;
-    // output.connect(this.analyserNode);
-    // requestAnimationFrame(this.doRender);
-    this.analyserData[200] = 150;
-    this.analyserData[201] = 150;
-    this.analyserData[202] = 150;
-    this.analyserData[203] = 150;
-    this.analyserData[204] = 150;
-    this.analyserData[205] = 150;
-    this.doRender();
+  get tiny() {
+    return tinycolor(this.color);
   }
 
-  // public destroyed() {
-  //   Audio.context.destination.disconnect(this.analyserNode);
-  // }
+  get transformatino() {
+    return this.tiny.isLight() ? 'darken' : 'lighten';
+  }
+
+  get colors() {
+    const percentages = [0, 10, 20, 30, 40, 50, 60, 90, 100];
+    // if (this.tiny.isLight()) {
+    //   percentages.reverse();
+    // }
+
+    return percentages.map((value) => {
+      const color = this.tiny.setAlpha(value).toRgb();
+      return [
+        color.r,
+        color.g,
+        color.b,
+        color.a,
+      ]
+    })
+  }
+
+  public mounted() {
+    console.log(this);
+    this.context = this.$refs.canvas.getContext('2d');
+    this.analyserNode.fftSize = 1024;
+    // @ts-ignore
+    const output = Tone.Master.output as AudioNode;
+    output.connect(this.analyserNode);
+    requestAnimationFrame(this.doRender);
+  }
+
+  public destroyed() {
+    // @ts-ignore
+    const output = Tone.Master.output as AudioNode;
+    output.connect(this.analyserNode);
+  }
 
   public doRender() {
-    console.log('HELLO');
     if (!this.context) {
       return;
     }
-
-    // const data = this.fft.getValue();
-    // this.analyserNode.getByteFrequencyData( this.analyserData );
-    console.log(this.analyserData.slice(0, 100));
+    this.analyserNode.getByteFrequencyData( this.analyserData );
+    // console.log(this.analyserData.slice(0, 100));
     const img = this.context.createImageData(this.analyserData.length, 1);
 
-    this.width = this.analyserData.length;
+    // this.width = this.analyserData.length;
     const datalen = this.analyserData.length;
-    // const img = ctx.createImageData( datalen, 1 );
 
-    for ( let i = 0, x = 0; i < datalen; ++i, x += 4 ) {
+    const arr = ( new Array( datalen ) ).fill( 0 );
+    const sum = arr.reduce( ( sum, _, i, arr ) => (
+      sum += arr[ i ] = Math.log( datalen / ( i + 1 ) )
+    ), 0);
+    arr.forEach( ( val, i, arr ) => {
+      arr[ i ] = val / sum * this.width;
+    });
+
+
+    for ( let i = 0, x = 0; i < datalen; ++i ) {
       let r;
       let g;
       let b;
-      let datum = 1 - Math.cos(this.analyserData[i] / 255 * Math.PI / 2);
+      let a = 0;
+      let datum = 1 - Math.cos( this.analyserData[ i ] / 255 * Math.PI / 2 );
 
       if ( datum < .05 ) {
         r = 4 + 10 * datum;
@@ -96,41 +119,43 @@ export default class Spectrogram extends Vue {
           colId = 8;
         }
 
-        col = colors[colId];
+        col = this.colors[ colId ];
         r = col[0] * datum;
         g = col[1] * datum;
         b = col[2] * datum;
+        a = col[3] * datum;
       }
 
-      img.data[x] = Math.floor(r);
-      img.data[x + 1] = Math.floor(g);
-      img.data[x + 2] = Math.floor(b);
-      img.data[x + 3] = 255;
-    }
+      // r = this.tiny.r + r;
+      // g = this.tiny.g + g;
+      // b = this.tiny.b + b;
 
-    console.log(img);
-    this.context.putImageData(img, 0, 0);
-    // requestAnimationFrame(this.doRender);
+      this.context.fillStyle = `rgba(${Math.floor(r)}, ${Math.floor(g)}, ${Math.floor(b)}, ${a})`;
+      this.context.clearRect( x, 0, arr[ i ], this.height * 3 );
+      this.context.fillRect( x, 0, arr[ i ], this.height * 3 );
+      x += arr[ i ];
+      // console.log(arr);
+    }
+    requestAnimationFrame(this.doRender);
   }
 }
 
-const colors = [
-[   5,   2,  20 ], // 0
-[   8,   5,  30 ], // 1
-[  15,   7,  50 ], // 2
-[  75,   7,  35 ], // 3
-[  80,   0,   0 ], // 4
-[ 180,   0,   0 ], // 5
-[ 200,  25,  10 ], // 6
-[ 200, 128,  10 ], // 7
-[ 200, 200,  20 ], // 8
-];
+// const colors = [
+// [   5,   2,  20 ], // 0
+// [   8,   5,  30 ], // 1
+// [  15,   7,  50 ], // 2
+// [  75,   7,  35 ], // 3
+// [  80,   0,   0 ], // 4
+// [ 180,   0,   0 ], // 5
+// [ 200,  25,  10 ], // 6
+// [ 200, 128,  10 ], // 7
+// [ 200, 200,  20 ], // 8
+// ];
 </script>
 
 <style scoped lang="sass">
 .myCanvas
-  border: 1px solid #FFFFFF
-  height: 60%
+  height: 100%
   width:  25%
 
 </style>

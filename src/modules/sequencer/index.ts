@@ -6,7 +6,7 @@ import PlaylistSequencer from '@/modules/sequencer/PlaylistSequencer.vue';
 import PianoRollSequencer from '@/modules/sequencer/PianoRollSequencer.vue';
 import ACE from '@/modules/sequencer/AutomationClipElement.vue';
 import N from '@/modules/sequencer/Note.vue';
-import Waveform from '@/modules/sequencer/Waveform.vue';
+import Waveform from '@/modules/dawg/Waveform.vue';
 import Scroller from '@/modules/sequencer/Scroller.vue';
 import { positionable, resizable, selectable, colored } from '@/modules/sequencer/helpers';
 

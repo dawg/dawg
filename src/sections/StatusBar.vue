@@ -5,10 +5,10 @@
       <div slot="activator" class="name item">{{ projectName }}</div>
       <div>Project Name</div>
     </v-tooltip>
-    <spectrogram-v2
+    <spectrogram
       class="item"
-      :color="$theme.secondary"
-    ></spectrogram-v2>
+      :color="$theme.foreground"
+    ></spectrogram>
     <status-text class="item status-text"></status-text>
     <div style="flex: 1"></div>
     <tooltip-icon 
@@ -76,7 +76,7 @@ export default class Foot extends Vue {
   align-items: center
 
 .item
-  margin: 0 4px
+  margin: 0 6px
   padding-top: 1px
 
 .status-text
