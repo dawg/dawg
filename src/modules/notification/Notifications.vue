@@ -30,6 +30,7 @@
             <v-icon small @click="destroy(i)">close</v-icon>
           </div>
           <vue-perfect-scrollbar
+            v-if="item.text"
             class="notification-content"
             v-html="item.text"
           ></vue-perfect-scrollbar>

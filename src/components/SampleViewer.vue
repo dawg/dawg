@@ -9,6 +9,7 @@
       ></waveform>
     </div>
     <div class="sample-controls foreground--text">
+      <div style="flex: 1"></div>
       <span class="control">
         <play-pause
           @play="playSample"

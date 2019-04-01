@@ -11,6 +11,9 @@
     ></spectrogram>
     <status-text class="item status-text"></status-text>
     <div style="flex: 1"></div>
+    <busy-signal
+      style="margin: 0 35px"
+    ></busy-signal>
     <tooltip-icon 
       v-if="general.backupError" 
       :color="$theme.foreground" 
@@ -40,7 +43,7 @@ import { cache, workspace, general } from '@/store';
 
 @Component
 export default class Foot extends Vue {
-  public height = 20;
+  @Prop({ type: Number, required: true }) public height!: number;
   public general = general;
 
   get style() {

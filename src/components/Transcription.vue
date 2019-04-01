@@ -16,8 +16,8 @@ export default class Transcription extends Vue {
 
       const options: Options = {
         mode: 'text',
-        pythonPath: workspace.pythonPath,
-        scriptPath: workspace.modelsPath,
+        pythonPath: workspace.pythonPath === null ? undefined : workspace.pythonPath,
+        scriptPath: workspace.modelsPath === null ? undefined : workspace.modelsPath,
         args: [this.samplePath],
       };
 

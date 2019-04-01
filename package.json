@@ -1,6 +1,7 @@
 {
   "name": "vusic",
   "author": "DAWG People <dawgpeople@gmail.com>",
+  "homepage": "https://dawg.dev",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -32,6 +33,7 @@
     "python-shell": "^1.0.7",
     "resize-observer-polyfill": "^1.5.0",
     "soundfont-player": "github:dawg/soundfont-player",
+    "strict-event-emitter-types": "^2.0.0",
     "tinycolor2": "^1.4.1",
     "tmp": "0.0.33",
     "tone": "^13.8.3",

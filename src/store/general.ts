@@ -9,11 +9,8 @@ import { User } from 'firebase';
 import { Project } from './project';
 import { remote } from 'electron';
 import cache from './cache';
-<<<<<<< HEAD
 import { Sample } from '@/core';
-=======
 import { DG_EXTENSION } from '@/constants';
->>>>>>> bc08ec9a5b42d2a3fa15f61bf4df38b8f1145259
 
 export interface InitializationError {
   type: 'error';
