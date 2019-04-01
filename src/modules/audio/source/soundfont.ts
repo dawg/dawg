@@ -1,7 +1,8 @@
 import Tone from 'tone';
 import { Time, ContextTime } from '@/modules/audio/types';
 import { Source } from '@/modules/audio/source/source';
-import { Player } from 'soundfont-player';
+import { context } from '@/modules/audio/context';
+import * as soundfonts from 'soundfont-player';
 
 
 // tslint:disable-next-line:no-empty-interface
@@ -13,8 +14,19 @@ export interface SoundfontOptions {
  * A soundfont source. Uses `soundfont-player` under the hood.
  */
 export class Soundfont implements Source<SoundfontOptions> {
-  constructor(private player: Player) {}
 
+  public static async load(name: soundfonts.InstrumentName) {
+    try {
+      return new Soundfont(await soundfonts.instrument(context, name));
+    } catch (e) {
+      // tslint:disable-next-line:no-console
+      console.warn(e.message);
+      return null;
+    }
+  }
+  private playingNotes: {[key: string]: soundfonts.Player} = {};
+
+  constructor(private player: soundfonts.Player) {}
   public triggerAttackRelease(note: string, duration: Time, time: ContextTime, velocity?: number) {
     const durationSeconds = new Tone.TransportTime(duration).toSeconds();
     this.player.play(note, time, {
@@ -24,13 +36,16 @@ export class Soundfont implements Source<SoundfontOptions> {
     return this;
   }
 
-  public triggerAttack(note: string): this {
-    this.player.play(note);
+  public triggerAttack(note: string, velocity?: number): this {
+    this.playingNotes[note] = this.player.play(note, undefined, {gain: velocity});
     return this;
   }
 
   public triggerRelease(note: string): this {
-    this.player.stop();
+    if (note in this.playingNotes) {
+      this.playingNotes[note].stop();
+      delete this.playingNotes[note];
+    }
     return this;
   }
 

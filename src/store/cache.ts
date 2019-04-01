@@ -50,9 +50,17 @@ export class Cache extends VuexModule {
       await this.write();
     }
 
-    // TODO Error handling
     const contents = (await fs.readFile(CACHE_PATH)).toString();
-    const json = JSON.parse(contents);
+
+    let json;
+    try {
+      json = JSON.parse(contents);
+    } catch (e) {
+      // Write current cache to the file if we can't parse the contents
+      this.write();
+      return;
+    }
+
     const decoded = io.deserialize(json, Cache);
     this.reset(decoded);
   }
@@ -65,8 +73,6 @@ export class Cache extends VuexModule {
   @Action
   public setOpenedFile(openedFile: string | null) {
     this.set({ key: 'openedFile', value: openedFile });
-    // This write call actually works.
-    // I was worried it wouldn't work since this method is not async.
     return this.write();
   }
 

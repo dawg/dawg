@@ -6,6 +6,7 @@ import { toTickTime } from '@/utils';
 import { Serializable } from './serializable';
 import { Channel } from './channel';
 import { Instrument } from './instrument/instrument';
+import { Beats } from './types';
 
 export const AutomationType = t.type({
   context: t.union([t.literal('channel'), t.literal('instrument')]),
@@ -73,10 +74,16 @@ export class AutomationClip implements Serializable<IAutomation> {
     return this.points[this.points.length - 1].time;
   }
 
-  public change(index: number, value: number) {
+  public setValue(index: number, value: number) {
     const point = this.points[index];
     this.control.change(point.eventId, value);
     this.points[index].value = value;
+  }
+
+  public setTime(index: number, time: Beats) {
+    const point = this.points[index];
+    this.control.setTime(point.eventId, toTickTime(time));
+    this.points[index].time = time;
   }
 
   public remove(i: number) {
@@ -85,7 +92,7 @@ export class AutomationClip implements Serializable<IAutomation> {
     this.points.splice(i, 1);
   }
 
-  public add(time: number, value: number) {
+  public add(time: Beats, value: number) {
     this.points.push(this.schedule({ time, value }));
   }
 

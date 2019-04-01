@@ -82,6 +82,14 @@ export class Controller extends Tone.Signal {
     return this;
   }
 
+  public setTime(eventId: string, time: TransportTime) {
+    if (this.scheduledEvents.hasOwnProperty(eventId)) {
+      const event = this.scheduledEvents[eventId];
+      event.time = new Tone.Time(time);
+    }
+    return this;
+  }
+
   public remove(eventId: string) {
     if (this.scheduledEvents.hasOwnProperty(eventId)) {
       const event = this.scheduledEvents[eventId];

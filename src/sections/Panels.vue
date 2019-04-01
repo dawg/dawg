@@ -33,6 +33,7 @@
         :beats-per-measure="general.project.beatsPerMeasure"
         :row-height="workspace.pianoRollRowHeight"
         :px-per-beat="workspace.pianoRollBeatWidth"
+        :is-recording="general.isRecording"
         @update:rowHeight="workspace.setPianoRollRowHeight"
         @update:pxPerBeat="workspace.setPianoRollBeatWidth"
       ></piano-roll-sequencer>

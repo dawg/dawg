@@ -20,4 +20,8 @@ export class Synth extends Tone.PolySynth implements Source<SynthOptions> {
   public set<K extends keyof SynthOptions>(o: { key: K, value: SynthOptions[K] }) {
     super.set({ [o.key]: o.value });
   }
+
+  public triggerAttack(note: string, velocity ?: number) {
+    return super.triggerAttack(note, undefined, velocity);
+  }
 }
