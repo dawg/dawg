@@ -61,6 +61,8 @@ export abstract class Schedulable {
 
       event.duration = new Tone.Ticks(toTickTime(value));
     }
+
+    this.updateDuration(value);
   }
 
   get tickTime() {
@@ -93,6 +95,10 @@ export abstract class Schedulable {
   }
 
   public abstract copy(): Schedulable;
+
+  protected updateDuration(duration: number) {
+    // TODO move to event emitter
+  }
 
   /**
    * Add yourself to the transport. Return null if it's not possible.

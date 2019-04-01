@@ -27,29 +27,19 @@ export default class Spectrogram extends Vue {
     return tinycolor(this.color);
   }
 
-  get transformatino() {
-    return this.tiny.isLight() ? 'darken' : 'lighten';
-  }
-
   get colors() {
-    const percentages = [0, 10, 20, 30, 40, 50, 60, 90, 100];
-    // if (this.tiny.isLight()) {
-    //   percentages.reverse();
-    // }
-
-    return percentages.map((value) => {
+    return [0, 10, 20, 30, 40, 50, 60, 90, 100].map((value) => {
       const color = this.tiny.setAlpha(value).toRgb();
       return [
         color.r,
         color.g,
         color.b,
         color.a,
-      ]
-    })
+      ];
+    });
   }
 
   public mounted() {
-    console.log(this);
     this.context = this.$refs.canvas.getContext('2d');
     this.analyserNode.fftSize = 1024;
     // @ts-ignore
@@ -75,13 +65,10 @@ export default class Spectrogram extends Vue {
     // this.width = this.analyserData.length;
     const datalen = this.analyserData.length;
 
-    const arr = ( new Array( datalen ) ).fill( 0 );
-    const sum = arr.reduce( ( sum, _, i, arr ) => (
-      sum += arr[ i ] = Math.log( datalen / ( i + 1 ) )
-    ), 0);
-    arr.forEach( ( val, i, arr ) => {
-      arr[ i ] = val / sum * this.width;
-    });
+    let arr: number[] = new Array(datalen).fill(0);
+    arr = arr.map((value, i) => Math.log( datalen / ( i + 1 )));
+    const sum = arr.reduce(( current, value ) => current + value, 0);
+    arr = arr.map((value) =>  value / sum * this.width);
 
 
     for ( let i = 0, x = 0; i < datalen; ++i ) {
