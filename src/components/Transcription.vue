@@ -23,7 +23,6 @@ export default class Transcription extends Vue {
 
       PythonShell.run('vusic/transcription/scripts/infer.py', options, (err?: Error) => {
         if (err) { throw err; }
-        console.log('success');
       });
     }
   }

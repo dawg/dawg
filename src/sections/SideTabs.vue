@@ -41,7 +41,11 @@
             @remove="(i) => general.project.removePattern(i)"
           ></patterns>
         </side-bar>
-        <side-bar :name="tabs.automationClips" icon="share">
+        <side-bar 
+          :name="tabs.automationClips" 
+          icon="share"
+          :icon-props="{ style: 'transform: rotate(-90deg)' }"
+        >
           <automation-clips></automation-clips>
         </side-bar>
       </base-tabs>

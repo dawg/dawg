@@ -23,7 +23,6 @@ public click() {
 
       PythonShell.run('vvusic/separation/scripts/separate.py', options, (err?: Error) => {
         if (err) { throw err; }
-        console.log('success');
       });
     }
   }
