@@ -56,54 +56,70 @@ export default class PanelHeaders extends Vue {
 
   public mounted() {
     webmidi.enable((err) => {
-      const input = webmidi.inputs[0];
-      if (input) {
-        input.addListener('noteon', 'all',
-          (e) => {
-            if (general.isRecording) {
-              this.recordedNotes[e.note.name + e.note.octave] = e;
-              const transportLocation = this.transport.progress * (this.transport.loopEnd - this.transport.loopStart);
-              this.notesStartTimes[e.note.name + e.note.octave] = transportLocation / 60  * general.project.bpm;
-            }
-
-            if (workspace.selectedScore) {
-              workspace.selectedScore.instrument.triggerAttack(e.note.name + e.note.octave, e.rawVelocity);
-            }
-          },
-        );
-
-        input.addListener('noteoff', 'all',
-          (e) => {
-            if (general.isRecording) {
-              const noteOn = this.recordedNotes[e.note.name + e.note.octave];
-              delete this.recordedNotes[e.note.name + e.note.octave];
-
-              const noteStartTime = this.notesStartTimes[e.note.name + e.note.octave];
-              delete this.notesStartTimes[e.note.name + e.note.octave];
-              const noteDuration = e.timestamp - noteOn.timestamp;
-
-              if (workspace.selectedScore) {
-                const note = new Note(workspace.selectedScore.instrument, {
-                  row: keyLookup[e.note.name + e.note.octave].id,
-                  duration: noteDuration / 1000 / 60 * general.project.bpm,
-                  time: noteStartTime,
-                  velocity: noteOn.rawVelocity,
-                });
-
-                workspace.selectedScore.notes.push(note);
-
-                if (workspace.selectedPattern) {
-                  note.schedule(this.transport);
+      webmidi.addListener('connected', (event) => {
+        if (event.port.type === 'input') {
+          const input = event.port;
+          if (input) {
+            this.$notify.success('MIDI Input Detected', {
+              detail: `${event.port.name} is now connected to Vusic.`,
+            });
+            input.addListener('noteon', 'all',
+              (e) => {
+                if (general.isRecording) {
+                  this.recordedNotes[e.note.name + e.note.octave] = e;
+                  const transportLocation = this.transport.progress *
+                                            (this.transport.loopEnd - this.transport.loopStart);
+                  this.notesStartTimes[e.note.name + e.note.octave] = transportLocation / 60  * general.project.bpm;
                 }
-              }
-            }
 
-            if (workspace.selectedScore) {
-              workspace.selectedScore.instrument.triggerRelease(e.note.name + e.note.octave);
-            }
-          },
-        );
-      }
+                if (workspace.selectedScore) {
+                  workspace.selectedScore.instrument.triggerAttack(e.note.name + e.note.octave, e.rawVelocity);
+                }
+              },
+            );
+
+            input.addListener('noteoff', 'all',
+              (e) => {
+                if (general.isRecording) {
+                  const noteOn = this.recordedNotes[e.note.name + e.note.octave];
+                  delete this.recordedNotes[e.note.name + e.note.octave];
+
+                  const noteStartTime = this.notesStartTimes[e.note.name + e.note.octave];
+                  delete this.notesStartTimes[e.note.name + e.note.octave];
+                  const noteDuration = e.timestamp - noteOn.timestamp;
+
+                  if (workspace.selectedScore) {
+                    const note = new Note(workspace.selectedScore.instrument, {
+                      row: keyLookup[e.note.name + e.note.octave].id,
+                      duration: noteDuration / 1000 / 60 * general.project.bpm,
+                      time: noteStartTime,
+                      velocity: noteOn.rawVelocity,
+                    });
+
+                    workspace.selectedScore.notes.push(note);
+
+                    if (workspace.selectedPattern) {
+                      note.schedule(this.transport);
+                    }
+                  }
+                }
+
+                if (workspace.selectedScore) {
+                  workspace.selectedScore.instrument.triggerRelease(e.note.name + e.note.octave);
+                }
+              },
+            );
+          }
+        }
+      });
+
+      webmidi.addListener('disconnected', (event) => {
+        if (event.port.type === 'input') {
+          this.$notify.warning('MIDI Input Diconnected', {
+            detail: `${event.port.name} has been disconnected.`,
+          });
+        }
+      });
     });
   }
 
