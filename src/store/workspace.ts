@@ -10,6 +10,7 @@ import store from '@/store/store';
 import { APPLICATION_PATH, SideTab, PanelNames, ApplicationContext } from '@/constants';
 import { Score, Pattern } from '@/core';
 import general from './general';
+import { makeLookup } from '@/modules/utils';
 
 const PROJECT_CACHE_PATH = path.join(APPLICATION_PATH, 'project-cache.json');
 
@@ -42,10 +43,14 @@ export class Specific extends VuexModule {
     super(module || {});
   }
 
+  get patternLookup() {
+    return makeLookup(general.project.patterns);
+  }
+
   get selectedPattern() {
     if (!this.selectedPatternId) { return null; }
-    if (!(this.selectedPatternId in general.project.patternLookup)) { return null; }
-    return general.project.patternLookup[this.selectedPatternId];
+    if (!(this.selectedPatternId in this.patternLookup)) { return null; }
+    return this.patternLookup[this.selectedPatternId];
   }
 
   get selectedScore() {

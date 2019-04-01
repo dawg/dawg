@@ -43,13 +43,13 @@ export abstract class Instrument<T, V extends string> {
   private connected = true;
 
   // tslint:disable-next-line:member-ordering
-  public pan = new Audio.Signal(this.panner.pan);
+  public pan = new Audio.Signal(this.panner.pan, -1, 1);
 
   // TODO for the gain
   private gainNode = new Tone.Gain().connect(this.panner);
 
   // tslint:disable-next-line:member-ordering
-  public volume = new Audio.Signal(this.gainNode.gain);
+  public volume = new Audio.Signal(this.gainNode.gain, 0, 1);
 
   constructor(source: Audio.Source<T> | null, destination: Tone.AudioNode, i: IInstrument) {
     this.source = source;
@@ -61,7 +61,7 @@ export abstract class Instrument<T, V extends string> {
     this.id = i.id || uuid.v4();
     this.channel = i.channel === undefined ? null : i.channel;
     this.muted = !!i.mute;
-    this.mute = !!i.mute; // TODO(jacob)
+    this.mute = !!i.mute;
     this.pan.value = i.pan || 0;
     this.volume.value = i.volume === undefined ? 0.8 : i.volume;
     this.connect(destination);
@@ -90,7 +90,7 @@ export abstract class Instrument<T, V extends string> {
 
   public triggerAttack(note: string, velocity?: number) {
     if (this.source) {
-      this.source.triggerAttack(note, velocity);
+      this.source.triggerAttack(note, undefined, velocity);
     }
   }
 

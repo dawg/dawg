@@ -51,7 +51,7 @@
       @update:duration="updateDuration(i, $event)"
       @contextmenu.native="remove($event, i)"
       @mousedown.native="select($event, i)"
-      @click="clickElement(i)"
+      @click.native="clickElement(i)"
       @dblclick="open($event, i)"
     ></component>
     <progression
@@ -167,7 +167,7 @@ export default class Arranger extends Mixins(Draggable) {
 
   get displayBeats() {
     return Math.max(
-      this.minDisplayMeasures * this.beatsPerMeasure,
+      256, // 256 is completly random
       (this.itemLoopEnd || 0) + this.beatsPerMeasure * 2,
     );
   }

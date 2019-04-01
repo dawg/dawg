@@ -149,6 +149,7 @@ import { ScheduledPattern } from '@/core/scheduled/pattern';
 import { ScheduledSample } from '@/core/scheduled/sample';
 import { Automatable } from '@/core/automation';
 import { win32 } from 'path';
+import * as Audio from '@/modules/audio';
 
 @Component({
   components: {
@@ -162,6 +163,9 @@ import { win32 } from 'path';
 export default class App extends Vue {
   public general = general;
   public workspace = workspace;
+
+  public Tone = Tone;
+  public Audio = Audio;
 
   public menuItems = {
     save: {

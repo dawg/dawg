@@ -78,8 +78,8 @@ export class Project implements Serializable<IProject> {
       id: uuid.v4(),
       bpm: 120,
       master: new Playlist([]),
-      patterns: [],
-      instruments: [],
+      patterns: [Pattern.create('Pattern 0')],
+      instruments: [Synth.create('Synth 0')],
       channels: range(10).map((index) => Channel.create(index)),
       tracks: range(21).map((index) => Track.create(index)),
       samples: [],
@@ -151,6 +151,10 @@ export class Project implements Serializable<IProject> {
       } else {
         // @ts-ignore
         signal = this.instrumentLookup[clip.contextId][clip.attr];
+      }
+
+      if (!signal) {
+        throw Error('Unable to parse automation clip');
       }
 
       return new AutomationClip(signal, iAutomationClip);
@@ -338,7 +342,7 @@ export class Project implements Serializable<IProject> {
   }
 
   public createAutomationClip<T extends Automatable>(
-    payload: { automatable: T, key: keyof T, end: number, start: number },
+    payload: { automatable: T, key: keyof T & string, end: number, start: number },
   ) {
     const { start, end, key, automatable } = payload;
     const signal = automatable[key] as any as Signal;
@@ -374,7 +378,7 @@ export class Project implements Serializable<IProject> {
     }
 
     const length = payload.end - payload.start;
-    const clip = AutomationClip.create(length, signal, context, automatable.id);
+    const clip = AutomationClip.create(length, signal, context, automatable.id, key);
     const placed = ScheduledAutomation.create(clip, payload.start, row);
     this.pushAutomationClip({ clip, placed });
 
@@ -563,10 +567,6 @@ export class Project implements Serializable<IProject> {
 
     clip.dispose();
     this.automationClips.splice(i, 1);
-  }
-
-  get patternLookup() {
-    return makeLookup(this.patterns);
   }
 
   get effectLookup() {

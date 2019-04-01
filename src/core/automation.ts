@@ -22,7 +22,7 @@ export type ClipContext = IAutomation['context'];
 export type Automatable = Channel | Instrument<any, any>;
 
 export class AutomationClip implements Serializable<IAutomation> {
-  public static create(length: number, signal: Audio.Signal, context: ClipContext, id: string) {
+  public static create(length: number, signal: Audio.Signal, context: ClipContext, id: string, attr: string) {
     const ac = new AutomationClip(signal, {
       id: uuid.v4(),
       context,
@@ -37,7 +37,7 @@ export class AutomationClip implements Serializable<IAutomation> {
           value: signal.value,
         },
       ],
-      attr: '', // TODO(jacob)
+      attr,
     });
 
     return ac;
@@ -49,8 +49,8 @@ export class AutomationClip implements Serializable<IAutomation> {
   public attr: string;
   public id: string;
 
-  public signal: Audio.Signal;
   public control: Audio.Controller;
+  private signal: Audio.Signal;
 
   constructor(signal: Audio.Signal, i: IAutomation) {
     this.context = i.context;
@@ -72,6 +72,14 @@ export class AutomationClip implements Serializable<IAutomation> {
     }
 
     return this.points[this.points.length - 1].time;
+  }
+
+  get minValue() {
+    return this.signal.minValue;
+  }
+
+  get maxValue() {
+    return this.signal.maxValue;
   }
 
   public setValue(index: number, value: number) {

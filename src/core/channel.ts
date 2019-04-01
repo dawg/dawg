@@ -45,7 +45,7 @@ export class Channel implements Serializable<IChannel> {
    * The panner for the channel.
    */
   // tslint:disable-next-line:member-ordering
-  public panner = new Audio.Signal(this.pannerNode.pan);
+  public panner = new Audio.Signal(this.pannerNode.pan, -1, 1);
 
   private gainNode = new Tone.Gain().connect(this.pannerNode);
 
@@ -53,7 +53,7 @@ export class Channel implements Serializable<IChannel> {
    * The volume for the channel.
    */
   // tslint:disable-next-line:member-ordering
-  public volume = new Audio.Signal(this.gainNode.gain);
+  public volume = new Audio.Signal(this.gainNode.gain, 0, 1);
 
   // tslint:disable-next-line:member-ordering
   public destination = this.gainNode;
