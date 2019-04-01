@@ -64,6 +64,8 @@
               :px-per-beat="workspace.playlistBeatWidth"
               @update:pxPerBeat="workspace.setPlaylistBeatWidth"
               @new-prototype="checkPrototype"
+              @record="record"
+              :ghosts="ghosts"
             ></playlist-sequencer>
             <blank v-else></blank>              
           </split>
@@ -148,6 +150,9 @@ import { User } from 'firebase';
 import { ScheduledPattern } from '@/core/scheduled/pattern';
 import { ScheduledSample } from '@/core/scheduled/sample';
 import { Automatable } from '@/core/automation';
+import * as Audio from '@/modules/audio';
+import { Ghost, ChunkGhost } from '@/core/ghosts/ghost';
+import { null } from 'io-ts';
 
 @Component({
   components: {
@@ -161,6 +166,8 @@ import { Automatable } from '@/core/automation';
 export default class App extends Vue {
   public general = general;
   public workspace = workspace;
+  public ghosts: Ghost[] = [];
+  public mediaRecorder: MediaRecorder | null = null;
 
   public menuItems: {[k: string]: PaletteItem} = {
     save: {
@@ -691,6 +698,125 @@ export default class App extends Vue {
       this.$notify.error('Unable to get projects.', { detail: this.getProjectsErrorMessage });
     }
   }
+
+  public record(trackId: number) {
+    if ( this.mediaRecorder == null ) {
+      this.startRecording(trackId);
+    } else {
+      this.stopRecording();
+    }
+  }
+
+  public startRecording(trackId: number) {
+        // create new ghost
+
+    this.ghosts.push(new ChunkGhost(0, trackId));
+
+    // record here
+    const contraints: MediaStreamConstraints = {
+      audio: true,
+      video: false,
+    };
+
+      // get user media
+    navigator.getUserMedia(contraints, (stream) => {
+
+        const mediaRecorder = new MediaRecorder(stream);
+        const audioBlobs: Blob[] = [];
+
+        mediaRecorder.start(1000);
+
+        mediaRecorder.ondataavailable = (event: BlobEvent) => {
+          const reader = new FileReader();
+
+          audioBlobs.push(event.data);
+
+          reader.onload = () => {
+            const buffer = reader.result;
+            Audio.context.decodeAudioData(buffer).then((decodedBuffer) => {
+              console.log(decodedBuffer);
+            });
+          };
+
+          const audioBlob = new Blob(audioBlobs);
+          reader.readAsArrayBuffer(audioBlob);
+        };
+
+        mediaRecorder.onstop = () => {
+          // todo
+          // combine all of the audio into one buffer and export as a wav to documents/vusic/recordings
+        };
+
+      }, (error) => {
+        return;
+      });
+
+  }
+
+  public stopRecording() {
+    if (this.mediaRecorder != null) {
+      this.mediaRecorder.stop();
+      this.mediaRecorder = null;
+    }
+  }
+
+  // public record(trackId: number) {
+
+  //   // todo get id of our current media device
+
+  //   // should we just use default if not?
+  //   // if (cache.microphoneIn === null) {
+  //   //   this.$notify.warning('No input device selected. Please select the input microphone in the settings.');
+  //   //   return;
+  //   // }
+
+  //   // create new ghost
+  //   this.ghosts.;
+
+  //   // record here
+  //   const contraints: MediaStreamConstraints = {
+  //     audio: true,
+  //     video: false,
+  //   };
+
+  //     // get user media
+  //   navigator.getUserMedia(contraints, (stream) => {
+
+  //       const mediaRecorder = new MediaRecorder(stream);
+  //       const audioChunks: Blob[] = [];
+
+  //       mediaRecorder.start(1000);
+
+  //       mediaRecorder.ondataavailable = (event: BlobEvent) => {
+  //         const reader = new FileReader();
+
+  //         audioChunks.push(event.data);
+
+  //         reader.onload = () => {
+  //           const buffer = reader.result;
+  //           Audio.context.decodeAudioData(buffer).then((decodedBuffer) => {
+  //             console.log(decodedBuffer);
+  //           });
+  //         };
+
+  //         const audioBlob = new Blob(audioChunks);
+  //         reader.readAsArrayBuffer(audioBlob);
+  //       };
+
+  //       setTimeout(() => {
+  //         mediaRecorder.stop();
+  //       }, 5000);
+
+  //       mediaRecorder.onstop = () => {
+  //         // todo
+  //         // combine all of the audio into one buffer and export as a wav to documents/vusic/recordings
+  //       };
+
+  //     }, (error) => {
+  //       return;
+  //     });
+  // }
+
 }
 </script>
 

@@ -91,8 +91,8 @@ export default class Settings extends Vue {
   public devices: string[] = [];
 
   public mounted() {
-    navigator.mediaDevices.enumerateDevices().then((media) => {
-      media.forEach((device) => {
+    navigator.mediaDevices.enumerateDevices().then((media: MediaDeviceInfo[]) => {
+      media.forEach((device: MediaDeviceInfo) => {
         if (device.kind === 'audioinput') {
           this.devices.push(device.label);
         }
@@ -157,7 +157,7 @@ export default class Settings extends Vue {
   margin: 0!important
   max-width: 250px
 
-.device-dropdown /deep/ .v-select__selection
+.device-dropdown /deep/ .v-select__selections
   margin: 0!important
   max-width: 220px
   white-space: nowrap

@@ -25,6 +25,10 @@ export default class Track extends Vue {
 </script>
 
 <style lang="sass" scoped>
+
+.name
+  user-select: none
+
 // TODO 20px and 5px is hardcoded! 
 .track
   display: flex

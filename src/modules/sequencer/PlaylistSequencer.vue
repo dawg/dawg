@@ -17,6 +17,7 @@
         v-for="(track, i) in tracks" 
         :key="i" 
         :track="track"
+        @contextmenu.native="trackOptions($event, i)"
       ></d-track>
     </template>
   </sequencer>
@@ -38,6 +39,19 @@ export default class PlaylistSequencer extends Vue {
   @Prop({ type: Object, required: true }) public transport!: Transport;
 
   public prototype = null;
+
+  public trackOptions(event: MouseEvent, i: number) {
+    this.$context({
+      event,
+      items: [
+        {
+          text: 'Record',
+          callback: () => this.$emit('record', i),
+        },
+      ],
+    });
+  }
+
 
   public rowStyle() {
     return {

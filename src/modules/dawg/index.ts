@@ -7,6 +7,10 @@ import VerticalSwitch from '@/modules/dawg/VerticalSwitch.vue';
 import Blank from '@/modules/dawg/Blank.vue';
 import Loading from '@/modules/dawg/Loading.vue';
 import WaveformV2 from '@/modules/dawg/WaveformV2.vue';
+import GH from '@/modules/dawg/ChunkGhost.vue';
+import { positionable } from '../sequencer';
+
+const ChunkGhost = positionable(GH);
 
 export default  {
   install() {
@@ -18,6 +22,7 @@ export default  {
     Vue.component('Blank', Blank);
     Vue.component('Loading', Loading);
     Vue.component('WaveformV2', WaveformV2);
+    Vue.component('ChunkGhost', ChunkGhost);
   },
 };
 
