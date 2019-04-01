@@ -122,8 +122,9 @@
 
 <script lang="ts">
 import fs from 'fs';
+import * as fs2 from '@/fs';
 import { Component, Vue } from 'vue-property-decorator';
-import { shell } from 'electron';
+import { shell, Event } from 'electron';
 import { cache, general, workspace, Project } from '@/store';
 import { toTickTime, allKeys, Keys } from '@/utils';
 import Transport from '@/modules/audio/transport';
@@ -135,7 +136,7 @@ import PanelHeaders from '@/sections/PanelHeaders.vue';
 import ActivityBar from '@/sections/ActivityBar.vue';
 import StatusBar from '@/sections/StatusBar.vue';
 import Tone from 'tone';
-import { SideTab, FILTERS, ApplicationContext } from '@/constants';
+import { SideTab, FILTERS, ApplicationContext, APPLICATION_PATH, RECORDING_PATH } from '@/constants';
 import { PaletteItem } from '@/modules/palette';
 import { Watch } from '@/modules/update';
 import backend, { ProjectInfo } from '@/backend';
@@ -152,6 +153,11 @@ import { ScheduledSample } from '@/core/scheduled/sample';
 import { Automatable } from '@/core/automation';
 import * as Audio from '@/modules/audio';
 import { Ghost, ChunkGhost } from '@/core/ghosts/ghost';
+// import wav from 'node-wav';
+import audioBufferToWav from 'audiobuffer-to-wav';
+import path from 'path';
+
+const { app } = remote;
 
 @Component({
   components: {
@@ -163,6 +169,35 @@ import { Ghost, ChunkGhost } from '@/core/ghosts/ghost';
   },
 })
 export default class App extends Vue {
+
+  get themeCommands(): PaletteItem[] {
+    return Object.entries(theme.defaults).map(([name, theDefault]) => {
+      return {
+        text: name,
+        callback: () => {
+          workspace.setTheme(name);
+          theme.insertTheme(theDefault);
+        },
+      };
+    });
+  }
+
+  get getProjectsErrorMessage() {
+    return general.getProjectsErrorMessage;
+  }
+
+  get transport() {
+    if (workspace.applicationContext === 'pianoroll') {
+      const pattern = workspace.selectedPattern;
+      return pattern ? pattern.transport : null;
+    } else {
+      return general.project.master.transport;
+    }
+  }
+
+  get playlistPlay() {
+    return general.play && workspace.applicationContext === 'playlist';
+  }
   public general = general;
   public workspace = workspace;
   public ghosts: Ghost[] = [];
@@ -289,18 +324,6 @@ export default class App extends Vue {
     },
   ];
 
-  get themeCommands(): PaletteItem[] {
-    return Object.entries(theme.defaults).map(([name, theDefault]) => {
-      return {
-        text: name,
-        callback: () => {
-          workspace.setTheme(name);
-          theme.insertTheme(theDefault);
-        },
-      };
-    });
-  }
-
   public paletteCommands: PaletteItem[] = [
     {
       text: 'Open Piano Roll',
@@ -352,23 +375,6 @@ export default class App extends Vue {
   // for creating automation clips
   public masterStart = 0;
   public masterEnd = 0;
-
-  get getProjectsErrorMessage() {
-    return general.getProjectsErrorMessage;
-  }
-
-  get transport() {
-    if (workspace.applicationContext === 'pianoroll') {
-      const pattern = workspace.selectedPattern;
-      return pattern ? pattern.transport : null;
-    } else {
-      return general.project.master.transport;
-    }
-  }
-
-  get playlistPlay() {
-    return general.play && workspace.applicationContext === 'playlist';
-  }
 
   public async created() {
     // This is called before refresh / close
@@ -710,12 +716,15 @@ export default class App extends Vue {
 
     // create new ghost
     const ghost = new ChunkGhost(0, trackId);
+    this.ghosts.push(ghost);
 
     // record here
     const contraints: MediaStreamConstraints = {
       audio: true,
       video: false,
     };
+
+    // audio/wav
 
       // get user media
     navigator.getUserMedia(contraints, (stream) => {
@@ -726,25 +735,38 @@ export default class App extends Vue {
         this.mediaRecorder.start(1000);
 
         this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
-          const reader = new FileReader();
-
+          console.log(event.data);
           audioBlobs.push(event.data);
-
-          reader.onload = () => {
-            const buffer: any = reader.result;
-            Audio.context.decodeAudioData(buffer).then((decodedBuffer) => {
-              ghost.buffer = decodedBuffer;
-              this.ghosts.push(ghost);
-            });
-          };
-
-          const audioBlob = new Blob(audioBlobs);
-          reader.readAsArrayBuffer(audioBlob);
+          this.blobsToAudioBuffer(audioBlobs).then((buffer: AudioBuffer) => {
+            // console.log(buffer.getChannelData(0));
+            ghost.buffer = buffer;
+          });
         };
 
         this.mediaRecorder.onstop = () => {
-          // todo
-          // combine all of the audio into one buffer and export as a wav to documents/vusic/recordings
+            this.blobsToAudioBuffer(audioBlobs).then((buffer: AudioBuffer) => {
+              const wavData: ArrayBuffer = audioBufferToWav(
+                buffer,
+                { sampleRate: buffer.sampleRate, float: true, bitDepth: 32});
+
+              // fs2.mkdirRecursive(RECORDING_PATH);
+
+              // console.log(wavData);
+
+              const date = new Date();
+              const recordstr = 'recording-' + date.getFullYear() + '-'
+              + date.getMonth() + '-'
+              + date.getDay() + '-'
+              + date.getHours() +
+              + date.getMinutes() +
+              '.wav';
+
+              fs.writeFile(path.join(RECORDING_PATH, recordstr), new DataView(wavData), (err) => {
+                if (err) {
+                  this.$notify.error('' + err);
+                }
+              });
+            });
         };
 
       }, (error) => {
@@ -757,7 +779,24 @@ export default class App extends Vue {
     if (this.mediaRecorder != null) {
       this.mediaRecorder.stop();
       this.mediaRecorder = null;
+      this.ghosts = [];
+      // add the wav to the workspace
     }
+  }
+
+  private blobsToAudioBuffer(blobs: Blob[]): Promise<AudioBuffer> {
+    const reader = new FileReader();
+    return new Promise<AudioBuffer>((resolve, reject) => {
+      reader.onload = (event: FileReaderProgressEvent) => {
+        const buffer: any = reader.result;
+        console.log(buffer);
+        Audio.context.decodeAudioData(buffer).then((decodedBuffer) => {
+          resolve(decodedBuffer);
+        });
+      };
+      const audioBlob = new Blob(blobs);
+      reader.readAsArrayBuffer(audioBlob);
+    });
   }
 }
 </script>

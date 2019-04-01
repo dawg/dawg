@@ -1,5 +1,6 @@
 <template>
-    <waveform
+    <waveform 
+      class="ghost-wav"
       v-if="ghost.buffer"
       :buffer="ghost.buffer"
     ></waveform>
@@ -19,5 +20,6 @@ export default class ChunkGhost extends Vue {
 }
 </script>
 
-<style scoped>
+<style scoped lang="sass">
+
 </style>

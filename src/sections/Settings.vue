@@ -69,20 +69,6 @@ import { Nullable } from '@/utils';
 import { cache, workspace, general } from '@/store';
 import auth from '@/auth';
 
-// interface Navigator {
-//     getUserMedia(
-//         options: { video?: bool; audio?: bool; },
-//         success: (stream: any) => void,
-//         error?: (error: string) => void,
-//         ): void;
-// }
-
-// navigator.getUserMedia(
-//     {video: true, audio: true},
-//     function(stream) {  },
-//     function(error) {  },
-// );
-
 @Component
 export default class Settings extends Vue {
   public cache = cache;

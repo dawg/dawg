@@ -22,6 +22,7 @@
     "@types/cors": "^2.8.4",
     "@types/dom-mediacapture-record": "^1.0.1",
     "@types/tmp": "0.0.34",
+    "audiobuffer-to-wav": "^1.0.0",
     "cors": "^2.8.5",
     "electron-context-menu": "^0.10.0",
     "firebase": "^5.8.6",
