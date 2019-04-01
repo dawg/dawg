@@ -13,17 +13,26 @@ export default class Transcription extends Vue {
 
   public click() {
     if (this.samplePath) {
+      if (workspace.pythonPath === null) {
+        this.$notify.error('Python Path Not Found', {
+          detail: 'Please specify your python path in settings',
+        });
+      } else if (workspace.modelsPath == null) {
+        this.$notify.error('Models Path Not Found', {
+          detail: 'Please specify your the path to the models repo in settings',
+        });
+      } else {
+        const options: Options = {
+          mode: 'text',
+          pythonPath: workspace.pythonPath,
+          scriptPath: workspace.modelsPath,
+          args: [this.samplePath],
+        };
 
-      const options: Options = {
-        mode: 'text',
-        pythonPath: workspace.pythonPath === null ? undefined : workspace.pythonPath,
-        scriptPath: workspace.modelsPath === null ? undefined : workspace.modelsPath,
-        args: [this.samplePath],
-      };
-
-      PythonShell.run('vusic/transcription/scripts/infer.py', options, (err?: Error) => {
-        if (err) { throw err; }
-      });
+        PythonShell.run('vusic/transcription/scripts/infer.py', options, (err?: Error) => {
+          if (err) { throw err; }
+        });
+      }
     }
   }
 }

@@ -11,19 +11,28 @@ import {PythonShell, Options} from 'python-shell';
 export default class Separation extends Vue {
   @Prop({type: String}) public samplePath!: string;
 
-public click() {
+  public click() {
     if (this.samplePath) {
+      if (workspace.pythonPath === null) {
+        this.$notify.error('Python Path Not Found', {
+          detail: 'Please specify your python path in settings',
+        });
+      } else if (workspace.modelsPath == null) {
+        this.$notify.error('Models Path Not Found', {
+          detail: 'Please specify your the path to the models repo in settings',
+        });
+      } else {
+        const options: Options = {
+          mode: 'text',
+          pythonPath: workspace.pythonPath,
+          scriptPath: workspace.modelsPath,
+          args: [this.samplePath],
+        };
 
-      const options: Options = {
-        mode: 'text',
-        pythonPath: workspace.pythonPath === null ? undefined : workspace.pythonPath,
-        scriptPath: workspace.modelsPath === null ? undefined : workspace.modelsPath,
-        args: [this.samplePath],
-      };
-
-      PythonShell.run('vvusic/separation/scripts/separate.py', options, (err?: Error) => {
-        if (err) { throw err; }
-      });
+        PythonShell.run('vusic/separation/scripts/separate.py', options, (err?: Error) => {
+          if (err) { throw err; }
+        });
+      }
     }
   }
 }
