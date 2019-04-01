@@ -152,7 +152,6 @@ import { ScheduledSample } from '@/core/scheduled/sample';
 import { Automatable } from '@/core/automation';
 import * as Audio from '@/modules/audio';
 import { Ghost, ChunkGhost } from '@/core/ghosts/ghost';
-import { null } from 'io-ts';
 
 @Component({
   components: {
@@ -708,9 +707,9 @@ export default class App extends Vue {
   }
 
   public startRecording(trackId: number) {
-        // create new ghost
 
-    this.ghosts.push(new ChunkGhost(0, trackId));
+    // create new ghost
+    const ghost = new ChunkGhost(0, trackId);
 
     // record here
     const contraints: MediaStreamConstraints = {
@@ -721,20 +720,21 @@ export default class App extends Vue {
       // get user media
     navigator.getUserMedia(contraints, (stream) => {
 
-        const mediaRecorder = new MediaRecorder(stream);
+        this.mediaRecorder = new MediaRecorder(stream);
         const audioBlobs: Blob[] = [];
 
-        mediaRecorder.start(1000);
+        this.mediaRecorder.start(1000);
 
-        mediaRecorder.ondataavailable = (event: BlobEvent) => {
+        this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
           const reader = new FileReader();
 
           audioBlobs.push(event.data);
 
           reader.onload = () => {
-            const buffer = reader.result;
+            const buffer: any = reader.result;
             Audio.context.decodeAudioData(buffer).then((decodedBuffer) => {
-              console.log(decodedBuffer);
+              ghost.buffer = decodedBuffer;
+              this.ghosts.push(ghost);
             });
           };
 
@@ -742,7 +742,7 @@ export default class App extends Vue {
           reader.readAsArrayBuffer(audioBlob);
         };
 
-        mediaRecorder.onstop = () => {
+        this.mediaRecorder.onstop = () => {
           // todo
           // combine all of the audio into one buffer and export as a wav to documents/vusic/recordings
         };
@@ -759,64 +759,6 @@ export default class App extends Vue {
       this.mediaRecorder = null;
     }
   }
-
-  // public record(trackId: number) {
-
-  //   // todo get id of our current media device
-
-  //   // should we just use default if not?
-  //   // if (cache.microphoneIn === null) {
-  //   //   this.$notify.warning('No input device selected. Please select the input microphone in the settings.');
-  //   //   return;
-  //   // }
-
-  //   // create new ghost
-  //   this.ghosts.;
-
-  //   // record here
-  //   const contraints: MediaStreamConstraints = {
-  //     audio: true,
-  //     video: false,
-  //   };
-
-  //     // get user media
-  //   navigator.getUserMedia(contraints, (stream) => {
-
-  //       const mediaRecorder = new MediaRecorder(stream);
-  //       const audioChunks: Blob[] = [];
-
-  //       mediaRecorder.start(1000);
-
-  //       mediaRecorder.ondataavailable = (event: BlobEvent) => {
-  //         const reader = new FileReader();
-
-  //         audioChunks.push(event.data);
-
-  //         reader.onload = () => {
-  //           const buffer = reader.result;
-  //           Audio.context.decodeAudioData(buffer).then((decodedBuffer) => {
-  //             console.log(decodedBuffer);
-  //           });
-  //         };
-
-  //         const audioBlob = new Blob(audioChunks);
-  //         reader.readAsArrayBuffer(audioBlob);
-  //       };
-
-  //       setTimeout(() => {
-  //         mediaRecorder.stop();
-  //       }, 5000);
-
-  //       mediaRecorder.onstop = () => {
-  //         // todo
-  //         // combine all of the audio into one buffer and export as a wav to documents/vusic/recordings
-  //       };
-
-  //     }, (error) => {
-  //       return;
-  //     });
-  // }
-
 }
 </script>
 

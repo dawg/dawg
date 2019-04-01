@@ -309,6 +309,11 @@ declare module 'tone' {
     dispose(): this;
   }
 
+  class FFT extends AudioNode {
+    size: Number;
+    getValue(): Float32Array;
+  }
+
   class Filter extends Tone {
     constructor(freq?: any, type?: string, rolloff?: number); //TODO: Number || Object
     detune: Signal;
