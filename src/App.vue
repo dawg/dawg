@@ -546,7 +546,7 @@ export default class App extends Vue {
     if (workspace.applicationContext === 'pianoroll') {
       const pattern = workspace.selectedPattern;
       if (!pattern) {
-        this.$notify.info('Please select a Pattern.', {
+        this.$notify.error('Please select a Pattern.', {
           detail: 'Please create and select a Pattern first or switch the Playlist context.',
         });
         return;

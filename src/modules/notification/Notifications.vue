@@ -7,10 +7,10 @@
         :style="notifyWrapperStyle(item)"
         :key="item.id"
       >
-        <div :class="notifyIconClass(item)">
+        <div :class="notifyIconClass(item)" class="left">
           <icon :name="item.icon"></icon>
         </div>
-        <div :class="notifyBodyClass(item)">
+        <div :class="notifyBodyClass(item)" class="right">
           <div style="display: flex">
             <div
               v-if="item.title"
@@ -241,5 +241,14 @@ export default class Notifications extends Vue {
 .close-all {
   background-color: transparent!important;
   margin: 4px;
+}
+
+/* TODO a bit of hardcoding */
+.left {
+  width: 26px;
+}
+
+.right {
+  width: calc(100% - 26px);
 }
 </style>
