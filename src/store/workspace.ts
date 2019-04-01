@@ -33,6 +33,8 @@ export class Specific extends VuexModule {
   @io.auto({ optional: true }) public sideBarSize = 250;
   @io.auto({ optional: true }) public panelsSize = 250;
   @io.auto({ optional: true }) public themeName: string | null = null;
+  @io.auto({ optional: true }) public pythonPath: string | undefined = undefined;
+  @io.auto({ optional: true }) public modelsPath: string | undefined = undefined;
 
   public projectId: string | null = null;
 
@@ -196,10 +198,19 @@ export class Specific extends VuexModule {
   }
 
   @Mutation
+  public setPythonPath(pythonPath: string) {
+    this.pythonPath = pythonPath;
+  }
+
+  @Mutation
+  public setModelsPath(modelsPath: string) {
+    this.modelsPath = modelsPath;
+  }
+
+  @Mutation
   private resetSpecific(payload: Specific) {
     Object.assign(this, payload);
   }
-
 }
 
 export default getModule(Specific);

@@ -4,6 +4,7 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
+import { workspace } from '@/store';
 
 @Component
 export default class Separation extends Vue {
@@ -11,7 +12,7 @@ export default class Separation extends Vue {
 
   public click() {
     if (this.samplePath) {
-      console.log(this.samplePath);
+      console.log(workspace.pythonPath);
     }
   }
 }
