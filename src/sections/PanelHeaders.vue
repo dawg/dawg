@@ -136,7 +136,10 @@ export default class PanelHeaders extends Vue {
       icon: 'fiber_manual_record',
       tooltip: general.isRecording ? 'Stop Recording' : 'Start Recording',
       callback: general.isRecording ? this.stopRecording : this.startRecording,
-      props: {color: general.isRecording ? this.$theme.error : this.$theme.foreground},
+      props: {
+        color: general.isRecording ? this.$theme.error : this.$theme.foreground,
+        size: '14px',
+      },
     }];
   }
 

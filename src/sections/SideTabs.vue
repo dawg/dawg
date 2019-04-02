@@ -28,6 +28,7 @@
             :folders="cache.folders"
             @open-explorer="openFolder"
             @open-sample="openSample"
+            @remove="cache.removeFolder"
           ></smart-file-explorer>
         </side-bar>
         <side-bar :name="tabs.audioFiles" icon="queue_music">

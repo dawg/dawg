@@ -2,7 +2,7 @@ import Vue from 'vue';
 import { Theme, Classes } from '@/modules/theme/types';
 import tinycolor from 'tinycolor2';
 import { defaults } from './defaults';
-import Component from 'vue-class-component';
+import { Component } from 'vue-property-decorator';
 
 export interface ThemeAugmentation {
   $theme: Theme;

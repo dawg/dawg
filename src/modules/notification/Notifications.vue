@@ -23,6 +23,7 @@
               :class="buttonClass(item)"
               @click="destroyAll"
               flat
+              style="margin-top: -2px"
               small
             >
               Close All

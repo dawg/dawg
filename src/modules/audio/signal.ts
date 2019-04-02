@@ -3,7 +3,7 @@ import Tone from 'tone';
 export class Signal {
   public raw = 0;
 
-  constructor(public signal: Tone.Signal) {
+  constructor(public signal: Tone.Signal, public minValue: number, public maxValue: number) {
     this.raw = signal.value;
   }
 
@@ -14,14 +14,6 @@ export class Signal {
   set value(value: number) {
     this.signal.value = value;
     this.raw = value;
-  }
-
-  get maxValue() {
-    return this.signal.maxValue;
-  }
-
-  get minValue() {
-    return this.signal.minValue;
   }
 
   public linearRampToValueAtTime(value: number, time: number) {

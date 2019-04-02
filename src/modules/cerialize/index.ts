@@ -262,7 +262,11 @@ function serializedObject(instance: any, type?: Serializer | Constructor<any>): 
       throw Error(`${metadata.key} does not exist.`);
     }
 
-    json[metadata.key] = Serialize(instance[metadata.key], undefined, metadata);
+    try {
+      json[metadata.key] = Serialize(instance[metadata.key], undefined, metadata);
+    } catch (e) {
+      throw Error(`${metadata.key} -> ${e.message}`);
+    }
   }
 
   return json;

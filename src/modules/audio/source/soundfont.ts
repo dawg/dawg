@@ -24,7 +24,7 @@ export class Soundfont implements Source<SoundfontOptions> {
       return null;
     }
   }
-  private playingNotes: {[key: string]: soundfonts.Player} = {};
+  private playingNotes: { [key: string]: soundfonts.Player } = {};
 
   constructor(private player: soundfonts.Player) {}
   public triggerAttackRelease(note: string, duration: Time, time: ContextTime, velocity?: number) {
@@ -36,7 +36,7 @@ export class Soundfont implements Source<SoundfontOptions> {
     return this;
   }
 
-  public triggerAttack(note: string, velocity?: number): this {
+  public triggerAttack(note: string, time?: Time, velocity?: number): this {
     this.playingNotes[note] = this.player.play(note, undefined, {gain: velocity});
     return this;
   }
