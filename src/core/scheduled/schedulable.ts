@@ -39,7 +39,7 @@ export abstract class Schedulable {
     this.row = i.row;
     this.time = i.time;
     this.beats = i.duration;
-    this.duration = i.duration; // TODO(jacob)
+    this.duration = i.duration;
   }
 
   /**
@@ -51,6 +51,7 @@ export abstract class Schedulable {
 
   set duration(value: number) {
     this.beats = value;
+    this.updateDuration(value);
 
     if (this.transport && this.eventId) {
       const event = this.transport.get(this.eventId);
@@ -61,8 +62,6 @@ export abstract class Schedulable {
 
       event.duration = new Tone.Ticks(toTickTime(value));
     }
-
-    this.updateDuration(value);
   }
 
   get tickTime() {

@@ -173,6 +173,10 @@ export default class Notifications extends Vue {
   }
 
   public destroy(i: number) {
+    if (this.list[i] === undefined) {
+      return;
+    }
+
     clearTimeout(this.timers[this.list[i].id]);
     this.list.splice(i, 1);
   }

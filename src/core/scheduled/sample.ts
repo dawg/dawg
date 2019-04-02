@@ -60,7 +60,7 @@ export class ScheduledSample extends Schedulable implements Serializable<ISchedu
 
   protected updateDuration(duration: number) {
     if (this.sample && this.sample.player) {
-      this.sample.player.setDuration(toTickTime(this.duration));
+      this.sample.player.setDuration(toTickTime(duration));
     }
   }
 

@@ -13,6 +13,7 @@ import { ScheduledSample, Sample } from '@/core';
 import { Extensions, ExtensionData } from '@/modules/explorer/types';
 import parser, { INotes } from '@/midi-parser';
 import fs from 'mz/fs';
+import { general } from '../store';
 
 @Component
 export default class SmartFileExplorer extends Vue {
@@ -64,7 +65,7 @@ export default class SmartFileExplorer extends Vue {
       view[i] = value;
     });
 
-    return parser.parse(ab);
+    return parser.parse(ab, general.project.bpm);
   }
 
   public openWav(sample: Sample) {

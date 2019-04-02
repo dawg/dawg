@@ -80,7 +80,7 @@ export class General extends VuexModule {
 
       // Only set this if we've actually opened a project successfully
       if (cache.openedFile === path) {
-        // This means that we are opening the cache file
+        // This means that we are opening the file path in the cache
         this.setOpenedFile(path);
       }
 

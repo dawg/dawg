@@ -388,7 +388,6 @@ export default class Split extends Vue {
       return;
     }
 
-    // console.log(this.parent.direction, this.initial);
     switch (this.parent.direction) {
       case 'horizontal':
         // TODO This is work around for my particular situation
