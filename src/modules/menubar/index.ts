@@ -107,7 +107,12 @@ export class MenuBar extends Vue {
       });
     });
 
-    submenus.push(h('div', { style: { flex: '1' } }));
+    // tslint:disable-next-line:max-line-length
+    // See https://stackoverflow.com/questions/44818508/how-do-i-move-a-frameless-window-in-electron-without-using-webkit-app-region
+    // This makes it a window drag area
+    submenus.push(h('div', {
+      style: { 'flex': '1', '-webkit-app-region': 'drag' },
+    }));
 
     this.icons.forEach(([icon, event]) => {
       submenus.push(h(IconItem, {

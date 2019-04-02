@@ -9,7 +9,7 @@
       :index="i"
       :bus="bus"
       :extensions="extensions"
-      @contextmenu="context($event, project[0])"
+      @contextmenu.native="context(project[0], $event)"
     ></tree>
   </div>
   <div v-else class="button-wrapper">
@@ -115,14 +115,10 @@ export default class FileEplorer extends Vue {
       items: [
         {
           text: 'Remove Folder From Workspace',
-          callback: () => this.remove(folder),
+          callback: () => this.$emit('remove', folder),
         },
       ],
     });
-  }
-
-  public remove(folder: string) {
-    this.$emit('remove', folder);
   }
 
   public mounted() {

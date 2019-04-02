@@ -10,6 +10,7 @@ import { Project } from './project';
 import { remote } from 'electron';
 import cache from './cache';
 import { Sample } from '@/core';
+import { DG_EXTENSION } from '@/constants';
 
 export interface InitializationError {
   type: 'error';
@@ -38,6 +39,7 @@ export class General extends VuexModule {
   public getProjectsErrorMessage: string | null = null;
   public user: User | null = null;
   public isRecordingMicrophone = false;
+  public isRecording: boolean = false;
 
   /**
    * The sample that is currently opened in the sample panel.
@@ -60,22 +62,27 @@ export class General extends VuexModule {
         continue;
       }
 
+      const result = await Project.fromFile(path);
+
+      // We always complete the following action, even if there is an error
       if (cache.backupTempPath === path) {
         // Always reset to null
         fs.unlink(path);
         cache.setBackupTempPath(null);
-      } else {
-        // This means that we are opening the cache file
-        this.setOpenedFile(path);
       }
 
-      const result = await Project.fromFile(path);
       if (result.type === 'error') {
         return {
           type: 'error',
           message: result.message,
           project: await Project.newProject(),
         };
+      }
+
+      // Only set this if we've actually opened a project successfully
+      if (cache.openedFile === path) {
+        // This means that we are opening the cache file
+        this.setOpenedFile(path);
       }
 
       return {
@@ -109,15 +116,19 @@ export class General extends VuexModule {
         return;
       }
 
+      if (!openedFile.endsWith(DG_EXTENSION)) {
+        openedFile = openedFile + DG_EXTENSION;
+      }
+
+      // Make sure we set the cache and the general
+      // The cache is what is written to the filesystem
+      // and the general is the file that is currently opened
       cache.setOpenedFile(openedFile);
+      this.setOpenedFile(openedFile);
 
       // This should never be true but we need to check
       if (!cache.openedFile) {
         return;
-      }
-
-      if (!cache.openedFile.endsWith('.dg')) {
-        cache.setOpenedFile(cache.openedFile + '.dg');
       }
     }
 
@@ -177,6 +188,11 @@ export class General extends VuexModule {
   @Mutation
   public setRecordingMicrophone(recording: boolean) {
     this.isRecordingMicrophone = recording;
+  }
+
+  @Mutation
+  public toggleRecording() {
+    this.isRecording = !this.isRecording;
   }
 
   @Mutation

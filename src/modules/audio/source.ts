@@ -5,7 +5,7 @@ import Transport from './transport';
 interface Event {
   state: Tone.TransportState;
   time: Tone.Time;
-  duration?: Time;
+  duration: Time;
   offset?: Time;
 }
 
@@ -69,7 +69,7 @@ export abstract class Source extends Tone.AudioNode {
     return this;
   }
 
-  public sync(transport: Transport, time: TransportTime, offset?: Time, duration?: Time) {
+  public sync(transport: Transport, time: TransportTime, offset: Time, duration: Time) {
     this.syncedTransport = transport;
 
     transport.on('start', this.syncedStart.bind(this));
@@ -91,7 +91,7 @@ export abstract class Source extends Tone.AudioNode {
     event.duration = duration;
 
     const id = this.syncedTransport.schedule((t: number) => {
-      this._start(t, offset, duration);
+      this._start(t, event.offset, event.duration);
     }, time);
     this.scheduled.push(id);
 
@@ -102,6 +102,7 @@ export abstract class Source extends Tone.AudioNode {
 
     return id;
   }
+
   public stop(time?: Time) {
     if (time === undefined && this.syncedTransport) {
       time = this.syncedTransport.seconds;
@@ -171,6 +172,12 @@ export abstract class Source extends Tone.AudioNode {
     this.syncedTransport = null;
     this._state.cancel(0);
     return this;
+  }
+
+  public setDuration(duration: Time) {
+    this._state.forEach((event) => {
+      event.duration = duration;
+    });
   }
 
   public dispose() {

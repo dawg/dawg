@@ -32,6 +32,28 @@
       </v-list-tile>
 
       <v-list-tile>
+        <v-list-tile-action class="action">
+          <v-text-field 
+            class="text-field"
+            label="Python Path"
+            :python-path="workspace.pythonPath"
+            @input="workspace.setPythonPath"
+          ></v-text-field>
+        </v-list-tile-action>
+      </v-list-tile>
+
+      <v-list-tile>
+        <v-list-tile-action class="action">
+          <v-text-field 
+            class="text-field"
+            label="Models Path"
+            :models-path="workspace.modelsPath"
+            @input="workspace.setModelsPath"
+          ></v-text-field>
+        </v-list-tile-action>
+      </v-list-tile>
+
+      <v-list-tile>
         <v-list-tile-title>Cloud Backup</v-list-tile-title>
         <v-list-tile-action>
           <v-switch 

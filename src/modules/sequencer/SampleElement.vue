@@ -36,7 +36,7 @@ export default class SampleElement extends Vue {
   }
 
   get bufferWidth() {
-    return this.element.duration * this.pxPerBeat;
+    return this.element.sample.beats * this.pxPerBeat;
   }
 }
 </script>

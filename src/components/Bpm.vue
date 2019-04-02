@@ -16,7 +16,7 @@ export default class Bpm extends Mixins(Draggable) {
   public cursor = 'ns-resize';
 
   public move(e: Event, { changeY }: { changeY: number }) {
-    this.$emit('input', this.value - changeY);
+    this.$emit('input', Math.max(0, this.value - changeY));
   }
 }
 </script>

@@ -35,7 +35,7 @@ export abstract class Instrument<T, V extends string> {
 
   public channel: number | null;
 
-  protected source: Audio.Source<T>;
+  protected source: Audio.Source<T> | null;
   private destination: Tone.AudioNode | null = Tone.Master;
   private muted: boolean;
   // tslint:disable-next-line:member-ordering
@@ -43,21 +43,25 @@ export abstract class Instrument<T, V extends string> {
   private connected = true;
 
   // tslint:disable-next-line:member-ordering
-  public pan = new Audio.Signal(this.panner.pan);
+  public pan = new Audio.Signal(this.panner.pan, -1, 1);
 
   // TODO for the gain
   private gainNode = new Tone.Gain().connect(this.panner);
 
   // tslint:disable-next-line:member-ordering
-  public volume = new Audio.Signal(this.gainNode.gain);
+  public volume = new Audio.Signal(this.gainNode.gain, 0, 1);
 
-  constructor(source: Audio.Source<T>, destination: Tone.AudioNode, i: IInstrument) {
-    this.source = source.connect(this.gainNode);
+  constructor(source: Audio.Source<T> | null, destination: Tone.AudioNode, i: IInstrument) {
+    this.source = source;
+    if (source) {
+      source.connect(this.gainNode);
+    }
+
     this.name = i.name;
     this.id = i.id || uuid.v4();
     this.channel = i.channel === undefined ? null : i.channel;
     this.muted = !!i.mute;
-    this.mute = !!i.mute; // TODO(jacob)
+    this.mute = !!i.mute;
     this.pan.value = i.pan || 0;
     this.volume.value = i.volume === undefined ? 0.8 : i.volume;
     this.connect(destination);
@@ -73,15 +77,21 @@ export abstract class Instrument<T, V extends string> {
   }
 
   public triggerAttackRelease(note: string, duration: Audio.Time, time: number, velocity?: number) {
-    this.source.triggerAttackRelease(note, duration, time, velocity);
+    if (this.source) {
+      this.source.triggerAttackRelease(note, duration, time, velocity);
+    }
   }
 
   public triggerRelease(note: string) {
-    this.source.triggerRelease(note);
+    if (this.source) {
+      this.source.triggerRelease(note);
+    }
   }
 
-  public triggerAttack(note: string) {
-    this.source.triggerAttack(note);
+  public triggerAttack(note: string, velocity?: number) {
+    if (this.source) {
+      this.source.triggerAttack(note, undefined, velocity);
+    }
   }
 
   public connect(effect: Tone.AudioNode) {
@@ -98,7 +108,9 @@ export abstract class Instrument<T, V extends string> {
   }
 
   public set<K extends keyof T>(o: { key: K, value: T[K] }) {
-    this.source.set(o);
+    if (this.source) {
+      this.source.set(o);
+    }
   }
 
   public dispose() {
@@ -108,10 +120,22 @@ export abstract class Instrument<T, V extends string> {
     disposeHelp(this.pan);
   }
 
-  protected setSource(source: Audio.Source<T>) {
-    this.source.disconnect(this.gainNode);
+  /**
+   * Called when online status is returned. This can be removed when soundfonts are loaded locally.
+   */
+  public online() {
+    // By default, do nothing
+  }
+
+  protected setSource(source: Audio.Source<T> | null) {
+    if (this.source) {
+      this.source.disconnect(this.gainNode);
+    }
+
     this.source = source;
-    this.source.connect(this.gainNode);
+    if (this.source) {
+      this.source.connect(this.gainNode);
+    }
   }
 
   private checkConnection() {

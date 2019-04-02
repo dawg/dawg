@@ -24,8 +24,7 @@ export type Soundfonts = ISoundfont['soundfont'];
 
 export class Soundfont extends Instrument<Audio.SoundfontOptions, Soundfonts> implements Serializable<ISoundfont> {
   public static async create(soundfont: Soundfonts, name: string) {
-    const player = await soundfonts.instrument(Audio.context, soundfont);
-    return new Soundfont(new Audio.Soundfont(player), Tone.Master, {
+    return new Soundfont(await Audio.Soundfont.load(soundfont), Tone.Master, {
       soundfont,
       instrument: 'soundfont',
       name,
@@ -36,7 +35,7 @@ export class Soundfont extends Instrument<Audio.SoundfontOptions, Soundfonts> im
 
   private soundfont: Soundfonts;
 
-  constructor(player: Audio.Soundfont, destination: Tone.AudioNode, i: ISoundfont) {
+  constructor(player: Audio.Soundfont | null, destination: Tone.AudioNode, i: ISoundfont) {
     super(player, destination, i);
     this.soundfont = i.soundfont;
   }
@@ -63,8 +62,13 @@ export class Soundfont extends Instrument<Audio.SoundfontOptions, Soundfonts> im
     };
   }
 
+  public online() {
+    if (this.source === null) {
+      this.updateSource();
+    }
+  }
+
   private async updateSource() {
-    const player = await soundfonts.instrument(Audio.context, this.soundfont);
-    this.setSource(new Audio.Soundfont(player));
+    this.setSource(await Audio.Soundfont.load(this.soundfont));
   }
 }

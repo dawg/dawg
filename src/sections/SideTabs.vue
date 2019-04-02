@@ -28,6 +28,7 @@
             :folders="cache.folders"
             @open-explorer="openFolder"
             @open-sample="openSample"
+            @remove="cache.removeFolder"
           ></smart-file-explorer>
         </side-bar>
         <side-bar :name="tabs.audioFiles" icon="queue_music">
@@ -41,7 +42,11 @@
             @remove="(i) => general.project.removePattern(i)"
           ></patterns>
         </side-bar>
-        <side-bar :name="tabs.automationClips" icon="share">
+        <side-bar 
+          :name="tabs.automationClips" 
+          icon="share"
+          :icon-props="{ style: 'transform: rotate(-90deg)' }"
+        >
           <automation-clips></automation-clips>
         </side-bar>
       </base-tabs>

@@ -65,6 +65,7 @@
           :row-height="rowHeight"
           :progress="progress"
           :name="name"
+          :display-loop-end.sync="displayLoopEnd"
           v-bind="$attrs"
           v-on="$listeners"
         ></sequencer-grid>
@@ -98,6 +99,7 @@ export default class Sequencer extends Vue {
   @Prop({ type: Array, required: true }) public elements!: Schedulable[];
   @Prop({ type: Boolean, default: false }) public play!: boolean;
   @Prop({ type: Object, required: true }) public transport!: Transport;
+  @Prop({ type: Boolean, default: false }) public isRecording!: boolean;
 
   /**
    * Set this if you want to control the end of the loop. This will be ignored if set to 0.
@@ -117,6 +119,7 @@ export default class Sequencer extends Vue {
   public scrollLeft = 0;
   public progress = 0;
   public sequencerLoopEnd = 0;
+  public displayLoopEnd = 0;
 
   // The loop start/end set by the user using the timeline.
   public userLoopStart: null | number = null;
@@ -155,9 +158,14 @@ export default class Sequencer extends Vue {
       return this.userLoopEnd;
     }
 
+    if (this.isRecording) {
+      return this.displayLoopEnd;
+    }
+
     if (this.setLoopEnd) {
       return this.setLoopEnd;
     }
+
 
     return this.sequencerLoopEnd;
   }
@@ -210,7 +218,8 @@ export default class Sequencer extends Vue {
   @Watch<Sequencer>('loopEnd', { immediate: true })
   public onLoopEndChange() {
     this.$log.debug(`${this.name} -> loodEnd being set to ${this.loopEnd}`);
-    this.transport.loopEnd = toTickTime(this.loopEnd);
+    const time = toTickTime(this.loopEnd);
+    this.transport.loopEnd = new Tone.TransportTime(time).toSeconds();
     this.$update('end', this.loopEnd);
   }
 
@@ -218,7 +227,7 @@ export default class Sequencer extends Vue {
   public onLoopStartChange() {
     this.$log.debug(`loopStart being set to ${this.loopStart}`);
     const time = toTickTime(this.loopStart);
-    this.transport.loopStart = time;
+    this.transport.loopStart = new Tone.TransportTime(time).toSeconds();
     this.$update('start', this.loopStart);
   }
 

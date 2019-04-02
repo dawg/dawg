@@ -6,6 +6,7 @@ import { toTickTime } from '@/utils';
 import { Serializable } from './serializable';
 import { Channel } from './channel';
 import { Instrument } from './instrument/instrument';
+import { Beats } from './types';
 
 export const AutomationType = t.type({
   context: t.union([t.literal('channel'), t.literal('instrument')]),
@@ -21,7 +22,7 @@ export type ClipContext = IAutomation['context'];
 export type Automatable = Channel | Instrument<any, any>;
 
 export class AutomationClip implements Serializable<IAutomation> {
-  public static create(length: number, signal: Audio.Signal, context: ClipContext, id: string) {
+  public static create(length: number, signal: Audio.Signal, context: ClipContext, id: string, attr: string) {
     const ac = new AutomationClip(signal, {
       id: uuid.v4(),
       context,
@@ -36,7 +37,7 @@ export class AutomationClip implements Serializable<IAutomation> {
           value: signal.value,
         },
       ],
-      attr: '', // TODO(jacob)
+      attr,
     });
 
     return ac;
@@ -48,8 +49,8 @@ export class AutomationClip implements Serializable<IAutomation> {
   public attr: string;
   public id: string;
 
-  public signal: Audio.Signal;
   public control: Audio.Controller;
+  private signal: Audio.Signal;
 
   constructor(signal: Audio.Signal, i: IAutomation) {
     this.context = i.context;
@@ -73,10 +74,24 @@ export class AutomationClip implements Serializable<IAutomation> {
     return this.points[this.points.length - 1].time;
   }
 
-  public change(index: number, value: number) {
+  get minValue() {
+    return this.signal.minValue;
+  }
+
+  get maxValue() {
+    return this.signal.maxValue;
+  }
+
+  public setValue(index: number, value: number) {
     const point = this.points[index];
     this.control.change(point.eventId, value);
     this.points[index].value = value;
+  }
+
+  public setTime(index: number, time: Beats) {
+    const point = this.points[index];
+    this.control.setTime(point.eventId, toTickTime(time));
+    this.points[index].time = time;
   }
 
   public remove(i: number) {
@@ -85,7 +100,7 @@ export class AutomationClip implements Serializable<IAutomation> {
     this.points.splice(i, 1);
   }
 
-  public add(time: number, value: number) {
+  public add(time: Beats, value: number) {
     this.points.push(this.schedule({ time, value }));
   }
 

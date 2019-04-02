@@ -89,8 +89,8 @@
           </split>
         </split>
       </split>
-      <split :initial="20" fixed>
-        <status-bar></status-bar>
+      <split :initial="25" fixed>
+        <status-bar :height="25"></status-bar>
       </split>
     </split>
     <notifications></notifications>
@@ -156,8 +156,7 @@ import * as Audio from '@/modules/audio';
 import { Ghost, ChunkGhost } from '@/core/ghosts/ghost';
 import audioBufferToWav from 'audiobuffer-to-wav';
 import path from 'path';
-
-const { app } = remote;
+import { win32 } from 'path';
 
 @Component({
   components: {
@@ -203,7 +202,7 @@ export default class App extends Vue {
   public ghosts: Ghost[] = [];
   public mediaRecorder: MediaRecorder | null = null;
 
-  public menuItems: {[k: string]: PaletteItem} = {
+  public menuItems = {
     save: {
       text: 'Save',
       shortcut: ['Ctrl', 'S'],
@@ -276,15 +275,6 @@ export default class App extends Vue {
       ],
     },
     {
-      name: 'Edit',
-      items: [
-        this.menuItems.cut,
-        this.menuItems.copy,
-        this.menuItems.paste,
-        this.menuItems.delete,
-      ],
-    },
-    {
       name: 'View',
       items: [
         this.menuItems.palette,
@@ -339,11 +329,6 @@ export default class App extends Vue {
       text: 'Open Mixer',
       shortcut: ['Ctrl', 'M'],
       callback: () => workspace.setOpenedPanel('Mixer'),
-    },
-    {
-      text: 'New Synthesizer',
-      shortcut: ['Ctrl', 'N'],
-      callback: () => general.project.addInstrument('Synth'),
     },
     {
       text: 'Play/Pause',
@@ -404,7 +389,7 @@ export default class App extends Vue {
 
       const result = await general.loadProject();
       if (result.type === 'error') {
-        this.$notify.info('Unable to load project.', { detail: result.message });
+        this.$notify.info('Unable to load project.', { detail: result.message, duration: Infinity });
       }
 
       general.setProject(result.project);
@@ -423,12 +408,41 @@ export default class App extends Vue {
 
   public mounted() {
     this.checkMaximize();
+
+    window.addEventListener('offline', this.offline);
+    window.addEventListener('online', this.online);
+
+    // The offline event is not fired if initially disconnected
+    if (!navigator.onLine) {
+      this.offline();
+    }
   }
 
   public destroyed() {
     const w = remote.getCurrentWindow();
     w.removeListener('maximize', this.maximize);
     w.removeListener('unmaximize', this.unmaximize);
+
+    window.removeEventListener('offline', this.offline);
+    window.removeEventListener('online', this.online);
+  }
+
+  public online() {
+    // Ok so this delay exists because we can still get connection errors even once we get back online
+    // 8000 was just a random number, but it works. It's probably longer than necessary
+    setTimeout(() => {
+      general.project.instruments.forEach((instrument) => {
+        this.$notify.info('Connection has been restored');
+        instrument.online();
+      });
+    }, 8000);
+  }
+
+  public offline() {
+    this.$notify.warning('You are disconnected', {
+      detail: 'Soundfonts and cloud syncing will not work as expected.',
+      duration: 20000,
+    });
   }
 
   public openPalette() {
@@ -544,7 +558,7 @@ export default class App extends Vue {
     if (workspace.applicationContext === 'pianoroll') {
       const pattern = workspace.selectedPattern;
       if (!pattern) {
-        this.$notify.info('Please select a Pattern.', {
+        this.$notify.error('Please select a Pattern.', {
           detail: 'Please create and select a Pattern first or switch the Playlist context.',
         });
         return;
@@ -569,7 +583,7 @@ export default class App extends Vue {
    * Whenever we add a sample, if it hasn't been imported before, add it the the list of project samples.
    */
   public checkPrototype(prototype: ScheduledPattern | ScheduledSample) {
-    if (!(prototype instanceof ScheduledSample)) {
+    if (prototype.component !== 'sample-element') {
       return;
     }
 
@@ -582,7 +596,7 @@ export default class App extends Vue {
     general.project.addSample(sample);
   }
 
-  public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T) {
+  public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T & string) {
     const added = await general.project.createAutomationClip({
       automatable,
       key,

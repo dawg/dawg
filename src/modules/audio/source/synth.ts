@@ -1,5 +1,6 @@
 import Tone from 'tone';
 import { Source } from '@/modules/audio/source/source';
+import { Time } from '../types';
 
 export interface SynthOptions {
   envelope: {
@@ -19,5 +20,9 @@ export interface SynthOptions {
 export class Synth extends Tone.PolySynth implements Source<SynthOptions> {
   public set<K extends keyof SynthOptions>(o: { key: K, value: SynthOptions[K] }) {
     super.set({ [o.key]: o.value });
+  }
+
+  public triggerAttack(note: string, time?: Time, velocity?: number) {
+    return super.triggerAttack(note, time, velocity);
   }
 }

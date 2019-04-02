@@ -152,6 +152,10 @@ export class Draggable extends Vue {
   }
 
   public destroyed() {
+    // Always reset when destroyed
+    // We can get into weird states where the component is destroyed while hovering
+    this.afterHover();
+
     const el = this.$refs.drag;
     if (!el) { return; }
     el.removeEventListener('mousedown', this.addListeners);

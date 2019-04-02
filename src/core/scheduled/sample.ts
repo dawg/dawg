@@ -3,7 +3,7 @@ import * as Audio from '@/modules/audio';
 import { SchedulableType, Schedulable } from './schedulable';
 import { Serializable } from '../serializable';
 import { Sample } from '@/core/sample';
-import { literal } from '@/utils';
+import { literal, toTickTime } from '@/utils';
 
 export const ScheduledSampleType = t.intersection([
   t.type({
@@ -58,11 +58,18 @@ export class ScheduledSample extends Schedulable implements Serializable<ISchedu
     };
   }
 
+  protected updateDuration(duration: number) {
+    if (this.sample && this.sample.player) {
+      this.sample.player.setDuration(toTickTime(this.duration));
+    }
+  }
+
   protected add(transport: Audio.Transport) {
     if (!this.sample.player) {
       return null;
     }
 
-    return this.sample.player.sync(transport, this.tickTime, undefined, this.duration);
+    const duration = toTickTime(this.duration);
+    return this.sample.player.sync(transport, this.tickTime, 0, duration);
   }
 }

@@ -48,12 +48,20 @@ export class Cache extends VuexModule {
   @Action
   public async fromCacheFolder() {
     if (!(await fs.exists(CACHE_PATH))) {
-      await this.write();
+      await this.writeCache();
     }
 
-    // TODO Error handling
     const contents = (await fs.readFile(CACHE_PATH)).toString();
-    const json = JSON.parse(contents);
+
+    let json;
+    try {
+      json = JSON.parse(contents);
+    } catch (e) {
+      // Write current cache to the file if we can't parse the contents
+      this.writeCache();
+      return;
+    }
+
     const decoded = io.deserialize(json, Cache);
     this.reset(decoded);
   }
@@ -66,21 +74,19 @@ export class Cache extends VuexModule {
   @Action
   public setOpenedFile(openedFile: string | null) {
     this.set({ key: 'openedFile', value: openedFile });
-    // This write call actually works.
-    // I was worried it wouldn't work since this method is not async.
-    return this.write();
+    return this.writeCache();
   }
 
   @Action
   public setBackupTempPath(tempPath: string | null) {
     this.set({ key: 'backupTempPath', value: tempPath });
-    this.write();
+    this.writeCache();
   }
 
   @Action
   public setFolders(folders: string[]) {
     this.set({ key: 'folders', value: folders });
-    return this.write();
+    return this.writeCache();
   }
 
   @Action
@@ -95,11 +101,20 @@ export class Cache extends VuexModule {
     }
 
     this.set({ key: 'folders', value: [...this.folders, folder] });
-    return this.write();
+    return this.writeCache();
   }
 
   @Action
-  public async write() {
+  public removeFolder(target: string) {
+    this.set({ key: 'folders', value: this.folders.filter((folder) => folder !== target) });
+    return this.writeCache();
+  }
+
+  /**
+   * This used to be called `write`, but somehow the `write` method in `workspace` was being called...
+   */
+  @Action
+  public async writeCache() {
     const c = io.serialize(this, Cache);
     const dir = path.dirname(CACHE_PATH);
     if (!await fs.exists(dir)) {

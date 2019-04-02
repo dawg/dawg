@@ -10,6 +10,7 @@ import store from '@/store/store';
 import { APPLICATION_PATH, SideTab, PanelNames, ApplicationContext } from '@/constants';
 import { Score, Pattern } from '@/core';
 import general from './general';
+import { makeLookup } from '@/modules/utils';
 
 const PROJECT_CACHE_PATH = path.join(APPLICATION_PATH, 'project-cache.json');
 
@@ -32,7 +33,9 @@ export class Specific extends VuexModule {
   @io.auto({ optional: true }) public playlistBeatWidth = 80;
   @io.auto({ optional: true }) public sideBarSize = 250;
   @io.auto({ optional: true }) public panelsSize = 250;
-  @io.auto({ optional: true }) public themeName: string | null = null;
+  @io.auto({ nullable: true }) public themeName: string | null = null;
+  @io.auto({ nullable: true }) public pythonPath: string | null = null;
+  @io.auto({ nullable: true }) public modelsPath: string | null = null;
 
   public projectId: string | null = null;
 
@@ -40,10 +43,14 @@ export class Specific extends VuexModule {
     super(module || {});
   }
 
+  get patternLookup() {
+    return makeLookup(general.project.patterns);
+  }
+
   get selectedPattern() {
     if (!this.selectedPatternId) { return null; }
-    if (!(this.selectedPatternId in general.project.patternLookup)) { return null; }
-    return general.project.patternLookup[this.selectedPatternId];
+    if (!(this.selectedPatternId in this.patternLookup)) { return null; }
+    return this.patternLookup[this.selectedPatternId];
   }
 
   get selectedScore() {
@@ -196,10 +203,19 @@ export class Specific extends VuexModule {
   }
 
   @Mutation
+  public setPythonPath(pythonPath: string) {
+    this.pythonPath = pythonPath;
+  }
+
+  @Mutation
+  public setModelsPath(modelsPath: string) {
+    this.modelsPath = modelsPath;
+  }
+
+  @Mutation
   private resetSpecific(payload: Specific) {
     Object.assign(this, payload);
   }
-
 }
 
 export default getModule(Specific);

@@ -191,7 +191,7 @@ export default class Transport extends Tone.Emitter<Events> {
     return new Tone.Ticks(this._loopStart).toSeconds();
   }
 
-  set loopStart(loopStart: number | string) {
+  set loopStart(loopStart: number) {
     this._loopStart = this.toTicks(loopStart);
     this.seconds = this.toSeconds(loopStart);
   }
@@ -210,7 +210,7 @@ export default class Transport extends Tone.Emitter<Events> {
     return new Tone.Ticks(this._loopEnd).toSeconds();
   }
 
-  set loopEnd(loopEnd: string | number) {
+  set loopEnd(loopEnd: number) {
     this._loopEnd = this.toTicks(loopEnd);
   }
 

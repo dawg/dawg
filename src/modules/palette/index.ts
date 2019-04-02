@@ -414,7 +414,6 @@ export class KeyboardShortcuts extends Vue {
   }
 }
 
-// TODO(jacob) use stack to store keyboard shortcut information??
 export default {
   install() {
     Vue.component('Palette', Palette);

@@ -61,7 +61,7 @@
       @update:duration="updateDuration(i, $event)"
       @contextmenu.native="remove($event, i)"
       @mousedown.native="select($event, i)"
-      @click="clickElement(i)"
+      @click.native="clickElement(i)"
       @dblclick="open($event, i)"
     ></component>
     <progression
@@ -85,7 +85,6 @@
 <script lang="ts">
 import { Component, Prop, Mixins, Inject, Vue } from 'vue-property-decorator';
 import { Draggable } from '@/modules/draggable';
-import { FactoryDictionary } from 'typescript-collections';
 import { range, Nullable, Keys, reverse } from '@/utils';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import Progression from '@/modules/sequencer/Progression.vue';
@@ -93,11 +92,10 @@ import { Watch } from '@/modules/update';
 import { Schedulable } from '@/core';
 import { Ghost } from '@/core/ghosts/ghost';
 
-
 @Component({
   components: { Progression, BeatLines },
 })
-export default class Arranger extends Mixins(Draggable) {
+export default class SequencerGrid extends Mixins(Draggable) {
   // name is used for debugging
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, required: true }) public rowHeight!: number;
@@ -127,6 +125,8 @@ export default class Arranger extends Mixins(Draggable) {
 
   // TODO edge case -> what happens if the element is deleted?
   @Prop(Nullable(Object)) public prototype!: Schedulable | null;
+
+  @Prop({ type: Number, required: true }) public displayLoopEnd!: number;
 
   public cursor = 'move';
   public rows!: HTMLElement;
@@ -191,9 +191,9 @@ export default class Arranger extends Mixins(Draggable) {
 
   get displayBeats() {
     return Math.max(
-      this.minDisplayMeasures * this.beatsPerMeasure,
-      this.itemLoopEnd || 0,
-    ) * this.stepsPerBeat;
+      256, // 256 is completly random
+      (this.itemLoopEnd || 0) + this.beatsPerMeasure * 2,
+    );
   }
 
   get selectStyle() {
@@ -516,7 +516,7 @@ export default class Arranger extends Mixins(Draggable) {
     // prototype is not updated automatically
   }
 
-  @Watch<Arranger>('elements', { immediate: true })
+  @Watch<SequencerGrid>('elements', { immediate: true })
   public resetSelectedIfNecessary() {
     // Whenever the parent changes the items
     // we should reset the selected!
@@ -526,6 +526,11 @@ export default class Arranger extends Mixins(Draggable) {
       this.selected = this.elements.map((_) => false);
     }
     this.checkLoopEnd();
+  }
+
+  @Watch<SequencerGrid>('displayBeats', { immediate: true })
+  public updateDisplayLoopEnd() {
+    this.$update('displayLoopEnd', this.displayBeats);
   }
 }
 </script>

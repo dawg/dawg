@@ -1,8 +1,8 @@
 <template>
   <div style="display: contents">
     <div 
-      @mousedown="loadData"
       @click="click" 
+      @mousedown="loadData"
       @dblclick="doubleClick"
       style="display: flex" 
       :class="nodeClass" 
@@ -98,7 +98,7 @@ export default class Tree extends Vue {
   public $parent!: Tree;
 
   // TODO make better types
-  public data: any = null;
+  public data: object | null = null;
   public transferData: any = null;
 
   get draggable() {
@@ -234,8 +234,10 @@ export default class Tree extends Vue {
       return;
     }
 
-    event.stopImmediatePropagation();
-    this.select(this.index + 1);
+    setTimeout(() => {
+      // TODO Remove this setTimeout
+      this.select(this.index + 1);
+    }, 100);
   }
 
   public moveUp(event: KeyboardEvent) {
@@ -250,7 +252,7 @@ export default class Tree extends Vue {
     this.open(this.data);
   }
 
-  public select(index: number) {
+  public async select(index: number) {
     const trees = this.$parent.$refs.trees;
     if (index < 0 || index >= trees.length) {
       return;
@@ -260,8 +262,12 @@ export default class Tree extends Vue {
       return;
     }
 
-    trees.forEach((tree, i) => {
+    trees.forEach(async (tree, i) => {
       if (i === index) {
+        if (trees[i].data === null) {
+          await trees[i].loadData();
+        }
+
         // If it's already selected, stop and start the preview
         if (tree.isSelected) {
           this.startAndStop();
