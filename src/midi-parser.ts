@@ -10,9 +10,9 @@ export interface INote {
 
 export type INotes = INote[];
 
-export const parse = (buffer: ArrayBuffer): INotes => {
+export const parse = (buffer: ArrayBuffer, bpm: number): INotes => {
   const json = new Midi(buffer);
-  const bps = Tone.Transport.bpm.value / 60;
+  const bps = bpm / 60;
 
   const notes: INote[] = [];
   json.tracks.forEach((track) => {

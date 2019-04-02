@@ -45,7 +45,6 @@ export abstract class Instrument<T, V extends string> {
   // tslint:disable-next-line:member-ordering
   public pan = new Audio.Signal(this.panner.pan, -1, 1);
 
-  // TODO for the gain
   private gainNode = new Tone.Gain().connect(this.panner);
 
   // tslint:disable-next-line:member-ordering

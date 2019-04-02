@@ -16,6 +16,9 @@ export async function logout() {
 
 export async function signIn() {
   const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({
+    prompt: 'select_account',
+  });
   await firebase.auth().signInWithRedirect(provider);
 }
 

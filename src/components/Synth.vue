@@ -25,6 +25,8 @@
         @input="volumeInput"
         @automate="automateVolume"
         name="Volume"
+        :min="instrument.volume.minValue"
+        :max="instrument.volume.maxValue"
       ></knob>
       <pan
         :value="instrument.pan.raw"

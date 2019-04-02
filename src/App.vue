@@ -477,7 +477,7 @@ export default class App extends Vue {
 
   public async onExit() {
     // If we don't have a file open, don't write the workspace information
-    if (!general.openedFile) {
+    if (!general.projectPath) {
       return;
     }
 
@@ -553,18 +553,11 @@ export default class App extends Vue {
   }
 
   public playPause() {
-    let transport: Transport;
-    if (workspace.applicationContext === 'pianoroll') {
-      const pattern = workspace.selectedPattern;
-      if (!pattern) {
-        this.$notify.error('Please select a Pattern.', {
-          detail: 'Please create and select a Pattern first or switch the Playlist context.',
-        });
-        return;
-      }
-      transport = pattern.transport;
-    } else {
-      transport = general.project.master.transport;
+    if (!this.transport) {
+      this.$notify.warning('Please select a Pattern.', {
+        detail: 'Please create and select a Pattern first or switch the Playlist context.',
+      });
+      return;
     }
 
     // XXX move all of this
@@ -572,13 +565,13 @@ export default class App extends Vue {
       this.stopRecording();
     }
 
-    if (transport.state === 'started') {
+    if (this.transport.state === 'started') {
       this.$log.debug('PAUSING');
-      transport.stop();
+      this.transport.stop();
       general.pause();
     } else {
       this.$log.debug('PLAY');
-      transport.start();
+      this.transport.start();
       general.start();
     }
   }

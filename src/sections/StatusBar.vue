@@ -5,15 +5,20 @@
       <div slot="activator" class="name item">{{ projectName }}</div>
       <div>Project Name</div>
     </v-tooltip>
+
     <spectrogram
       class="item"
       :color="$theme.foreground"
     ></spectrogram>
+
     <status-text class="item status-text"></status-text>
+
     <div style="flex: 1"></div>
+
     <busy-signal
       style="margin: 0 35px"
     ></busy-signal>
+
     <tooltip-icon 
       v-if="general.backupError" 
       :color="$theme.foreground" 
@@ -24,12 +29,14 @@
     >
       error_outline
     </tooltip-icon>
+
     <v-progress-circular
       v-else-if="general.syncing"
       :size="15"
       :width="2"
       indeterminate
     ></v-progress-circular>
+
     <v-icon v-else :color="$theme.foreground" size="20">
       {{ icon }}
     </v-icon>
@@ -57,7 +64,7 @@ export default class Foot extends Vue {
   }
 
   get openedFile() {
-    return general.openedFile;
+    return general.projectPath;
   }
 
   get projectName() {

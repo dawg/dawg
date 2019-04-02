@@ -49,7 +49,7 @@ export class General extends VuexModule {
   /**
    * The actual file that is currently opened. This is not the same as the opened file in the cache.
    */
-  public openedFile: string | null = null;
+  public projectPath: string | null = null;
 
   get authenticated() {
     return !!this.user;
@@ -81,7 +81,7 @@ export class General extends VuexModule {
 
       // Only set this if we've actually opened a project successfully
       if (cache.openedFile === path) {
-        // This means that we are opening the cache file
+        // This means that we are opening the file path in the cache
         this.setOpenedFile(path);
       }
 
@@ -107,24 +107,24 @@ export class General extends VuexModule {
 
   @Action
   public async saveProject(opts: { backup: boolean, user: User | null, forceDialog?: boolean }) {
-    let openedFile = this.openedFile;
-    if (!openedFile || opts.forceDialog) {
-      openedFile = remote.dialog.showSaveDialog(remote.getCurrentWindow(), {}) || null;
+    let projectPath = this.projectPath;
+    if (!projectPath || opts.forceDialog) {
+      projectPath = remote.dialog.showSaveDialog(remote.getCurrentWindow(), {}) || null;
 
       // If the user cancels the dialog
-      if (!openedFile) {
+      if (!projectPath) {
         return;
       }
 
-      if (!openedFile.endsWith(DG_EXTENSION)) {
-        openedFile = openedFile + DG_EXTENSION;
+      if (!projectPath.endsWith(DG_EXTENSION)) {
+        projectPath = projectPath + DG_EXTENSION;
       }
 
       // Make sure we set the cache and the general
       // The cache is what is written to the filesystem
       // and the general is the file that is currently opened
-      cache.setOpenedFile(openedFile);
-      this.setOpenedFile(openedFile);
+      cache.setOpenedFile(projectPath);
+      this.setOpenedFile(projectPath);
 
       // This should never be true but we need to check
       if (!cache.openedFile) {
@@ -134,7 +134,7 @@ export class General extends VuexModule {
 
     const encoded = this.project.serialize();
 
-    await fs.writeFile(openedFile, JSON.stringify(encoded, null, 4));
+    await fs.writeFile(projectPath, JSON.stringify(encoded, null, 4));
 
     // I don't think this is the best place to put this.
     if (opts.backup && opts.user && encoded.name) {
@@ -207,7 +207,7 @@ export class General extends VuexModule {
 
   @Mutation
   public setOpenedFile(file: string) {
-    this.openedFile = file;
+    this.projectPath = file;
   }
 
   @Mutation

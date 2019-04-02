@@ -1,8 +1,6 @@
 import Tone from 'tone';
 import { ContextTime, TransportTime, Time } from './types';
 
-// TODO Fix BPM STUFF
-
 // An interface doesn't work for some reason
 // tslint:disable-next-line:interface-over-type-literal
 type Events = {
@@ -19,9 +17,6 @@ Tone.TransportRepeatEvent.prototype._createEvents = function(time) {
   const ticks = this.Transport.getTicksAtTime(time);
 
   // @ts-ignore
-  // console.log(ticks, this.time + this.duration);
-
-  // @ts-ignore
   if (ticks >= this.time && ticks >= this._nextTick && this._nextTick + this._interval < this.time + this.duration) {
     // @ts-ignore
     this._nextTick += this._interval;
@@ -29,8 +24,6 @@ Tone.TransportRepeatEvent.prototype._createEvents = function(time) {
     this._currentId = this._nextId;
     // @ts-ignore
     this._nextId = this.Transport.scheduleOnce(this.invoke.bind(this), Tone.Ticks(this._nextTick));
-  } else {
-    // console.log('DONE');
   }
 };
 
