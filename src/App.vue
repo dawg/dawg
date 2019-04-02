@@ -65,6 +65,7 @@
               @update:pxPerBeat="workspace.setPlaylistBeatWidth"
               @new-prototype="checkPrototype"
               @record="record"
+              :is-recording="general.isRecordingMicrophone"
               :ghosts="ghosts"
             ></playlist-sequencer>
             <blank v-else></blank>              
@@ -122,7 +123,7 @@
 
 <script lang="ts">
 import fs from 'fs';
-import * as fs2 from '@/fs';
+import fs2 from '@/fs';
 import { Component, Vue } from 'vue-property-decorator';
 import { shell, Event, DesktopCapturer, desktopCapturer } from 'electron';
 import { cache, general, workspace, Project } from '@/store';
@@ -149,11 +150,10 @@ import { Theme } from '@/modules/theme/types';
 import auth from '@/auth';
 import { User } from 'firebase';
 import { ScheduledPattern } from '@/core/scheduled/pattern';
-import { ScheduledSample } from '@/core/scheduled/sample';
+import { ScheduledSample, Sample } from '@/core';
 import { Automatable } from '@/core/automation';
 import * as Audio from '@/modules/audio';
 import { Ghost, ChunkGhost } from '@/core/ghosts/ghost';
-// import wav from 'node-wav';
 import audioBufferToWav from 'audiobuffer-to-wav';
 import path from 'path';
 
@@ -714,6 +714,18 @@ export default class App extends Vue {
 
   public startRecording(trackId: number) {
 
+    if (this.transport && this.transport.state === 'started') {
+      this.$log.debug('PAUSING');
+      this.transport.stop();
+      general.pause();
+    }
+
+    workspace.setContext('playlist');
+
+    const transport = general.project.master.transport;
+
+    const time = transport.beats;
+
     if ( cache.microphoneIn === null ) {
       this.$notify.info('Please select a microphone from the settings.');
       return;
@@ -735,7 +747,7 @@ export default class App extends Vue {
       }
 
       // create new chunk ghost
-      const ghost = new ChunkGhost(0, trackId);
+      const ghost = new ChunkGhost(time, trackId);
       this.ghosts.push(ghost);
 
       const contraints: MediaStreamConstraints = {
@@ -750,26 +762,33 @@ export default class App extends Vue {
         this.mediaRecorder = new MediaRecorder(stream);
         const audioBlobs: Blob[] = [];
 
+
         this.mediaRecorder.start(100);
 
+        // keep the ghost updated
         this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
+          if ( !general.isRecordingMicrophone ) {
+            general.setRecordingMicrophone(true);
+            transport.start();
+            general.start();
+          }
           audioBlobs.push(event.data);
           this.blobsToAudioBuffer(audioBlobs).then((buffer: AudioBuffer) => {
             ghost.buffer = buffer;
           });
         };
-        this.mediaRecorder.onstop = () => {
-            this.blobsToAudioBuffer(audioBlobs).then((buffer: AudioBuffer) => {
 
-              const wavData: ArrayBuffer = audioBufferToWav(
+        this.mediaRecorder.onstop = () => {
+          this.blobsToAudioBuffer(audioBlobs).then((buffer: AudioBuffer) => {
+
+            const wavData: ArrayBuffer = audioBufferToWav(
                 buffer,
                 { sampleRate: buffer.sampleRate, float: true, bitDepth: 32});
 
-              // FIXME?
-              // fs2.mkdirRecursive(RECORDING_PATH);
+            fs2.mkdirRecursive(RECORDING_PATH);
 
-              const date = new Date();
-              const recordstr = path.join(RECORDING_PATH, 'recording-'
+            const date = new Date();
+            const dst = path.join(RECORDING_PATH, 'recording-'
               + date.getFullYear() + '-'
               + date.getMonth() + '-'
               + date.getDay() + '-'
@@ -778,16 +797,27 @@ export default class App extends Vue {
               + date.getSeconds() +
               '.wav');
 
-              fs.writeFile(recordstr, new DataView(wavData), (err) => {
+            fs.writeFile(dst, new DataView(wavData), (err) => {
                 if (err) {
                   this.$notify.error('' + err);
                 }
 
                 // add the file to the workspace
-                
+                // create a sample from the file.
+                const master = general.project.master;
+                const sample = Sample.create(dst, buffer);
+                general.project.samples.push(sample);
+                const scheduled = new ScheduledSample(sample, {
+                  type: 'sample',
+                  sampleId: sample.id,
+                  duration: sample.beats,
+                  row: trackId,
+                  time,
+                });
 
-                // clear the ghosts
-                this.ghosts = [];
+                scheduled.schedule(master.transport);
+                master.elements.push(scheduled);
+
               });
             });
         };
@@ -800,7 +830,9 @@ export default class App extends Vue {
   public stopRecording() {
     if (this.mediaRecorder != null) {
       this.mediaRecorder.stop();
+      general.setRecordingMicrophone(false);
       this.mediaRecorder = null;
+      this.ghosts = [];
     }
   }
 

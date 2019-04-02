@@ -40,7 +40,7 @@
       :left="ghost.left"
       :top="ghost.top"
       :px-per-beat="pxPerBeat"
-      :style="{ position: 'absolute', 'z-index': 2, height: `40px` }"
+      :style="{ position: 'absolute', 'z-index': 2, height: `${rowHeight}px` }"
       :key="i"
       :ghost="ghost.ghost"
     ></component>

@@ -37,6 +37,7 @@ export class General extends VuexModule {
   public projects: ProjectInfo[] = [];
   public getProjectsErrorMessage: string | null = null;
   public user: User | null = null;
+  public isRecordingMicrophone = false;
 
   /**
    * The sample that is currently opened in the sample panel.
@@ -171,6 +172,11 @@ export class General extends VuexModule {
   @Mutation
   public setPanels(panels: BaseTabs) {
     this.panels = panels;
+  }
+
+  @Mutation
+  public setRecordingMicrophone(recording: boolean) {
+    this.isRecordingMicrophone = recording;
   }
 
   @Mutation

@@ -1,7 +1,13 @@
 <template>
   <div class="track foreground--text secondary">
     <dot-button
+      v-if="!recording"
       v-model="active"
+    ></dot-button>
+    <dot-button
+      v-else
+      v-model="recording"
+      :value="$theme.error"
     ></dot-button>
     <div class="name">{{ track.name }}</div>
   </div>
@@ -11,10 +17,13 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Watch } from '@/modules/update';
 import { Track as T } from '@/core/track';
+import { boolean } from 'io-ts';
 
 @Component
 export default class Track extends Vue {
   @Prop({ type: Object, required: true }) public track!: T;
+  @Prop({ type: Boolean, required: false, default: false }) public recording!: boolean;
+
   public active = !this.track.mute;
 
   @Watch<Track>('active')

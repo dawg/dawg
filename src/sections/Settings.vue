@@ -17,8 +17,6 @@
         </google-button>
       </v-list-tile>
 
-      
-
       <v-divider
         style="margin: 20px 0 10px"
       ></v-divider>

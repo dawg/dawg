@@ -12,9 +12,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import Waveform from '@/modules/dawg/Waveform.vue';
 import { ChunkGhost as Ghost } from '@/core/ghosts/ghost';
-import tinycolor from 'tinycolor2';
 import general from '@/store/general';
-import { Tone } from 'tone';
 
 @Component({components: { Waveform }})
 export default class ChunkGhost extends Vue {
@@ -33,9 +31,7 @@ export default class ChunkGhost extends Vue {
 
   get bufferWidth() {
     if (this.ghost.buffer) {
-      const w = this.ghost.buffer.length / this.ghost.buffer.sampleRate / 60 * general.project.bpm * this.pxPerBeat;
-      console.log(w);
-      return w;
+      return this.ghost.buffer.length / this.ghost.buffer.sampleRate / 60 * general.project.bpm * this.pxPerBeat;
     } else {
       return 0;
     }
