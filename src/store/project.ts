@@ -137,6 +137,8 @@ export class Project implements Serializable<IProject> {
       return new Sample(buffer, iSample);
     }));
 
+    const instrumentLookup = makeLookup(instruments);
+    const channelLookup = makeLookup(channels);
     const tracks = i.tracks.map((iTrack) => new Track(iTrack));
 
     // I don't like this at all
@@ -147,10 +149,10 @@ export class Project implements Serializable<IProject> {
       if (iAutomationClip.context === 'channel') {
         // TODO(jacob) remove this
         // @ts-ignore
-        signal = this.channelLookup[clip.contextId][clip.attr];
+        signal = channelLookup[iAutomationClip.contextId][iAutomationClip.attr];
       } else {
         // @ts-ignore
-        signal = this.instrumentLookup[clip.contextId][clip.attr];
+        signal = instrumentLookup[iAutomationClip.contextId][iAutomationClip.attr];
       }
 
       if (!signal) {
@@ -160,7 +162,6 @@ export class Project implements Serializable<IProject> {
       return new AutomationClip(signal, iAutomationClip);
     });
 
-    const instrumentLookup = makeLookup(instruments);
     const patterns = (i.patterns || []).map((iPattern) => {
       const scores = (iPattern.scores || []).map((iScore) => {
         if (!(iScore.instrumentId in instrumentLookup)) {
@@ -206,7 +207,10 @@ export class Project implements Serializable<IProject> {
           return new ScheduledSample(sample, iElement);
       }
     });
+
     const master = new Playlist(elements);
+    master.transport.bpm.value = i.bpm;
+    Tone.Transport.bpm.value = i.bpm;
 
     return new Project({
       ...i,
@@ -263,7 +267,9 @@ export class Project implements Serializable<IProject> {
     // There must be a pattern for this
     // I want it to be reactive
     // Sub/pub ??
+    // Also we shouldn't have to update the Transport bpm but we do
     this.master.transport.bpm.value = bpm;
+    Tone.Transport.bpm.value = bpm;
     this.patterns.forEach((pattern) => {
       pattern.transport.bpm.value = bpm;
     });

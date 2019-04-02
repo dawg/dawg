@@ -17,7 +17,7 @@ export default class Progression extends Vue {
   @Prop({ type: Number, required: true }) public loopStart!: number;
   @Prop({ type: Number, required: true }) public loopEnd!: number;
 
-  public get progressPx() {
+  get progressPx() {
     return this.beatToPx((this.loopEnd - this.loopStart) * this.progress + this.loopStart);
   }
 
@@ -25,7 +25,7 @@ export default class Progression extends Vue {
     return (beat - this.offset) * this.pxPerBeat + 'px';
   }
 
-  public get style() {
+  get style() {
     return {
       left: this.progressPx,
     };

@@ -103,7 +103,7 @@ export class Specific extends VuexModule {
     await fs.writeFileIfNonExistent(PROJECT_CACHE_PATH, '{}');
 
     // tslint:disable-next-line:no-console
-    console.log('Reading from ' + PROJECT_CACHE_PATH);
+    console.info('Reading from ' + PROJECT_CACHE_PATH);
     const contents = (await fs.readFile(PROJECT_CACHE_PATH)).toString();
 
     try {

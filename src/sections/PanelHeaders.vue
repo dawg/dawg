@@ -128,7 +128,6 @@ export default class PanelHeaders extends Vue {
   }
 
   get actions() {
-    // TODO NO Type Checking
     if (workspace.openedPanel === 'Instruments') {
       return this.synthActions;
     } else if (workspace.openedPanel === 'Piano Roll') {

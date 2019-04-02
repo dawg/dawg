@@ -6,22 +6,18 @@
     <logo
       :color="$theme.foreground"
     ></logo>
-    <!-- <h1 class="foreground--text">Vusic</h1> -->
+
     <div 
       class="tall-line"
       :style="lineStyle"
     ></div>
-    
 
     <time-display
       style="margin-right: 10px"
       :raw="seconds"
     ></time-display>
+    
     <bpm :value="bpm" @input="updateBpm"></bpm>
-
-    <!-- <spectrogram-v2 
-      :color="$theme.secondary"
-    ></spectrogram-v2> -->
 
     <v-spacer
       class="drag-area"
@@ -30,7 +26,14 @@
     <v-btn icon style="margin: 0" @click="toggle">
       <icon :name="icon" class="foreground--text"></icon>
     </v-btn>
-    <v-btn icon style="margin: 0"><ico fa>stop</ico></v-btn>
+
+    <v-btn 
+      icon 
+      style="margin: 0"
+    >
+      <ico fa>stop</ico>
+    </v-btn>
+
     <vertical-switch :top.sync="sliderTop"></vertical-switch>
 
   </v-toolbar>

@@ -45,8 +45,10 @@
         <div class="slider" style="display: flex">
           <slider 
             :value="channel.volume.raw"
+            :min="channel.volume.minValue"
+            :max="channel.volume.maxValue"
             @input="volumeInput"
-            :left="left" 
+            :left="left"
             :right="right"
             @automate="automateVolume"
           ></slider>
