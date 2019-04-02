@@ -124,7 +124,7 @@
 import fs from 'fs';
 import * as fs2 from '@/fs';
 import { Component, Vue } from 'vue-property-decorator';
-import { shell, Event } from 'electron';
+import { shell, Event, DesktopCapturer, desktopCapturer } from 'electron';
 import { cache, general, workspace, Project } from '@/store';
 import { toTickTime, allKeys, Keys } from '@/utils';
 import Transport from '@/modules/audio/transport';
@@ -714,20 +714,40 @@ export default class App extends Vue {
 
   public startRecording(trackId: number) {
 
+    if ( cache.microphoneIn === null) {
+      this.$notify.info('Please select a microphone from the settings.');
+      return;
+    }
+
+    let deviceId: string | null = null;
+
+    // enumerate devices and find our input device
+    navigator.mediaDevices.enumerateDevices().then((devices) => {
+      devices.forEach((device) => {
+        if ( device.label === cache.microphoneIn ) {
+          deviceId = device.deviceId;
+        }
+      });
+
+      if ( deviceId === null ) {
+        this.$notify.info('Selected microphone is no longer available.');
+        return;
+      }
+    });
+
     // create new ghost
     const ghost = new ChunkGhost(0, trackId);
     this.ghosts.push(ghost);
 
     // record here
     const contraints: MediaStreamConstraints = {
-      audio: true,
+      audio: {
+        deviceId,
+      },
       video: false,
     };
 
-    // audio/wav
-
-      // get user media
-    navigator.getUserMedia(contraints, (stream) => {
+    navigator.mediaDevices.getUserMedia(contraints).then((stream) => {
 
         this.mediaRecorder = new MediaRecorder(stream);
         const audioBlobs: Blob[] = [];
@@ -735,23 +755,20 @@ export default class App extends Vue {
         this.mediaRecorder.start(1000);
 
         this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
-          console.log(event.data);
           audioBlobs.push(event.data);
           this.blobsToAudioBuffer(audioBlobs).then((buffer: AudioBuffer) => {
-            // console.log(buffer.getChannelData(0));
             ghost.buffer = buffer;
           });
         };
-
         this.mediaRecorder.onstop = () => {
             this.blobsToAudioBuffer(audioBlobs).then((buffer: AudioBuffer) => {
+
               const wavData: ArrayBuffer = audioBufferToWav(
                 buffer,
                 { sampleRate: buffer.sampleRate, float: true, bitDepth: 32});
 
+              // FIXME?
               // fs2.mkdirRecursive(RECORDING_PATH);
-
-              // console.log(wavData);
 
               const date = new Date();
               const recordstr = 'recording-' + date.getFullYear() + '-'
@@ -759,6 +776,7 @@ export default class App extends Vue {
               + date.getDay() + '-'
               + date.getHours() +
               + date.getMinutes() +
+              + date.getSeconds() +
               '.wav';
 
               fs.writeFile(path.join(RECORDING_PATH, recordstr), new DataView(wavData), (err) => {
@@ -768,18 +786,16 @@ export default class App extends Vue {
               });
             });
         };
-
       }, (error) => {
-        return;
+        throw error;
       });
-
   }
 
   public stopRecording() {
     if (this.mediaRecorder != null) {
       this.mediaRecorder.stop();
       this.mediaRecorder = null;
-      this.ghosts = [];
+      // this.ghosts = [];
       // add the wav to the workspace
     }
   }
@@ -788,8 +804,7 @@ export default class App extends Vue {
     const reader = new FileReader();
     return new Promise<AudioBuffer>((resolve, reject) => {
       reader.onload = (event: FileReaderProgressEvent) => {
-        const buffer: any = reader.result;
-        console.log(buffer);
+        const buffer = reader.result as ArrayBuffer;
         Audio.context.decodeAudioData(buffer).then((decodedBuffer) => {
           resolve(decodedBuffer);
         });

@@ -39,7 +39,7 @@
       :is="ghost.name"
       :left="ghost.left"
       :top="ghost.top"
-      :style="{ position: 'absolute', 'z-index': 2, height: `${ghost.height}px` }"
+      :style="{ position: 'absolute', 'z-index': 2, height: `50px` }"
       :key="i"
       :ghost="ghost.ghost"
     ></component>
