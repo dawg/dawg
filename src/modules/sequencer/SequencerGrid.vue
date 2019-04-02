@@ -84,7 +84,7 @@ import { Schedulable } from '@/core';
 @Component({
   components: { Progression, BeatLines },
 })
-export default class Arranger extends Mixins(Draggable) {
+export default class SequencerGrid extends Mixins(Draggable) {
   // name is used for debugging
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, required: true }) public rowHeight!: number;
@@ -492,7 +492,7 @@ export default class Arranger extends Mixins(Draggable) {
     // prototype is not updated automatically
   }
 
-  @Watch<Arranger>('elements', { immediate: true })
+  @Watch<SequencerGrid>('elements', { immediate: true })
   public resetSelectedIfNecessary() {
     // Whenever the parent changes the items
     // we should reset the selected!
@@ -504,7 +504,7 @@ export default class Arranger extends Mixins(Draggable) {
     this.checkLoopEnd();
   }
 
-  @Watch<Arranger>('displayBeats', { immediate: true })
+  @Watch<SequencerGrid>('displayBeats', { immediate: true })
   public updateDisplayLoopEnd() {
     this.$update('displayLoopEnd', this.displayBeats);
   }

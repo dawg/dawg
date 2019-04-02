@@ -406,10 +406,6 @@ export class Project implements Serializable<IProject> {
       throw Error(`${payload.id} already exists`);
     }
 
-    this.pushSample(payload);
-  }
-
-  public pushSample(payload: Sample) {
     this.samples.push(payload);
   }
 

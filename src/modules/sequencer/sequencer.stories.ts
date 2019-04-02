@@ -108,8 +108,9 @@ function mounted() {
 
 const clip = AutomationClip.create(
   1,
-  new Signal(new Tone.Signal()),
+  new Signal(new Tone.Signal(), 0, 1),
   'instrument',
+  '',
   '',
 );
 

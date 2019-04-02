@@ -575,7 +575,7 @@ export default class App extends Vue {
    * Whenever we add a sample, if it hasn't been imported before, add it the the list of project samples.
    */
   public checkPrototype(prototype: ScheduledPattern | ScheduledSample) {
-    if (!(prototype instanceof ScheduledSample)) {
+    if (prototype.component !== 'sample-element') {
       return;
     }
 
@@ -588,7 +588,7 @@ export default class App extends Vue {
     general.project.addSample(sample);
   }
 
-  public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T) {
+  public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T & string) {
     const added = await general.project.createAutomationClip({
       automatable,
       key,
