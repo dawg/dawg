@@ -384,8 +384,7 @@ export default class App extends Vue {
       // Make sure we load the cache first before loading the default project.
       this.$log.debug('Starting to read data.');
 
-      // FIXME?
-      // await cache.fromCacheFolder();
+      await cache.fromCacheFolder();
 
       const result = await general.loadProject();
       if (result.type === 'error') {
@@ -800,9 +799,11 @@ export default class App extends Vue {
         this.mediaRecorder.onstop = () => {
           this.blobsToAudioBuffer(audioBlobs).then((buffer: AudioBuffer) => {
 
-            const wavData: ArrayBuffer = audioBufferToWav(
-                buffer,
-                { sampleRate: buffer.sampleRate, float: true, bitDepth: 32});
+            const wavData: ArrayBuffer = audioBufferToWav(buffer, {
+              sampleRate: buffer.sampleRate,
+              float: true,
+              bitDepth: 32,
+            });
 
             fs2.mkdirRecursive(RECORDING_PATH);
 
@@ -838,13 +839,11 @@ export default class App extends Vue {
                 master.elements.push(scheduled);
 
                 general.setRecordingMicrophone(false);
-                this.mediaRecorder = null;
-
               });
             });
         };
-      }, (error) => {
-        throw error;
+      }, (err) => {
+        // this.$notify.error('' + err);
       });
     });
   }
@@ -852,6 +851,7 @@ export default class App extends Vue {
   public stopRecording() {
     if (this.mediaRecorder != null) {
       this.mediaRecorder.stop();
+      this.mediaRecorder = null;
       this.ghosts = [];
     }
   }
@@ -859,7 +859,7 @@ export default class App extends Vue {
   private blobsToAudioBuffer(blobs: Blob[]): Promise<AudioBuffer> {
     const reader = new FileReader();
     return new Promise<AudioBuffer>((resolve, reject) => {
-      reader.onload = (event: FileReaderProgressEvent) => {
+      reader.onload = (event) => {
         const buffer = reader.result as ArrayBuffer;
         Audio.context.decodeAudioData(buffer).then((decodedBuffer) => {
           resolve(decodedBuffer);
