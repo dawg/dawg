@@ -39,7 +39,8 @@
       :is="ghost.name"
       :left="ghost.left"
       :top="ghost.top"
-      :style="{ position: 'absolute', 'z-index': 2, height: `50px` }"
+      :px-per-beat="pxPerBeat"
+      :style="{ position: 'absolute', 'z-index': 2, height: `40px` }"
       :key="i"
       :ghost="ghost.ghost"
     ></component>

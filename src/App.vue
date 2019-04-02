@@ -714,7 +714,7 @@ export default class App extends Vue {
 
   public startRecording(trackId: number) {
 
-    if ( cache.microphoneIn === null) {
+    if ( cache.microphoneIn === null ) {
       this.$notify.info('Please select a microphone from the settings.');
       return;
     }
@@ -733,26 +733,24 @@ export default class App extends Vue {
         this.$notify.info('Selected microphone is no longer available.');
         return;
       }
-    });
 
-    // create new ghost
-    const ghost = new ChunkGhost(0, trackId);
-    this.ghosts.push(ghost);
+      // create new chunk ghost
+      const ghost = new ChunkGhost(0, trackId);
+      this.ghosts.push(ghost);
 
-    // record here
-    const contraints: MediaStreamConstraints = {
-      audio: {
-        deviceId,
-      },
-      video: false,
-    };
+      const contraints: MediaStreamConstraints = {
+        audio: {
+          deviceId,
+        },
+        video: false,
+      };
 
-    navigator.mediaDevices.getUserMedia(contraints).then((stream) => {
+      navigator.mediaDevices.getUserMedia(contraints).then((stream) => {
 
         this.mediaRecorder = new MediaRecorder(stream);
         const audioBlobs: Blob[] = [];
 
-        this.mediaRecorder.start(1000);
+        this.mediaRecorder.start(100);
 
         this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
           audioBlobs.push(event.data);
@@ -771,32 +769,38 @@ export default class App extends Vue {
               // fs2.mkdirRecursive(RECORDING_PATH);
 
               const date = new Date();
-              const recordstr = 'recording-' + date.getFullYear() + '-'
+              const recordstr = path.join(RECORDING_PATH, 'recording-'
+              + date.getFullYear() + '-'
               + date.getMonth() + '-'
               + date.getDay() + '-'
               + date.getHours() +
               + date.getMinutes() +
               + date.getSeconds() +
-              '.wav';
+              '.wav');
 
-              fs.writeFile(path.join(RECORDING_PATH, recordstr), new DataView(wavData), (err) => {
+              fs.writeFile(recordstr, new DataView(wavData), (err) => {
                 if (err) {
                   this.$notify.error('' + err);
                 }
+
+                // add the file to the workspace
+                
+
+                // clear the ghosts
+                this.ghosts = [];
               });
             });
         };
       }, (error) => {
         throw error;
       });
+    });
   }
 
   public stopRecording() {
     if (this.mediaRecorder != null) {
       this.mediaRecorder.stop();
       this.mediaRecorder = null;
-      // this.ghosts = [];
-      // add the wav to the workspace
     }
   }
 
