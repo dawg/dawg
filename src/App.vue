@@ -164,9 +164,6 @@ export default class App extends Vue {
   public general = general;
   public workspace = workspace;
 
-  public Tone = Tone;
-  public Audio = Audio;
-
   public menuItems = {
     save: {
       text: 'Save',
