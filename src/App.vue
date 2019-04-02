@@ -568,6 +568,11 @@ export default class App extends Vue {
       transport = general.project.master.transport;
     }
 
+    // XXX move all of this
+    if (this.mediaRecorder) {
+      this.stopRecording();
+    }
+
     if (transport.state === 'started') {
       this.$log.debug('PAUSING');
       transport.stop();
@@ -832,6 +837,9 @@ export default class App extends Vue {
                 scheduled.schedule(master.transport);
                 master.elements.push(scheduled);
 
+                general.setRecordingMicrophone(false);
+                this.mediaRecorder = null;
+
               });
             });
         };
@@ -844,8 +852,6 @@ export default class App extends Vue {
   public stopRecording() {
     if (this.mediaRecorder != null) {
       this.mediaRecorder.stop();
-      general.setRecordingMicrophone(false);
-      this.mediaRecorder = null;
       this.ghosts = [];
     }
   }
