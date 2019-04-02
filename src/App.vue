@@ -467,7 +467,7 @@ export default class App extends Vue {
 
   public async onExit() {
     // If we don't have a file open, don't write the workspace information
-    if (!general.openedFile) {
+    if (!general.projectPath) {
       return;
     }
 

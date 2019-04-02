@@ -5,15 +5,20 @@ import * as Audio from '@/modules/audio';
 import { Serializable } from './serializable';
 import { EffectType, AnyEffect, Effect } from '@/core/filters/effect';
 
-export const ChannelType = t.type({
+export const ChannelTypeRequired = t.type({
   number: t.number,
   name: t.string,
   id: t.string,
-  effects: t.array(EffectType),
   panner: t.number,
   volume: t.number,
   mute: t.boolean,
 });
+
+export const ChannelTypePartial = t.partial({
+  effects: t.array(EffectType),
+});
+
+export const ChannelType = t.intersection([ChannelTypeRequired, ChannelTypePartial]);
 
 export type IChannel = t.TypeOf<typeof ChannelType>;
 
@@ -75,7 +80,7 @@ export class Channel implements Serializable<IChannel> {
     this.split.left.connect(this.left);
     this.split.right.connect(this.right);
 
-    this.effects = i.effects.map((iEffect) => {
+    this.effects = (i.effects || []).map((iEffect) => {
       return new Effect(iEffect);
     });
 
