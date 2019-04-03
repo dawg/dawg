@@ -85,7 +85,7 @@ export default class PianoRollSequencer extends Vue {
   }
 
   public addNotes(notes: INotes) {
-    notes.slice(0, 100).forEach((iNote) => {
+    notes.forEach((iNote) => {
       // Transform the interfaces into actual note classes
       const row = keyLookup[iNote.name].id;
       const note = new Note(this.instrument, {
