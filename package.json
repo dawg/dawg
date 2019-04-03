@@ -2,7 +2,7 @@
   "name": "vusic",
   "author": "DAWG People <dawgpeople@gmail.com>",
   "homepage": "https://dawg.dev",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "lint": "vue-cli-service lint",

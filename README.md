@@ -88,6 +88,9 @@ npm run test:unit
 ```
 There is also an `test:e2e` command; however, this test suite does not currently contain any tests.
 
+# Deploying
+First, replace of references of the version in `package.json` and `.travis.yml` to the new version. Then add and commit your changes.
+
 # Authors
 |[<img src="https://avatars1.githubusercontent.com/u/18077531?s=460&v=4" width="128">](https://github.com/jsmith) |[<img src="https://avatars1.githubusercontent.com/u/36887395?s=400&v=4" width="128">](https://github.com/desilvamatt) | [<img src="https://avatars3.githubusercontent.com/u/27429447?s=460&v=4" width="128">](https://github.com/aeldesoky) | [<img src="https://avatars0.githubusercontent.com/u/30574445?s=400&v=4" width="128">](https://github.com/alexodonn)
 |:---:|:---:|:---:|:---:|
