@@ -64,6 +64,9 @@
               :px-per-beat="workspace.playlistBeatWidth"
               @update:pxPerBeat="workspace.setPlaylistBeatWidth"
               @new-prototype="checkPrototype"
+              @record="record"
+              :is-recording="general.isRecordingMicrophone"
+              :ghosts="ghosts"
             ></playlist-sequencer>
             <blank v-else></blank>              
           </split>
@@ -120,8 +123,9 @@
 
 <script lang="ts">
 import fs from 'fs';
+import fs2 from '@/fs';
 import { Component, Vue } from 'vue-property-decorator';
-import { shell } from 'electron';
+import { shell, Event, DesktopCapturer, desktopCapturer } from 'electron';
 import { cache, general, workspace, Project } from '@/store';
 import { toTickTime, allKeys, Keys } from '@/utils';
 import Transport from '@/modules/audio/transport';
@@ -133,7 +137,7 @@ import PanelHeaders from '@/sections/PanelHeaders.vue';
 import ActivityBar from '@/sections/ActivityBar.vue';
 import StatusBar from '@/sections/StatusBar.vue';
 import Tone from 'tone';
-import { SideTab, FILTERS, ApplicationContext } from '@/constants';
+import { SideTab, FILTERS, ApplicationContext, APPLICATION_PATH, RECORDING_PATH } from '@/constants';
 import { PaletteItem } from '@/modules/palette';
 import { Watch } from '@/modules/update';
 import backend, { ProjectInfo } from '@/backend';
@@ -146,10 +150,13 @@ import { Theme } from '@/modules/theme/types';
 import auth from '@/auth';
 import { User } from 'firebase';
 import { ScheduledPattern } from '@/core/scheduled/pattern';
-import { ScheduledSample } from '@/core/scheduled/sample';
+import { ScheduledSample, Sample } from '@/core';
 import { Automatable } from '@/core/automation';
-import { win32 } from 'path';
 import * as Audio from '@/modules/audio';
+import { Ghost, ChunkGhost } from '@/core/ghosts/ghost';
+import audioBufferToWav from 'audiobuffer-to-wav';
+import path from 'path';
+import { win32 } from 'path';
 
 @Component({
   components: {
@@ -161,8 +168,39 @@ import * as Audio from '@/modules/audio';
   },
 })
 export default class App extends Vue {
+
+  get themeCommands(): PaletteItem[] {
+    return Object.entries(theme.defaults).map(([name, theDefault]) => {
+      return {
+        text: name,
+        callback: () => {
+          workspace.setTheme(name);
+          theme.insertTheme(theDefault);
+        },
+      };
+    });
+  }
+
+  get getProjectsErrorMessage() {
+    return general.getProjectsErrorMessage;
+  }
+
+  get transport() {
+    if (workspace.applicationContext === 'pianoroll') {
+      const pattern = workspace.selectedPattern;
+      return pattern ? pattern.transport : null;
+    } else {
+      return general.project.master.transport;
+    }
+  }
+
+  get playlistPlay() {
+    return general.play && workspace.applicationContext === 'playlist';
+  }
   public general = general;
   public workspace = workspace;
+  public ghosts: Ghost[] = [];
+  public mediaRecorder: MediaRecorder | null = null;
 
   public menuItems = {
     save: {
@@ -276,18 +314,6 @@ export default class App extends Vue {
     },
   ];
 
-  get themeCommands(): PaletteItem[] {
-    return Object.entries(theme.defaults).map(([name, theDefault]) => {
-      return {
-        text: name,
-        callback: () => {
-          workspace.setTheme(name);
-          theme.insertTheme(theDefault);
-        },
-      };
-    });
-  }
-
   public paletteCommands: PaletteItem[] = [
     {
       text: 'Open Piano Roll',
@@ -335,23 +361,6 @@ export default class App extends Vue {
   public masterStart = 0;
   public masterEnd = 0;
 
-  get getProjectsErrorMessage() {
-    return general.getProjectsErrorMessage;
-  }
-
-  get transport() {
-    if (workspace.applicationContext === 'pianoroll') {
-      const pattern = workspace.selectedPattern;
-      return pattern ? pattern.transport : null;
-    } else {
-      return general.project.master.transport;
-    }
-  }
-
-  get playlistPlay() {
-    return general.play && workspace.applicationContext === 'playlist';
-  }
-
   public async created() {
     // This is called before refresh / close
     // I don't remove this listner because the window is closing anyway
@@ -374,6 +383,7 @@ export default class App extends Vue {
     setTimeout(async () => {
       // Make sure we load the cache first before loading the default project.
       this.$log.debug('Starting to read data.');
+
       await cache.fromCacheFolder();
 
       const result = await general.loadProject();
@@ -550,6 +560,11 @@ export default class App extends Vue {
       return;
     }
 
+    // XXX move all of this
+    if (this.mediaRecorder) {
+      this.stopRecording();
+    }
+
     if (this.transport.state === 'started') {
       this.$log.debug('PAUSING');
       this.transport.stop();
@@ -698,6 +713,154 @@ export default class App extends Vue {
     if (this.getProjectsErrorMessage) {
       this.$notify.error('Unable to get projects.', { detail: this.getProjectsErrorMessage });
     }
+  }
+
+  public record(trackId: number) {
+    if ( this.mediaRecorder == null ) {
+      this.startRecording(trackId);
+    } else {
+      this.stopRecording();
+    }
+  }
+
+  public startRecording(trackId: number) {
+
+    if (this.transport && this.transport.state === 'started') {
+      this.$log.debug('PAUSING');
+      this.transport.stop();
+      general.pause();
+    }
+
+    workspace.setContext('playlist');
+
+    const transport = general.project.master.transport;
+
+    const time = transport.beats;
+
+    if ( cache.microphoneIn === null ) {
+      this.$notify.info('Please select a microphone from the settings.');
+      return;
+    }
+
+    let deviceId: string | null = null;
+
+    // enumerate devices and find our input device
+    navigator.mediaDevices.enumerateDevices().then((devices) => {
+      devices.forEach((device) => {
+        if ( device.label === cache.microphoneIn ) {
+          deviceId = device.deviceId;
+        }
+      });
+
+      if ( deviceId === null ) {
+        this.$notify.info('Selected microphone is no longer available.');
+        return;
+      }
+
+      // create new chunk ghost
+      const ghost = new ChunkGhost(time, trackId);
+      this.ghosts.push(ghost);
+
+      const contraints: MediaStreamConstraints = {
+        audio: {
+          deviceId,
+        },
+        video: false,
+      };
+
+      navigator.mediaDevices.getUserMedia(contraints).then((stream) => {
+
+        this.mediaRecorder = new MediaRecorder(stream);
+        const audioBlobs: Blob[] = [];
+
+
+        this.mediaRecorder.start(100);
+
+        // keep the ghost updated
+        this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
+          if ( !general.isRecordingMicrophone ) {
+            general.setRecordingMicrophone(true);
+            transport.start();
+            general.start();
+          }
+          audioBlobs.push(event.data);
+          this.blobsToAudioBuffer(audioBlobs).then((buffer: AudioBuffer) => {
+            ghost.buffer = buffer;
+          });
+        };
+
+        this.mediaRecorder.onstop = () => {
+          this.blobsToAudioBuffer(audioBlobs).then((buffer: AudioBuffer) => {
+
+            const wavData: ArrayBuffer = audioBufferToWav(buffer, {
+              sampleRate: buffer.sampleRate,
+              float: true,
+              bitDepth: 32,
+            });
+
+            fs2.mkdirRecursive(RECORDING_PATH);
+
+            const date = new Date();
+            const dst = path.join(RECORDING_PATH, 'recording-'
+              + date.getFullYear() + '-'
+              + date.getMonth() + '-'
+              + date.getDay() + '-'
+              + date.getHours() +
+              + date.getMinutes() +
+              + date.getSeconds() +
+              '.wav');
+
+            fs.writeFile(dst, new DataView(wavData), (err) => {
+                if (err) {
+                  this.$notify.error('' + err);
+                }
+
+                // add the file to the workspace
+                // create a sample from the file.
+                const master = general.project.master;
+                const sample = Sample.create(dst, buffer);
+                general.project.samples.push(sample);
+                const scheduled = new ScheduledSample(sample, {
+                  type: 'sample',
+                  sampleId: sample.id,
+                  duration: sample.beats,
+                  row: trackId,
+                  time,
+                });
+
+                scheduled.schedule(master.transport);
+                master.elements.push(scheduled);
+
+                general.setRecordingMicrophone(false);
+              });
+            });
+        };
+      }, (err) => {
+        // this.$notify.error('' + err);
+      });
+    });
+  }
+
+  public stopRecording() {
+    if (this.mediaRecorder != null) {
+      this.mediaRecorder.stop();
+      this.mediaRecorder = null;
+      this.ghosts = [];
+    }
+  }
+
+  private blobsToAudioBuffer(blobs: Blob[]): Promise<AudioBuffer> {
+    const reader = new FileReader();
+    return new Promise<AudioBuffer>((resolve, reject) => {
+      reader.onload = (event) => {
+        const buffer = reader.result as ArrayBuffer;
+        Audio.context.decodeAudioData(buffer).then((decodedBuffer) => {
+          resolve(decodedBuffer);
+        });
+      };
+      const audioBlob = new Blob(blobs);
+      reader.readAsArrayBuffer(audioBlob);
+    });
   }
 }
 </script>

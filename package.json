@@ -23,6 +23,7 @@
     "@types/tmp": "0.0.34",
     "@types/webmidi": "^2.0.3",
     "electron-context-menu": "^0.10.0",
+    "audiobuffer-to-wav": "^1.0.0",
     "firebase": "^5.8.6",
     "io-ts": "^1.8.3",
     "lodash.throttle": "^4.1.1",

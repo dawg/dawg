@@ -211,6 +211,7 @@ export default class Transport extends Tone.Emitter<Events> {
     return this.clock.ticks;
   }
 
+
   set ticks(t: number) {
     if (this.clock.ticks !== t) {
       const now = Tone.Transport.context.now();
@@ -226,6 +227,10 @@ export default class Transport extends Tone.Emitter<Events> {
 
       this.startPosition = t;
     }
+  }
+
+  get beats() {
+    return this.ticks / this.PPQ;
   }
 
   get PPQ() {

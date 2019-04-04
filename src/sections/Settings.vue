@@ -17,8 +17,6 @@
         </google-button>
       </v-list-tile>
 
-      
-
       <v-divider
         style="margin: 20px 0 10px"
       ></v-divider>
@@ -67,6 +65,20 @@
         </v-list-tile-action>
       </v-list-tile>
 
+      <v-list-tile>
+          <v-list-tile-action>
+          <v-select
+            class="device-dropdown"
+            dense
+            dark
+            label="Microphone"
+            :items="devices"
+            :value="cache.microphoneIn"
+            @input="cache.setMicrophoneIn"
+          ></v-select>
+        </v-list-tile-action>
+      </v-list-tile>
+
     </v-list>
   </v-card>
 </template>
@@ -74,13 +86,25 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Nullable } from '@/utils';
-import { workspace, general } from '@/store';
+import { cache, workspace, general } from '@/store';
 import auth from '@/auth';
 
 @Component
 export default class Settings extends Vue {
+  public cache = cache;
   public workspace = workspace;
   public general = general;
+  public devices: string[] = [];
+
+  public mounted() {
+    navigator.mediaDevices.enumerateDevices().then((media: MediaDeviceInfo[]) => {
+      media.forEach((device: MediaDeviceInfo) => {
+        if (device.kind === 'audioinput') {
+          this.devices.push(device.label);
+        }
+      });
+    });
+  }
 
   get text() {
     if (general.authenticated) {
@@ -134,4 +158,16 @@ export default class Settings extends Vue {
 
 .settings
   padding: 0 0 10px 0
+
+.device-dropdown /deep/ .v-input__slot
+  margin: 0!important
+  max-width: 250px
+
+.device-dropdown /deep/ .v-select__selections
+  margin: 0!important
+  max-width: 220px
+  white-space: nowrap
+  overflow: hidden
+  text-overflow: ellipsis
+
 </style>

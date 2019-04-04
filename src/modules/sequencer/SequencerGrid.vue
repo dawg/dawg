@@ -35,6 +35,16 @@
       class="layer lines"
     ></beat-lines>
     <component
+      v-for="(ghost, i) in ghostsComponents"
+      :is="ghost.name"
+      :left="ghost.left"
+      :top="ghost.top"
+      :px-per-beat="pxPerBeat"
+      :style="{ position: 'absolute', 'z-index': 2, height: `${rowHeight}px` }"
+      :key="i"
+      :ghost="ghost.ghost"
+    ></component>
+    <component
       v-for="(component, i) in components"
       :is="component.name"
       :left="component.left"
@@ -80,6 +90,7 @@ import BeatLines from '@/modules/sequencer/BeatLines';
 import Progression from '@/modules/sequencer/Progression.vue';
 import { Watch } from '@/modules/update';
 import { Schedulable } from '@/core';
+import { Ghost } from '@/core/ghosts/ghost';
 
 @Component({
   components: { Progression, BeatLines },
@@ -89,6 +100,7 @@ export default class SequencerGrid extends Mixins(Draggable) {
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, required: true }) public rowHeight!: number;
   @Prop({ type: Array, required: true }) public elements!: Schedulable[];
+  @Prop({ type: Array, required: true }) public ghosts!: Ghost[];
   @Prop({ type: Number, default: 0.25 }) public snap!: number;
 
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;
@@ -136,6 +148,18 @@ export default class SequencerGrid extends Mixins(Draggable) {
         name: item.component,
         duration: item.duration,
         element: item,
+      };
+    });
+  }
+
+  get ghostsComponents() {
+    return this.ghosts.map((item) => {
+      return {
+        row: item.row,
+        left: item.time * this.pxPerBeat,
+        top: item.row * this.rowHeight,
+        name: item.component,
+        ghost: item,
       };
     });
   }

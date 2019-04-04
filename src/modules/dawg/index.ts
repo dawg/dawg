@@ -6,8 +6,12 @@ import Dawg from '@/modules/dawg/Dawg.vue';
 import VerticalSwitch from '@/modules/dawg/VerticalSwitch.vue';
 import Blank from '@/modules/dawg/Blank.vue';
 import Loading from '@/modules/dawg/Loading.vue';
+import GH from '@/modules/dawg/ChunkGhost.vue';
+import { positionable } from '../sequencer';
 import Waveform from '@/modules/dawg/Waveform.vue';
 import Spectrogram from '@/modules/dawg/Spectrogram.vue';
+
+const ChunkGhost = positionable(GH);
 
 export default  {
   install() {
@@ -18,6 +22,7 @@ export default  {
     Vue.component('VerticalSwitch', VerticalSwitch);
     Vue.component('Blank', Blank);
     Vue.component('Loading', Loading);
+    Vue.component('ChunkGhost', ChunkGhost);
     Vue.component('Waveform', Waveform);
     Vue.component('Spectrogram', Spectrogram);
   },
