@@ -100,7 +100,7 @@ export default class SequencerGrid extends Mixins(Draggable) {
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, required: true }) public rowHeight!: number;
   @Prop({ type: Array, required: true }) public elements!: Schedulable[];
-  @Prop({ type: Array, required: true }) public ghosts!: Ghost[];
+  @Prop({ type: Array, default: null }) public ghosts!: Ghost[] | null;
   @Prop({ type: Number, default: 0.25 }) public snap!: number;
 
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;
@@ -153,6 +153,10 @@ export default class SequencerGrid extends Mixins(Draggable) {
   }
 
   get ghostsComponents() {
+    if (this.ghosts === null) {
+      return;
+    }
+
     return this.ghosts.map((item) => {
       return {
         row: item.row,
