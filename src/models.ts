@@ -1,4 +1,4 @@
-import fs from '@/fs';
+import fs from '@/wrappers/fs';
 import {PythonShell, Options} from 'python-shell';
 import path from 'path';
 

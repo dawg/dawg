@@ -1,4 +1,4 @@
-import fs from '@/fs';
+import fs from '@/wrappers/fs';
 import { Loader, RetrievalTypes } from './loader';
 
 export class FileLoader<T> extends Loader<T, { path: string }> {

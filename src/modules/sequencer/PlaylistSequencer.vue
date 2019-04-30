@@ -41,6 +41,7 @@ export default class PlaylistSequencer extends Vue {
   public prototype = null;
 
   public trackOptions(event: MouseEvent, i: number) {
+    // TODO(jacob) REMOVE THIS!!!
     this.$context({
       event,
       items: [

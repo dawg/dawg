@@ -570,6 +570,21 @@ export class Project implements Serializable<IProject> {
     this.automationClips.splice(i, 1);
   }
 
+  public scheduleMaster(sample: Sample, row: number, time: number) {
+    this.samples.push(sample);
+
+    const scheduled = new ScheduledSample(sample, {
+      type: 'sample',
+      sampleId: sample.id,
+      duration: sample.beats,
+      row,
+      time,
+    });
+
+    scheduled.schedule(this.master.transport);
+    this.master.elements.push(scheduled);
+  }
+
   get effectLookup() {
     const effects = this.channels.map((channel) => channel.effects);
     const iterable = chain(...effects);

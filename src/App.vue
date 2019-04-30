@@ -64,7 +64,6 @@
               :px-per-beat="workspace.playlistBeatWidth"
               @update:pxPerBeat="workspace.setPlaylistBeatWidth"
               @new-prototype="checkPrototype"
-              @record="record"
               :is-recording="general.isRecordingMicrophone"
               :ghosts="ghosts"
             ></playlist-sequencer>
@@ -122,7 +121,7 @@
 </template>
 
 <script lang="ts">
-import fs from '@/fs';
+import fs from '@/wrappers/fs';
 import { Component, Vue } from 'vue-property-decorator';
 import { shell, Event, DesktopCapturer, desktopCapturer } from 'electron';
 import { cache, general, workspace, Project } from '@/store';
@@ -182,15 +181,6 @@ export default class App extends Vue {
 
   get getProjectsErrorMessage() {
     return general.getProjectsErrorMessage;
-  }
-
-  get transport() {
-    if (workspace.applicationContext === 'pianoroll') {
-      const pattern = workspace.selectedPattern;
-      return pattern ? pattern.transport : null;
-    } else {
-      return general.project.master.transport;
-    }
   }
 
   get playlistPlay() {
@@ -552,25 +542,26 @@ export default class App extends Vue {
   }
 
   public playPause() {
-    if (!this.transport) {
+    if (!workspace.transport) {
       this.$notify.warning('Please select a Pattern.', {
         detail: 'Please create and select a Pattern first or switch the Playlist context.',
       });
       return;
     }
 
-    // XXX move all of this
+    // TODO(jacob) move all of this
     if (this.mediaRecorder) {
       this.stopRecording();
     }
 
-    if (this.transport.state === 'started') {
+    // TODO(jacob) refactor
+    if (workspace.transport.state === 'started') {
       this.$log.debug('PAUSING');
-      this.transport.stop();
+      workspace.transport.stop();
       general.pause();
     } else {
       this.$log.debug('PLAY');
-      this.transport.start();
+      workspace.transport.start();
       general.start();
     }
   }
@@ -811,7 +802,7 @@ export default class App extends Vue {
 
             try {
               await fs.writeFile(dst, new DataView(wavData));
-            } catch(e) {
+            } catch (e) {
               this.$notify.error('' + e);
             }
 

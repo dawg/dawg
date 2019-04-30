@@ -1,6 +1,6 @@
 import { Module, getModule, Mutation, Action } from 'vuex-module-decorators';
 import SideBar from '@/components/SideBar.vue';
-import fs from '@/fs';
+import fs from '@/wrappers/fs';
 import BaseTabs from '@/components/BaseTabs.vue';
 import store from '@/store/store';
 import { VuexModule } from '@/store/utils';

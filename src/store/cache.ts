@@ -1,4 +1,4 @@
-import fs from '@/fs';
+import fs from '@/wrappers/fs';
 import * as io from '@/modules/cerialize';
 import path from 'path';
 import { remote } from 'electron';

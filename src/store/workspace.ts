@@ -1,4 +1,4 @@
-import fs from '@/fs';
+import fs from '@/wrappers/fs';
 import path from 'path';
 
 import { Module as Mod } from 'vuex';
@@ -11,6 +11,7 @@ import { APPLICATION_PATH, SideTab, PanelNames, ApplicationContext } from '@/con
 import { Score, Pattern } from '@/core';
 import general from './general';
 import { makeLookup } from '@/modules/utils';
+import { emitter, EventProvider } from '@/dawg/events';
 
 const PROJECT_CACHE_PATH = path.join(APPLICATION_PATH, 'project-cache.json');
 
@@ -20,27 +21,14 @@ const PROJECT_CACHE_PATH = path.join(APPLICATION_PATH, 'project-cache.json');
  */
 @Module({ dynamic: true, store, name: 'workspace' })
 export class Specific extends VuexModule {
-  @io.auto({ optional: true }) public backup = false;
-  @io.auto({ nullable: true, optional: true }) public selectedPatternId: string | null = null;
-  @io.auto({ nullable: true, optional: true }) public selectedScoreId: string | null = null;
-  @io.auto({ nullable: true, optional: true }) public openedPanel: PanelNames | null = null;
-  @io.auto({ nullable: true, optional: true }) public openedSideTab: SideTab | null = null;
-  @io.auto({ nullable: true, optional: true }) public openedTab: string | null = null;
-  @io.auto({ optional: true }) public applicationContext: ApplicationContext = 'pianoroll';
-  @io.auto({ optional: true }) public pianoRollRowHeight = 16;
-  @io.auto({ optional: true }) public pianoRollBeatWidth = 80;
-  @io.auto({ optional: true }) public playlistRowHeight = 40;
-  @io.auto({ optional: true }) public playlistBeatWidth = 80;
-  @io.auto({ optional: true }) public sideBarSize = 250;
-  @io.auto({ optional: true }) public panelsSize = 250;
-  @io.auto({ nullable: true }) public themeName: string | null = null;
-  @io.auto({ nullable: true }) public pythonPath: string | null = null;
-  @io.auto({ nullable: true }) public modelsPath: string | null = null;
 
-  public projectId: string | null = null;
-
-  constructor(module?: Mod<any, any>) {
-    super(module || {});
+  get transport() {
+    if (this.applicationContext === 'pianoroll') {
+      const pattern = this.selectedPattern;
+      return pattern ? pattern.transport : null;
+    } else {
+      return general.project.master.transport;
+    }
   }
 
   get patternLookup() {
@@ -67,6 +55,34 @@ export class Specific extends VuexModule {
       scores[score.id] = score;
     });
     return scores;
+  }
+
+  get project() {
+    return general.project;
+  }
+
+  public events = emitter<{ playPause: () => void }>();
+  @io.auto({ optional: true }) public backup = false;
+  @io.auto({ nullable: true, optional: true }) public selectedPatternId: string | null = null;
+  @io.auto({ nullable: true, optional: true }) public selectedScoreId: string | null = null;
+  @io.auto({ nullable: true, optional: true }) public openedPanel: PanelNames | null = null;
+  @io.auto({ nullable: true, optional: true }) public openedSideTab: SideTab | null = null;
+  @io.auto({ nullable: true, optional: true }) public openedTab: string | null = null;
+  @io.auto({ optional: true }) public applicationContext: ApplicationContext = 'pianoroll';
+  @io.auto({ optional: true }) public pianoRollRowHeight = 16;
+  @io.auto({ optional: true }) public pianoRollBeatWidth = 80;
+  @io.auto({ optional: true }) public playlistRowHeight = 40;
+  @io.auto({ optional: true }) public playlistBeatWidth = 80;
+  @io.auto({ optional: true }) public sideBarSize = 250;
+  @io.auto({ optional: true }) public panelsSize = 250;
+  @io.auto({ nullable: true }) public themeName: string | null = null;
+  @io.auto({ nullable: true }) public pythonPath: string | null = null;
+  @io.auto({ nullable: true }) public modelsPath: string | null = null;
+
+  public projectId: string | null = null;
+
+  constructor(module?: Mod<any, any>) {
+    super(module || {});
   }
 
   @Action
@@ -210,6 +226,41 @@ export class Specific extends VuexModule {
   @Mutation
   public setModelsPath(modelsPath: string) {
     this.modelsPath = modelsPath;
+  }
+
+  @Mutation
+  public startTransport() {
+    if (!this.transport) {
+      return;
+    }
+
+    this.transport.start();
+    general.start();
+    this.events.emit('playPause');
+  }
+
+  @Mutation
+  public stopTransport() {
+    if (!this.transport) {
+      return;
+    }
+
+    this.transport.stop();
+    general.pause();
+    this.events.emit('playPause');
+  }
+
+  @Mutation
+  public stopIfStarted() {
+    if (this.transport && this.transport.state === 'started') {
+      this.stopTransport();
+    }
+  }
+
+  @Mutation
+  public onDidPlayPause(cb: () => void) {
+    // TODO(jacob) might cause error
+    return new EventProvider(this.events, 'playPause', cb);
   }
 
   @Mutation
