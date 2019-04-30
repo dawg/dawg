@@ -34,10 +34,8 @@ import { keyLookup } from '@/utils';
 import { Note } from '@/core';
 import webmidi, { INoteParam, IMidiChannel, InputEventNoteon } from 'webmidi';
 import { error } from 'util';
-import { constants } from 'fs';
 import Transport from '@/modules/audio/transport';
 import * as Audio from '@/modules/audio';
-import { None } from 'fp-ts/lib/Option';
 import { Player } from 'soundfont-player';
 
 interface Group {

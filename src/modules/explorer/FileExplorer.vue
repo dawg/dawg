@@ -28,7 +28,7 @@
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import { ipcRenderer } from 'electron';
-import fs, { FSWatcher } from 'mz/fs';
+import fs, { FSWatcher } from '@/fs';
 import os from 'os';
 import path from 'path';
 import { Extensions, FileTree, EventBus } from '@/modules/explorer/types';

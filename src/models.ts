@@ -1,4 +1,4 @@
-import fs from 'mz/fs';
+import fs from '@/fs';
 import {PythonShell, Options} from 'python-shell';
 import path from 'path';
 

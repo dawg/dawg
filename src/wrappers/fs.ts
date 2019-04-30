@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'mz/fs';
+export { FSWatcher } from 'mz/fs';
 
 // TODO Remove this eventually
 // Or change the name
@@ -12,10 +13,11 @@ const mkdirRecursive = (dir: string) => {
   }
 };
 
-const writeFile = async (filename: string, data: string) => {
+const writeFile = async (filename: string, data: string | Buffer | DataView) => {
+  const toWrite = data as any;
   const dir = path.dirname(filename);
   mkdirRecursive(dir);
-  await fs.writeFile(filename, data);
+  await fs.writeFile(filename, toWrite);
 };
 
 const writeFileIfNonExistent = async (filename: string, data: string) => {
@@ -31,4 +33,8 @@ export default {
   exists: fs.exists,
   writeFileIfNonExistent,
   readFile: fs.readFile,
+  stat: fs.stat,
+  readdir: fs.readdir,
+  watch: fs.watch,
+  unlink: fs.unlink,
 };

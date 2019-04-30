@@ -122,8 +122,7 @@
 </template>
 
 <script lang="ts">
-import fs from 'fs';
-import fs2 from '@/fs';
+import fs from '@/fs';
 import { Component, Vue } from 'vue-property-decorator';
 import { shell, Event, DesktopCapturer, desktopCapturer } from 'electron';
 import { cache, general, workspace, Project } from '@/store';
@@ -623,9 +622,9 @@ export default class App extends Vue {
 
 
       const { name } = tmp.fileSync({ keep: true });
-      fs.writeFileSync(name, JSON.stringify(res.project, null, 4));
+      await fs.writeFile(name, JSON.stringify(res.project, null, 4));
 
-      if (!fs.existsSync(name)) {
+      if (!(await fs.exists(name))) {
         throw Error(name);
       }
 
@@ -789,8 +788,8 @@ export default class App extends Vue {
           });
         };
 
-        this.mediaRecorder.onstop = () => {
-          this.blobsToAudioBuffer(audioBlobs).then((buffer: AudioBuffer) => {
+        this.mediaRecorder.onstop = async () => {
+          this.blobsToAudioBuffer(audioBlobs).then(async (buffer: AudioBuffer) => {
 
             const wavData: ArrayBuffer = audioBufferToWav(buffer, {
               sampleRate: buffer.sampleRate,
@@ -798,7 +797,7 @@ export default class App extends Vue {
               bitDepth: 32,
             });
 
-            fs2.mkdirRecursive(RECORDING_PATH);
+            fs.mkdirRecursive(RECORDING_PATH);
 
             const date = new Date();
             const dst = path.join(RECORDING_PATH, 'recording-'
@@ -810,30 +809,30 @@ export default class App extends Vue {
               + date.getSeconds() +
               '.wav');
 
-            fs.writeFile(dst, new DataView(wavData), (err) => {
-                if (err) {
-                  this.$notify.error('' + err);
-                }
+            try {
+              await fs.writeFile(dst, new DataView(wavData));
+            } catch(e) {
+              this.$notify.error('' + e);
+            }
 
-                // add the file to the workspace
-                // create a sample from the file.
-                const master = general.project.master;
-                const sample = Sample.create(dst, buffer);
-                general.project.samples.push(sample);
-                const scheduled = new ScheduledSample(sample, {
-                  type: 'sample',
-                  sampleId: sample.id,
-                  duration: sample.beats,
-                  row: trackId,
-                  time,
-                });
-
-                scheduled.schedule(master.transport);
-                master.elements.push(scheduled);
-
-                general.setRecordingMicrophone(false);
-              });
+            // add the file to the workspace
+            // create a sample from the file.
+            const master = general.project.master;
+            const sample = Sample.create(dst, buffer);
+            general.project.samples.push(sample);
+            const scheduled = new ScheduledSample(sample, {
+              type: 'sample',
+              sampleId: sample.id,
+              duration: sample.beats,
+              row: trackId,
+              time,
             });
+
+            scheduled.schedule(master.transport);
+            master.elements.push(scheduled);
+
+            general.setRecordingMicrophone(false);
+          });
         };
       }, (err) => {
         // this.$notify.error('' + err);

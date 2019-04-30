@@ -1,4 +1,4 @@
-import fs from 'mz/fs';
+import fs from '@/fs';
 import * as io from '@/modules/cerialize';
 import path from 'path';
 import { remote } from 'electron';
@@ -119,7 +119,7 @@ export class Cache extends VuexModule {
     const c = io.serialize(this, Cache);
     const dir = path.dirname(CACHE_PATH);
     if (!await fs.exists(dir)) {
-      await fs.mkdir(dir);
+      await fs.mkdirRecursive(dir);
     }
 
     return fs.writeFile(CACHE_PATH, JSON.stringify(c, null, 4));

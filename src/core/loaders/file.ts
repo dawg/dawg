@@ -1,4 +1,4 @@
-import fs from 'mz/fs';
+import fs from '@/fs';
 import { Loader, RetrievalTypes } from './loader';
 
 export class FileLoader<T> extends Loader<T, { path: string }> {

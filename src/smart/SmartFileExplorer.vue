@@ -12,7 +12,7 @@ import { loadBuffer } from '@/modules/wav/local';
 import { ScheduledSample, Sample } from '@/core';
 import { Extensions, ExtensionData } from '@/modules/explorer/types';
 import parser, { INotes } from '@/midi-parser';
-import fs from 'mz/fs';
+import fs from '@/fs';
 import { general } from '../store';
 
 @Component

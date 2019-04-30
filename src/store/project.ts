@@ -1,6 +1,5 @@
-import fs from 'mz/fs';
+import fs from '@/wrappers/fs';
 import Tone from 'tone';
-import soundfonts from 'soundfont-player';
 import { findUniqueName, range } from '@/utils';
 import * as Audio from '@/modules/audio';
 import uuid from 'uuid';

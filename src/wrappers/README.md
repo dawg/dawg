@@ -1,0 +1,2 @@
+# Wrappers
+Contains some wrappers for Node.js modules. This might be useful in the future (if we wanted to build for the web instead of using Electron). Also, some utility functions are also defined in the wrappers to improve this API.
