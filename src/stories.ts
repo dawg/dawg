@@ -20,9 +20,12 @@ import Synth from '@/components/Synth.vue';
 
 import Timeline from '@/components/Timeline.vue';
 import ContextMenu from '@/modules/context/ContextMenu.vue';
+import * as dawg from '@/dawg';
 
 const synth = new Tone.Synth().toMaster();
 
+
+// TODO(jacob) Remove these
 
 storiesOf(Piano.name, module)
   .add('Standard', () => ({
@@ -269,19 +272,19 @@ storiesOf(Notifications.name, module)
     methods: {
       info() {
         // @ts-ignore
-        this.$notify.info('Information', {detail: 'Here is some info!'});
+        dawg.notify.info('Information', {detail: 'Here is some info!'});
       },
       success() {
         // @ts-ignore
-        this.$notify.success('Success', {detail: 'Something went well!'});
+        dawg.notify.success('Success', {detail: 'Something went well!'});
       },
       warning() {
         // @ts-ignore
-        this.$notify.warning('Warning', {detail: 'This is bad!'});
+        dawg.notify.warning('Warning', {detail: 'This is bad!'});
       },
       error() {
         // @ts-ignore
-        this.$notify.error('Error', {detail: 'Something is probably broken!'});
+        dawg.notify.error('Error', {detail: 'Something is probably broken!'});
       },
     },
   }));

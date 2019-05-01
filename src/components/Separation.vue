@@ -8,6 +8,7 @@ import { workspace } from '@/store';
 import {PythonShell, Options} from 'python-shell';
 import { runModel } from '@/models';
 import path from 'path';
+import * as dawg from '@/dawg';
 
 @Component
 export default class Separation extends Vue {
@@ -24,14 +25,14 @@ export default class Separation extends Vue {
       cb: (result) => {
         provider.dispose();
         if (result.type === 'error') {
-          this.$notify.error(result.message, {
+          dawg.notify.error(result.message, {
             detail: result.details,
             duration: Infinity,
           });
         }
 
         if (result.type === 'success') {
-          this.$notify.success(result.message, {detail: result.details});
+          dawg.notify.success(result.message, {detail: result.details});
         }
       },
     });

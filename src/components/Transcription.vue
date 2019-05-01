@@ -7,6 +7,7 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 import { workspace } from '@/store';
 import { runModel } from '@/models';
 import path from 'path';
+import * as dawg from '@/dawg';
 
 @Component
 export default class Transcription extends Vue {
@@ -23,14 +24,14 @@ export default class Transcription extends Vue {
       cb: (result) => {
         provider.dispose();
         if (result.type === 'error') {
-          this.$notify.error(result.message, {
+          dawg.notify.error(result.message, {
             detail: result.details,
             duration: Infinity,
           });
         }
 
         if (result.type === 'success') {
-          this.$notify.success(result.message, {detail: result.details});
+          dawg.notify.success(result.message, {detail: result.details});
         }
       },
     });

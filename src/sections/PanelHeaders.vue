@@ -37,6 +37,7 @@ import { error } from 'util';
 import Transport from '@/modules/audio/transport';
 import * as Audio from '@/modules/audio';
 import { Player } from 'soundfont-player';
+import * as dawg from '@/dawg';
 
 interface Group {
   icon: string;
@@ -58,7 +59,7 @@ export default class PanelHeaders extends Vue {
         if (event.port.type === 'input') {
           const input = event.port;
           if (input) {
-            this.$notify.success('MIDI Input Detected', {
+            dawg.notify.success('MIDI Input Detected', {
               detail: `${event.port.name} is now connected to Vusic.`,
             });
             input.addListener('noteon', 'all',
@@ -113,7 +114,7 @@ export default class PanelHeaders extends Vue {
 
       webmidi.addListener('disconnected', (event) => {
         if (event.port.type === 'input') {
-          this.$notify.warning('MIDI Input Diconnected', {
+          dawg.notify.warning('MIDI Input Diconnected', {
             detail: `${event.port.name} has been disconnected.`,
           });
         }
@@ -182,7 +183,7 @@ export default class PanelHeaders extends Vue {
 
   public startRecording(event: MouseEvent) {
     if (!workspace.selectedScore) {
-      this.$notify.warning('No Score Found', {
+      dawg.notify.warning('No Score Found', {
         detail: 'Please create a score before you start recording',
       });
       return;

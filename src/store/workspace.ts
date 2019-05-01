@@ -57,10 +57,6 @@ export class Specific extends VuexModule {
     return scores;
   }
 
-  get project() {
-    return general.project;
-  }
-
   public events = emitter<{ playPause: () => void }>();
   @io.auto({ optional: true }) public backup = false;
   @io.auto({ nullable: true, optional: true }) public selectedPatternId: string | null = null;

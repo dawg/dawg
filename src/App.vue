@@ -36,7 +36,7 @@
             <toolbar
               class="toolbar"
               :height="general.toolbarHeight"
-              :transport="transport"
+              :transport="workspace.transport"
               :context="workspace.applicationContext"
               @update:context="setContext"
               :play="general.play"
@@ -154,7 +154,7 @@ import * as Audio from '@/modules/audio';
 import { Ghost, ChunkGhost } from '@/core/ghosts/ghost';
 import audioBufferToWav from 'audiobuffer-to-wav';
 import path from 'path';
-import { win32 } from 'path';
+import * as dawg from '@/dawg';
 
 @Component({
   components: {
@@ -377,7 +377,7 @@ export default class App extends Vue {
 
       const result = await general.loadProject();
       if (result.type === 'error') {
-        this.$notify.info('Unable to load project.', { detail: result.message, duration: Infinity });
+        dawg.notify.info('Unable to load project.', { detail: result.message, duration: Infinity });
       }
 
       general.setProject(result.project);
@@ -420,14 +420,14 @@ export default class App extends Vue {
     // 8000 was just a random number, but it works. It's probably longer than necessary
     setTimeout(() => {
       general.project.instruments.forEach((instrument) => {
-        this.$notify.info('Connection has been restored');
+        dawg.notify.info('Connection has been restored');
         instrument.online();
       });
     }, 8000);
   }
 
   public offline() {
-    this.$notify.warning('You are disconnected', {
+    dawg.notify.warning('You are disconnected', {
       detail: 'Soundfonts and cloud syncing will not work as expected.',
       duration: 20000,
     });
@@ -525,7 +525,7 @@ export default class App extends Vue {
     if (backupStatus) {
       switch (backupStatus.type) {
         case 'error':
-          this.$notify.error('Unable to backup', { detail: backupStatus.message });
+          dawg.notify.error('Unable to backup', { detail: backupStatus.message });
           general.set({ key: 'backupError', value: true });
           break;
         case 'success':
@@ -543,7 +543,7 @@ export default class App extends Vue {
 
   public playPause() {
     if (!workspace.transport) {
-      this.$notify.warning('Please select a Pattern.', {
+      dawg.notify.warning('Please select a Pattern.', {
         detail: 'Please create and select a Pattern first or switch the Playlist context.',
       });
       return;
@@ -592,7 +592,7 @@ export default class App extends Vue {
     });
 
     if (!added) {
-      this.$notify.warning('Unable to create automation clip', {
+      dawg.notify.warning('Unable to create automation clip', {
         detail: 'There are no free tracks. Move elements and try again.',
       });
     }
@@ -602,12 +602,12 @@ export default class App extends Vue {
     this.handleUnauthenticated(async (user) => {
       const res = await backend.getProject(user, info.id);
       if (res.type === 'not-found') {
-        this.$notify.warning('Uh, we were unable to find project');
+        dawg.notify.warning('Uh, we were unable to find project');
         return;
       }
 
       if (res.type === 'error') {
-        this.$notify.error('Unable to get project', { detail: res.message });
+        dawg.notify.error('Unable to get project', { detail: res.message });
         return;
       }
 
@@ -630,7 +630,7 @@ export default class App extends Vue {
   public handleUnauthenticated(authenticated: (user: User) => void) {
     if (general.user === null) {
       // TODO dulication
-      this.$notify.info('Please login first', { detail: 'Use the settings icon in the Activity Bar.' });
+      dawg.notify.info('Please login first', { detail: 'Use the settings icon in the Activity Bar.' });
       return;
     }
 
@@ -649,9 +649,9 @@ export default class App extends Vue {
           general.projects.filter((maybe) => maybe !== info),
         );
       } else if (res.type === 'not-found') {
-        this.$notify.info(`Unable to delete ${info.name}`, { detail: 'The project was not found.' });
+        dawg.notify.info(`Unable to delete ${info.name}`, { detail: 'The project was not found.' });
       } else {
-        this.$notify.info(`Unable to delete ${info.name}`, { detail: res.message });
+        dawg.notify.info(`Unable to delete ${info.name}`, { detail: res.message });
       }
     });
   }
@@ -701,7 +701,7 @@ export default class App extends Vue {
   @Watch<App>('getProjectsErrorMessage')
   public showNotification() {
     if (this.getProjectsErrorMessage) {
-      this.$notify.error('Unable to get projects.', { detail: this.getProjectsErrorMessage });
+      dawg.notify.error('Unable to get projects.', { detail: this.getProjectsErrorMessage });
     }
   }
 
@@ -714,10 +714,10 @@ export default class App extends Vue {
   }
 
   public startRecording(trackId: number) {
-
-    if (this.transport && this.transport.state === 'started') {
+    // TODO(jacob) Remove
+    if (workspace.transport && workspace.transport.state === 'started') {
       this.$log.debug('PAUSING');
-      this.transport.stop();
+      workspace.transport.stop();
       general.pause();
     }
 
@@ -728,7 +728,7 @@ export default class App extends Vue {
     const time = transport.beats;
 
     if ( cache.microphoneIn === null ) {
-      this.$notify.info('Please select a microphone from the settings.');
+      dawg.notify.info('Please select a microphone from the settings.');
       return;
     }
 
@@ -743,7 +743,7 @@ export default class App extends Vue {
       });
 
       if ( deviceId === null ) {
-        this.$notify.info('Selected microphone is no longer available.');
+        dawg.notify.info('Selected microphone is no longer available.');
         return;
       }
 
@@ -803,7 +803,7 @@ export default class App extends Vue {
             try {
               await fs.writeFile(dst, new DataView(wavData));
             } catch (e) {
-              this.$notify.error('' + e);
+              dawg.notify.error('' + e);
             }
 
             // add the file to the workspace
@@ -826,7 +826,7 @@ export default class App extends Vue {
           });
         };
       }, (err) => {
-        // this.$notify.error('' + err);
+        // dawg.notify.error('' + err);
       });
     });
   }

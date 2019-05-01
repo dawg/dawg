@@ -88,6 +88,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Nullable } from '@/utils';
 import { cache, workspace, general } from '@/store';
 import auth from '@/auth';
+import * as dawg from '@/dawg';
 
 @Component
 export default class Settings extends Vue {
@@ -134,7 +135,7 @@ export default class Settings extends Vue {
       general.setProjects([]);
       workspace.setBackup(false);
     } catch (e) {
-      this.$notify.error('Unable to sign out of Google.', { detail: e.message });
+      dawg.notify.error('Unable to sign out of Google.', { detail: e.message });
     }
   }
 
@@ -142,7 +143,7 @@ export default class Settings extends Vue {
     try {
       auth.signIn();
     } catch (e) {
-      this.$notify.error('Unable to sign into Google.', { detail: e.message });
+      dawg.notify.error('Unable to sign into Google.', { detail: e.message });
     }
   }
 

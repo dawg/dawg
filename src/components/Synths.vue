@@ -20,6 +20,7 @@ import { Nullable } from '@/utils';
 import { Score, Instrument, Pattern } from '@/core';
 import { Watch } from '@/modules/update';
 import { workspace, general } from '@/store';
+import * as dawg from '@/dawg';
 
 @Component({ components: { Synth } })
 export default class Synths extends Vue {
@@ -48,7 +49,7 @@ export default class Synths extends Vue {
 
   public async openScore(i: number) {
     if (!this.selectedPattern) {
-      this.$notify.warning('Please select a Pattern first.', {
+      dawg.notify.warning('Please select a Pattern first.', {
         detail: 'You must select a pattern before you can open the Piano Roll',
       });
       return;

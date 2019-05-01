@@ -1,7 +1,7 @@
 import { Extension } from '@/dawg/extensions';
-import { commands } from '@/dawg/extensions/commands';
-import { palette } from '@/dawg/extensions/palette';
-import { notify } from '@/dawg/extensions/notify';
+import { commands } from '@/dawg/extensions/core/commands';
+import { palette } from '@/dawg/extensions/core/palette';
+import { notify } from '@/dawg/extensions/core/notify';
 import * as Audio from '@/modules/audio';
 import audioBufferToWav from 'audiobuffer-to-wav';
 import path from 'path';
@@ -9,7 +9,7 @@ import fs from '@/wrappers/fs';
 import { ChunkGhost } from '@/core/ghosts/ghost';
 import { remote } from 'electron';
 import { Sample } from '@/core';
-import { workspace } from '@/store';
+import { workspace, general } from '@/store';
 
 export const DOCUMENTS_PATH = remote.app.getPath('documents');
 export const RECORDING_PATH = path.join(DOCUMENTS_PATH, remote.app.getName(), 'recordings');
@@ -60,7 +60,7 @@ export const extension: Extension<{}, { microphoneIn: string }> = {
     const startRecording = async (trackId: number) => {
       workspace.stopIfStarted();
       workspace.setContext('playlist');
-      const time = workspace.project.master.transport.beats;
+      const time = general.project.master.transport.beats;
 
       const microphoneIn = context.global.get('microphoneIn');
       if (microphoneIn === undefined) {
@@ -123,7 +123,7 @@ export const extension: Extension<{}, { microphoneIn: string }> = {
         // add the file to the workspace
         // create a sample from the file.
         const sample = Sample.create(dst, buffer);
-        workspace.project.scheduleMaster(sample, trackId, time);
+        general.project.scheduleMaster(sample, trackId, time);
         record.recording = false;
       };
     };
