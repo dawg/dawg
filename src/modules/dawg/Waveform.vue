@@ -2,8 +2,8 @@
   <svg class="waveform" preserveAspectRatio="none" :viewBox="viewBox">
     <polygon 
       :points="points" 
-      :fill="$theme.foreground"
-      :stoke="$theme.foreground"
+      :fill="color"
+      :stoke="color"
       style="stroke-width:0.2; shape-rendering: geometricPrecision"
     ></polygon>
   </svg>
@@ -15,6 +15,7 @@ import { Vue, Component, Prop, Mixins } from 'vue-property-decorator';
 import { Player } from 'tone';
 import { Nullable } from '@/utils';
 import { Watch } from '@/modules/update';
+import * as dawg from '@/dawg';
 
 @Component({components: { }})
 export default class Waveform extends Vue {
@@ -25,6 +26,10 @@ export default class Waveform extends Vue {
 
   get viewBox() {
     return '0 0 ' + this.steps + ' ' + this.height;
+  }
+
+  get color() {
+    return dawg.theme.foreground;
   }
 
   get h2() {

@@ -8,9 +8,11 @@ interface DetailedItem { text: string; action?: string; }
 type InputItem = string | DetailedItem;
 interface InputItemLookup<T> { [key: string]: T; }
 
-interface QuickPickOptions<T> extends PaletteOptions {
+interface QuickPickOptions<T> {
   onDidCancel?: () => void;
   onDidSelect: QuickPickCallback<T>;
+  onDidKeyboardFocus?: QuickPickCallback<T>;
+  placeholder?: string;
 }
 
 const isDetailedItem = (item: any): item is DetailedItem => {
@@ -48,12 +50,21 @@ export const palette = manager.activate({
             return typeof item === 'string' ? { text: displayText } : item as DetailedItem;
           });
 
-          paletteEvents.emit('show', paletteItems, options);
+          paletteEvents.emit('show', paletteItems, {
+            placeholder: options.placeholder,
+          });
 
           const onDidSelect = (key: string) => {
             const item = itemLookup[key];
             options.onDidSelect(item);
             removeListeners();
+          };
+
+          const onDidFocus = (key: string) => {
+            if (options.onDidKeyboardFocus) {
+              const item = itemLookup[key];
+              options.onDidKeyboardFocus(item);
+            }
           };
 
           const onDidCancel = () => {
@@ -66,10 +77,12 @@ export const palette = manager.activate({
           const removeListeners = () => {
             paletteEvents.removeListener('select', onDidSelect);
             paletteEvents.removeListener('cancel', onDidCancel);
+            paletteEvents.removeListener('focus', onDidFocus);
           };
 
           paletteEvents.on('select', onDidSelect);
           paletteEvents.on('cancel', onDidCancel);
+          paletteEvents.on('focus', onDidFocus);
 
           resolve();
         });

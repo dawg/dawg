@@ -11,7 +11,7 @@
         :key="action.icon"
         :tooltip="action.tooltip"
         bottom
-        :color="$theme.foreground"
+        :color="iconColor"
         @click.native="action.callback"
       >
         {{ action.icon }}
@@ -94,9 +94,13 @@ export default class SideTabs extends Vue {
     tabs: BaseTabs,
   };
 
+  get iconColor() {
+    return dawg.theme.foreground;
+  }
+
   get headerStyle() {
     return {
-      borderBottom: `1px solid ${this.$theme.background}`,
+      borderBottom: `1px solid ${dawg.theme.background}`,
       minHeight: `${general.toolbarHeight + 1}px`,
       display: 'flex',
       alignItems: 'center',

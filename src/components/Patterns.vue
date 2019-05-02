@@ -20,6 +20,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Pattern, ScheduledPattern } from '@/core';
 import { Nullable } from '@/utils';
 import { Watch } from '@/modules/update';
+import * as dawg from '@/dawg';
 
 @Component
 export default class Patterns extends Vue {
@@ -58,7 +59,7 @@ export default class Patterns extends Vue {
   public border(pattern: Pattern) {
     if (pattern === this.value) {
       return {
-        border: `1px solid ${this.$theme.foreground + '30'}`,
+        border: `1px solid ${dawg.theme.foreground + '30'}`,
       };
     }
   }

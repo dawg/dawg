@@ -29,6 +29,7 @@ import Sequencer from '@/modules/sequencer/Sequencer.vue';
 import { Track } from '@/core';
 import { toTickTime } from '@/utils';
 import Transport from '@/modules/audio/transport';
+import * as dawg from '@/dawg';
 
 @Component({
   components: { Sequencer },
@@ -56,7 +57,7 @@ export default class PlaylistSequencer extends Vue {
 
   public rowStyle() {
     return {
-      borderBottom: `1px solid ${this.$theme.background}`,
+      borderBottom: `1px solid ${dawg.theme.background}`,
     };
   }
 }

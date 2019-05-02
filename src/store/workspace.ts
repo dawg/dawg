@@ -71,7 +71,6 @@ export class Specific extends VuexModule {
   @io.auto({ optional: true }) public playlistBeatWidth = 80;
   @io.auto({ optional: true }) public sideBarSize = 250;
   @io.auto({ optional: true }) public panelsSize = 250;
-  @io.auto({ nullable: true }) public themeName: string | null = null;
   @io.auto({ nullable: true }) public pythonPath: string | null = null;
   @io.auto({ nullable: true }) public modelsPath: string | null = null;
 
@@ -207,11 +206,6 @@ export class Specific extends VuexModule {
   @Mutation
   public setContext(context: ApplicationContext) {
     this.applicationContext = context;
-  }
-
-  @Action
-  public setTheme(name: string) {
-    this.set({ key: 'themeName', value: name });
   }
 
   @Mutation

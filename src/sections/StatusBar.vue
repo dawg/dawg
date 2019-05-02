@@ -8,7 +8,7 @@
 
     <spectrogram
       class="item"
-      :color="$theme.foreground"
+      :color="iconColor"
     ></spectrogram>
 
     <status-text class="item status-text"></status-text>
@@ -21,7 +21,7 @@
 
     <tooltip-icon 
       v-if="general.backupError" 
-      :color="$theme.foreground" 
+      :color="iconColor" 
       size="18" 
       tooltip="Cloud Backup Error"
       top
@@ -37,7 +37,7 @@
       indeterminate
     ></v-progress-circular>
 
-    <v-icon v-else :color="$theme.foreground" size="20">
+    <v-icon v-else :color="iconColor" size="20">
       {{ icon }}
     </v-icon>
   </div>
@@ -47,11 +47,16 @@
 import path from 'path';
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import { cache, workspace, general } from '@/store';
+import * as dawg from '@/dawg';
 
 @Component
 export default class Foot extends Vue {
   @Prop({ type: Number, required: true }) public height!: number;
   public general = general;
+
+  get iconColor() {
+    return dawg.theme.foreground;
+  }
 
   get style() {
     return {

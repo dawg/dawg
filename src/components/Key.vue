@@ -18,6 +18,7 @@
 <script lang="ts">
 import { Component, Prop, Inject, Vue } from 'vue-property-decorator';
 import Tone from 'tone';
+import * as dawg from '@/dawg';
 
 @Component
 export default class Key extends Vue {
@@ -64,8 +65,8 @@ export default class Key extends Vue {
 
   get keyOverlay() {
     return {
-      backgroundColor: this.$theme.primary + this.percentage,
-      borderBottom: `1px solid ${this.$theme.primary + 10}`,
+      backgroundColor: dawg.theme.primary + this.percentage,
+      borderBottom: `1px solid ${dawg.theme.primary + 10}`,
     };
   }
 

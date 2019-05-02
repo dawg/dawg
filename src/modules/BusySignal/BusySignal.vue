@@ -38,7 +38,7 @@
         </div>
         
         <v-progress-linear
-          :color="$theme.foreground"
+          :color="color"
           class="linear"
           :height="4"
           v-model="provider.progress"
@@ -59,6 +59,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Provider, bus } from '@/modules/BusySignal/helpers';
+import * as dawg from '@/dawg';
 
 @Component
 export default class BusySignal extends Vue {
@@ -66,14 +67,14 @@ export default class BusySignal extends Vue {
 
   public iconSize = 6;
   public providers: Provider[] = [];
-  public loadingColor = this.$theme.foreground;
+  public loadingColor = dawg.theme.foreground;
 
   get inProgress() {
     return !!this.providers.length;
   }
 
   get color() {
-    return this.$theme.foreground;
+    return dawg.theme.foreground;
   }
 
   get progresStyle() {
@@ -84,7 +85,7 @@ export default class BusySignal extends Vue {
 
   get spacerStyle() {
     return {
-      borderColor: this.$theme.foreground + 50,
+      borderColor: dawg.theme.foreground + 50,
       margin: '10px 0',
     };
   }

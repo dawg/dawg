@@ -12,7 +12,7 @@
       >
         <tooltip-icon 
           medium 
-          :color="$theme.foreground" 
+          :color="iconColor" 
           :tooltip="item.name"
           right
           v-bind="item.iconProps"
@@ -24,7 +24,7 @@
       <v-list-tile>
         <v-icon 
           medium
-          :color="$theme.foreground"
+          :color="iconColor"
           @click="openSettings"
         >
           settings
@@ -50,6 +50,7 @@ import { workspace, general } from '@/store';
 import Sidebar from '@/components/SideBar.vue';
 import { PanelNames, SideTab } from '@/constants';
 import Settings from '@/sections/Settings.vue';
+import * as dawg from '@/dawg';
 
 @Component({
   components: { Settings },
@@ -60,6 +61,10 @@ export default class ActivityBar extends Vue {
   public open = false;
   public x = 0;
   public y = 0;
+
+  get iconColor() {
+    return dawg.theme.foreground;
+  }
 
   public clickActivityBar(tab: Sidebar) {
     // TODO not the best

@@ -136,7 +136,7 @@ export default class PanelHeaders extends Vue {
       tooltip: general.isRecording ? 'Stop Recording' : 'Start Recording',
       callback: general.isRecording ? this.stopRecording : this.startRecording,
       props: {
-        color: general.isRecording ? this.$theme.error : this.$theme.foreground,
+        color: general.isRecording ? dawg.theme.error : dawg.theme.foreground,
         size: '14px',
       },
     }];

@@ -4,7 +4,7 @@
     :height="height" 
   >
     <logo
-      :color="$theme.foreground"
+      :color="iconColor"
     ></logo>
 
     <div 
@@ -49,6 +49,7 @@ import Transport from '@/modules/audio/transport';
 import { ApplicationContext } from '@/constants';
 import { Nullable } from '@/utils';
 import { Signal } from 'tone';
+import * as dawg from '@/dawg';
 
 @Component({
   components: { TimeDisplay, Bpm },
@@ -70,8 +71,12 @@ export default class Toolbar extends Vue {
     return this.play ? 'pause' : 'play';
   }
 
+  get iconColor() {
+    return dawg.theme.foreground;
+  }
+
   get lineStyle() {
-    return `border-left: 1px solid ${this.$theme.foreground}`;
+    return `border-left: 1px solid ${dawg.theme.foreground}`;
   }
 
   public toggle() {

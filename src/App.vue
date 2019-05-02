@@ -133,8 +133,6 @@ import * as io from '@/modules/cerialize';
 import tmp from 'tmp';
 import { remote } from 'electron';
 import { Menu } from '@/modules/menubar';
-import theme from '@/modules/theme';
-import { Theme } from '@/modules/theme/types';
 import auth from '@/auth';
 import { User } from 'firebase';
 import { ScheduledPattern } from '@/core/scheduled/pattern';
@@ -157,19 +155,6 @@ import * as dawg from '@/dawg';
 })
 export default class App extends Vue {
   public dawg = dawg;
-
-  // TODO(jacob)
-  get themeCommands() {
-    return Object.entries(theme.defaults).map(([name, theDefault]) => {
-      return {
-        text: name,
-        callback: () => {
-          workspace.setTheme(name);
-          theme.insertTheme(theDefault);
-        },
-      };
-    });
-  }
 
   get getProjectsErrorMessage() {
     return general.getProjectsErrorMessage;
@@ -317,10 +302,6 @@ export default class App extends Vue {
       shortcut: ['Space'],
       callback: this.playPause,
     },
-    {
-      text: 'Change Theme',
-      callback: this.openThemePalette,
-    },
     ...Object.values(this.menuItems),
   ];
 
@@ -331,10 +312,8 @@ export default class App extends Vue {
   // ie. some components expect props to stay the same.
   public loaded = false;
 
+  // TODO REMOVE
   public backupModal = false;
-  public palette = false;
-  public themePalette = false;
-  public themeMomento: string | null = null;
 
   public maximized = false;
 
@@ -369,6 +348,9 @@ export default class App extends Vue {
       // Make sure we load the cache first before loading the default project.
       this.$log.debug('Starting to read data.');
 
+      // tslint:disable-next-line:no-console
+      console.log(dawg);
+
       await cache.fromCacheFolder();
 
       const result = await general.loadProject();
@@ -382,8 +364,6 @@ export default class App extends Vue {
       // Log this for debugging purposes
       // tslint:disable-next-line:no-console
       console.info(general.project);
-
-      this.loadTheme(workspace.themeName);
 
       this.$log.debug('Finished reading data from the fs.');
       this.loaded = true;
@@ -430,7 +410,7 @@ export default class App extends Vue {
   }
 
   public openPalette() {
-    dawg.palette.showQuickPick(this.paletteCommands, {
+    dawg.palette.showQuickPick(dawg.commands.getItems(), {
       onDidSelect: (item) => {
         item.callback();
       },
@@ -445,23 +425,8 @@ export default class App extends Vue {
     dawg.commands.clear();
   }
 
-  public openThemePalette() {
-    this.themeMomento = workspace.themeName;
-    this.themePalette = true;
-  }
-
   public border(side: 'left' | 'right' | 'top' | 'bottom') {
-    return `border-${side}: 1px solid ${this.$theme.background}`;
-  }
-
-  public loadTheme(themeName: string | null) {
-    const isThemeKey = (key: string | null): key is keyof typeof theme.defaults => {
-      return !!key && theme.defaults.hasOwnProperty(key);
-    };
-
-    if (isThemeKey(themeName)) {
-      theme.insertTheme(theme.defaults[themeName]);
-    }
+    return `border-${side}: 1px solid ${dawg.theme.background}`;
   }
 
   public async onExit() {
@@ -478,10 +443,6 @@ export default class App extends Vue {
       this.backupModal = true;
       general.loadProjects(user);
     });
-  }
-
-  public restoreTheme() {
-    this.loadTheme(this.themeMomento);
   }
 
   public async open() {

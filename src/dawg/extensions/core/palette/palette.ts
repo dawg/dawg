@@ -15,6 +15,7 @@ interface PaletteEvents {
   show: (items: Item[], opts?: PaletteOptions) => void;
   cancel: () => void;
   select: (text: string) => void;
+  focus: (text: string) => void;
 }
 
 export const paletteEvents = events.emitter<PaletteEvents>();
@@ -112,7 +113,6 @@ export class TextField extends Vue {
 export class Palette extends Vue {
   public value = false;
   public items: Item[] = [];
-  public automatic = false;
   public placeholder = '';
   public searchText = '';
   public selected = 0;
@@ -147,13 +147,13 @@ export class Palette extends Vue {
   }
 
   public destroyed() {
-    paletteEvents.off('show', this.show);
+    paletteEvents.removeListener('show', this.show);
   }
 
   public show(items: Item[], opts: PaletteOptions = {}) {
     this.items = items;
     this.value = true;
-    this.automatic = opts.automatic || false;
+    this.searchText = '';
   }
 
   public open() {
@@ -188,8 +188,8 @@ export class Palette extends Vue {
         return;
       }
 
-      paletteEvents.emit('select', item.text);
       this.value = false;
+      paletteEvents.emit('select', item.text);
     }
   }
 
@@ -210,13 +210,9 @@ export class Palette extends Vue {
 
   @Watch<Palette>('selected', { immediate: true })
   public doAutomatic() {
-    if (!this.automatic) {
-      return;
-    }
-
     const item = this.filtered[this.selected];
     if (item) {
-      paletteEvents.emit('select', item.text);
+      paletteEvents.emit('focus', item.text);
     }
   }
 

@@ -50,6 +50,7 @@ import { ResponsiveMixin, Directions } from '@/modules/resize';
 import { Button } from '@/utils';
 import { range, Nullable } from '@/utils';
 import Progression from '@/modules/sequencer/Progression.vue';
+import * as dawg from '@/dawg';
 
 type Location = 'start' | 'end' | 'center';
 
@@ -81,7 +82,7 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 
   get timelineStyle() {
     return {
-      color: `${this.$theme.foreground}90`,
+      color: `${dawg.theme.foreground}90`,
     };
   }
 

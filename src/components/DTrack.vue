@@ -7,7 +7,7 @@
     <dot-button
       v-else
       v-model="recording"
-      :value="$theme.error"
+      :value="color"
     ></dot-button>
     <div class="name">{{ track.name }}</div>
   </div>
@@ -18,6 +18,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Watch } from '@/modules/update';
 import { Track as T } from '@/core/track';
 import { boolean } from 'io-ts';
+import * as dawg from '@/dawg';
 
 @Component
 export default class Track extends Vue {
@@ -25,6 +26,10 @@ export default class Track extends Vue {
   @Prop({ type: Boolean, required: false, default: false }) public recording!: boolean;
 
   public active = !this.track.mute;
+
+  get color() {
+    return dawg.theme.error;
+  }
 
   @Watch<Track>('active')
   public changeMute() {

@@ -5,7 +5,6 @@ import { ContextInterface } from '@/modules/context';
 import { KnobAugmentation } from '@/modules/knobs';
 import { Automatable } from '@/core';
 import { StatusAugmentation } from '@/modules/status';
-import { ThemeAugmentation } from '@/modules/theme';
 import { BusySignalAugmentation } from '@/modules/BusySignal';
 
 // 2. Specify a file with the types you want to augment
@@ -18,7 +17,6 @@ declare module 'vue/types/vue' {
     ContextInterface, 
     KnobAugmentation<Automatable>, 
     StatusAugmentation, 
-    ThemeAugmentation, 
     BusySignalAugmentation 
   {
     $log: {

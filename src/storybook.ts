@@ -6,7 +6,6 @@ import '@/styles/material.css';
 import Icon from 'vue-awesome/components/Icon.vue';
 import VueLogger from 'vuejs-logger';
 import Update from '@/modules/update';
-import Theme from '@/modules/theme';
 import sequencer from '@/modules/sequencer';
 import Dawg from '@/modules/dawg';
 import DragNDrop from '@/modules/dragndrop';
@@ -27,7 +26,6 @@ import BusySignal from '@/modules/BusySignal';
 
 export default function middleware() {
   Vue.use(Split);
-  Vue.use(Theme);
   Vue.use(Update);
   Vue.use(DragNDrop);
   Vue.use(Dawg);
