@@ -5,7 +5,6 @@ import { ContextInterface } from '@/modules/context';
 import { KnobAugmentation } from '@/modules/knobs';
 import { Automatable } from '@/core';
 import { StatusAugmentation } from '@/modules/status';
-import { BusySignalAugmentation } from '@/modules/BusySignal';
 
 // 2. Specify a file with the types you want to augment
 //    Vue has the constructor type in types/vue.d.ts
@@ -16,8 +15,7 @@ declare module 'vue/types/vue' {
     UpdateAugmentation,
     ContextInterface, 
     KnobAugmentation<Automatable>, 
-    StatusAugmentation, 
-    BusySignalAugmentation 
+    StatusAugmentation
   {
     $log: {
       debug(...args: any[]): void,

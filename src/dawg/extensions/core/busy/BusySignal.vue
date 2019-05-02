@@ -38,7 +38,7 @@
         </div>
         
         <v-progress-linear
-          :color="color"
+          :color="$theme.foreground"
           class="linear"
           :height="4"
           v-model="provider.progress"
@@ -58,7 +58,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { Provider, bus } from '@/modules/BusySignal/helpers';
+import { Provider, bus } from '@/dawg/extensions/core/busy/helpers';
 import * as dawg from '@/dawg';
 
 @Component
@@ -67,7 +67,11 @@ export default class BusySignal extends Vue {
 
   public iconSize = 6;
   public providers: Provider[] = [];
-  public loadingColor = dawg.theme.foreground;
+  public disposers: Array<{ dispose: () => void }> = [];
+
+  get loadingColor() {
+    return dawg.theme.foreground;
+  }
 
   get inProgress() {
     return !!this.providers.length;
@@ -106,8 +110,8 @@ export default class BusySignal extends Vue {
       return;
     }
 
-    provider.on('dispose', this.removeProvider);
     this.providers.push(provider);
+    this.disposers.push(provider.onDidDispose(this.removeProvider));
   }
 
   public removeProvider(provider: Provider) {
@@ -116,7 +120,10 @@ export default class BusySignal extends Vue {
       return;
     }
 
-    provider.off('dispose', this.removeProvider);
+    // Remove the event listner
+    this.disposers[index].dispose();
+
+    this.disposers.splice(index, 1);
     this.providers.splice(index, 1);
   }
 }

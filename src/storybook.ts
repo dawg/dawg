@@ -22,7 +22,6 @@ import TooltipIcon from '@/components/TooltipIcon.vue';
 import DotButton from '@/components/DotButton.vue';
 import MenuBar from '@/modules/menubar';
 import Explorer from '@/modules/explorer';
-import BusySignal from '@/modules/BusySignal';
 
 export default function middleware() {
   Vue.use(Split);
@@ -30,7 +29,6 @@ export default function middleware() {
   Vue.use(DragNDrop);
   Vue.use(Dawg);
   Vue.use(Knobs);
-  Vue.use(BusySignal);
   Vue.use(MenuBar);
   Vue.use(Status);
   Vue.use(Explorer);

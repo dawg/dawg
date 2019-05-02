@@ -1,5 +1,7 @@
-import BusySignal from '@/modules/BusySignal/BusySignal.vue';
-import { Provider, bus } from '@/modules/BusySignal/helpers';
+import BusySignal from '@/dawg/extensions/core/busy/BusySignal.vue';
+import { Provider, bus } from '@/dawg/extensions/core/busy/helpers';
+import { manager } from '../../manager';
+import { ui } from '@/dawg/ui';
 
 /**
  * The configuration options.
@@ -14,23 +16,19 @@ export interface BusySignalOptions {
 
 export type BusyFunction = (message: string, options?: BusySignalOptions) => Provider;
 
-export interface BusySignalAugmentation {
-  /**
-   * Start a busy signal. Use the options to configure the behavior.
-   */
-  $busy: BusyFunction;
-}
-
-export default {
-  install(vue: any) {
-    const busy: BusyFunction = (message, opts = {}) => {
+export const busy = manager.activate({
+  id: 'dawg.busy',
+  activate: () => {
+    const busyFunction: BusyFunction = (message, opts = {}) => {
       const estimate = opts.estimate === undefined ? null : opts.estimate;
       const provider = new Provider(message, estimate);
       bus.emit('start', provider);
       return provider;
     };
 
-    vue.component('BusySignal', BusySignal);
-    vue.prototype.$busy = busy;
+    // TODO(jacob) Thing for sorting
+    ui.statusBarRight.push(BusySignal);
+
+    return busyFunction;
   },
-};
+});

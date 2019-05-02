@@ -1,5 +1,6 @@
 import StrictEventEmitter from 'strict-event-emitter-types';
 import { EventEmitter } from 'events';
+import * as events from '@/dawg/events';
 
 interface Events {
   start: (provider: Provider) => void;
@@ -7,18 +8,22 @@ interface Events {
 
 export const bus: StrictEventEmitter<EventEmitter, Events> = new EventEmitter();
 
-type ProviderEventEmitter = StrictEventEmitter<EventEmitter, { dispose: (provider: Provider) => void }>;
-
-export class Provider extends (EventEmitter as new() => ProviderEventEmitter) {
+export class Provider {
   public progress: number | null = null;
   private disposed = false;
+  private emitter = events.emitter<{ dispose: (provider: Provider) => void }>();
 
-  constructor(
-    public message: string | null,
-    public estimate: number | null,
-  ) {
-    super();
+  constructor(public message: string | null, public estimate: number | null) {
     this.updateProgress();
+  }
+
+  public onDidDispose(cb: (provider: Provider) => void) {
+    this.emitter.on('dispose', cb);
+    return {
+      dispose: () => {
+        this.emitter.removeListener('dispose', cb);
+      },
+    };
   }
 
   /**
@@ -57,7 +62,7 @@ export class Provider extends (EventEmitter as new() => ProviderEventEmitter) {
     this.message = null;
     this.progress = null;
     this.disposed = true;
-    this.emit('dispose', this);
+    this.emitter.emit('dispose', this);
   }
 
   /**

@@ -14,8 +14,9 @@ import * as dawg from '@/dawg';
 export default class Separation extends Vue {
   @Prop({type: String}) public samplePath!: string;
 
+  // TODO(jacob refactor duplication)
   public click() {
-    const provider = this.$busy(`Extracting vocals from ${path.basename(this.samplePath)}`);
+    const provider = dawg.busy(`Extracting vocals from ${path.basename(this.samplePath)}`);
 
     runModel({
       pythonPath: workspace.pythonPath,

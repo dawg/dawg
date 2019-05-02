@@ -14,7 +14,7 @@ export default class Transcription extends Vue {
   @Prop({type: String}) public samplePath!: string;
 
   public click() {
-    const provider = this.$busy(`Converting ${path.basename(this.samplePath)} to MIDI`);
+    const provider = dawg.busy(`Converting ${path.basename(this.samplePath)} to MIDI`);
 
     runModel({
       pythonPath: workspace.pythonPath,

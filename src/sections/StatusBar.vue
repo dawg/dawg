@@ -13,13 +13,23 @@
 
     <status-text class="item status-text"></status-text>
 
+    <component
+      v-for="(component, i) in onLeft"
+      :key="i"
+      :is="component"
+    ></component>
+
     <div style="flex: 1"></div>
 
-    <busy-signal
+    <!-- TODO Remove margin -->
+    <component
+      v-for="(component, i) in onRight"
+      :key="i"
+      :is="component"
       style="margin: 0 35px"
-    ></busy-signal>
+    ></component>
 
-    <tooltip-icon 
+    <tooltip-icon
       v-if="general.backupError" 
       :color="iconColor" 
       size="18" 
@@ -56,6 +66,14 @@ export default class Foot extends Vue {
 
   get iconColor() {
     return dawg.theme.foreground;
+  }
+
+  get onRight() {
+    return dawg.ui.statusBarRight;
+  }
+
+  get onLeft() {
+    return dawg.ui.statusBarLeft;
   }
 
   get style() {
