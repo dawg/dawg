@@ -24,7 +24,8 @@ function createWindow() {
     minWidth: 800,
     // @ts-ignore
     icon: path.join(__static, 'icon.png'),
-    frame: false,
+    // TODO(jacob) linux
+    // frame: false,
   });
 
   win.setMenuBarVisibility(false);

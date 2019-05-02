@@ -5,7 +5,6 @@ import { Palette, paletteEvents, PaletteOptions } from '@/dawg/extensions/core/p
 type QuickPickCallback<T> = (item: T) => void;
 
 interface DetailedItem { text: string; action?: string; }
-type InputItem = string | DetailedItem;
 interface InputItemLookup<T> { [key: string]: T; }
 
 interface QuickPickOptions<T> {
@@ -26,73 +25,59 @@ export const palette = manager.activate({
 
     // TODO(jacob) REMOVE the promise
     return {
-      showQuickPick<T extends InputItem>(
-        items: T[] | InputItemLookup<T>,
-        options: QuickPickOptions<T>,
-      ): Promise<void> {
-        return new Promise((resolve) => {
-          const itemLookup: InputItemLookup<T> = {};
-
-          if (Array.isArray(items)) {
-            items.forEach((item) => {
-              if (typeof item === 'string') {
-                itemLookup[item] = item;
-              } else if (isDetailedItem(item)) {
-                // This second if statement is annoying but TypeScript doesn't support type narrowing with Generics
-                itemLookup[item.text] = item;
-              }
-            });
-          }
-
-          const paletteItems = Object.keys(itemLookup).map((displayText) => {
-            const item = itemLookup[displayText];
-            // It's super annoying that we have to cast but we do
-            return typeof item === 'string' ? { text: displayText } : item as DetailedItem;
-          });
-
-          paletteEvents.emit('show', paletteItems, {
-            placeholder: options.placeholder,
-          });
-
-          const onDidSelect = (key: string) => {
-            const item = itemLookup[key];
-            options.onDidSelect(item);
-            removeListeners();
-          };
-
-          const onDidFocus = (key: string) => {
-            if (options.onDidKeyboardFocus) {
-              const item = itemLookup[key];
-              options.onDidKeyboardFocus(item);
-            }
-          };
-
-          const onDidCancel = () => {
-            if (options.onDidCancel) {
-              options.onDidCancel();
-            }
-            removeListeners();
-          };
-
-          const removeListeners = () => {
-            paletteEvents.removeListener('select', onDidSelect);
-            paletteEvents.removeListener('cancel', onDidCancel);
-            paletteEvents.removeListener('focus', onDidFocus);
-          };
-
-          paletteEvents.on('select', onDidSelect);
-          paletteEvents.on('cancel', onDidCancel);
-          paletteEvents.on('focus', onDidFocus);
-
-          resolve();
-        });
+      selectFromStrings<T extends string>(items: T[], options: QuickPickOptions<T>) {
+        this.selectFromTuples(items.map((item) => [{ text: item }, item]), options);
       },
-
-      // TODO IMPLEMENT AND MOVE TO CORE
-      showInputBox(): Promise <number> {
-        return new Promise((resolve) => {
-          resolve(0);
+      selectFromItems<T extends DetailedItem>(items: T[], options: QuickPickOptions<T>) {
+        this.selectFromTuples(items.map((item) => [item, item]), options);
+      },
+      selectFromTuples<T>(items: Array<[DetailedItem, T]>, options: QuickPickOptions<T>) {
+        const lookup: InputItemLookup<T> = {};
+        items.forEach(([info, item]) => {
+          lookup[info.text] = item;
         });
+
+        const paletteItems = items.map(([info, _]) => info);
+
+        paletteEvents.emit('show', paletteItems, {
+          placeholder: options.placeholder,
+        });
+
+        const onDidSelect = (key: string) => {
+          const item = lookup[key];
+          options.onDidSelect(item);
+          removeListeners();
+        };
+
+        const onDidFocus = (key: string) => {
+          if (options.onDidKeyboardFocus) {
+            const item = lookup[key];
+            options.onDidKeyboardFocus(item);
+          }
+        };
+
+        const onDidCancel = () => {
+          if (options.onDidCancel) {
+            options.onDidCancel();
+          }
+          removeListeners();
+        };
+
+        const removeListeners = () => {
+          paletteEvents.removeListener('select', onDidSelect);
+          paletteEvents.removeListener('cancel', onDidCancel);
+          paletteEvents.removeListener('focus', onDidFocus);
+        };
+
+        paletteEvents.on('select', onDidSelect);
+        paletteEvents.on('cancel', onDidCancel);
+        paletteEvents.on('focus', onDidFocus);
+      },
+      selectFromObject<T>(items: InputItemLookup<T>, options: QuickPickOptions<T>) {
+        this.selectFromTuples(Object.keys(items).map((key) => [{ text: key }, items[key]]), options);
+      },
+      showInputBox() {
+        // TODO(jacob)
       },
     };
   },

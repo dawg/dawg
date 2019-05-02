@@ -113,7 +113,7 @@ const extension: Extension<{ theme: ThemeNames }, {}, {}, ITheme> = {
         const themeNames = Object.keys(defaults) as ThemeNames[];
 
         const currentThemeName = context.workspace.get('theme', 'Default');
-        palette.showQuickPick(themeNames, {
+        palette.selectFromStrings(themeNames, {
           onDidSelect: (themeName) => {
             context.workspace.set('theme', themeName);
             insertTheme(defaults[themeName]);

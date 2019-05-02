@@ -410,7 +410,7 @@ export default class App extends Vue {
   }
 
   public openPalette() {
-    dawg.palette.showQuickPick(dawg.commands.getItems(), {
+    dawg.palette.selectFromItems(dawg.commands.getItems(), {
       onDidSelect: (item) => {
         item.callback();
       },
