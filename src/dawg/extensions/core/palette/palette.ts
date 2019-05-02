@@ -1,11 +1,27 @@
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import { CreateElement } from 'vue';
 import { Watch } from '@/modules/update';
+import * as events from '@/dawg/events';
 
-// TODO
+export interface PaletteOptions {
+  /**
+   * Whether to call the callback when selected using the arrow keys.
+   */
+  automatic?: boolean;
+  placeholder?: string;
+}
+
+interface PaletteEvents {
+  show: (items: Item[], opts?: PaletteOptions) => void;
+  cancel: () => void;
+  select: (text: string) => void;
+}
+
+export const paletteEvents = events.emitter<PaletteEvents>();
+
+// TODO(jacob) IDK
 interface Item {
   text: string;
-  callback: () => void;
   helper?: string;
 }
 
@@ -61,6 +77,7 @@ Vue.directive('focus', {
 export class TextField extends Vue {
   @Prop({ type: String, required: true }) public value!: string;
   @Prop({ type: Boolean, default: false }) public autofocus!: boolean;
+  @Prop({ type: String, default: '' }) public placeholder!: string;
 
   public render(h: CreateElement) {
     const directives = this.autofocus ? [{ name: 'focus' }] : [];
@@ -68,6 +85,7 @@ export class TextField extends Vue {
     return h('input', {
       props: {
         value: this.value,
+        placeholder: this.placeholder,
       },
       on: {
         input: (e: { target: HTMLInputElement }) => {
@@ -92,16 +110,10 @@ export class TextField extends Vue {
 
 @Component
 export class Palette extends Vue {
-  @Prop({ type: Boolean, required: true }) public value!: boolean;
-  @Prop({ type: Array, required: true }) public items!: Item[];
-  @Prop({ type: String, required: false }) public paletteClass?: string;
-
-  // TODO Change the name of this prop
-  /**
-   * Whether to call the callback when selected using the arrow keys.
-   */
-  @Prop({ type: Boolean, default: false }) public automatic!: boolean;
-
+  public value = false;
+  public items: Item[] = [];
+  public automatic = false;
+  public placeholder = '';
   public searchText = '';
   public selected = 0;
 
@@ -130,15 +142,30 @@ export class Palette extends Vue {
       }).filter((item) => item);
   }
 
+  public mounted() {
+    paletteEvents.on('show', this.show);
+  }
+
+  public destroyed() {
+    paletteEvents.off('show', this.show);
+  }
+
+  public show(items: Item[], opts: PaletteOptions = {}) {
+    this.items = items;
+    this.value = true;
+    this.automatic = opts.automatic || false;
+  }
+
   public open() {
-    this.$emit('input', true);
+    this.value = true;
   }
 
   public checkEnterEsc(e: KeyboardEvent) {
     if (e.which === 27) { // ESC
-      e.preventDefault();
-      this.$emit('cancel');
-      this.$emit('input', false);
+      // TODO(jacob)
+      // e.preventDefault();
+      paletteEvents.emit('cancel');
+      this.value = false;
     }
 
     let newIndex: null | number = null;
@@ -161,8 +188,8 @@ export class Palette extends Vue {
         return;
       }
 
-      item.callback();
-      this.$emit('input', false);
+      paletteEvents.emit('select', item.text);
+      this.value = false;
     }
   }
 
@@ -189,7 +216,7 @@ export class Palette extends Vue {
 
     const item = this.filtered[this.selected];
     if (item) {
-      item.callback();
+      paletteEvents.emit('select', item.text);
     }
   }
 
@@ -198,6 +225,7 @@ export class Palette extends Vue {
       props: {
         value: this.searchText,
         autofocus: true,
+        placeholder: this.placeholder,
       },
       on: {
         input: (text: string) => {
@@ -218,7 +246,7 @@ export class Palette extends Vue {
     const results = h('div', { style: { margin: '5px' } }, items);
 
     const palette = h('div', {
-      class: this.paletteClass,
+      class: 'secondary', // sets the theme
       style: {
         width: '400px',
         height: 'fit-content',
@@ -242,8 +270,8 @@ export class Palette extends Vue {
       },
       on: {
         click: () => {
-          this.$emit('cancel');
-          this.$emit('input', false);
+          paletteEvents.emit('cancel');
+          this.value = false;
         },
       },
       class: 'foreground--text',

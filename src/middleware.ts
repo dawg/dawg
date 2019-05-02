@@ -1,7 +1,6 @@
 import Vue from 'vue';
 import { remote } from 'electron';
 import Context from '@/modules/context';
-import Notification from '@/modules/notification';
 import storybook from '@/storybook';
 
 const inspect = {
@@ -24,7 +23,6 @@ const middleware = () => {
     // Only have inspect in development
     default: process.env.NODE_ENV !== 'production' ? [inspect] : [],
   });
-  Vue.use(Notification);
 
   storybook();
 

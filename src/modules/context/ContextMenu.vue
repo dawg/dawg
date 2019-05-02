@@ -117,7 +117,8 @@ export default class ContextMenu extends Vue {
     }
 
     this.items = payload.items;
-    this.$press(['Esc'], this.close);
+    // TODO(jacob)
+    // this.$press(['Esc'], this.close);
 
     document.addEventListener('click', this.outsideClickListener);
   }

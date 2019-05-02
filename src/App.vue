@@ -92,21 +92,12 @@
         <status-bar :height="25"></status-bar>
       </split>
     </split>
-    <notifications></notifications>
+    <component
+      v-for="(global, i) in dawg.ui.global"
+      :key="i"
+      :is="global"
+    ></component>
     <context-menu></context-menu>
-    <palette 
-      v-model="palette"
-      palette-class="secondary"
-      :items="paletteCommands"
-    ></palette>
-    <keyboard-shortcuts :items="paletteCommands"></keyboard-shortcuts>
-    <palette 
-      v-model="themePalette"
-      palette-class="secondary"
-      :items="themeCommands"
-      automatic
-      @cancel="restoreTheme"
-    ></palette>
     <project-modal 
       v-model="backupModal" 
       :projects="general.projects"
@@ -136,7 +127,6 @@ import ActivityBar from '@/sections/ActivityBar.vue';
 import StatusBar from '@/sections/StatusBar.vue';
 import Tone from 'tone';
 import { SideTab, FILTERS, ApplicationContext, APPLICATION_PATH, RECORDING_PATH } from '@/constants';
-import { PaletteItem } from '@/modules/palette';
 import { Watch } from '@/modules/update';
 import backend, { ProjectInfo } from '@/backend';
 import * as io from '@/modules/cerialize';
@@ -166,8 +156,10 @@ import * as dawg from '@/dawg';
   },
 })
 export default class App extends Vue {
+  public dawg = dawg;
 
-  get themeCommands(): PaletteItem[] {
+  // TODO(jacob)
+  get themeCommands() {
     return Object.entries(theme.defaults).map(([name, theDefault]) => {
       return {
         text: name,
@@ -191,7 +183,7 @@ export default class App extends Vue {
   public ghosts: Ghost[] = [];
   public mediaRecorder: MediaRecorder | null = null;
 
-  public menuItems = {
+  public menuItems: { [key: string]: dawg.Command } = {
     save: {
       text: 'Save',
       shortcut: ['Ctrl', 'S'],
@@ -303,7 +295,8 @@ export default class App extends Vue {
     },
   ];
 
-  public paletteCommands: PaletteItem[] = [
+  // TODO(jacob)
+  public paletteCommands: dawg.Command[] = [
     {
       text: 'Open Piano Roll',
       shortcut: ['Ctrl', 'P'],
@@ -355,6 +348,9 @@ export default class App extends Vue {
     // I don't remove this listner because the window is closing anyway
     // I'm not even sure onExit would be called if we removed it in the destroy method
     window.addEventListener('beforeunload', this.onExit);
+
+    // TODO(jacob)
+    this.paletteCommands.forEach((command) => dawg.commands.registerCommand(command));
 
     const w = remote.getCurrentWindow();
     w.addListener('maximize', this.maximize);
@@ -434,7 +430,11 @@ export default class App extends Vue {
   }
 
   public openPalette() {
-    this.palette = true;
+    dawg.palette.showQuickPick(this.paletteCommands, {
+      onDidSelect: (item) => {
+        item.callback();
+      },
+    });
   }
 
   public openFolder() {
@@ -442,7 +442,7 @@ export default class App extends Vue {
     // the showFileDialog messes with the keyup events
     // This is a temporary solution
     cache.openFolder();
-    this.$shortcuts.clear();
+    dawg.commands.clear();
   }
 
   public openThemePalette() {
@@ -491,10 +491,10 @@ export default class App extends Vue {
       { filters: FILTERS, properties: ['openFile'] },
     );
 
-    // TODO
+    // TODO(jacob)
     // the showFileDialog messes with the keyup events
     // This is a temporary solution
-    this.$shortcuts.clear();
+    dawg.commands.clear();
 
     if (!files) {
       return;

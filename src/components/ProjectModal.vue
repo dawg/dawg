@@ -100,7 +100,8 @@ export default class ProjectModal extends Vue {
 
   @Watch<ProjectModal>('value')
   public addListener() {
-    this.$press(['Esc'], this.close);
+    // TODO(jacob)
+    // this.$press(['Esc'], this.close);
   }
 }
 </script>

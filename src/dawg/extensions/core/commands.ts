@@ -44,7 +44,7 @@ const codeLookup: KeyCodeLookup = {
   Shift: 16,
   Ctrl: {
     [Platform.Windows]: 17,
-    [Platform.Mac]: 55,
+    [Platform.Mac]: 91,
     [Platform.Linux]: 17,
   }, // 55 is the Mac command key
   A: 65,
@@ -108,10 +108,14 @@ function shortcutPressed(shortcut: Key[], pressedKeys: Set<number>) {
 
 export class KeyboardShortcuts {
   public pressedKeys = new Set<number>();
+  private boundKeydown: (e: KeyboardEvent) => void;
+  private boundKeyup: (e: KeyboardEvent) => void;
 
   constructor() {
-    window.addEventListener('keydown', this.keydown);
-    window.addEventListener('keyup', this.keyup);
+    this.boundKeydown = this.keydown.bind(this);
+    this.boundKeyup = this.keyup.bind(this);
+    window.addEventListener('keydown', this.boundKeydown);
+    window.addEventListener('keyup', this.boundKeyup);
   }
 
   public clear() {
@@ -132,8 +136,6 @@ export class KeyboardShortcuts {
 
       if (shortcutPressed(item.shortcut, this.pressedKeys)) {
         e.preventDefault();
-        e.stopImmediatePropagation();
-        e.stopPropagation();
         item.callback();
       }
     });
@@ -144,15 +146,14 @@ export class KeyboardShortcuts {
   }
 
   public dispose() {
-    window.removeEventListener('keydown', this.keydown);
-    window.removeEventListener('keyup', this.keyup);
+    window.removeEventListener('keydown', this.boundKeydown);
+    window.removeEventListener('keyup', this.boundKeyup);
   }
 }
 
 const items: Command[] = [];
 
 export interface Command {
-  command: string;
   text: string;
   shortcut?: Key[]; // TODO
   callback: CommandCallback;

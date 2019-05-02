@@ -21,7 +21,6 @@ import Piano from '@/components/Piano.vue';
 import DTrack from '@/components/DTrack.vue';
 import TooltipIcon from '@/components/TooltipIcon.vue';
 import DotButton from '@/components/DotButton.vue';
-import Palette from '@/modules/palette';
 import MenuBar from '@/modules/menubar';
 import Explorer from '@/modules/explorer';
 import BusySignal from '@/modules/BusySignal';
@@ -32,7 +31,6 @@ export default function middleware() {
   Vue.use(Update);
   Vue.use(DragNDrop);
   Vue.use(Dawg);
-  Vue.use(Palette);
   Vue.use(Knobs);
   Vue.use(BusySignal);
   Vue.use(MenuBar);

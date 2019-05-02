@@ -1,9 +1,9 @@
-import { Key } from '@/modules/palette';
 import { Bus } from '@/modules/update';
+import * as dawg from '@/dawg';
 
 export interface Item {
   text: string;
-  shortcut?: Key[];
+  shortcut?: dawg.Key[];
   callback: (e: MouseEvent) => void;
 }
 

@@ -137,7 +137,6 @@ export const extension: Extension<{}, { microphoneIn: string }> = {
     };
 
     const disposable = commands.registerCommand({
-      command: 'record.start',
       text: 'Record Audio',
       callback: async () => {
         const trackNumber = await palette.showInputBox();

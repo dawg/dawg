@@ -15,12 +15,10 @@ import Dawg from '@/modules/dawg/Dawg.vue';
 import ColorBlock from '@/components/ColorBlock.vue';
 import { StyleType, range, makeStyle } from '@/utils';
 // import Foot from '@/components/Foot.vue';
-import Notifications from '@/modules/notification/Notifications.vue';
 import Synth from '@/components/Synth.vue';
 
 import Timeline from '@/components/Timeline.vue';
 import ContextMenu from '@/modules/context/ContextMenu.vue';
-import * as dawg from '@/dawg';
 
 const synth = new Tone.Synth().toMaster();
 
@@ -251,51 +249,6 @@ storiesOf(ContextMenu.name, module)
       },
     },
   }));
-
-
-storiesOf(Notifications.name, module)
-  .add('Standard', () => ({
-    template: `
-    <div>
-      <div>
-        <v-btn @click="info" class="info">INFO</v-btn>
-        <v-btn @click="success" class="success">SUCCESS</v-btn>
-      </div>
-      <div>
-        <v-btn @click="warning" class="warning">WARNING</v-btn>
-        <v-btn @click="error" class="error">ERROR</v-btn>
-      </div>
-      <notifications></notifications>
-    </div>
-    `,
-    components: { Notifications },
-    methods: {
-      info() {
-        // @ts-ignore
-        dawg.notify.info('Information', {detail: 'Here is some info!'});
-      },
-      success() {
-        // @ts-ignore
-        dawg.notify.success('Success', {detail: 'Something went well!'});
-      },
-      warning() {
-        // @ts-ignore
-        dawg.notify.warning('Warning', {detail: 'This is bad!'});
-      },
-      error() {
-        // @ts-ignore
-        dawg.notify.error('Error', {detail: 'Something is probably broken!'});
-      },
-    },
-  }));
-
-// storiesOf(Foot.name, module)
-//   .add('Standard', () => ({
-//     template: `
-//     <foot></foot>
-//     `,
-//     components: { Foot },
-//   }));
 
 const NOTES = [
   {id: 44, time: 0, duration: 1},

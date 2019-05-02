@@ -40,8 +40,8 @@
     </transition-group>
   </div>
 </template>
-<script lang="ts">
 
+<script lang="ts">
 import { events, Notification } from './events';
 import { Vue, Component, Prop} from 'vue-property-decorator';
 import { reverse } from '@/utils';

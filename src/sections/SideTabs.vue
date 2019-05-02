@@ -67,6 +67,7 @@ import { SideTab } from '@/constants';
 import SmartFileExplorer from '@/smart/SmartFileExplorer.vue';
 import AutomationClips from '@/sections/AutomationClips.vue';
 import { Sample } from '@/core';
+import * as dawg from '@/dawg';
 
 interface Group {
   icon: string;
@@ -128,7 +129,7 @@ export default class SideTabs extends Vue {
     // the showFileDialog messes with the keyup events
     // This is a temporary solution
     cache.openFolder();
-    this.$shortcuts.clear();
+    dawg.commands.clear();
   }
 
   public openSample(sample: Sample) {
