@@ -2,6 +2,9 @@ import Vue from 'vue';
 import { remote } from 'electron';
 import Context from '@/modules/context';
 import storybook from '@/storybook';
+import * as backup from '@/dawg/extensions/extra/backup';
+import * as record from '@/dawg/extensions/extra/record';
+import * as dawg from '@/dawg';
 
 const inspect = {
   text: 'Inspect',
@@ -51,6 +54,9 @@ const middleware = () => {
       componentConfig.default || componentConfig,
     );
   });
+
+  dawg.manager.activate(backup.extension);
+  dawg.manager.activate(record.extension);
 };
 
 export default middleware;

@@ -8,6 +8,7 @@ export interface IExtensionState<T extends ExtensionData> {
   get<K extends keyof T & string>(key: K): T[K] | undefined;
   get<K extends keyof T & string>(key: K, defaultValue: T[K]): T[K];
   set<K extends keyof T & string>(key: K, value: T[K]): Promise<void>;
+  getData(): ExtensionData;
 }
 
 export interface ISettingsState<S extends ExtensionData> extends IExtensionState<S> {
@@ -30,11 +31,12 @@ interface Subscription {
 }
 
 class State<T extends ExtensionData> implements IExtensionState<T> {
-  private config: ExtensionData = {};
+  constructor(private config: ExtensionData) {}
 
   public get<K extends keyof T & string>(key: K, defaultValue?: T[K]) {
     if (defaultValue === undefined) {
-      return this.config[key];
+      // FIXME Remove this any. We shouldn't need it but for some reason we do.
+      return this.config[key] as any;
     } else {
       return this.config[key] === undefined ? defaultValue : this.config[key];
     }
@@ -45,6 +47,10 @@ class State<T extends ExtensionData> implements IExtensionState<T> {
       this.config[key] = value;
       resolve();
     });
+  }
+
+  public getData() {
+    return this.config;
   }
 }
 
@@ -64,9 +70,15 @@ export class ExtensionContext<
   S extends ExtensionData = {},
 > implements IExtensionContext<W, G, S> {
   public subscriptions: Subscription[] = [];
-  public workspace = new State<W>();
-  public global = new State<G>();
-  public settings = new Settings<S>();
+  public workspace: State<W>;
+  public global: State<G>;
+  public settings: Settings<S>;
+
+  constructor(workspace: ExtensionData, global: ExtensionData, settings: ExtensionData) {
+    this.workspace = new State<W>(workspace);
+    this.global = new State<G>(global);
+    this.settings = new Settings<S>(settings);
+  }
 }
 
 

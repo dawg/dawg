@@ -29,6 +29,7 @@ import { Instrument } from '@/core/instrument/instrument';
 const ProjectTypeRequired = t.type({
   id: t.string,
   bpm: t.number,
+  name: t.string,
   master: PlaylistType,
   channels: t.array(ChannelType),
   tracks: t.array(TrackType),
@@ -37,7 +38,6 @@ const ProjectTypeRequired = t.type({
 const ProjectTypePartial = t.partial({
   stepsPerBeat: t.number,
   beatsPerMeasure: t.number,
-  name: t.string,
   patterns: t.array(PatternType),
   instruments: t.array(t.union([SynthType, SoundfontType])),
   samples: t.array(SampleType),
@@ -53,7 +53,7 @@ export interface IProjectConstructor {
   bpm: number;
   stepsPerBeat?: number;
   beatsPerMeasure?: number;
-  name?: string;
+  name: string;
   patterns: Pattern[];
   instruments: Array<Synth | Soundfont>;
   channels: Channel[];
@@ -76,6 +76,7 @@ export class Project implements Serializable<IProject> {
     return new Project({
       id: uuid.v4(),
       bpm: 120,
+      name: '',
       master: new Playlist([]),
       patterns: [Pattern.create('Pattern 0')],
       instruments: [Synth.create('Synth 0')],
@@ -229,7 +230,7 @@ export class Project implements Serializable<IProject> {
   public bpm: number;
   public stepsPerBeat: number;
   public beatsPerMeasure: number;
-  public name?: string;
+  public name: string;
   public id: string;
   public patterns: Pattern[];
   public instruments: Array<Synth | Soundfont>;

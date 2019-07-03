@@ -28,28 +28,6 @@
       :is="component"
       style="margin: 0 35px"
     ></component>
-
-    <tooltip-icon
-      v-if="general.backupError" 
-      :color="iconColor" 
-      size="18" 
-      tooltip="Cloud Backup Error"
-      top
-      left
-    >
-      error_outline
-    </tooltip-icon>
-
-    <v-progress-circular
-      v-else-if="general.syncing"
-      :size="15"
-      :width="2"
-      indeterminate
-    ></v-progress-circular>
-
-    <v-icon v-else :color="iconColor" size="20">
-      {{ icon }}
-    </v-icon>
   </div>
 </template>
 
@@ -83,7 +61,8 @@ export default class Foot extends Vue {
   }
 
   get icon() {
-    return workspace.backup ? 'cloud_done' : 'cloud_off';
+    // TODO
+    return 'cloud_off'; // workspace.backup ? 'cloud_done' : 'cloud_off';
   }
 
   get openedFile() {

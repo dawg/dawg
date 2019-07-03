@@ -4,8 +4,6 @@ import fs from '@/wrappers/fs';
 import BaseTabs from '@/components/BaseTabs.vue';
 import store from '@/store/store';
 import { VuexModule } from '@/store/utils';
-import backend, { ProjectInfo } from '@/backend';
-import { User } from 'firebase';
 import { Project } from './project';
 import { remote } from 'electron';
 import cache from './cache';
@@ -33,11 +31,8 @@ export class General extends VuexModule {
   public panels: BaseTabs | null = null;
   public toolbarHeight = 64;
   public play = false;
-  public syncing = false;
-  public backupError = false;
-  public projects: ProjectInfo[] = [];
-  public getProjectsErrorMessage: string | null = null;
-  public user: User | null = null;
+
+  // TODO(jacob)
   public isRecordingMicrophone = false;
   public isRecording: boolean = false;
 
@@ -50,10 +45,6 @@ export class General extends VuexModule {
    * The actual file that is currently opened. This is not the same as the opened file in the cache.
    */
   public projectPath: string | null = null;
-
-  get authenticated() {
-    return !!this.user;
-  }
 
   @Action
   public async loadProject(): Promise<InitializationError | InitializationSuccess> {
@@ -106,7 +97,7 @@ export class General extends VuexModule {
   }
 
   @Action
-  public async saveProject(opts: { backup: boolean, user: User | null, forceDialog?: boolean }) {
+  public async saveProject(opts: { forceDialog?: boolean }) {
     let projectPath = this.projectPath;
     if (!projectPath || opts.forceDialog) {
       projectPath = remote.dialog.showSaveDialog(remote.getCurrentWindow(), {}) || null;
@@ -135,44 +126,11 @@ export class General extends VuexModule {
     const encoded = this.project.serialize();
 
     await fs.writeFile(projectPath, JSON.stringify(encoded, null, 4));
-
-    // I don't think this is the best place to put this.
-    if (opts.backup && opts.user && encoded.name) {
-      return await backend.updateProject(opts.user, this.project.id, encoded as any);
-    }
-  }
-
-  @Action
-  public setUser(user: User | null) {
-    this.set({ key: 'user', value: user });
-  }
-
-  @Action
-  public async loadProjects(user: User) {
-    const res =  await backend.getProjects(user);
-
-    if (res.type === 'success') {
-      this.setProjects(res.projects);
-    }
-
-    if (res.type === 'error') {
-      this.setErrorMessage(res.message);
-    }
-  }
-
-  @Mutation
-  public setProjects(projects: ProjectInfo[]) {
-    this.projects = projects;
   }
 
   @Mutation
   public setProject(project: Project) {
     this.project = project;
-  }
-
-  @Mutation
-  public setErrorMessage(message: string) {
-    this.getProjectsErrorMessage = message;
   }
 
   @Mutation

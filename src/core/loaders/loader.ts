@@ -21,8 +21,8 @@ export interface DecodeSuccess<T> {
 export abstract class Loader<T, O> {
   constructor(public type: t.Type<T>, public opts: O) {}
 
-  public async load(): Promise<Error | DecodeSuccess<T>> {
-    const retrieval = await this.get();
+  public load(): Error | DecodeSuccess<T> {
+    const retrieval = this.get();
     if (retrieval.type === 'error') {
       return retrieval;
     }
@@ -43,5 +43,5 @@ export abstract class Loader<T, O> {
     };
   }
 
-  protected abstract get(): RetrievalTypes | Promise<RetrievalTypes>;
+  protected abstract get(): RetrievalTypes;
 }

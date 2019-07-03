@@ -48,7 +48,8 @@ export class Effect<T extends EffectName> implements Serializable<IEffect> {
     this.type = i.type as T;
     // TODO Remove any cast
     this.options = i.options as any;
-    this.effect = new EffectMap[this.type]();
+    // TODO FIx this because we shouldn't have to use any type
+    this.effect = new EffectMap[this.type]() as any;
     // TODO actually set options
   }
 

@@ -4,11 +4,14 @@ import * as t from 'io-ts';
 import backend, { ProjectInfo } from '@/dawg/extensions/extra/backup/backend';
 import { ProjectType, IProject } from '@/store/project';
 import { PathReporter } from 'io-ts/lib/PathReporter';
-import auth from '@/auth';
+import auth from '@/dawg/extensions/extra/backup/auth';
+import firebase from 'firebase/app';
+import 'firebase/database';
+import 'firebase/auth';
 
-class BackupManager {
+export class BackupManager {
+  public user: User | null = null;
   private projects: ProjectInfo[] = [];
-  private user: User | null = null;
   private item = dawg.ui.createStatusBarItem();
   private error = false;
   private syncing = false;
@@ -61,14 +64,18 @@ class BackupManager {
     }
   }
 
-  public openBackup() {
-    const projects: { [name: string]: ProjectInfo } = {};
-    this.projects.forEach((project) => {
-      projects[project.name] = project;
-    });
+  public resetProjects() {
+    this.projects = [];
+  }
 
+  public openBackup() {
     this.handleUnauthenticated(async (user) => {
       await this.loadProjects(user);
+      const projects: { [name: string]: ProjectInfo } = {};
+      this.projects.forEach((project) => {
+        projects[project.name] = project;
+      });
+
       dawg.palette.selectFromObject(projects, {
         placeholder: 'Available Projects',
         onDidSelect: (projectInfo) => {
@@ -97,6 +104,7 @@ class BackupManager {
         dawg.notify.error('Unable to parse project from backup', {
           detail: errors.join('\n'),
         });
+        return;
       }
 
       dawg.project.openTempProject(decoded.value);
@@ -141,7 +149,7 @@ class BackupManager {
       return;
     }
 
-    if (!encoded.name) {
+    if (encoded.name === '') {
       dawg.notify.info('Please give your project a name to backup.');
       return;
     }
@@ -175,7 +183,7 @@ class BackupManager {
   }
 }
 
-export const extension: dawg.Extension<{}, {}, { backup: t.BooleanC }> = {
+export const extension: dawg.Extension<{}, {}, { backup: t.BooleanC }, BackupManager> = {
   id: 'dawg.backup',
   defineSettings() {
     return {
@@ -184,6 +192,16 @@ export const extension: dawg.Extension<{}, {}, { backup: t.BooleanC }> = {
   },
 
   activate(context) {
+    const config = {
+      apiKey: 'AIzaSyCg8BcL3EbQpOpXFLwMx4h6XmdKtStVKhU',
+      authDomain: 'dawg-backup.firebaseapp.com',
+      databaseURL: 'https://dawg-backup.firebaseio.com',
+      projectId: 'dawg-backup',
+      storageBucket: 'dawg-backup.appspot.com',
+      messagingSenderId: '540203128797',
+    };
+    firebase.initializeApp(config);
+
     const manager = new BackupManager(context);
     manager.setBackup(context.settings.get('backup', false));
 
@@ -229,6 +247,8 @@ export const extension: dawg.Extension<{}, {}, { backup: t.BooleanC }> = {
     context.subscriptions.push(dawg.project.onDidSave((encoded) => {
       manager.updateProject(encoded);
     }));
+
+    return manager;
   },
 
   deactivate() {

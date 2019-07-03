@@ -76,8 +76,9 @@ export const palette = manager.activate({
       selectFromObject<T>(items: InputItemLookup<T>, options: QuickPickOptions<T>) {
         this.selectFromTuples(Object.keys(items).map((key) => [{ text: key }, items[key]]), options);
       },
-      showInputBox() {
-        // TODO(jacob)
+      async showNumberInputBox() {
+        //
+        return 0;
       },
     };
   },

@@ -56,11 +56,12 @@
       <v-list-tile>
         <v-list-tile-title>Cloud Backup</v-list-tile-title>
         <v-list-tile-action>
+          <!-- TODO Refactor -->
           <v-switch 
             :input-value="workspace.backup"
             color="primary"
             :disabled="!general.project.name || !general.authenticated"
-            @change="workspace.setBackup"
+            @change="backup ? backup.setBackup : () => ({})"
           ></v-switch>
         </v-list-tile-action>
       </v-list-tile>
@@ -87,8 +88,10 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Nullable } from '@/utils';
 import { cache, workspace, general } from '@/store';
-import auth from '@/auth';
+// TODO(jacob)
+import auth from '@/dawg/extensions/extra/backup/auth';
 import * as dawg from '@/dawg';
+import { BackupManager, extension } from '@/dawg/extensions/extra/backup';
 
 @Component
 export default class Settings extends Vue {
@@ -96,6 +99,7 @@ export default class Settings extends Vue {
   public workspace = workspace;
   public general = general;
   public devices: string[] = [];
+  public backup: BackupManager | null = null;
 
   public mounted() {
     navigator.mediaDevices.enumerateDevices().then((media: MediaDeviceInfo[]) => {
@@ -105,10 +109,24 @@ export default class Settings extends Vue {
         }
       });
     });
+
+    this.backup = dawg.manager.get(extension);
+  }
+
+  get user() {
+    if (!this.backup) {
+      return null;
+    }
+
+    return this.backup.user;
+  }
+
+  get authenticated() {
+    return !!this.user;
   }
 
   get text() {
-    if (general.authenticated) {
+    if (this.authenticated) {
       return 'Sign Out';
     } else {
       return 'Sign in with Google';
@@ -116,13 +134,13 @@ export default class Settings extends Vue {
   }
 
   get name() {
-    if (general.user) {
-      return general.user.displayName;
+    if (this.user) {
+      return this.user.displayName;
     }
   }
 
   public signInOrSignOut() {
-    if (general.authenticated) {
+    if (this.authenticated) {
       this.logout();
     } else {
       this.signIn();
@@ -132,8 +150,11 @@ export default class Settings extends Vue {
   public async logout() {
     try {
       auth.logout();
-      general.setProjects([]);
-      workspace.setBackup(false);
+
+      if (this.backup) {
+        this.backup.setBackup(false);
+        this.backup.resetProjects();
+      }
     } catch (e) {
       dawg.notify.error('Unable to sign out of Google.', { detail: e.message });
     }

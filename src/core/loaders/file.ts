@@ -6,8 +6,8 @@ export class FileLoader<T> extends Loader<T, { path: string }> {
     return this.opts.path;
   }
 
-  public async get(): Promise<RetrievalTypes> {
-    if (!await fs.exists(this.path)) {
+  public get(): RetrievalTypes {
+    if (!fs.existsSync(this.path)) {
       return {
         type: 'error',
         message: `${this.path} does not exist.`,
@@ -19,7 +19,7 @@ export class FileLoader<T> extends Loader<T, { path: string }> {
 
     let contents: string;
     try {
-      contents = (await fs.readFile(this.path)).toString();
+      contents = fs.readFileSync(this.path).toString();
     } catch (e) {
       return {
         type: 'error',

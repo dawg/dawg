@@ -111,7 +111,7 @@ export const extension: Extension<{}, { microphoneIn: string }> = {
           bitDepth: 32,
         });
 
-        fs.mkdirRecursive(RECORDING_PATH);
+        await fs.mkdirRecursive(RECORDING_PATH);
 
         const dst = path.join(RECORDING_PATH, makeFileName());
         try {
@@ -139,7 +139,7 @@ export const extension: Extension<{}, { microphoneIn: string }> = {
     const disposable = commands.registerCommand({
       text: 'Record Audio',
       callback: async () => {
-        const trackNumber = await palette.showInputBox();
+        const trackNumber = await palette.showNumberInputBox();
         startRecording(trackNumber);
       },
     });

@@ -98,12 +98,6 @@
       :is="global"
     ></component>
     <context-menu></context-menu>
-    <project-modal 
-      v-model="backupModal" 
-      :projects="general.projects"
-      @open="openProject"
-      @delete="deleteProject"
-    ></project-modal>
     <loading 
       class="secondary"
       :value="!loaded"
@@ -133,7 +127,6 @@ import * as io from '@/modules/cerialize';
 import tmp from 'tmp';
 import { remote } from 'electron';
 import { Menu } from '@/modules/menubar';
-import auth from '@/auth';
 import { User } from 'firebase';
 import { ScheduledPattern } from '@/core/scheduled/pattern';
 import { ScheduledSample, Sample } from '@/core';
@@ -156,13 +149,10 @@ import * as dawg from '@/dawg';
 export default class App extends Vue {
   public dawg = dawg;
 
-  get getProjectsErrorMessage() {
-    return general.getProjectsErrorMessage;
-  }
-
   get playlistPlay() {
     return general.play && workspace.applicationContext === 'playlist';
   }
+
   public general = general;
   public workspace = workspace;
   public ghosts: Ghost[] = [];
@@ -183,10 +173,6 @@ export default class App extends Vue {
       text: 'Open',
       shortcut: ['Ctrl', 'O'],
       callback: this.open,
-    },
-    backup: {
-      text: 'Open From Backup',
-      callback: this.openBackup,
     },
     addFolder: {
       text: 'Add Folder to Workspace',
@@ -337,13 +323,6 @@ export default class App extends Vue {
 
     automation.$on('automate', this.addAutomationClip);
 
-    auth.watchUser({
-      authenticated: general.setUser,
-      unauthenticated: () => {
-        general.setUser(null);
-      },
-    });
-
     setTimeout(async () => {
       // Make sure we load the cache first before loading the default project.
       this.$log.debug('Starting to read data.');
@@ -438,13 +417,6 @@ export default class App extends Vue {
     await workspace.write();
   }
 
-  public openBackup() {
-    this.handleUnauthenticated(async (user) => {
-      this.backupModal = true;
-      general.loadProjects(user);
-    });
-  }
-
   public async open() {
     // files can be undefined. There is an issue with the .d.ts files.
     const files = remote.dialog.showOpenDialog(
@@ -468,33 +440,9 @@ export default class App extends Vue {
   }
 
   public async save(forceDialog: boolean = false) {
-    // If we are backing up, star the progress circle!
-    if (workspace.backup) {
-      general.set({ key: 'syncing', value: true });
-    }
-
-    const backupStatus = await general.saveProject({
-      backup: workspace.backup,
-      user: general.user,
+    await general.saveProject({
       forceDialog,
     });
-
-    // Always set the value back to false... you never know
-    general.set({ key: 'syncing', value: false });
-
-    // backupStatus is true if workspace.backup is also true
-    if (backupStatus) {
-      switch (backupStatus.type) {
-        case 'error':
-          dawg.notify.error('Unable to backup', { detail: backupStatus.message });
-          general.set({ key: 'backupError', value: true });
-          break;
-        case 'success':
-          // Make sure to set it back to false if there was an error previously
-          general.set({ key: 'backupError', value: false });
-          break;
-      }
-    }
   }
 
   public setContext(context: ApplicationContext) {
@@ -559,64 +507,6 @@ export default class App extends Vue {
     }
   }
 
-  public async openProject(info: ProjectInfo) {
-    this.handleUnauthenticated(async (user) => {
-      const res = await backend.getProject(user, info.id);
-      if (res.type === 'not-found') {
-        dawg.notify.warning('Uh, we were unable to find project');
-        return;
-      }
-
-      if (res.type === 'error') {
-        dawg.notify.error('Unable to get project', { detail: res.message });
-        return;
-      }
-
-
-      const { name } = tmp.fileSync({ keep: true });
-      await fs.writeFile(name, JSON.stringify(res.project, null, 4));
-
-      if (!(await fs.exists(name))) {
-        throw Error(name);
-      }
-
-      this.$log.info(`Writing ${name} as backup`);
-      cache.setBackupTempPath(name);
-
-      const window = remote.getCurrentWindow();
-      window.reload();
-    });
-  }
-
-  public handleUnauthenticated(authenticated: (user: User) => void) {
-    if (general.user === null) {
-      // TODO dulication
-      dawg.notify.info('Please login first', { detail: 'Use the settings icon in the Activity Bar.' });
-      return;
-    }
-
-    authenticated(general.user);
-  }
-
-  public deleteProject(info: ProjectInfo) {
-    this.handleUnauthenticated(async (user) => {
-      const res = await backend.deleteProject(user, info.id);
-
-      if (res.type === 'success') {
-        // We are not taking advantage of firebase here
-        // Ideally firebase would send an event and we would update our project list
-        // Until we do that, this will suffice
-        general.setProjects(
-          general.projects.filter((maybe) => maybe !== info),
-        );
-      } else if (res.type === 'not-found') {
-        dawg.notify.info(`Unable to delete ${info.name}`, { detail: 'The project was not found.' });
-      } else {
-        dawg.notify.info(`Unable to delete ${info.name}`, { detail: res.message });
-      }
-    });
-  }
-
   public async newProject() {
     await cache.setOpenedFile(null);
     this.reload();
@@ -657,13 +547,6 @@ export default class App extends Vue {
 
   public unmaximize() {
     this.maximized = false;
-  }
-
-  @Watch<App>('getProjectsErrorMessage')
-  public showNotification() {
-    if (this.getProjectsErrorMessage) {
-      dawg.notify.error('Unable to get projects.', { detail: this.getProjectsErrorMessage });
-    }
   }
 
   public record(trackId: number) {
@@ -749,7 +632,7 @@ export default class App extends Vue {
               bitDepth: 32,
             });
 
-            fs.mkdirRecursive(RECORDING_PATH);
+            await fs.mkdirRecursive(RECORDING_PATH);
 
             const date = new Date();
             const dst = path.join(RECORDING_PATH, 'recording-'

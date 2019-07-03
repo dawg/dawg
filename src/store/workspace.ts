@@ -58,7 +58,6 @@ export class Specific extends VuexModule {
   }
 
   public events = emitter<{ playPause: () => void }>();
-  @io.auto({ optional: true }) public backup = false;
   @io.auto({ nullable: true, optional: true }) public selectedPatternId: string | null = null;
   @io.auto({ nullable: true, optional: true }) public selectedScoreId: string | null = null;
   @io.auto({ nullable: true, optional: true }) public openedPanel: PanelNames | null = null;
@@ -156,11 +155,6 @@ export class Specific extends VuexModule {
     } else {
       this.set({ key: 'selectedScoreId', value: null });
     }
-  }
-
-  @Action
-  public setBackup(backup: boolean) {
-    this.set({ key: 'backup', value: backup });
   }
 
   @Action
