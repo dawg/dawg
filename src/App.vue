@@ -156,7 +156,6 @@ export default class App extends Vue {
   public general = general;
   public workspace = workspace;
   public ghosts: Ghost[] = [];
-  public mediaRecorder: MediaRecorder | null = null;
 
   public menuItems: { [key: string]: dawg.Command } = {
     save: {
@@ -458,11 +457,6 @@ export default class App extends Vue {
       return;
     }
 
-    // TODO(jacob) move all of this
-    if (this.mediaRecorder) {
-      this.stopRecording();
-    }
-
     // TODO(jacob) refactor
     if (workspace.transport.state === 'started') {
       this.$log.debug('PAUSING');
@@ -547,154 +541,6 @@ export default class App extends Vue {
 
   public unmaximize() {
     this.maximized = false;
-  }
-
-  public record(trackId: number) {
-    if ( this.mediaRecorder == null ) {
-      this.startRecording(trackId);
-    } else {
-      this.stopRecording();
-    }
-  }
-
-  public startRecording(trackId: number) {
-    // TODO(jacob) Remove
-    if (workspace.transport && workspace.transport.state === 'started') {
-      this.$log.debug('PAUSING');
-      workspace.transport.stop();
-      general.pause();
-    }
-
-    workspace.setContext('playlist');
-
-    const transport = general.project.master.transport;
-
-    const time = transport.beats;
-
-    if ( cache.microphoneIn === null ) {
-      dawg.notify.info('Please select a microphone from the settings.');
-      return;
-    }
-
-    let deviceId: string | null = null;
-
-    // enumerate devices and find our input device
-    navigator.mediaDevices.enumerateDevices().then((devices) => {
-      devices.forEach((device) => {
-        if ( device.label === cache.microphoneIn ) {
-          deviceId = device.deviceId;
-        }
-      });
-
-      if ( deviceId === null ) {
-        dawg.notify.info('Selected microphone is no longer available.');
-        return;
-      }
-
-      // create new chunk ghost
-      const ghost = new ChunkGhost(time, trackId);
-      this.ghosts.push(ghost);
-
-      const contraints: MediaStreamConstraints = {
-        audio: {
-          deviceId,
-        },
-        video: false,
-      };
-
-      navigator.mediaDevices.getUserMedia(contraints).then((stream) => {
-
-        this.mediaRecorder = new MediaRecorder(stream);
-        const audioBlobs: Blob[] = [];
-
-
-        this.mediaRecorder.start(100);
-
-        // keep the ghost updated
-        this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
-          if ( !general.isRecordingMicrophone ) {
-            general.setRecordingMicrophone(true);
-            transport.start();
-            general.start();
-          }
-          audioBlobs.push(event.data);
-          this.blobsToAudioBuffer(audioBlobs).then((buffer: AudioBuffer) => {
-            ghost.buffer = buffer;
-          });
-        };
-
-        this.mediaRecorder.onstop = async () => {
-          this.blobsToAudioBuffer(audioBlobs).then(async (buffer: AudioBuffer) => {
-
-            const wavData: ArrayBuffer = audioBufferToWav(buffer, {
-              sampleRate: buffer.sampleRate,
-              float: true,
-              bitDepth: 32,
-            });
-
-            await fs.mkdirRecursive(RECORDING_PATH);
-
-            const date = new Date();
-            const dst = path.join(RECORDING_PATH, 'recording-'
-              + date.getFullYear() + '-'
-              + date.getMonth() + '-'
-              + date.getDay() + '-'
-              + date.getHours() +
-              + date.getMinutes() +
-              + date.getSeconds() +
-              '.wav');
-
-            try {
-              await fs.writeFile(dst, new DataView(wavData));
-            } catch (e) {
-              dawg.notify.error('' + e);
-            }
-
-            // add the file to the workspace
-            // create a sample from the file.
-            const master = general.project.master;
-            const sample = Sample.create(dst, buffer);
-            general.project.samples.push(sample);
-            const scheduled = new ScheduledSample(sample, {
-              type: 'sample',
-              sampleId: sample.id,
-              duration: sample.beats,
-              row: trackId,
-              time,
-            });
-
-            scheduled.schedule(master.transport);
-            master.elements.push(scheduled);
-
-            general.setRecordingMicrophone(false);
-          });
-        };
-      }, (err) => {
-        // dawg.notify.error('' + err);
-      });
-    });
-  }
-
-  public stopRecording() {
-    if (this.mediaRecorder != null) {
-      this.mediaRecorder.stop();
-      this.mediaRecorder = null;
-      this.ghosts = [];
-    }
-  }
-
-  private blobsToAudioBuffer(blobs: Blob[]): Promise<AudioBuffer> {
-    const reader = new FileReader();
-    return new Promise<AudioBuffer>((resolve, reject) => {
-      reader.onload = (event) => {
-        const buffer = reader.result as ArrayBuffer;
-        Audio.context.decodeAudioData(buffer).then((decodedBuffer) => {
-          resolve(decodedBuffer);
-        });
-      };
-      const audioBlob = new Blob(blobs);
-      reader.readAsArrayBuffer(audioBlob);
-    });
   }
 }
 </script>

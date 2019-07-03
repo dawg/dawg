@@ -192,15 +192,14 @@ export const extension: dawg.Extension<{}, {}, { backup: t.BooleanC }, BackupMan
   },
 
   activate(context) {
-    const config = {
+    firebase.initializeApp({
       apiKey: 'AIzaSyCg8BcL3EbQpOpXFLwMx4h6XmdKtStVKhU',
       authDomain: 'dawg-backup.firebaseapp.com',
       databaseURL: 'https://dawg-backup.firebaseio.com',
       projectId: 'dawg-backup',
       storageBucket: 'dawg-backup.appspot.com',
       messagingSenderId: '540203128797',
-    };
-    firebase.initializeApp(config);
+    });
 
     const manager = new BackupManager(context);
     manager.setBackup(context.settings.get('backup', false));
