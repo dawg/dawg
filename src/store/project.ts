@@ -87,19 +87,6 @@ export class Project implements Serializable<IProject> {
     });
   }
 
-  public static async fromFile(path: string): Promise<Error | ProjectLoaded> {
-    const loader = new FileLoader(ProjectType, { path });
-    const result = await loader.load();
-    if (result.type === 'error') {
-      return result;
-    }
-
-    return {
-      type: 'success',
-      project: await Project.load(result.decoded),
-    };
-  }
-
   public static async load(i: IProject) {
     const channels =  (i.channels || []).map((iChannel) => {
       return new Channel(iChannel);

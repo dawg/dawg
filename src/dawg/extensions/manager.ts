@@ -5,7 +5,7 @@ import path from 'path';
 import { GLOBAL_PATH, WORKSPACE_PATH, SETTINGS_PATH, PROJECT_PATH } from '@/constants';
 import { Project } from '@/store';
 import { reverse } from '@/utils';
-import { FileLoader } from '@/core/loaders/file';
+import { FileLoader, FileWriter } from '@/core/loaders/file';
 import uuid from 'uuid';
 
 // TODO IF TWO instances of Vusic are opened at the same time
@@ -13,17 +13,20 @@ import uuid from 'uuid';
 // data is loaded on startup and written back at the end. Thus,
 // stuff can easily be overwritten
 
-export const ProjectContextInformation = t.type({
+export const ProjectInformationType = t.type({
   path: t.string,
   id: t.string,
 });
 
 export const PastProjectsType = t.partial({
-  projectPath: ProjectContextInformation,
-  tempPath: ProjectContextInformation,
+  projectPath: ProjectInformationType,
+  tempPath: ProjectInformationType,
 });
 
-type PastProjects = t.TypeOf<typeof PastProjectsType>;
+type ProjectInformation = t.TypeOf<typeof ProjectInformationType>;
+type PastProject = t.TypeOf<typeof PastProjectsType>;
+
+let pastProject: PastProject = {};
 
 interface JSON {
   [k: string]: any;
@@ -79,20 +82,35 @@ const loadWorkspace = (projectId: string, file: string) => {
 
 class Manager {
   public static fromFileSystem() {
-    // TODO(jacob) remove class ahhh
     const loader = new FileLoader(PastProjectsType, { path: PROJECT_PATH });
     const result = loader.load();
 
-    let pastProjects: PastProjects;
     if (result.type === 'error') {
       // TODO(jacob) LOG
-      pastProjects = {};
     } else {
-      pastProjects = result.decoded;
+      pastProject = result.decoded;
     }
 
-    const toOpen = pastProjects.tempPath ? pastProjects.tempPath : pastProjects.projectPath;
-    const projectId = toOpen ? toOpen.id : uuid.v4();
+    const createNewProjectInfo = (): ProjectInfo => {
+      return { id: uuid.v4(), path: null };
+    };
+
+    type TempInfo = { isTemp: false, path: null } | { isTemp: true, path: string };
+
+    const toOpen = pastProject.tempPath ? pastProject.tempPath : pastProject.projectPath;
+    let info: ProjectInfo;
+    let tempInfo: TempInfo = { isTemp: false, path: null };
+    if (toOpen === undefined) {
+      info = createNewProjectInfo();
+    } else {
+      if (pastProject.tempPath !== undefined) {
+        tempInfo = { isTemp: true, path: toOpen.path };
+      }
+
+      info = { id: toOpen.id, path: toOpen.path };
+    }
+
+    const projectId = info.id;
 
     // let project: Project;
     // if (!toOpen) {
@@ -108,6 +126,43 @@ class Manager {
     //     project = await Project.load(r.decoded);
     //   }
     // }
+
+
+    let projectContents: string | null = null;
+    try {
+      if (info.path) {
+        projectContents = fs.readFileSync(info.path).toString();
+      }
+    } catch (e) {
+      // tslint:disable-next-line:no-console
+      console.error(`Unable to load project from ${info.path}: ${e.message}`);
+
+      // If we throw an error while opening the file, set the opened file to null
+      info = createNewProjectInfo();
+    }
+
+    if (tempInfo.isTemp) {
+      // Always remove temporary information once the file has been read
+      // Even if there are errors we do this
+      fs.unlink(tempInfo.path);
+      pastProject.tempPath = undefined;
+      const writer = new FileWriter(PastProjectsType, { path: PROJECT_PATH, data: pastProject });
+      writer.write();
+    }
+
+    let parsedProject: JSON | null = null;
+    try {
+      if (projectContents) {
+        parsedProject = JSON.parse(projectContents);
+      }
+    } catch (e) {
+      // tslint:disable-next-line:no-console
+      console.error(`Unable to parse project ${info.path}: ${e.message}`);
+
+      // Same thing with parsing the file
+      // If we can't actually parse the file, then we haven't actually opened the file
+      info = createNewProjectInfo();
+    }
 
     let global: JSON = {};
     let workspace: JSON = {};
@@ -134,20 +189,56 @@ class Manager {
       console.error(`Unable to load settings at ${SETTINGS_PATH}: ${e.message}`);
     }
 
-    return new Manager(projectId, global, workspace, settings);
+    return new Manager(info, parsedProject, global, workspace, settings);
   }
 
   constructor(
-    public readonly projectId: string,
+    public projectInfo: ProjectInfo,
+    public readonly parsedProject: JSON | null,
     public readonly global: JSON,
     public readonly workspace: JSON,
     public readonly settings: JSON,
   ) {}
 }
 
+export type ProjectInfo =
+  { id: string, path: string } |
+  { id: string, path: null };
+
 let projectManager: Manager | null = null;
 
 export const manager = {
+  getOpenedFile() {
+    if (!projectManager) {
+      projectManager = Manager.fromFileSystem();
+    }
+
+    return projectManager.projectInfo.path;
+  },
+  getProjectJSON() {
+    if (!projectManager) {
+      projectManager = Manager.fromFileSystem();
+    }
+
+    return projectManager.parsedProject;
+  },
+  async setOpenedFile(projectInfo: ProjectInformation, opts: { isTemp?: boolean } = {}) {
+    if (!projectManager) {
+      projectManager = Manager.fromFileSystem();
+    }
+
+    // TODO
+    projectManager.projectInfo = projectInfo;
+
+    if (opts.isTemp) {
+      pastProject.tempPath = projectInfo;
+    } else {
+      pastProject.projectPath = projectInfo;
+    }
+
+    const writer = new FileWriter(PastProjectsType, { path: PROJECT_PATH, data: pastProject });
+    return await writer.write();
+  },
   // TODO USE THIS
   async dispose() {
     if (!projectManager) {
@@ -165,7 +256,7 @@ export const manager = {
     const w = getDataFromExtensions('workspace');
 
     // TODO(jacob) consider folder structure
-    projectManager.workspace[projectManager.projectId] = w;
+    projectManager.workspace[projectManager.projectInfo.id] = w;
 
     await write(GLOBAL_PATH, g);
     await write(SETTINGS_PATH, s);

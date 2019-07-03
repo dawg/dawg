@@ -124,7 +124,6 @@ import { SideTab, FILTERS, ApplicationContext, APPLICATION_PATH, RECORDING_PATH 
 import { Watch } from '@/modules/update';
 import backend, { ProjectInfo } from '@/backend';
 import * as io from '@/modules/cerialize';
-import tmp from 'tmp';
 import { remote } from 'electron';
 import { Menu } from '@/modules/menubar';
 import { User } from 'firebase';
@@ -136,6 +135,10 @@ import { Ghost, ChunkGhost } from '@/core/ghosts/ghost';
 import audioBufferToWav from 'audiobuffer-to-wav';
 import path from 'path';
 import * as dawg from '@/dawg';
+
+// TO VERIFY
+// 1. Recording
+// 2. Backup
 
 @Component({
   components: {
@@ -331,12 +334,14 @@ export default class App extends Vue {
 
       await cache.fromCacheFolder();
 
-      const result = await general.loadProject();
-      if (result.type === 'error') {
-        dawg.notify.info('Unable to load project.', { detail: result.message, duration: Infinity });
-      }
+      // TODO(jacob)
+      // const result = await general.loadProject();
+      // if (result.type === 'error') {
+      //   dawg.notify.info('Unable to load project.', { detail: result.message, duration: Infinity });
+      // }
 
-      general.setProject(result.project);
+      // general.setProject(result.project);
+
       await workspace.loadSpecific();
 
       // Log this for debugging purposes
@@ -439,7 +444,7 @@ export default class App extends Vue {
   }
 
   public async save(forceDialog: boolean = false) {
-    await general.saveProject({
+    await dawg.project.saveProject({
       forceDialog,
     });
   }

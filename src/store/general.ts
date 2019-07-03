@@ -47,56 +47,6 @@ export class General extends VuexModule {
   public projectPath: string | null = null;
 
   @Action
-  public async loadProject(): Promise<InitializationError | InitializationSuccess> {
-    for (const path of [cache.backupTempPath, cache.openedFile]) {
-      if (!path) {
-        continue;
-      }
-
-      const result = await Project.fromFile(path);
-
-      // We always complete the following action, even if there is an error
-      if (cache.backupTempPath === path) {
-        // Always reset to null
-        fs.unlink(path);
-        cache.setBackupTempPath(null);
-      }
-
-      if (result.type === 'error') {
-        return {
-          type: 'error',
-          message: result.message,
-          project: await Project.newProject(),
-        };
-      }
-
-      // Only set this if we've actually opened a project successfully
-      if (cache.openedFile === path) {
-        // This means that we are opening the file path in the cache
-        this.setOpenedFile(path);
-      }
-
-      return {
-        type: 'success',
-        project: result.project,
-      };
-    }
-
-    if (cache.openedFile) {
-      fs.exists(cache.openedFile, (_, exists) => {
-        if (!exists) {
-          cache.setOpenedFile(null);
-        }
-      });
-    }
-
-    return {
-      type: 'success',
-      project: await Project.newProject(),
-    };
-  }
-
-  @Action
   public async saveProject(opts: { forceDialog?: boolean }) {
     let projectPath = this.projectPath;
     if (!projectPath || opts.forceDialog) {
