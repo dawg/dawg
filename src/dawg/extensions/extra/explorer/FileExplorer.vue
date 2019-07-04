@@ -34,8 +34,11 @@ import path from 'path';
 import { Extensions, FileTree, EventBus } from '@/dawg/extensions/extra/explorer/types';
 import { Watch, Bus } from '@/modules/update';
 import { Keys } from '@/utils';
+import Tree from '@/dawg/extensions/extra/explorer/Tree.vue';
 
-@Component
+@Component({
+  components: { Tree },
+})
 export default class FileEplorer extends Vue {
   /**
    * A list of folder paths. For example, `["/one/path", "/another/path"]

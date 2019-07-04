@@ -1,6 +1,5 @@
 import * as dawg from '@/dawg';
 import SmartFileExplorer from '@/dawg/extensions/extra/explorer/SmartFileExplorer.vue';
-import { createComponent } from 'vue-function-api';
 import Vue from 'vue';
 import { remote } from 'electron';
 import { Sample } from '@/core';
@@ -50,17 +49,17 @@ export const extension: dawg.Extension<{}, { folders: string[] }> = {
       folders.splice(i, 1);
     };
 
-    const options = createComponent({
+    const options = {
       components: { SmartFileExplorer },
       template: `
       <smart-file-explorer
         :folders="folders"
         @open-explorer="openFolder"
         @open-sample="openSample"
-        @remove="REMOVE"
+        @remove="remove"
       ></smart-file-explorer>
       `,
-      setup() {
+      data() {
         return {
           folders,
           openFolder,
@@ -68,7 +67,7 @@ export const extension: dawg.Extension<{}, { folders: string[] }> = {
           remove,
         };
       },
-    });
+    };
 
     const wrapper = Vue.extend(options);
 

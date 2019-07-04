@@ -30,6 +30,7 @@ interface StatusBarVueElement {
 
 interface ActivityBarItem {
   icon: string;
+  iconProps?: { [k: string]: string };
   name: string;
   component: VueConstructor;
 }

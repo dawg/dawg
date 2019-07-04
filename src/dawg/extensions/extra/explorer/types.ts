@@ -1,5 +1,4 @@
-import { Bus } from '../update';
-import { PropOptions } from 'vue';
+import { Bus } from '../../../../modules/update';
 
 export interface FileTree {
   [fullPath: string]: FileTree | string;

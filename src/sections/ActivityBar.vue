@@ -6,7 +6,7 @@
   >
     <v-list dense style="height: 100%; display: flex; flex-direction: column">
       <v-list-tile
-        v-for="item in general.sideBarTabs"
+        v-for="item in dawg.ui.activityBar"
         :key="item.name"
         @click="clickActivityBar(item)"
       >
@@ -20,6 +20,24 @@
           {{ item.icon }}
         </tooltip-icon>
       </v-list-tile>
+
+      <!-- TODO REMOVE -->
+      <!-- <v-list-tile
+        v-for="item in general.sideBarTabs"
+        :key="item.name"
+        @click="clickActivityBar(item)"
+      >
+        <tooltip-icon 
+          medium 
+          :color="iconColor" 
+          :tooltip="item.name"
+          right
+          v-bind="item.iconProps"
+        >
+          {{ item.icon }}
+        </tooltip-icon>
+      </v-list-tile> -->
+
       <div style="flex-grow: 1"></div>
       <v-list-tile>
         <v-icon 
@@ -56,6 +74,7 @@ import * as dawg from '@/dawg';
   components: { Settings },
 })
 export default class ActivityBar extends Vue {
+  public dawg = dawg;
   public workspace = workspace;
   public general = general;
   public open = false;

@@ -4,6 +4,7 @@ import Context from '@/modules/context';
 import storybook from '@/storybook';
 import * as backup from '@/dawg/extensions/extra/backup';
 import * as record from '@/dawg/extensions/extra/record';
+import * as explorer from '@/dawg/extensions/extra/explorer';
 import * as dawg from '@/dawg';
 
 const inspect = {
@@ -55,8 +56,9 @@ const middleware = () => {
     );
   });
 
-  dawg.manager.activate(backup.extension);
+  // dawg.manager.activate(backup.extension);
   dawg.manager.activate(record.extension);
+  dawg.manager.activate(explorer.extension);
 };
 
 export default middleware;

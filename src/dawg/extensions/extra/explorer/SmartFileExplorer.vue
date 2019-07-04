@@ -14,8 +14,11 @@ import { Extensions, ExtensionData } from '@/dawg/extensions/extra/explorer/type
 import parser, { INotes } from '@/midi-parser';
 import fs from '@/wrappers/fs';
 import { general } from '@/store';
+import FileExplorer from '@/dawg/extensions/extra/explorer/FileExplorer.vue';
 
-@Component
+@Component({
+  components: { FileExplorer },
+})
 export default class SmartFileExplorer extends Vue {
   public extensions: Extensions = {
     wav: {

@@ -23,16 +23,30 @@
         :selected-tab="workspace.openedSideTab"
         @update:selectedTab="workspace.setOpenedSideTab"
       >
-        <side-bar :name="tabs.explorer" icon="folder">
-          <!-- TODO REMOVE -->
-          <!-- <smart-file-explorer
+
+        <side-bar
+          v-for="tab in dawg.ui.activityBar"
+          :key="tab.name"
+          :name="tab.name"
+          :icon="tab.icon"
+        >
+          <component
+            :is="tab.component"
+          ></component>
+        </side-bar>
+
+        <!-- TODO REMOVE -->
+        <!-- <side-bar :name="tabs.explorer" icon="folder">
+          <smart-file-explorer
             :folders="cache.folders"
             @open-explorer="openFolder"
             @open-sample="openSample"
             @remove="cache.removeFolder"
-          ></smart-file-explorer> -->
-        </side-bar>
-        <side-bar :name="tabs.audioFiles" icon="queue_music">
+          ></smart-file-explorer>
+        </side-bar> -->
+
+        <!-- TODO ADD this stuff -->
+        <!-- <side-bar :name="tabs.audioFiles" icon="queue_music">
           <audio-files></audio-files>
         </side-bar>
         <side-bar :name="tabs.patterns" icon="queue_play">
@@ -49,7 +63,8 @@
           :icon-props="{ style: 'transform: rotate(-90deg)' }"
         >
           <automation-clips></automation-clips>
-        </side-bar>
+        </side-bar> -->
+
       </base-tabs>
     </vue-perfect-scrollbar>
   </div>
@@ -85,6 +100,7 @@ interface Group {
   },
 })
 export default class SideTabs extends Vue {
+  public dawg = dawg;
   public workspace = workspace;
   public general = general;
 
