@@ -28,11 +28,18 @@ interface StatusBarVueElement {
   priority?: number;
 }
 
-interface ActivityBarItem {
+interface Action {
+  icon: string;
+  tooltip: string;
+  callback: () => void;
+}
+
+export interface ActivityBarItem {
   icon: string;
   iconProps?: { [k: string]: string };
   name: string;
   component: VueConstructor;
+  actions?: Action[];
 }
 
 type StatusBarElement = StatusBarItemElement | StatusBarVueElement;

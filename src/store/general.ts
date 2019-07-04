@@ -1,5 +1,4 @@
-import { Module, getModule, Mutation, Action } from 'vuex-module-decorators';
-import SideBar from '@/components/SideBar.vue';
+import { Module, getModule, Mutation } from 'vuex-module-decorators';
 import BaseTabs from '@/components/BaseTabs.vue';
 import store from '@/store/store';
 import { VuexModule } from '@/store/utils';
@@ -23,7 +22,6 @@ export interface InitializationSuccess {
 @Module({ dynamic: true, store, name: 'general' })
 export class General extends VuexModule {
   public project = Project.newProject();
-  public sideBarTabs: SideBar[] = [];
   public panels: BaseTabs | null = null;
   public toolbarHeight = 64;
   public play = false;
@@ -45,11 +43,6 @@ export class General extends VuexModule {
   @Mutation
   public setProject(project: Project) {
     this.project = project;
-  }
-
-  @Mutation
-  public setSideBarTabs(sideBarTabs: SideBar[]) {
-    this.sideBarTabs = sideBarTabs;
   }
 
   @Mutation

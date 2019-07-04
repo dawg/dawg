@@ -1,13 +1,15 @@
 import * as dawg from '@/dawg';
-import AudioFiles from '@/dawg/extensions/extra/clips/AudioFiles.vue';
+import AutomationClips from '@/dawg/extensions/extra/clips/AutomationClips.vue';
+import { general } from '@/store';
 
 export const extension: dawg.Extension = {
   id: 'dawg.clips',
   activate() {
     dawg.ui.activityBar.push({
-      icon: 'queue_music',
-      name: 'Audio Files',
-      component: AudioFiles,
+      icon: 'share',
+      name: 'Automation Clips',
+      component: AutomationClips,
+      iconProps: { style: 'transform: rotate(-90deg)' },
     });
   },
 };

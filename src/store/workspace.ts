@@ -61,8 +61,6 @@ export class Specific extends VuexModule {
   @io.auto({ nullable: true, optional: true }) public selectedPatternId: string | null = null;
   @io.auto({ nullable: true, optional: true }) public selectedScoreId: string | null = null;
   @io.auto({ nullable: true, optional: true }) public openedPanel: PanelNames | null = null;
-  @io.auto({ nullable: true, optional: true }) public openedSideTab: SideTab | null = null;
-  @io.auto({ nullable: true, optional: true }) public openedTab: string | null = null;
   @io.auto({ optional: true }) public applicationContext: ApplicationContext = 'pianoroll';
   @io.auto({ optional: true }) public pianoRollRowHeight = 16;
   @io.auto({ optional: true }) public pianoRollBeatWidth = 80;
@@ -82,16 +80,6 @@ export class Specific extends VuexModule {
   @Action
   public setOpenedPanel(openedPanel: PanelNames) {
     this.set({ key: 'openedPanel', value: openedPanel });
-  }
-
-  @Action
-  public setOpenedSideTab(sideTab: SideTab) {
-    this.set({ key: 'openedSideTab', value: sideTab });
-  }
-
-  @Action
-  public setTab(tab: string) {
-    this.set({ key: 'openedTab', value: tab });
   }
 
   @Action

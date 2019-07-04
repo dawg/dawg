@@ -7,7 +7,7 @@ import { general } from '@/store';
 import { Pattern } from '@/core';
 
 export const extension: dawg.Extension = {
-  id: 'dawg.clips',
+  id: 'dawg.patterns',
   activate() {
     const selectedPatternId = value<null | string>(null);
 

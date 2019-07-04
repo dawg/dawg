@@ -10,6 +10,7 @@ export interface IExtensionState<T extends ExtensionData> {
   get<K extends keyof T & string>(key: K): T[K] | undefined;
   get<K extends keyof T & string>(key: K, defaultValue: T[K]): T[K];
   set<K extends keyof T & string>(key: K, value: T[K]): Promise<void>;
+  remove<K extends keyof T & string>(key: K): void;
   getData(): ExtensionData;
 }
 
@@ -49,6 +50,10 @@ class State<T extends ExtensionData> implements IExtensionState<T> {
       this.config[key] = value;
       resolve();
     });
+  }
+
+  public remove<K extends keyof T & string>(key: K) {
+    delete this.config[key];
   }
 
   public getData() {

@@ -18,10 +18,10 @@
       </tooltip-icon>
     </div>
     <vue-perfect-scrollbar class="scrollbar" style="height: 100%">
+      <!-- TODO make sure this works -->
       <base-tabs
         ref="tabs"
-        :selected-tab="workspace.openedSideTab"
-        @update:selectedTab="workspace.setOpenedSideTab"
+        :selected-tab.sync="openedSideTab.value"
       >
 
         <side-bar
@@ -29,29 +29,12 @@
           :key="tab.name"
           :name="tab.name"
           :icon="tab.icon"
+          :icon-props="tab.iconProps"
         >
           <component
             :is="tab.component"
           ></component>
         </side-bar>
-
-        <!-- TODO ADD this stuff -->
-        <!--
-        <side-bar :name="tabs.patterns" icon="queue_play">
-          <patterns 
-            :value="workspace.selectedPattern" 
-            @input="workspace.setPattern"
-            :patterns="general.project.patterns"
-            @remove="(i) => general.project.removePattern(i)"
-          ></patterns>
-        </side-bar>
-        <side-bar 
-          :name="tabs.automationClips" 
-          icon="share"
-          :icon-props="{ style: 'transform: rotate(-90deg)' }"
-        >
-          <automation-clips></automation-clips>
-        </side-bar> -->
 
       </base-tabs>
     </vue-perfect-scrollbar>
@@ -60,91 +43,64 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-
 import BaseTabs from '@/components/BaseTabs.vue';
 import SideBar from '@/components/SideBar.vue';
-import { general, workspace } from '@/store';
 import { Watch } from '@/modules/update';
-import { SideTab } from '@/constants';
-import AutomationClips from '@/sections/AutomationClips.vue';
+import { SideTab, TOOLBAR_HEIGHT } from '@/constants';
 import { Sample } from '@/core';
 import * as dawg from '@/dawg';
+import { ActivityBarItem } from '@/dawg/ui';
 
-interface Group {
-  icon: string;
-  tooltip: string;
-  callback: () => void;
-}
+// TODO REMOVE GENERAL & WORKSPACE
 
 @Component({
   components: {
     BaseTabs,
     SideBar,
-    AutomationClips,
   },
 })
 export default class SideTabs extends Vue {
   public dawg = dawg;
-  public workspace = workspace;
-  public general = general;
-
-  public $refs!: {
-    tabs: BaseTabs,
-  };
 
   get iconColor() {
     return dawg.theme.foreground;
   }
 
+  get openedSideTab() {
+    return dawg.activityBar.openedSideTab;
+  }
+
   get headerStyle() {
     return {
       borderBottom: `1px solid ${dawg.theme.background}`,
-      minHeight: `${general.toolbarHeight + 1}px`,
+      minHeight: `${TOOLBAR_HEIGHT + 1}px`,
       display: 'flex',
       alignItems: 'center',
     };
   }
 
-  public patternActions: Group[] = [
-    {
-      icon: 'add',
-      tooltip: 'Add Pattern',
-      callback: () => general.project.addPattern(),
-    },
-  ];
+  get itemLookup() {
+    const lookup: { [name: string]: ActivityBarItem } = {};
+    dawg.ui.activityBar.forEach((item) => {
+      lookup[item.name] = item;
+    });
 
-  // For typing reasons
-  // Vue will give a compilation error if we use a wrong key
-  public tabs: { [k: string]: SideTab } = {
-    explorer: 'Explorer',
-    audioFiles: 'Audio Files',
-    patterns: 'Patterns',
-    automationClips: 'Automation Clips',
-  };
-
-  public mounted() {
-    general.setSideBarTabs(this.$refs.tabs.$children as SideBar[]);
+    return lookup;
   }
 
-  public openSample(sample: Sample) {
-    general.setSample(sample);
-    workspace.setOpenedPanel('Sample');
-  }
-
-  get actions(): Group[] {
-    if (workspace.openedSideTab === 'Patterns') {
-      return this.patternActions;
-    } else {
+  get actions() {
+    if (this.openedSideTab.value === undefined) {
       return [];
     }
+
+    return this.itemLookup[this.openedSideTab.value].actions || [];
   }
 
   get header() {
-    if (workspace.openedSideTab) {
-      return workspace.openedSideTab.toUpperCase();
+    if (this.openedSideTab.value) {
+      return this.openedSideTab.value.toUpperCase();
     }
   }
-
 }
 </script>
 

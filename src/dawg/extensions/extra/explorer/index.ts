@@ -3,12 +3,22 @@ import SmartFileExplorer from '@/dawg/extensions/extra/explorer/SmartFileExplore
 import Vue from 'vue';
 import { remote } from 'electron';
 import { Sample } from '@/core';
+import { commands } from '@/dawg/extensions/core/commands';
 
 export const extension: dawg.Extension<{}, { folders: string[] }> = {
   id: 'dawg.explorer',
 
   activate(context) {
     const folders = context.global.get('folders', []);
+
+    context.subscriptions.push(commands.registerCommand({
+      text: 'Open File Explorer',
+      shortcut: ['Ctrl', 'E'],
+      callback: () => {
+        // This must match the tab name below
+        dawg.activityBar.openedSideTab.value = 'Explorer';
+      },
+    }));
 
     const openFolder = () => {
       const { dialog } = remote;

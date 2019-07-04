@@ -21,23 +21,6 @@
         </tooltip-icon>
       </v-list-tile>
 
-      <!-- TODO REMOVE -->
-      <!-- <v-list-tile
-        v-for="item in general.sideBarTabs"
-        :key="item.name"
-        @click="clickActivityBar(item)"
-      >
-        <tooltip-icon 
-          medium 
-          :color="iconColor" 
-          :tooltip="item.name"
-          right
-          v-bind="item.iconProps"
-        >
-          {{ item.icon }}
-        </tooltip-icon>
-      </v-list-tile> -->
-
       <div style="flex-grow: 1"></div>
       <v-list-tile>
         <v-icon 
@@ -64,19 +47,17 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { workspace, general } from '@/store';
 import Sidebar from '@/components/SideBar.vue';
 import { PanelNames, SideTab } from '@/constants';
 import Settings from '@/sections/Settings.vue';
 import * as dawg from '@/dawg';
+import { activityBar } from '@/dawg/extensions/core/activity-bar';
 
 @Component({
   components: { Settings },
 })
 export default class ActivityBar extends Vue {
   public dawg = dawg;
-  public workspace = workspace;
-  public general = general;
   public open = false;
   public x = 0;
   public y = 0;
@@ -86,8 +67,7 @@ export default class ActivityBar extends Vue {
   }
 
   public clickActivityBar(tab: Sidebar) {
-    // TODO not the best
-    workspace.setOpenedSideTab(tab.name as SideTab);
+    activityBar.openedSideTab.value = tab.name;
   }
 
   public openSettings(e: MouseEvent) {

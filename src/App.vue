@@ -117,7 +117,7 @@ import Sidebar from '@/components/SideBar.vue';
 import SideTabs from '@/sections/SideTabs.vue';
 import Panels from '@/sections/Panels.vue';
 import PanelHeaders from '@/sections/PanelHeaders.vue';
-import ActivityBar from '@/sections/ActivityBar.vue';
+import ActivityBar from '@/dawg/extensions/core/activity-bar/ActivityBar.vue';
 import StatusBar from '@/sections/StatusBar.vue';
 import Tone from 'tone';
 import { SideTab, FILTERS, ApplicationContext, APPLICATION_PATH, RECORDING_PATH } from '@/constants';
@@ -271,11 +271,6 @@ export default class App extends Vue {
       text: 'Open Piano Roll',
       shortcut: ['Ctrl', 'P'],
       callback: () => workspace.setOpenedPanel('Piano Roll'),
-    },
-    {
-      text: 'Open File Explorer',
-      shortcut: ['Ctrl', 'E'],
-      callback: () => workspace.setOpenedSideTab('Explorer'),
     },
     {
       text: 'Open Mixer',

@@ -14,7 +14,7 @@ import { Watch } from '@/modules/update';
 @Component({components: { Tab }})
 export default class BaseTabs extends Vue {
   public tabs: Tab[] = [];
-  @Prop(Nullable(String)) public selectedTab!: null | string;
+  @Prop(String) public selectedTab?: string;
 
   get firstTab() {
     return this.tabs[0] || {};
