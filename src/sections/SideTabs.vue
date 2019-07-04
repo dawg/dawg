@@ -35,20 +35,8 @@
           ></component>
         </side-bar>
 
-        <!-- TODO REMOVE -->
-        <!-- <side-bar :name="tabs.explorer" icon="folder">
-          <smart-file-explorer
-            :folders="cache.folders"
-            @open-explorer="openFolder"
-            @open-sample="openSample"
-            @remove="cache.removeFolder"
-          ></smart-file-explorer>
-        </side-bar> -->
-
         <!-- TODO ADD this stuff -->
-        <!-- <side-bar :name="tabs.audioFiles" icon="queue_music">
-          <audio-files></audio-files>
-        </side-bar>
+        <!--
         <side-bar :name="tabs.patterns" icon="queue_play">
           <patterns 
             :value="workspace.selectedPattern" 
@@ -73,10 +61,8 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 
-import Patterns from '@/components/Patterns.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
 import SideBar from '@/components/SideBar.vue';
-import AudioFiles from '@/sections/AudioFiles.vue';
 import { general, workspace } from '@/store';
 import { Watch } from '@/modules/update';
 import { SideTab } from '@/constants';
@@ -92,10 +78,8 @@ interface Group {
 
 @Component({
   components: {
-    Patterns,
     BaseTabs,
     SideBar,
-    AudioFiles,
     AutomationClips,
   },
 })
