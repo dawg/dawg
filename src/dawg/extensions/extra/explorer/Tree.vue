@@ -53,7 +53,7 @@ import Tone from 'tone';
 import path from 'path';
 import { Keys } from '@/utils';
 import { Component, Prop } from 'vue-property-decorator';
-import { FileTree, EventBus, Extensions, Extension, ExtensionData } from '@/modules/explorer/types';
+import { FileTree, EventBus, Extensions, Extension, ExtensionData } from '@/dawg/extensions/extra/explorer/types';
 import { Watch } from '@/modules/update';
 
 @Component

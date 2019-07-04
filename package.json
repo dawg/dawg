@@ -40,6 +40,7 @@
     "vue": "^2.6.10",
     "vue-awesome": "^3.1.2",
     "vue-drag-drop": "^1.1.4",
+    "vue-function-api": "^2.0.6",
     "vue-perfect-scrollbar": "^0.1.0",
     "vue-property-decorator": "^7.0.0",
     "vuejs-logger": "^1.5.3",

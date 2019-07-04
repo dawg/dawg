@@ -24,12 +24,13 @@
         @update:selectedTab="workspace.setOpenedSideTab"
       >
         <side-bar :name="tabs.explorer" icon="folder">
-          <smart-file-explorer
+          <!-- TODO REMOVE -->
+          <!-- <smart-file-explorer
             :folders="cache.folders"
             @open-explorer="openFolder"
             @open-sample="openSample"
             @remove="cache.removeFolder"
-          ></smart-file-explorer>
+          ></smart-file-explorer> -->
         </side-bar>
         <side-bar :name="tabs.audioFiles" icon="queue_music">
           <audio-files></audio-files>
@@ -61,10 +62,9 @@ import Patterns from '@/components/Patterns.vue';
 import BaseTabs from '@/components/BaseTabs.vue';
 import SideBar from '@/components/SideBar.vue';
 import AudioFiles from '@/sections/AudioFiles.vue';
-import { cache, general, workspace } from '@/store';
+import { general, workspace } from '@/store';
 import { Watch } from '@/modules/update';
 import { SideTab } from '@/constants';
-import SmartFileExplorer from '@/smart/SmartFileExplorer.vue';
 import AutomationClips from '@/sections/AutomationClips.vue';
 import { Sample } from '@/core';
 import * as dawg from '@/dawg';
@@ -81,12 +81,10 @@ interface Group {
     BaseTabs,
     SideBar,
     AudioFiles,
-    SmartFileExplorer,
     AutomationClips,
   },
 })
 export default class SideTabs extends Vue {
-  public cache = cache;
   public workspace = workspace;
   public general = general;
 
@@ -126,14 +124,6 @@ export default class SideTabs extends Vue {
 
   public mounted() {
     general.setSideBarTabs(this.$refs.tabs.$children as SideBar[]);
-  }
-
-  public openFolder() {
-    // TODO
-    // the showFileDialog messes with the keyup events
-    // This is a temporary solution
-    cache.openFolder();
-    dawg.commands.clear();
   }
 
   public openSample(sample: Sample) {

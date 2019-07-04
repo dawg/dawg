@@ -34,7 +34,7 @@
 <script lang="ts">
 import path from 'path';
 import { Component, Vue, Prop } from 'vue-property-decorator';
-import { cache, workspace, general } from '@/store';
+import { workspace, general } from '@/store';
 import * as dawg from '@/dawg';
 
 @Component

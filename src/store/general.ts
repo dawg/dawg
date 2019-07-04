@@ -1,14 +1,10 @@
 import { Module, getModule, Mutation, Action } from 'vuex-module-decorators';
 import SideBar from '@/components/SideBar.vue';
-import fs from '@/wrappers/fs';
 import BaseTabs from '@/components/BaseTabs.vue';
 import store from '@/store/store';
 import { VuexModule } from '@/store/utils';
 import { Project } from './project';
-import { remote } from 'electron';
-import cache from './cache';
 import { Sample } from '@/core';
-import { DG_EXTENSION } from '@/constants';
 
 export interface InitializationError {
   type: 'error';
@@ -45,38 +41,6 @@ export class General extends VuexModule {
    * The actual file that is currently opened. This is not the same as the opened file in the cache.
    */
   public projectPath: string | null = null;
-
-  @Action
-  public async saveProject(opts: { forceDialog?: boolean }) {
-    let projectPath = this.projectPath;
-    if (!projectPath || opts.forceDialog) {
-      projectPath = remote.dialog.showSaveDialog(remote.getCurrentWindow(), {}) || null;
-
-      // If the user cancels the dialog
-      if (!projectPath) {
-        return;
-      }
-
-      if (!projectPath.endsWith(DG_EXTENSION)) {
-        projectPath = projectPath + DG_EXTENSION;
-      }
-
-      // Make sure we set the cache and the general
-      // The cache is what is written to the filesystem
-      // and the general is the file that is currently opened
-      cache.setOpenedFile(projectPath);
-      this.setOpenedFile(projectPath);
-
-      // This should never be true but we need to check
-      if (!cache.openedFile) {
-        return;
-      }
-    }
-
-    const encoded = this.project.serialize();
-
-    await fs.writeFile(projectPath, JSON.stringify(encoded, null, 4));
-  }
 
   @Mutation
   public setProject(project: Project) {

@@ -109,7 +109,7 @@
 import fs from '@/wrappers/fs';
 import { Component, Vue } from 'vue-property-decorator';
 import { shell, Event, DesktopCapturer, desktopCapturer } from 'electron';
-import { cache, general, workspace, Project } from '@/store';
+import { general, workspace, Project } from '@/store';
 import { toTickTime, allKeys, Keys } from '@/utils';
 import Transport from '@/modules/audio/transport';
 import { automation } from '@/modules/knobs';
@@ -176,10 +176,6 @@ export default class App extends Vue {
       shortcut: ['Ctrl', 'O'],
       callback: this.open,
     },
-    addFolder: {
-      text: 'Add Folder to Workspace',
-      callback: this.openFolder,
-    },
     closeApplication: {
       text: 'Close Application',
       shortcut: ['Ctrl', 'W'],
@@ -222,7 +218,8 @@ export default class App extends Vue {
         this.menuItems.open,
         this.menuItems.backup,
         null,
-        this.menuItems.addFolder,
+        // TODO(jacob)
+        // this.menuItems.addFolder,
         null,
         this.menuItems.save,
         this.menuItems.saveAs,
@@ -332,8 +329,6 @@ export default class App extends Vue {
       // tslint:disable-next-line:no-console
       console.log(dawg);
 
-      await cache.fromCacheFolder();
-
       // TODO(jacob)
       // const result = await general.loadProject();
       // if (result.type === 'error') {
@@ -342,7 +337,7 @@ export default class App extends Vue {
 
       // general.setProject(result.project);
 
-      await workspace.loadSpecific();
+      // await workspace.loadSpecific();
 
       // Log this for debugging purposes
       // tslint:disable-next-line:no-console
@@ -400,14 +395,6 @@ export default class App extends Vue {
     });
   }
 
-  public openFolder() {
-    // TODO
-    // the showFileDialog messes with the keyup events
-    // This is a temporary solution
-    cache.openFolder();
-    dawg.commands.clear();
-  }
-
   public border(side: 'left' | 'right' | 'top' | 'bottom') {
     return `border-${side}: 1px solid ${dawg.theme.background}`;
   }
@@ -438,7 +425,7 @@ export default class App extends Vue {
     }
 
     const filePath = files[0];
-    await cache.setOpenedFile(filePath);
+    await dawg.project.setOpenedFile(filePath);
     const window = remote.getCurrentWindow();
     window.reload();
   }
@@ -507,13 +494,13 @@ export default class App extends Vue {
   }
 
   public async newProject() {
-    await cache.setOpenedFile(null);
+    await dawg.project.removeOpenedFile();
     this.reload();
   }
 
   public reload() {
-      const window = remote.getCurrentWindow();
-      window.reload();
+    const window = remote.getCurrentWindow();
+    window.reload();
   }
 
   public closeApplication() {

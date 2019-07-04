@@ -31,7 +31,7 @@ import { ipcRenderer } from 'electron';
 import fs, { FSWatcher } from '@/wrappers/fs';
 import os from 'os';
 import path from 'path';
-import { Extensions, FileTree, EventBus } from '@/modules/explorer/types';
+import { Extensions, FileTree, EventBus } from '@/dawg/extensions/extra/explorer/types';
 import { Watch, Bus } from '@/modules/update';
 import { Keys } from '@/utils';
 

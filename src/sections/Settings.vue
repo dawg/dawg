@@ -66,7 +66,8 @@
         </v-list-tile-action>
       </v-list-tile>
 
-      <v-list-tile>
+      <!-- TODO JACOB -->
+      <!-- <v-list-tile>
           <v-list-tile-action>
           <v-select
             class="device-dropdown"
@@ -78,7 +79,7 @@
             @input="cache.setMicrophoneIn"
           ></v-select>
         </v-list-tile-action>
-      </v-list-tile>
+      </v-list-tile> -->
 
     </v-list>
   </v-card>
@@ -87,7 +88,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Nullable } from '@/utils';
-import { cache, workspace, general } from '@/store';
+import { workspace, general } from '@/store';
 // TODO(jacob)
 import auth from '@/dawg/extensions/extra/backup/auth';
 import * as dawg from '@/dawg';
@@ -95,7 +96,6 @@ import { BackupManager, extension } from '@/dawg/extensions/extra/backup';
 
 @Component
 export default class Settings extends Vue {
-  public cache = cache;
   public workspace = workspace;
   public general = general;
   public devices: string[] = [];

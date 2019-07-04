@@ -222,13 +222,20 @@ export const manager = {
 
     return projectManager.parsedProject;
   },
-  async setOpenedFile(projectInfo: ProjectInformation, opts: { isTemp?: boolean } = {}) {
+  async setOpenedFile(projectInfo?: ProjectInformation, opts: { isTemp?: boolean } = {}) {
     if (!projectManager) {
       projectManager = Manager.fromFileSystem();
     }
 
     // TODO
-    projectManager.projectInfo = projectInfo;
+    if (projectInfo) {
+      projectManager.projectInfo = projectInfo;
+    } else {
+      projectManager.projectInfo = {
+        id: projectManager.projectInfo.id,
+        path: null,
+      };
+    }
 
     if (opts.isTemp) {
       pastProject.tempPath = projectInfo;

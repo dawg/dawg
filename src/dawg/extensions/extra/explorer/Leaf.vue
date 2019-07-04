@@ -4,8 +4,8 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { ExtensionData } from '@/modules/explorer/types';
-import Tree from '@/modules/explorer/Tree.vue';
+import { ExtensionData } from '@/dawg/extensions/extra/explorer/types';
+import Tree from '@/dawg/extensions/extra/explorer/Tree.vue';
 
 @Component
 export default class Leaf extends Vue {

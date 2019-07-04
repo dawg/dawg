@@ -90,6 +90,17 @@ class ProjectAPI {
     await fs.writeFile(projectPath, JSON.stringify(encoded, null, 4));
   }
 
+  public async removeOpenedFile() {
+    await manager.setOpenedFile(undefined);
+  }
+
+  public async setOpenedFile(path: string) {
+    await manager.setOpenedFile({
+      path,
+      id: this.getProject().id,
+    });
+  }
+
   private async getOrCreateProject() {
     if (this.project === null) {
       const result = await loadProject();

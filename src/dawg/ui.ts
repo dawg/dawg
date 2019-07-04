@@ -28,6 +28,12 @@ interface StatusBarVueElement {
   priority?: number;
 }
 
+interface ActivityBarItem {
+  icon: string;
+  name: string;
+  component: VueConstructor;
+}
+
 type StatusBarElement = StatusBarItemElement | StatusBarVueElement;
 
 const statusBarElements: StatusBarElement[] = [];
@@ -36,6 +42,7 @@ interface UI {
   global: VueConstructor[];
   statusBarLeft: VueConstructor[];
   statusBarRight: VueConstructor[];
+  activityBar: ActivityBarItem[];
   createStatusBarItem: () => StatusBarItem;
 }
 
@@ -43,6 +50,7 @@ export const ui: UI = {
   global: [],
   statusBarLeft: [],
   statusBarRight: [],
+  activityBar: [],
   createStatusBarItem(alignment?: StatusBarAlignment, priority?: number) {
     const statusBarItem = new StatusBarItem();
     statusBarElements.push({

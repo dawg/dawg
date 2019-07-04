@@ -16,7 +16,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { cache, general, workspace } from '@/store';
+import { general, workspace } from '@/store';
 import { ScheduledSample, Sample } from '@/core';
 
 @Component

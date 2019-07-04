@@ -21,7 +21,6 @@ import DTrack from '@/components/DTrack.vue';
 import TooltipIcon from '@/components/TooltipIcon.vue';
 import DotButton from '@/components/DotButton.vue';
 import MenuBar from '@/modules/menubar';
-import Explorer from '@/modules/explorer';
 
 export default function middleware() {
   Vue.use(Split);
@@ -31,7 +30,6 @@ export default function middleware() {
   Vue.use(Knobs);
   Vue.use(MenuBar);
   Vue.use(Status);
-  Vue.use(Explorer);
   Vue.use(VueLogger, {
     logLevel: 'info',
   });

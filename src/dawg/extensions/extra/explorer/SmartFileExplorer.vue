@@ -10,10 +10,10 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { loadBuffer } from '@/modules/wav/local';
 import { ScheduledSample, Sample } from '@/core';
-import { Extensions, ExtensionData } from '@/modules/explorer/types';
+import { Extensions, ExtensionData } from '@/dawg/extensions/extra/explorer/types';
 import parser, { INotes } from '@/midi-parser';
 import fs from '@/wrappers/fs';
-import { general } from '../store';
+import { general } from '@/store';
 
 @Component
 export default class SmartFileExplorer extends Vue {

@@ -1,7 +1,9 @@
 import * as t from 'io-ts';
 
+type BasicType = string | number | boolean;
+
 export interface ExtensionData {
-  [key: string]: string | number | boolean;
+  [key: string]: BasicType | BasicType[];
 }
 
 export interface IExtensionState<T extends ExtensionData> {
@@ -84,14 +86,14 @@ export class ExtensionContext<
 
 
 export interface Extension<
-  W extends ExtensionData = {},
-  G extends ExtensionData = {},
-  P extends t.Props = {},
+  WorkspaceType extends ExtensionData = {},
+  GlobalType extends ExtensionData = {},
+  SettingType extends t.Props = {},
   V = void
 > {
   id: string;
-  defineSettings?: () => P;
-  activate(context: IExtensionContext<W, G, t.TypeOf<t.TypeC<P>>>): V;
+  defineSettings?: () => SettingType;
+  activate(context: IExtensionContext<WorkspaceType, GlobalType, t.TypeOf<t.TypeC<SettingType>>>): V;
   // TODO ACTUALLY DEACTIVATE
-  deactivate?(context: IExtensionContext<W, G>): void;
+  deactivate?(context: IExtensionContext<WorkspaceType, GlobalType>): void;
 }
