@@ -2,16 +2,13 @@
   <base-tabs 
     class="tabs-panels secondary" 
     ref="panels"
-    :selected-tab="workspace.openedPanel"
-    @update:selectedTab="workspace.setOpenedPanel"
+    :selected-tab.sync="openedPanel.value"
   >
     <panel name="Instruments">
       <synths 
         :instruments="general.project.instruments"
-        :selected-score="workspace.selectedScore"
-        @update:selectedScore="workspace.setScore"
-        :selected-pattern="workspace.selectedPattern"
-        :scores="workspace.selectedScore"
+        :selected-score.sync="selectedScore.value"
+        :selected-pattern="selectedPattern"
       ></synths>
     </panel>
     <panel name="Mixer">
@@ -25,9 +22,9 @@
     <panel name="Piano Roll">
       <piano-roll-sequencer
         style="height: 100%"
-        v-if="workspace.selectedScore"
-        :pattern="workspace.selectedPattern"
-        :score="workspace.selectedScore"
+        v-if="selectedScore.value"
+        :pattern="selectedPattern"
+        :score="selectedScore.value"
         :play="pianoRollPlay"
         :steps-per-beat="general.project.stepsPerBeat"
         :beats-per-measure="general.project.beatsPerMeasure"
@@ -56,6 +53,7 @@ import SampleViewer from '@/components/SampleViewer.vue';
 import Synths from '@/components/Synths.vue';
 import Panel from '@/components/Panel.vue';
 import { Note, EffectName, Channel, EffectOptions } from '@/core';
+import * as dawg from '@/dawg';
 
 @Component({
   components: {
@@ -73,6 +71,18 @@ export default class Panels extends Vue {
   public $refs!: {
     panels: BaseTabs;
   };
+
+  get openedPanel() {
+    return dawg.panels.openedPanel;
+  }
+
+  get selectedPattern() {
+    return dawg.patterns.selectedPattern.value;
+  }
+
+  get selectedScore() {
+    return dawg.instruments.selectedScore;
+  }
 
   get pianoRollPlay() {
     return general.play && workspace.applicationContext === 'pianoroll';

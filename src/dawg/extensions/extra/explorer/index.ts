@@ -4,6 +4,7 @@ import Vue from 'vue';
 import { remote } from 'electron';
 import { Sample } from '@/core';
 import { commands } from '@/dawg/extensions/core/commands';
+import { panels } from '@/dawg/extensions/core/panels';
 
 export const extension: dawg.Extension<{}, { folders: string[] }> = {
   id: 'dawg.explorer',
@@ -47,7 +48,7 @@ export const extension: dawg.Extension<{}, { folders: string[] }> = {
     const openSample = (sample: Sample) => {
       // TODO(jacob)
       // general.setSample(sample);
-      // workspace.setOpenedPanel('Sample');
+      panels.openedPanel.value = 'Sample';
     };
 
     const remove = (target: string) => {

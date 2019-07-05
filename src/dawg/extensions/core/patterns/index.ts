@@ -1,12 +1,13 @@
 import Vue from 'vue';
-import * as dawg from '@/dawg';
-import Patterns from '@/dawg/extensions/extra/patterns/Patterns.vue';
+import Patterns from '@/dawg/extensions/core/patterns/Patterns.vue';
 import { value, computed, createComponent } from 'vue-function-api';
 import { makeLookup } from '@/modules/utils';
 import { general } from '@/store';
 import { Pattern } from '@/core';
+import { manager } from '@/dawg/extensions/manager';
+import { ui } from '@/dawg/ui';
 
-export const extension: dawg.Extension = {
+export const patterns = manager.activate({
   id: 'dawg.patterns',
   activate() {
     const selectedPatternId = value<null | string>(null);
@@ -63,10 +64,14 @@ export const extension: dawg.Extension = {
       }),
     }));
 
-    dawg.ui.activityBar.push({
+    ui.activityBar.push({
       icon: 'queue_play',
       name: 'Patterns',
       component: wrapper,
     });
+
+    return {
+      selectedPattern,
+    };
   },
-};
+});

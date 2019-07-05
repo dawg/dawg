@@ -102,3 +102,12 @@ export interface Extension<
   // TODO ACTUALLY DEACTIVATE
   deactivate?(context: IExtensionContext<WorkspaceType, GlobalType>): void;
 }
+
+export const createExtension = <
+  W extends ExtensionData = {},
+  G extends ExtensionData = {},
+  S extends t.Props = {},
+  V = void
+>(extension: Extension<W, G, S, V>) => {
+  return extension;
+};

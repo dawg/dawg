@@ -18,12 +18,10 @@
       </tooltip-icon>
     </div>
     <vue-perfect-scrollbar class="scrollbar" style="height: 100%">
-      <!-- TODO make sure this works -->
       <base-tabs
         ref="tabs"
         :selected-tab.sync="openedSideTab.value"
       >
-
         <side-bar
           v-for="tab in dawg.ui.activityBar"
           :key="tab.name"

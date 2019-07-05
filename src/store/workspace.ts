@@ -12,6 +12,7 @@ import { Score, Pattern } from '@/core';
 import general from './general';
 import { makeLookup } from '@/modules/utils';
 import { emitter, EventProvider } from '@/dawg/events';
+import * as dawg from '@/dawg';
 
 const PROJECT_CACHE_PATH = path.join(APPLICATION_PATH, 'project-cache.json');
 
@@ -21,6 +22,10 @@ const PROJECT_CACHE_PATH = path.join(APPLICATION_PATH, 'project-cache.json');
  */
 @Module({ dynamic: true, store, name: 'workspace' })
 export class Specific extends VuexModule {
+
+  get selectedPattern() {
+    return dawg.patterns.selectedPattern.value;
+  }
 
   get transport() {
     if (this.applicationContext === 'pianoroll') {
@@ -35,32 +40,7 @@ export class Specific extends VuexModule {
     return makeLookup(general.project.patterns);
   }
 
-  get selectedPattern() {
-    if (!this.selectedPatternId) { return null; }
-    if (!(this.selectedPatternId in this.patternLookup)) { return null; }
-    return this.patternLookup[this.selectedPatternId];
-  }
-
-  get selectedScore() {
-    if (!this.selectedScoreId) { return null; }
-    if (!this.scoreLookup) { return null; }
-    if (!this.scoreLookup.hasOwnProperty(this.selectedScoreId)) { return null; }
-    return this.scoreLookup[this.selectedScoreId];
-  }
-
-  get scoreLookup() {
-    if (!this.selectedPattern) { return null; }
-    const scores: {[k: string]: Score} = {};
-    this.selectedPattern.scores.forEach((score) => {
-      scores[score.id] = score;
-    });
-    return scores;
-  }
-
   public events = emitter<{ playPause: () => void }>();
-  @io.auto({ nullable: true, optional: true }) public selectedPatternId: string | null = null;
-  @io.auto({ nullable: true, optional: true }) public selectedScoreId: string | null = null;
-  @io.auto({ nullable: true, optional: true }) public openedPanel: PanelNames | null = null;
   @io.auto({ optional: true }) public applicationContext: ApplicationContext = 'pianoroll';
   @io.auto({ optional: true }) public pianoRollRowHeight = 16;
   @io.auto({ optional: true }) public pianoRollBeatWidth = 80;
@@ -75,11 +55,6 @@ export class Specific extends VuexModule {
 
   constructor(module?: Mod<any, any>) {
     super(module || {});
-  }
-
-  @Action
-  public setOpenedPanel(openedPanel: PanelNames) {
-    this.set({ key: 'openedPanel', value: openedPanel });
   }
 
   @Action
@@ -114,34 +89,6 @@ export class Specific extends VuexModule {
       // We need to figure out why this happens.
       // Since everything is optional, this is ok though
       return {};
-    }
-  }
-
-  @Action
-  public setPattern(pattern: Pattern | null) {
-    if (pattern) {
-      this.set({ key: 'selectedPatternId', value: pattern.id });
-    } else {
-      this.set({ key: 'selectedPatternId', value: null });
-    }
-
-    if (!this.selectedScoreId || !this.scoreLookup) {
-      return;
-    }
-
-    if (this.selectedScoreId in this.scoreLookup) {
-      return;
-    }
-
-    this.set({ key: 'selectedScoreId', value: null });
-  }
-
-  @Action
-  public setScore(score: Score | null) {
-    if (score) {
-      this.set({ key: 'selectedScoreId', value: score.id });
-    } else {
-      this.set({ key: 'selectedScoreId', value: null });
     }
   }
 

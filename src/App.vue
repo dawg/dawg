@@ -115,8 +115,8 @@ import Transport from '@/modules/audio/transport';
 import { automation } from '@/modules/knobs';
 import Sidebar from '@/components/SideBar.vue';
 import SideTabs from '@/sections/SideTabs.vue';
-import Panels from '@/sections/Panels.vue';
-import PanelHeaders from '@/sections/PanelHeaders.vue';
+import Panels from '@/dawg/extensions/core/panels/Panels.vue';
+import PanelHeaders from '@/dawg/extensions/core/panels/PanelHeaders.vue';
 import ActivityBar from '@/dawg/extensions/core/activity-bar/ActivityBar.vue';
 import StatusBar from '@/sections/StatusBar.vue';
 import Tone from 'tone';
@@ -270,12 +270,16 @@ export default class App extends Vue {
     {
       text: 'Open Piano Roll',
       shortcut: ['Ctrl', 'P'],
-      callback: () => workspace.setOpenedPanel('Piano Roll'),
+      callback: () => {
+        dawg.panels.openedPanel.value = 'Piano Roll';
+      },
     },
     {
       text: 'Open Mixer',
       shortcut: ['Ctrl', 'M'],
-      callback: () => workspace.setOpenedPanel('Mixer'),
+      callback: () => {
+        dawg.panels.openedPanel.value = 'Mixer';
+      },
     },
     {
       text: 'Play/Pause',

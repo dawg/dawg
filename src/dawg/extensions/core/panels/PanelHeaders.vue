@@ -53,6 +53,10 @@ export default class PanelHeaders extends Vue {
   public notesStartTimes: {[key: string]: number} = {};
   public transport: Transport = new Audio.Transport();
 
+  get selectedScore() {
+    return dawg.instruments.selectedScore.value;
+  }
+
   public mounted() {
     webmidi.enable((err) => {
       webmidi.addListener('connected', (event) => {
@@ -71,8 +75,8 @@ export default class PanelHeaders extends Vue {
                   this.notesStartTimes[e.note.name + e.note.octave] = transportLocation / 60  * general.project.bpm;
                 }
 
-                if (workspace.selectedScore) {
-                  workspace.selectedScore.instrument.triggerAttack(e.note.name + e.note.octave, e.rawVelocity);
+                if (this.selectedScore) {
+                  this.selectedScore.instrument.triggerAttack(e.note.name + e.note.octave, e.rawVelocity);
                 }
               },
             );
@@ -87,24 +91,24 @@ export default class PanelHeaders extends Vue {
                   delete this.notesStartTimes[e.note.name + e.note.octave];
                   const noteDuration = e.timestamp - noteOn.timestamp;
 
-                  if (workspace.selectedScore) {
-                    const note = new Note(workspace.selectedScore.instrument, {
+                  if (this.selectedScore) {
+                    const note = new Note(this.selectedScore.instrument, {
                       row: keyLookup[e.note.name + e.note.octave].id,
                       duration: noteDuration / 1000 / 60 * general.project.bpm,
                       time: noteStartTime,
                       velocity: noteOn.rawVelocity,
                     });
 
-                    workspace.selectedScore.notes.push(note);
+                    this.selectedScore.notes.push(note);
 
-                    if (workspace.selectedPattern) {
+                    if (dawg.patterns.selectedPattern.value) {
                       note.schedule(this.transport);
                     }
                   }
                 }
 
-                if (workspace.selectedScore) {
-                  workspace.selectedScore.instrument.triggerRelease(e.note.name + e.note.octave);
+                if (this.selectedScore) {
+                  this.selectedScore.instrument.triggerRelease(e.note.name + e.note.octave);
                 }
               },
             );
@@ -143,9 +147,10 @@ export default class PanelHeaders extends Vue {
   }
 
   get actions() {
-    if (workspace.openedPanel === 'Instruments') {
+    // TODO(jacob)
+    if (dawg.panels.openedPanel.value === 'Instruments') {
       return this.synthActions;
-    } else if (workspace.openedPanel === 'Piano Roll') {
+    } else if (dawg.panels.openedPanel.value === 'Piano Roll') {
       return this.pianoRollActions;
     } else {
       return [];
@@ -161,7 +166,7 @@ export default class PanelHeaders extends Vue {
   }
 
   public selectPanel(name: PanelNames) {
-    workspace.setOpenedPanel(name);
+    dawg.panels.openedPanel.value = name;
   }
 
   public addInstrument(event: MouseEvent) {
@@ -182,7 +187,7 @@ export default class PanelHeaders extends Vue {
   }
 
   public startRecording(event: MouseEvent) {
-    if (!workspace.selectedScore) {
+    if (!this.selectedScore) {
       dawg.notify.warning('No Score Found', {
         detail: 'Please create a score before you start recording',
       });
@@ -191,8 +196,8 @@ export default class PanelHeaders extends Vue {
 
     general.toggleRecording();
 
-    if (workspace.selectedPattern) {
-      this.transport = workspace.selectedPattern.transport;
+    if (dawg.patterns.selectedPattern.value) {
+      this.transport = dawg.patterns.selectedPattern.value.transport;
       this.transport.start();
       general.start();
     }

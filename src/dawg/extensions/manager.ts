@@ -1,9 +1,8 @@
 import * as t from 'io-ts';
-import { Extension, ExtensionContext, IExtensionContext } from '@/dawg/extensions';
+import { Extension, ExtensionContext, IExtensionContext, ExtensionData } from '@/dawg/extensions';
 import fs from '@/wrappers/fs';
 import path from 'path';
 import { GLOBAL_PATH, WORKSPACE_PATH, SETTINGS_PATH, PROJECT_PATH } from '@/constants';
-import { Project } from '@/store';
 import { reverse } from '@/utils';
 import { FileLoader, FileWriter } from '@/core/loaders/file';
 import uuid from 'uuid';
@@ -35,7 +34,7 @@ interface JSON {
 const extensions: { [id: string]: any } = {};
 const resolved: { [id: string]: boolean } = {};
 
-let extensionsStack: Array<{ extension: Extension, context: IExtensionContext }> = [];
+let extensionsStack: Array<{ extension: Extension<any, any, any, any>, context: IExtensionContext }> = [];
 
 const makeAndRead = (file: string): JSON => {
   if (!fs.existsSync(file)) {
@@ -269,7 +268,9 @@ export const manager = {
     await write(SETTINGS_PATH, s);
     await write(WORKSPACE_PATH, projectManager.workspace);
   },
-  activate<E extends Extension<any, any, any, any>>(extension: E): ReturnType<E['activate']> {
+  activate<W extends ExtensionData = {}, G extends ExtensionData = {}, S extends t.Props = {}, V = void>(
+    extension: Extension<W, G, S, V>,
+  ): V {
     if (!projectManager) {
       projectManager = Manager.fromFileSystem();
     }

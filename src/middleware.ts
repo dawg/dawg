@@ -6,7 +6,6 @@ import * as backup from '@/dawg/extensions/extra/backup';
 import * as record from '@/dawg/extensions/extra/record';
 import * as explorer from '@/dawg/extensions/extra/explorer';
 import * as audioFiles from '@/dawg/extensions/extra/audio-files';
-import * as patterns from '@/dawg/extensions/extra/patterns';
 import * as clips from '@/dawg/extensions/extra/clips';
 import * as dawg from '@/dawg';
 
@@ -63,7 +62,6 @@ const middleware = () => {
   dawg.manager.activate(record.extension);
   dawg.manager.activate(explorer.extension);
   dawg.manager.activate(audioFiles.extension);
-  dawg.manager.activate(patterns.extension);
   dawg.manager.activate(clips.extension);
 };
 
