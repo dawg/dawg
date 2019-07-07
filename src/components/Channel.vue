@@ -65,6 +65,7 @@ import { Watch } from '@/modules/update';
 import { AnyEffect } from '@/core/filters/effect';
 import { Channel as C } from '@/core/channel';
 import { EffectMap, EffectName } from '@/core';
+import * as dawg from '@/dawg';
 
 function sentenceCase(text: string) {
   // const result = text.replace( /([A-Z])/g, ' $1' );
@@ -107,7 +108,7 @@ export default class Channel extends Vue {
       text: sentenceCase(option), callback: () => this.addEffect(option, i),
     }));
 
-    this.$menu({
+    dawg.context.menu({
       event,
       items,
     });
@@ -123,7 +124,7 @@ export default class Channel extends Vue {
   }
 
   public contextmenu(event: MouseEvent, effect: AnyEffect) {
-    this.$context({
+    dawg.context.context({
       event,
       items: [{
         text: 'Delete',

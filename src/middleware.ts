@@ -1,6 +1,4 @@
 import Vue from 'vue';
-import { remote } from 'electron';
-import Context from '@/modules/context';
 import storybook from '@/storybook';
 import * as backup from '@/dawg/extensions/extra/backup';
 import * as record from '@/dawg/extensions/extra/record';
@@ -8,31 +6,10 @@ import * as explorer from '@/dawg/extensions/extra/explorer';
 import * as audioFiles from '@/dawg/extensions/extra/audio-files';
 import * as clips from '@/dawg/extensions/extra/clips';
 import * as mixer from '@/dawg/extensions/core/mixer';
-import * as pianoRoll from '@/dawg/extensions/core/piano-roll';
 import * as sampleViewer from '@/dawg/extensions/core/sample-viewer';
 import * as dawg from '@/dawg';
 
-const inspect = {
-  text: 'Inspect',
-  callback: (e: MouseEvent) => {
-    // Wait for context menu to close before opening the Dev Tools!
-    // If you don't, it will focus on the context menu.
-    setTimeout(() => {
-      const window = remote.getCurrentWindow();
-      window.webContents.inspectElement(e.x, e.y);
-      if (window.webContents.isDevToolsOpened()) {
-        window.webContents.devToolsWebContents.focus();
-      }
-    }, 1000);
-  },
-};
-
 const middleware = () => {
-  Vue.use(Context, {
-    // Only have inspect in development
-    default: process.env.NODE_ENV !== 'production' ? [inspect] : [],
-  });
-
   storybook();
 
   // This imports all .vue files in the components folder
@@ -68,7 +45,6 @@ const middleware = () => {
   dawg.manager.activate(clips.extension);
 
   dawg.manager.activate(mixer.extension);
-  dawg.manager.activate(pianoRoll.extension);
   dawg.manager.activate(sampleViewer.extension);
 };
 

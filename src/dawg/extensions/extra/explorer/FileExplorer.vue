@@ -35,6 +35,7 @@ import { Extensions, FileTree, EventBus } from '@/dawg/extensions/extra/explorer
 import { Watch, Bus } from '@/modules/update';
 import { Keys } from '@/utils';
 import Tree from '@/dawg/extensions/extra/explorer/Tree.vue';
+import * as dawg from '@/dawg';
 
 @Component({
   components: { Tree },
@@ -113,7 +114,7 @@ export default class FileEplorer extends Vue {
   }
 
   public context(folder: string, event: MouseEvent) {
-    this.$context({
+    dawg.context.context({
       event,
       items: [
         {

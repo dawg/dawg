@@ -3,7 +3,7 @@
     <li
       v-for="(tab, i) in tabs"
       :key="i" 
-      :class="{ 'is-active': tab.isActive }"
+      :class="isActive(tab)"
       class="tabs-header"
     >
       <div @click="selectPanel(tab.name)" class="text foreground--text">{{ tab.name }}</div>
@@ -24,197 +24,51 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
+import { Vue, Component } from 'vue-property-decorator';
 import BaseTabs from '@/components/BaseTabs.vue';
 import { Nullable } from '@/utils';
 import { general, workspace } from '@/store';
 import { Watch } from '@/modules/update';
-import { PanelNames } from '@/constants';
-import { keyLookup } from '@/utils';
-import { Note } from '@/core';
-import webmidi, { INoteParam, IMidiChannel, InputEventNoteon } from 'webmidi';
-import { error } from 'util';
-import Transport from '@/modules/audio/transport';
-import * as Audio from '@/modules/audio';
 import { Player } from 'soundfont-player';
 import * as dawg from '@/dawg';
-
-interface Group {
-  icon: string;
-  tooltip: string;
-  props?: {[key: string]: any};
-  callback: (e: MouseEvent) => void;
-}
+import { PanelItem } from '@/dawg/ui';
 
 @Component
 export default class PanelHeaders extends Vue {
-
-  public recordedNotes: {[key: string]: InputEventNoteon} = {};
-  public notesStartTimes: {[key: string]: number} = {};
-  public transport: Transport = new Audio.Transport();
-
-  get selectedScore() {
-    return dawg.instruments.selectedScore.value;
-  }
-
-  public mounted() {
-    webmidi.enable((err) => {
-      webmidi.addListener('connected', (event) => {
-        if (event.port.type === 'input') {
-          const input = event.port;
-          if (input) {
-            dawg.notify.success('MIDI Input Detected', {
-              detail: `${event.port.name} is now connected to Vusic.`,
-            });
-            input.addListener('noteon', 'all',
-              (e) => {
-                if (general.isRecording) {
-                  this.recordedNotes[e.note.name + e.note.octave] = e;
-                  const transportLocation = this.transport.progress *
-                                            (this.transport.loopEnd - this.transport.loopStart);
-                  this.notesStartTimes[e.note.name + e.note.octave] = transportLocation / 60  * general.project.bpm;
-                }
-
-                if (this.selectedScore) {
-                  this.selectedScore.instrument.triggerAttack(e.note.name + e.note.octave, e.rawVelocity);
-                }
-              },
-            );
-
-            input.addListener('noteoff', 'all',
-              (e) => {
-                if (general.isRecording) {
-                  const noteOn = this.recordedNotes[e.note.name + e.note.octave];
-                  delete this.recordedNotes[e.note.name + e.note.octave];
-
-                  const noteStartTime = this.notesStartTimes[e.note.name + e.note.octave];
-                  delete this.notesStartTimes[e.note.name + e.note.octave];
-                  const noteDuration = e.timestamp - noteOn.timestamp;
-
-                  if (this.selectedScore) {
-                    const note = new Note(this.selectedScore.instrument, {
-                      row: keyLookup[e.note.name + e.note.octave].id,
-                      duration: noteDuration / 1000 / 60 * general.project.bpm,
-                      time: noteStartTime,
-                      velocity: noteOn.rawVelocity,
-                    });
-
-                    this.selectedScore.notes.push(note);
-
-                    if (dawg.patterns.selectedPattern.value) {
-                      note.schedule(this.transport);
-                    }
-                  }
-                }
-
-                if (this.selectedScore) {
-                  this.selectedScore.instrument.triggerRelease(e.note.name + e.note.octave);
-                }
-              },
-            );
-          }
-        }
-      });
-
-      webmidi.addListener('disconnected', (event) => {
-        if (event.port.type === 'input') {
-          dawg.notify.warning('MIDI Input Diconnected', {
-            detail: `${event.port.name} has been disconnected.`,
-          });
-        }
-      });
+  get itemLookup() {
+    const lookup: { [name: string]: PanelItem } = {};
+    dawg.ui.panels.forEach((item) => {
+      lookup[item.name] = item;
     });
-  }
 
-  get synthActions(): Group[] {
-    return [{
-      icon: 'add',
-      tooltip: 'Add Instrument',
-      callback: this.addInstrument,
-    }];
-  }
-
-  get pianoRollActions(): Group[] {
-    return [{
-      icon: 'fiber_manual_record',
-      tooltip: general.isRecording ? 'Stop Recording' : 'Start Recording',
-      callback: general.isRecording ? this.stopRecording : this.startRecording,
-      props: {
-        color: general.isRecording ? dawg.theme.error : dawg.theme.foreground,
-        size: '14px',
-      },
-    }];
+    return lookup;
   }
 
   get actions() {
-    // TODO(jacob)
-    if (dawg.panels.openedPanel.value === 'Instruments') {
-      return this.synthActions;
-    } else if (dawg.panels.openedPanel.value === 'Piano Roll') {
-      return this.pianoRollActions;
-    } else {
+    if (dawg.panels.openedPanel.value === undefined) {
       return [];
     }
+
+    const panel = this.itemLookup[dawg.panels.openedPanel.value];
+    if (!panel) {
+      return [];
+    }
+
+    return panel.actions || [];
   }
 
   get tabs() {
-    if (general.panels) {
-      return general.panels.tabs;
-    } else {
-      return [];
+    return dawg.ui.panels;
+  }
+
+  public isActive(tab: PanelItem) {
+    if (tab.name === dawg.panels.openedPanel.value) {
+      return 'is-active';
     }
   }
 
-  public selectPanel(name: PanelNames) {
+  public selectPanel(name: string) {
     dawg.panels.openedPanel.value = name;
-  }
-
-  public addInstrument(event: MouseEvent) {
-    this.$menu({
-      event,
-      items: [
-        {
-          text: 'Synth',
-          callback: () => general.project.addInstrument('Synth'),
-        },
-        {
-          text: 'Soundfont',
-          callback: () => general.project.addInstrument('Soundfont'),
-        },
-      ],
-      left: true,
-    });
-  }
-
-  public startRecording(event: MouseEvent) {
-    if (!this.selectedScore) {
-      dawg.notify.warning('No Score Found', {
-        detail: 'Please create a score before you start recording',
-      });
-      return;
-    }
-
-    general.toggleRecording();
-
-    if (dawg.patterns.selectedPattern.value) {
-      this.transport = dawg.patterns.selectedPattern.value.transport;
-      this.transport.start();
-      general.start();
-    }
-  }
-
-  public stopRecording(event: MouseEvent) {
-    general.toggleRecording();
-    this.transport.pause();
-    general.pause();
-  }
-
-  public destroyed() {
-    const input = webmidi.inputs[0];
-
-    if (input) {
-      input.removeListener();
-    }
   }
 }
 

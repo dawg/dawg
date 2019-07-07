@@ -17,6 +17,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { general } from '@/store';
 import { ScheduledAutomation } from '@/core';
+import * as dawg from '@/dawg';
 
 @Component
 export default class AutomationClips extends Vue {
@@ -34,7 +35,7 @@ export default class AutomationClips extends Vue {
   }
 
   public context(event: MouseEvent, i: number) {
-    this.$context({
+    dawg.context.context({
       event,
       items: [
         {

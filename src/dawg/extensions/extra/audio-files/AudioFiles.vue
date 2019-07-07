@@ -18,6 +18,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { general, workspace } from '@/store';
 import { ScheduledSample, Sample } from '@/core';
+import * as dawg from '@/dawg';
 
 @Component
 export default class AudioFiles extends Vue {
@@ -33,7 +34,7 @@ export default class AudioFiles extends Vue {
   }
 
   public context(event: MouseEvent, i: number) {
-    this.$context({
+    dawg.context.context({
       event,
       items: [
         {

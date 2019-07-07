@@ -1,7 +1,6 @@
 // 1. Make sure to import 'vue' before declaring augmented types
 import Vue from 'vue'
 import { UpdateAugmentation } from '@/modules/update';
-import { ContextInterface } from '@/modules/context';
 import { KnobAugmentation } from '@/modules/knobs';
 import { Automatable } from '@/core';
 import { StatusAugmentation } from '@/modules/status';
@@ -13,7 +12,6 @@ declare module 'vue/types/vue' {
   // I'm not sure that this is the best way to do things...
   interface Vue extends 
     UpdateAugmentation,
-    ContextInterface, 
     KnobAugmentation<Automatable>, 
     StatusAugmentation
   {

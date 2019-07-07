@@ -7,8 +7,7 @@ import { VuexModule } from '@/store/utils';
 
 import * as io from '@/modules/cerialize';
 import store from '@/store/store';
-import { APPLICATION_PATH, SideTab, PanelNames, ApplicationContext } from '@/constants';
-import { Score, Pattern } from '@/core';
+import { APPLICATION_PATH, ApplicationContext } from '@/constants';
 import general from './general';
 import { makeLookup } from '@/modules/utils';
 import { emitter, EventProvider } from '@/dawg/events';

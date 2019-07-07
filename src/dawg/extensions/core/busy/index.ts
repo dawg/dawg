@@ -1,6 +1,6 @@
 import BusySignal from '@/dawg/extensions/core/busy/BusySignal.vue';
 import { Provider, bus } from '@/dawg/extensions/core/busy/helpers';
-import { manager } from '../../manager';
+import { manager } from '@/dawg/extensions/manager';
 import { ui } from '@/dawg/ui';
 
 /**

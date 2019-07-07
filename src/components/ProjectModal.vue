@@ -54,6 +54,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { ProjectInfo } from '@/backend';
 import { Watch } from '@/modules/update';
+import * as dawg from '@/dawg';
 
 @Component({
   filters: {
@@ -85,7 +86,7 @@ export default class ProjectModal extends Vue {
   }
 
   public context(project: ProjectInfo, event: MouseEvent) {
-    this.$context({
+    dawg.context.context({
       event,
       items: [
         {

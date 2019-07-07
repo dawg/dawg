@@ -1,5 +1,6 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { CreateElement } from 'vue';
+import * as dawg from '@/dawg';
 
 interface SubMenuItem {
   text: string;
@@ -74,7 +75,7 @@ export class MenuItem extends Vue {
       nativeOn: {
         click: (e: MouseEvent) => {
           e.stopPropagation();
-          this.$menu({
+          dawg.context.menu({
             event: this.$el.getBoundingClientRect(),
             items: this.subMenu.items,
           });

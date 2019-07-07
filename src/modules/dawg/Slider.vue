@@ -39,6 +39,7 @@
 import { Component, Prop, Mixins } from 'vue-property-decorator';
 import { Draggable } from '@/modules/draggable';
 import { scale } from '@/utils';
+import * as dawg from '@/dawg';
 
 @Component
 export default class Slider extends Mixins(Draggable) {
@@ -115,7 +116,7 @@ export default class Slider extends Mixins(Draggable) {
   }
 
   public contextmenu(event: MouseEvent) {
-    this.$context({
+    dawg.context.context({
       event,
       items: [
         {

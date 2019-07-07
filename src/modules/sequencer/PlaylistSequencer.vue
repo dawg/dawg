@@ -29,7 +29,8 @@ import Sequencer from '@/modules/sequencer/Sequencer.vue';
 import { Track } from '@/core';
 import { toTickTime } from '@/utils';
 import Transport from '@/modules/audio/transport';
-import * as dawg from '@/dawg';
+import { theme } from '@/dawg/extensions/core/theme';
+import { context } from '@/dawg/extensions/core/context';
 
 @Component({
   components: { Sequencer },
@@ -43,7 +44,7 @@ export default class PlaylistSequencer extends Vue {
 
   public trackOptions(event: MouseEvent, i: number) {
     // TODO(jacob) REMOVE THIS!!!
-    this.$context({
+    context.context({
       event,
       items: [
         {
@@ -57,7 +58,7 @@ export default class PlaylistSequencer extends Vue {
 
   public rowStyle() {
     return {
-      borderBottom: `1px solid ${dawg.theme.background}`,
+      borderBottom: `1px solid ${theme.background}`,
     };
   }
 }

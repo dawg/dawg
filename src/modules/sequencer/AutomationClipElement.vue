@@ -36,6 +36,7 @@
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import { Point, ScheduledAutomation } from '@/core';
 import { scale } from '@/utils';
+import * as dawg from '@/dawg';
 
 @Component
 export default class AutomationClipElement extends Vue {
@@ -155,7 +156,7 @@ export default class AutomationClipElement extends Vue {
   }
 
   public pointContext(event: MouseEvent, i: number) {
-    this.$context({
+    dawg.context.context({
       event,
       items: [
         {

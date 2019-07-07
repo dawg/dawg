@@ -8,21 +8,16 @@ import Waveform from '@/modules/dawg/Waveform.vue';
 import Scroller from '@/modules/sequencer/Scroller.vue';
 import { positionable, resizable, selectable, colored } from '@/modules/sequencer/helpers';
 
-function hoc(o: VueConstructor) {
+export const createElement = (o: VueConstructor) => {
   return positionable(resizable(selectable(o)));
-}
+};
 
-export const SampleElement = hoc(colored(SE));
-export const PatternElement = hoc(colored(PE));
-export const AutomationClipElement = hoc(colored(ACE));
-
-export const createElement = hoc;
+export const SampleElement = createElement(colored(SE));
+export const PatternElement = createElement(colored(PE));
+export const AutomationClipElement = createElement(colored(ACE));
 
 export {
   Sequencer,
-  positionable,
-  resizable,
-  selectable,
   colored,
 };
 

@@ -1,5 +1,4 @@
 import { Module, getModule, Mutation } from 'vuex-module-decorators';
-import BaseTabs from '@/components/BaseTabs.vue';
 import store from '@/store/store';
 import { VuexModule } from '@/store/utils';
 import { Project } from './project';
@@ -22,7 +21,6 @@ export interface InitializationSuccess {
 @Module({ dynamic: true, store, name: 'general' })
 export class General extends VuexModule {
   public project = Project.newProject();
-  public panels: BaseTabs | null = null;
   public toolbarHeight = 64;
   public play = false;
 
@@ -43,11 +41,6 @@ export class General extends VuexModule {
   @Mutation
   public setProject(project: Project) {
     this.project = project;
-  }
-
-  @Mutation
-  public setPanels(panels: BaseTabs) {
-    this.panels = panels;
   }
 
   @Mutation

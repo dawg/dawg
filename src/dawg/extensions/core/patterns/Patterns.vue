@@ -20,7 +20,8 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Pattern, ScheduledPattern } from '@/core';
 import { Nullable } from '@/utils';
 import { Watch } from '@/modules/update';
-import * as dawg from '@/dawg';
+import { context } from '@/dawg/extensions/core/context';
+import { theme } from '@/dawg/extensions/core/theme';
 
 @Component
 export default class Patterns extends Vue {
@@ -45,7 +46,7 @@ export default class Patterns extends Vue {
   }
 
   public context(event: MouseEvent, i: number) {
-    this.$context({
+    context.context({
       event,
       items: [
         {
@@ -59,7 +60,7 @@ export default class Patterns extends Vue {
   public border(pattern: Pattern) {
     if (pattern === this.value) {
       return {
-        border: `1px solid ${dawg.theme.foreground + '30'}`,
+        border: `1px solid ${theme.foreground + '30'}`,
       };
     }
   }

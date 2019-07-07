@@ -1,13 +1,13 @@
 import { expect } from 'chai';
 import Vue from 'vue';
-import { resizable } from '@/modules/sequencer';
+// import { resizable } from '@/modules/sequencer';
 import { shallowMount } from '@vue/test-utils';
 
 const Tester = Vue.component('Tester', {
   template: `<div></div>`,
 });
 
-const Resizable = resizable(Tester);
+// const Resizable = resizable(Tester);
 
 describe('Resizable', () => {
   it('should have the correct width', () => {

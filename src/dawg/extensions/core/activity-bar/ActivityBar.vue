@@ -48,7 +48,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import Sidebar from '@/components/SideBar.vue';
-import { PanelNames, SideTab } from '@/constants';
+import { SideTab } from '@/constants';
 import Settings from '@/sections/Settings.vue';
 import * as dawg from '@/dawg';
 import { activityBar } from '@/dawg/extensions/core/activity-bar';

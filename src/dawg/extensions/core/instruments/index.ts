@@ -6,6 +6,7 @@ import { patterns } from '@/dawg/extensions/core/patterns';
 import { Score } from '@/core';
 import { ui } from '@/dawg/ui';
 import { general } from '@/store';
+import { context } from '../context';
 
 export const instruments = manager.activate({
   id: 'dawg.instruments',
@@ -28,9 +29,31 @@ export const instruments = manager.activate({
       },
     });
 
+    function addInstrument(event: MouseEvent) {
+      context.menu({
+        event,
+        items: [
+          {
+            text: 'Synth',
+            callback: () => general.project.addInstrument('Synth'),
+          },
+          {
+            text: 'Soundfont',
+            callback: () => general.project.addInstrument('Soundfont'),
+          },
+        ],
+        left: true,
+      });
+    }
+
     ui.panels.push({
       name: 'Instruments',
       component,
+      actions: [{
+        icon: 'add',
+        tooltip: 'Add Instrument',
+        callback: addInstrument,
+      }],
     });
 
     const selectedScoreId: Wrapper<string | null> = value(null);

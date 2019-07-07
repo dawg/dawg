@@ -1,15 +1,21 @@
-import Vue from 'vue';
-import { createExtension } from '@/dawg/extensions';
+import Vue, { VueConstructor } from 'vue';
 import PianoRollSequencer from '@/dawg/extensions/core/piano-roll/PianoRollSequencer.vue';
 import Note from '@/dawg/extensions/core/piano-roll/Note.vue';
 import { workspace, general } from '@/store';
 import { instruments } from '@/dawg/extensions/core/instruments';
 import { patterns } from '@/dawg/extensions/core/patterns';
-import { ui } from '@/dawg/ui';
-import { createElement } from '@/modules/sequencer';
+import { ui, TabAction } from '@/dawg/ui';
+import { manager } from '@/dawg/extensions/manager';
+import { positionable, selectable } from '@/modules/sequencer/helpers';
+import { resizable } from '@/modules/sequencer/seq';
 
-export const extension = createExtension({
-  id:  'dawg.project',
+// TODO(jacob) WHy do I need to do this?
+const createElement = (o: VueConstructor) => {
+  return positionable(resizable(selectable(o)));
+};
+
+export const pianoRoll = manager.activate({
+  id:  'dawg.piano-roll',
   activate() {
     Vue.component('Note', createElement(Note));
 
@@ -44,10 +50,18 @@ export const extension = createExtension({
       },
     });
 
+    const actions: TabAction[] = [];
 
     ui.panels.push({
       name: 'Piano Roll',
       component,
+      actions,
     });
+
+    return {
+      addAction(action: TabAction) {
+        actions.push(action);
+      },
+    };
   },
 });

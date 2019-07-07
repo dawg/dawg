@@ -19,6 +19,7 @@ import Synth from '@/components/Synth.vue';
 
 import Timeline from '@/components/Timeline.vue';
 import ContextMenu from '@/modules/context/ContextMenu.vue';
+import * as dawg from '@/dawg';
 
 const synth = new Tone.Synth().toMaster();
 
@@ -237,7 +238,7 @@ storiesOf(ContextMenu.name, module)
     }),
     methods: {
       contextmenu(event: MouseEvent) {
-        this.$context({
+        dawg.context.context({
           event,
           items: [{
             // tslint:disable-next-line:no-console

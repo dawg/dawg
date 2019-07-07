@@ -18,4 +18,3 @@ export const TOOLBAR_HEIGHT = 64;
 
 export type ApplicationContext = 'playlist' | 'pianoroll';
 export type SideTab = 'Explorer' | 'Audio Files' | 'Patterns' | 'Automation Clips';
-export type PanelNames = 'Piano Roll' | 'Mixer' | 'Instruments' | 'Sample';

@@ -7,11 +7,11 @@ import VerticalSwitch from '@/modules/dawg/VerticalSwitch.vue';
 import Blank from '@/modules/dawg/Blank.vue';
 import Loading from '@/modules/dawg/Loading.vue';
 import GH from '@/modules/dawg/ChunkGhost.vue';
-import { positionable } from '../sequencer';
 import Waveform from '@/modules/dawg/Waveform.vue';
 import Spectrogram from '@/modules/dawg/Spectrogram.vue';
 
-const ChunkGhost = positionable(GH);
+// TODO(jacob)
+const ChunkGhost = GH; // positionable(GH);
 
 export default  {
   install() {

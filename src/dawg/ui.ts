@@ -28,10 +28,11 @@ interface StatusBarVueElement {
   priority?: number;
 }
 
-interface Action {
+export interface TabAction {
   icon: string;
   tooltip: string;
-  callback: () => void;
+  callback: (e: MouseEvent) => void;
+  props?: { [k: string]: string };
 }
 
 export interface ActivityBarItem {
@@ -39,13 +40,13 @@ export interface ActivityBarItem {
   iconProps?: { [k: string]: string };
   name: string;
   component: VueConstructor;
-  actions?: Action[];
+  actions?: TabAction[];
 }
 
 export interface PanelItem {
   name: string;
   component: VueConstructor;
-  actions?: Action[];
+  actions?: TabAction[];
 }
 
 type StatusBarElement = StatusBarItemElement | StatusBarVueElement;

@@ -97,7 +97,6 @@
       :key="i"
       :is="global"
     ></component>
-    <context-menu></context-menu>
     <loading 
       class="secondary"
       :value="!loaded"

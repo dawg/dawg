@@ -25,7 +25,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 
-import bus, { Item, isMouseEvent, Position, ContextPayload } from '@/modules/context/bus';
+import bus, { Item, isMouseEvent, Position, ContextPayload } from '@/dawg/extensions/core/context/bus';
 import { Watch } from '@/modules/update';
 
 @Component
