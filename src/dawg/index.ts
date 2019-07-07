@@ -12,6 +12,8 @@ export { pianoRoll } from '@/dawg/extensions/core/piano-roll';
 export { patterns } from '@/dawg/extensions/core/patterns';
 export { panels } from '@/dawg/extensions/core/panels';
 export { menubar } from '@/dawg/extensions/core/menubar';
+export { record } from '@/dawg/extensions/core/record';
+export { playlist } from '@/dawg/extensions/core/playlist';
 export { window } from '@/dawg/extensions/core/window';
 export { Key, Command } from '@/dawg/extensions/core/commands';
 export { IExtensionContext, Extension, createExtension } from '@/dawg/extensions';

@@ -8,8 +8,10 @@ import path from 'path';
 import fs from '@/wrappers/fs';
 import { ChunkGhost } from '@/core/ghosts/ghost';
 import { remote } from 'electron';
-import { Sample } from '@/core';
+import { Sample, ScheduledSample } from '@/core';
 import { workspace, general } from '@/store';
+import { value, Wrapper } from 'vue-function-api';
+import { manager } from '../manager';
 
 export const DOCUMENTS_PATH = remote.app.getPath('documents');
 export const RECORDING_PATH = path.join(DOCUMENTS_PATH, remote.app.getName(), 'recordings');
@@ -40,15 +42,13 @@ function makeFileName() {
   '.wav';
 }
 
-export const record = {
-  recording: false,
-};
-
 let ghosts: ChunkGhost[] = [];
 
-export const extension: Extension<{}, { microphoneIn: string }> = {
+export const extension: Extension<{}, { microphoneIn: string }, {}, { recording: Wrapper<boolean> }> = {
   id: 'dawg.record',
   activate(context) {
+    const recording = value(false);
+
     let mediaRecorder: MediaRecorder | null = null;
 
     context.subscriptions.push(workspace.onDidPlayPause(() => {
@@ -94,8 +94,8 @@ export const extension: Extension<{}, { microphoneIn: string }> = {
 
       // keep the ghost updated
       mediaRecorder.ondataavailable = async (event: BlobEvent) => {
-        if (!record.recording) {
-          record.recording = true;
+        if (!recording.value) {
+          recording.value = true;
           workspace.startTransport();
         }
 
@@ -122,9 +122,21 @@ export const extension: Extension<{}, { microphoneIn: string }> = {
 
         // add the file to the workspace
         // create a sample from the file.
+        const master = general.project.master;
         const sample = Sample.create(dst, buffer);
-        general.project.scheduleMaster(sample, trackId, time);
-        record.recording = false;
+        general.project.samples.push(sample);
+        const scheduled = new ScheduledSample(sample, {
+          type: 'sample',
+          sampleId: sample.id,
+          duration: sample.beats,
+          row: trackId,
+          time,
+        });
+
+        scheduled.schedule(master.transport);
+        master.elements.push(scheduled);
+
+        recording.value = false;
       };
     };
 
@@ -145,9 +157,12 @@ export const extension: Extension<{}, { microphoneIn: string }> = {
     });
 
     context.subscriptions.push(disposable);
-  },
 
-  deactivate() {
-    //
+    return {
+      recording,
+    };
   },
 };
+
+
+export const record = manager.activate(extension);

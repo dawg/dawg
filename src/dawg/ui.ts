@@ -59,6 +59,7 @@ interface UI {
   statusBarRight: VueConstructor[];
   activityBar: ActivityBarItem[];
   panels: PanelItem[];
+  mainSection: VueConstructor[];
   createStatusBarItem: () => StatusBarItem;
 }
 
@@ -68,6 +69,7 @@ export const ui: UI = {
   statusBarRight: [],
   activityBar: [],
   panels: [],
+  mainSection: [],
   createStatusBarItem(alignment?: StatusBarAlignment, priority?: number) {
     const statusBarItem = new StatusBarItem();
     statusBarElements.push({

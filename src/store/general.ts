@@ -21,11 +21,9 @@ export interface InitializationSuccess {
 @Module({ dynamic: true, store, name: 'general' })
 export class General extends VuexModule {
   public project = Project.newProject();
-  public toolbarHeight = 64;
   public play = false;
 
   // TODO(jacob)
-  public isRecordingMicrophone = false;
   public isRecording: boolean = false;
 
   /**
@@ -41,11 +39,6 @@ export class General extends VuexModule {
   @Mutation
   public setProject(project: Project) {
     this.project = project;
-  }
-
-  @Mutation
-  public setRecordingMicrophone(recording: boolean) {
-    this.isRecordingMicrophone = recording;
   }
 
   @Mutation

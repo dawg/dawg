@@ -25,6 +25,7 @@ export default class BaseTabs extends Vue {
   }
 
   public mounted() {
+    this.doSelectTab();
     this.tabs = [...this.$children as Tab[]];
   }
 

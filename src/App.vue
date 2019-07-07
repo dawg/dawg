@@ -1,16 +1,6 @@
 <template>
   <v-app class="app">
     <split direction="vertical">
-      <!-- <split :initial="30" fixed>
-        <menu-bar 
-          :menu="menu"
-          :maximized="maximized"
-          @close="dawg.window.close"
-          @minimize="minimizeApplication"
-          @maximize="maximizeApplication"
-          @restore="restoreApplication"
-        ></menu-bar>
-      </split> -->
 
       <split direction="horizontal" resizable>
         <split :initial="65" fixed>
@@ -32,10 +22,10 @@
 
         <split direction="vertical" resizable>
 
-          <split :initial="general.toolbarHeight" fixed>
+          <split :initial="TOOLBAR_HEIGHT" fixed>
             <toolbar
               class="toolbar"
-              :height="general.toolbarHeight"
+              :height="TOOLBAR_HEIGHT"
               :transport="workspace.transport"
               :context="workspace.applicationContext"
               @update:context="setContext"
@@ -48,25 +38,11 @@
           </split>
 
           <split>
-            <playlist-sequencer
+            <component
               v-if="loaded"
+              :is="mainComponent"
               style="height: 100%"
-              :tracks="general.project.tracks" 
-              :elements="general.project.master.elements"
-              :transport="general.project.master.transport"
-              :play="playlistPlay"
-              :start.sync="masterStart"
-              :end.sync="masterEnd"
-              :steps-per-beat="general.project.stepsPerBeat"
-              :beats-per-measure="general.project.beatsPerMeasure"
-              :row-height="workspace.playlistRowHeight"
-              @update:rowHeight="workspace.setPlaylistRowHeight"
-              :px-per-beat="workspace.playlistBeatWidth"
-              @update:pxPerBeat="workspace.setPlaylistBeatWidth"
-              @new-prototype="checkPrototype"
-              :is-recording="general.isRecordingMicrophone"
-              :ghosts="ghosts"
-            ></playlist-sequencer>
+            ></component>
             <blank v-else></blank>              
           </split>
 
@@ -105,33 +81,21 @@
 </template>
 
 <script lang="ts">
-import fs from '@/wrappers/fs';
 import { Component, Vue } from 'vue-property-decorator';
-import { shell, Event, DesktopCapturer, desktopCapturer } from 'electron';
+import { shell } from 'electron';
 import { general, workspace, Project } from '@/store';
-import { toTickTime, allKeys, Keys } from '@/utils';
-import Transport from '@/modules/audio/transport';
 import { automation } from '@/modules/knobs';
-import Sidebar from '@/components/SideBar.vue';
 import SideTabs from '@/sections/SideTabs.vue';
 import Panels from '@/dawg/extensions/core/panels/Panels.vue';
 import PanelHeaders from '@/dawg/extensions/core/panels/PanelHeaders.vue';
 import ActivityBar from '@/dawg/extensions/core/activity-bar/ActivityBar.vue';
 import StatusBar from '@/sections/StatusBar.vue';
-import Tone from 'tone';
-import { SideTab, FILTERS, ApplicationContext, APPLICATION_PATH, RECORDING_PATH } from '@/constants';
-import { Watch } from '@/modules/update';
-import backend, { ProjectInfo } from '@/backend';
-import * as io from '@/modules/cerialize';
+import { SideTab, FILTERS, ApplicationContext, APPLICATION_PATH, RECORDING_PATH, TOOLBAR_HEIGHT } from '@/constants';
 import { remote } from 'electron';
-import { User } from 'firebase';
 import { ScheduledPattern } from '@/core/scheduled/pattern';
 import { ScheduledSample, Sample } from '@/core';
 import { Automatable } from '@/core/automation';
 import * as Audio from '@/modules/audio';
-import { Ghost, ChunkGhost } from '@/core/ghosts/ghost';
-import audioBufferToWav from 'audiobuffer-to-wav';
-import path from 'path';
 import * as dawg from '@/dawg';
 import { Menu } from './dawg/extensions/core/menubar';
 
@@ -153,14 +117,10 @@ import { Menu } from './dawg/extensions/core/menubar';
 })
 export default class App extends Vue {
   public dawg = dawg;
-
-  get playlistPlay() {
-    return general.play && workspace.applicationContext === 'playlist';
-  }
+  public TOOLBAR_HEIGHT = TOOLBAR_HEIGHT;
 
   public general = general;
   public workspace = workspace;
-  public ghosts: Ghost[] = [];
 
   public menuItems: { [key: string]: dawg.Command } = {
     save: {
@@ -275,13 +235,12 @@ export default class App extends Vue {
   // ie. some components expect props to stay the same.
   public loaded = false;
 
-  // TODO REMOVE
-  public backupModal = false;
-
-  // We need these to be able to keep track of the start and end of the playlist loop
-  // for creating automation clips
-  public masterStart = 0;
-  public masterEnd = 0;
+  get mainComponent() {
+    console.log(dawg.ui.mainSection.length);
+    if (dawg.ui.mainSection.length) {
+      return dawg.ui.mainSection[dawg.ui.mainSection.length - 1];
+    }
+  }
 
   public async created() {
     // This is called before refresh / close
@@ -295,9 +254,6 @@ export default class App extends Vue {
     automation.$on('automate', this.addAutomationClip);
 
     setTimeout(async () => {
-      // Make sure we load the cache first before loading the default project.
-      this.$log.debug('Starting to read data.');
-
       // tslint:disable-next-line:no-console
       console.log(dawg);
 
@@ -431,36 +387,20 @@ export default class App extends Vue {
     }
   }
 
-  /**
-   * Whenever we add a sample, if it hasn't been imported before, add it the the list of project samples.
-   */
-  public checkPrototype(prototype: ScheduledPattern | ScheduledSample) {
-    if (prototype.component !== 'sample-element') {
-      return;
-    }
-
-    const sample = prototype.sample;
-    if (general.project.samples.indexOf(prototype.sample) >= 0) {
-      return;
-    }
-
-    this.$log.debug('Adding a sample!');
-    general.project.addSample(sample);
-  }
-
   public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T & string) {
-    const added = await general.project.createAutomationClip({
-      automatable,
-      key,
-      start: this.masterStart,
-      end: this.masterEnd,
-    });
+    // TODO(jacob)
+    // const added = await general.project.createAutomationClip({
+    //   automatable,
+    //   key,
+    //   start: this.masterStart,
+    //   end: this.masterEnd,
+    // });
 
-    if (!added) {
-      dawg.notify.warning('Unable to create automation clip', {
-        detail: 'There are no free tracks. Move elements and try again.',
-      });
-    }
+    // if (!added) {
+    //   dawg.notify.warning('Unable to create automation clip', {
+    //     detail: 'There are no free tracks. Move elements and try again.',
+    //   });
+    // }
   }
 
   public async newProject() {
