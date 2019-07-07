@@ -12,6 +12,8 @@ import { InitializationError, InitializationSuccess } from '@/store/general';
 import { MemoryLoader } from '@/core/loaders/memory';
 import { notify } from './notify';
 import { DG_EXTENSION } from '@/constants';
+import { commands, Command } from './commands';
+import { menubar } from './menubar';
 
 class ProjectAPI {
   private project: Project | null = null;
@@ -150,9 +152,39 @@ const online = () => {
 
 const extension: Extension<{}, {}, {}, ProjectAPI> = {
   id: 'dawg.project',
-  activate() {
+  activate(context) {
+    const api = new ProjectAPI();
+
     window.addEventListener('online', online);
-    return new ProjectAPI();
+
+    const save: Command = {
+      text: 'Save',
+      shortcut: ['CmdOrCtrl', 'S'],
+      callback: async () => {
+        await api.saveProject({
+          forceDialog: false,
+        });
+      },
+    };
+
+    const saveAs: Command = {
+      text: 'Save',
+      shortcut: ['CmdOrCtrl', 'Shift', 'S'],
+      callback: async () => {
+        await api.saveProject({
+          forceDialog: true,
+        });
+      },
+    };
+
+    const toDispose = [save, saveAs].map((command) => {
+      context.subscriptions.push(commands.registerCommand(command));
+      return menubar.addItem('File', command);
+    });
+
+    context.subscriptions.push(...toDispose);
+
+    return api;
   },
 
   deactivate() {

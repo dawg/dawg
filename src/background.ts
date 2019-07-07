@@ -7,9 +7,22 @@ import {
   createProtocol,
   installVueDevtools,
 } from 'vue-cli-plugin-electron-builder/lib';
-import { IpcMain, ElectronMenuItem } from './ipc';
+import { IpcMain, ElectronMenuItem } from '@/ipc';
 
 let menuLookup: { [k: string]: MenuItemConstructorOptions } = {};
+
+const renderMenu = () => {
+  const template = Object.values(menuLookup);
+
+  // The first menu item is associated with the application
+  // Just look at the menu and you will see what I mean
+  if (process.platform === 'darwin') {
+    template.unshift({ label: '' });
+  }
+
+  // Set the application menu every time.
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+};
 
 const events = ipcMain as IpcMain;
 events.on('removeMenu', () => {
@@ -56,16 +69,41 @@ events.on('addToMenu', (_, itemsOrItem) => {
     addItem(itemsOrItem);
   }
 
-  const template = Object.values(menuLookup);
+  renderMenu();
+});
 
-  // The first menu item is associated with the application
-  // Just look at the menu and you will see what I mean
-  if (process.platform === 'darwin') {
-    template.unshift({ label: '' });
+events.on('removeFromMenu', (_, itemsOrItem) => {
+  const removeItem = (item: ElectronMenuItem) => {
+    if (item.label === null) {
+      return;
+    }
+
+    if (!menuLookup[item.menu]) {
+      return;
+    }
+
+    const singleMenu = menuLookup[item.menu];
+    if (!singleMenu.submenu) {
+      return;
+    }
+
+    if (!Array.isArray(singleMenu.submenu)) {
+      // this condition should never occur
+      return;
+    }
+
+    singleMenu.submenu = singleMenu.submenu.filter((menuItem) => {
+      return item.label !== menuItem.label || item.callback !== menuItem.click;
+    });
+  };
+
+  if (Array.isArray(itemsOrItem)) {
+    itemsOrItem.forEach(removeItem);
+  } else {
+    removeItem(itemsOrItem);
   }
 
-  // Set the application menu every time.
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+  renderMenu();
 });
 
 const isDevelopment = process.env.NODE_ENV !== 'production';

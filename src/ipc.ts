@@ -46,7 +46,9 @@ export type ElectronMenuItem = ElectronMenuAction | ElectronMenuDivider;
 // tslint:disable-next-line:interface-over-type-literal
 type IEvents = {
   addToMenu: [ElectronMenuItem | ElectronMenuItem[]];
+  removeFromMenu: [ElectronMenuItem | ElectronMenuItem[]];
   removeMenu: [],
+  showMenu: [],
 };
 
 export type IpcMain = IpcMainGeneric<IEvents>;

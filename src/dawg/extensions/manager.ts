@@ -245,7 +245,6 @@ export const manager = {
     const writer = new FileWriter(PastProjectsType, { path: PROJECT_PATH, data: pastProject });
     return await writer.write();
   },
-  // TODO USE THIS
   async dispose() {
     if (!projectManager) {
       return;
@@ -253,8 +252,24 @@ export const manager = {
 
     for (const e of reverse(extensionsStack)) {
       if (e.extension.deactivate) {
-        e.extension.deactivate(e.context);
+        try {
+          await e.extension.deactivate(e.context);
+        } catch (error) {
+          // TODO(jacob) write to file
+          // tslint:disable-next-line:no-console
+          console.error(`Unable to deactivate ${e.extension.id}: ${error}`);
+        }
       }
+
+      e.context.subscriptions.forEach((subscription) => {
+        try {
+          subscription.dispose();
+        } catch (error) {
+          // TODO(jacob) write to file
+          // tslint:disable-next-line:no-console
+          console.error(`Unable to deactivate subscription for ${e.extension.id}: ${error}`);
+        }
+      });
     }
 
     const g = getDataFromExtensions('global');

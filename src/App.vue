@@ -123,16 +123,6 @@ export default class App extends Vue {
   public workspace = workspace;
 
   public menuItems: { [key: string]: dawg.Command } = {
-    save: {
-      text: 'Save',
-      shortcut: ['CmdOrCtrl', 'S'],
-      callback: this.save,
-    },
-    saveAs: {
-      text: 'Save As',
-      shortcut: ['CmdOrCtrl', 'Shift', 'S'],
-      callback: () => this.save(true),
-    },
     open: {
       text: 'Open',
       shortcut: ['CmdOrCtrl', 'O'],
@@ -272,8 +262,6 @@ export default class App extends Vue {
   }
 
   public mounted() {
-    dawg.menubar.setMenu(this.menu);
-
     window.addEventListener('offline', this.offline);
     window.addEventListener('online', this.online);
 
@@ -305,6 +293,8 @@ export default class App extends Vue {
   }
 
   public async onExit() {
+    await dawg.manager.dispose();
+
     // If we don't have a file open, don't write the workspace information
     if (!general.projectPath) {
       return;
@@ -333,12 +323,6 @@ export default class App extends Vue {
     await dawg.project.setOpenedFile(filePath);
     const window = remote.getCurrentWindow();
     window.reload();
-  }
-
-  public async save(forceDialog: boolean = false) {
-    await dawg.project.saveProject({
-      forceDialog,
-    });
   }
 
   public setContext(context: ApplicationContext) {
