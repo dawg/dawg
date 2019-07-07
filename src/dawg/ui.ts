@@ -59,6 +59,9 @@ interface UI {
   statusBarRight: VueConstructor[];
   activityBar: ActivityBarItem[];
   panels: PanelItem[];
+  // TODO This will eventually be used for the settings.
+  // You will be able to push and then remove when finished.
+  // We shoud add functions instead of allowing elements to interact directly with the arrays.
   mainSection: VueConstructor[];
   createStatusBarItem: () => StatusBarItem;
 }

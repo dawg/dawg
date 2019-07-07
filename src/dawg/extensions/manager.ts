@@ -318,4 +318,7 @@ export const manager = {
 
     return extensions[extension.id] as ReturnType<T['activate']>;
   },
+  forEach(f: (extension: Extension) => void) {
+
+  },
 };

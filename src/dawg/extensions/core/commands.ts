@@ -1,5 +1,6 @@
 import { Platform, platform } from '@/dawg/platform';
 import { manager } from '@/dawg/extensions/manager';
+import { palette } from './palette';
 
 type CommandCallback = () => void;
 
@@ -180,13 +181,24 @@ export const commands = manager.activate({
   activate(context) {
     context.subscriptions.push(new KeyboardShortcuts());
 
+    const registerCommand = (command: Command) => {
+      return new CommandManager(command);
+    };
+
+    registerCommand({
+      text: 'Command Palette',
+      shortcut: ['CmdOrCtrl', 'Shift', 'P'],
+      callback: () => {
+        palette.selectFromItems(items, {
+          onDidSelect: (item) => {
+            item.callback();
+          },
+        });
+      },
+    });
+
     return {
-      getItems() {
-        return items;
-      },
-      registerCommand(command: Command) {
-        return new CommandManager(command);
-      },
+      registerCommand,
       clear() {
         // bus.$emit('clear');
       },

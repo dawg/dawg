@@ -142,15 +142,21 @@ async function loadProject(): Promise<InitializationError | InitializationSucces
   };
 }
 
+const online = () => {
+  general.project.instruments.forEach((instrument) => {
+    instrument.online();
+  });
+};
+
 const extension: Extension<{}, {}, {}, ProjectAPI> = {
   id: 'dawg.project',
   activate() {
-    // TODO Loading from FS
+    window.addEventListener('online', online);
     return new ProjectAPI();
   },
 
   deactivate() {
-    //
+    window.removeEventListener('online', online);
   },
 };
 

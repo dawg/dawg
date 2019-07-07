@@ -90,7 +90,7 @@ import Panels from '@/dawg/extensions/core/panels/Panels.vue';
 import PanelHeaders from '@/dawg/extensions/core/panels/PanelHeaders.vue';
 import ActivityBar from '@/dawg/extensions/core/activity-bar/ActivityBar.vue';
 import StatusBar from '@/sections/StatusBar.vue';
-import { SideTab, FILTERS, ApplicationContext, APPLICATION_PATH, RECORDING_PATH, TOOLBAR_HEIGHT } from '@/constants';
+import { FILTERS, ApplicationContext, TOOLBAR_HEIGHT } from '@/constants';
 import { remote } from 'electron';
 import { ScheduledPattern } from '@/core/scheduled/pattern';
 import { ScheduledSample, Sample } from '@/core';
@@ -142,11 +142,6 @@ export default class App extends Vue {
       shortcut: ['CmdOrCtrl', 'N'],
       text: 'New Project',
       callback: this.newProject,
-    },
-    palette: {
-      text: 'Command Palette',
-      shortcut: ['CmdOrCtrl', 'Shift', 'P'],
-      callback: this.openPalette,
     },
     switchContext: {
       text: 'Switch Context',
@@ -296,28 +291,12 @@ export default class App extends Vue {
   }
 
   public online() {
-    // Ok so this delay exists because we can still get connection errors even once we get back online
-    // 8000 was just a random number, but it works. It's probably longer than necessary
-    setTimeout(() => {
-      general.project.instruments.forEach((instrument) => {
-        dawg.notify.info('Connection has been restored');
-        instrument.online();
-      });
-    }, 8000);
+    dawg.notify.info('Connection has been restored');
   }
 
   public offline() {
     dawg.notify.warning('You are disconnected', {
-      detail: 'Soundfonts and cloud syncing will not work as expected.',
-      duration: 20000,
-    });
-  }
-
-  public openPalette() {
-    dawg.palette.selectFromItems(dawg.commands.getItems(), {
-      onDidSelect: (item) => {
-        item.callback();
-      },
+      detail: 'Features may not work as expected.',
     });
   }
 
