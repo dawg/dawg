@@ -5,7 +5,7 @@ export { activityBar } from '@/dawg/extensions/core/activity-bar';
 export { busy } from '@/dawg/extensions/core/busy';
 export { theme } from '@/dawg/extensions/core/theme';
 export { project } from '@/dawg/extensions/core/project';
-export { context } from '@/dawg/extensions/core/context';
+export { menu } from '@/dawg/extensions/core/menu';
 export { instruments } from '@/dawg/extensions/core/instruments';
 export { ui } from '@/dawg/ui';
 export { pianoRoll } from '@/dawg/extensions/core/piano-roll';
@@ -18,6 +18,9 @@ export { window } from '@/dawg/extensions/core/window';
 export { Key, Command } from '@/dawg/extensions/core/commands';
 export { IExtensionContext, Extension, createExtension } from '@/dawg/extensions';
 export { manager } from '@/dawg/extensions/manager';
+
+// Ignore unused imports here
+import { helpLinks } from '@/dawg/extensions/core/help-links';
 
 import * as platform from '@/dawg/platform';
 import * as events from '@/dawg/events';

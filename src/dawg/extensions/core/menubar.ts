@@ -1,4 +1,4 @@
-import { manager } from '../manager';
+import { manager } from '@/dawg/extensions/manager';
 import { IpcRenderer, ElectronMenuItem } from '@/ipc';
 import { ipcRenderer } from 'electron';
 import { Key } from './commands';
@@ -14,6 +14,20 @@ interface SubMenu {
   name: string;
   items: Array<SubMenuItem | null>;
 }
+
+// TODO(jacob) Make this structure...
+// [
+//   this.menuItems.new,
+//   null,
+//   this.menuItems.open,
+//   this.menuItems.backup,
+//   null,
+//   // TODO(jacob)
+//   // this.menuItems.addFolder,
+//   null,
+//   this.menuItems.save,
+//   this.menuItems.saveAs,
+// ],
 
 export type Menu = SubMenu[];
 

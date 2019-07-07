@@ -10,7 +10,6 @@ import store from '@/store/store';
 import { APPLICATION_PATH, ApplicationContext } from '@/constants';
 import general from './general';
 import { makeLookup } from '@/modules/utils';
-import { emitter, EventProvider } from '@/dawg/events';
 import * as dawg from '@/dawg';
 
 const PROJECT_CACHE_PATH = path.join(APPLICATION_PATH, 'project-cache.json');
@@ -26,20 +25,10 @@ export class Specific extends VuexModule {
     return dawg.patterns.selectedPattern.value;
   }
 
-  get transport() {
-    if (this.applicationContext === 'pianoroll') {
-      const pattern = this.selectedPattern;
-      return pattern ? pattern.transport : null;
-    } else {
-      return general.project.master.transport;
-    }
-  }
-
   get patternLookup() {
     return makeLookup(general.project.patterns);
   }
 
-  public events = emitter<{ playPause: () => void }>();
   @io.auto({ optional: true }) public applicationContext: ApplicationContext = 'pianoroll';
   @io.auto({ optional: true }) public pianoRollRowHeight = 16;
   @io.auto({ optional: true }) public pianoRollBeatWidth = 80;
@@ -144,41 +133,6 @@ export class Specific extends VuexModule {
   @Mutation
   public setModelsPath(modelsPath: string) {
     this.modelsPath = modelsPath;
-  }
-
-  @Mutation
-  public startTransport() {
-    if (!this.transport) {
-      return;
-    }
-
-    this.transport.start();
-    general.start();
-    this.events.emit('playPause');
-  }
-
-  @Mutation
-  public stopTransport() {
-    if (!this.transport) {
-      return;
-    }
-
-    this.transport.stop();
-    general.pause();
-    this.events.emit('playPause');
-  }
-
-  @Mutation
-  public stopIfStarted() {
-    if (this.transport && this.transport.state === 'started') {
-      this.stopTransport();
-    }
-  }
-
-  @Mutation
-  public onDidPlayPause(cb: () => void) {
-    // TODO(jacob) might cause error
-    return new EventProvider(this.events, 'playPause', cb);
   }
 
   @Mutation

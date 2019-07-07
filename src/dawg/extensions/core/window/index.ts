@@ -1,6 +1,6 @@
-import { manager } from '../../manager';
+import { manager } from '@/dawg/extensions/manager';
 import { remote } from 'electron';
-import { commands } from '../commands';
+import { commands } from '@/dawg/extensions/core/commands';
 
 export const window = manager.activate({
   id: 'dawg.window',

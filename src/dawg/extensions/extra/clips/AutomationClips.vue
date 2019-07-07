@@ -35,7 +35,7 @@ export default class AutomationClips extends Vue {
   }
 
   public context(event: MouseEvent, i: number) {
-    dawg.context.context({
+    dawg.menu.context({
       event,
       items: [
         {

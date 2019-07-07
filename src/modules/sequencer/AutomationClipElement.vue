@@ -156,7 +156,7 @@ export default class AutomationClipElement extends Vue {
   }
 
   public pointContext(event: MouseEvent, i: number) {
-    dawg.context.context({
+    dawg.menu.context({
       event,
       items: [
         {

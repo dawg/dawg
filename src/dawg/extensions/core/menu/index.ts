@@ -1,6 +1,6 @@
 import { manager } from '@/dawg/extensions/manager';
-import ContextMenu from '@/dawg/extensions/core/context/ContextMenu.vue';
-import bus, { isMouseEvent, ContextPayload } from '@/dawg/extensions/core/context/bus';
+import ContextMenu from '@/dawg/extensions/core/menu/ContextMenu.vue';
+import bus, { isMouseEvent, ContextPayload } from '@/dawg/extensions/core/menu/bus';
 import { remote } from 'electron';
 import { ui } from '@/dawg/ui';
 
@@ -21,7 +21,7 @@ const inspect = {
   },
 };
 
-export const context = manager.activate({
+export const menu = manager.activate({
   id: 'dawg.context',
   activate() {
     const defaultItems =  process.env.NODE_ENV !== 'production' ? [inspect] : [];

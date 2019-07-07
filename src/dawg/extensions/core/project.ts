@@ -2,24 +2,53 @@ import tmp from 'tmp';
 import fs from 'mz/fs';
 import { Sample, ScheduledSample } from '@/core';
 import { Beats } from '@/core/types';
-import { general } from '@/store';
+import { general, workspace } from '@/store';
 import { IProject, Project, ProjectType } from '@/store/project';
 import { Extension } from '@/dawg/extensions';
 // TODO(jacob) Wrap
 import { remote } from 'electron';
-import { manager } from '../manager';
+import { manager } from '@/dawg/extensions/manager';
 import { InitializationError, InitializationSuccess } from '@/store/general';
 import { MemoryLoader } from '@/core/loaders/memory';
 import { notify } from './notify';
-import { DG_EXTENSION } from '@/constants';
+import { DG_EXTENSION, FILTERS } from '@/constants';
 import { commands, Command } from './commands';
 import { menubar } from './menubar';
+import { computed } from 'vue-function-api';
+import { patterns } from './patterns';
+import { emitter, EventProvider } from '@/dawg/events';
 
-class ProjectAPI {
-  private project: Project | null = null;
+const projectApi = () => {
+  // tslint:disable-next-line:variable-name
+  let _p: Project | null = null;
+  const events = emitter<{ playPause: () => void }>();
 
-  public scheduleMaster(sample: Sample, row: number, time: Beats) {
-    general.project.samples.push(sample);
+  const transport = computed(() => {
+    // TODO NOW
+    if (workspace.applicationContext === 'pianoroll') {
+      const pattern = patterns.selectedPattern;
+      return pattern.value ? pattern.value.transport : null;
+    } else {
+      return general.project.master.transport;
+    }
+  });
+
+  const get = async () => {
+    if (!_p) {
+      const result = await loadProject();
+      if (result.type === 'error') {
+        notify.info('Unable to load project.', { detail: result.message, duration: Infinity });
+      }
+
+      _p = result.project;
+    }
+
+
+    return _p;
+  };
+
+  async function scheduleMaster(sample: Sample, row: number, time: Beats) {
+    (await get()).samples.push(sample);
 
     const scheduled = new ScheduledSample(sample, {
       type: 'sample',
@@ -33,7 +62,7 @@ class ProjectAPI {
     general.project.master.elements.push(scheduled);
   }
 
-  public async openTempProject(p: IProject) {
+  async function openTempProject(p: IProject) {
     const { name } = tmp.fileSync({ keep: true });
     await fs.writeFile(name, JSON.stringify(p, null, 4));
 
@@ -45,7 +74,7 @@ class ProjectAPI {
     window.reload();
   }
 
-  public onDidSave(cb: (encoded: IProject) => void) {
+  function onDidSave(cb: (encoded: IProject) => void) {
     return {
       dispose() {
         // TODO(jacob)
@@ -53,20 +82,20 @@ class ProjectAPI {
     };
   }
 
-  public serializeProject() {
-    return general.project.serialize();
+  async function serializeProject() {
+    return (await get()).serialize();
   }
 
-  public getProject() {
-    return general.project;
+  async function getProject() {
+    return await get();
   }
 
-  public getOpenedFile() {
+  function getOpenedFile() {
     return manager.getOpenedFile();
   }
 
-  public async saveProject(opts: { forceDialog?: boolean }) {
-    const p = await this.getOrCreateProject();
+  async function saveProject(opts: { forceDialog?: boolean }) {
+    const p = await get();
 
     let projectPath = manager.getOpenedFile();
     if (!projectPath || opts.forceDialog) {
@@ -92,30 +121,78 @@ class ProjectAPI {
     await fs.writeFile(projectPath, JSON.stringify(encoded, null, 4));
   }
 
-  public async removeOpenedFile() {
+  async function removeOpenedFile() {
     await manager.setOpenedFile(undefined);
   }
 
-  public async setOpenedFile(path: string) {
+  async function setOpenedFile(path: string) {
     await manager.setOpenedFile({
       path,
-      id: this.getProject().id,
+      id: (await get()).id,
     });
   }
 
-  private async getOrCreateProject() {
-    if (this.project === null) {
-      const result = await loadProject();
-      if (result.type === 'error') {
-        notify.info('Unable to load project.', { detail: result.message, duration: Infinity });
-      }
-
-      this.project = result.project;
+  function playPause() {
+    if (!transport.value) {
+      notify.warning('Please select a Pattern.', {
+        detail: 'Please create and select a Pattern first or switch the Playlist context.',
+      });
+      return;
     }
 
-    return this.project;
+    // TODO(jacob) refactor
+    if (transport.value.state === 'started') {
+      transport.value.stop();
+      general.pause();
+    } else {
+      transport.value.start();
+      general.start();
+    }
   }
-}
+
+  return {
+    scheduleMaster,
+    openTempProject,
+    onDidSave,
+    serializeProject,
+    getProject,
+    getOpenedFile,
+    saveProject,
+    removeOpenedFile,
+    setOpenedFile,
+    playPause,
+    getTime() {
+      // TODO FINISH
+      return 0;
+    },
+    startTransport() {
+      if (!transport.value) {
+        return;
+      }
+
+      transport.value.start();
+      general.start();
+      events.emit('playPause');
+    },
+    stopIfStarted() {
+      if (transport.value && transport.value.state === 'started') {
+        this.stopTransport();
+      }
+    },
+    stopTransport() {
+      if (!transport.value) {
+        return;
+      }
+
+      transport.value.stop();
+      general.pause();
+      events.emit('playPause');
+    },
+    onDidPlayPause(cb: () => void) {
+      return new EventProvider(events, 'playPause', cb);
+    },
+  };
+};
 
 async function loadProject(): Promise<InitializationError | InitializationSuccess> {
   const projectJSON = manager.getProjectJSON();
@@ -128,7 +205,7 @@ async function loadProject(): Promise<InitializationError | InitializationSucces
   }
 
   const loader = new MemoryLoader(ProjectType, { data: projectJSON });
-  const result = await loader.load();
+  const result = loader.load();
   if (result.type === 'error') {
     return {
       type: 'error',
@@ -150,10 +227,10 @@ const online = () => {
   });
 };
 
-const extension: Extension<{}, {}, {}, ProjectAPI> = {
+const extension: Extension<{}, {}, {}, ReturnType<typeof projectApi>> = {
   id: 'dawg.project',
   activate(context) {
-    const api = new ProjectAPI();
+    const api = projectApi();
 
     window.addEventListener('online', online);
 
@@ -177,12 +254,57 @@ const extension: Extension<{}, {}, {}, ProjectAPI> = {
       },
     };
 
-    const toDispose = [save, saveAs].map((command) => {
+    const open: Command = {
+      text: 'Open',
+      shortcut: ['CmdOrCtrl', 'O'],
+      callback: async () => {
+        // files can be undefined. There is an issue with the .d.ts files.
+        const files = remote.dialog.showOpenDialog(
+          remote.getCurrentWindow(),
+          { filters: FILTERS, properties: ['openFile'] },
+        );
+
+        // TODO(jacob)
+        // the showFileDialog messes with the keyup events
+        // This is a temporary solution
+        commands.clear();
+
+        if (!files) {
+          return;
+        }
+
+        const filePath = files[0];
+        await api.setOpenedFile(filePath);
+
+        // TODO use function
+        const window = remote.getCurrentWindow();
+        window.reload();
+      },
+    };
+
+    const newProject: Command = {
+      shortcut: ['CmdOrCtrl', 'N'],
+      text: 'New Project',
+      callback: async () => {
+        await api.removeOpenedFile();
+
+        // TODO use function
+        const window = remote.getCurrentWindow();
+        window.reload();
+      },
+    };
+
+    const toDispose = [save, saveAs, open, newProject].map((command) => {
       context.subscriptions.push(commands.registerCommand(command));
       return menubar.addItem('File', command);
     });
 
     context.subscriptions.push(...toDispose);
+    context.subscriptions.push(commands.registerCommand({
+      text: 'Play/Pause',
+      shortcut: ['Space'],
+      callback: api.playPause,
+    }));
 
     return api;
   },

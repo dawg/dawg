@@ -30,7 +30,7 @@ import { Track } from '@/core';
 import { toTickTime } from '@/utils';
 import Transport from '@/modules/audio/transport';
 import { theme } from '@/dawg/extensions/core/theme';
-import { context } from '@/dawg/extensions/core/context';
+import { menu } from '@/dawg/extensions/core/menu';
 
 @Component({
   components: { Sequencer },
@@ -44,7 +44,7 @@ export default class PlaylistSequencer extends Vue {
 
   public trackOptions(event: MouseEvent, i: number) {
     // TODO(jacob) REMOVE THIS!!!
-    context.context({
+    menu.context({
       event,
       items: [
         {

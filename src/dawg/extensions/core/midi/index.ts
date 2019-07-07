@@ -1,14 +1,14 @@
 import webmidi, { WebMidiEventConnected, WebMidiEventDisconnected, InputEventNoteon, InputEventNoteoff } from 'webmidi';
 import { Extension } from '@/dawg/extensions';
-import { notify } from '../notify';
+import { notify } from '@/dawg/extensions/core/notify';
 import { general } from '@/store';
-import { instruments } from '../instruments';
+import { instruments } from '@/dawg/extensions/core/instruments';
 import { keyLookup } from '@/utils';
-import { patterns } from '../patterns';
+import { patterns } from '@/dawg/extensions/core/patterns';
 import { Note } from '@/core';
 import * as Audio from '@/modules/audio';
-import { theme } from '../theme';
-import { pianoRoll } from '../piano-roll';
+import { theme } from '@/dawg/extensions/core/theme';
+import { pianoRoll } from '@/dawg/extensions/core/piano-roll';
 
 export const extension: Extension<{}, {}, {}> = {
   id: 'dawg.midi',

@@ -6,7 +6,7 @@ import { patterns } from '@/dawg/extensions/core/patterns';
 import { Score } from '@/core';
 import { ui } from '@/dawg/ui';
 import { general } from '@/store';
-import { context } from '../context';
+import { menu } from '@/dawg/extensions/core/menu';
 
 export const instruments = manager.activate({
   id: 'dawg.instruments',
@@ -30,7 +30,7 @@ export const instruments = manager.activate({
     });
 
     function addInstrument(event: MouseEvent) {
-      context.menu({
+      menu.menu({
         event,
         items: [
           {

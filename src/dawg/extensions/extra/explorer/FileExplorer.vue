@@ -114,7 +114,7 @@ export default class FileEplorer extends Vue {
   }
 
   public context(folder: string, event: MouseEvent) {
-    dawg.context.context({
+    dawg.menu.context({
       event,
       items: [
         {

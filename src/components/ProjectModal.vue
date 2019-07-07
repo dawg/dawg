@@ -86,7 +86,7 @@ export default class ProjectModal extends Vue {
   }
 
   public context(project: ProjectInfo, event: MouseEvent) {
-    dawg.context.context({
+    dawg.menu.context({
       event,
       items: [
         {

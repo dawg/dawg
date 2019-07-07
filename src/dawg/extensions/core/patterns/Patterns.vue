@@ -20,7 +20,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Pattern, ScheduledPattern } from '@/core';
 import { Nullable } from '@/utils';
 import { Watch } from '@/modules/update';
-import { context } from '@/dawg/extensions/core/context';
+import { menu } from '@/dawg/extensions/core/menu';
 import { theme } from '@/dawg/extensions/core/theme';
 
 @Component
@@ -46,7 +46,7 @@ export default class Patterns extends Vue {
   }
 
   public context(event: MouseEvent, i: number) {
-    context.context({
+    menu.context({
       event,
       items: [
         {

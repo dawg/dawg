@@ -123,16 +123,6 @@ export default class App extends Vue {
   public workspace = workspace;
 
   public menuItems: { [key: string]: dawg.Command } = {
-    open: {
-      text: 'Open',
-      shortcut: ['CmdOrCtrl', 'O'],
-      callback: this.open,
-    },
-    new: {
-      shortcut: ['CmdOrCtrl', 'N'],
-      text: 'New Project',
-      callback: this.newProject,
-    },
     switchContext: {
       text: 'Switch Context',
       shortcut: ['CmdOrCtrl', 'Tab'],
@@ -146,72 +136,7 @@ export default class App extends Vue {
     },
   };
 
-  public menu: Menu = [
-    {
-      name: 'File',
-      items: [
-        this.menuItems.new,
-        null,
-        this.menuItems.open,
-        this.menuItems.backup,
-        null,
-        // TODO(jacob)
-        // this.menuItems.addFolder,
-        null,
-        this.menuItems.save,
-        this.menuItems.saveAs,
-      ],
-    },
-    {
-      name: 'View',
-      items: [
-        this.menuItems.palette,
-        // TODO(jacob)
-        // this.menuItems.reload,
-      ],
-    },
-    {
-      name: 'Help',
-      items: [
-        {
-          text: 'Guide',
-          callback: () => {
-            shell.openExternal('https://dawg.github.io/guide');
-          },
-        },
-        {
-          text: 'Report an Issue',
-          callback: () => {
-            shell.openExternal('https://github.com/dawg/vusic/issues');
-          },
-        },
-        {
-          text: 'Trello Board',
-          callback: () => {
-            shell.openExternal('https://trello.com/b/ZOLQJGSv/vusic-feature-requests');
-          },
-        },
-        null,
-        {
-          text: 'Open Developer Tools',
-          callback: () => {
-            const window = remote.getCurrentWindow();
-            window.webContents.openDevTools();
-          },
-        },
-      ],
-    },
-  ];
-
-  // TODO(jacob)
-  public paletteCommands: dawg.Command[] = [
-    {
-      text: 'Play/Pause',
-      shortcut: ['Space'],
-      callback: this.playPause,
-    },
-    ...Object.values(this.menuItems),
-  ];
+  public paletteCommands: dawg.Command[] = Object.values(this.menuItems);
 
   // This loaded flag is important
   // Bugs can appear if we render before we load the project file
@@ -231,7 +156,7 @@ export default class App extends Vue {
     // This is called before refresh / close
     // I don't remove this listner because the window is closing anyway
     // I'm not even sure onExit would be called if we removed it in the destroy method
-    window.addEventListener('beforeunload', this.onExit);
+    window.addEventListener('beforeunload', dawg.manager.dispose);
 
     // TODO(jacob)
     this.paletteCommands.forEach((command) => dawg.commands.registerCommand(command));
@@ -239,24 +164,9 @@ export default class App extends Vue {
     automation.$on('automate', this.addAutomationClip);
 
     setTimeout(async () => {
-      // tslint:disable-next-line:no-console
-      console.log(dawg);
-
-      // TODO(jacob)
-      // const result = await general.loadProject();
-      // if (result.type === 'error') {
-      //   dawg.notify.info('Unable to load project.', { detail: result.message, duration: Infinity });
-      // }
-
-      // general.setProject(result.project);
-
-      // await workspace.loadSpecific();
-
       // Log this for debugging purposes
       // tslint:disable-next-line:no-console
-      console.info(general.project);
-
-      this.$log.debug('Finished reading data from the fs.');
+      console.log(dawg);
       this.loaded = true;
     }, 1250);
   }
@@ -292,62 +202,9 @@ export default class App extends Vue {
     return `border-${side}: 1px solid ${dawg.theme.background}`;
   }
 
-  public async onExit() {
-    await dawg.manager.dispose();
-
-    // If we don't have a file open, don't write the workspace information
-    if (!general.projectPath) {
-      return;
-    }
-
-    await workspace.write();
-  }
-
-  public async open() {
-    // files can be undefined. There is an issue with the .d.ts files.
-    const files = remote.dialog.showOpenDialog(
-      remote.getCurrentWindow(),
-      { filters: FILTERS, properties: ['openFile'] },
-    );
-
-    // TODO(jacob)
-    // the showFileDialog messes with the keyup events
-    // This is a temporary solution
-    dawg.commands.clear();
-
-    if (!files) {
-      return;
-    }
-
-    const filePath = files[0];
-    await dawg.project.setOpenedFile(filePath);
-    const window = remote.getCurrentWindow();
-    window.reload();
-  }
-
   public setContext(context: ApplicationContext) {
     workspace.setContext(context);
     general.pause();
-  }
-
-  public playPause() {
-    if (!workspace.transport) {
-      dawg.notify.warning('Please select a Pattern.', {
-        detail: 'Please create and select a Pattern first or switch the Playlist context.',
-      });
-      return;
-    }
-
-    // TODO(jacob) refactor
-    if (workspace.transport.state === 'started') {
-      this.$log.debug('PAUSING');
-      workspace.transport.stop();
-      general.pause();
-    } else {
-      this.$log.debug('PLAY');
-      workspace.transport.start();
-      general.start();
-    }
   }
 
   public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T & string) {
@@ -364,11 +221,6 @@ export default class App extends Vue {
     //     detail: 'There are no free tracks. Move elements and try again.',
     //   });
     // }
-  }
-
-  public async newProject() {
-    await dawg.project.removeOpenedFile();
-    dawg.window.reload();
   }
 }
 </script>

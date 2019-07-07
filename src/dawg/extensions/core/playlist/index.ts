@@ -1,8 +1,8 @@
 import Vue from 'vue';
-import { manager } from '../../manager';
-import { project } from '../project';
+import { manager } from '@/dawg/extensions/manager';
+import { project } from '@/dawg/extensions/core/project';
 import { workspace, general } from '@/store';
-import { record } from '../record';
+import { record } from '@/dawg/extensions/core/record';
 import { ScheduledPattern, ScheduledSample } from '@/core';
 import { value } from 'vue-function-api';
 import { ui } from '@/dawg/ui';
@@ -11,7 +11,6 @@ import { Ghost } from '@/core/ghosts/ghost';
 export const playlist = manager.activate({
   id: 'dawg.playlist',
   activate() {
-    const p = project.getProject();
     const masterStart = value(0);
     const masterEnd = value(0);
     const ghosts: Ghost[] = [];
@@ -52,23 +51,26 @@ export const playlist = manager.activate({
         playlistPlay() {
           return general.play && workspace.applicationContext === 'playlist';
         },
+        async project() {
+          return await project.getProject();
+        },
       },
       methods: {
         /**
          * Whenever we add a sample, if it hasn't been imported before, add it the the list of project samples.
          */
-        checkPrototype(prototype: ScheduledPattern | ScheduledSample) {
+        async checkPrototype(prototype: ScheduledPattern | ScheduledSample) {
           if (prototype.component !== 'sample-element') {
             return;
           }
 
           const sample = prototype.sample;
-          if (p.samples.indexOf(prototype.sample) >= 0) {
+          if ((await this.project).samples.indexOf(prototype.sample) >= 0) {
             return;
           }
 
           this.$log.debug('Adding a sample!');
-          p.addSample(sample);
+          (await this.project).addSample(sample);
         },
       },
     });

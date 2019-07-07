@@ -12,6 +12,7 @@ import { Sample, ScheduledSample } from '@/core';
 import { workspace, general } from '@/store';
 import { value, Wrapper } from 'vue-function-api';
 import { manager } from '../manager';
+import { project } from './project';
 
 export const DOCUMENTS_PATH = remote.app.getPath('documents');
 export const RECORDING_PATH = path.join(DOCUMENTS_PATH, remote.app.getName(), 'recordings');
@@ -51,14 +52,14 @@ export const extension: Extension<{}, { microphoneIn: string }, {}, { recording:
 
     let mediaRecorder: MediaRecorder | null = null;
 
-    context.subscriptions.push(workspace.onDidPlayPause(() => {
+    context.subscriptions.push(project.onDidPlayPause(() => {
       if (mediaRecorder) {
         stopRecording();
       }
     }));
 
     const startRecording = async (trackId: number) => {
-      workspace.stopIfStarted();
+      project.stopIfStarted();
       workspace.setContext('playlist');
       const time = general.project.master.transport.beats;
 
@@ -96,7 +97,7 @@ export const extension: Extension<{}, { microphoneIn: string }, {}, { recording:
       mediaRecorder.ondataavailable = async (event: BlobEvent) => {
         if (!recording.value) {
           recording.value = true;
-          workspace.startTransport();
+          project.startTransport();
         }
 
         audioBlobs.push(event.data);

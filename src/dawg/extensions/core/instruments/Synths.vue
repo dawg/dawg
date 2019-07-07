@@ -20,8 +20,8 @@ import { Nullable } from '@/utils';
 import { Score, Instrument, Pattern } from '@/core';
 import { Watch } from '@/modules/update';
 import { workspace, general } from '@/store';
-import { notify } from '../notify';
-import { context } from '../context';
+import { notify } from '@/dawg/extensions/core/notify';
+import { menu } from '@/dawg/extensions/core/menu';
 
 @Component({ components: { Synth } })
 export default class Synths extends Vue {
@@ -68,7 +68,7 @@ export default class Synths extends Vue {
   }
 
   public contextmenu(event: MouseEvent, i: number) {
-    context.context({
+    menu.context({
       event,
       items: [
         {

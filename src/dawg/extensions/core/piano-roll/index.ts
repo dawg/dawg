@@ -8,8 +8,8 @@ import { ui, TabAction } from '@/dawg/ui';
 import { manager } from '@/dawg/extensions/manager';
 import { positionable, selectable } from '@/modules/sequencer/helpers';
 import { resizable } from '@/modules/sequencer/seq';
-import { commands } from '../commands';
-import { panels } from '../panels';
+import { commands } from '@/dawg/extensions/core/commands';
+import { panels } from '@/dawg/extensions/core/panels';
 
 // TODO(jacob) WHy do I need to do this?
 const createElement = (o: VueConstructor) => {

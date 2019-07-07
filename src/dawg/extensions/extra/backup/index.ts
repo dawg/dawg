@@ -8,6 +8,7 @@ import auth from '@/dawg/extensions/extra/backup/auth';
 import firebase from 'firebase/app';
 import 'firebase/database';
 import 'firebase/auth';
+import { menubar } from '@/dawg/extensions/core/menubar';
 
 export class BackupManager {
   public user: User | null = null;
@@ -225,18 +226,20 @@ export const extension: dawg.Extension<{}, {}, { backup: t.BooleanC }, BackupMan
       },
     });
 
-    // TODO Register menubar
-    dawg.commands.registerCommand({
+    const open = {
       text: 'Open From Backup',
       callback: () => {
         manager.openBackup();
       },
-    });
+    };
+
+    dawg.commands.registerCommand(open);
+    menubar.addItem('File', open);
 
     dawg.commands.registerCommand({
       text: 'Delete Backup',
       callback: () => {
-        // TODO DELETE
+        // TODO actually DELETE
         manager.openBackup();
       },
     });

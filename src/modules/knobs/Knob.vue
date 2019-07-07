@@ -289,7 +289,7 @@ export default class Knob extends Mixins(Draggable) {
       return;
     }
 
-    dawg.context.context({
+    dawg.menu.context({
       event,
       items: [
         {

@@ -238,7 +238,7 @@ storiesOf(ContextMenu.name, module)
     }),
     methods: {
       contextmenu(event: MouseEvent) {
-        dawg.context.context({
+        dawg.menu.context({
           event,
           items: [{
             // tslint:disable-next-line:no-console

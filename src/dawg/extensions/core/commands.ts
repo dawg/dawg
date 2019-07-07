@@ -1,6 +1,7 @@
 import { Platform, platform } from '@/dawg/platform';
 import { manager } from '@/dawg/extensions/manager';
 import { palette } from './palette';
+import { menubar } from './menubar';
 
 type CommandCallback = () => void;
 
@@ -185,7 +186,7 @@ export const commands = manager.activate({
       return new CommandManager(command);
     };
 
-    registerCommand({
+    const openCommandPalette: Command = {
       text: 'Command Palette',
       shortcut: ['CmdOrCtrl', 'Shift', 'P'],
       callback: () => {
@@ -195,7 +196,10 @@ export const commands = manager.activate({
           },
         });
       },
-    });
+    };
+
+    registerCommand(openCommandPalette);
+    context.subscriptions.push(menubar.addItem('View', openCommandPalette));
 
     return {
       registerCommand,

@@ -34,7 +34,7 @@ export default class AudioFiles extends Vue {
   }
 
   public context(event: MouseEvent, i: number) {
-    dawg.context.context({
+    dawg.menu.context({
       event,
       items: [
         {

@@ -108,7 +108,7 @@ export default class Channel extends Vue {
       text: sentenceCase(option), callback: () => this.addEffect(option, i),
     }));
 
-    dawg.context.menu({
+    dawg.menu.menu({
       event,
       items,
     });
@@ -124,7 +124,7 @@ export default class Channel extends Vue {
   }
 
   public contextmenu(event: MouseEvent, effect: AnyEffect) {
-    dawg.context.context({
+    dawg.menu.context({
       event,
       items: [{
         text: 'Delete',

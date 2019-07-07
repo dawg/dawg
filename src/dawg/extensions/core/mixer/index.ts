@@ -3,8 +3,8 @@ import Mixer from '@/dawg/extensions/core/mixer/Mixer.vue';
 import { general } from '@/store';
 import { ui } from '@/dawg/ui';
 import { createExtension } from '@/dawg/extensions';
-import { commands } from '../commands';
-import { panels } from '../panels';
+import { commands } from '@/dawg/extensions/core/commands';
+import { panels } from '@/dawg/extensions/core/panels';
 
 export const extension = createExtension({
   id: 'dawg.mixer',
