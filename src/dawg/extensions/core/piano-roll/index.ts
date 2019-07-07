@@ -8,6 +8,8 @@ import { ui, TabAction } from '@/dawg/ui';
 import { manager } from '@/dawg/extensions/manager';
 import { positionable, selectable } from '@/modules/sequencer/helpers';
 import { resizable } from '@/modules/sequencer/seq';
+import { commands } from '../commands';
+import { panels } from '../panels';
 
 // TODO(jacob) WHy do I need to do this?
 const createElement = (o: VueConstructor) => {
@@ -16,7 +18,15 @@ const createElement = (o: VueConstructor) => {
 
 export const pianoRoll = manager.activate({
   id:  'dawg.piano-roll',
-  activate() {
+  activate(context) {
+    context.subscriptions.push(commands.registerCommand({
+      text: 'Open Piano Roll',
+      shortcut: ['CmdOrCtrl', 'P'],
+      callback: () => {
+        panels.openedPanel.value = 'Piano Roll';
+      },
+    }));
+
     Vue.component('Note', createElement(Note));
 
     const component = Vue.extend({

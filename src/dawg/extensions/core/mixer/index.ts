@@ -3,10 +3,20 @@ import Mixer from '@/dawg/extensions/core/mixer/Mixer.vue';
 import { general } from '@/store';
 import { ui } from '@/dawg/ui';
 import { createExtension } from '@/dawg/extensions';
+import { commands } from '../commands';
+import { panels } from '../panels';
 
 export const extension = createExtension({
   id: 'dawg.mixer',
-  activate() {
+  activate(context) {
+    context.subscriptions.push(commands.registerCommand({
+      text: 'Open Mixer',
+      shortcut: ['CmdOrCtrl', 'M'],
+      callback: () => {
+        panels.openedPanel.value = 'Mixer';
+      },
+    }));
+
     const component = Vue.extend({
       components: { Mixer },
       template: `

@@ -1,16 +1,16 @@
 <template>
   <v-app class="app">
     <split direction="vertical">
-      <split :initial="30" fixed>
+      <!-- <split :initial="30" fixed>
         <menu-bar 
           :menu="menu"
           :maximized="maximized"
-          @close="closeApplication"
+          @close="dawg.window.close"
           @minimize="minimizeApplication"
           @maximize="maximizeApplication"
           @restore="restoreApplication"
         ></menu-bar>
-      </split>
+      </split> -->
 
       <split direction="horizontal" resizable>
         <split :initial="65" fixed>
@@ -124,7 +124,6 @@ import { Watch } from '@/modules/update';
 import backend, { ProjectInfo } from '@/backend';
 import * as io from '@/modules/cerialize';
 import { remote } from 'electron';
-import { Menu } from '@/modules/menubar';
 import { User } from 'firebase';
 import { ScheduledPattern } from '@/core/scheduled/pattern';
 import { ScheduledSample, Sample } from '@/core';
@@ -134,10 +133,14 @@ import { Ghost, ChunkGhost } from '@/core/ghosts/ghost';
 import audioBufferToWav from 'audiobuffer-to-wav';
 import path from 'path';
 import * as dawg from '@/dawg';
+import { Menu } from './dawg/extensions/core/menubar';
 
 // TO VERIFY
 // 1. Recording
 // 2. Backup
+// 3. MIDI
+// 4. Remove all dawg references in the extensions folder
+// 5. Move all extensions to a single folder and not core/extra
 
 @Component({
   components: {
@@ -162,42 +165,32 @@ export default class App extends Vue {
   public menuItems: { [key: string]: dawg.Command } = {
     save: {
       text: 'Save',
-      shortcut: ['Ctrl', 'S'],
+      shortcut: ['CmdOrCtrl', 'S'],
       callback: this.save,
     },
     saveAs: {
       text: 'Save As',
-      shortcut: ['Ctrl', 'Shift', 'S'],
+      shortcut: ['CmdOrCtrl', 'Shift', 'S'],
       callback: () => this.save(true),
     },
     open: {
       text: 'Open',
-      shortcut: ['Ctrl', 'O'],
+      shortcut: ['CmdOrCtrl', 'O'],
       callback: this.open,
     },
-    closeApplication: {
-      text: 'Close Application',
-      shortcut: ['Ctrl', 'W'],
-      callback: this.closeApplication,
-    },
     new: {
-      shortcut: ['Ctrl', 'N'],
+      shortcut: ['CmdOrCtrl', 'N'],
       text: 'New Project',
       callback: this.newProject,
     },
-    reload: {
-      text: 'Reload',
-      shortcut: ['Ctrl', 'R'],
-      callback: this.reload,
-    },
     palette: {
       text: 'Command Palette',
-      shortcut: ['Ctrl', 'Shift', 'P'],
+      shortcut: ['CmdOrCtrl', 'Shift', 'P'],
       callback: this.openPalette,
     },
     switchContext: {
       text: 'Switch Context',
-      shortcut: ['Ctrl', 'Tab'],
+      shortcut: ['CmdOrCtrl', 'Tab'],
       callback: () => {
         if (workspace.applicationContext === 'pianoroll') {
           this.setContext('playlist');
@@ -228,7 +221,8 @@ export default class App extends Vue {
       name: 'View',
       items: [
         this.menuItems.palette,
-        this.menuItems.reload,
+        // TODO(jacob)
+        // this.menuItems.reload,
       ],
     },
     {
@@ -267,20 +261,6 @@ export default class App extends Vue {
   // TODO(jacob)
   public paletteCommands: dawg.Command[] = [
     {
-      text: 'Open Piano Roll',
-      shortcut: ['Ctrl', 'P'],
-      callback: () => {
-        dawg.panels.openedPanel.value = 'Piano Roll';
-      },
-    },
-    {
-      text: 'Open Mixer',
-      shortcut: ['Ctrl', 'M'],
-      callback: () => {
-        dawg.panels.openedPanel.value = 'Mixer';
-      },
-    },
-    {
       text: 'Play/Pause',
       shortcut: ['Space'],
       callback: this.playPause,
@@ -298,8 +278,6 @@ export default class App extends Vue {
   // TODO REMOVE
   public backupModal = false;
 
-  public maximized = false;
-
   // We need these to be able to keep track of the start and end of the playlist loop
   // for creating automation clips
   public masterStart = 0;
@@ -313,10 +291,6 @@ export default class App extends Vue {
 
     // TODO(jacob)
     this.paletteCommands.forEach((command) => dawg.commands.registerCommand(command));
-
-    const w = remote.getCurrentWindow();
-    w.addListener('maximize', this.maximize);
-    w.addListener('unmaximize', this.unmaximize);
 
     automation.$on('automate', this.addAutomationClip);
 
@@ -347,7 +321,7 @@ export default class App extends Vue {
   }
 
   public mounted() {
-    this.checkMaximize();
+    dawg.menubar.setMenu(this.menu);
 
     window.addEventListener('offline', this.offline);
     window.addEventListener('online', this.online);
@@ -360,8 +334,6 @@ export default class App extends Vue {
 
   public destroyed() {
     const w = remote.getCurrentWindow();
-    w.removeListener('maximize', this.maximize);
-    w.removeListener('unmaximize', this.unmaximize);
 
     window.removeEventListener('offline', this.offline);
     window.removeEventListener('online', this.online);
@@ -493,44 +465,7 @@ export default class App extends Vue {
 
   public async newProject() {
     await dawg.project.removeOpenedFile();
-    this.reload();
-  }
-
-  public reload() {
-    const window = remote.getCurrentWindow();
-    window.reload();
-  }
-
-  public closeApplication() {
-    const window = remote.getCurrentWindow();
-    window.close();
-  }
-
-  public minimizeApplication() {
-    const window = remote.getCurrentWindow();
-    window.minimize();
-  }
-
-  public maximizeApplication() {
-    const window = remote.getCurrentWindow();
-    window.maximize();
-  }
-
-  public restoreApplication() {
-    const window = remote.getCurrentWindow();
-    window.restore();
-  }
-
-  public checkMaximize() {
-    this.maximized = remote.getCurrentWindow().isMaximized();
-  }
-
-  public maximize() {
-    this.maximized = true;
-  }
-
-  public unmaximize() {
-    this.maximized = false;
+    dawg.window.reload();
   }
 }
 </script>

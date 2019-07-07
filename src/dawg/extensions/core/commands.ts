@@ -5,7 +5,7 @@ type CommandCallback = () => void;
 
 export type Key =
   'Shift' |
-  'Ctrl' |
+  'CmdOrCtrl' |
   'A' |
   'B' |
   'C' |
@@ -42,7 +42,7 @@ type KeyCodeLookup = { [k in Key]: KeyCode };
 
 const codeLookup: KeyCodeLookup = {
   Shift: 16,
-  Ctrl: {
+  CmdOrCtrl: {
     [Platform.Windows]: 17,
     [Platform.Mac]: 91,
     [Platform.Linux]: 17,

@@ -20,7 +20,6 @@ import Piano from '@/components/Piano.vue';
 import DTrack from '@/components/DTrack.vue';
 import TooltipIcon from '@/components/TooltipIcon.vue';
 import DotButton from '@/components/DotButton.vue';
-import MenuBar from '@/modules/menubar';
 
 export default function middleware() {
   Vue.use(Split);
@@ -28,7 +27,6 @@ export default function middleware() {
   Vue.use(DragNDrop);
   Vue.use(Dawg);
   Vue.use(Knobs);
-  Vue.use(MenuBar);
   Vue.use(Status);
   Vue.use(VueLogger, {
     logLevel: 'info',

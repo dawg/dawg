@@ -1,12 +1,73 @@
 'use strict';
 
-import { app, protocol, BrowserWindow } from 'electron';
+import { app, protocol, BrowserWindow, Menu, ipcMain, MenuItemConstructorOptions } from 'electron';
 import menu from 'electron-context-menu';
 import path from 'path';
 import {
   createProtocol,
   installVueDevtools,
 } from 'vue-cli-plugin-electron-builder/lib';
+import { IpcMain, ElectronMenuItem } from './ipc';
+
+let menuLookup: { [k: string]: MenuItemConstructorOptions } = {};
+
+const events = ipcMain as IpcMain;
+events.on('removeMenu', () => {
+  menuLookup = {};
+  Menu.setApplicationMenu(Menu.buildFromTemplate([]));
+});
+
+events.on('addToMenu', (_, itemsOrItem) => {
+  const addItem = (item: ElectronMenuItem) => {
+    if (!menuLookup[item.menu]) {
+      menuLookup[item.menu] = {
+        label: item.menu,
+      };
+    }
+
+    const singleMenu = menuLookup[item.menu];
+    if (!singleMenu.submenu) {
+      singleMenu.submenu = [];
+    }
+
+    if (!Array.isArray(singleMenu.submenu)) {
+      // This condition should never happen, but we have to satisfy TypeScript
+      return;
+    }
+
+    if (item.label === null) {
+      singleMenu.submenu.push({
+        type: 'separator',
+      });
+    } else {
+      singleMenu.submenu.push({
+        label: item.label,
+        click: item.callback,
+        accelerator: item.accelerator,
+        // The renderer process will be handling this
+        registerAccelerator: false,
+      });
+    }
+  };
+
+  if (Array.isArray(itemsOrItem)) {
+    itemsOrItem.forEach(addItem);
+  } else {
+    addItem(itemsOrItem);
+  }
+
+  const template = Object.values(menuLookup);
+
+  // The first menu item is associated with the application
+  // Just look at the menu and you will see what I mean
+  if (process.platform === 'darwin') {
+    template.unshift({ label: '' });
+  }
+
+  // Set the application menu every time.
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+});
+
 const isDevelopment = process.env.NODE_ENV !== 'production';
 
 // Keep a global reference of the window object, if you don't, the window will
@@ -23,13 +84,12 @@ function createWindow() {
     minHeight: 600,
     minWidth: 800,
     // @ts-ignore
-    icon: path.join(__static, 'icon.png'),
-    // TODO(jacob) linux
-    // frame: false,
+    icon: path.join(__static as string, 'icon.png'),
   });
 
+  // Make the menu initially not visible
+  // Basically, get rid of the default menu
   win.setMenuBarVisibility(false);
-
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode

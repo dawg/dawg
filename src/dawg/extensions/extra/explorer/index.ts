@@ -14,7 +14,7 @@ export const extension: dawg.Extension<{}, { folders: string[] }> = {
 
     context.subscriptions.push(commands.registerCommand({
       text: 'Open File Explorer',
-      shortcut: ['Ctrl', 'E'],
+      shortcut: ['CmdOrCtrl', 'E'],
       callback: () => {
         // This must match the tab name below
         dawg.activityBar.openedSideTab.value = 'Explorer';
