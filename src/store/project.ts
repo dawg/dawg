@@ -3,7 +3,7 @@ import Tone from 'tone';
 import { findUniqueName, range } from '@/utils';
 import * as Audio from '@/modules/audio';
 import uuid from 'uuid';
-import { loadBuffer } from '@/modules/wav/local';
+import { loadBuffer, loadBufferSync } from '@/modules/wav/local';
 import { makeLookup, chain } from '@/modules/utils';
 import { Signal } from '@/modules/audio';
 import * as t from 'io-ts';
@@ -87,12 +87,12 @@ export class Project implements Serializable<IProject> {
     });
   }
 
-  public static async load(i: IProject) {
+  public static load(i: IProject) {
     const channels =  (i.channels || []).map((iChannel) => {
       return new Channel(iChannel);
     });
 
-    const instruments = await Promise.all((i.instruments || []).map(async (iInstrument) => {
+    const instruments = (i.instruments || []).map((iInstrument) => {
       let destination: Tone.AudioNode = Tone.Master;
       if (iInstrument.channel !== null && iInstrument.channel !== undefined) {
         if (iInstrument.channel >= channels.length) {
@@ -108,21 +108,20 @@ export class Project implements Serializable<IProject> {
 
       switch (iInstrument.instrument) {
         case 'soundfont':
-          const soundfont = await Audio.Soundfont.load(iInstrument.soundfont);
-          return new Soundfont(soundfont, destination, iInstrument);
+          return new Soundfont(Audio.Soundfont.load(iInstrument.soundfont), destination, iInstrument);
         case 'synth':
           return new Synth(destination, iInstrument);
       }
-    }));
+    });
 
-    const samples = await Promise.all((i.samples || []).map(async (iSample) => {
+    const samples = (i.samples || []).map((iSample) => {
       let buffer: AudioBuffer | null = null;
-      if (await fs.exists(iSample.path)) {
-        buffer = await loadBuffer(iSample.path);
+      if (fs.existsSync(iSample.path)) {
+        buffer = loadBufferSync(iSample.path);
       }
 
       return new Sample(buffer, iSample);
-    }));
+    });
 
     const instrumentLookup = makeLookup(instruments);
     const channelLookup = makeLookup(channels);

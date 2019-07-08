@@ -1,7 +1,7 @@
 import Tone from 'tone';
 import { Time, ContextTime } from '@/modules/audio/types';
 import { Source } from '@/modules/audio/source/source';
-import { menu } from '@/modules/audio/context';
+import { context } from '@/modules/audio/context';
 import * as soundfonts from 'soundfont-player';
 
 
@@ -15,28 +15,44 @@ export interface SoundfontOptions {
  */
 export class Soundfont implements Source<SoundfontOptions> {
 
-  public static async load(name: soundfonts.InstrumentName) {
+  public static load(name: soundfonts.InstrumentName) {
     try {
-      return new Soundfont(await soundfonts.instrument(context, name));
+      return new Soundfont(soundfonts.instrument(context, name));
     } catch (e) {
       // tslint:disable-next-line:no-console
       console.warn(e.message);
       return null;
     }
   }
+
+  private player: soundfonts.Player | null = null;
   private playingNotes: { [key: string]: soundfonts.Player } = {};
 
-  constructor(private player: soundfonts.Player) {}
+  constructor(promise: Promise<soundfonts.Player>) {
+    promise.then((player) => {
+      this.player = player;
+    });
+  }
+
   public triggerAttackRelease(note: string, duration: Time, time: ContextTime, velocity?: number) {
+    if (this.player === null) {
+      return this;
+    }
+
     const durationSeconds = new Tone.TransportTime(duration).toSeconds();
     this.player.play(note, time, {
       duration: durationSeconds,
       gain: velocity,
     });
+
     return this;
   }
 
   public triggerAttack(note: string, time?: Time, velocity?: number): this {
+    if (this.player === null) {
+      return this;
+    }
+
     this.playingNotes[note] = this.player.play(note, undefined, {gain: velocity});
     return this;
   }
@@ -50,9 +66,12 @@ export class Soundfont implements Source<SoundfontOptions> {
   }
 
   public connect(node: Tone.AudioNode): this {
-    // @ts-ignore
+    if (this.player === null) {
+      return this;
+    }
+
     // TODO A bit of a hacky solution to make Tone.js work with soundfonts
-    this.player.connect(node.output);
+    this.player.connect((node as any).output);
     return this;
   }
 

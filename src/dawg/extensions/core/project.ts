@@ -14,7 +14,7 @@ import { notify } from './notify';
 import { DG_EXTENSION, FILTERS } from '@/constants';
 import { commands, Command } from './commands';
 import { menubar } from './menubar';
-import { computed } from 'vue-function-api';
+import { computed, value } from 'vue-function-api';
 import { patterns } from './patterns';
 import { emitter, EventProvider } from '@/dawg/events';
 
@@ -22,6 +22,7 @@ const projectApi = () => {
   // tslint:disable-next-line:variable-name
   let _p: Project | null = null;
   const events = emitter<{ playPause: () => void }>();
+  const state = value<'stopped' | 'started' | 'paused'>('stopped');
 
   const transport = computed(() => {
     // TODO NOW
@@ -33,9 +34,9 @@ const projectApi = () => {
     }
   });
 
-  const get = async () => {
+  const get = () => {
     if (!_p) {
-      const result = await loadProject();
+      const result = loadProject();
       if (result.type === 'error') {
         notify.info('Unable to load project.', { detail: result.message, duration: Infinity });
       }
@@ -47,8 +48,8 @@ const projectApi = () => {
     return _p;
   };
 
-  async function scheduleMaster(sample: Sample, row: number, time: Beats) {
-    (await get()).samples.push(sample);
+  function scheduleMaster(sample: Sample, row: number, time: Beats) {
+    get().samples.push(sample);
 
     const scheduled = new ScheduledSample(sample, {
       type: 'sample',
@@ -82,12 +83,12 @@ const projectApi = () => {
     };
   }
 
-  async function serializeProject() {
-    return (await get()).serialize();
+  function serializeProject() {
+    return get().serialize();
   }
 
-  async function getProject() {
-    return await get();
+  function getProject() {
+    return get();
   }
 
   function getOpenedFile() {
@@ -128,7 +129,7 @@ const projectApi = () => {
   async function setOpenedFile(path: string) {
     await manager.setOpenedFile({
       path,
-      id: (await get()).id,
+      id: get().id,
     });
   }
 
@@ -162,8 +163,11 @@ const projectApi = () => {
     setOpenedFile,
     playPause,
     getTime() {
-      // TODO FINISH
-      return 0;
+      if (!transport.value) {
+        return 0;
+      }
+
+      return transport.value.seconds;
     },
     startTransport() {
       if (!transport.value) {
@@ -185,16 +189,18 @@ const projectApi = () => {
       }
 
       transport.value.stop();
+      state.value = transport.value.state;
       general.pause();
       events.emit('playPause');
     },
     onDidPlayPause(cb: () => void) {
       return new EventProvider(events, 'playPause', cb);
     },
+    state,
   };
 };
 
-async function loadProject(): Promise<InitializationError | InitializationSuccess> {
+function loadProject(): InitializationError | InitializationSuccess {
   const projectJSON = manager.getProjectJSON();
 
   if (!projectJSON) {
@@ -214,7 +220,7 @@ async function loadProject(): Promise<InitializationError | InitializationSucces
     };
   }
 
-  const loaded = await Project.load(result.decoded);
+  const loaded = Project.load(result.decoded);
   return {
     type: 'success',
     project: loaded,

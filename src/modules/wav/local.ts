@@ -30,3 +30,16 @@ export async function loadBuffer(path: string) {
 
   return audioBuffer;
 }
+
+
+export function loadBufferSync(path: string) {
+  const buffer = fs.readFileSync(path);
+  const result = wav.decode(buffer);
+
+  const audioBuffer = createBuffer(
+    result.sampleRate,
+    result.channelData,
+  );
+
+  return audioBuffer;
+}

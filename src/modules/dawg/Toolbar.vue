@@ -60,7 +60,11 @@ export default class Toolbar extends Vue {
   @Prop({ type: String, required: true }) public context!: ApplicationContext;
   @Prop({ type: Number, required: true }) public bpm!: number;
   @Prop({ type: Boolean, required: true }) public play!: boolean;
-  @Prop(Nullable(Object)) public transport!: Transport | null;
+
+  // TODO JACOB
+  @Prop({ type: String, required: true }) public state!: 'started' | 'stopped';
+  @Prop({ type: Function, required: true }) public getSeconds!: () => number;
+
 
   public signal = new Signal(5);
 
@@ -88,13 +92,8 @@ export default class Toolbar extends Vue {
   }
 
   public update() {
-    if (!this.transport) {
-      this.seconds = 0;
-      return;
-    }
-
-    if (this.transport.state === 'started') { requestAnimationFrame(this.update); }
-    this.seconds = this.transport.seconds;
+    if (this.state === 'started') { requestAnimationFrame(this.update); }
+    this.seconds = this.getSeconds();
   }
 
   @Watch<Toolbar>('play')

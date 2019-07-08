@@ -205,11 +205,11 @@ export const extension: dawg.Extension<{}, {}, { backup: t.BooleanC }, BackupMan
     const manager = new BackupManager(context);
     manager.setBackup(context.settings.get('backup', false));
 
-    context.subscriptions.push(context.settings.onDidChangeSettings((key, value) => {
+    context.subscriptions.push(context.settings.onDidChangeSettings(async (key, value) => {
       switch (key) {
         case 'backup':
           if (value) {
-            manager.updateProject(dawg.project.serializeProject());
+            manager.updateProject(await dawg.project.serializeProject());
           } else {
             manager.setBackup(false);
           }

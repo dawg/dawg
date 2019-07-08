@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import { manager } from '@/dawg/extensions/manager';
 import { project } from '@/dawg/extensions/core/project';
-import { workspace, general } from '@/store';
+import { workspace, general, Project } from '@/store';
 import { record } from '@/dawg/extensions/core/record';
 import { ScheduledPattern, ScheduledSample } from '@/core';
 import { value } from 'vue-function-api';
@@ -16,16 +16,17 @@ export const playlist = manager.activate({
     const ghosts: Ghost[] = [];
 
     const component = Vue.extend({
+      name: 'PlaylistSequencerWrapper',
       template: `
       <playlist-sequencer
-        :tracks="p.tracks"
-        :elements="p.master.elements"
-        :transport="p.master.transport"
+        :tracks="project.tracks"
+        :elements="project.master.elements"
+        :transport="project.master.transport"
         :play="playlistPlay"
         :start.sync="masterStart.value"
         :end.sync="masterEnd.value"
-        :steps-per-beat="p.stepsPerBeat"
-        :beats-per-measure="p.beatsPerMeasure"
+        :steps-per-beat="project.stepsPerBeat"
+        :beats-per-measure="project.beatsPerMeasure"
         :row-height="workspace.playlistRowHeight"
         @update:rowHeight="workspace.setPlaylistRowHeight"
         :px-per-beat="workspace.playlistBeatWidth"
@@ -36,23 +37,19 @@ export const playlist = manager.activate({
       ></playlist-sequencer>
       `,
       data: () => ({
-        project: project.getProject(),
         workspace,
         recording: record.recording,
-        p,
 
         // We need these to be able to keep track of the start and end of the playlist loop
         // for creating automation clips
         masterStart,
         masterEnd,
         ghosts,
+        project: project.getProject(),
       }),
       computed: {
         playlistPlay() {
           return general.play && workspace.applicationContext === 'playlist';
-        },
-        async project() {
-          return await project.getProject();
         },
       },
       methods: {

@@ -27,10 +27,12 @@
               class="toolbar"
               :height="TOOLBAR_HEIGHT"
               :transport="workspace.transport"
+              :state="dawg.project.state.value"
+              :get-seconds="dawg.project.getTime"
               :context="workspace.applicationContext"
               @update:context="setContext"
               :play="general.play"
-              @update:play="playPause"
+              @update:play="dawg.project.playPause"
               :style="border('bottom')"
               :bpm="general.project.bpm"
               @update:bpm="(bpm) => general.project.setBpm(bpm)"
@@ -146,7 +148,6 @@ export default class App extends Vue {
   public loaded = false;
 
   get mainComponent() {
-    console.log(dawg.ui.mainSection.length);
     if (dawg.ui.mainSection.length) {
       return dawg.ui.mainSection[dawg.ui.mainSection.length - 1];
     }
