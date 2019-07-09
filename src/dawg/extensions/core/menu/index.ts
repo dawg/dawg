@@ -22,7 +22,7 @@ const inspect = {
 };
 
 export const menu = manager.activate({
-  id: 'dawg.context',
+  id: 'dawg.menu',
   activate() {
     const defaultItems =  process.env.NODE_ENV !== 'production' ? [inspect] : [];
 

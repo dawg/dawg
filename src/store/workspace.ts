@@ -7,7 +7,7 @@ import { VuexModule } from '@/store/utils';
 
 import * as io from '@/modules/cerialize';
 import store from '@/store/store';
-import { APPLICATION_PATH, ApplicationContext } from '@/constants';
+import { APPLICATION_PATH } from '@/constants';
 import general from './general';
 import { makeLookup } from '@/modules/utils';
 import * as dawg from '@/dawg';
@@ -29,7 +29,6 @@ export class Specific extends VuexModule {
     return makeLookup(general.project.patterns);
   }
 
-  @io.auto({ optional: true }) public applicationContext: ApplicationContext = 'pianoroll';
   @io.auto({ optional: true }) public pianoRollRowHeight = 16;
   @io.auto({ optional: true }) public pianoRollBeatWidth = 80;
   @io.auto({ optional: true }) public playlistRowHeight = 40;
@@ -118,11 +117,6 @@ export class Specific extends VuexModule {
   @Action
   public setSideBarSize(value: number) {
     this.set({ key: 'sideBarSize', value });
-  }
-
-  @Mutation
-  public setContext(context: ApplicationContext) {
-    this.applicationContext = context;
   }
 
   @Mutation

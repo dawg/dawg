@@ -10,6 +10,7 @@ import { positionable, selectable } from '@/modules/sequencer/helpers';
 import { resizable } from '@/modules/sequencer/seq';
 import { commands } from '@/dawg/extensions/core/commands';
 import { panels } from '@/dawg/extensions/core/panels';
+import { applicationContext } from '../application-context';
 
 // TODO(jacob) WHy do I need to do this?
 const createElement = (o: VueConstructor) => {
@@ -55,7 +56,7 @@ export const pianoRoll = manager.activate({
       }),
       computed: {
         pianoRollPlay() {
-          return general.play && workspace.applicationContext === 'pianoroll';
+          return general.play && applicationContext.context.value === 'pianoroll';
         },
       },
     });

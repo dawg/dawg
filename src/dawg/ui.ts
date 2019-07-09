@@ -49,6 +49,11 @@ export interface PanelItem {
   actions?: TabAction[];
 }
 
+export interface ToolbarItem {
+  component: VueConstructor;
+  position: 'right' | 'left';
+}
+
 type StatusBarElement = StatusBarItemElement | StatusBarVueElement;
 
 const statusBarElements: StatusBarElement[] = [];
@@ -63,6 +68,7 @@ interface UI {
   // You will be able to push and then remove when finished.
   // We shoud add functions instead of allowing elements to interact directly with the arrays.
   mainSection: VueConstructor[];
+  toolbar: ToolbarItem[];
   createStatusBarItem: () => StatusBarItem;
 }
 
@@ -73,6 +79,7 @@ export const ui: UI = {
   activityBar: [],
   panels: [],
   mainSection: [],
+  toolbar: [],
   createStatusBarItem(alignment?: StatusBarAlignment, priority?: number) {
     const statusBarItem = new StatusBarItem();
     statusBarElements.push({

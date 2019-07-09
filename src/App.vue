@@ -29,8 +29,6 @@
               :transport="workspace.transport"
               :state="dawg.project.state.value"
               :get-seconds="dawg.project.getTime"
-              :context="workspace.applicationContext"
-              @update:context="setContext"
               :play="general.play"
               @update:play="dawg.project.playPause"
               :style="border('bottom')"
@@ -92,7 +90,7 @@ import Panels from '@/dawg/extensions/core/panels/Panels.vue';
 import PanelHeaders from '@/dawg/extensions/core/panels/PanelHeaders.vue';
 import ActivityBar from '@/dawg/extensions/core/activity-bar/ActivityBar.vue';
 import StatusBar from '@/sections/StatusBar.vue';
-import { FILTERS, ApplicationContext, TOOLBAR_HEIGHT } from '@/constants';
+import { FILTERS, TOOLBAR_HEIGHT } from '@/constants';
 import { remote } from 'electron';
 import { ScheduledPattern } from '@/core/scheduled/pattern';
 import { ScheduledSample, Sample } from '@/core';
@@ -124,22 +122,6 @@ export default class App extends Vue {
   public general = general;
   public workspace = workspace;
 
-  public menuItems: { [key: string]: dawg.Command } = {
-    switchContext: {
-      text: 'Switch Context',
-      shortcut: ['CmdOrCtrl', 'Tab'],
-      callback: () => {
-        if (workspace.applicationContext === 'pianoroll') {
-          this.setContext('playlist');
-        } else {
-          this.setContext('pianoroll');
-        }
-      },
-    },
-  };
-
-  public paletteCommands: dawg.Command[] = Object.values(this.menuItems);
-
   // This loaded flag is important
   // Bugs can appear if we render before we load the project file
   // This occurs because some components mutate objects
@@ -158,9 +140,6 @@ export default class App extends Vue {
     // I don't remove this listner because the window is closing anyway
     // I'm not even sure onExit would be called if we removed it in the destroy method
     window.addEventListener('beforeunload', dawg.manager.dispose);
-
-    // TODO(jacob)
-    this.paletteCommands.forEach((command) => dawg.commands.registerCommand(command));
 
     automation.$on('automate', this.addAutomationClip);
 
@@ -201,11 +180,6 @@ export default class App extends Vue {
 
   public border(side: 'left' | 'right' | 'top' | 'bottom') {
     return `border-${side}: 1px solid ${dawg.theme.background}`;
-  }
-
-  public setContext(context: ApplicationContext) {
-    workspace.setContext(context);
-    general.pause();
   }
 
   public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T & string) {

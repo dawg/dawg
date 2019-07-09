@@ -13,6 +13,7 @@ import { workspace, general } from '@/store';
 import { value, Wrapper } from 'vue-function-api';
 import { manager } from '../manager';
 import { project } from './project';
+import { applicationContext } from './application-context';
 
 export const DOCUMENTS_PATH = remote.app.getPath('documents');
 export const RECORDING_PATH = path.join(DOCUMENTS_PATH, remote.app.getName(), 'recordings');
@@ -60,7 +61,7 @@ export const extension: Extension<{}, { microphoneIn: string }, {}, { recording:
 
     const startRecording = async (trackId: number) => {
       project.stopIfStarted();
-      workspace.setContext('playlist');
+      applicationContext.context.value = 'playlist';
       const time = general.project.master.transport.beats;
 
       const microphoneIn = context.global.get('microphoneIn');

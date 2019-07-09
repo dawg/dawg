@@ -12,6 +12,12 @@
       :style="lineStyle"
     ></div>
 
+    <component
+      v-for="(item, i) in start"
+      :key="i"
+      :is="item.component"
+    ></component>
+
     <time-display
       style="margin-right: 10px"
       :raw="seconds"
@@ -34,7 +40,11 @@
       <ico fa>stop</ico>
     </v-btn>
 
-    <vertical-switch :top.sync="sliderTop"></vertical-switch>
+    <component
+      v-for="(item, i) in end"
+      :key="i"
+      :is="item.component"
+    ></component>
 
   </v-toolbar>
 </template>
@@ -46,7 +56,6 @@ import Bpm from '@/components/Bpm.vue';
 import TimeDisplay from '@/components/TimeDisplay.vue';
 import { Watch } from '@/modules/update';
 import Transport from '@/modules/audio/transport';
-import { ApplicationContext } from '@/constants';
 import { Nullable } from '@/utils';
 import { Signal } from 'tone';
 import * as dawg from '@/dawg';
@@ -57,7 +66,6 @@ import * as dawg from '@/dawg';
 export default class Toolbar extends Vue {
   @Prop(Number) public height!: number;
   @Prop(Number) public offset!: number;
-  @Prop({ type: String, required: true }) public context!: ApplicationContext;
   @Prop({ type: Number, required: true }) public bpm!: number;
   @Prop({ type: Boolean, required: true }) public play!: boolean;
 
@@ -65,11 +73,15 @@ export default class Toolbar extends Vue {
   @Prop({ type: String, required: true }) public state!: 'started' | 'stopped';
   @Prop({ type: Function, required: true }) public getSeconds!: () => number;
 
-
-  public signal = new Signal(5);
-
   public seconds = 0;
-  public sliderTop = false;
+
+  get start() {
+    return dawg.ui.toolbar.filter((item) => item.position === 'left');
+  }
+
+  get end() {
+    return dawg.ui.toolbar.filter((item) => item.position === 'right');
+  }
 
   get icon() {
     return this.play ? 'pause' : 'play';
@@ -100,24 +112,6 @@ export default class Toolbar extends Vue {
   public startClock() {
     if (this.play) {
       this.update();
-    }
-  }
-
-  @Watch<Toolbar>('context')
-  public switchSlider() {
-    if (this.context === 'playlist') {
-      this.sliderTop = true;
-    } else {
-      this.sliderTop = false;
-    }
-  }
-
-  @Watch<Toolbar>('sliderTop', { immediate: true })
-  public switchContext() {
-    if (this.sliderTop) {
-      this.$update('context', 'playlist');
-    } else {
-      this.$update('context', 'pianoroll');
     }
   }
 }

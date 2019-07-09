@@ -44,7 +44,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import BaseTabs from '@/components/BaseTabs.vue';
 import SideBar from '@/components/SideBar.vue';
 import { Watch } from '@/modules/update';
-import { SideTab, TOOLBAR_HEIGHT } from '@/constants';
+import { TOOLBAR_HEIGHT } from '@/constants';
 import { Sample } from '@/core';
 import * as dawg from '@/dawg';
 import { ActivityBarItem } from '@/dawg/ui';

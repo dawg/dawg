@@ -7,6 +7,7 @@ import { ScheduledPattern, ScheduledSample } from '@/core';
 import { value } from 'vue-function-api';
 import { ui } from '@/dawg/ui';
 import { Ghost } from '@/core/ghosts/ghost';
+import { applicationContext } from '../application-context';
 
 export const playlist = manager.activate({
   id: 'dawg.playlist',
@@ -49,7 +50,7 @@ export const playlist = manager.activate({
       }),
       computed: {
         playlistPlay() {
-          return general.play && workspace.applicationContext === 'playlist';
+          return general.play && applicationContext.context.value === 'playlist';
         },
       },
       methods: {

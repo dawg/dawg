@@ -14,9 +14,10 @@ import { notify } from './notify';
 import { DG_EXTENSION, FILTERS } from '@/constants';
 import { commands, Command } from './commands';
 import { menubar } from './menubar';
-import { computed, value } from 'vue-function-api';
+import { computed, value, watch } from 'vue-function-api';
 import { patterns } from './patterns';
 import { emitter, EventProvider } from '@/dawg/events';
+import { applicationContext } from './application-context';
 
 const projectApi = () => {
   // tslint:disable-next-line:variable-name
@@ -25,8 +26,7 @@ const projectApi = () => {
   const state = value<'stopped' | 'started' | 'paused'>('stopped');
 
   const transport = computed(() => {
-    // TODO NOW
-    if (workspace.applicationContext === 'pianoroll') {
+    if (applicationContext.context.value === 'pianoroll') {
       const pattern = patterns.selectedPattern;
       return pattern.value ? pattern.value.transport : null;
     } else {
@@ -146,9 +146,17 @@ const projectApi = () => {
       transport.value.stop();
       general.pause();
     } else {
-      transport.value.start();
-      general.start();
+      pause();
     }
+  }
+
+  function pause() {
+    if (!transport.value) {
+      return;
+    }
+
+    transport.value.stop();
+    general.pause();
   }
 
   return {
@@ -162,6 +170,7 @@ const projectApi = () => {
     removeOpenedFile,
     setOpenedFile,
     playPause,
+    pause,
     getTime() {
       if (!transport.value) {
         return 0;
@@ -239,6 +248,11 @@ const extension: Extension<{}, {}, {}, ReturnType<typeof projectApi>> = {
     const api = projectApi();
 
     window.addEventListener('online', online);
+
+    // Pause every time the context changes
+    watch(applicationContext.context, () => {
+      api.pause();
+    });
 
     const save: Command = {
       text: 'Save',
