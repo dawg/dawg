@@ -5,7 +5,6 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { workspace } from '@/store';
-import { runModel } from '@/models';
 import path from 'path';
 import * as dawg from '@/dawg';
 
@@ -16,7 +15,7 @@ export default class Transcription extends Vue {
   public click() {
     const provider = dawg.busy(`Converting ${path.basename(this.samplePath)} to MIDI`);
 
-    runModel({
+    dawg.models.runModel({
       pythonPath: workspace.pythonPath,
       modelsPath: workspace.modelsPath,
       scriptPath: 'vusic/transcription/scripts/infer.py',

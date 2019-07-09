@@ -6,7 +6,6 @@
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { workspace } from '@/store';
 import {PythonShell, Options} from 'python-shell';
-import { runModel } from '@/models';
 import path from 'path';
 import * as dawg from '@/dawg';
 
@@ -18,7 +17,7 @@ export default class Separation extends Vue {
   public click() {
     const provider = dawg.busy(`Extracting vocals from ${path.basename(this.samplePath)}`);
 
-    runModel({
+    dawg.models.runModel({
       pythonPath: workspace.pythonPath,
       modelsPath: workspace.modelsPath,
       scriptPath: 'vusic/separation/scripts/separate.py',

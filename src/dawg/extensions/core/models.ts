@@ -1,6 +1,8 @@
 import fs from '@/wrappers/fs';
-import {PythonShell, Options} from 'python-shell';
+import { PythonShell, Options } from 'python-shell';
 import path from 'path';
+import { manager } from '../manager';
+import { computed, Wrapper } from 'vue-function-api';
 
 interface PythonError {
   type: 'error';
@@ -23,7 +25,6 @@ interface PythonOptions {
 }
 
 export async function runModel(opts: PythonOptions) {
-
   if (opts.pythonPath === null || !(await fs.exists(opts.pythonPath))) {
     opts.cb({
       type: 'error',
@@ -76,3 +77,35 @@ export async function runModel(opts: PythonOptions) {
     });
   }
 }
+
+// tslint:disable-next-line:interface-over-type-literal
+type Global = { modelsPath: string, pythonPath: string };
+
+interface API {
+  modelsPath: Wrapper<string>;
+  pythonPath: Wrapper<string>;
+  runModel: (opts: PythonOptions) => void;
+}
+
+export const models = manager.activate<{}, Global, {}, API>({
+  id: 'dawg.models',
+  activate(context) {
+    const modelsPath = computed(() => {
+      return context.global.get('modelsPath', '');
+    }, (value) => {
+      context.global.set('modelsPath', value);
+    });
+
+    const pythonPath = computed(() => {
+      return context.global.get('pythonPath', '');
+    }, (value) => {
+      context.global.set('pythonPath', value);
+    });
+
+    return {
+      modelsPath,
+      pythonPath,
+      runModel,
+    };
+  },
+});

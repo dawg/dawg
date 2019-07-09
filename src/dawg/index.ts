@@ -13,6 +13,7 @@ export { patterns } from '@/dawg/extensions/core/patterns';
 export { applicationContext } from '@/dawg/extensions/core/application-context';
 export { panels } from '@/dawg/extensions/core/panels';
 export { sizes } from '@/dawg/extensions/core/sizes';
+export { models } from '@/dawg/extensions/core/models';
 export { menubar } from '@/dawg/extensions/core/menubar';
 export { record } from '@/dawg/extensions/core/record';
 export { playlist } from '@/dawg/extensions/core/playlist';
