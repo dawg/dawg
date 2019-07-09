@@ -11,13 +11,20 @@ import { resizable } from '@/modules/sequencer/seq';
 import { commands } from '@/dawg/extensions/core/commands';
 import { panels } from '@/dawg/extensions/core/panels';
 import { applicationContext } from '../application-context';
+import { value, computed } from 'vue-function-api';
 
 // TODO(jacob) WHy do I need to do this?
 const createElement = (o: VueConstructor) => {
   return positionable(resizable(selectable(o)));
 };
 
-export const pianoRoll = manager.activate({
+// tslint:disable-next-line:interface-over-type-literal
+type Workspace = {
+  pianoRollRowHeight: number;
+  pianoRollBeatWidth: number;
+};
+
+export const pianoRoll = manager.activate<Workspace, {}, {}, { addAction: (action: TabAction) => void }>({
   id:  'dawg.piano-roll',
   activate(context) {
     context.subscriptions.push(commands.registerCommand({
@@ -27,6 +34,18 @@ export const pianoRoll = manager.activate({
         panels.openedPanel.value = 'Piano Roll';
       },
     }));
+
+    const pianoRollRowHeight = computed(() => {
+      return context.workspace.get('pianoRollRowHeight', 16);
+    }, (height: number) => {
+      context.workspace.set('pianoRollRowHeight', height);
+    });
+
+    const pianoRollBeatWidth = computed(() => {
+      return context.workspace.get('pianoRollBeatWidth', 80);
+    }, (height: number) => {
+      context.workspace.set('pianoRollBeatWidth', height);
+    });
 
     Vue.component('Note', createElement(Note));
 
@@ -41,11 +60,9 @@ export const pianoRoll = manager.activate({
         :play="pianoRollPlay"
         :steps-per-beat="general.project.stepsPerBeat"
         :beats-per-measure="general.project.beatsPerMeasure"
-        :row-height="workspace.pianoRollRowHeight"
-        :px-per-beat="workspace.pianoRollBeatWidth"
+        :row-height.sync="pianoRollRowHeight.value"
+        :px-per-beat.sync="pianoRollBeatWidth.value"
         :is-recording="general.isRecording"
-        @update:rowHeight="workspace.setPianoRollRowHeight"
-        @update:pxPerBeat="workspace.setPianoRollBeatWidth"
       ></piano-roll-sequencer>
       `,
       data: () => ({
@@ -53,6 +70,8 @@ export const pianoRoll = manager.activate({
         selectedPattern: patterns.selectedPattern,
         general,
         workspace,
+        pianoRollBeatWidth,
+        pianoRollRowHeight,
       }),
       computed: {
         pianoRollPlay() {

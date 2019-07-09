@@ -4,17 +4,41 @@ import { project } from '@/dawg/extensions/core/project';
 import { workspace, general, Project } from '@/store';
 import { record } from '@/dawg/extensions/core/record';
 import { ScheduledPattern, ScheduledSample } from '@/core';
-import { value } from 'vue-function-api';
+import { value, computed, Wrapper } from 'vue-function-api';
 import { ui } from '@/dawg/ui';
 import { Ghost } from '@/core/ghosts/ghost';
 import { applicationContext } from '../application-context';
 
-export const playlist = manager.activate({
+// tslint:disable-next-line:interface-over-type-literal
+type Workspace = {
+  playlistRowHeight: number;
+  playlistBeatWidth: number;
+};
+
+interface API {
+  masterStart: Wrapper<number>;
+  masterEnd: Wrapper<number>;
+  ghosts: Ghost[];
+}
+
+export const playlist = manager.activate<Workspace, {}, {}, API>({
   id: 'dawg.playlist',
-  activate() {
+  activate(context) {
     const masterStart = value(0);
     const masterEnd = value(0);
     const ghosts: Ghost[] = [];
+
+    const playlistRowHeight = computed(() => {
+      return context.workspace.get('playlistRowHeight', 16);
+    }, (height: number) => {
+      context.workspace.set('playlistRowHeight', height);
+    });
+
+    const playlistBeatWidth = computed(() => {
+      return context.workspace.get('playlistBeatWidth', 80);
+    }, (width: number) => {
+      context.workspace.set('playlistBeatWidth', width);
+    });
 
     const component = Vue.extend({
       name: 'PlaylistSequencerWrapper',
@@ -28,10 +52,8 @@ export const playlist = manager.activate({
         :end.sync="masterEnd.value"
         :steps-per-beat="project.stepsPerBeat"
         :beats-per-measure="project.beatsPerMeasure"
-        :row-height="workspace.playlistRowHeight"
-        @update:rowHeight="workspace.setPlaylistRowHeight"
-        :px-per-beat="workspace.playlistBeatWidth"
-        @update:pxPerBeat="workspace.setPlaylistBeatWidth"
+        :row-height.sync="playlistRowHeight.value"
+        :px-per-beat.sync="playlistBeatWidth.value"
         @new-prototype="checkPrototype"
         :is-recording="recording.value"
         :ghosts="ghosts"
@@ -47,6 +69,8 @@ export const playlist = manager.activate({
         masterEnd,
         ghosts,
         project: project.getProject(),
+        playlistRowHeight,
+        playlistBeatWidth,
       }),
       computed: {
         playlistPlay() {

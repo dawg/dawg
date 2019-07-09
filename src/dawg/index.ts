@@ -12,6 +12,7 @@ export { pianoRoll } from '@/dawg/extensions/core/piano-roll';
 export { patterns } from '@/dawg/extensions/core/patterns';
 export { applicationContext } from '@/dawg/extensions/core/application-context';
 export { panels } from '@/dawg/extensions/core/panels';
+export { sizes } from '@/dawg/extensions/core/sizes';
 export { menubar } from '@/dawg/extensions/core/menubar';
 export { record } from '@/dawg/extensions/core/record';
 export { playlist } from '@/dawg/extensions/core/playlist';

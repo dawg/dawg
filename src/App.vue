@@ -10,8 +10,7 @@
         <split 
           collapsible 
           :min-size="100"
-          :initial="workspace.sideBarSize"
-          @resize="workspace.setSideBarSize"
+          :initial.sync="dawg.sizes.sideBarSize.value"
         >
           <side-tabs 
             v-if="loaded"
@@ -51,8 +50,7 @@
             direction="vertical"
             :style="border('top')"
             keep
-            :initial="workspace.panelsSize"
-            @resize="workspace.setPanelsSize"
+            :initial.sync="dawg.sizes.panelsSize.value"
           >
             <split :initial="55" fixed>
               <panel-headers></panel-headers>

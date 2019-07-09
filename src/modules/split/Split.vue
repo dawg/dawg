@@ -266,7 +266,7 @@ export default class Split extends Vue {
           s[attr] = value;
         } else {
           s.setSize(value);
-          s.$emit('resize', value);
+          s.$update('initial', value);
         }
       }
     };
