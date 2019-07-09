@@ -16,15 +16,12 @@
           @stop="pauseSample"
         ></play-pause>
       </span>
-      <span class="control">
-        <separation
-          :samplePath="samplePath"
-        ></separation>
-      </span>
-      <span class="control">
-        <transcription
-          :samplePath="samplePath"
-        ></transcription>
+      <span
+        class="control" 
+        v-for="(action, i) in actionsWithSamplePath"
+        :key="i"
+      >
+        <button class="button" @click="action.callback"> {{ action.text }} </button>
       </span>
     </div>
   </div>
@@ -37,10 +34,25 @@ import Tone from 'tone';
 import { Watch } from '@/modules/update';
 import { Sample } from '@/core';
 import { Nullable } from '@/utils';
+import { Action } from '@/dawg/extensions/core/sample-viewer/types';
 
 @Component({components: { PlayPause }})
 export default class SampleViewer extends Vue {
   @Prop(Nullable(Object)) public sample!: Sample | null;
+  @Prop({ type: Array, required: true }) public actions!: Action[];
+
+  get actionsWithSamplePath() {
+    return this.actions.map((action) => {
+      return {
+        text: action.text,
+        callback: () => {
+          if (this.samplePath) {
+            action.callback(this.samplePath);
+          }
+        },
+      };
+    });
+  }
 
   get buffer() {
     if (this.sample) {

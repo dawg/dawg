@@ -5,7 +5,6 @@ import * as explorer from '@/dawg/extensions/extra/explorer';
 import * as audioFiles from '@/dawg/extensions/extra/audio-files';
 import * as clips from '@/dawg/extensions/extra/clips';
 import * as mixer from '@/dawg/extensions/core/mixer';
-import * as sampleViewer from '@/dawg/extensions/core/sample-viewer';
 import * as dawg from '@/dawg';
 
 const middleware = () => {
@@ -43,7 +42,6 @@ const middleware = () => {
   dawg.manager.activate(clips.extension);
 
   dawg.manager.activate(mixer.extension);
-  dawg.manager.activate(sampleViewer.extension);
 };
 
 export default middleware;

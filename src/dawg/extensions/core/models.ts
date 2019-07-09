@@ -3,6 +3,9 @@ import { PythonShell, Options } from 'python-shell';
 import path from 'path';
 import { manager } from '../manager';
 import { computed, Wrapper } from 'vue-function-api';
+import { sampleViewer } from './sample-viewer';
+import { busy } from './busy';
+import { notify } from './notify';
 
 interface PythonError {
   type: 'error';
@@ -100,6 +103,47 @@ export const models = manager.activate<{}, Global, {}, API>({
       return context.global.get('pythonPath', '');
     }, (value) => {
       context.global.set('pythonPath', value);
+    });
+
+    const createCallback = (scriptPath: string, notifyText: (samplePath: string) => string) => (samplePath: string) => {
+      const provider = busy(notifyText(samplePath));
+
+      runModel({
+        pythonPath: pythonPath.value,
+        modelsPath: modelsPath.value,
+        scriptPath,
+        samplePath,
+        cb: (result) => {
+          provider.dispose();
+          if (result.type === 'error') {
+            notify.error(result.message, {
+              detail: result.details,
+              duration: Infinity,
+            });
+          }
+
+          if (result.type === 'success') {
+            notify.success(result.message, {detail: result.details});
+          }
+        },
+      });
+    };
+
+    context.subscriptions.push(sampleViewer.addAction({
+      text: 'Separate',
+      callback: createCallback(
+        'vusic/separation/scripts/separate.py',
+        (samplePath) => `Extracting vocals from ${path.basename(samplePath)}`,
+      ),
+    }));
+
+
+    sampleViewer.addAction({
+      text: 'Transcribe',
+      callback: createCallback(
+        'vusic/transcription/scripts/infer.py',
+        (samplePath) => `Converting ${path.basename(samplePath)} to MIDI`,
+      ),
     });
 
     return {

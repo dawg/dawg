@@ -17,6 +17,7 @@ export { models } from '@/dawg/extensions/core/models';
 export { menubar } from '@/dawg/extensions/core/menubar';
 export { record } from '@/dawg/extensions/core/record';
 export { playlist } from '@/dawg/extensions/core/playlist';
+export { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 export { window } from '@/dawg/extensions/core/window';
 export { Key, Command } from '@/dawg/extensions/core/commands';
 export { IExtensionContext, Extension, createExtension } from '@/dawg/extensions';
