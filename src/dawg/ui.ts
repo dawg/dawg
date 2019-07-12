@@ -30,8 +30,8 @@ interface StatusBarVueElement {
 }
 
 export interface TabAction {
-  icon: string;
-  tooltip: string;
+  icon: Wrapper<string>;
+  tooltip: Wrapper<string>;
   callback: (e: MouseEvent) => void;
   props?: { [k: string]: string };
 }

@@ -11,6 +11,7 @@ import 'firebase/auth';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, watch, Wrapper, value, createComponent } from 'vue-function-api';
 import { ui } from '@/dawg/ui';
+import { project } from '../../core/project';
 
 const createBackupAPI = (
   context: dawg.IExtensionContext<{ backup: boolean }>,
@@ -317,8 +318,7 @@ export const extension: dawg.Extension<{ backup: boolean }, {}, ReturnType<typeo
       type: 'boolean',
       value: manager.backup,
       disabled: computed(() => {
-        // return !general.project.name || !general.authenticated
-        return true;
+        return !project.project.name || !manager.user.value;
       }),
     });
 

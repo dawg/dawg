@@ -15,18 +15,17 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { general } from '@/store';
 import { ScheduledAutomation } from '@/core';
 import * as dawg from '@/dawg';
 
 @Component
 export default class AutomationClips extends Vue {
   get project() {
-    return general.project;
+    return dawg.project.project;
   }
 
   get items() {
-    return general.project.automationClips.map((clip, i) => {
+    return this.project.automationClips.map((clip, i) => {
       return {
         prototype: ScheduledAutomation.create(clip, 0, 0),
         name: `Automation ${i}`,
@@ -40,7 +39,7 @@ export default class AutomationClips extends Vue {
       items: [
         {
           text: 'Delete',
-          callback: () => general.project.remoteAutomation(i),
+          callback: () => this.project.remoteAutomation(i),
         },
       ],
     });

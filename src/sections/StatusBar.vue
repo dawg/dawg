@@ -34,13 +34,11 @@
 <script lang="ts">
 import path from 'path';
 import { Component, Vue, Prop } from 'vue-property-decorator';
-import { workspace, general } from '@/store';
 import * as dawg from '@/dawg';
 
 @Component
 export default class Foot extends Vue {
   @Prop({ type: Number, required: true }) public height!: number;
-  public general = general;
 
   get iconColor() {
     return dawg.theme.foreground;
@@ -66,7 +64,7 @@ export default class Foot extends Vue {
   }
 
   get openedFile() {
-    return general.projectPath;
+    return dawg.project.getOpenedFile();
   }
 
   get projectName() {

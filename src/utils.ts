@@ -209,3 +209,15 @@ export class UnreachableCaseError extends Error {
     super(`Unreachable case: ${value}`);
   }
 }
+
+export const addDisposableListener = <K extends keyof WindowEventMap>(
+  type: K, cb: (ev: WindowEventMap[K]) => any,
+) => {
+  window.addEventListener(type, cb);
+
+  return {
+    dispose() {
+      window.removeEventListener(type, cb);
+    },
+  };
+};

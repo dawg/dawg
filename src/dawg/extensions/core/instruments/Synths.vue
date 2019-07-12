@@ -7,7 +7,7 @@
       :instrument="instrument"
       :notes="getNotes(instrument)"
       :channel="instrument.channel"
-      @update:channel="general.project.setChannel({ instrument, channel: $event })"
+      @update:channel="project.setChannel({ instrument, channel: $event })"
     ></synth>
   </div>
 </template>
@@ -19,9 +19,9 @@ import Synth from '@/components/Synth.vue';
 import { Nullable } from '@/utils';
 import { Score, Instrument, Pattern } from '@/core';
 import { Watch } from '@/modules/update';
-import { workspace, general } from '@/store';
 import { notify } from '@/dawg/extensions/core/notify';
 import { menu } from '@/dawg/extensions/core/menu';
+import { project } from '../project';
 
 @Component({ components: { Synth } })
 export default class Synths extends Vue {
@@ -30,7 +30,9 @@ export default class Synths extends Vue {
   @Prop(Nullable(Object)) public selectedScore!: Score | null;
   @Prop(Nullable(Object)) public selectedPattern!: Pattern | null;
 
-  public general = general;
+  get project() {
+    return project.project;
+  }
 
   get scoreLookup() {
     const lookup: {[k: string]: Score} = {};
@@ -58,7 +60,7 @@ export default class Synths extends Vue {
 
     const instrument = this.instruments[i];
     if (!this.scoreLookup.hasOwnProperty(instrument.id)) {
-      general.project.addScore({ pattern: this.selectedPattern, instrument });
+      project.project.addScore({ pattern: this.selectedPattern, instrument });
     }
 
     this.$update('selectedScore', this.scoreLookup[instrument.id]);
@@ -72,7 +74,7 @@ export default class Synths extends Vue {
       event,
       items: [
         {
-          callback: () => general.project.deleteInstrument(i),
+          callback: () => project.project.deleteInstrument(i),
           text: 'Delete',
         },
         {

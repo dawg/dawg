@@ -1,7 +1,6 @@
 import Vue, { VueConstructor } from 'vue';
 import PianoRollSequencer from '@/dawg/extensions/core/piano-roll/PianoRollSequencer.vue';
 import Note from '@/dawg/extensions/core/piano-roll/Note.vue';
-import { workspace, general } from '@/store';
 import { instruments } from '@/dawg/extensions/core/instruments';
 import { patterns } from '@/dawg/extensions/core/patterns';
 import { ui, TabAction } from '@/dawg/ui';
@@ -12,6 +11,7 @@ import { commands } from '@/dawg/extensions/core/commands';
 import { panels } from '@/dawg/extensions/core/panels';
 import { applicationContext } from '../application-context';
 import { value, computed } from 'vue-function-api';
+import { project } from '../project';
 
 // TODO(jacob) WHy do I need to do this?
 const createElement = (o: VueConstructor) => {
@@ -49,6 +49,7 @@ export const pianoRoll = manager.activate<Workspace, {}, { addAction: (action: T
 
     Vue.component('Note', createElement(Note));
 
+    const recording = value(false);
     const component = Vue.extend({
       components: { PianoRollSequencer },
       template: `
@@ -58,24 +59,23 @@ export const pianoRoll = manager.activate<Workspace, {}, { addAction: (action: T
         :pattern="selectedPattern"
         :score="selectedScore.value"
         :play="pianoRollPlay"
-        :steps-per-beat="general.project.stepsPerBeat"
-        :beats-per-measure="general.project.beatsPerMeasure"
+        :steps-per-beat="project.project.stepsPerBeat"
+        :beats-per-measure="project.project.beatsPerMeasure"
         :row-height.sync="pianoRollRowHeight.value"
         :px-per-beat.sync="pianoRollBeatWidth.value"
-        :is-recording="general.isRecording"
+        :is-recording="recording.value"
       ></piano-roll-sequencer>
       `,
       data: () => ({
         selectedScore: instruments.selectedScore,
         selectedPattern: patterns.selectedPattern,
-        general,
-        workspace,
+        recording,
         pianoRollBeatWidth,
         pianoRollRowHeight,
       }),
       computed: {
         pianoRollPlay() {
-          return general.play && applicationContext.context.value === 'pianoroll';
+          return project.play && applicationContext.context.value === 'pianoroll';
         },
       },
     });
@@ -91,6 +91,9 @@ export const pianoRoll = manager.activate<Workspace, {}, { addAction: (action: T
     return {
       addAction(action: TabAction) {
         actions.push(action);
+      },
+      setRecording(r: boolean) {
+        recording.value = r;
       },
     };
   },

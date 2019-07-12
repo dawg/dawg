@@ -1,10 +1,10 @@
 import Vue from 'vue';
 import Mixer from '@/dawg/extensions/core/mixer/Mixer.vue';
-import { general } from '@/store';
 import { ui } from '@/dawg/ui';
 import { createExtension } from '@/dawg/extensions';
 import { commands } from '@/dawg/extensions/core/commands';
 import { panels } from '@/dawg/extensions/core/panels';
+import { project } from '../project';
 
 export const extension = createExtension({
   id: 'dawg.mixer',
@@ -21,14 +21,14 @@ export const extension = createExtension({
       components: { Mixer },
       template: `
       <mixer
-        :channels="general.project.channels"
-        :play="general.play"
-        @add="(payload) => general.project.addEffect(payload)"
-        @delete="(payload) => general.project.deleteEffect(payload)"
+        :channels="project.project.channels"
+        :play="project.play"
+        @add="(payload) => project.project.addEffect(payload)"
+        @delete="(payload) => project.project.deleteEffect(payload)"
       ></mixer>
       `,
       data: () => ({
-        general,
+        project,
       }),
     });
 

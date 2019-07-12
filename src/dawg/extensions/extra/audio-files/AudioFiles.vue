@@ -16,7 +16,6 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { general, workspace } from '@/store';
 import { ScheduledSample, Sample } from '@/core';
 import * as dawg from '@/dawg';
 
@@ -25,7 +24,7 @@ export default class AudioFiles extends Vue {
   public currentlyPlaying: Sample | null = null;
 
   get items() {
-    return general.project.samples.map((sample) => {
+    return dawg.project.project.samples.map((sample) => {
       return {
         prototype: ScheduledSample.create(sample),
         sample,
@@ -39,7 +38,7 @@ export default class AudioFiles extends Vue {
       items: [
         {
           text: 'Delete',
-          callback: () => general.project.removeSample(i),
+          callback: () => dawg.project.project.removeSample(i),
         },
       ],
     });

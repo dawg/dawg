@@ -12,12 +12,13 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import Waveform from '@/modules/dawg/Waveform.vue';
 import { ChunkGhost as Ghost } from '@/core/ghosts/ghost';
-import general from '@/store/general';
+import * as dawg from '@/dawg';
 
 @Component({components: { Waveform }})
 export default class ChunkGhost extends Vue {
   @Prop({ type: Object, required: true }) public ghost!: Ghost;
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;
+
   get buffer() {
     return this.ghost.buffer;
   }
@@ -31,7 +32,7 @@ export default class ChunkGhost extends Vue {
 
   get bufferWidth() {
     if (this.ghost.buffer) {
-      return this.ghost.buffer.length / this.ghost.buffer.sampleRate / 60 * general.project.bpm * this.pxPerBeat;
+      return this.ghost.buffer.length / this.ghost.buffer.sampleRate / 60 * dawg.project.project.bpm * this.pxPerBeat;
     } else {
       return 0;
     }

@@ -2,13 +2,11 @@ import tmp from 'tmp';
 import fs from 'mz/fs';
 import { Sample, ScheduledSample } from '@/core';
 import { Beats } from '@/core/types';
-import { general, workspace } from '@/store';
 import { IProject, Project, ProjectType } from '@/store/project';
 import { Extension } from '@/dawg/extensions';
 // TODO(jacob) Wrap
 import { remote } from 'electron';
 import { manager } from '@/dawg/extensions/manager';
-import { InitializationError, InitializationSuccess } from '@/store/general';
 import { MemoryLoader } from '@/core/loaders/memory';
 import { notify } from './notify';
 import { DG_EXTENSION, FILTERS } from '@/constants';
@@ -19,6 +17,19 @@ import { patterns } from './patterns';
 import { emitter, EventProvider } from '@/dawg/events';
 import { applicationContext } from './application-context';
 import { ui } from '@/dawg/ui';
+import { addDisposableListener } from '@/utils';
+
+export interface InitializationError {
+  type: 'error';
+  message: string;
+  project: Project;
+}
+
+export interface InitializationSuccess {
+  type: 'success';
+  project: Project;
+}
+
 
 const projectApi = () => {
   // tslint:disable-next-line:variable-name
@@ -31,7 +42,7 @@ const projectApi = () => {
       const pattern = patterns.selectedPattern;
       return pattern.value ? pattern.value.transport : null;
     } else {
-      return general.project.master.transport;
+      return get().master.transport;
     }
   });
 
@@ -60,8 +71,8 @@ const projectApi = () => {
       time,
     });
 
-    scheduled.schedule(general.project.master.transport);
-    general.project.master.elements.push(scheduled);
+    scheduled.schedule(get().master.transport);
+    get().master.elements.push(scheduled);
   }
 
   async function openTempProject(p: IProject) {
@@ -112,6 +123,7 @@ const projectApi = () => {
         projectPath = projectPath + DG_EXTENSION;
       }
 
+      // TODO UPDATE
       // Make sure we set the cache and the general
       // The cache is what is written to the filesystem
       // and the general is the file that is currently opened
@@ -134,32 +146,6 @@ const projectApi = () => {
     });
   }
 
-  function playPause() {
-    if (!transport.value) {
-      notify.warning('Please select a Pattern.', {
-        detail: 'Please create and select a Pattern first or switch the Playlist context.',
-      });
-      return;
-    }
-
-    // TODO(jacob) refactor
-    if (transport.value.state === 'started') {
-      transport.value.stop();
-      general.pause();
-    } else {
-      pause();
-    }
-  }
-
-  function pause() {
-    if (!transport.value) {
-      return;
-    }
-
-    transport.value.stop();
-    general.pause();
-  }
-
   return {
     scheduleMaster,
     openTempProject,
@@ -170,8 +156,30 @@ const projectApi = () => {
     saveProject,
     removeOpenedFile,
     setOpenedFile,
-    playPause,
-    pause,
+    playPause() {
+      if (!transport.value) {
+        notify.warning('Please select a Pattern.', {
+          detail: 'Please create and select a Pattern first or switch the Playlist context.',
+        });
+        return;
+      }
+
+      if (transport.value.state === 'started') {
+        this.pause();
+      } else {
+        this.startTransport();
+      }
+    },
+    play: false,
+    pause() {
+      if (!transport.value) {
+        return;
+      }
+
+      transport.value.stop();
+      this.play = false;
+    },
+    project: getProject(),
     getTime() {
       if (!transport.value) {
         return 0;
@@ -185,7 +193,7 @@ const projectApi = () => {
       }
 
       transport.value.start();
-      general.start();
+      this.play = true;
       events.emit('playPause');
     },
     stopIfStarted() {
@@ -200,7 +208,7 @@ const projectApi = () => {
 
       transport.value.stop();
       state.value = transport.value.state;
-      general.pause();
+      this.play = false;
       events.emit('playPause');
     },
     onDidPlayPause(cb: () => void) {
@@ -237,8 +245,8 @@ function loadProject(): InitializationError | InitializationSuccess {
   };
 }
 
-const online = () => {
-  general.project.instruments.forEach((instrument) => {
+const online = (p: Project) => () => {
+  p.instruments.forEach((instrument) => {
     instrument.online();
   });
 };
@@ -248,7 +256,7 @@ const extension: Extension<{}, {}, ReturnType<typeof projectApi>> = {
   activate(context) {
     const api = projectApi();
 
-    window.addEventListener('online', online);
+    context.subscriptions.push(addDisposableListener('online', online(api.project)));
 
     // Pause every time the context changes
     watch(applicationContext.context, () => {
@@ -341,10 +349,6 @@ const extension: Extension<{}, {}, ReturnType<typeof projectApi>> = {
     });
 
     return api;
-  },
-
-  deactivate() {
-    window.removeEventListener('online', online);
   },
 };
 

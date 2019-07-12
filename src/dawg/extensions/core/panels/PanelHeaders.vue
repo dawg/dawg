@@ -12,8 +12,8 @@
     <tooltip-icon
       class="action"
       v-for="action in actions"
-      :key="action.icon"
-      :tooltip="action.tooltip"
+      :key="action.icon.value"
+      :tooltip="action.tooltip.value"
       v-bind="action.props"
       bottom
       @click.native="action.callback"
@@ -27,7 +27,6 @@
 import { Vue, Component } from 'vue-property-decorator';
 import BaseTabs from '@/components/BaseTabs.vue';
 import { Nullable } from '@/utils';
-import { general, workspace } from '@/store';
 import { Watch } from '@/modules/update';
 import { Player } from 'soundfont-player';
 import * as dawg from '@/dawg';

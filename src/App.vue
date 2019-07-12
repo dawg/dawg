@@ -28,11 +28,11 @@
               :transport="workspace.transport"
               :state="dawg.project.state.value"
               :get-seconds="dawg.project.getTime"
-              :play="general.play"
+              :play="dawg.project.play"
               @update:play="dawg.project.playPause"
               :style="border('bottom')"
-              :bpm="general.project.bpm"
-              @update:bpm="(bpm) => general.project.setBpm(bpm)"
+              :bpm="dawg.project.project.bpm"
+              @update:bpm="dawg.project.project.setBpm"
             ></toolbar>
           </split>
 
@@ -81,7 +81,6 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import { shell } from 'electron';
-import { general, workspace, Project } from '@/store';
 import { automation } from '@/modules/knobs';
 import SideTabs from '@/sections/SideTabs.vue';
 import Panels from '@/dawg/extensions/core/panels/Panels.vue';
@@ -116,9 +115,6 @@ import { Menu } from './dawg/extensions/core/menubar';
 export default class App extends Vue {
   public dawg = dawg;
   public TOOLBAR_HEIGHT = TOOLBAR_HEIGHT;
-
-  public general = general;
-  public workspace = workspace;
 
   // This loaded flag is important
   // Bugs can appear if we render before we load the project file
@@ -182,7 +178,7 @@ export default class App extends Vue {
 
   public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T & string) {
     // TODO(jacob)
-    // const added = await general.project.createAutomationClip({
+    // const added = await dawg.project.project.createAutomationClip({
     //   automatable,
     //   key,
     //   start: this.masterStart,

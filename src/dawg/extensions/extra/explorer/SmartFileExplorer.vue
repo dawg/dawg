@@ -13,8 +13,8 @@ import { ScheduledSample, Sample } from '@/core';
 import { Extensions, ExtensionData } from '@/dawg/extensions/extra/explorer/types';
 import parser, { INotes } from '@/midi-parser';
 import fs from '@/wrappers/fs';
-import { general } from '@/store';
 import FileExplorer from '@/dawg/extensions/extra/explorer/FileExplorer.vue';
+import * as dawg from '@/dawg';
 
 @Component({
   components: { FileExplorer },
@@ -68,7 +68,7 @@ export default class SmartFileExplorer extends Vue {
       view[i] = value;
     });
 
-    return parser.parse(ab, general.project.bpm);
+    return parser.parse(ab, dawg.project.project.bpm);
   }
 
   public openWav(sample: Sample) {

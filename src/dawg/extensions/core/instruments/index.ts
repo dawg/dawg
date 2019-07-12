@@ -5,8 +5,8 @@ import { value, Wrapper, computed } from 'vue-function-api';
 import { patterns } from '@/dawg/extensions/core/patterns';
 import { Score } from '@/core';
 import { ui } from '@/dawg/ui';
-import { general } from '@/store';
 import { menu } from '@/dawg/extensions/core/menu';
+import { project } from '../project';
 
 export const instruments = manager.activate({
   id: 'dawg.instruments',
@@ -23,7 +23,7 @@ export const instruments = manager.activate({
       data() {
         return {
           selectedScore,
-          instruments: general.project.instruments,
+          instruments: project.project.instruments,
           selectedPattern: patterns.selectedPattern,
         };
       },
@@ -35,11 +35,11 @@ export const instruments = manager.activate({
         items: [
           {
             text: 'Synth',
-            callback: () => general.project.addInstrument('Synth'),
+            callback: () => project.project.addInstrument('Synth'),
           },
           {
             text: 'Soundfont',
-            callback: () => general.project.addInstrument('Soundfont'),
+            callback: () => project.project.addInstrument('Soundfont'),
           },
         ],
         left: true,
@@ -50,8 +50,8 @@ export const instruments = manager.activate({
       name: 'Instruments',
       component,
       actions: [{
-        icon: 'add',
-        tooltip: 'Add Instrument',
+        icon: value('add'),
+        tooltip: value('Add Instrument'),
         callback: addInstrument,
       }],
     });

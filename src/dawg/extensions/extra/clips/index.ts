@@ -1,6 +1,5 @@
 import * as dawg from '@/dawg';
 import AutomationClips from '@/dawg/extensions/extra/clips/AutomationClips.vue';
-import { general } from '@/store';
 
 export const extension: dawg.Extension = {
   id: 'dawg.clips',

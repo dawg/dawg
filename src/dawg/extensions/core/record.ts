@@ -9,7 +9,6 @@ import fs from '@/wrappers/fs';
 import { ChunkGhost } from '@/core/ghosts/ghost';
 import { remote } from 'electron';
 import { Sample, ScheduledSample } from '@/core';
-import { workspace, general } from '@/store';
 import { value, Wrapper, watch } from 'vue-function-api';
 import { manager } from '../manager';
 import { project } from './project';
@@ -68,7 +67,7 @@ export const extension: Extension<{}, { microphoneIn: string }, { recording: Wra
     const startRecording = async (trackId: number) => {
       project.stopIfStarted();
       applicationContext.context.value = 'playlist';
-      const time = general.project.master.transport.beats;
+      const time = project.project.master.transport.beats;
 
       if (microphoneIn === undefined) {
         notify.info('Please select a microphone from the settings.');
@@ -129,9 +128,9 @@ export const extension: Extension<{}, { microphoneIn: string }, { recording: Wra
 
         // add the file to the workspace
         // create a sample from the file.
-        const master = general.project.master;
+        const master = project.project.master;
         const sample = Sample.create(dst, buffer);
-        general.project.samples.push(sample);
+        project.project.samples.push(sample);
         const scheduled = new ScheduledSample(sample, {
           type: 'sample',
           sampleId: sample.id,

@@ -1,7 +1,6 @@
 import Vue from 'vue';
 import { manager } from '@/dawg/extensions/manager';
 import { project } from '@/dawg/extensions/core/project';
-import { workspace, general, Project } from '@/store';
 import { record } from '@/dawg/extensions/core/record';
 import { ScheduledPattern, ScheduledSample } from '@/core';
 import { value, computed, Wrapper } from 'vue-function-api';
@@ -60,7 +59,6 @@ export const playlist = manager.activate<Workspace, {}, API>({
       ></playlist-sequencer>
       `,
       data: () => ({
-        workspace,
         recording: record.recording,
 
         // We need these to be able to keep track of the start and end of the playlist loop
@@ -74,7 +72,7 @@ export const playlist = manager.activate<Workspace, {}, API>({
       }),
       computed: {
         playlistPlay() {
-          return general.play && applicationContext.context.value === 'playlist';
+          return project.play && applicationContext.context.value === 'playlist';
         },
       },
       methods: {

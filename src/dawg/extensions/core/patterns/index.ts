@@ -2,10 +2,10 @@ import Vue from 'vue';
 import Patterns from '@/dawg/extensions/core/patterns/Patterns.vue';
 import { value, computed, createComponent } from 'vue-function-api';
 import { makeLookup } from '@/modules/utils';
-import { general } from '@/store';
 import { Pattern } from '@/core';
 import { manager } from '@/dawg/extensions/manager';
 import { ui } from '@/dawg/ui';
+import { project } from '../project';
 
 export const patterns = manager.activate({
   id: 'dawg.patterns',
@@ -14,7 +14,7 @@ export const patterns = manager.activate({
 
     const patternLookup = computed(() => {
       // TODO
-      return makeLookup(general.project.patterns);
+      return makeLookup(project.project.patterns);
     });
 
     const selectedPattern = computed(() => {
@@ -59,8 +59,8 @@ export const patterns = manager.activate({
       setup: () => ({
         selectedPattern,
         setPattern,
-        patterns: general.project.patterns,
-        remove: (i: number) => general.project.removePattern(i),
+        patterns: project.project.patterns,
+        remove: (i: number) => project.project.removePattern(i),
       }),
     }));
 

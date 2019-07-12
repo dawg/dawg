@@ -1,7 +1,6 @@
 import webmidi, { WebMidiEventConnected, WebMidiEventDisconnected, InputEventNoteon, InputEventNoteoff } from 'webmidi';
 import { Extension } from '@/dawg/extensions';
 import { notify } from '@/dawg/extensions/core/notify';
-import { general } from '@/store';
 import { instruments } from '@/dawg/extensions/core/instruments';
 import { keyLookup } from '@/utils';
 import { patterns } from '@/dawg/extensions/core/patterns';
@@ -9,6 +8,8 @@ import { Note } from '@/core';
 import * as Audio from '@/modules/audio';
 import { theme } from '@/dawg/extensions/core/theme';
 import { pianoRoll } from '@/dawg/extensions/core/piano-roll';
+import { value, computed, watch } from 'vue-function-api';
+import { project } from '../project';
 
 export const extension: Extension = {
   id: 'dawg.midi',
@@ -18,11 +19,13 @@ export const extension: Extension = {
     const notesStartTimes: {[key: string]: number} = {};
     let transport = new Audio.Transport(); // TODO REMOVE THIS
 
+    const recording = value(false);
+
     const onDidNoteOn = (e: InputEventNoteon) => {
-      if (general.isRecording) {
+      if (recording.value) {
         recordedNotes[e.note.name + e.note.octave] = e;
         const transportLocation = transport.progress * (transport.loopEnd - transport.loopStart);
-        notesStartTimes[e.note.name + e.note.octave] = transportLocation / 60  * general.project.bpm;
+        notesStartTimes[e.note.name + e.note.octave] = transportLocation / 60  * project.project.bpm;
       }
 
       if (selectedScore.value) {
@@ -35,7 +38,7 @@ export const extension: Extension = {
         selectedScore.value.instrument.triggerRelease(e.note.name + e.note.octave);
       }
 
-      if (!general.isRecording) {
+      if (!recording.value) {
         return;
       }
 
@@ -49,7 +52,7 @@ export const extension: Extension = {
       if (selectedScore.value) {
         const note = new Note(selectedScore.value.instrument, {
           row: keyLookup[e.note.name + e.note.octave].id,
-          duration: noteDuration / 1000 / 60 * general.project.bpm,
+          duration: noteDuration / 1000 / 60 * project.project.bpm,
           time: noteStartTime,
           velocity: noteOn.rawVelocity,
         });
@@ -103,29 +106,40 @@ export const extension: Extension = {
         return;
       }
 
-      general.toggleRecording();
+      recording.value = !recording.value;
 
       if (patterns.selectedPattern.value) {
         transport = patterns.selectedPattern.value.transport;
         transport.start();
-        general.start();
+        project.startTransport();
       }
     }
 
     function stopRecording() {
-      general.toggleRecording();
-      transport.pause();
-      general.pause();
+      recording.value = !recording.value;
+      project.stopTransport();
     }
 
+    const props = {
+      color: theme.foreground,
+      size: '14px',
+    };
+
+    watch(recording, () => {
+      props.color = recording.value ? theme.error : theme.foreground;
+    });
+
     pianoRoll.addAction({
-      icon: 'fiber_manual_record',
-      tooltip: general.isRecording ? 'Stop Recording' : 'Start Recording',
-      callback: general.isRecording ? stopRecording : startRecording,
-      props: {
-        color: general.isRecording ? theme.error : theme.foreground,
-        size: '14px',
+      icon: value('fiber_manual_record'),
+      tooltip: computed(() => recording.value ? 'Stop Recording' : 'Start Recording'),
+      callback: () => {
+        if (recording.value) {
+          stopRecording();
+        } else {
+          startRecording();
+        }
       },
+      props,
     });
   },
 
