@@ -11,7 +11,7 @@ class ActivityBar {
   constructor(public readonly openedSideTab: Wrapper<string | undefined>) {}
 }
 
-const extension: Extension<{ openedSideTab: string }, {}, {}, ActivityBar> = {
+const extension: Extension<{ openedSideTab: string }, {}, ActivityBar> = {
   id: 'dawg.activity-bar',
   activate(context) {
     const openedSideTab = value<string | undefined>(context.workspace.get('openedSideTab'));

@@ -24,7 +24,10 @@ export { IExtensionContext, Extension, createExtension } from '@/dawg/extensions
 export { manager } from '@/dawg/extensions/manager';
 
 // Ignore unused imports here
+import { manager } from '@/dawg/extensions/manager';
 import { helpLinks } from '@/dawg/extensions/core/help-links';
+import { extension } from '@/dawg/extensions/extra/backup';
+manager.activate(extension);
 
 import * as platform from '@/dawg/platform';
 import * as events from '@/dawg/events';

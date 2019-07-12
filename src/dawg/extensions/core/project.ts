@@ -18,6 +18,7 @@ import { computed, value, watch } from 'vue-function-api';
 import { patterns } from './patterns';
 import { emitter, EventProvider } from '@/dawg/events';
 import { applicationContext } from './application-context';
+import { ui } from '@/dawg/ui';
 
 const projectApi = () => {
   // tslint:disable-next-line:variable-name
@@ -242,7 +243,7 @@ const online = () => {
   });
 };
 
-const extension: Extension<{}, {}, {}, ReturnType<typeof projectApi>> = {
+const extension: Extension<{}, {}, ReturnType<typeof projectApi>> = {
   id: 'dawg.project',
   activate(context) {
     const api = projectApi();
@@ -325,6 +326,19 @@ const extension: Extension<{}, {}, {}, ReturnType<typeof projectApi>> = {
       shortcut: ['Space'],
       callback: api.playPause,
     }));
+
+    const p = api.getProject();
+    const name = value(p.name);
+    watch(name, () => {
+      p.name = name.value;
+    });
+
+    ui.settings.push({
+      type: 'string',
+      title: 'Project Name',
+      description: 'The project name',
+      value: name,
+    });
 
     return api;
   },

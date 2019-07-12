@@ -10,7 +10,7 @@ import * as Audio from '@/modules/audio';
 import { theme } from '@/dawg/extensions/core/theme';
 import { pianoRoll } from '@/dawg/extensions/core/piano-roll';
 
-export const extension: Extension<{}, {}, {}> = {
+export const extension: Extension = {
   id: 'dawg.midi',
   activate() {
     const selectedScore = instruments.selectedScore;

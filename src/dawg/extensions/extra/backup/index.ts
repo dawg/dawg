@@ -1,6 +1,6 @@
 import * as dawg from '@/dawg';
 import { User } from 'firebase';
-import * as t from 'io-ts';
+import Vue from 'vue';
 import backend, { ProjectInfo } from '@/dawg/extensions/extra/backup/backend';
 import { ProjectType, IProject } from '@/store/project';
 import { PathReporter } from 'io-ts/lib/PathReporter';
@@ -9,55 +9,50 @@ import firebase from 'firebase/app';
 import 'firebase/database';
 import 'firebase/auth';
 import { menubar } from '@/dawg/extensions/core/menubar';
+import { computed, watch, Wrapper, value, createComponent } from 'vue-function-api';
+import { ui } from '@/dawg/ui';
 
-export class BackupManager {
-  public user: User | null = null;
-  private projects: ProjectInfo[] = [];
-  private item = dawg.ui.createStatusBarItem();
-  private error = false;
-  private syncing = false;
-  private backup = false;
+const createBackupAPI = (
+  context: dawg.IExtensionContext<{ backup: boolean }>,
+  backup: Wrapper<boolean>,
+) => {
+  const user = value<User | null>(null);
+  let projects: ProjectInfo[] = [];
+  const item = dawg.ui.createStatusBarItem();
+  const error = value(false);
+  const syncing = value(false);
 
-  constructor(private context: dawg.IExtensionContext<{}, {}, { backup: boolean }>) {
-    this.context.subscriptions.push(this.item);
-  }
-
-  public setError(error: boolean) {
-    this.error = error;
-    this.setIcon();
-  }
-
-  public setSyncing(syncing: boolean) {
-    this.syncing = syncing;
-    this.setIcon();
-  }
-
-  public setBackup(backup: boolean) {
-    this.backup = backup;
-    this.setIcon();
-  }
-
-  public setIcon() {
-    if (!this.backup) {
-      this.item.text = 'cloud_off';
-      this.item.tooltip = 'Cloud Backup Disabled';
-    } else if (this.error) {
-      this.item.text = 'error_outline';
-      this.item.tooltip = 'Cloud Error';
-    } else if (this.syncing) {
-      this.item.text = 'cloud_queue';
-      this.item.tooltip = 'Backup In Progress';
+  const icon = computed(() => {
+    if (!backup.value) {
+      return 'cloud_off';
+    } else if (error.value) {
+      return 'error_outline';
+    } else if (syncing.value) {
+      return 'cloud_queue';
     } else {
-      this.item.text = 'cloud_done';
-      this.item.tooltip = 'Cloud Backup Enabled';
+      return 'cloud_done';
     }
-  }
+  });
 
-  public async loadProjects(user: User) {
+  const tooltip = computed(() => {
+    if (!backup.value) {
+      return 'Cloud Backup Disabled';
+    } else if (error.value) {
+      return 'Cloud Error';
+    } else if (syncing.value) {
+      return 'Backup In Progress';
+    } else {
+      return 'Cloud Backup Enabled';
+    }
+  });
+
+  context.subscriptions.push(item);
+
+  async function loadProjects(user: User) {
     const res =  await backend.getProjects(user);
 
     if (res.type === 'success') {
-      this.projects = res.projects;
+      projects = res.projects;
     }
 
     if (res.type === 'error') {
@@ -65,29 +60,29 @@ export class BackupManager {
     }
   }
 
-  public resetProjects() {
-    this.projects = [];
+  function resetProjects() {
+    projects = [];
   }
 
-  public openBackup() {
-    this.handleUnauthenticated(async (user) => {
-      await this.loadProjects(user);
-      const projects: { [name: string]: ProjectInfo } = {};
-      this.projects.forEach((project) => {
-        projects[project.name] = project;
+  function openBackup() {
+    handleUnauthenticated(async (user) => {
+      await loadProjects(user);
+      const projectLookup: { [name: string]: ProjectInfo } = {};
+      projects.forEach((project) => {
+        projectLookup[project.name] = project;
       });
 
-      dawg.palette.selectFromObject(projects, {
+      dawg.palette.selectFromObject(projectLookup, {
         placeholder: 'Available Projects',
         onDidSelect: (projectInfo) => {
-          this.openProject(projectInfo);
+          openProject(projectInfo);
         },
       });
     });
   }
 
-  public async openProject(info: ProjectInfo) {
-    this.handleUnauthenticated(async (user) => {
+  async function openProject(info: ProjectInfo) {
+    handleUnauthenticated(async (user) => {
       const res = await backend.getProject(user, info.id);
       if (res.type === 'not-found') {
         dawg.notify.warning('Uh, we were unable to find your project');
@@ -112,24 +107,24 @@ export class BackupManager {
     });
   }
 
-  public handleUnauthenticated(authenticated: (user: User) => void) {
-    if (this.user === null) {
+  function handleUnauthenticated(authenticated: (user: User) => void) {
+    if (user.value === null) {
       dawg.notify.info('Please login first', { detail: 'Use the settings icon in the Activity Bar.' });
       return;
     }
 
-    authenticated(this.user);
+    authenticated(user.value);
   }
 
-  public deleteProject(info: ProjectInfo) {
-    this.handleUnauthenticated(async (user) => {
+  function deleteProject(info: ProjectInfo) {
+    handleUnauthenticated(async (user) => {
       const res = await backend.deleteProject(user, info.id);
 
       if (res.type === 'success') {
         // We are not taking advantage of firebase here
         // Ideally firebase would send an event and we would update our project list
         // Until we do that, this will suffice
-        this.projects = this.projects.filter((maybe) => maybe !== info);
+        projects = projects.filter((maybe) => maybe !== info);
       } else if (res.type === 'not-found') {
         dawg.notify.info(`Unable to delete ${info.name}`, { detail: 'The project was not found.' });
       } else {
@@ -138,14 +133,14 @@ export class BackupManager {
     });
   }
 
-  public async updateProject(encoded: IProject) {
-    if (this.context.settings.get('backup', false)) {
+  async function updateProject(encoded: IProject) {
+    if (backup.value) {
       return;
     }
 
-    this.setSyncing(true);
+    syncing.value = true;
 
-    if (!this.user) {
+    if (!user.value) {
       dawg.notify.info('Please sign in to backup a project.');
       return;
     }
@@ -155,43 +150,46 @@ export class BackupManager {
       return;
     }
 
-    const backupStatus = await backend.updateProject(this.user, encoded.id, encoded);
+    const backupStatus = await backend.updateProject(user.value, encoded.id, encoded);
 
     switch (backupStatus.type) {
       case 'error':
         dawg.notify.error('Unable to backup', { detail: backupStatus.message });
-        this.setError(true);
+        error.value = true;
         break;
       case 'success':
         // Make sure to set it back to false if there was an error previously
-        this.setError(false);
+        error.value = false;
         break;
     }
 
-    this.setSyncing(false);
+    syncing.value = false;
   }
 
-  public setUser(user: User | null) {
-    this.user = user;
+  function setUser(u: User | null) {
+    user.value = u;
 
     if (user === null) {
-      this.projects = [];
+      projects = [];
     }
   }
 
-  public dispose() {
-    //
-  }
-}
+  return {
+    loadProjects,
+    resetProjects,
+    openBackup,
+    openProject,
+    handleUnauthenticated,
+    deleteProject,
+    updateProject,
+    setUser,
+    user,
+    backup,
+  };
+};
 
-export const extension: dawg.Extension<{}, {}, { backup: t.BooleanC }, BackupManager> = {
+export const extension: dawg.Extension<{ backup: boolean }, {}, ReturnType<typeof createBackupAPI>> = {
   id: 'dawg.backup',
-  defineSettings() {
-    return {
-      backup: t.boolean,
-    };
-  },
-
   activate(context) {
     firebase.initializeApp({
       apiKey: 'AIzaSyCg8BcL3EbQpOpXFLwMx4h6XmdKtStVKhU',
@@ -202,20 +200,22 @@ export const extension: dawg.Extension<{}, {}, { backup: t.BooleanC }, BackupMan
       messagingSenderId: '540203128797',
     });
 
-    const manager = new BackupManager(context);
-    manager.setBackup(context.settings.get('backup', false));
+    // TODO probably not reactive??
+    const backup = computed(() => {
+      return context.workspace.get('backup', false);
+    }, (b) => {
+      context.workspace.set('backup', b);
+    });
 
-    context.subscriptions.push(context.settings.onDidChangeSettings(async (key, value) => {
-      switch (key) {
-        case 'backup':
-          if (value) {
-            manager.updateProject(await dawg.project.serializeProject());
-          } else {
-            manager.setBackup(false);
-          }
-          break;
+    watch(backup, async () => {
+      if (backup.value) {
+        manager.updateProject(await dawg.project.serializeProject());
+      } else {
+        backup.value = false;
       }
-    }));
+    });
+
+    const manager = createBackupAPI(context, backup);
 
     auth.watchUser({
       authenticated: (user) => {
@@ -244,16 +244,84 @@ export const extension: dawg.Extension<{}, {}, { backup: t.BooleanC }, BackupMan
       },
     });
 
-    context.subscriptions.push(manager);
-
     context.subscriptions.push(dawg.project.onDidSave((encoded) => {
       manager.updateProject(encoded);
     }));
 
-    return manager;
-  },
+    const component = Vue.extend(createComponent({
+      template: `
+      <div>
+        <div
+          v-if="authenticated"
+          style="font-size: 0.9em; padding: 5px 0px; color: rgba(255, 255, 255, 0.7)"
+        >
+          Signed in as {{ name }}
+        </div>
+        <google-button @click="signInOrSignOut">
+          {{ text }}
+        </google-button>
+      </div>
+      `,
+      setup() {
+        const logout = () => {
+          try {
+            auth.logout();
+            manager.backup.value = false;
+            manager.resetProjects();
+          } catch (e) {
+            dawg.notify.error('Unable to sign out of Google.', { detail: e.message });
+          }
+        };
 
-  deactivate() {
-    //
+        const signIn = () => {
+          try {
+            auth.signIn();
+          } catch (e) {
+            dawg.notify.error('Unable to sign into Google.', { detail: e.message });
+          }
+        };
+
+        const text = computed(() => {
+          if (manager.user.value) {
+            return 'Sign Out';
+          } else {
+            return 'Sign in with Google';
+          }
+        });
+
+        const signInOrSignOut = () => {
+          if (manager.user.value) {
+            logout();
+          } else {
+            signIn();
+          }
+        };
+
+        return {
+          text,
+          signInOrSignOut,
+          authenticated: computed(() => !!manager.user.value),
+          name: computed(() => {
+            if (manager.user.value) {
+              return manager.user.value.displayName;
+            }
+          }),
+        };
+      },
+    }));
+
+    ui.settings.push(component);
+    ui.settings.push({
+      title: 'Cloud Backup',
+      description: 'Whether to sync this project to the cloud',
+      type: 'boolean',
+      value: manager.backup,
+      disabled: computed(() => {
+        // return !general.project.name || !general.authenticated
+        return true;
+      }),
+    });
+
+    return manager;
   },
 };

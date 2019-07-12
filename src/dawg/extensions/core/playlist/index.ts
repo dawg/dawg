@@ -21,7 +21,7 @@ interface API {
   ghosts: Ghost[];
 }
 
-export const playlist = manager.activate<Workspace, {}, {}, API>({
+export const playlist = manager.activate<Workspace, {}, API>({
   id: 'dawg.playlist',
   activate(context) {
     const masterStart = value(0);

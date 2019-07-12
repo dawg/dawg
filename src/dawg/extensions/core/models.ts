@@ -6,6 +6,7 @@ import { computed, Wrapper } from 'vue-function-api';
 import { sampleViewer } from './sample-viewer';
 import { busy } from './busy';
 import { notify } from './notify';
+import { ui } from '@/dawg/ui';
 
 interface PythonError {
   type: 'error';
@@ -90,7 +91,7 @@ interface API {
   runModel: (opts: PythonOptions) => void;
 }
 
-export const models = manager.activate<{}, Global, {}, API>({
+export const models = manager.activate<{}, Global, API>({
   id: 'dawg.models',
   activate(context) {
     const modelsPath = computed(() => {
@@ -144,6 +145,20 @@ export const models = manager.activate<{}, Global, {}, API>({
         'vusic/transcription/scripts/infer.py',
         (samplePath) => `Converting ${path.basename(samplePath)} to MIDI`,
       ),
+    });
+
+    ui.settings.push({
+      type: 'string',
+      value: pythonPath,
+      title: 'Python Path',
+      description: 'The path to your python interpreter',
+    });
+
+    ui.settings.push({
+      type: 'string',
+      value: modelsPath,
+      title: 'Models Path',
+      description: 'The path to the `models` repository',
     });
 
     return {

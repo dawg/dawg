@@ -2,7 +2,7 @@ import * as t from 'io-ts';
 import { Extension, ExtensionContext, IExtensionContext, ExtensionData } from '@/dawg/extensions';
 import fs from '@/wrappers/fs';
 import path from 'path';
-import { GLOBAL_PATH, WORKSPACE_PATH, SETTINGS_PATH, PROJECT_PATH } from '@/constants';
+import { GLOBAL_PATH, WORKSPACE_PATH, PROJECT_PATH } from '@/constants';
 import { reverse } from '@/utils';
 import { FileLoader, FileWriter } from '@/core/loaders/file';
 import uuid from 'uuid';
@@ -34,7 +34,7 @@ interface JSON {
 const extensions: { [id: string]: any } = {};
 const resolved: { [id: string]: boolean } = {};
 
-let extensionsStack: Array<{ extension: Extension<any, any, any, any>, context: IExtensionContext }> = [];
+let extensionsStack: Array<{ extension: Extension<any, any, any>, context: IExtensionContext }> = [];
 
 const makeAndRead = (file: string): JSON => {
   if (!fs.existsSync(file)) {
@@ -51,7 +51,7 @@ const write = async (file: string, contents: any) => {
   await fs.writeFile(file, JSON.stringify(contents, null, 4));
 };
 
-const getDataFromExtensions = (key: 'workspace' | 'global' | 'settings') => {
+const getDataFromExtensions = (key: 'workspace' | 'global') => {
   const data: { [k: string]: string } = {};
   for (const { extension, context } of reverse(extensionsStack)) {
     try {
@@ -165,7 +165,6 @@ class Manager {
 
     let global: JSON = {};
     let workspace: JSON = {};
-    let settings: JSON = {};
 
     try {
       global = makeAndRead(GLOBAL_PATH);
@@ -181,14 +180,7 @@ class Manager {
       console.error(`Unable to load workspace at ${WORKSPACE_PATH}: ${e.message}`);
     }
 
-    try {
-      settings = makeAndRead(SETTINGS_PATH);
-    } catch (e) {
-      // tslint:disable-next-line:no-console
-      console.error(`Unable to load settings at ${SETTINGS_PATH}: ${e.message}`);
-    }
-
-    return new Manager(info, parsedProject, global, workspace, settings);
+    return new Manager(info, parsedProject, global, workspace);
   }
 
   constructor(
@@ -196,7 +188,6 @@ class Manager {
     public readonly parsedProject: JSON | null,
     public readonly global: JSON,
     public readonly workspace: JSON,
-    public readonly settings: JSON,
   ) {}
 }
 
@@ -273,18 +264,16 @@ export const manager = {
     }
 
     const g = getDataFromExtensions('global');
-    const s = getDataFromExtensions('settings');
     const w = getDataFromExtensions('workspace');
 
     // TODO(jacob) consider folder structure
     projectManager.workspace[projectManager.projectInfo.id] = w;
 
     await write(GLOBAL_PATH, g);
-    await write(SETTINGS_PATH, s);
     await write(WORKSPACE_PATH, projectManager.workspace);
   },
-  activate<W extends ExtensionData = {}, G extends ExtensionData = {}, S extends t.Props = {}, V = void>(
-    extension: Extension<W, G, S, V>,
+  activate<W extends ExtensionData = {}, G extends ExtensionData = {}, V = void>(
+    extension: Extension<W, G, V>,
   ): V {
     if (!projectManager) {
       projectManager = Manager.fromFileSystem();
@@ -296,9 +285,8 @@ export const manager = {
 
     const w = projectManager.workspace[extension.id] || {};
     const g = projectManager.global[extension.id] || {};
-    const s = projectManager.settings[extension.id] || {};
 
-    const context = new ExtensionContext(w, g, s);
+    const context = new ExtensionContext(w, g);
 
     // beware of the any type
     const api = extension.activate(context);
@@ -319,7 +307,7 @@ export const manager = {
 
     extensionsStack = [];
   },
-  get<V, T extends Extension<any, any, any, any>>(extension: T): ReturnType<T['activate']> {
+  get<V, T extends Extension<any, any, any>>(extension: T): ReturnType<T['activate']> {
     // tslint:disable-next-line:no-console
     console.log(resolved, extension.id);
     if (extensions.hasOwnProperty(extension.id)) {

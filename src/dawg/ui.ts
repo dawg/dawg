@@ -1,4 +1,5 @@
 import { VueConstructor } from 'vue';
+import { Wrapper } from 'vue-function-api';
 
 class StatusBarItem {
   public text = '';
@@ -54,6 +55,31 @@ export interface ToolbarItem {
   position: 'right' | 'left';
 }
 
+export interface StringField {
+  title: string;
+  description: string;
+  disabled?: Wrapper<boolean>;
+  type: 'string';
+  value: Wrapper<string>;
+}
+
+export interface SelectField {
+  title: string;
+  description: string;
+  disabled?: Wrapper<boolean>;
+  type: 'select';
+  value: Wrapper<string>;
+  options: string[];
+}
+
+export interface BooleanField {
+  title: string;
+  description: string;
+  disabled?: Wrapper<boolean>;
+  type: 'boolean';
+  value: Wrapper<boolean>;
+}
+
 type StatusBarElement = StatusBarItemElement | StatusBarVueElement;
 
 const statusBarElements: StatusBarElement[] = [];
@@ -69,6 +95,7 @@ interface UI {
   // We shoud add functions instead of allowing elements to interact directly with the arrays.
   mainSection: VueConstructor[];
   toolbar: ToolbarItem[];
+  settings: Array<StringField | BooleanField | SelectField | VueConstructor>;
   createStatusBarItem: () => StatusBarItem;
 }
 
@@ -80,6 +107,7 @@ export const ui: UI = {
   panels: [],
   mainSection: [],
   toolbar: [],
+  settings: [],
   createStatusBarItem(alignment?: StatusBarAlignment, priority?: number) {
     const statusBarItem = new StatusBarItem();
     statusBarElements.push({

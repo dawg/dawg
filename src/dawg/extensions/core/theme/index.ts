@@ -103,7 +103,7 @@ interface ITheme {
   insertStoredTheme: () => void;
 }
 
-const extension: Extension<{ theme: ThemeNames }, {}, {}, ITheme> = {
+const extension: Extension<{ theme: ThemeNames }, {}, ITheme> = {
   id: 'dawg.theme',
   activate(context) {
     const disposable = commands.registerCommand({

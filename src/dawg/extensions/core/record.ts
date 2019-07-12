@@ -10,10 +10,11 @@ import { ChunkGhost } from '@/core/ghosts/ghost';
 import { remote } from 'electron';
 import { Sample, ScheduledSample } from '@/core';
 import { workspace, general } from '@/store';
-import { value, Wrapper } from 'vue-function-api';
+import { value, Wrapper, watch } from 'vue-function-api';
 import { manager } from '../manager';
 import { project } from './project';
 import { applicationContext } from './application-context';
+import { ui } from '@/dawg/ui';
 
 export const DOCUMENTS_PATH = remote.app.getPath('documents');
 export const RECORDING_PATH = path.join(DOCUMENTS_PATH, remote.app.getName(), 'recordings');
@@ -46,7 +47,7 @@ function makeFileName() {
 
 let ghosts: ChunkGhost[] = [];
 
-export const extension: Extension<{}, { microphoneIn: string }, {}, { recording: Wrapper<boolean> }> = {
+export const extension: Extension<{}, { microphoneIn: string }, { recording: Wrapper<boolean> }> = {
   id: 'dawg.record',
   activate(context) {
     const recording = value(false);
@@ -59,12 +60,16 @@ export const extension: Extension<{}, { microphoneIn: string }, {}, { recording:
       }
     }));
 
+    const microphoneIn = value(context.global.get('microphoneIn', ''));
+    watch(microphoneIn, () => {
+      context.global.set('microphoneIn', microphoneIn.value);
+    });
+
     const startRecording = async (trackId: number) => {
       project.stopIfStarted();
       applicationContext.context.value = 'playlist';
       const time = general.project.master.transport.beats;
 
-      const microphoneIn = context.global.get('microphoneIn');
       if (microphoneIn === undefined) {
         notify.info('Please select a microphone from the settings.');
         return;
@@ -75,7 +80,7 @@ export const extension: Extension<{}, { microphoneIn: string }, {}, { recording:
       // enumerate devices and find our input device
       const devices = await navigator.mediaDevices.enumerateDevices();
       devices.forEach((device) => {
-        if ( device.label === microphoneIn ) {
+        if ( device.label === microphoneIn.value ) {
           deviceId = device.deviceId;
         }
       });
@@ -159,6 +164,23 @@ export const extension: Extension<{}, { microphoneIn: string }, {}, { recording:
     });
 
     context.subscriptions.push(disposable);
+
+    const options: string[] = [];
+    navigator.mediaDevices.enumerateDevices().then((media) => {
+      media.forEach((device) => {
+        if (device.kind === 'audioinput') {
+          options.push(device.label);
+        }
+      });
+    });
+
+    ui.settings.push({
+      title: 'Microphone',
+      description: '',
+      type: 'select',
+      value: microphoneIn,
+      options,
+    });
 
     return {
       recording,

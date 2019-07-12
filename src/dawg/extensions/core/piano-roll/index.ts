@@ -24,7 +24,7 @@ type Workspace = {
   pianoRollBeatWidth: number;
 };
 
-export const pianoRoll = manager.activate<Workspace, {}, {}, { addAction: (action: TabAction) => void }>({
+export const pianoRoll = manager.activate<Workspace, {}, { addAction: (action: TabAction) => void }>({
   id:  'dawg.piano-roll',
   activate(context) {
     context.subscriptions.push(commands.registerCommand({

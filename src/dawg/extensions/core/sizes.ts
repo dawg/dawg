@@ -12,7 +12,7 @@ type Workspace = {
   panelsSize: number;
 };
 
-export const sizes = manager.activate<Workspace, {}, {}, API>({
+export const sizes = manager.activate<Workspace, {}, API>({
   id: 'dawg.sizes',
   activate(context) {
     const sideBarSize = computed(() => {
