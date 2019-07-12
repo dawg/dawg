@@ -7,6 +7,9 @@ import * as clips from '@/dawg/extensions/extra/clips';
 import * as mixer from '@/dawg/extensions/core/mixer';
 import * as dawg from '@/dawg';
 
+// TODO(jacob)
+// const ChunkGhost = GH; // positionable(GH);
+
 const middleware = () => {
   storybook();
 

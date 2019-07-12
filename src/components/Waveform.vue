@@ -17,7 +17,7 @@ import { Nullable } from '@/utils';
 import { Watch } from '@/modules/update';
 import * as dawg from '@/dawg';
 
-@Component({components: { }})
+@Component
 export default class Waveform extends Vue {
   @Prop({ type: AudioBuffer, required: true }) public buffer!: AudioBuffer;
   @Prop({ type: Number, default: 0 }) public offset!: number;

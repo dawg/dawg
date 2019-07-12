@@ -7,7 +7,6 @@ import Icon from 'vue-awesome/components/Icon.vue';
 import VueLogger from 'vuejs-logger';
 import Update from '@/modules/update';
 import sequencer from '@/modules/sequencer';
-import Dawg from '@/modules/dawg';
 import DragNDrop from '@/modules/dragndrop';
 import '@/styles/global.sass';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
@@ -25,7 +24,6 @@ export default function middleware() {
   Vue.use(Split);
   Vue.use(Update);
   Vue.use(DragNDrop);
-  Vue.use(Dawg);
   Vue.use(Knobs);
   Vue.use(Status);
   Vue.use(VueLogger, {
