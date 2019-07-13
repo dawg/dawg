@@ -1,4 +1,5 @@
-import { Extension } from '@/dawg/extensions';
+import { Extension, createExtension } from '@/dawg/extensions';
+import * as t from 'io-ts';
 import { commands } from '@/dawg/extensions/core/commands';
 import { palette } from '@/dawg/extensions/core/palette';
 import { notify } from '@/dawg/extensions/core/notify';
@@ -46,8 +47,11 @@ function makeFileName() {
 
 let ghosts: ChunkGhost[] = [];
 
-export const extension: Extension<{}, { microphoneIn: string }, { recording: Wrapper<boolean> }> = {
+export const extension = createExtension({
   id: 'dawg.record',
+  global: {
+    microphoneIn: t.string,
+  },
   activate(context) {
     const recording = value(false);
 
@@ -59,10 +63,7 @@ export const extension: Extension<{}, { microphoneIn: string }, { recording: Wra
       }
     }));
 
-    const microphoneIn = value(context.global.get('microphoneIn', ''));
-    watch(microphoneIn, () => {
-      context.global.set('microphoneIn', microphoneIn.value);
-    });
+    const microphoneIn = context.global.microphoneIn;
 
     const startRecording = async (trackId: number) => {
       project.stopIfStarted();
@@ -185,7 +186,7 @@ export const extension: Extension<{}, { microphoneIn: string }, { recording: Wra
       recording,
     };
   },
-};
+});
 
 
 export const record = manager.activate(extension);

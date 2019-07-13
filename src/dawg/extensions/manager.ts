@@ -1,11 +1,12 @@
 import * as t from 'io-ts';
-import { Extension, ExtensionContext, IExtensionContext, ExtensionData } from '@/dawg/extensions';
+import { Extension, ExtensionContext, IExtensionContext, StateType, ExtensionProps, ReactiveDefinition } from '@/dawg/extensions';
 import fs from '@/wrappers/fs';
 import path from 'path';
 import { GLOBAL_PATH, WORKSPACE_PATH, PROJECT_PATH } from '@/constants';
-import { reverse } from '@/utils';
+import { reverse, keys } from '@/utils';
 import { FileLoader, FileWriter } from '@/core/loaders/file';
 import uuid from 'uuid';
+import { value } from 'vue-function-api';
 
 // TODO IF TWO instances of Vusic are opened at the same time
 // there will be an issue when writing to the fs because the
@@ -34,7 +35,7 @@ interface JSON {
 const extensions: { [id: string]: any } = {};
 const resolved: { [id: string]: boolean } = {};
 
-let extensionsStack: Array<{ extension: Extension<any, any, any>, context: IExtensionContext }> = [];
+let extensionsStack: Array<{ extension: Extension, context: IExtensionContext }> = [];
 
 const makeAndRead = (file: string): JSON => {
   if (!fs.existsSync(file)) {
@@ -55,7 +56,21 @@ const getDataFromExtensions = (key: 'workspace' | 'global') => {
   const data: { [k: string]: string } = {};
   for (const { extension, context } of reverse(extensionsStack)) {
     try {
-      data[extension.id] = JSON.stringify(context[key].getData());
+      const definition = extension[key];
+      if (!definition) {
+        return;
+      }
+
+      const state = context[key];
+      const toEncode: { [K in keyof typeof state]: t.TypeOf<StateType> } = {};
+      for (const k of keys(state)) {
+        toEncode[k] = state[k].value;
+      }
+
+      const type = t.strict(definition);
+      // TODO(jacob) ERROR?
+      const encoded = type.encode(toEncode);
+      data[extension.id] = JSON.stringify(encoded);
     } catch (e) {
       // tslint:disable-next-line:no-console
       console.warn('' + e);
@@ -272,7 +287,7 @@ export const manager = {
     await write(GLOBAL_PATH, g);
     await write(WORKSPACE_PATH, projectManager.workspace);
   },
-  activate<W extends ExtensionData = {}, G extends ExtensionData = {}, V = void>(
+  activate<W extends ExtensionProps, G extends ExtensionProps, V>(
     extension: Extension<W, G, V>,
   ): V {
     if (!projectManager) {
@@ -283,10 +298,39 @@ export const manager = {
     console.info('Activating ' + extension.id);
     resolved[extension.id] = false;
 
-    const w = projectManager.workspace[extension.id] || {};
-    const g = projectManager.global[extension.id] || {};
+    const getOrEmptyObject = (o: JSON, key: string) => {
+      return o[key] === undefined ? {} : o[key];
+    };
 
-    const context = new ExtensionContext(w, g);
+    const makeReactive = <P extends ExtensionProps>(definition: P | undefined, o: any) => {
+      if (!definition) {
+        return {} as ReactiveDefinition<P>;
+      }
+
+      const type = t.type(definition);
+      const result = type.decode(o);
+      if (result.isLeft()) {
+        // TODO(jacob) Better error
+        throw Error(result.toString());
+      }
+
+      const decoded = result.value;
+      const reactive = {} as ReactiveDefinition<P>;
+
+      for (const key of keys(definition)) {
+        reactive[key] = value(decoded[key]);
+      }
+
+      return reactive;
+    };
+
+    const w = getOrEmptyObject(projectManager.workspace, extension.id);
+    const g = getOrEmptyObject(projectManager.global, extension.id);
+
+    const reactiveWorkspace = makeReactive(extension.workspace, w);
+    const reactiveGlobal = makeReactive(extension.global, g);
+
+    const context = new ExtensionContext<W, G>(reactiveWorkspace, reactiveGlobal);
 
     // beware of the any type
     const api = extension.activate(context);

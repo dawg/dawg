@@ -1,10 +1,11 @@
-import { Extension } from '@/dawg/extensions';
+import { Extension, createExtension } from '@/dawg/extensions';
 import { Theme, Classes } from '@/dawg/extensions/core/theme/types';
 import { defaults } from '@/dawg/extensions/core/theme/defaults';
 import tinycolor from 'tinycolor2';
 import { palette } from '@/dawg/extensions/core/palette';
 import { commands } from '@/dawg/extensions/core/commands';
 import { manager } from '@/dawg/extensions/manager';
+import * as t from 'io-ts';
 
 export interface ThemeAugmentation {
   $theme: Theme;
@@ -103,26 +104,37 @@ interface ITheme {
   insertStoredTheme: () => void;
 }
 
-const extension: Extension<{ theme: ThemeNames }, {}, ITheme> = {
+const extension = createExtension({
   id: 'dawg.theme',
+  workspace: {
+    theme: t.string,
+  },
   activate(context) {
+    const themeNames = Object.keys(defaults) as ThemeNames[];
+
+    const checkIsValidTheme = (candidate: string) => {
+      if (themeNames.indexOf(candidate as ThemeNames) === -1) {
+        return 'Default';
+      }
+
+      return candidate as ThemeNames;
+    };
+
     const disposable = commands.registerCommand({
       text: 'Change Theme',
       callback: () => {
         // this is an annoying cast
-        const themeNames = Object.keys(defaults) as ThemeNames[];
-
-        const currentThemeName = context.workspace.get('theme', 'Default');
+        const currentThemeName = context.workspace.theme.value;
         palette.selectFromStrings(themeNames, {
           onDidSelect: (themeName) => {
-            context.workspace.set('theme', themeName);
+            context.workspace.theme.value = themeName;
             insertTheme(defaults[themeName]);
           },
           onDidKeyboardFocus: (themeName) => {
             insertTheme(defaults[themeName]);
           },
           onDidCancel: () => {
-            insertTheme(defaults[currentThemeName]);
+            insertTheme(defaults[checkIsValidTheme(currentThemeName)]);
           },
         });
       },
@@ -141,13 +153,13 @@ const extension: Extension<{ theme: ThemeNames }, {}, ITheme> = {
       success: '',
       warning: '',
       insertStoredTheme: () => {
-        const name = context.workspace.get('theme', 'Default');
+        const name = context.workspace.theme.value;
         // TODO ERROR handling
-        insertTheme(defaults[name]);
+        insertTheme(defaults[checkIsValidTheme(name)]);
       },
     };
   },
-};
+});
 
 
 export const theme = manager.activate(extension);

@@ -1,4 +1,5 @@
 import * as dawg from '@/dawg';
+import * as t from 'io-ts';
 import { User } from 'firebase';
 import Vue from 'vue';
 import backend, { ProjectInfo } from '@/dawg/extensions/extra/backup/backend';
@@ -12,9 +13,10 @@ import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, watch, Wrapper, value, createComponent } from 'vue-function-api';
 import { ui } from '@/dawg/ui';
 import { project } from '../../core/project';
+import { createExtension } from '../..';
 
 const createBackupAPI = (
-  context: dawg.IExtensionContext<{ backup: boolean }>,
+  subscriptions: dawg.Subscription[],
   backup: Wrapper<boolean>,
 ) => {
   const user = value<User | null>(null);
@@ -47,7 +49,7 @@ const createBackupAPI = (
     }
   });
 
-  context.subscriptions.push(item);
+  subscriptions.push(item);
 
   async function loadProjects(user: User) {
     const res =  await backend.getProjects(user);
@@ -189,9 +191,13 @@ const createBackupAPI = (
   };
 };
 
-export const extension: dawg.Extension<{ backup: boolean }, {}, ReturnType<typeof createBackupAPI>> = {
+export const extension = createExtension({
   id: 'dawg.backup',
+  workspace: {
+    backup: t.boolean,
+  },
   activate(context) {
+
     firebase.initializeApp({
       apiKey: 'AIzaSyCg8BcL3EbQpOpXFLwMx4h6XmdKtStVKhU',
       authDomain: 'dawg-backup.firebaseapp.com',
@@ -201,12 +207,7 @@ export const extension: dawg.Extension<{ backup: boolean }, {}, ReturnType<typeo
       messagingSenderId: '540203128797',
     });
 
-    // TODO probably not reactive??
-    const backup = computed(() => {
-      return context.workspace.get('backup', false);
-    }, (b) => {
-      context.workspace.set('backup', b);
-    });
+    const backup = context.workspace.backup;
 
     watch(backup, async () => {
       if (backup.value) {
@@ -216,7 +217,7 @@ export const extension: dawg.Extension<{ backup: boolean }, {}, ReturnType<typeo
       }
     });
 
-    const manager = createBackupAPI(context, backup);
+    const manager = createBackupAPI(context.subscriptions, backup);
 
     auth.watchUser({
       authenticated: (user) => {
@@ -324,4 +325,4 @@ export const extension: dawg.Extension<{ backup: boolean }, {}, ReturnType<typeo
 
     return manager;
   },
-};
+});

@@ -1,19 +1,14 @@
+import * as t from 'io-ts';
 import { manager } from '@/dawg/extensions/manager';
-import { value, watch, Wrapper } from 'vue-function-api';
 
-export const panels = manager.activate<{ openedPanel: string }, {}, { openedPanel: Wrapper<string | undefined> }>({
+export const panels = manager.activate({
   id: 'dawg.panels',
+  workspace: {
+    openedPanel: t.string,
+  },
   activate(context) {
-    const openedPanel = value(context.workspace.get('openedPanel'));
-
-    watch(openedPanel, () => {
-      if (openedPanel.value !== undefined) {
-        context.workspace.set('openedPanel', openedPanel.value);
-      }
-    });
-
     return {
-      openedPanel,
+      openedPanel: context.workspace.openedPanel,
     };
   },
 });

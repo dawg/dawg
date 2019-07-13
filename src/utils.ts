@@ -221,3 +221,15 @@ export const addDisposableListener = <K extends keyof WindowEventMap>(
     },
   };
 };
+
+export const keys = <O>(o: O): Array<keyof O & string> => {
+  return Object.keys(o) as Array<keyof O & string>;
+};
+
+export const mapObject = <V, T, O extends { [k: string]: V }>(o: O, f: (v: V) => T) => {
+  const transformed: { [k: string]: T } = {};
+  for (const key of keys(o)) {
+    transformed[key] = f(o[key]);
+  }
+  return transformed as { [K in keyof O]: T };
+};

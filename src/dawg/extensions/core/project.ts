@@ -3,7 +3,7 @@ import fs from 'mz/fs';
 import { Sample, ScheduledSample } from '@/core';
 import { Beats } from '@/core/types';
 import { IProject, Project, ProjectType } from '@/store/project';
-import { Extension } from '@/dawg/extensions';
+import { Extension, createExtension } from '@/dawg/extensions';
 // TODO(jacob) Wrap
 import { remote } from 'electron';
 import { manager } from '@/dawg/extensions/manager';
@@ -251,7 +251,7 @@ const online = (p: Project) => () => {
   });
 };
 
-const extension: Extension<{}, {}, ReturnType<typeof projectApi>> = {
+const extension = createExtension({
   id: 'dawg.project',
   activate(context) {
     const api = projectApi();
@@ -350,6 +350,6 @@ const extension: Extension<{}, {}, ReturnType<typeof projectApi>> = {
 
     return api;
   },
-};
+});
 
 export const project = manager.activate(extension);

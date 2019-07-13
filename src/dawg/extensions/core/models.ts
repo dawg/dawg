@@ -1,4 +1,5 @@
 import fs from '@/wrappers/fs';
+import * as t from 'io-ts';
 import { PythonShell, Options } from 'python-shell';
 import path from 'path';
 import { manager } from '../manager';
@@ -82,29 +83,12 @@ export async function runModel(opts: PythonOptions) {
   }
 }
 
-// tslint:disable-next-line:interface-over-type-literal
-type Global = { modelsPath: string, pythonPath: string };
-
-interface API {
-  modelsPath: Wrapper<string>;
-  pythonPath: Wrapper<string>;
-  runModel: (opts: PythonOptions) => void;
-}
-
-export const models = manager.activate<{}, Global, API>({
+export const models = manager.activate({
   id: 'dawg.models',
+  global: { modelsPath: t.string, pythonPath: t.string },
   activate(context) {
-    const modelsPath = computed(() => {
-      return context.global.get('modelsPath', '');
-    }, (value) => {
-      context.global.set('modelsPath', value);
-    });
-
-    const pythonPath = computed(() => {
-      return context.global.get('pythonPath', '');
-    }, (value) => {
-      context.global.set('pythonPath', value);
-    });
+    const modelsPath = context.global.modelsPath;
+    const pythonPath = context.global.pythonPath;
 
     const createCallback = (scriptPath: string, notifyText: (samplePath: string) => string) => (samplePath: string) => {
       const provider = busy(notifyText(samplePath));

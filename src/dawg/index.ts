@@ -20,7 +20,7 @@ export { playlist } from '@/dawg/extensions/core/playlist';
 export { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 export { window } from '@/dawg/extensions/core/window';
 export { Key, Command } from '@/dawg/extensions/core/commands';
-export { IExtensionContext, Extension, createExtension } from '@/dawg/extensions';
+export { IExtensionContext, Extension, createExtension, Subscription } from '@/dawg/extensions';
 export { manager } from '@/dawg/extensions/manager';
 
 // Ignore unused imports here

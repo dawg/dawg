@@ -1,4 +1,5 @@
 import * as dawg from '@/dawg';
+import * as t from 'io-ts';
 import SmartFileExplorer from '@/dawg/extensions/extra/explorer/SmartFileExplorer.vue';
 import Vue from 'vue';
 import { remote } from 'electron';
@@ -6,12 +7,15 @@ import { Sample } from '@/core';
 import { commands } from '@/dawg/extensions/core/commands';
 import { panels } from '@/dawg/extensions/core/panels';
 import { sampleViewer } from '../../core/sample-viewer';
+import { createExtension } from '../..';
 
-export const extension: dawg.Extension<{}, { folders: string[] }> = {
+export const extension = createExtension({
   id: 'dawg.explorer',
-
+  global: {
+    folders: t.array(t.string),
+  },
   activate(context) {
-    const folders = context.global.get('folders', []);
+    const folders = context.global.folders.value;
 
     context.subscriptions.push(commands.registerCommand({
       text: 'Open File Explorer',
@@ -96,4 +100,4 @@ export const extension: dawg.Extension<{}, { folders: string[] }> = {
 
     context.subscriptions.push(addFolder);
   },
-};
+});

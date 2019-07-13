@@ -1,4 +1,5 @@
 import Vue from 'vue';
+import * as t from 'io-ts';
 import { manager } from '@/dawg/extensions/manager';
 import { project } from '@/dawg/extensions/core/project';
 import { record } from '@/dawg/extensions/core/record';
@@ -8,36 +9,22 @@ import { ui } from '@/dawg/ui';
 import { Ghost } from '@/core/ghosts/ghost';
 import { applicationContext } from '../application-context';
 
-// tslint:disable-next-line:interface-over-type-literal
-type Workspace = {
-  playlistRowHeight: number;
-  playlistBeatWidth: number;
-};
-
-interface API {
-  masterStart: Wrapper<number>;
-  masterEnd: Wrapper<number>;
-  ghosts: Ghost[];
-}
-
-export const playlist = manager.activate<Workspace, {}, API>({
+export const playlist = manager.activate({
   id: 'dawg.playlist',
+  workspace: {
+    playlistRowHeight: t.number,
+    playlistBeatWidth: t.number,
+  },
   activate(context) {
     const masterStart = value(0);
     const masterEnd = value(0);
     const ghosts: Ghost[] = [];
 
-    const playlistRowHeight = computed(() => {
-      return context.workspace.get('playlistRowHeight', 16);
-    }, (height: number) => {
-      context.workspace.set('playlistRowHeight', height);
-    });
+    // TODO DEFAULT 16
+    const playlistRowHeight = context.workspace.playlistRowHeight;
 
-    const playlistBeatWidth = computed(() => {
-      return context.workspace.get('playlistBeatWidth', 80);
-    }, (width: number) => {
-      context.workspace.set('playlistBeatWidth', width);
-    });
+    // TODO DEFAULT 80
+    const playlistBeatWidth = context.workspace.playlistBeatWidth;
 
     const component = Vue.extend({
       name: 'PlaylistSequencerWrapper',
@@ -79,18 +66,18 @@ export const playlist = manager.activate<Workspace, {}, API>({
         /**
          * Whenever we add a sample, if it hasn't been imported before, add it the the list of project samples.
          */
-        async checkPrototype(prototype: ScheduledPattern | ScheduledSample) {
+        checkPrototype(prototype: ScheduledPattern | ScheduledSample) {
           if (prototype.component !== 'sample-element') {
             return;
           }
 
           const sample = prototype.sample;
-          if ((await this.project).samples.indexOf(prototype.sample) >= 0) {
+          if (this.project.samples.indexOf(prototype.sample) >= 0) {
             return;
           }
 
           this.$log.debug('Adding a sample!');
-          (await this.project).addSample(sample);
+          this.project.addSample(sample);
         },
       },
     });

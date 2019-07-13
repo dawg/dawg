@@ -1,4 +1,5 @@
 import Vue, { VueConstructor } from 'vue';
+import * as t from 'io-ts';
 import PianoRollSequencer from '@/dawg/extensions/core/piano-roll/PianoRollSequencer.vue';
 import Note from '@/dawg/extensions/core/piano-roll/Note.vue';
 import { instruments } from '@/dawg/extensions/core/instruments';
@@ -18,14 +19,12 @@ const createElement = (o: VueConstructor) => {
   return positionable(resizable(selectable(o)));
 };
 
-// tslint:disable-next-line:interface-over-type-literal
-type Workspace = {
-  pianoRollRowHeight: number;
-  pianoRollBeatWidth: number;
-};
-
-export const pianoRoll = manager.activate<Workspace, {}, { addAction: (action: TabAction) => void }>({
+export const pianoRoll = manager.activate({
   id:  'dawg.piano-roll',
+  workspace: {
+    pianoRollRowHeight: t.number,
+    pianoRollBeatWidth: t.number,
+  },
   activate(context) {
     context.subscriptions.push(commands.registerCommand({
       text: 'Open Piano Roll',
@@ -35,17 +34,11 @@ export const pianoRoll = manager.activate<Workspace, {}, { addAction: (action: T
       },
     }));
 
-    const pianoRollRowHeight = computed(() => {
-      return context.workspace.get('pianoRollRowHeight', 16);
-    }, (height: number) => {
-      context.workspace.set('pianoRollRowHeight', height);
-    });
+    // TODO DEFAULT 16
+    const pianoRollRowHeight = context.workspace.pianoRollRowHeight;
 
-    const pianoRollBeatWidth = computed(() => {
-      return context.workspace.get('pianoRollBeatWidth', 80);
-    }, (height: number) => {
-      context.workspace.set('pianoRollBeatWidth', height);
-    });
+    // TODO DEFAULT 80
+    const pianoRollBeatWidth = context.workspace.pianoRollBeatWidth;
 
     Vue.component('Note', createElement(Note));
 

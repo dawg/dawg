@@ -1,91 +1,64 @@
 import * as t from 'io-ts';
+import { Wrapper } from 'vue-function-api';
 
-type BasicType = string | number | boolean;
-
-export interface ExtensionData {
-  [key: string]: BasicType | BasicType[];
-}
-
-export interface IExtensionState<T extends ExtensionData> {
-  get<K extends keyof T & string>(key: K): T[K] | undefined;
-  get<K extends keyof T & string>(key: K, defaultValue: T[K]): T[K];
-  set<K extends keyof T & string>(key: K, value: T[K]): Promise<void>;
-  remove<K extends keyof T & string>(key: K): void;
-  getData(): ExtensionData;
-}
+export type ReactiveDefinition<P extends ExtensionProps> = { [K in keyof P]: Wrapper<t.TypeOf<P[K]>> };
 
 export interface IExtensionContext<
-  W extends ExtensionData = {},
-  G extends ExtensionData = {},
+  W extends ExtensionProps = ExtensionProps,
+  G extends ExtensionProps = ExtensionProps,
 > {
   subscriptions: Subscription[];
-  workspace: IExtensionState<W>;
-  global: IExtensionState<G>;
+  workspace: ReactiveDefinition<W>;
+  global: ReactiveDefinition<G>;
 }
 
-interface Subscription {
+export interface Subscription {
   dispose: () => void;
 }
 
-class State<T extends ExtensionData> implements IExtensionState<T> {
-  constructor(private config: ExtensionData) {}
-
-  public get<K extends keyof T & string>(key: K, defaultValue?: T[K]) {
-    if (defaultValue === undefined) {
-      // FIXME Remove this any. We shouldn't need it but for some reason we do.
-      return this.config[key] as any;
-    } else {
-      return this.config[key] === undefined ? defaultValue : this.config[key];
-    }
-  }
-
-  public set<K extends keyof T & string>(key: K, value: T[K]): Promise<void> {
-    return new Promise((resolve) => {
-      this.config[key] = value;
-      resolve();
-    });
-  }
-
-  public remove<K extends keyof T & string>(key: K) {
-    delete this.config[key];
-  }
-
-  public getData() {
-    return this.config;
-  }
-}
-
 export class ExtensionContext<
-  W extends ExtensionData = {},
-  G extends ExtensionData = {},
+  W extends ExtensionProps = {},
+  G extends ExtensionProps = {},
 > implements IExtensionContext<W, G> {
   public subscriptions: Subscription[] = [];
-  public workspace: State<W>;
-  public global: State<G>;
+  public workspace: ReactiveDefinition<W>;
+  public global: ReactiveDefinition<G>;
 
-  constructor(workspace: ExtensionData, global: ExtensionData) {
-    this.workspace = new State<W>(workspace);
-    this.global = new State<G>(global);
+  constructor(workspace: ReactiveDefinition<W>, global: ReactiveDefinition<G>) {
+    this.workspace = workspace;
+    this.global = global;
   }
 }
 
+export type Primitive = t.BooleanC | t.StringC | t.NumberC;
+export type ArrayPrimitive = t.ArrayC<t.BooleanC> | t.ArrayC<t.StringC> | t.ArrayC<t.NumberC>;
+export type StateType = Primitive | ArrayPrimitive;
 
+export interface ExtensionProps {
+  [key: string]: StateType;
+}
+
+type TypeOf<P extends ExtensionProps> = t.TypeOf<t.TypeC<P>>;
+
+type T = TypeOf<{ tt: t.BooleanC }>;
 
 export interface Extension<
-  WorkspaceType extends ExtensionData = {},
-  GlobalType extends ExtensionData = {},
-  V = void
+  W extends ExtensionProps = ExtensionProps,
+  G extends ExtensionProps = ExtensionProps,
+  V = void,
 > {
   id: string;
-  activate(context: IExtensionContext<WorkspaceType, GlobalType>): V;
+  workspace?: W;
+  global?: G;
+  activate(context: IExtensionContext<W, G>): V;
   // TODO ACTUALLY DEACTIVATE
-  deactivate?(context: IExtensionContext<WorkspaceType, GlobalType>): void;
+  deactivate?(context: IExtensionContext<W, G>): void;
 }
 
 export const createExtension = <
-  W extends ExtensionData = {},
-  G extends ExtensionData = {},
-  V = void
+  W extends ExtensionProps,
+  G extends ExtensionProps,
+  V
 >(extension: Extension<W, G, V>) => {
   return extension;
 };
