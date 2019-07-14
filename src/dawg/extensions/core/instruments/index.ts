@@ -73,7 +73,7 @@ export const instruments = manager.activate({
       () => {
         if (!selectedScoreId.value) { return null; }
         if (!scoreLookup.value) { return null; }
-        if (!scoreLookup.hasOwnProperty(selectedScoreId.value)) { return null; }
+        if (!scoreLookup.value.hasOwnProperty(selectedScoreId.value)) { return null; }
         return scoreLookup.value[selectedScoreId.value];
       },
       (pattern) => {

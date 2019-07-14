@@ -50,17 +50,18 @@ export const pianoRoll = manager.activate({
       <piano-roll-sequencer
         style="height: 100%"
         v-if="selectedScore.value"
-        :pattern="selectedPattern"
+        :pattern="selectedPattern.value"
         :score="selectedScore.value"
         :play="pianoRollPlay"
-        :steps-per-beat="project.project.stepsPerBeat"
-        :beats-per-measure="project.project.beatsPerMeasure"
+        :steps-per-beat="project.stepsPerBeat"
+        :beats-per-measure="project.beatsPerMeasure"
         :row-height.sync="pianoRollRowHeight.value"
         :px-per-beat.sync="pianoRollBeatWidth.value"
         :is-recording="recording.value"
       ></piano-roll-sequencer>
       `,
       data: () => ({
+        project: project.project,
         selectedScore: instruments.selectedScore,
         selectedPattern: patterns.selectedPattern,
         recording,
