@@ -1,5 +1,4 @@
 import Vue from 'vue';
-import storybook from '@/storybook';
 import * as backup from '@/dawg/extensions/extra/backup';
 import * as explorer from '@/dawg/extensions/extra/explorer';
 import * as audioFiles from '@/dawg/extensions/extra/audio-files';
@@ -7,12 +6,31 @@ import * as clips from '@/dawg/extensions/extra/clips';
 import * as mixer from '@/dawg/extensions/core/mixer';
 import * as dawg from '@/dawg';
 
+import Vuetify from 'vuetify';
+import 'vue-awesome/icons';
+import 'vuetify/dist/vuetify.css';
+import '@/styles/material.css';
+import Icon from 'vue-awesome/components/Icon.vue';
+import VueLogger from 'vuejs-logger';
+import Update from '@/modules/update';
+import sequencer from '@/modules/sequencer';
+import DragNDrop from '@/modules/dragndrop';
+import '@/styles/global.sass';
+import VuePerfectScrollbar from 'vue-perfect-scrollbar';
+import { DragElement } from '@/modules/draggable';
+import Knobs from '@/modules/knobs';
+import Split from '@/modules/split';
+import Status from '@/modules/status';
+
+import Piano from '@/components/Piano.vue';
+import DTrack from '@/components/DTrack.vue';
+import TooltipIcon from '@/components/TooltipIcon.vue';
+import DotButton from '@/components/DotButton.vue';
+
 // TODO(jacob)
 // const ChunkGhost = GH; // positionable(GH);
 
 const middleware = () => {
-  storybook();
-
   // This imports all .vue files in the components folder
   // See https://vuejs.org/v2/guide/components-registration.html
   const components = require.context(
@@ -45,6 +63,28 @@ const middleware = () => {
   dawg.manager.activate(clips.extension);
 
   dawg.manager.activate(mixer.extension);
+
+  Vue.use(Split);
+  Vue.use(Update);
+  Vue.use(DragNDrop);
+  Vue.use(Knobs);
+  Vue.use(Status);
+  Vue.use(VueLogger, {
+    logLevel: 'info',
+  });
+  Vue.use(sequencer);
+  Vue.component('VuePerfectScrollbar', VuePerfectScrollbar);
+
+  Vue.use(Vuetify, {theme: false});
+  Vue.component('icon', Icon);
+
+  // TODO Move these to the dawg module
+  Vue.component('Piano', Piano);
+  Vue.component('DTrack', DTrack);
+  Vue.component('DotButton', DotButton);
+  Vue.component('TooltipIcon', TooltipIcon);
+
+  Vue.component('DragElement', DragElement);
 };
 
 export default middleware;
