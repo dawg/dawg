@@ -9,7 +9,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Mixins, Inject } from 'vue-property-decorator';
-import MiniScore from '@/modules/dawg/MiniScore.vue';
+import MiniScore from '@/components/MiniScore.vue';
 import { Note, ScheduledPattern } from '@/core';
 
 @Component({

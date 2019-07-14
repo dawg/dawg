@@ -14,6 +14,9 @@ export const extension = createExtension({
   global: {
     folders: t.array(t.string),
   },
+  globalDefaults: {
+    folders: [] as string[],
+  },
   activate(context) {
     const folders = context.global.folders.value;
 

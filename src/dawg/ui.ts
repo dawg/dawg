@@ -60,7 +60,7 @@ export interface StringField {
   description: string;
   disabled?: Wrapper<boolean>;
   type: 'string';
-  value: Wrapper<string>;
+  value: Wrapper<string | undefined>;
 }
 
 export interface SelectField {
@@ -68,7 +68,7 @@ export interface SelectField {
   description: string;
   disabled?: Wrapper<boolean>;
   type: 'select';
-  value: Wrapper<string>;
+  value: Wrapper<string | undefined>;
   options: string[];
 }
 

@@ -25,7 +25,6 @@
             <toolbar
               class="toolbar"
               :height="TOOLBAR_HEIGHT"
-              :transport="workspace.transport"
               :state="dawg.project.state.value"
               :get-seconds="dawg.project.getTime"
               :play="dawg.project.play"

@@ -64,7 +64,7 @@
 import Vue from 'vue';
 import Tone from 'tone';
 import DotButton from '@/components/DotButton.vue';
-import MiniScore from '@/modules/dawg/MiniScore.vue';
+import MiniScore from '@/components/MiniScore.vue';
 import ChannelSelect from '@/components/ChannelSelect.vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { Note, Instrument } from '@/core';

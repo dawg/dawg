@@ -22,15 +22,15 @@ interface PythonSuccess {
 }
 
 interface PythonOptions {
-  pythonPath: string | null;
-  modelsPath: string | null;
+  pythonPath: string | undefined;
+  modelsPath: string | undefined;
   scriptPath: string | null;
   samplePath: string | null;
   cb: (result: PythonError | PythonSuccess) => void;
 }
 
 export async function runModel(opts: PythonOptions) {
-  if (opts.pythonPath === null || !(await fs.exists(opts.pythonPath))) {
+  if (opts.pythonPath === undefined || !(await fs.exists(opts.pythonPath))) {
     opts.cb({
       type: 'error',
       message: 'Python Path Not Found',
@@ -39,7 +39,7 @@ export async function runModel(opts: PythonOptions) {
 
     return;
   }
-  if (opts.modelsPath === null ||
+  if (opts.modelsPath === undefined ||
       opts.scriptPath === null ||
       !(await fs.exists(path.join(opts.modelsPath, opts.scriptPath)))) {
     opts.cb({
@@ -85,7 +85,10 @@ export async function runModel(opts: PythonOptions) {
 
 export const models = manager.activate({
   id: 'dawg.models',
-  global: { modelsPath: t.string, pythonPath: t.string },
+  global: {
+    modelsPath: t.string,
+    pythonPath: t.string,
+  },
   activate(context) {
     const modelsPath = context.global.modelsPath;
     const pythonPath = context.global.pythonPath;

@@ -112,7 +112,11 @@ const extension = createExtension({
   activate(context) {
     const themeNames = Object.keys(defaults) as ThemeNames[];
 
-    const checkIsValidTheme = (candidate: string) => {
+    const checkIsValidTheme = (candidate: string | undefined) => {
+      if (candidate === undefined) {
+        return 'Default';
+      }
+
       if (themeNames.indexOf(candidate as ThemeNames) === -1) {
         return 'Default';
       }

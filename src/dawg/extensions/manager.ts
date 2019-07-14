@@ -1,5 +1,13 @@
 import * as t from 'io-ts';
-import { Extension, ExtensionContext, IExtensionContext, StateType, ExtensionProps, ReactiveDefinition } from '@/dawg/extensions';
+import {
+  Extension,
+  ExtensionContext,
+  IExtensionContext,
+  StateType,
+  ExtensionProps,
+  ReactiveDefinition,
+  ExtensionDefaults,
+} from '@/dawg/extensions';
 import fs from '@/wrappers/fs';
 import path from 'path';
 import { GLOBAL_PATH, WORKSPACE_PATH, PROJECT_PATH } from '@/constants';
@@ -7,6 +15,7 @@ import { reverse, keys } from '@/utils';
 import { FileLoader, FileWriter } from '@/core/loaders/file';
 import uuid from 'uuid';
 import { value } from 'vue-function-api';
+import { PathReporter } from 'io-ts/lib/PathReporter';
 
 // TODO IF TWO instances of Vusic are opened at the same time
 // there will be an issue when writing to the fs because the
@@ -62,12 +71,12 @@ const getDataFromExtensions = (key: 'workspace' | 'global') => {
       }
 
       const state = context[key];
-      const toEncode: { [K in keyof typeof state]: t.TypeOf<StateType> } = {};
+      const toEncode: { [K in keyof typeof state]: t.TypeOf<StateType> | undefined } = {};
       for (const k of keys(state)) {
         toEncode[k] = state[k].value;
       }
 
-      const type = t.strict(definition);
+      const type = t.partial(definition);
       // TODO(jacob) ERROR?
       const encoded = type.encode(toEncode);
       data[extension.id] = JSON.stringify(encoded);
@@ -212,6 +221,8 @@ export type ProjectInfo =
 
 let projectManager: Manager | null = null;
 
+const notificationQueue: string[] = [];
+
 export const manager = {
   getOpenedFile() {
     if (!projectManager) {
@@ -287,8 +298,13 @@ export const manager = {
     await write(GLOBAL_PATH, g);
     await write(WORKSPACE_PATH, projectManager.workspace);
   },
-  activate<W extends ExtensionProps, G extends ExtensionProps, V>(
-    extension: Extension<W, G, V>,
+  activate<
+    W extends ExtensionProps,
+    WD extends ExtensionDefaults<W>,
+    G extends ExtensionProps, V,
+    GD extends ExtensionDefaults<G>,
+  >(
+    extension: Extension<W, WD, G, GD, V>,
   ): V {
     if (!projectManager) {
       projectManager = Manager.fromFileSystem();
@@ -302,23 +318,43 @@ export const manager = {
       return o[key] === undefined ? {} : o[key];
     };
 
-    const makeReactive = <P extends ExtensionProps>(definition: P | undefined, o: any) => {
+    const makeReactive = <
+      P extends ExtensionProps,
+      D extends ExtensionDefaults<P>,
+    >(definition: P | undefined, defaults: D | undefined, o: any) => {
       if (!definition) {
-        return {} as ReactiveDefinition<P>;
+        return {} as ReactiveDefinition<P, D>;
       }
 
-      const type = t.type(definition);
+      const getDefault = (key: keyof D) => {
+        if (!defaults) {
+          return undefined;
+        }
+
+        return defaults[key];
+      };
+
+      const type = t.partial(definition);
       const result = type.decode(o);
       if (result.isLeft()) {
-        // TODO(jacob) Better error
-        throw Error(result.toString());
+        // TODO(jacob) Actually report this error
+        notificationQueue.push(
+          ...PathReporter.report(result),
+        );
+        throw Error(PathReporter.report(result).join('\n'));
       }
 
       const decoded = result.value;
-      const reactive = {} as ReactiveDefinition<P>;
+      const reactive = {} as ReactiveDefinition<P, D>;
 
       for (const key of keys(definition)) {
-        reactive[key] = value(decoded[key]);
+        let decodedValue = decoded[key];
+        if (decodedValue === undefined && defaults) {
+          decodedValue = defaults[key];
+        }
+
+        // FIXME remove this any
+        reactive[key] = value(decodedValue as any);
       }
 
       return reactive;
@@ -327,10 +363,10 @@ export const manager = {
     const w = getOrEmptyObject(projectManager.workspace, extension.id);
     const g = getOrEmptyObject(projectManager.global, extension.id);
 
-    const reactiveWorkspace = makeReactive(extension.workspace, w);
-    const reactiveGlobal = makeReactive(extension.global, g);
+    const reactiveWorkspace = makeReactive(extension.workspace, extension.workspaceDefaults, w);
+    const reactiveGlobal = makeReactive(extension.global, extension.globalDefaults, g);
 
-    const context = new ExtensionContext<W, G>(reactiveWorkspace, reactiveGlobal);
+    const context = new ExtensionContext<W, WD, G, GD>(reactiveWorkspace, reactiveGlobal);
 
     // beware of the any type
     const api = extension.activate(context);
@@ -365,4 +401,5 @@ export const manager = {
 
     return extensions[extension.id] as ReturnType<T['activate']>;
   },
+  notificationQueue,
 };

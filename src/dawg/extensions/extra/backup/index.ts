@@ -196,6 +196,9 @@ export const extension = createExtension({
   workspace: {
     backup: t.boolean,
   },
+  workspaceDefaults: {
+    backup: false,
+  },
   activate(context) {
 
     firebase.initializeApp({

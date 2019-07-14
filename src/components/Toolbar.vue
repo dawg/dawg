@@ -55,7 +55,6 @@ import { Component, Prop } from 'vue-property-decorator';
 import Bpm from '@/components/Bpm.vue';
 import TimeDisplay from '@/components/TimeDisplay.vue';
 import { Watch } from '@/modules/update';
-import Transport from '@/modules/audio/transport';
 import { Nullable } from '@/utils';
 import { Signal } from 'tone';
 import * as dawg from '@/dawg';

@@ -91,6 +91,10 @@ export default class SideTabs extends Vue {
       return [];
     }
 
+    if (this.itemLookup[this.openedSideTab.value] === undefined) {
+      return [];
+    }
+
     return this.itemLookup[this.openedSideTab.value].actions || [];
   }
 

@@ -15,15 +15,16 @@ export const playlist = manager.activate({
     playlistRowHeight: t.number,
     playlistBeatWidth: t.number,
   },
+  workspaceDefaults: {
+    playlistRowHeight: 16,
+    playlistBeatWidth: 80,
+  },
   activate(context) {
     const masterStart = value(0);
     const masterEnd = value(0);
     const ghosts: Ghost[] = [];
 
-    // TODO DEFAULT 16
     const playlistRowHeight = context.workspace.playlistRowHeight;
-
-    // TODO DEFAULT 80
     const playlistBeatWidth = context.workspace.playlistBeatWidth;
 
     const component = Vue.extend({

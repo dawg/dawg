@@ -10,7 +10,7 @@
 <script lang="ts">
 
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import Waveform from '@/modules/dawg/Waveform.vue';
+import Waveform from '@/components/Waveform.vue';
 import { ChunkGhost as Ghost } from '@/core/ghosts/ghost';
 import * as dawg from '@/dawg';
 

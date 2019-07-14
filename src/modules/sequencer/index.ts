@@ -4,7 +4,7 @@ import PE from '@/modules/sequencer/PatternElement.vue';
 import SE from '@/modules/sequencer/SampleElement.vue';
 import PlaylistSequencer from '@/modules/sequencer/PlaylistSequencer.vue';
 import ACE from '@/modules/sequencer/AutomationClipElement.vue';
-import Waveform from '@/modules/dawg/Waveform.vue';
+import Waveform from '@/components/Waveform.vue';
 import Scroller from '@/modules/sequencer/Scroller.vue';
 import { positionable, resizable, selectable, colored } from '@/modules/sequencer/helpers';
 

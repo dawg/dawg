@@ -25,6 +25,10 @@ export const pianoRoll = manager.activate({
     pianoRollRowHeight: t.number,
     pianoRollBeatWidth: t.number,
   },
+  workspaceDefaults: {
+    pianoRollRowHeight: 16,
+    pianoRollBeatWidth: 80,
+  },
   activate(context) {
     context.subscriptions.push(commands.registerCommand({
       text: 'Open Piano Roll',
@@ -34,10 +38,7 @@ export const pianoRoll = manager.activate({
       },
     }));
 
-    // TODO DEFAULT 16
     const pianoRollRowHeight = context.workspace.pianoRollRowHeight;
-
-    // TODO DEFAULT 80
     const pianoRollBeatWidth = context.workspace.pianoRollBeatWidth;
 
     Vue.component('Note', createElement(Note));
