@@ -27,7 +27,10 @@ export const busy = manager.activate({
     };
 
     // TODO(jacob) Thing for sorting
-    ui.statusBarRight.push(BusySignal);
+    ui.statusBar.push({
+      component: BusySignal,
+      position: 'right',
+    });
 
     return busyFunction;
   },

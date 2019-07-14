@@ -21,7 +21,7 @@ const createBackupAPI = (
 ) => {
   const user = value<User | null>(null);
   let projects: ProjectInfo[] = [];
-  const item = dawg.ui.createStatusBarItem();
+  // const item = dawg.ui.createStatusBarItem();
   const error = value(false);
   const syncing = value(false);
 
@@ -48,8 +48,6 @@ const createBackupAPI = (
       return 'Cloud Backup Enabled';
     }
   });
-
-  subscriptions.push(item);
 
   async function loadProjects(user: User) {
     const res =  await backend.getProjects(user);

@@ -3,7 +3,6 @@ import Vue from 'vue'
 import { UpdateAugmentation } from '@/modules/update';
 import { KnobAugmentation } from '@/modules/knobs';
 import { Automatable } from '@/core';
-import { StatusAugmentation } from '@/modules/status';
 
 // 2. Specify a file with the types you want to augment
 //    Vue has the constructor type in types/vue.d.ts
@@ -12,8 +11,7 @@ declare module 'vue/types/vue' {
   // I'm not sure that this is the best way to do things...
   interface Vue extends 
     UpdateAugmentation,
-    KnobAugmentation<Automatable>, 
-    StatusAugmentation
+    KnobAugmentation<Automatable>
   {
     $log: {
       debug(...args: any[]): void,

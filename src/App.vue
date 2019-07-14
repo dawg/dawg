@@ -20,7 +20,6 @@
         </split>
 
         <split direction="vertical" resizable>
-
           <split :initial="TOOLBAR_HEIGHT" fixed>
             <v-toolbar 
               class="secondary toolbar" 
@@ -38,7 +37,7 @@
 
               <component
                 v-for="(item, i) in toolbarLeft"
-                :key="i"
+                :key="`toolbar-left-${i}`"
                 :is="item.component"
               ></component>
 
@@ -48,7 +47,7 @@
 
               <component
                 v-for="(item, i) in toolbarRight"
-                :key="i"
+                :key="`toolbar-right-${i}`"
                 :is="item.component"
               ></component>
             </v-toolbar>
@@ -81,7 +80,26 @@
         </split>
       </split>
       <split :initial="25" fixed>
-        <status-bar :height="25"></status-bar>
+
+        <div class="primary footer position foreground--text" :style="statusBarStyle">
+          <component
+            v-for="(item, i) in statusBarLeft"
+            class="status-bar-item"
+            :key="`status-bar-left-${i}`"
+            :is="item.component"
+          ></component>
+
+          <div style="flex: 1"></div>
+
+          <component
+            v-for="(item, i) in statusBarRight"
+            class="status-bar-item"
+            :key="`status-bar-right-${i}`"
+            :is="item.component"
+            style="margin: 0 35px"
+          ></component>
+        </div>
+
       </split>
     </split>
     <component
@@ -98,17 +116,12 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import { shell } from 'electron';
 import { automation } from '@/modules/knobs';
 import SideTabs from '@/sections/SideTabs.vue';
 import Panels from '@/dawg/extensions/core/panels/Panels.vue';
 import PanelHeaders from '@/dawg/extensions/core/panels/PanelHeaders.vue';
 import ActivityBar from '@/dawg/extensions/core/activity-bar/ActivityBar.vue';
-import StatusBar from '@/sections/StatusBar.vue';
-import { FILTERS, TOOLBAR_HEIGHT } from '@/constants';
-import { remote } from 'electron';
-import { ScheduledPattern } from '@/core/scheduled/pattern';
-import { ScheduledSample, Sample } from '@/core';
+import { TOOLBAR_HEIGHT } from '@/constants';
 import { Automatable } from '@/core/automation';
 import * as Audio from '@/modules/audio';
 import * as dawg from '@/dawg';
@@ -127,7 +140,6 @@ import { Menu } from './dawg/extensions/core/menubar';
     Panels,
     PanelHeaders,
     ActivityBar,
-    StatusBar,
   },
 })
 export default class App extends Vue {
@@ -163,6 +175,21 @@ export default class App extends Vue {
     return `border-left: 1px solid ${dawg.theme.foreground}`;
   }
 
+  get statusBarRight() {
+    return dawg.ui.statusBar.filter((item) => item.position === 'right');
+  }
+
+  get statusBarLeft() {
+    return dawg.ui.statusBar.filter((item) => item.position === 'left');
+  }
+
+  get statusBarStyle() {
+    return {
+      // TODO(jacob)
+      lineHeight: `${25}px`,
+    };
+  }
+
   public async created() {
     // This is called before refresh / close
     // I don't remove this listner because the window is closing anyway
@@ -190,8 +217,6 @@ export default class App extends Vue {
   }
 
   public destroyed() {
-    const w = remote.getCurrentWindow();
-
     window.removeEventListener('offline', this.offline);
     window.removeEventListener('online', this.online);
   }
@@ -258,5 +283,19 @@ html
 .tall-line
   height: 60% 
   margin: 20px
+
+.footer
+  display: flex
+  width: 100%
+  font-size: 12px
+  height: 100%
+  text-align: center
+  position: unset
+  padding: 0 10px
+  align-items: center
+
+.status-bar-item
+  margin: 0 6px
+  padding-top: 1px
 </style>
 

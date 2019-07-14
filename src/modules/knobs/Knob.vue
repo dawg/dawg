@@ -255,7 +255,7 @@ export default class Knob extends Mixins(Draggable) {
 
   public enter() {
     if (this.name) {
-      this.$status.set({
+      dawg.status.set({
         text: this.name,
         value: this.format ? this.format(this.value) : this.defaultFormat(),
       });
@@ -263,7 +263,7 @@ export default class Knob extends Mixins(Draggable) {
   }
 
   public leave() {
-    this.$status.clear();
+    dawg.status.set(null);
   }
 
   public move(e: MouseEvent) {
@@ -281,7 +281,7 @@ export default class Knob extends Mixins(Draggable) {
     // This isn't ideal but it works
     // For example, if they are still on the element, it will clear it
     // Even though we probably still want to display the value
-    this.$status.clear();
+    dawg.status.set(null);
   }
 
   public contextmenu(event: MouseEvent) {

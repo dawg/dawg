@@ -1,34 +1,6 @@
 import { VueConstructor } from 'vue';
 import { Wrapper } from 'vue-function-api';
 
-class StatusBarItem {
-  public text = '';
-  public tooltip = '';
-
-  public dispose() {
-    //
-  }
-}
-
-export enum StatusBarAlignment {
-  Left,
-  Right,
-}
-
-interface StatusBarItemElement {
-  type: 'item';
-  element: StatusBarItem;
-  alignment?: StatusBarAlignment;
-  priority?: number;
-}
-
-interface StatusBarVueElement {
-  type: 'vue';
-  element: VueConstructor;
-  alignment?: StatusBarAlignment;
-  priority?: number;
-}
-
 export interface TabAction {
   icon: Wrapper<string>;
   tooltip: Wrapper<string>;
@@ -81,14 +53,15 @@ export interface BooleanField {
   value: Wrapper<boolean>;
 }
 
-type StatusBarElement = StatusBarItemElement | StatusBarVueElement;
-
-const statusBarElements: StatusBarElement[] = [];
+interface StatusBarItem {
+  component: VueConstructor;
+  position: 'right' | 'left';
+  order?: number;
+}
 
 interface UI {
   global: VueConstructor[];
-  statusBarLeft: VueConstructor[];
-  statusBarRight: VueConstructor[];
+  statusBar: StatusBarItem[];
   activityBar: ActivityBarItem[];
   panels: PanelItem[];
   // TODO This will eventually be used for the settings.
@@ -97,27 +70,14 @@ interface UI {
   mainSection: VueConstructor[];
   toolbar: ToolbarItem[];
   settings: Array<StringField | BooleanField | SelectField | VueConstructor>;
-  createStatusBarItem: () => StatusBarItem;
 }
 
 export const ui: UI = {
   global: [],
-  statusBarLeft: [],
-  statusBarRight: [],
+  statusBar: [],
   activityBar: [],
   panels: [],
   mainSection: [],
   toolbar: [],
   settings: [],
-  createStatusBarItem(alignment?: StatusBarAlignment, priority?: number) {
-    const statusBarItem = new StatusBarItem();
-    statusBarElements.push({
-      type: 'item',
-      element: statusBarItem,
-      alignment,
-      priority,
-    });
-
-    return statusBarItem;
-  },
 };

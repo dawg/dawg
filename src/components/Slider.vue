@@ -101,14 +101,14 @@ export default class Slider extends Mixins(Draggable) {
   }
 
   public update() {
-    this.$status.set({
+    dawg.status.set({
       text: 'Volume',
       value: this.getFormatted(),
     });
   }
 
   public afterMove() {
-    this.$status.clear();
+    dawg.status.set(null);
   }
 
   public getPosition(level: number) {

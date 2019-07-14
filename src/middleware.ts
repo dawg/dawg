@@ -5,6 +5,8 @@ import * as time from '@/dawg/extensions/extra/time';
 import * as bpm from '@/dawg/extensions/extra/bpm';
 import * as audioFiles from '@/dawg/extensions/extra/audio-files';
 import * as clips from '@/dawg/extensions/extra/clips';
+import * as spectrogram from '@/dawg/extensions/extra/spectrogram';
+import * as projectName from '@/dawg/extensions/extra/project-name';
 import * as mixer from '@/dawg/extensions/core/mixer';
 import * as dawg from '@/dawg';
 
@@ -17,12 +19,10 @@ import VueLogger from 'vuejs-logger';
 import Update from '@/modules/update';
 import sequencer from '@/modules/sequencer';
 import DragNDrop from '@/modules/dragndrop';
-import '@/styles/global.sass';
 import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { DragElement } from '@/modules/draggable';
 import Knobs from '@/modules/knobs';
 import Split from '@/modules/split';
-import Status from '@/modules/status';
 
 import Piano from '@/components/Piano.vue';
 import DTrack from '@/components/DTrack.vue';
@@ -60,7 +60,16 @@ const middleware = () => {
   });
 
   // dawg.manager.activate(backup.extension);
-  [explorer, audioFiles, clips, mixer, time, bpm].forEach(({ extension }) => {
+  [
+    explorer,
+    audioFiles,
+    clips,
+    mixer,
+    time,
+    bpm,
+    projectName,
+    spectrogram,
+  ].forEach(({ extension }) => {
     dawg.manager.activate(extension);
   });
 
@@ -68,7 +77,6 @@ const middleware = () => {
   Vue.use(Update);
   Vue.use(DragNDrop);
   Vue.use(Knobs);
-  Vue.use(Status);
   Vue.use(VueLogger, {
     logLevel: 'info',
   });

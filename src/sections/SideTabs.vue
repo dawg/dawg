@@ -49,8 +49,6 @@ import { Sample } from '@/core';
 import * as dawg from '@/dawg';
 import { ActivityBarItem } from '@/dawg/ui';
 
-// TODO REMOVE GENERAL & WORKSPACE
-
 @Component({
   components: {
     BaseTabs,

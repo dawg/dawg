@@ -16,6 +16,7 @@ export { sizes } from '@/dawg/extensions/core/sizes';
 export { models } from '@/dawg/extensions/core/models';
 export { menubar } from '@/dawg/extensions/core/menubar';
 export { record } from '@/dawg/extensions/core/record';
+export { status } from '@/dawg/extensions/core/status';
 export { playlist } from '@/dawg/extensions/core/playlist';
 export { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 export { window } from '@/dawg/extensions/core/window';
@@ -24,10 +25,7 @@ export { IExtensionContext, Extension, createExtension, Subscription } from '@/d
 export { manager } from '@/dawg/extensions/manager';
 
 // Ignore unused imports here
-import { manager } from '@/dawg/extensions/manager';
 import { helpLinks } from '@/dawg/extensions/core/help-links';
-import { extension } from '@/dawg/extensions/extra/backup';
-manager.activate(extension);
 
 import * as platform from '@/dawg/platform';
 import * as events from '@/dawg/events';
