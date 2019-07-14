@@ -4,7 +4,7 @@ import { manager } from '@/dawg/extensions/manager';
 import { project } from '@/dawg/extensions/core/project';
 import { record } from '@/dawg/extensions/core/record';
 import { ScheduledPattern, ScheduledSample } from '@/core';
-import { value, computed, Wrapper } from 'vue-function-api';
+import { value } from 'vue-function-api';
 import { ui } from '@/dawg/ui';
 import { Ghost } from '@/core/ghosts/ghost';
 import { applicationContext } from '../application-context';
@@ -16,7 +16,7 @@ export const playlist = manager.activate({
     playlistBeatWidth: t.number,
   },
   workspaceDefaults: {
-    playlistRowHeight: 16,
+    playlistRowHeight: 40,
     playlistBeatWidth: 80,
   },
   activate(context) {
@@ -89,6 +89,8 @@ export const playlist = manager.activate({
       masterStart,
       masterEnd,
       ghosts,
+      playlistRowHeight,
+      playlistBeatWidth,
     };
   },
 });

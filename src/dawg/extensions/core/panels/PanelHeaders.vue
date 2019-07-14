@@ -18,7 +18,7 @@
       bottom
       @click.native="action.callback"
     >
-      {{ action.icon }}
+      {{ action.icon.value }}
     </tooltip-icon>
   </ul>
 </template>
