@@ -1,6 +1,8 @@
 import Vue from 'vue';
 import * as backup from '@/dawg/extensions/extra/backup';
 import * as explorer from '@/dawg/extensions/extra/explorer';
+import * as time from '@/dawg/extensions/extra/time';
+import * as bpm from '@/dawg/extensions/extra/bpm';
 import * as audioFiles from '@/dawg/extensions/extra/audio-files';
 import * as clips from '@/dawg/extensions/extra/clips';
 import * as mixer from '@/dawg/extensions/core/mixer';
@@ -58,11 +60,9 @@ const middleware = () => {
   });
 
   // dawg.manager.activate(backup.extension);
-  dawg.manager.activate(explorer.extension);
-  dawg.manager.activate(audioFiles.extension);
-  dawg.manager.activate(clips.extension);
-
-  dawg.manager.activate(mixer.extension);
+  [explorer, audioFiles, clips, mixer, time, bpm].forEach(({ extension }) => {
+    dawg.manager.activate(extension);
+  });
 
   Vue.use(Split);
   Vue.use(Update);

@@ -1,5 +1,4 @@
 import Midi from '@tonejs/midi';
-import Tone from 'tone';
 
 export interface INote {
   start: number;

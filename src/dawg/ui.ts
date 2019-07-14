@@ -53,6 +53,7 @@ export interface PanelItem {
 export interface ToolbarItem {
   component: VueConstructor;
   position: 'right' | 'left';
+  order?: number;
 }
 
 export interface StringField {

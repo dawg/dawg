@@ -22,17 +22,36 @@
         <split direction="vertical" resizable>
 
           <split :initial="TOOLBAR_HEIGHT" fixed>
-            <toolbar
-              class="toolbar"
-              :height="TOOLBAR_HEIGHT"
-              :state="dawg.project.state.value"
-              :get-seconds="dawg.project.getTime"
-              :play="dawg.project.play"
-              @update:play="dawg.project.playPause"
+            <v-toolbar 
+              class="secondary toolbar" 
               :style="border('bottom')"
-              :bpm="dawg.project.project.bpm"
-              @update:bpm="dawg.project.project.setBpm"
-            ></toolbar>
+              :height="TOOLBAR_HEIGHT" 
+            >
+              <logo
+                :color="iconColor"
+              ></logo>
+
+              <div 
+                class="tall-line"
+                :style="lineStyle"
+              ></div>
+
+              <component
+                v-for="(item, i) in toolbarLeft"
+                :key="i"
+                :is="item.component"
+              ></component>
+
+              <v-spacer
+                class="drag-area"
+              ></v-spacer>
+
+              <component
+                v-for="(item, i) in toolbarRight"
+                :key="i"
+                :is="item.component"
+              ></component>
+            </v-toolbar>
           </split>
 
           <split>
@@ -128,6 +147,22 @@ export default class App extends Vue {
     }
   }
 
+  get toolbarLeft() {
+    return dawg.ui.toolbar.filter((item) => item.position === 'left');
+  }
+
+  get toolbarRight() {
+    return dawg.ui.toolbar.filter((item) => item.position === 'right');
+  }
+
+  get iconColor() {
+    return dawg.theme.foreground;
+  }
+
+  get lineStyle() {
+    return `border-left: 1px solid ${dawg.theme.foreground}`;
+  }
+
   public async created() {
     // This is called before refresh / close
     // I don't remove this listner because the window is closing anyway
@@ -213,5 +248,15 @@ html
 
 .toolbar
   z-index: 10
+  border-bottom: 1px solid
+  padding: 0
+  box-shadow: none
+
+.toolbar /deep/ .v-toolbar__content
+  padding: 0 20px
+
+.tall-line
+  height: 60% 
+  margin: 20px
 </style>
 
