@@ -49,8 +49,49 @@ const createBackupAPI = (
     }
   });
 
-  async function loadProjects(user: User) {
-    const res =  await backend.getProjects(user);
+  const component = Vue.extend(createComponent({
+    template: `
+    <tooltip-icon
+      v-if="error"
+      :color="theme.foreground"
+      size="18"
+      tooltip="Cloud Backup Error"
+      top
+      left
+    >
+      error_outline
+    </tooltip-icon>
+
+    <v-progress-circular
+      v-else-if="syncing"
+      :size="15"
+      :width="2"
+      indeterminate
+    ></v-progress-circular>
+
+    <v-icon v-else :color="theme.foreground" size="20">
+      {{ icon }}
+    </v-icon>
+    `,
+    setup() {
+      return {
+        icon,
+        tooltip,
+        syncing,
+        theme: dawg.theme,
+        error,
+      };
+    },
+  }));
+
+  ui.statusBar.push({
+    component,
+    position: 'right',
+    order: 1,
+  });
+
+  async function loadProjects(u: User) {
+    const res =  await backend.getProjects(u);
 
     if (res.type === 'success') {
       projects = res.projects;
@@ -66,11 +107,11 @@ const createBackupAPI = (
   }
 
   function openBackup() {
-    handleUnauthenticated(async (user) => {
-      await loadProjects(user);
+    handleUnauthenticated(async (u) => {
+      await loadProjects(u);
       const projectLookup: { [name: string]: ProjectInfo } = {};
-      projects.forEach((project) => {
-        projectLookup[project.name] = project;
+      projects.forEach((p) => {
+        projectLookup[p.name] = p;
       });
 
       dawg.palette.selectFromObject(projectLookup, {
@@ -83,8 +124,8 @@ const createBackupAPI = (
   }
 
   async function openProject(info: ProjectInfo) {
-    handleUnauthenticated(async (user) => {
-      const res = await backend.getProject(user, info.id);
+    handleUnauthenticated(async (u) => {
+      const res = await backend.getProject(u, info.id);
       if (res.type === 'not-found') {
         dawg.notify.warning('Uh, we were unable to find your project');
         return;
@@ -118,8 +159,8 @@ const createBackupAPI = (
   }
 
   function deleteProject(info: ProjectInfo) {
-    handleUnauthenticated(async (user) => {
-      const res = await backend.deleteProject(user, info.id);
+    handleUnauthenticated(async (u) => {
+      const res = await backend.deleteProject(u, info.id);
 
       if (res.type === 'success') {
         // We are not taking advantage of firebase here
