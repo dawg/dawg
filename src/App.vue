@@ -194,7 +194,16 @@ export default class App extends Vue {
 </script>
 
 <style lang="sass">
-@import '~@/styles/global'
+html
+  overflow: hidden
+
+*
+  font-family: monospace
+
+.center--vertial
+  display: flex
+  flex-direction: column
+  justify-content: center
 </style>
 
 <style lang="sass" scoped>

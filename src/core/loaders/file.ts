@@ -1,4 +1,4 @@
-import fs from '@/wrappers/fs';
+import fs from '@/fs';
 import * as t from 'io-ts';
 import { Loader, RetrievalTypes, Error } from './loader';
 import { PathReporter } from 'io-ts/lib/PathReporter';

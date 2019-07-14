@@ -6,7 +6,7 @@ import { notify } from '@/dawg/extensions/core/notify';
 import * as Audio from '@/modules/audio';
 import audioBufferToWav from 'audiobuffer-to-wav';
 import path from 'path';
-import fs from '@/wrappers/fs';
+import fs from '@/fs';
 import { ChunkGhost } from '@/core/ghosts/ghost';
 import { remote } from 'electron';
 import { Sample, ScheduledSample } from '@/core';

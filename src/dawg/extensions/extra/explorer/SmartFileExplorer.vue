@@ -12,7 +12,7 @@ import { loadBuffer } from '@/modules/wav/local';
 import { ScheduledSample, Sample } from '@/core';
 import { Extensions, ExtensionData } from '@/dawg/extensions/extra/explorer/types';
 import parser, { INotes } from '@/midi-parser';
-import fs from '@/wrappers/fs';
+import fs from '@/fs';
 import FileExplorer from '@/dawg/extensions/extra/explorer/FileExplorer.vue';
 import * as dawg from '@/dawg';
 

@@ -1,4 +1,4 @@
-import fs from '@/wrappers/fs';
+import fs from '@/fs';
 import Tone from 'tone';
 import { findUniqueName, range } from '@/utils';
 import * as Audio from '@/modules/audio';

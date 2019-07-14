@@ -3,7 +3,7 @@ import * as t from 'io-ts';
 import { User } from 'firebase';
 import Vue from 'vue';
 import backend, { ProjectInfo } from '@/dawg/extensions/extra/backup/backend';
-import { ProjectType, IProject } from '@/store/project';
+import { ProjectType, IProject } from '@/project';
 import { PathReporter } from 'io-ts/lib/PathReporter';
 import auth from '@/dawg/extensions/extra/backup/auth';
 import firebase from 'firebase/app';

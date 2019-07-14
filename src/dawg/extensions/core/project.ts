@@ -2,8 +2,8 @@ import tmp from 'tmp';
 import fs from 'mz/fs';
 import { Sample, ScheduledSample } from '@/core';
 import { Beats } from '@/core/types';
-import { IProject, Project, ProjectType } from '@/store/project';
-import { Extension, createExtension } from '@/dawg/extensions';
+import { IProject, Project, ProjectType } from '@/project';
+import { createExtension } from '@/dawg/extensions';
 // TODO(jacob) Wrap
 import { remote } from 'electron';
 import { manager } from '@/dawg/extensions/manager';

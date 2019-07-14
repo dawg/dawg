@@ -8,7 +8,7 @@ import {
   ReactiveDefinition,
   ExtensionDefaults,
 } from '@/dawg/extensions';
-import fs from '@/wrappers/fs';
+import fs from '@/fs';
 import path from 'path';
 import { GLOBAL_PATH, WORKSPACE_PATH, PROJECT_PATH } from '@/constants';
 import { reverse, keys } from '@/utils';
