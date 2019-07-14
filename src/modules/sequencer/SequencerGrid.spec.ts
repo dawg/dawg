@@ -1,11 +1,8 @@
-import { expect } from 'chai';
 import { shallowMount, Wrapper } from '@vue/test-utils';
 import Arranger from '@/modules/sequencer/Arranger.vue';
 import Vue from 'vue';
 import Update from '@/modules/update';
 import VueLogger from 'vuejs-logger';
-import { Note } from '@/core';
-import * as io from '@/modules/cerialize';
 
 Vue.use(VueLogger);
 Vue.use(Update);
