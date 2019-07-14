@@ -117,7 +117,6 @@
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
 import { automation } from '@/modules/knobs';
-import SideTabs from '@/sections/SideTabs.vue';
 import Panels from '@/dawg/extensions/core/panels/Panels.vue';
 import PanelHeaders from '@/dawg/extensions/core/panels/PanelHeaders.vue';
 import ActivityBar from '@/dawg/extensions/core/activity-bar/ActivityBar.vue';
@@ -136,7 +135,6 @@ import { Menu } from './dawg/extensions/core/menubar';
 
 @Component({
   components: {
-    SideTabs,
     Panels,
     PanelHeaders,
     ActivityBar,

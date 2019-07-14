@@ -48,13 +48,10 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import Sidebar from '@/components/SideBar.vue';
-import Settings from '@/sections/Settings.vue';
 import * as dawg from '@/dawg';
 import { activityBar } from '@/dawg/extensions/core/activity-bar';
 
-@Component({
-  components: { Settings },
-})
+@Component
 export default class ActivityBar extends Vue {
   public dawg = dawg;
   public open = false;

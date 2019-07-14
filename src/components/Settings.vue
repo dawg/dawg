@@ -1,14 +1,10 @@
 <template>
   <v-card dark class="settings secondary">
     <v-list class="secondary" style="padding-top: 20px">
-      
-      <!-- TODO REMOVE? -->
-      <!-- <v-divider
-        style="margin: 20px 0 10px"
-      ></v-divider> -->
-
       <v-list-tile v-for="(setting, i) in dawg.ui.settings" :key="i">
+
         <v-list-tile-title v-if="setting.type === 'boolean'">{{ setting.title }}</v-list-tile-title>
+        
         <v-list-tile-action v-if="setting.title">
           <v-text-field
             v-if="setting.type === 'string'"
@@ -33,7 +29,9 @@
             v-model="setting.value.value"
           ></v-select>
         </v-list-tile-action>
+
         <component v-else :is="setting"></component>
+
       </v-list-tile>
 
     </v-list>
@@ -42,11 +40,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { Nullable } from '@/utils';
-// TODO(jacob)
-import auth from '@/dawg/extensions/extra/backup/auth';
 import * as dawg from '@/dawg';
-import { extension } from '@/dawg/extensions/extra/backup';
 
 @Component
 export default class Settings extends Vue {

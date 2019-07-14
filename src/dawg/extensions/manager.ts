@@ -61,13 +61,13 @@ const write = async (file: string, contents: any) => {
   await fs.writeFile(file, JSON.stringify(contents, null, 4));
 };
 
-const getDataFromExtensions = (key: 'workspace' | 'global') => {
-  const data: { [k: string]: string } = {};
+const getDataFromExtensions = (key: 'workspace' | 'global'): { [k: string]: ExtensionDefaults<ExtensionProps> } => {
+  const data: { [k: string]: ExtensionDefaults<ExtensionProps> } = {};
   for (const { extension, context } of reverse(extensionsStack)) {
     try {
       const definition = extension[key];
       if (!definition) {
-        return;
+        continue;
       }
 
       const state = context[key];
@@ -79,7 +79,7 @@ const getDataFromExtensions = (key: 'workspace' | 'global') => {
       const type = t.partial(definition);
       // TODO(jacob) ERROR?
       const encoded = type.encode(toEncode);
-      data[extension.id] = JSON.stringify(encoded);
+      data[extension.id] = encoded;
     } catch (e) {
       // tslint:disable-next-line:no-console
       console.warn('' + e);
@@ -298,12 +298,8 @@ export const manager = {
     await write(GLOBAL_PATH, g);
     await write(WORKSPACE_PATH, projectManager.workspace);
   },
-  activate<
-    W extends ExtensionProps,
-    WD extends ExtensionDefaults<W>,
-    G extends ExtensionProps, V,
-    GD extends ExtensionDefaults<G>,
-  >(
+  // tslint:disable-next-line:max-line-length
+  activate<W extends ExtensionProps, WD extends ExtensionDefaults<W>, G extends ExtensionProps, V, GD extends ExtensionDefaults<G>>(
     extension: Extension<W, WD, G, GD, V>,
   ): V {
     if (!projectManager) {
@@ -326,25 +322,22 @@ export const manager = {
         return {} as ReactiveDefinition<P, D>;
       }
 
-      const getDefault = (key: keyof D) => {
-        if (!defaults) {
-          return undefined;
-        }
-
-        return defaults[key];
-      };
-
       const type = t.partial(definition);
       const result = type.decode(o);
+      let decoded: typeof result['_A'];
       if (result.isLeft()) {
         // TODO(jacob) Actually report this error
         notificationQueue.push(
           ...PathReporter.report(result),
         );
-        throw Error(PathReporter.report(result).join('\n'));
+
+        // tslint:disable-next-line:no-console
+        console.error(PathReporter.report(result).join('\n'));
+        decoded = {};
+      } else {
+        decoded = result.value;
       }
 
-      const decoded = result.value;
       const reactive = {} as ReactiveDefinition<P, D>;
 
       for (const key of keys(definition)) {
