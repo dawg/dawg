@@ -64,9 +64,6 @@ export default class Synths extends Vue {
     }
 
     this.$update('selectedScore', this.scoreLookup[instrument.id]);
-
-    // TODO JACOB
-    // dawg.panels.openedPanel.value = 'Piano Roll';
   }
 
   public contextmenu(event: MouseEvent, i: number) {

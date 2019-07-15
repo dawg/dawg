@@ -31,7 +31,7 @@ export interface ElectronMenuAction {
   menu: string;
   label: string;
   accelerator?: string;
-  callback: () => void;
+  uniqueEvent: string;
 }
 
 export interface ElectronMenuDivider {

@@ -84,7 +84,7 @@
         <div class="primary footer position foreground--text" :style="statusBarStyle">
           <component
             v-for="(item, i) in statusBarLeft"
-            class="status-bar-item"
+            class="status-bar-item-left"
             :key="`status-bar-left-${i}`"
             :is="item.component"
           ></component>
@@ -93,10 +93,9 @@
 
           <component
             v-for="(item, i) in statusBarRight"
-            class="status-bar-item"
+            class="status-bar-item-right"
             :key="`status-bar-right-${i}`"
             :is="item.component"
-            style="margin: 0 35px"
           ></component>
         </div>
 
@@ -199,7 +198,7 @@ export default class App extends Vue {
     setTimeout(async () => {
       // Log this for debugging purposes
       // tslint:disable-next-line:no-console
-      console.log(dawg);
+      console.info(dawg);
       this.loaded = true;
     }, 1250);
   }
@@ -289,11 +288,14 @@ html
   height: 100%
   text-align: center
   position: unset
-  padding: 0 10px
   align-items: center
 
-.status-bar-item
-  margin: 0 6px
+.status-bar-item-left
+  margin-left: 15px
+  padding-top: 1px
+
+.status-bar-item-right
+  margin-right: 15px
   padding-top: 1px
 </style>
 

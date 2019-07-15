@@ -60,7 +60,7 @@ export const playlist = manager.activate({
       }),
       computed: {
         playlistPlay() {
-          return project.play && applicationContext.context.value === 'playlist';
+          return project.state.value === 'started' && applicationContext.context.value === 'playlist';
         },
       },
       methods: {

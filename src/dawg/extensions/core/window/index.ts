@@ -1,6 +1,7 @@
 import { manager } from '@/dawg/extensions/manager';
 import { remote } from 'electron';
-import { commands } from '@/dawg/extensions/core/commands';
+import { commands, Command } from '@/dawg/extensions/core/commands';
+import { menubar } from '../menubar';
 
 export const window = manager.activate({
   id: 'dawg.window',
@@ -21,12 +22,16 @@ export const window = manager.activate({
       callback: close,
     }));
 
-    // TODO(jacob) Add to file menu
-    context.subscriptions.push(commands.registerCommand({
+    const reloadCommand: Command = {
       text: 'Reload',
       shortcut: ['CmdOrCtrl', 'R'],
       callback: reload,
-    }));
+    };
+
+    context.subscriptions.push(commands.registerCommand(reloadCommand));
+
+    // TODO move menus
+    context.subscriptions.push(menubar.addItem('View', reloadCommand));
 
     return {
       reload,

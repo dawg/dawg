@@ -3,7 +3,7 @@ import fs from 'mz/fs';
 import { Sample, ScheduledSample } from '@/core';
 import { Beats } from '@/core/types';
 import { IProject, Project, ProjectType } from '@/project';
-import { createExtension } from '@/dawg/extensions';
+import { createExtension, IExtensionContext } from '@/dawg/extensions';
 // TODO(jacob) Wrap
 import { remote } from 'electron';
 import { manager } from '@/dawg/extensions/manager';
@@ -14,7 +14,6 @@ import { commands, Command } from './commands';
 import { menubar } from './menubar';
 import { computed, value, watch } from 'vue-function-api';
 import { patterns } from './patterns';
-import { emitter, EventProvider } from '@/dawg/events';
 import { applicationContext } from './application-context';
 import { ui } from '@/dawg/ui';
 import { addDisposableListener } from '@/utils';
@@ -31,11 +30,15 @@ export interface InitializationSuccess {
 }
 
 
-const projectApi = () => {
+const projectApi = (context: IExtensionContext) => {
   // tslint:disable-next-line:variable-name
   let _p: Project | null = null;
-  const events = emitter<{ playPause: () => void }>();
   const state = value<'stopped' | 'started' | 'paused'>('stopped');
+  const openedFile = value(manager.getOpenedFile());
+
+  context.subscriptions.push(manager.onDidSetOpenedFile(() => {
+    openedFile.value = manager.getOpenedFile();
+  }));
 
   const transport = computed(() => {
     if (applicationContext.context.value === 'pianoroll') {
@@ -103,10 +106,6 @@ const projectApi = () => {
     return get();
   }
 
-  function getOpenedFile() {
-    return manager.getOpenedFile();
-  }
-
   async function saveProject(opts: { forceDialog?: boolean }) {
     const p = await get();
 
@@ -146,13 +145,13 @@ const projectApi = () => {
     });
   }
 
-  return {
+  const api = {
     scheduleMaster,
     openTempProject,
     onDidSave,
     serializeProject,
     getProject,
-    getOpenedFile,
+    openedFile,
     saveProject,
     removeOpenedFile,
     setOpenedFile,
@@ -165,19 +164,18 @@ const projectApi = () => {
       }
 
       if (transport.value.state === 'started') {
-        this.pause();
+        api.pause();
       } else {
-        this.startTransport();
+        api.startTransport();
       }
     },
-    play: false,
     pause() {
       if (!transport.value) {
         return;
       }
 
       transport.value.stop();
-      this.play = false;
+      state.value = 'paused';
     },
     project: getProject(),
     getTime() {
@@ -193,12 +191,11 @@ const projectApi = () => {
       }
 
       transport.value.start();
-      this.play = true;
-      events.emit('playPause');
+      state.value = 'started';
     },
     stopIfStarted() {
       if (transport.value && transport.value.state === 'started') {
-        this.stopTransport();
+        api.stopTransport();
       }
     },
     stopTransport() {
@@ -207,15 +204,12 @@ const projectApi = () => {
       }
 
       transport.value.stop();
-      state.value = transport.value.state;
-      this.play = false;
-      events.emit('playPause');
-    },
-    onDidPlayPause(cb: () => void) {
-      return new EventProvider(events, 'playPause', cb);
+      state.value = 'stopped';
     },
     state,
   };
+
+  return api;
 };
 
 function loadProject(): InitializationError | InitializationSuccess {
@@ -254,7 +248,7 @@ const online = (p: Project) => () => {
 const extension = createExtension({
   id: 'dawg.project',
   activate(context) {
-    const api = projectApi();
+    const api = projectApi(context);
 
     context.subscriptions.push(addDisposableListener('online', online(api.project)));
 

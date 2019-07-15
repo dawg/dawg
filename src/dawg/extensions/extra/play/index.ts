@@ -31,11 +31,8 @@ export const extension = createExtension({
           toggle: () => {
             dawg.project.playPause();
           },
-          play: computed(() => {
-            return dawg.project.play;
-          }),
           icon: computed(() => {
-            return dawg.project.play ? 'pause' : 'play';
+            return dawg.project.state.value === 'started' ? 'play' : 'pause';
           }),
         };
       },

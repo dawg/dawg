@@ -57,11 +57,11 @@ export const extension = createExtension({
 
     let mediaRecorder: MediaRecorder | null = null;
 
-    context.subscriptions.push(project.onDidPlayPause(() => {
+    watch(project.state, () => {
       if (mediaRecorder) {
         stopRecording();
       }
-    }));
+    });
 
     const microphoneIn = context.global.microphoneIn;
 

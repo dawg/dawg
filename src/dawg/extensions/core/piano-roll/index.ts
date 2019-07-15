@@ -7,11 +7,11 @@ import { patterns } from '@/dawg/extensions/core/patterns';
 import { ui, TabAction } from '@/dawg/ui';
 import { manager } from '@/dawg/extensions/manager';
 import { positionable, selectable } from '@/modules/sequencer/helpers';
-import { resizable } from '@/modules/sequencer/seq';
+import { resizable } from '@/modules/sequencer/helpers';
 import { commands } from '@/dawg/extensions/core/commands';
 import { panels } from '@/dawg/extensions/core/panels';
 import { applicationContext } from '../application-context';
-import { value, computed } from 'vue-function-api';
+import { value, watch } from 'vue-function-api';
 import { project } from '../project';
 
 // TODO(jacob) WHy do I need to do this?
@@ -70,7 +70,7 @@ export const pianoRoll = manager.activate({
       }),
       computed: {
         pianoRollPlay() {
-          return project.play && applicationContext.context.value === 'pianoroll';
+          return project.state.value === 'started' && applicationContext.context.value === 'pianoroll';
         },
       },
     });
@@ -81,6 +81,10 @@ export const pianoRoll = manager.activate({
       name: 'Piano Roll',
       component,
       actions,
+    });
+
+    watch(instruments.selectedScore, () => {
+      panels.openedPanel.value = 'Piano Roll';
     });
 
     return {

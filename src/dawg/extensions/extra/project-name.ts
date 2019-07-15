@@ -2,17 +2,20 @@ import Vue from 'vue';
 import { createExtension } from '..';
 import * as dawg from '@/dawg';
 import path from 'path';
+import { computed } from 'vue-function-api';
 
 export const extension = createExtension({
   id: 'dawg.project-name',
   activate() {
-    const openedFile = dawg.project.getOpenedFile();
-    const projectName = openedFile === null ? '' : path.basename(openedFile).split('.')[0];
+    const openedFile = dawg.project.openedFile;
+    const projectName = computed(() => {
+      return openedFile.value === null ? '' : path.basename(openedFile.value).split('.')[0];
+    });
 
     const component = Vue.extend({
       template: `
       <v-tooltip top>
-        <div slot="activator" class="name item">{{ projectName }}</div>
+        <div slot="activator" class="name item">{{ projectName.value }}</div>
         <div>Project Name</div>
       </v-tooltip>
       `,

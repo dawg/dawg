@@ -233,3 +233,8 @@ export const mapObject = <V, T, O extends { [k: string]: V }>(o: O, f: (v: V) =>
   }
   return transformed as { [K in keyof O]: T };
 };
+
+export const uniqueId = () => {
+  return Math.random().toString().substr(2, 9);
+};
+

@@ -16,6 +16,9 @@ import { FileLoader, FileWriter } from '@/core/loaders/file';
 import uuid from 'uuid';
 import { value } from 'vue-function-api';
 import { PathReporter } from 'io-ts/lib/PathReporter';
+import { emitter } from '../events';
+
+const events = emitter<{ setOpenedFile: () => void }>();
 
 // TODO IF TWO instances of Vusic are opened at the same time
 // there will be an issue when writing to the fs because the
@@ -238,6 +241,14 @@ export const manager = {
 
     return projectManager.parsedProject;
   },
+  onDidSetOpenedFile(listener: () => void) {
+    events.addListener('setOpenedFile', listener);
+    return {
+      dispose() {
+        events.removeListener('setOpenedFile', listener);
+      },
+    };
+  },
   async setOpenedFile(projectInfo?: ProjectInformation, opts: { isTemp?: boolean } = {}) {
     if (!projectManager) {
       projectManager = Manager.fromFileSystem();
@@ -258,6 +269,8 @@ export const manager = {
     } else {
       pastProject.projectPath = projectInfo;
     }
+
+    events.emit('setOpenedFile');
 
     const writer = new FileWriter(PastProjectsType, { path: PROJECT_PATH, data: pastProject });
     return await writer.write();
@@ -380,7 +393,7 @@ export const manager = {
 
     extensionsStack = [];
   },
-  get<V, T extends Extension<any, any, any>>(extension: T): ReturnType<T['activate']> {
+  get<T extends Extension<any, any, any>>(extension: T): ReturnType<T['activate']> {
     // tslint:disable-next-line:no-console
     console.log(resolved, extension.id);
     if (extensions.hasOwnProperty(extension.id)) {

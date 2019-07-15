@@ -2,6 +2,7 @@ import { manager } from '@/dawg/extensions/manager';
 import { IpcRenderer, ElectronMenuItem } from '@/ipc';
 import { ipcRenderer } from 'electron';
 import { Key } from './commands';
+import { uniqueId } from '@/utils';
 
 // TODO USE COMMAND
 interface SubMenuItem {
@@ -45,40 +46,26 @@ export const menubar = manager.activate({
       return {
         menu,
         label: item.text,
-        callback: item.callback,
+        uniqueEvent: uniqueId(),
         accelerator,
       };
     };
 
-    const setMenu = (menu: Menu) => {
-      const items: ElectronMenuItem[] = [];
-      menu.forEach((submenu) => {
-        submenu.items.forEach((item) => {
-          if (!item) {
-            items.push({
-              menu: submenu.name,
-              label: null,
-            });
-            return;
-          }
-
-          items.push(transform(submenu.name, item));
-        });
-      });
-
-      events.send('addToMenu', items);
-      events.send('showMenu');
-    };
-
     return {
-      setMenu,
       addItem: (menu: string, item: SubMenuItem) => {
         const electronItem = transform(menu, item);
         events.send('addToMenu', electronItem);
 
+        // This solution is a bit weird but it works
+        // You can't pass functions, so we create a unique ID and add a listener
+        events.on(electronItem.uniqueEvent as any, () => {
+          item.callback();
+        });
+
         return {
           dispose() {
             events.send('removeFromMenu', electronItem);
+            events.removeAllListeners(electronItem.uniqueEvent as any);
           },
         };
       },

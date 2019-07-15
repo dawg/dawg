@@ -1,3 +1,4 @@
+import Vue from 'vue';
 import BusySignal from '@/dawg/extensions/core/busy/BusySignal.vue';
 import { Provider, bus } from '@/dawg/extensions/core/busy/helpers';
 import { manager } from '@/dawg/extensions/manager';
@@ -26,9 +27,14 @@ export const busy = manager.activate({
       return provider;
     };
 
+    const component = Vue.extend({
+      template: `<busy-signal style="margin-right: 25px"></busy-signal>`,
+      components: { BusySignal },
+    });
+
     // TODO(jacob) Thing for sorting
     ui.statusBar.push({
-      component: BusySignal,
+      component,
       position: 'right',
     });
 

@@ -30,7 +30,7 @@ events.on('removeMenu', () => {
   Menu.setApplicationMenu(Menu.buildFromTemplate([]));
 });
 
-events.on('addToMenu', (_, itemsOrItem) => {
+events.on('addToMenu', (event, itemsOrItem) => {
   const addItem = (item: ElectronMenuItem) => {
     if (!menuLookup[item.menu]) {
       menuLookup[item.menu] = {
@@ -55,7 +55,9 @@ events.on('addToMenu', (_, itemsOrItem) => {
     } else {
       singleMenu.submenu.push({
         label: item.label,
-        click: item.callback,
+        click: () => {
+          event.sender.send(item.uniqueEvent);
+        },
         accelerator: item.accelerator,
         // The renderer process will be handling this
         registerAccelerator: false,
@@ -93,7 +95,7 @@ events.on('removeFromMenu', (_, itemsOrItem) => {
     }
 
     singleMenu.submenu = singleMenu.submenu.filter((menuItem) => {
-      return item.label !== menuItem.label || item.callback !== menuItem.click;
+      return item.label !== menuItem.label;
     });
   };
 

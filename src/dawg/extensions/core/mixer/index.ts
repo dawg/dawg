@@ -22,7 +22,7 @@ export const extension = createExtension({
       template: `
       <mixer
         :channels="project.project.channels"
-        :play="project.play"
+        :play="play"
         @add="(payload) => project.project.addEffect(payload)"
         @delete="(payload) => project.project.deleteEffect(payload)"
       ></mixer>
@@ -30,6 +30,11 @@ export const extension = createExtension({
       data: () => ({
         project,
       }),
+      computed:  {
+        play: () => {
+          return project.state.value === 'started';
+        },
+      },
     });
 
     ui.panels.push({
