@@ -24,7 +24,7 @@ export const helpLinks = manager.activate({
           shell.openExternal('https://trello.com/b/ZOLQJGSv/vusic-feature-requests');
         },
       },
-      // TODO(jacob) add back null
+      // FIXME add back null
       // null,
       {
         text: 'Open Developer Tools',

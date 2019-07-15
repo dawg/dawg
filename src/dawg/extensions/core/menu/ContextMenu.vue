@@ -24,116 +24,141 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-
 import bus, { Item, isMouseEvent, Position, ContextPayload } from '@/dawg/extensions/core/menu/bus';
 import { Watch } from '@/modules/update';
+import { computed, onMounted, onDestroyed, watch, value } from 'vue-function-api';
+import { createComponent } from '@/utils';
+import { commands } from '../commands';
 
-@Component
-export default class ContextMenu extends Vue {
-  /**
-   * The default width of the menu.
-   */
-  @Prop({ type: Number, default: 300 }) public width!: number;
+export default createComponent({
+  props: {
+    /**
+     * The default width of the menu.
+     */
+    width: { type: Number, default: 300 },
+  },
+  setup(props, context) {
+    const items = value<Array<Item | null>>([]);
+    const open = value(false);
+    const x = value(0);
+    const y = value(0);
 
-  public items: Array<Item | null> = [];
-  public open = false;
-  public x = 0;
-  public y = 0;
+    /**
+     * To help show shadows.
+     */
+    const active = value<boolean[]>([]);
+    let e: MouseEvent | null = null;
 
-  /**
-   * To help show shadows.
-   */
-  public active: boolean[] = [];
+    const processed = computed(() => {
+      return items.value.map((item) => {
+        if (!item) {
+          return null;
+        }
 
-  public e: MouseEvent | null = null;
+        return {
+          ...item,
+          shortcut: item.shortcut ? item.shortcut.join('+') : undefined,
+        };
+      });
+    });
 
-  get processed() {
-    return this.items.map((item) => {
-      if (!item) {
-        return null;
+    const style = computed(() => {
+      return {
+        left: `${x.value}px`,
+        top: `${y.value}px`,
+        minWidth: `${props.width}px`,
+      };
+    })
+
+    function outsideClickListener(event: MouseEvent) {
+      if (!event.target) {
+        return;
       }
 
-      return {
-        ...item,
-        shortcut: item.shortcut ? item.shortcut.join('+') : undefined,
-      };
-    });
-  }
+      if (!context.root.$el.contains(event.target as Node)) {
+        close();
+      }
+    }
 
-  get style() {
+    function close() {
+      open.value = false;
+      document.removeEventListener('click', outsideClickListener);
+
+      if (disposer) {
+        disposer.dispose();
+        disposer = null;
+      }
+    }
+
+    function mouseover(i: number) {
+      Vue.set(active.value, i, true);
+    }
+
+    function mouseleave(i: number) {
+      Vue.set(active.value, i, false);
+    }
+
+    let disposer: { dispose(): void } | null = null;
+    function show(payload: ContextPayload) {
+      open.value = true;
+      if (isMouseEvent(payload.event)) {
+        e = payload.event;
+        x.value = payload.event.pageX;
+        y.value = payload.event.pageY;
+      } else {
+        x.value = payload.event.left;
+        y.value = payload.event.bottom;
+      }
+
+      if (payload.left) {
+        x.value -= props.width;
+      }
+
+      items.value = payload.items;
+      disposer = commands.registerCommand({
+        text: 'Close Context Menu',
+        callback: close,
+        shortcut: ['Esc'],
+      });
+
+      document.addEventListener('click', outsideClickListener);
+    }
+
+    function doCallback(callback: (e: MouseEvent | null) => void) {
+      close();
+      callback(e);
+    }
+
+    watch(open, () => {
+      if (open.value) { return; }
+      active.value = [];
+      e = null;
+    })
+
+    onMounted(() => {
+      bus.$on('show', show);
+    })
+
+    onDestroyed(() => {
+      // Make sure to remove all stray listeners
+      bus.$off('show', show);
+      document.removeEventListener('click', outsideClickListener);
+    })
+
     return {
-      left: `${this.x}px`,
-      top: `${this.y}px`,
-      minWidth: `${this.width}px`,
-    };
-  }
-
-  public mounted() {
-    bus.$on('show', this.show);
-  }
-
-  public destroyed() {
-    // Make sure to remove all stray listeners
-    bus.$off('show', this.show);
-    document.removeEventListener('click', this.outsideClickListener);
-  }
-
-  public outsideClickListener(event: MouseEvent) {
-    if (!event.target) {
-      return;
-    }
-
-    if (!this.$el.contains(event.target as Node)) {
-      this.close();
+      processed,
+      doCallback,
+      mouseover,
+      mouseleave,
+      active,style,
+      open,
     }
   }
+})
 
-  public close() {
-    this.open = false;
-    document.removeEventListener('click', this.outsideClickListener);
-  }
-
-  public mouseover(i: number) {
-    Vue.set(this.active, i, true);
-  }
-
-  public mouseleave(i: number) {
-    Vue.set(this.active, i, false);
-  }
-
-  public show(payload: ContextPayload) {
-    this.open = true;
-    if (isMouseEvent(payload.event)) {
-      this.e = payload.event;
-      this.x = payload.event.pageX;
-      this.y = payload.event.pageY;
-    } else {
-      this.x = payload.event.left;
-      this.y = payload.event.bottom;
-    }
-
-    if (payload.left) {
-      this.x -= this.width;
-    }
-
-    this.items = payload.items;
-    // TODO(jacob)
-    // this.$press(['Esc'], this.close);
-
-    document.addEventListener('click', this.outsideClickListener);
-  }
-
-  public doCallback(callback: (e: MouseEvent | null) => void) {
-    this.open = false;
-    callback(this.e);
-  }
-
-  @Watch<ContextMenu>('open')
-  public onClose() {
-    if (this.open) { return; }
-    this.active = [];
-    this.e = null;
-  }
+@Component
+export class ContextMenu extends Vue {
+  
 }
 </script>
 

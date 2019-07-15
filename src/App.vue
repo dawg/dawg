@@ -79,7 +79,7 @@
           </split>
         </split>
       </split>
-      <split :initial="25" fixed>
+      <split :initial="STATUS_BAR_HEIGHT" fixed>
 
         <div class="primary footer position foreground--text" :style="statusBarStyle">
           <component
@@ -119,7 +119,7 @@ import { automation } from '@/modules/knobs';
 import Panels from '@/dawg/extensions/core/panels/Panels.vue';
 import PanelHeaders from '@/dawg/extensions/core/panels/PanelHeaders.vue';
 import ActivityBar from '@/dawg/extensions/core/activity-bar/ActivityBar.vue';
-import { TOOLBAR_HEIGHT } from '@/constants';
+import { TOOLBAR_HEIGHT, STATUS_BAR_HEIGHT } from '@/constants';
 import { Automatable } from '@/core/automation';
 import * as Audio from '@/modules/audio';
 import * as dawg from '@/dawg';
@@ -142,6 +142,7 @@ import { Menu } from './dawg/extensions/core/menubar';
 export default class App extends Vue {
   public dawg = dawg;
   public TOOLBAR_HEIGHT = TOOLBAR_HEIGHT;
+  public STATUS_BAR_HEIGHT = STATUS_BAR_HEIGHT;
 
   // This loaded flag is important
   // Bugs can appear if we render before we load the project file
@@ -182,8 +183,7 @@ export default class App extends Vue {
 
   get statusBarStyle() {
     return {
-      // TODO(jacob)
-      lineHeight: `${25}px`,
+      lineHeight: `${STATUS_BAR_HEIGHT}px`,
     };
   }
 
@@ -233,7 +233,7 @@ export default class App extends Vue {
   }
 
   public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T & string) {
-    // TODO(jacob)
+    // FIXME Fix automation clips
     // const added = await dawg.project.project.createAutomationClip({
     //   automatable,
     //   key,

@@ -1,4 +1,4 @@
-// TODO REMOVE THIS
+// FIXME For some reason, it only works if I place this Vue.use statement here
 import Vue from 'vue';
 import { plugin } from 'vue-function-api';
 Vue.use(plugin);

@@ -55,8 +55,9 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Watch } from '@/modules/update';
 import * as dawg from '@/dawg';
 import { ProjectInfo } from '@/dawg/extensions/extra/backup/backend';
+import { createComponent, watch } from 'vue-function-api';
 
-@Component({
+export default createComponent({
   filters: {
     dateConvert(epoch: number) {
       return new Date(epoch).toLocaleString('en-US', {
@@ -67,44 +68,55 @@ import { ProjectInfo } from '@/dawg/extensions/extra/backup/backend';
       });
     },
   },
+  props: {
+    value: { type: Boolean, required: true },
+    projects: { type: Array as () => ProjectInfo[], required: true },
+  },
+  setup(props, context) {
+    function close() {
+      context.emit('input', false);
+    }
+
+    let disposer: { dispose(): void } | null = null;
+    watch(() => props.value, (value) => {
+      if (disposer) {
+        disposer.dispose();
+        disposer = null;
+      }
+
+      if (value) {
+        disposer = dawg.commands.registerCommand({
+          text: 'Close Project Modal',
+          shortcut: ['Esc'],
+          callback: close,
+        })
+      }
+    })
+
+    return {
+      context(project: ProjectInfo, event: MouseEvent) {
+        dawg.menu.context({
+          event,
+          items: [
+            {
+              text: 'Delete',
+              callback: () => {
+                context.emit('delete', project);
+              },
+            },
+          ],
+        });
+      },
+      input(value: boolean) {
+        context.emit('input', value);
+      },
+      openProject(project: ProjectInfo) {
+        context.emit('open', project);
+        close();
+      },
+    }
+  }
 })
-export default class ProjectModal extends Vue {
-  @Prop({ type: Boolean, required: true }) public value!: boolean;
-  @Prop({ type: Array, required: true }) public projects!: ProjectInfo[];
-
-  public close() {
-    this.$emit('input', false);
-  }
-
-  public input(value: boolean) {
-    this.$emit('input', value);
-  }
-
-  public openProject(project: ProjectInfo) {
-    this.$emit('open', project);
-    this.close();
-  }
-
-  public context(project: ProjectInfo, event: MouseEvent) {
-    dawg.menu.context({
-      event,
-      items: [
-        {
-          text: 'Delete',
-          callback: () => {
-            this.$emit('delete', project);
-          },
-        },
-      ],
-    });
-  }
-
-  @Watch<ProjectModal>('value')
-  public addListener() {
-    // TODO(jacob)
-    // this.$press(['Esc'], this.close);
-  }
-}
 </script>
 
 <style lang="sass" scoped>

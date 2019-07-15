@@ -21,6 +21,7 @@
       <base-tabs
         ref="tabs"
         :selected-tab.sync="openedSideTab.value"
+        :first="dawg.ui.activityBar[0] ? dawg.ui.activityBar[0].name : undefined"
       >
         <side-bar
           v-for="tab in dawg.ui.activityBar"

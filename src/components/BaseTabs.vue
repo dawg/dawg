@@ -14,16 +14,9 @@ import { Watch } from '@/modules/update';
 @Component
 export default class BaseTabs extends Vue {
   @Prop(String) public selectedTab?: string;
+  @Prop(String) public first?: string;
 
   public $children!: Tab[];
-
-  get firstTab() {
-    return this.$children[0] || {};
-  }
-
-  get tabLookup() {
-    return makeLookup(this.$children, (tab) => tab.name);
-  }
 
   public selectTab(name?: string | null, event?: MouseEvent) {
     if (event) { event.preventDefault(); }
@@ -37,10 +30,10 @@ export default class BaseTabs extends Vue {
     this.selectTab(tab.name);
   }
 
-  @Watch<BaseTabs>('firstTab')
+  @Watch<BaseTabs>('first')
   public checkFirstTab() {
-    if (!this.selectedTab && this.firstTab) {
-      this.$update('selectedTab', this.firstTab.name);
+    if (!this.selectedTab && this.first) {
+      this.$update('selectedTab', this.first);
     }
   }
 }

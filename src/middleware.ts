@@ -69,7 +69,7 @@ const middleware = () => {
     bpm,
     projectName,
     spectrogram,
-    // backup,
+    backup,
   ].forEach(({ extension }) => {
     dawg.manager.activate(extension);
   });

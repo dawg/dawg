@@ -17,7 +17,7 @@ export const EffectType = t.type({
     t.literal('Tremolo'),
     t.literal('Distortion'),
   ]),
-  options: t.object, // TODO
+  options: t.object, // FIXME
   id: t.string,
 });
 
@@ -46,11 +46,11 @@ export class Effect<T extends EffectName> implements Serializable<IEffect> {
     this.slot = i.slot;
     this.id = i.id;
     this.type = i.type as T;
-    // TODO Remove any cast
+    // FIXME Remove any cast
     this.options = i.options as any;
-    // TODO FIx this because we shouldn't have to use any type
+    // FIXME FIx this because we shouldn't have to use any type
     this.effect = new EffectMap[this.type]() as any;
-    // TODO actually set options
+    // FIXME actually set options
   }
 
   get wet() {

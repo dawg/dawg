@@ -12,14 +12,14 @@
         v-if="isLeaf"
         :is="iconComponent"
       ></component>
-      <ico
+      <dg-icon
         v-else 
         fa 
         class="icon" 
         :style="iconStyle"
       >
         caret-right
-      </ico>
+      </dg-icon>
       
       <drag
         class="white--text path"

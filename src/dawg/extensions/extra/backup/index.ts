@@ -2,6 +2,7 @@ import * as dawg from '@/dawg';
 import * as t from 'io-ts';
 import { User } from 'firebase';
 import Vue from 'vue';
+import ProjectModal from '@/dawg/extensions/extra/backup/ProjectModal.vue';
 import backend, { ProjectInfo } from '@/dawg/extensions/extra/backup/backend';
 import { ProjectType, IProject } from '@/project';
 import { PathReporter } from 'io-ts/lib/PathReporter';
@@ -16,11 +17,10 @@ import { project } from '../../core/project';
 import { createExtension } from '../..';
 
 const createBackupAPI = (
-  subscriptions: dawg.Subscription[],
   backup: Wrapper<boolean>,
 ) => {
   const user = value<User | null>(null);
-  let projects: ProjectInfo[] = [];
+  const projects = value<ProjectInfo[]>([]);
   // const item = dawg.ui.createStatusBarItem();
   const error = value(false);
   const syncing = value(false);
@@ -94,7 +94,7 @@ const createBackupAPI = (
     const res =  await backend.getProjects(u);
 
     if (res.type === 'success') {
-      projects = res.projects;
+      projects.value = res.projects;
     }
 
     if (res.type === 'error') {
@@ -103,14 +103,14 @@ const createBackupAPI = (
   }
 
   function resetProjects() {
-    projects = [];
+    projects.value = [];
   }
 
   function openBackup() {
     handleUnauthenticated(async (u) => {
       await loadProjects(u);
       const projectLookup: { [name: string]: ProjectInfo } = {};
-      projects.forEach((p) => {
+      projects.value.forEach((p) => {
         projectLookup[p.name] = p;
       });
 
@@ -166,7 +166,7 @@ const createBackupAPI = (
         // We are not taking advantage of firebase here
         // Ideally firebase would send an event and we would update our project list
         // Until we do that, this will suffice
-        projects = projects.filter((maybe) => maybe !== info);
+        projects.value = projects.value.filter((maybe) => maybe !== info);
       } else if (res.type === 'not-found') {
         dawg.notify.info(`Unable to delete ${info.name}`, { detail: 'The project was not found.' });
       } else {
@@ -212,7 +212,7 @@ const createBackupAPI = (
     user.value = u;
 
     if (user === null) {
-      projects = [];
+      projects.value = [];
     }
   }
 
@@ -227,6 +227,7 @@ const createBackupAPI = (
     setUser,
     user,
     backup,
+    projects,
   };
 };
 
@@ -259,7 +260,7 @@ export const extension = createExtension({
       }
     });
 
-    const manager = createBackupAPI(context.subscriptions, backup);
+    const manager = createBackupAPI(backup);
 
     auth.watchUser({
       authenticated: (user) => {

@@ -9,7 +9,7 @@ export const extension = createExtension({
     const stop = Vue.extend(createComponent({
       template: `
       <v-btn icon style="margin: 0">
-        <ico fa>stop</ico>
+        <dg-icon fa>stop</dg-icon>
       </v-btn>
       `,
     }));

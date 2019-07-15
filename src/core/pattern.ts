@@ -31,7 +31,7 @@ export class Pattern implements Serializable<IPattern> {
     this.name = i.name;
     this.scores = scores;
 
-    // TODO is this the best place
+    // FIXME is this the best place
     this.scores.forEach((score) => {
       score.notes.forEach((note) => {
         note.schedule(this.transport);
@@ -40,7 +40,7 @@ export class Pattern implements Serializable<IPattern> {
   }
 
   get duration() {
-    // TODO 4 is is hardcoded
+    // FIXME 4 is is hardcoded
     return this.scores.reduce((max, score) => {
       return Math.max(max, ...score.notes.map(({ time, duration }) => time + duration));
     }, 4);

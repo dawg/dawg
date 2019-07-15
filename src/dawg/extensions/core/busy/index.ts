@@ -32,10 +32,10 @@ export const busy = manager.activate({
       components: { BusySignal },
     });
 
-    // TODO(jacob) Thing for sorting
     ui.statusBar.push({
       component,
       position: 'right',
+      order: 2,
     });
 
     return busyFunction;

@@ -62,10 +62,10 @@ export const instruments = manager.activate({
       if (!patterns.selectedPattern.value) { return null; }
       const scores: {[k: string]: Score} = {};
 
-      // TODO MAKE LOOKUP
       patterns.selectedPattern.value.scores.forEach((score) => {
         scores[score.id] = score;
       });
+
       return scores;
     });
 

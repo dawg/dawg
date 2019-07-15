@@ -159,7 +159,7 @@ const items: Command[] = [];
 
 export interface Command {
   text: string;
-  shortcut?: Key[]; // TODO
+  shortcut?: Key[];
   callback: CommandCallback;
 }
 

@@ -3,6 +3,7 @@
     class="tabs-panels secondary" 
     ref="panels"
     :selected-tab.sync="openedPanel.value"
+    :first="dawg.ui.panels[0] ? dawg.ui.panels[0].name : undefined"
   >
     <panel 
       v-for="item in dawg.ui.panels"

@@ -1,4 +1,7 @@
 import Tone from 'tone';
+import Vue from 'vue';
+import { PropsDefinition, ComponentOptions } from 'vue/types/options';
+import { Context } from 'vue-function-api/dist/types/vue';
 
 export enum StyleType {
   PRIMARY = 'primary',
@@ -238,3 +241,30 @@ export const uniqueId = () => {
   return Math.random().toString().substr(2, 9);
 };
 
+// FIXME Remove when https://github.com/vuejs/vue-function-api/issues/15 is resolved
+type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
+type ComponentOptionsWithSetup<Props> = Omit<ComponentOptions<Vue>, 'props' | 'setup'> & {
+  props?: PropsDefinition<Props>;
+  setup?: (
+    this: undefined,
+    props: Readonly<Props>,
+    context: Context,
+  ) => object | null | undefined | void;
+};
+
+// when props is an object
+export function createComponent<Props>(
+  compOptions: ComponentOptionsWithSetup<Props>,
+): ComponentOptions<Vue>;
+// when props is an array
+export function createComponent<Props extends string = never>(
+  compOptions: ComponentOptionsWithSetup<Record<Props, any>>,
+): ComponentOptions<Vue>;
+
+export function createComponent<Props>(
+  compOptions: ComponentOptionsWithSetup<Props>,
+): ComponentOptions<Vue> {
+  return (compOptions as any) as ComponentOptions<Vue>;
+}
+
+// Remove until here

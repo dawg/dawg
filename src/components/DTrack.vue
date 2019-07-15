@@ -43,7 +43,7 @@ export default class Track extends Vue {
 .name
   user-select: none
 
-// TODO 20px and 5px is hardcoded! 
+// FIXME 20px and 5px is hardcoded! 
 .track
   display: flex
   border: 0 solid
