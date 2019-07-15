@@ -1,9 +1,6 @@
 dev:
 	npm run serve
 
-storybook:
-	npm run storybook:serve
-
 test:
 	npm run test:unit
 

@@ -47,18 +47,9 @@ Here is an incomplete list of the major tasks that need to be completed. :runner
 1. Install the dependencies: `npm i`
 
 ### Development
-Development occurs one of two places. Application development occurs in `Electron`; however, `Storybook` is used as an isolated component development environment. For many components, it is recommended that you create a `story` within `Storybook` to serve as active documentation.
-
-#### Electron
-Start the `Electron` application in development mode.
+Development occurs one of two places. Application development occurs in `Electron`. To start the `Electron` application in development mode, use this command:
 ```
 npm run serve:electron
-```
-
-#### Storybook
-Start the `Storybook` server.
-```
-npm run serve:storybook
 ```
 
 ### Building
@@ -72,14 +63,6 @@ Currently, we are able to build the `Electron` application; however, deployment 
 ```
 npm run build:electron
 ```
-
-#### Storybook
-`GitHub Pages` deploys the website located in our `docs` folder on the `master` branch. To update this folder, you must first build the storybook website.
-```
-npm run build:storybook
-```
-
-After, you must create a PR into `develop` and then another into `master`. The site itself will deploy automatically once the PR into `master` has been merged.
 
 # Testing
 Currently, there is a small unit suite available. These tests make use of [Vue Test Utils](https://vue-test-utils.vuejs.org/) and can be initiated using the following command.
