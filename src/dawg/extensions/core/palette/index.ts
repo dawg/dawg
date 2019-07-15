@@ -1,10 +1,9 @@
 import { manager } from '@/dawg/extensions/manager';
 import { ui } from '@/dawg/ui';
-import { Palette, paletteEvents, PaletteOptions } from '@/dawg/extensions/core/palette/palette';
+import { Palette, paletteEvents, DetailedItem } from '@/dawg/extensions/core/palette/palette';
 
 type QuickPickCallback<T> = (item: T) => void;
 
-interface DetailedItem { text: string; action?: string; }
 interface InputItemLookup<T> { [key: string]: T; }
 
 interface QuickPickOptions<T> {
@@ -13,10 +12,6 @@ interface QuickPickOptions<T> {
   onDidKeyboardFocus?: QuickPickCallback<T>;
   placeholder?: string;
 }
-
-const isDetailedItem = (item: any): item is DetailedItem => {
-  return item.hasOwnProperty('text');
-};
 
 export const palette = manager.activate({
   id: 'dawg.palette',

@@ -12,7 +12,7 @@ export interface PaletteOptions {
 }
 
 interface PaletteEvents {
-  show: (items: Item[], opts?: PaletteOptions) => void;
+  show: (items: DetailedItem[], opts?: PaletteOptions) => void;
   cancel: () => void;
   select: (text: string) => void;
   focus: (text: string) => void;
@@ -20,15 +20,14 @@ interface PaletteEvents {
 
 export const paletteEvents = events.emitter<PaletteEvents>();
 
-// TODO(jacob) IDK
-interface Item {
+export interface DetailedItem {
   text: string;
-  helper?: string;
+  action?: string;
 }
 
 @Component
 class Result extends Vue {
-  @Prop({ type: Object, required: true }) public item!: Item;
+  @Prop({ type: Object, required: true }) public item!: DetailedItem;
   @Prop({ type: Boolean, required: true }) public selected!: boolean;
 
   public hover = false;
@@ -45,7 +44,7 @@ class Result extends Vue {
   }
 
   public render(h: CreateElement) {
-    const shortcutText = this.item.helper;
+    const shortcutText = this.item.action;
 
     const text = h('span', this.item.text);
     const spacer = h('div', { style: { flex: '1' } });
@@ -112,7 +111,7 @@ export class TextField extends Vue {
 @Component
 export class Palette extends Vue {
   public value = false;
-  public items: Item[] = [];
+  public items: DetailedItem[] = [];
   public placeholder = '';
   public searchText = '';
   public selected = 0;
@@ -150,7 +149,7 @@ export class Palette extends Vue {
     paletteEvents.removeListener('show', this.show);
   }
 
-  public show(items: Item[], opts: PaletteOptions = {}) {
+  public show(items: DetailedItem[], opts: PaletteOptions = {}) {
     this.items = items;
     this.value = true;
     this.searchText = '';

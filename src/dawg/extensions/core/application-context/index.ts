@@ -35,7 +35,7 @@ export const applicationContext = manager.activate({
 
     context.subscriptions.push(commands.registerCommand({
       text: 'Switch Context',
-      shortcut: ['CmdOrCtrl', 'Tab'],
+      shortcut: ['Ctrl', 'Tab'],
       callback: () => {
         if (c.value === 'pianoroll') {
           c.value = 'playlist';

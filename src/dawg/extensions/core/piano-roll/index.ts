@@ -84,7 +84,9 @@ export const pianoRoll = manager.activate({
     });
 
     watch(instruments.selectedScore, () => {
-      panels.openedPanel.value = 'Piano Roll';
+      if (instruments.selectedScore.value) {
+        panels.openedPanel.value = 'Piano Roll';
+      }
     });
 
     return {

@@ -16,7 +16,11 @@ import { Component, Prop, Vue } from 'vue-property-decorator';
 @Component
 export default class Tab extends Vue {
   @Prop({ type: String, required: true }) public name!: string;
-  public isActive = false;
+  @Prop({ type: String, required: true }) public selectedTab!: string;
+
+  get isActive() {
+    return this.name === this.selectedTab;
+  }
 }
 </script>
 

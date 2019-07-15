@@ -8,6 +8,7 @@
       v-for="item in dawg.ui.panels"
       :key="item.name"
       :name="item.name"
+      :selected-tab="openedPanel.value"
     >
       <component
         :is="item.component"

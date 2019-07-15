@@ -11,22 +11,18 @@ import { makeLookup, Nullable } from '@/utils';
 import Tab from '@/components/Tab.vue';
 import { Watch } from '@/modules/update';
 
-@Component({components: { Tab }})
+@Component
 export default class BaseTabs extends Vue {
-  public tabs: Tab[] = [];
   @Prop(String) public selectedTab?: string;
 
+  public $children!: Tab[];
+
   get firstTab() {
-    return this.tabs[0] || {};
+    return this.$children[0] || {};
   }
 
   get tabLookup() {
-    return makeLookup(this.tabs, (tab) => tab.name);
-  }
-
-  public mounted() {
-    this.doSelectTab();
-    this.tabs = [...this.$children as Tab[]];
+    return makeLookup(this.$children, (tab) => tab.name);
   }
 
   public selectTab(name?: string | null, event?: MouseEvent) {
@@ -36,9 +32,8 @@ export default class BaseTabs extends Vue {
   }
 
   public close(i: number) {
-    this.tabs[i].isActive = false;
-    const tab = this.tabs[i + 1] || this.tabs[i - 1] || {};
-    this.tabs.splice(i, 1);
+    const tab = this.$children[i + 1] || this.$children[i - 1] || {};
+    this.$children.splice(i, 1);
     this.selectTab(tab.name);
   }
 
@@ -47,14 +42,6 @@ export default class BaseTabs extends Vue {
     if (!this.selectedTab && this.firstTab) {
       this.$update('selectedTab', this.firstTab.name);
     }
-  }
-
-  @Watch<BaseTabs>('selectedTab')
-  public doSelectTab() {
-    this.$log.debug(`Tab change -> ${this.selectedTab}`);
-    this.tabs.forEach((tab) => {
-      tab.isActive = (tab.name === this.selectedTab);
-    });
   }
 }
 </script>

@@ -28,6 +28,7 @@
           :name="tab.name"
           :icon="tab.icon"
           :icon-props="tab.iconProps"
+          :selected-tab="openedSideTab.value"
         >
           <component
             :is="tab.component"

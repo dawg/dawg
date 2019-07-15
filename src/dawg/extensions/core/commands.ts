@@ -8,6 +8,7 @@ type CommandCallback = () => void;
 export type Key =
   'Shift' |
   'CmdOrCtrl' |
+  'Ctrl' |
   'A' |
   'B' |
   'C' |
@@ -49,6 +50,7 @@ const codeLookup: KeyCodeLookup = {
     [Platform.Mac]: 91,
     [Platform.Linux]: 17,
   }, // 55 is the Mac command key
+  Ctrl: 17,
   A: 65,
   B: 66,
   C: 67,
@@ -190,7 +192,12 @@ export const commands = manager.activate({
       text: 'Command Palette',
       shortcut: ['CmdOrCtrl', 'Shift', 'P'],
       callback: () => {
-        palette.selectFromItems(items, {
+        const paletteItems = items.map((item) => ({
+          ...item,
+          action: item.shortcut ? item.shortcut.join('+') : undefined,
+        }));
+
+        palette.selectFromItems(paletteItems, {
           onDidSelect: (item) => {
             item.callback();
           },
