@@ -28,8 +28,8 @@ import bus, { isMouseEvent, Position, ContextPayload } from '@/dawg/extensions/c
 import { Watch } from '@/modules/update';
 import { computed, onMounted, onDestroyed, watch, value } from 'vue-function-api';
 import { createComponent } from '@/utils';
-import { commands } from '../commands';
-import { ClickCommand } from '../../../ui';
+import { commands } from '@/dawg/extensions/core/commands';
+import { ClickCommand } from '@/dawg/ui';
 
 export default createComponent({
   props: {
@@ -151,7 +151,7 @@ export default createComponent({
       doCallback,
       mouseover,
       mouseleave,
-      active,style,
+      active, style,
       open,
     };
   },

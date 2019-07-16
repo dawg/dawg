@@ -4,7 +4,7 @@ import { ui } from '@/dawg/ui';
 import { createExtension } from '@/dawg/extensions';
 import { commands } from '@/dawg/extensions/core/commands';
 import { panels } from '@/dawg/extensions/core/panels';
-import { project } from '../project';
+import { project } from '@/dawg/extensions/core/project';
 
 export const extension = createExtension({
   id: 'dawg.mixer',

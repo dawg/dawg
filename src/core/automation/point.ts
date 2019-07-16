@@ -1,6 +1,6 @@
 import * as t from 'io-ts';
 import { Beats } from '@/core/types';
-import { Serializable } from '../serializable';
+import { Serializable } from '@/core/serializable';
 
 export const PointType = t.type({
   time: t.number,

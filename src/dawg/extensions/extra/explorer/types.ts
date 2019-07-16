@@ -1,4 +1,4 @@
-import { Bus } from '../../../../modules/update';
+import { Bus } from '@/modules/update';
 
 export interface FileTree {
   [fullPath: string]: FileTree | string;

@@ -9,7 +9,7 @@ import * as Audio from '@/modules/audio';
 import { theme } from '@/dawg/extensions/core/theme';
 import { pianoRoll } from '@/dawg/extensions/core/piano-roll';
 import { value, computed, watch } from 'vue-function-api';
-import { project } from '../project';
+import { project } from '@/dawg/extensions/core/project';
 
 export const extension: Extension = {
   id: 'dawg.midi',

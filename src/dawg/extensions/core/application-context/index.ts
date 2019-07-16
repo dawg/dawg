@@ -1,9 +1,8 @@
 import Vue from 'vue';
 import VerticalSwitch from '@/dawg/extensions/core/application-context/VerticalSwitch.vue';
-import { manager } from '../../manager';
+import { manager } from '@/dawg/extensions/manager';
 import { value } from 'vue-function-api';
 import { ui } from '@/dawg/ui';
-import { commands } from '../commands';
 
 export type ApplicationContext = 'playlist' | 'pianoroll';
 

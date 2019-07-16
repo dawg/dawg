@@ -8,8 +8,8 @@ import { ScheduledPattern, ScheduledSample } from '@/core';
 import { value } from 'vue-function-api';
 import { ui } from '@/dawg/ui';
 import { Ghost } from '@/core/ghost';
-import { applicationContext } from '../application-context';
-import { log } from '../log';
+import { applicationContext } from '@/dawg/extensions/core/application-context';
+import { log } from '@/dawg/extensions/core/log';
 
 export const playlist = manager.activate({
   id: 'dawg.playlist',

@@ -1,7 +1,7 @@
 import { manager } from '@/dawg/extensions/manager';
 import { remote } from 'electron';
 import { commands, Command } from '@/dawg/extensions/core/commands';
-import { menubar } from '../menubar';
+import { menubar } from '@/dawg/extensions/core/menubar';
 
 export const window = manager.activate({
   id: 'dawg.window',

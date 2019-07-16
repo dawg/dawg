@@ -6,7 +6,7 @@ import { patterns } from '@/dawg/extensions/core/patterns';
 import { Score } from '@/core';
 import { ui } from '@/dawg/ui';
 import { menu } from '@/dawg/extensions/core/menu';
-import { project } from '../project';
+import { project } from '@/dawg/extensions/core/project';
 
 export const instruments = manager.activate({
   id: 'dawg.instruments',

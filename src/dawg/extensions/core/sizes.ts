@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { manager } from '../manager';
+import { manager } from '@/dawg/extensions/manager';
 
 export const sizes = manager.activate({
   id: 'dawg.sizes',

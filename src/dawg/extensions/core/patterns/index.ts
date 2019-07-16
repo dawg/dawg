@@ -5,7 +5,7 @@ import { makeLookup } from '@/modules/utils';
 import { Pattern } from '@/core';
 import { manager } from '@/dawg/extensions/manager';
 import { ui } from '@/dawg/ui';
-import { project } from '../project';
+import { project } from '@/dawg/extensions/core/project';
 
 export const patterns = manager.activate({
   id: 'dawg.patterns',

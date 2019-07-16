@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { createExtension } from '../..';
+import { createExtension } from '@/dawg/extensions';
 import TimeDisplay from '@/dawg/extensions/extra/time/TimeDisplay.vue';
 import * as dawg from '@/dawg';
 import { createComponent, value, watch } from 'vue-function-api';

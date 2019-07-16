@@ -21,7 +21,7 @@ import { Score, Instrument, Pattern } from '@/core';
 import { Watch } from '@/modules/update';
 import { notify } from '@/dawg/extensions/core/notify';
 import { menu } from '@/dawg/extensions/core/menu';
-import { project } from '../project';
+import { project } from '@/dawg/extensions/core/project';
 
 @Component({ components: { Synth } })
 export default class Synths extends Vue {

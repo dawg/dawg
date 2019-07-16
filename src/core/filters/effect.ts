@@ -3,7 +3,7 @@ import uuid from 'uuid';
 import * as t from 'io-ts';
 import { EffectOptions, EffectName, EffectTones, EffectMap } from '@/core/filters/effects';
 import { EffectDefaults } from '@/core/filters/defaults';
-import { Serializable } from '../serializable';
+import { Serializable } from '@/core/serializable';
 
 export const EffectType = t.type({
   slot: t.number,

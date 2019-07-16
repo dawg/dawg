@@ -13,8 +13,8 @@ import 'firebase/auth';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, watch, Wrapper, value, createComponent } from 'vue-function-api';
 import { ui } from '@/dawg/ui';
-import { project } from '../../core/project';
-import { createExtension } from '../..';
+import { project } from '@/dawg/extensions/core/project';
+import { createExtension } from '@/dawg/extensions';
 
 const createBackupAPI = (
   backup: Wrapper<boolean>,

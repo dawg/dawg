@@ -2,7 +2,7 @@ import * as t from 'io-ts';
 import { AutomationClip } from '@/core/automation';
 import * as Audio from '@/modules/audio';
 import { Schedulable, SchedulableType } from '@/core/scheduled/schedulable';
-import { Serializable } from '../serializable';
+import { Serializable } from '@/core/serializable';
 import { toTickTime, literal } from '@/utils';
 
 export const ScheduledAutomationType = t.intersection([

@@ -6,8 +6,8 @@ import { remote } from 'electron';
 import { Sample } from '@/core';
 import { commands } from '@/dawg/extensions/core/commands';
 import { panels } from '@/dawg/extensions/core/panels';
-import { sampleViewer } from '../../core/sample-viewer';
-import { createExtension } from '../..';
+import { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
+import { createExtension } from '@/dawg/extensions';
 
 export const extension = createExtension({
   id: 'dawg.explorer',

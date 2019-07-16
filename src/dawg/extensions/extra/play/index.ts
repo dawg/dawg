@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { createExtension } from '../..';
+import { createExtension } from '@/dawg/extensions';
 import * as dawg from '@/dawg';
 import { createComponent, computed } from 'vue-function-api';
 

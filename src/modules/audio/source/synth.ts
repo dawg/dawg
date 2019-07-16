@@ -1,6 +1,6 @@
 import Tone from 'tone';
 import { Source } from '@/modules/audio/source/source';
-import { Time } from '../types';
+import { Time } from '@/modules/audio/types';
 
 export interface SynthOptions {
   envelope: {

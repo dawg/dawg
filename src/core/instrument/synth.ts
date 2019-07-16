@@ -2,7 +2,7 @@ import Tone from 'tone';
 import * as t from 'io-ts';
 import * as Audio from '@/modules/audio';
 import { Instrument, InstrumentType } from '@/core/instrument/instrument';
-import { Serializable } from '../serializable';
+import { Serializable } from '@/core/serializable';
 import { literal } from '@/utils';
 
 export const SynthType = t.intersection([

@@ -12,7 +12,7 @@ import { commands } from '@/dawg/extensions/core/commands';
 import { panels } from '@/dawg/extensions/core/panels';
 import { applicationContext } from '../application-context';
 import { value, watch } from 'vue-function-api';
-import { project } from '../project';
+import { project } from '@/dawg/extensions/core/project';
 
 // FIXME remove HOC and use hooks
 const createElement = (o: VueConstructor) => {
