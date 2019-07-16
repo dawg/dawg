@@ -181,13 +181,11 @@ export default class Sequencer extends Vue {
   }
 
   public added(element: Schedulable) {
-    this.$log.debug(`Adding element at ${element.time}`);
     element.schedule(this.transport);
     this.$emit('added', element);
   }
 
   public removed(element: Schedulable) {
-    this.$log.debug(`Removing element at ${element.time}`);
     element.remove(this.transport);
     this.$emit('removed', element);
   }
@@ -217,7 +215,6 @@ export default class Sequencer extends Vue {
 
   @Watch<Sequencer>('loopEnd', { immediate: true })
   public onLoopEndChange() {
-    this.$log.debug(`${this.name} -> loodEnd being set to ${this.loopEnd}`);
     const time = toTickTime(this.loopEnd);
     this.transport.loopEnd = new Tone.TransportTime(time).toSeconds();
     this.$update('end', this.loopEnd);
@@ -225,7 +222,6 @@ export default class Sequencer extends Vue {
 
   @Watch<Sequencer>('loopStart', { immediate: true })
   public onLoopStartChange() {
-    this.$log.debug(`loopStart being set to ${this.loopStart}`);
     const time = toTickTime(this.loopStart);
     this.transport.loopStart = new Tone.TransportTime(time).toSeconds();
     this.$update('start', this.loopStart);
@@ -239,7 +235,6 @@ export default class Sequencer extends Vue {
 
   @Watch<Sequencer>('play', { immediate: true })
   public onPlay() {
-    this.$log.debug(`play -> ${this.play}`);
     if (this.play) {
       this.update();
     } else if (this.transport.state === 'started') {

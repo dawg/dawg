@@ -8,6 +8,7 @@ import { value } from 'vue-function-api';
 import { ui } from '@/dawg/ui';
 import { Ghost } from '@/core/ghosts/ghost';
 import { applicationContext } from '../application-context';
+import { log } from '../log';
 
 export const playlist = manager.activate({
   id: 'dawg.playlist',
@@ -26,6 +27,7 @@ export const playlist = manager.activate({
 
     const playlistRowHeight = context.workspace.playlistRowHeight;
     const playlistBeatWidth = context.workspace.playlistBeatWidth;
+    const logger = log.getLogger();
 
     const component = Vue.extend({
       name: 'PlaylistSequencerWrapper',
@@ -77,7 +79,7 @@ export const playlist = manager.activate({
             return;
           }
 
-          this.$log.debug('Adding a sample!');
+          logger.debug('Adding a sample!');
           this.project.addSample(sample);
         },
       },

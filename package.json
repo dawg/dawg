@@ -25,6 +25,7 @@
     "firebase": "^5.8.6",
     "io-ts": "^1.8.5",
     "lodash.throttle": "^4.1.1",
+    "log4js": "^4.5.1",
     "mz": "^2.7.0",
     "node-wav": "0.0.2",
     "python-shell": "^1.0.7",
@@ -41,7 +42,6 @@
     "vue-function-api": "^2.0.6",
     "vue-perfect-scrollbar": "^0.1.0",
     "vue-property-decorator": "^7.0.0",
-    "vuejs-logger": "^1.5.3",
     "vuetify": "^1.5.5",
     "webmidi": "^2.3.3"
   },

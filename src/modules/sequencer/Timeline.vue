@@ -230,7 +230,6 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
     this.justDragged = true;
 
     if (!this.inLoop) {
-      this.$log.debug('Starting loop!');
       const position = this.getPosition(e);
       this.inLoop = true;
       this.start = position;

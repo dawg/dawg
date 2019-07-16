@@ -13,7 +13,6 @@ export const patterns = manager.activate({
     const selectedPatternId = value<null | string>(null);
 
     const patternLookup = computed(() => {
-      // TODO
       return makeLookup(project.project.patterns);
     });
 
@@ -33,17 +32,6 @@ export const patterns = manager.activate({
       } else {
         selectedPatternId.value = null;
       }
-
-      // TODO(jacob)
-      // if (!this.selectedScoreId || !this.scoreLookup) {
-      //   return;
-      // }
-
-      // if (this.selectedScoreId in this.scoreLookup) {
-      //   return;
-      // }
-
-      // this.set({ key: 'selectedScoreId', value: null });
     };
 
     const wrapper = Vue.extend(createComponent({

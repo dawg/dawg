@@ -359,7 +359,6 @@ export default class Split extends Vue {
 
     const notInitialized = this.children.filter((child) => !child.initial);
     const size = remaining / notInitialized.length;
-    // this.$log.debug('Initializing', this.$el, remaining, notInitialized.length, size);
     notInitialized.forEach((split) => { split.setSize(size); });
     this.children.forEach((split) => { split.init(); });
   }

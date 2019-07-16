@@ -4,7 +4,6 @@ import { Sample, ScheduledSample } from '@/core';
 import { Beats } from '@/core/types';
 import { IProject, Project, ProjectType } from '@/project';
 import { createExtension, IExtensionContext } from '@/dawg/extensions';
-// TODO(jacob) Wrap
 import { remote } from 'electron';
 import { manager } from '@/dawg/extensions/manager';
 import { MemoryLoader } from '@/core/loaders/memory';
@@ -17,6 +16,7 @@ import { patterns } from './patterns';
 import { applicationContext } from './application-context';
 import { ui } from '@/dawg/ui';
 import { addDisposableListener } from '@/utils';
+import { log } from './log';
 
 export interface InitializationError {
   type: 'error';
@@ -35,6 +35,7 @@ const projectApi = (context: IExtensionContext) => {
   let _p: Project | null = null;
   const state = value<'stopped' | 'started' | 'paused'>('stopped');
   const openedFile = value(manager.getOpenedFile());
+  const logger = log.getLogger();
 
   context.subscriptions.push(manager.onDidSetOpenedFile(() => {
     openedFile.value = manager.getOpenedFile();
@@ -82,8 +83,7 @@ const projectApi = (context: IExtensionContext) => {
     const { name } = tmp.fileSync({ keep: true });
     await fs.writeFile(name, JSON.stringify(p, null, 4));
 
-    // TODO
-    // dawg.log.info(`Writing ${name} as backup`);
+    logger.info(`Writing ${name} as backup`);
     manager.setOpenedFile({ path: name, id: p.id }, { isTemp: true });
 
     const window = remote.getCurrentWindow();
@@ -119,6 +119,7 @@ const projectApi = (context: IExtensionContext) => {
       }
 
       if (!projectPath.endsWith(DG_EXTENSION)) {
+        logger.info(`Adding ${DG_EXTENSION} to project path`);
         projectPath = projectPath + DG_EXTENSION;
       }
 
@@ -126,6 +127,7 @@ const projectApi = (context: IExtensionContext) => {
       // Make sure we set the cache and the general
       // The cache is what is written to the filesystem
       // and the general is the file that is currently opened
+      logger.info(`Setting opened project as ${projectPath}`);
       manager.setOpenedFile({ path: projectPath, id: p.id });
     }
 

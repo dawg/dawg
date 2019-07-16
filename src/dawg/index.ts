@@ -17,6 +17,7 @@ export { models } from '@/dawg/extensions/core/models';
 export { menubar } from '@/dawg/extensions/core/menubar';
 export { record } from '@/dawg/extensions/core/record';
 export { status } from '@/dawg/extensions/core/status';
+export { log } from '@/dawg/extensions/core/log';
 export { playlist } from '@/dawg/extensions/core/playlist';
 export { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 export { window } from '@/dawg/extensions/core/window';

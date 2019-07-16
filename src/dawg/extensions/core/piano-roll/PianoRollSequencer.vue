@@ -95,7 +95,7 @@ export default class PianoRollSequencer extends Vue {
         velocity: iNote.velocity,
       });
 
-      // TODO Refactor this
+      // FIXME Refactor this
       this.notes.push(note);
       note.schedule(this.transport);
     });

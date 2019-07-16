@@ -322,6 +322,7 @@ export const manager = {
     // tslint:disable-next-line:no-console
     console.info('Activating ' + extension.id);
     resolved[extension.id] = false;
+    manager.activating.push(extension);
 
     const getOrEmptyObject = (o: JSON, key: string) => {
       return o[key] === undefined ? {} : o[key];
@@ -378,6 +379,7 @@ export const manager = {
     const api = extension.activate(context);
 
     extensions[extension.id] = api;
+    manager.activating.pop();
     resolved[extension.id] = true;
     extensionsStack.push({ extension, context });
 
@@ -408,4 +410,5 @@ export const manager = {
     return extensions[extension.id] as ReturnType<T['activate']>;
   },
   notificationQueue,
+  activating: [] as Extension[],
 };

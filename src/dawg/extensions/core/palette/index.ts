@@ -18,7 +18,6 @@ export const palette = manager.activate({
   activate() {
     ui.global.push(Palette);
 
-    // TODO(jacob) REMOVE the promise
     return {
       selectFromStrings<T extends string>(items: T[], options: QuickPickOptions<T>) {
         this.selectFromTuples(items.map((item) => [{ text: item }, item]), options);

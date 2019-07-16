@@ -332,12 +332,10 @@ export default class SequencerGrid extends Mixins(Draggable) {
     const x = e.clientX - rect.left;
     let time = x / this.pxPerBeat;
     time = Math.floor(time / this.snap) * this.snap;
-    this.$log.debug(x, e.clientX, rect.left, time);
 
     const y = e.clientY - rect.top;
     const row = Math.floor(y / this.rowHeight);
 
-    this.$log.debug(`Adding to row -> ${row}, time -> ${time}`);
     const item = this.prototype.copy();
     item.row = row;
     item.time = time;
@@ -424,7 +422,6 @@ export default class SequencerGrid extends Mixins(Draggable) {
     );
 
     const itemLoopEnd = Math.ceil(maxTime / this.beatsPerMeasure) * this.beatsPerMeasure;
-    this.$log.debug(`${this.name} -> sequencerLoopEnd -> ${itemLoopEnd}`);
 
     if (itemLoopEnd !== this.itemLoopEnd) {
       this.$update('sequencerLoopEnd', itemLoopEnd);

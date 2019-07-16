@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Synths from '@/dawg/extensions/core/instruments/Synths.vue';
 import { manager } from '@/dawg/extensions/manager';
-import { value, Wrapper, computed } from 'vue-function-api';
+import { value, Wrapper, computed, watch } from 'vue-function-api';
 import { patterns } from '@/dawg/extensions/core/patterns';
 import { Score } from '@/core';
 import { ui } from '@/dawg/ui';
@@ -84,6 +84,19 @@ export const instruments = manager.activate({
         }
       },
     );
+
+    watch(patterns.selectedPattern, () => {
+      if (!selectedScoreId.value || !scoreLookup.value) {
+        return;
+      }
+
+      if (selectedScoreId.value in scoreLookup.value) {
+        return;
+      }
+
+      // Invalidate the selected score
+      selectedScoreId.value = null;
+    });
 
     return {
       selectedScore,

@@ -9,16 +9,6 @@ import { Automatable } from '@/core';
 declare module 'vue/types/vue' {
   // 3. Declare augmentation for Vue
   // I'm not sure that this is the best way to do things...
-  interface Vue extends 
-    UpdateAugmentation,
-    KnobAugmentation<Automatable>
-  {
-    $log: {
-      debug(...args: any[]): void,
-      info(...args: any[]): void,
-      warn(...args: any[]): void,
-      error(...args: any[]): void,
-      fatal(...args: any[]): void,
-    }
+  interface Vue extends  UpdateAugmentation, KnobAugmentation<Automatable> {
   }
 }

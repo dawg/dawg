@@ -14,7 +14,7 @@ import { applicationContext } from '../application-context';
 import { value, watch } from 'vue-function-api';
 import { project } from '../project';
 
-// TODO(jacob) WHy do I need to do this?
+// FIXME remove HOC and use hooks
 const createElement = (o: VueConstructor) => {
   return positionable(resizable(selectable(o)));
 };

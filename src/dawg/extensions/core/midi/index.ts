@@ -17,11 +17,15 @@ export const extension: Extension = {
     const selectedScore = instruments.selectedScore;
     const recordedNotes: {[key: string]: InputEventNoteon} = {};
     const notesStartTimes: {[key: string]: number} = {};
-    let transport = new Audio.Transport(); // TODO REMOVE THIS
+    let transport: Audio.Transport | null = null;
 
     const recording = value(false);
 
     const onDidNoteOn = (e: InputEventNoteon) => {
+      if (!transport) {
+        return;
+      }
+
       if (recording.value) {
         recordedNotes[e.note.name + e.note.octave] = e;
         const transportLocation = transport.progress * (transport.loopEnd - transport.loopStart);
@@ -34,6 +38,10 @@ export const extension: Extension = {
     };
 
     const onDidNoteOff = (e: InputEventNoteoff) => {
+      if (!transport) {
+        return;
+      }
+
       if (selectedScore.value) {
         selectedScore.value.instrument.triggerRelease(e.note.name + e.note.octave);
       }
@@ -116,6 +124,7 @@ export const extension: Extension = {
     }
 
     function stopRecording() {
+      transport = null;
       recording.value = !recording.value;
       project.stopTransport();
     }

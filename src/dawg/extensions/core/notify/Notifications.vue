@@ -190,7 +190,7 @@ export default class Notifications extends Vue {
 
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .notifications {
   display: block;
   position: fixed;
@@ -248,12 +248,12 @@ export default class Notifications extends Vue {
   margin: 4px;
 }
 
-/* TODO a bit of hardcoding */
+$width: 26px;
 .left {
-  width: 26px;
+  width: $width;
 }
 
 .right {
-  width: calc(100% - 26px);
+  width: calc(100% - $width);
 }
 </style>

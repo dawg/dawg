@@ -161,7 +161,7 @@ export class Palette extends Vue {
 
   public checkEnterEsc(e: KeyboardEvent) {
     if (e.which === 27) { // ESC
-      // TODO(jacob)
+      // TODOLATER
       // e.preventDefault();
       paletteEvents.emit('cancel');
       this.value = false;

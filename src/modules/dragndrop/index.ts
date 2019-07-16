@@ -52,7 +52,6 @@ export const giving = (component: VueConstructor) => {
     @Prop({ type: String, required: true }) public group!: string;
 
     public dragstart() {
-      this.$log.debug('dragstart', this.group);
       dragging = this.group;
     }
 

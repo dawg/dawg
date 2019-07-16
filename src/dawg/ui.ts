@@ -59,6 +59,7 @@ interface StatusBarItem {
   order?: number;
 }
 
+// FIXME add function and that return a dispose function
 interface UI {
   global: VueConstructor[];
   statusBar: StatusBarItem[];

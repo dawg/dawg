@@ -13,7 +13,6 @@ interface NotificationFunctions {
 export const notify = manager.activate({
   id: 'dawg.notify',
   activate() {
-    // TODO Can we add a method with the dispose thingy so that we can avoid the pop during deactivate
     ui.global.push(Notifications);
 
     const functions: NotificationFunctions = {
@@ -36,8 +35,5 @@ export const notify = manager.activate({
     };
 
     return functions;
-  },
-  deactivate() {
-    ui.global.pop();
   },
 });

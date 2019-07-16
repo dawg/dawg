@@ -1,30 +1,22 @@
 import { manager } from '@/dawg/extensions/manager';
-import { IpcRenderer, ElectronMenuItem } from '@/ipc';
+import { IpcRenderer } from '@/ipc';
 import { ipcRenderer } from 'electron';
-import { Key } from './commands';
+import { Command } from './commands';
 import { uniqueId } from '@/utils';
-
-// TODO USE COMMAND
-interface SubMenuItem {
-  text: string;
-  shortcut?: Key[];
-  callback: () => void;
-}
 
 interface SubMenu {
   name: string;
-  items: Array<SubMenuItem | null>;
+  items: Array<Command | null>;
 }
 
-// TODO(jacob) Make this structure...
+// FIXME Make this structure...
 // [
 //   this.menuItems.new,
 //   null,
 //   this.menuItems.open,
 //   this.menuItems.backup,
 //   null,
-//   // TODO(jacob)
-//   // this.menuItems.addFolder,
+//   this.menuItems.addFolder,
 //   null,
 //   this.menuItems.save,
 //   this.menuItems.saveAs,
@@ -37,7 +29,7 @@ export const menubar = manager.activate({
   activate() {
     const events: IpcRenderer = ipcRenderer;
 
-    const transform = (menu: string, item: SubMenuItem) => {
+    const transform = (menu: string, item: Command) => {
       let accelerator: string | undefined;
       if (item.shortcut) {
         accelerator = item.shortcut.join('+');
@@ -52,7 +44,7 @@ export const menubar = manager.activate({
     };
 
     return {
-      addItem: (menu: string, item: SubMenuItem) => {
+      addItem: (menu: string, item: Command) => {
         const electronItem = transform(menu, item);
         events.send('addToMenu', electronItem);
 

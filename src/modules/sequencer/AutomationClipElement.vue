@@ -142,7 +142,7 @@ export default class AutomationClipElement extends Vue {
     value = Math.max(0, Math.min(1, value));
     value = 1 - scale(value, [0, 1], this.fromRange);
 
-    this.$log.debug(`Changing ${this.clip.points[i].value} -> ${value}`);
+    dawg.log.debug(`Changing ${this.clip.points[i].value} -> ${value}`);
     this.clip.setValue(i, value);
     this.$set(this.points, i, this.points[i]);
   }
