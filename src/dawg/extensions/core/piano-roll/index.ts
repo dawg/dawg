@@ -10,7 +10,7 @@ import { positionable, selectable } from '@/modules/sequencer/helpers';
 import { resizable } from '@/modules/sequencer/helpers';
 import { commands } from '@/dawg/extensions/core/commands';
 import { panels } from '@/dawg/extensions/core/panels';
-import { applicationContext } from '../application-context';
+import { applicationContext } from '@/dawg/extensions/core/application-context';
 import { value, watch } from 'vue-function-api';
 import { project } from '@/dawg/extensions/core/project';
 

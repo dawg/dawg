@@ -3,6 +3,7 @@ import VerticalSwitch from '@/dawg/extensions/core/application-context/VerticalS
 import { manager } from '@/dawg/extensions/manager';
 import { value } from 'vue-function-api';
 import { ui } from '@/dawg/ui';
+import { commands } from '@/dawg/extensions/core/commands';
 
 export type ApplicationContext = 'playlist' | 'pianoroll';
 

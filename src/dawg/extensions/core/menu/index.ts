@@ -42,7 +42,8 @@ export const menu = manager.activate({
       bus.$emit('show', opts);
     };
 
-    ui.global.push(ContextMenu);
+    // FIXME(2) we shouldn't have to cast here??
+    ui.global.push(ContextMenu as any);
 
     return {
       context: contextFunction,

@@ -1,7 +1,7 @@
 'use strict';
 
 import { app, protocol, BrowserWindow, Menu, ipcMain, MenuItemConstructorOptions } from 'electron';
-import menu from 'electron-context-menu';
+import menu from './main/context';
 import path from 'path';
 import {
   createProtocol,
