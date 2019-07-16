@@ -2,13 +2,6 @@ import path from 'path';
 import fs from 'mz/fs';
 export { FSWatcher } from 'mz/fs';
 
-// TODO Remove this eventually
-// Or change the name
-// And make everything that accesses fs use this file
-// Contains some wrappers for Node.js modules. This might be useful in the
-// future (if we wanted to build for the web instead of using Electron). Also,
-// some utility functions are also defined in the wrappers to improve this API.
-
 const mkdirRecursive = async (dir: string) => {
   if (!(await fs.exists(dir))) {
     await mkdirRecursive(path.join(dir, '..'));

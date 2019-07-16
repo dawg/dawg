@@ -41,7 +41,7 @@ import * as dawg from '@/dawg';
 @Component
 export default class AutomationClipElement extends Vue {
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;
-  // TODO small bug height !== true height
+  // FIXME(2) small bug height !== true height
   @Prop({ type: Number, required: true }) public height!: number;
   @Prop({ type: Number, required: true }) public snap!: number;
 
@@ -107,7 +107,7 @@ export default class AutomationClipElement extends Vue {
   }
 
   public getTimeValue(e: MouseEvent) {
-    // TODO duplication
+    // FIXME(3) duplication
     const rect = this.$el.getBoundingClientRect();
     const x = e.clientX - rect.left;
     let time = x / this.pxPerBeat;
@@ -136,7 +136,7 @@ export default class AutomationClipElement extends Vue {
     time = Math.max(lowerBound, Math.min(upperBound, time));
 
     this.clip.setTime(i, time);
-    // TODO this needs a better home
+    // FIXME(2) this needs a better home
     this.element.duration = Math.max(this.element.duration, time);
 
     value = Math.max(0, Math.min(1, value));

@@ -17,13 +17,10 @@
 import { Vue, Component, Prop, Watch, Mixins } from 'vue-property-decorator';
 import { Draggable } from '@/modules/draggable';
 
-// TODO Add sync variables for size (and collapsed?)
-
 export type Direction = 'horizontal' | 'vertical';
 
 const isSplit = (vue: Vue): vue is Split => {
-  // @ts-ignore
-  return vue.constructor.options.name === Split.name;
+  return (vue.constructor as any as { options: { name: string } }).options.name === Split.name;
 };
 
 @Component({ components: { Draggable } })
@@ -389,8 +386,6 @@ export default class Split extends Vue {
 
     switch (this.parent.direction) {
       case 'horizontal':
-        // TODO This is work around for my particular situation
-        // It won't work for other situations
         this.after[1].resize(this.initial - this.width);
         break;
       case 'vertical':

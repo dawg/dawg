@@ -38,7 +38,7 @@ declare module 'tone' {
   }
 
   class AmplitudeEnvelope extends Envelope {
-    constructor(attack?: any, decay?: _TimeArg, sustain?: number, release?: _TimeArg); //TODO: Change 'any' to '_TimeArg | Object'
+    constructor(attack?: any, decay?: _TimeArg, sustain?: number, release?: _TimeArg); //FIXME: Change 'any' to '_TimeArg | Object'
     dispose(): this;
   }
 
@@ -72,7 +72,7 @@ declare module 'tone' {
   }
 
   class AutoPanner extends Effect {
-    constructor(frequency?: any); //TODO: Number || Object
+    constructor(frequency?: any); //FIXME: Number || Object
     amount: Signal;
     frequency: Signal;
     type: string;
@@ -112,7 +112,7 @@ declare module 'tone' {
     onprogress(): void;
     dispose(): this;
     get(): AudioBuffer;
-    set(buffer: any): Buffer; //TODO: change any to AudioBuffer | Buffer
+    set(buffer: any): Buffer; //FIXME: change any to AudioBuffer | Buffer
   }
 
   interface BufferSourceOptions {
@@ -135,7 +135,7 @@ declare module 'tone' {
   }
 
   class Chebyshev extends Effect {
-    constructor(order: any); //TODO: Number || Object
+    constructor(order: any); //FIXME: Number || Object
     order: number;
     oversample: string;
     dispose(): this;
@@ -178,7 +178,7 @@ declare module 'tone' {
   }
 
   class Compressor extends AudioNode {
-    constructor(threshold?: any, ratio?: number); //TODO: Number || Object
+    constructor(threshold?: any, ratio?: number); //FIXME: Number || Object
     attack: Signal;
     knee: AudioParam;
     ratio: AudioParam;
@@ -198,7 +198,7 @@ declare module 'tone' {
 
 
   class Convolver extends Effect {
-    constructor(url: any); //TODO: Change any to 'string | AudioBuffer' when available
+    constructor(url: any); //FIXME: Change any to 'string | AudioBuffer' when available
     buffer: AudioBuffer;
     load(url: string, callback?: (e: any) => any): Convolver;
     dispose(): this;
@@ -246,7 +246,7 @@ declare module 'tone' {
   }
 
   class Envelope extends Tone {
-    constructor(attack: any, decay?: _TimeArg, sustain?: number, release?: _TimeArg);  //TODO: Change 'any' to '_TimeArg | Object'
+    constructor(attack: any, decay?: _TimeArg, sustain?: number, release?: _TimeArg);  //FIXME: Change 'any' to '_TimeArg | Object'
     attack: _TimeArg;
     decay: _TimeArg;
     release: _TimeArg;
@@ -258,7 +258,7 @@ declare module 'tone' {
   }
 
   class EQ3 extends AudioNode {
-    constructor(lowLevel?: any, midLevel?: number, highLevel?: number); //TODO: Change 'any' to 'number | Object'
+    constructor(lowLevel?: any, midLevel?: number, highLevel?: number); //FIXME: Change 'any' to 'number | Object'
     highFrequency: Signal;
     high: Gain;
     lowFrequency: Signal;
@@ -315,7 +315,7 @@ declare module 'tone' {
   }
 
   class Filter extends Tone {
-    constructor(freq?: any, type?: string, rolloff?: number); //TODO: Number || Object
+    constructor(freq?: any, type?: string, rolloff?: number); //FIXME: Number || Object
     detune: Signal;
     frequency: Signal;
     gain: AudioParam;
@@ -403,7 +403,7 @@ declare module 'tone' {
   }
 
   class JCReverb extends Effect {
-    constructor(roomSize: number); //TODO: Number || Object
+    constructor(roomSize: number); //FIXME: Number || Object
     roomSize: Signal;
     dispose(): this;
   }
@@ -414,7 +414,7 @@ declare module 'tone' {
   }
 
   class LFO extends Oscillator {
-    constructor(frequency?: _TimeArg, outputMin?: number, outputMax?: number); //TODO: Number || Object
+    constructor(frequency?: _TimeArg, outputMin?: number, outputMax?: number); //FIXME: Number || Object
     amplitude: Signal;
     frequency: Signal;
     max: number;
@@ -607,7 +607,7 @@ declare module 'tone' {
   }
 
   class OmniOscillator extends Source {
-    constructor(frequency?: Frequency, type?: string); //TODO: Number || Object
+    constructor(frequency?: Frequency, type?: string); //FIXME: Number || Object
     detune: Signal;
     frequency: Signal;
     modulationFrequency: Signal;
@@ -670,12 +670,12 @@ declare module 'tone' {
     humanize: boolean
     loopEnd: _TimeArg
     loopStart: _TimeArg
-    add(time: _TimeArg, value: T): void // TODO
-    remove(time: _TimeArg, value: T): void // TODO
+    add(time: _TimeArg, value: T): void // FIXME
+    remove(time: _TimeArg, value: T): void // FIXME
   }
 
   class Phaser extends StereoEffect {
-    constructor(rate?: any, depth?: number, baseFrequency?: number); //TODO: change 'any' to 'number | Object'
+    constructor(rate?: any, depth?: number, baseFrequency?: number); //FIXME: change 'any' to 'number | Object'
     baseFrequency: number;
     depth: number;
     frequency: Signal;
@@ -683,7 +683,7 @@ declare module 'tone' {
   }
 
   class PingPongDelay extends StereoXFeedbackEffect {
-    constructor(delayTime?: any, feedback?: number); //TODO: _TimeArg || Object
+    constructor(delayTime?: any, feedback?: number); //FIXME: _TimeArg || Object
     delayTime: Signal;
     dispose(): this;
   }
@@ -784,7 +784,7 @@ declare module 'tone' {
   }
 
   class ScaledEnvelope extends Envelope {
-    constructor(attack?: any, decay?: _TimeArg, sustain?: number, release?: _TimeArg); //TODO: Change 'any' to '_TimeArg | Object'
+    constructor(attack?: any, decay?: _TimeArg, sustain?: number, release?: _TimeArg); //FIXME: Change 'any' to '_TimeArg | Object'
     exponent: number;
     max: number;
     min: number;
@@ -867,7 +867,7 @@ declare module 'tone' {
   }
 
   class StereoWidener extends MidSideEffect {
-    constructor(width?: any); //TODO change 'any' to 'number | Object'
+    constructor(width?: any); //FIXME change 'any' to 'number | Object'
     width: Signal;
     dispose(): this;
   }
@@ -885,7 +885,7 @@ declare module 'tone' {
   }
 
   class Synth extends Monophonic {
-    constructor(options?: any) // TODO fix any
+    constructor(options?: any) // FIXME fix any
   }
 
   class Ticks extends TransportTime {
@@ -984,7 +984,7 @@ declare module 'tone' {
 
   type TransportCallback = (exact: number, ticks: number) => void;
 
-  // TODO callback ^^ is wrong
+  // FIXME callback ^^ is wrong
   class TransportEvent extends Tone {
     constructor(transport: _TransportConstructor, options: { time: TransportTime, callback: TransportCallback })
     id: string;
@@ -1032,7 +1032,7 @@ declare module 'tone' {
   }
 
   class WaveShaper extends SignalBase {
-    constructor(mapping: any, bufferLen?: number); //TODO: change 'any' to 'Function | Array | number'
+    constructor(mapping: any, bufferLen?: number); //FIXME: change 'any' to 'Function | Array | number'
     curve: number[];
     oversample: string;
   }

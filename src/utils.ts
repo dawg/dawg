@@ -145,7 +145,7 @@ export const Button = {
 };
 
 export function toTickTime(time: number) {
-  // TODO is ceil right?
+  // FIXME(3) is ceil right?
   return `${Math.ceil(time * Tone.Transport.PPQ)}i`;
 }
 

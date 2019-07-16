@@ -146,6 +146,11 @@ const extension = createExtension({
 
     context.subscriptions.push(disposable);
 
+    function insertStoredTheme() {
+      const name = context.workspace.theme.value;
+      insertTheme(defaults[checkIsValidTheme(name)]);
+    }
+
     return {
       foreground: '',
       background: '',
@@ -156,11 +161,7 @@ const extension = createExtension({
       info: '',
       success: '',
       warning: '',
-      insertStoredTheme: () => {
-        const name = context.workspace.theme.value;
-        // TODO ERROR handling
-        insertTheme(defaults[checkIsValidTheme(name)]);
-      },
+      insertStoredTheme,
     };
   },
 });
@@ -168,5 +169,6 @@ const extension = createExtension({
 
 export const theme = manager.activate(extension);
 
-// TODO(jacob) not the best
+// Insert the theme right away
+// FIXME maybe add ready hook??
 theme.insertStoredTheme();

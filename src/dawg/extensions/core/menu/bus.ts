@@ -1,15 +1,9 @@
 import { Bus } from '@/modules/update';
-import * as dawg from '@/dawg';
-
-export interface Item {
-  text: string;
-  shortcut?: dawg.Key[];
-  callback: (e: MouseEvent) => void;
-}
+import { ClickCommand } from '@/dawg/ui';
 
 export interface ContextPayload {
   event: MouseEvent | Position;
-  items: Array<Item | null>;
+  items: Array<ClickCommand | null>;
   left?: boolean;
 }
 

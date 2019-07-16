@@ -90,7 +90,7 @@ import BeatLines from '@/modules/sequencer/BeatLines';
 import Progression from '@/modules/sequencer/Progression.vue';
 import { Watch } from '@/modules/update';
 import { Schedulable } from '@/core';
-import { Ghost } from '@/core/ghosts/ghost';
+import { Ghost } from '@/core/ghost';
 
 @Component({
   components: { Progression, BeatLines },
@@ -123,7 +123,7 @@ export default class SequencerGrid extends Mixins(Draggable) {
   @Prop(Nullable(Number)) public setLoopStart!: number | null;
   @Prop({ type: Number, required: true }) public progress!: number;
 
-  // TODO edge case -> what happens if the element is deleted?
+  // FIXME edge case -> what happens if the element is deleted?
   @Prop(Nullable(Object)) public prototype!: Schedulable | null;
 
   @Prop({ type: Number, required: true }) public displayLoopEnd!: number;

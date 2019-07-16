@@ -2,11 +2,12 @@ import Vue from 'vue';
 import * as t from 'io-ts';
 import { manager } from '@/dawg/extensions/manager';
 import { project } from '@/dawg/extensions/core/project';
+// FIXME(2) Remove this import
 import { record } from '@/dawg/extensions/core/record';
 import { ScheduledPattern, ScheduledSample } from '@/core';
 import { value } from 'vue-function-api';
 import { ui } from '@/dawg/ui';
-import { Ghost } from '@/core/ghosts/ghost';
+import { Ghost } from '@/core/ghost';
 import { applicationContext } from '../application-context';
 import { log } from '../log';
 

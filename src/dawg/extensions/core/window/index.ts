@@ -29,8 +29,6 @@ export const window = manager.activate({
     };
 
     context.subscriptions.push(commands.registerCommand(reloadCommand));
-
-    // TODO move menus
     context.subscriptions.push(menubar.addItem('View', reloadCommand));
 
     return {

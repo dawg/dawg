@@ -11,7 +11,7 @@
 
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import Waveform from '@/components/Waveform.vue';
-import { ChunkGhost as Ghost } from '@/core/ghosts/ghost';
+import { ChunkGhost as Ghost } from '@/core/ghost';
 import * as dawg from '@/dawg';
 
 @Component({components: { Waveform }})

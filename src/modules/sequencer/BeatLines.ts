@@ -2,8 +2,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import { CreateElement } from 'vue';
 import * as dawg from '@/dawg';
 
-// Make this an actual component
-// TODO
+
 @Component
 export default class BeatLines extends Vue {
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;

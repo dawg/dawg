@@ -133,7 +133,7 @@ export class Project implements Serializable<IProject> {
     const automationClips = (i.automationClips || []).map((iAutomationClip) => {
       let signal: Signal;
       if (iAutomationClip.context === 'channel') {
-        // TODO(jacob) remove this
+        // FIXME(3) remove this
         // @ts-ignore
         signal = channelLookup[iAutomationClip.contextId][iAutomationClip.attr];
       } else {
@@ -479,7 +479,6 @@ export class Project implements Serializable<IProject> {
       effects[i - 1].connect(newEffect);
     }
 
-    // TODO Move to mutation
     if (toInsert !== null) {
       effects.splice(toInsert, 0, newEffect);
     } else {

@@ -1,5 +1,5 @@
 import tmp from 'tmp';
-import fs from 'mz/fs';
+import fs from '@/fs';
 import { Sample, ScheduledSample } from '@/core';
 import { Beats } from '@/core/types';
 import { IProject, Project, ProjectType } from '@/project';
@@ -17,6 +17,7 @@ import { applicationContext } from './application-context';
 import { ui } from '@/dawg/ui';
 import { addDisposableListener } from '@/utils';
 import { log } from './log';
+import { emitter } from '@/dawg/events';
 
 export interface InitializationError {
   type: 'error';
@@ -29,6 +30,7 @@ export interface InitializationSuccess {
   project: Project;
 }
 
+const events = emitter<{ save: (encoded: IProject) => void }>();
 
 const projectApi = (context: IExtensionContext) => {
   // tslint:disable-next-line:variable-name
@@ -91,9 +93,10 @@ const projectApi = (context: IExtensionContext) => {
   }
 
   function onDidSave(cb: (encoded: IProject) => void) {
+    events.addListener('save', cb);
     return {
       dispose() {
-        // TODO(jacob)
+        events.removeListener('save', cb);
       },
     };
   }
@@ -123,7 +126,6 @@ const projectApi = (context: IExtensionContext) => {
         projectPath = projectPath + DG_EXTENSION;
       }
 
-      // TODO UPDATE
       // Make sure we set the cache and the general
       // The cache is what is written to the filesystem
       // and the general is the file that is currently opened
@@ -134,6 +136,7 @@ const projectApi = (context: IExtensionContext) => {
     const encoded = p.serialize();
 
     await fs.writeFile(projectPath, JSON.stringify(encoded, null, 4));
+    events.emit('save', encoded);
   }
 
   async function removeOpenedFile() {
@@ -289,7 +292,7 @@ const extension = createExtension({
           { filters: FILTERS, properties: ['openFile'] },
         );
 
-        // TODO(jacob)
+        // FIXME
         // the showFileDialog messes with the keyup events
         // This is a temporary solution
         commands.clear();
@@ -301,7 +304,6 @@ const extension = createExtension({
         const filePath = files[0];
         await api.setOpenedFile(filePath);
 
-        // TODO use function
         const window = remote.getCurrentWindow();
         window.reload();
       },
@@ -313,7 +315,6 @@ const extension = createExtension({
       callback: async () => {
         await api.removeOpenedFile();
 
-        // TODO use function
         const window = remote.getCurrentWindow();
         window.reload();
       },

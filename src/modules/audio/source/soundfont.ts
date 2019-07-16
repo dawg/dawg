@@ -70,7 +70,7 @@ export class Soundfont implements Source<SoundfontOptions> {
       return this;
     }
 
-    // TODO A bit of a hacky solution to make Tone.js work with soundfonts
+    // FIXME(3) A bit of a hacky solution to make Tone.js work with soundfonts
     this.player.connect((node as any).output);
     return this;
   }

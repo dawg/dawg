@@ -24,11 +24,12 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import bus, { Item, isMouseEvent, Position, ContextPayload } from '@/dawg/extensions/core/menu/bus';
+import bus, { isMouseEvent, Position, ContextPayload } from '@/dawg/extensions/core/menu/bus';
 import { Watch } from '@/modules/update';
 import { computed, onMounted, onDestroyed, watch, value } from 'vue-function-api';
 import { createComponent } from '@/utils';
 import { commands } from '../commands';
+import { ClickCommand } from '../../../ui';
 
 export default createComponent({
   props: {
@@ -38,7 +39,7 @@ export default createComponent({
     width: { type: Number, default: 300 },
   },
   setup(props, context) {
-    const items = value<Array<Item | null>>([]);
+    const items = value<Array<ClickCommand | null>>([]);
     const open = value(false);
     const x = value(0);
     const y = value(0);
@@ -68,7 +69,7 @@ export default createComponent({
         top: `${y.value}px`,
         minWidth: `${props.width}px`,
       };
-    })
+    });
 
     function outsideClickListener(event: MouseEvent) {
       if (!event.target) {
@@ -133,17 +134,17 @@ export default createComponent({
       if (open.value) { return; }
       active.value = [];
       e = null;
-    })
+    });
 
     onMounted(() => {
       bus.$on('show', show);
-    })
+    });
 
     onDestroyed(() => {
       // Make sure to remove all stray listeners
       bus.$off('show', show);
       document.removeEventListener('click', outsideClickListener);
-    })
+    });
 
     return {
       processed,
@@ -152,13 +153,13 @@ export default createComponent({
       mouseleave,
       active,style,
       open,
-    }
-  }
-})
+    };
+  },
+});
 
 @Component
 export class ContextMenu extends Vue {
-  
+
 }
 </script>
 

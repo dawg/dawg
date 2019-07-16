@@ -21,9 +21,10 @@ export { log } from '@/dawg/extensions/core/log';
 export { playlist } from '@/dawg/extensions/core/playlist';
 export { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 export { window } from '@/dawg/extensions/core/window';
-export { Key, Command } from '@/dawg/extensions/core/commands';
+export { DawgCommand } from '@/dawg/commands';
 export { IExtensionContext, Extension, createExtension, Subscription } from '@/dawg/extensions';
 export { manager } from '@/dawg/extensions/manager';
+export { Key } from '@/dawg/keyboard';
 
 // Ignore unused imports here
 import { helpLinks } from '@/dawg/extensions/core/help-links';

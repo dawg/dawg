@@ -15,7 +15,6 @@ import 'vue-awesome/icons';
 import 'vuetify/dist/vuetify.css';
 import '@/styles/material.css';
 import Icon from 'vue-awesome/components/Icon.vue';
-import VueLogger from 'vuejs-logger';
 import Update from '@/modules/update';
 import sequencer from '@/modules/sequencer';
 import DragNDrop from '@/modules/dragndrop';
@@ -29,8 +28,6 @@ import DTrack from '@/components/DTrack.vue';
 import TooltipIcon from '@/components/TooltipIcon.vue';
 import DotButton from '@/components/DotButton.vue';
 
-// TODO(jacob)
-// const ChunkGhost = GH; // positionable(GH);
 
 const middleware = () => {
   // This imports all .vue files in the components folder
@@ -78,16 +75,12 @@ const middleware = () => {
   Vue.use(Update);
   Vue.use(DragNDrop);
   Vue.use(Knobs);
-  Vue.use(VueLogger, {
-    logLevel: 'info',
-  });
   Vue.use(sequencer);
   Vue.component('VuePerfectScrollbar', VuePerfectScrollbar);
 
   Vue.use(Vuetify, {theme: false});
   Vue.component('icon', Icon);
 
-  // TODO Move these to the dawg module
   Vue.component('Piano', Piano);
   Vue.component('DTrack', DTrack);
   Vue.component('DotButton', DotButton);

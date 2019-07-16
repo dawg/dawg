@@ -2,9 +2,7 @@ import { shallowMount, Wrapper } from '@vue/test-utils';
 import Arranger from '@/modules/sequencer/Arranger.vue';
 import Vue from 'vue';
 import Update from '@/modules/update';
-import VueLogger from 'vuejs-logger';
 
-Vue.use(VueLogger);
 Vue.use(Update);
 let wrapper: Wrapper<Arranger>;
 let vm: any;
@@ -52,7 +50,6 @@ describe(Arranger.name, () => {
   });
 
   it('should move correctly', () => {
-    // TODO fix the test
     // vm.move({ clientX: 1 });
     // expect(wrapper.emitted().input).to.equal(undefined);
 

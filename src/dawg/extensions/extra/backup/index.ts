@@ -220,6 +220,23 @@ const createBackupAPI = (
     loadProjects,
     resetProjects,
     openBackup,
+    deleteBackup: () => {
+      // FIXME duplicate code
+      handleUnauthenticated(async (u) => {
+        await loadProjects(u);
+        const projectLookup: { [name: string]: ProjectInfo } = {};
+        projects.value.forEach((p) => {
+          projectLookup[p.name] = p;
+        });
+
+        dawg.palette.selectFromObject(projectLookup, {
+          placeholder: 'Available Projects',
+          onDidSelect: (projectInfo) => {
+            deleteProject(projectInfo);
+          },
+        });
+      });
+    },
     openProject,
     handleUnauthenticated,
     deleteProject,
@@ -284,8 +301,7 @@ export const extension = createExtension({
     dawg.commands.registerCommand({
       text: 'Delete Backup',
       callback: () => {
-        // TODO actually DELETE
-        manager.openBackup();
+        manager.deleteBackup();
       },
     });
 

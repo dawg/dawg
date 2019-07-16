@@ -11,7 +11,6 @@ export const sizes = manager.activate({
     sideBarSize: 250,
     panelsSize: 250,
   },
-  // TODO DEFAULTS
   activate(context) {
     return {
       sideBarSize: context.workspace.sideBarSize,

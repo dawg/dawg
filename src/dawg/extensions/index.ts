@@ -62,7 +62,6 @@ export interface Extension<
   global?: G;
   globalDefaults?: GD;
   activate(context: IExtensionContext<W, WD, G, GD>): V;
-  // TODO ACTUALLY DEACTIVATE
   deactivate?(context: IExtensionContext<W, WD, G, GD>): void;
 }
 

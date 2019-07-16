@@ -12,7 +12,7 @@ export default class Progression extends Vue {
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;
   // Range from 0 to 1
   @Prop({ type: Number, required: true }) public progress!: number;
-  @Prop({ type: Number, default: 0 }) public offset!: number; // TODO I'm not sure this is needed
+  @Prop({ type: Number, default: 0 }) public offset!: number;
   // Since the progress is a range from 0-1, this needs the bounds to calculate the position.
   @Prop({ type: Number, required: true }) public loopStart!: number;
   @Prop({ type: Number, required: true }) public loopEnd!: number;

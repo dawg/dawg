@@ -1,5 +1,8 @@
 import { VueConstructor } from 'vue';
 import { Wrapper } from 'vue-function-api';
+import { DawgCommand } from './commands';
+
+export type ClickCommand = DawgCommand<[MouseEvent]>;
 
 export interface TabAction {
   icon: Wrapper<string>;
@@ -59,22 +62,22 @@ interface StatusBarItem {
   order?: number;
 }
 
-// FIXME add function and that return a dispose function
+// FIXME(1) add function and that return a dispose function
+// This should be added to the base later
 interface UI {
   global: VueConstructor[];
   statusBar: StatusBarItem[];
   activityBar: ActivityBarItem[];
   panels: PanelItem[];
-  // TODO This will eventually be used for the settings.
-  // You will be able to push and then remove when finished.
-  // We shoud add functions instead of allowing elements to interact directly with the arrays.
   mainSection: VueConstructor[];
   toolbar: ToolbarItem[];
+  trackContext: Array<DawgCommand<[number]>>;
   settings: Array<StringField | BooleanField | SelectField | VueConstructor>;
 }
 
 export const ui: UI = {
   global: [],
+  trackContext: [],
   statusBar: [],
   activityBar: [],
   panels: [],

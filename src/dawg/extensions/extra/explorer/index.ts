@@ -54,8 +54,8 @@ export const extension = createExtension({
     };
 
     const openSample = (sample: Sample) => {
-      // TODO(jacob)
-      sampleViewer.setOpenedSample(sample);
+      // FIXME(1) This should go in sample extension
+      sampleViewer.openedSample.value = sample;
       panels.openedPanel.value = 'Sample';
     };
 

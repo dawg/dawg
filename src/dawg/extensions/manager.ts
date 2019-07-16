@@ -20,7 +20,7 @@ import { emitter } from '../events';
 
 const events = emitter<{ setOpenedFile: () => void }>();
 
-// TODO IF TWO instances of Vusic are opened at the same time
+// FIXME IF TWO instances of Vusic are opened at the same time
 // there will be an issue when writing to the fs because the
 // data is loaded on startup and written back at the end. Thus,
 // stuff can easily be overwritten
@@ -80,7 +80,6 @@ const getDataFromExtensions = (key: 'workspace' | 'global'): { [k: string]: Exte
       }
 
       const type = t.partial(definition);
-      // TODO(jacob) ERROR?
       const encoded = type.encode(toEncode);
       data[extension.id] = encoded;
     } catch (e) {
@@ -112,7 +111,7 @@ class Manager {
     const result = loader.load();
 
     if (result.type === 'error') {
-      // TODO(jacob) LOG
+      notificationQueue.push(`Unable to load previously opened project information. Opening blank project instead.`);
     } else {
       pastProject = result.decoded;
     }
@@ -137,22 +136,6 @@ class Manager {
     }
 
     const projectId = info.id;
-
-    // let project: Project;
-    // if (!toOpen) {
-      // project = Project.newProject();
-    // } else {
-    //   const l = new FileLoader(ProjectType, { path: toOpen });
-    //   const r = l.load();
-    //   if (r.type === 'error') {
-    //     // TODO(jacob) LOG WITH EVENTS MAYBE OR A QUEUE
-    //     project = Project.newProject();
-    //   } else {
-    //     // TODO(jacob) catch errors ahhhhhh
-    //     project = await Project.load(r.decoded);
-    //   }
-    // }
-
 
     let projectContents: string | null = null;
     try {
@@ -224,6 +207,8 @@ export type ProjectInfo =
 
 let projectManager: Manager | null = null;
 
+// FIXME(1) Add interface with message, description, showUser
+// Also, write to file
 const notificationQueue: string[] = [];
 
 export const manager = {
@@ -254,7 +239,6 @@ export const manager = {
       projectManager = Manager.fromFileSystem();
     }
 
-    // TODO
     if (projectInfo) {
       projectManager.projectInfo = projectInfo;
     } else {
@@ -285,7 +269,8 @@ export const manager = {
         try {
           await e.extension.deactivate(e.context);
         } catch (error) {
-          // TODO(jacob) write to file
+          // tslint:disable-next-line:no-console
+          notificationQueue.push(`Unable to deactivate ${e.extension.id}: ${error}`);
           // tslint:disable-next-line:no-console
           console.error(`Unable to deactivate ${e.extension.id}: ${error}`);
         }
@@ -295,7 +280,8 @@ export const manager = {
         try {
           subscription.dispose();
         } catch (error) {
-          // TODO(jacob) write to file
+          // tslint:disable-next-line:no-console
+          notificationQueue.push(`Unable to deactivate subscription for ${e.extension.id}: ${error}`);
           // tslint:disable-next-line:no-console
           console.error(`Unable to deactivate subscription for ${e.extension.id}: ${error}`);
         }
@@ -305,7 +291,6 @@ export const manager = {
     const g = getDataFromExtensions('global');
     const w = getDataFromExtensions('workspace');
 
-    // TODO(jacob) consider folder structure
     projectManager.workspace[projectManager.projectInfo.id] = w;
 
     await write(GLOBAL_PATH, g);
@@ -340,7 +325,6 @@ export const manager = {
       const result = type.decode(o);
       let decoded: typeof result['_A'];
       if (result.isLeft()) {
-        // TODO(jacob) Actually report this error
         notificationQueue.push(
           ...PathReporter.report(result),
         );

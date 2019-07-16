@@ -45,9 +45,7 @@ export const sampleViewer = manager.activate({
           },
         };
       },
-      setOpenedSample(sample: Sample) {
-        openedSample.value = sample;
-      },
+      openedSample,
     };
   },
 });

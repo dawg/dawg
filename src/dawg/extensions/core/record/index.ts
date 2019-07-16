@@ -1,4 +1,5 @@
-import { Extension, createExtension } from '@/dawg/extensions';
+import Vue from 'vue';
+import { createExtension } from '@/dawg/extensions';
 import * as t from 'io-ts';
 import { commands } from '@/dawg/extensions/core/commands';
 import { palette } from '@/dawg/extensions/core/palette';
@@ -7,21 +8,25 @@ import * as Audio from '@/modules/audio';
 import audioBufferToWav from 'audiobuffer-to-wav';
 import path from 'path';
 import fs from '@/fs';
-import { ChunkGhost } from '@/core/ghosts/ghost';
+import { ChunkGhost } from '@/core/ghost';
 import { remote } from 'electron';
 import { Sample, ScheduledSample } from '@/core';
-import { value, Wrapper, watch } from 'vue-function-api';
-import { manager } from '../manager';
-import { project } from './project';
-import { applicationContext } from './application-context';
+import { value, watch } from 'vue-function-api';
+import { manager } from '../../manager';
+import { project } from '../project';
+import { applicationContext } from '../application-context';
+import { positionable } from '@/modules/sequencer/helpers';
+import GH from '@/dawg/extensions/core/record/ChunkGhost.vue';
 import { ui } from '@/dawg/ui';
+
+const ChunkGhostComponent = positionable(GH);
 
 export const DOCUMENTS_PATH = remote.app.getPath('documents');
 export const RECORDING_PATH = path.join(DOCUMENTS_PATH, remote.app.getName(), 'recordings');
 
 function blobsToAudioBuffer(blobs: Blob[]): Promise<AudioBuffer> {
   const reader = new FileReader();
-  return new Promise<AudioBuffer>((resolve, reject) => {
+  return new Promise<AudioBuffer>((resolve) => {
     reader.onload = (event) => {
       const buffer = reader.result as ArrayBuffer;
       Audio.context.decodeAudioData(buffer).then((decodedBuffer) => {
@@ -174,12 +179,19 @@ export const extension = createExtension({
       });
     });
 
+    Vue.component('ChunkGhost', ChunkGhostComponent);
+
     ui.settings.push({
       title: 'Microphone',
       description: '',
       type: 'select',
       value: microphoneIn,
       options,
+    });
+
+    ui.trackContext.push({
+      text: 'Record',
+      callback: (i) => startRecording(i),
     });
 
     return {
