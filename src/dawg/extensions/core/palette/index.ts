@@ -1,5 +1,5 @@
 import { manager } from '@/dawg/extensions/manager';
-import { ui } from '@/dawg/ui';
+import { ui } from '@/dawg/base/ui';
 import { Palette, paletteEvents, DetailedItem } from '@/dawg/extensions/core/palette/palette';
 
 type QuickPickCallback<T> = (item: T) => void;

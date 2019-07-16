@@ -31,7 +31,7 @@ import { toTickTime } from '@/utils';
 import Transport from '@/modules/audio/transport';
 import { theme } from '@/dawg/extensions/core/theme';
 import { menu } from '@/dawg/extensions/core/menu';
-import { ui } from '@/dawg/ui';
+import { ui } from '@/dawg/base/ui';
 
 @Component({
   components: { Sequencer },

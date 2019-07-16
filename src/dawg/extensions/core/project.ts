@@ -7,16 +7,16 @@ import { createExtension, IExtensionContext } from '@/dawg/extensions';
 import { remote } from 'electron';
 import { manager } from '@/dawg/extensions/manager';
 import { MemoryLoader } from '@/core/loaders/memory';
-import { notify } from './notify';
+import { notify } from '@/dawg/extensions/core/notify';
 import { DG_EXTENSION, FILTERS } from '@/constants';
-import { commands, Command } from './commands';
-import { menubar } from './menubar';
+import { commands, Command } from '@/dawg/extensions/core/commands';
+import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, value, watch } from 'vue-function-api';
-import { patterns } from './patterns';
-import { applicationContext } from './application-context';
-import { ui } from '@/dawg/ui';
+import { patterns } from '@/dawg/extensions/core/patterns';
+import { applicationContext } from '@/dawg/extensions/core/application-context';
+import { ui } from '@/dawg/base/ui';
 import { addDisposableListener } from '@/utils';
-import { log } from './log';
+import { log } from '@/dawg/extensions/core/log';
 import { emitter } from '@/dawg/events';
 
 export interface InitializationError {

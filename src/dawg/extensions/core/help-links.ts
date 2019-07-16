@@ -1,5 +1,5 @@
 import { manager } from '@/dawg/extensions/manager';
-import { menubar } from './menubar';
+import { menubar } from '@/dawg/extensions/core/menubar';
 import { shell, remote } from 'electron';
 
 export const helpLinks = manager.activate({

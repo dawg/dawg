@@ -49,7 +49,7 @@ import { Watch } from '@/modules/update';
 import { TOOLBAR_HEIGHT } from '@/constants';
 import { Sample } from '@/core';
 import * as dawg from '@/dawg';
-import { ActivityBarItem } from '@/dawg/ui';
+import { ActivityBarItem } from '@/dawg/base/ui';
 
 @Component({
   components: {

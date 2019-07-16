@@ -1,7 +1,7 @@
 import * as t from 'io-ts';
 import uuid from 'uuid';
 import * as Audio from '@/modules/audio';
-import { Serializable } from './serializable';
+import { Serializable } from '@/core/serializable';
 import { Score, ScoreType } from '@/core/score';
 
 const PatternTypeRequired = t.type({

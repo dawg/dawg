@@ -1,5 +1,5 @@
 import Tone from 'tone';
-import { ContextTime, TransportTime, Time } from './types';
+import { ContextTime, TransportTime, Time } from '@/modules/audio/types';
 
 // An interface doesn't work for some reason
 // tslint:disable-next-line:interface-over-type-literal

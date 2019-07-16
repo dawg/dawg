@@ -2,7 +2,7 @@ import Vue from 'vue';
 import BusySignal from '@/dawg/extensions/core/busy/BusySignal.vue';
 import { Provider, bus } from '@/dawg/extensions/core/busy/helpers';
 import { manager } from '@/dawg/extensions/manager';
-import { ui } from '@/dawg/ui';
+import { ui } from '@/dawg/base/ui';
 
 /**
  * The configuration options.

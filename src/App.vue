@@ -123,7 +123,7 @@ import { TOOLBAR_HEIGHT, STATUS_BAR_HEIGHT } from '@/constants';
 import { Automatable } from '@/core/automation';
 import * as Audio from '@/modules/audio';
 import * as dawg from '@/dawg';
-import { Menu } from './dawg/extensions/core/menubar';
+import { Menu } from '@/dawg/extensions/core/menubar';
 
 // TO VERIFY
 // 1. Recording

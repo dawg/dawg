@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import SampleViewer from '@/dawg/extensions/core/sample-viewer/SampleViewer.vue';
 import { Action } from '@/dawg/extensions/core/sample-viewer/types';
-import { ui } from '@/dawg/ui';
+import { ui } from '@/dawg/base/ui';
 import { manager } from '@/dawg/extensions/manager';
 import { value } from 'vue-function-api';
 import { Sample } from '@/core';

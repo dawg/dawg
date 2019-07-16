@@ -1,8 +1,8 @@
 import * as t from 'io-ts';
 import uuid from 'uuid';
 import { Instrument } from '@/core/instrument/instrument';
-import { Serializable } from './serializable';
-import { Note, NoteType } from './scheduled/note';
+import { Serializable } from '@/core/serializable';
+import { Note, NoteType } from '@/core/scheduled/note';
 
 const ScoreTypeRequired = t.type({
   instrumentId: t.string,

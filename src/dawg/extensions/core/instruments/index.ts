@@ -4,7 +4,7 @@ import { manager } from '@/dawg/extensions/manager';
 import { value, Wrapper, computed, watch } from 'vue-function-api';
 import { patterns } from '@/dawg/extensions/core/patterns';
 import { Score } from '@/core';
-import { ui } from '@/dawg/ui';
+import { ui } from '@/dawg/base/ui';
 import { menu } from '@/dawg/extensions/core/menu';
 import { project } from '@/dawg/extensions/core/project';
 

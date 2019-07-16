@@ -30,7 +30,7 @@ import { Nullable } from '@/utils';
 import { Watch } from '@/modules/update';
 import { Player } from 'soundfont-player';
 import * as dawg from '@/dawg';
-import { PanelItem } from '@/dawg/ui';
+import { PanelItem } from '@/dawg/base/ui';
 
 @Component
 export default class PanelHeaders extends Vue {

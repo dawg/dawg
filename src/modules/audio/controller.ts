@@ -1,5 +1,5 @@
 import Tone from 'tone';
-import { TransportTime } from './types';
+import { TransportTime } from '@/modules/audio/types';
 import Transport from '@/modules/audio/transport';
 import { Signal } from '@/modules/audio';
 

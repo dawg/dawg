@@ -1,6 +1,6 @@
 import { VueConstructor } from 'vue';
 import { Wrapper } from 'vue-function-api';
-import { DawgCommand } from './commands';
+import { DawgCommand } from '@/dawg/commands';
 
 export type ClickCommand = DawgCommand<[MouseEvent]>;
 

@@ -1,6 +1,6 @@
 import * as t from 'io-ts';
 import * as Audio from '@/modules/audio';
-import { SchedulableType, Schedulable } from './schedulable';
+import { SchedulableType, Schedulable } from '@/core/scheduled/schedulable';
 import { Serializable } from '@/core/serializable';
 import { Sample } from '@/core/sample';
 import { literal, toTickTime } from '@/utils';

@@ -1,5 +1,5 @@
-import { events, NotificationConfig } from './events';
-import { ui } from '@/dawg/ui';
+import { events, NotificationConfig } from '@/dawg/extensions/core/notify/events';
+import { ui } from '@/dawg/base/ui';
 import Notifications from '@/dawg/extensions/core/notify/Notifications.vue';
 import { manager } from '@/dawg/extensions/manager';
 

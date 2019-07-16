@@ -42,7 +42,7 @@
 </template>
 
 <script lang="ts">
-import { events, Notification } from './events';
+import { events, Notification } from '@/dawg/extensions/core/notify/events';
 import { Vue, Component, Prop} from 'vue-property-decorator';
 import { reverse } from '@/utils';
 

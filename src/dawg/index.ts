@@ -7,7 +7,7 @@ export { theme } from '@/dawg/extensions/core/theme';
 export { project } from '@/dawg/extensions/core/project';
 export { menu } from '@/dawg/extensions/core/menu';
 export { instruments } from '@/dawg/extensions/core/instruments';
-export { ui } from '@/dawg/ui';
+export { ui } from '@/dawg/base/ui';
 export { pianoRoll } from '@/dawg/extensions/core/piano-roll';
 export { patterns } from '@/dawg/extensions/core/patterns';
 export { applicationContext } from '@/dawg/extensions/core/application-context';

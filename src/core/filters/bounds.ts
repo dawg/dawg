@@ -1,4 +1,4 @@
-import { EffectOptions } from './effects';
+import { EffectOptions } from '@/core/filters/effects';
 
 interface Constraints {
   min: number;

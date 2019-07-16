@@ -1,6 +1,6 @@
 import Tone from 'tone';
-import { Source } from './source';
-import { Time } from './types';
+import { Source } from '@/modules/audio/source';
+import { Time } from '@/modules/audio/types';
 
 export class Player extends Source {
   public fadeOut = 0;

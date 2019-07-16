@@ -1,7 +1,7 @@
 import { manager } from '@/dawg/extensions/manager';
 import { IpcRenderer } from '@/ipc';
 import { ipcRenderer } from 'electron';
-import { Command } from './commands';
+import { Command } from '@/dawg/extensions/core/commands';
 import { uniqueId } from '@/utils';
 
 interface SubMenu {

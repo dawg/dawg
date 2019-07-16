@@ -1,7 +1,7 @@
 import { platform } from '@/dawg/platform';
 import { manager } from '@/dawg/extensions/manager';
-import { palette } from './palette';
-import { menubar } from './menubar';
+import { palette } from '@/dawg/extensions/core/palette';
+import { menubar } from '@/dawg/extensions/core/menubar';
 import { DawgCommand } from '@/dawg/commands';
 import { Key, KeyCode, codeLookup } from '@/dawg/keyboard';
 

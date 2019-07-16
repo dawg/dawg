@@ -1,5 +1,5 @@
 import { Bus } from '@/modules/update';
-import { ClickCommand } from '@/dawg/ui';
+import { ClickCommand } from '@/dawg/base/ui';
 
 export interface ContextPayload {
   event: MouseEvent | Position;

@@ -17,7 +17,7 @@ import { project } from '@/dawg/extensions/core/project';
 import { applicationContext } from '@/dawg/extensions/core/application-context';
 import { positionable } from '@/modules/sequencer/helpers';
 import GH from '@/dawg/extensions/core/record/ChunkGhost.vue';
-import { ui } from '@/dawg/ui';
+import { ui } from '@/dawg/base/ui';
 
 const ChunkGhostComponent = positionable(GH);
 
