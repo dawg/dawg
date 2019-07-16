@@ -29,7 +29,7 @@ import { Watch } from '@/modules/update';
 import { computed, onMounted, onDestroyed, watch, value } from 'vue-function-api';
 import { createComponent } from '@/utils';
 import { commands } from '@/dawg/extensions/core/commands';
-import { ClickCommand } from '@/dawg/base/ui';
+import { ClickCommand } from '@/base/ui';
 
 export default createComponent({
   props: {

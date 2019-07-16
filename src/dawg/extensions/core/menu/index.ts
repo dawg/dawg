@@ -2,7 +2,7 @@ import { manager } from '@/dawg/extensions/manager';
 import ContextMenu from '@/dawg/extensions/core/menu/ContextMenu.vue';
 import bus, { isMouseEvent, ContextPayload } from '@/dawg/extensions/core/menu/bus';
 import { remote } from 'electron';
-import { ui } from '@/dawg/base/ui';
+import { ui } from '@/base/ui';
 
 type ContextFunction = (opts: ContextPayload) => void;
 

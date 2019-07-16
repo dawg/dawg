@@ -7,7 +7,7 @@ import { computed, Wrapper } from 'vue-function-api';
 import { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 import { busy } from '@/dawg/extensions/core/busy';
 import { notify } from '@/dawg/extensions/core/notify';
-import { ui } from '@/dawg/base/ui';
+import { ui } from '@/base/ui';
 
 interface PythonError {
   type: 'error';

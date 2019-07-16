@@ -14,7 +14,7 @@ import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, value, watch } from 'vue-function-api';
 import { patterns } from '@/dawg/extensions/core/patterns';
 import { applicationContext } from '@/dawg/extensions/core/application-context';
-import { ui } from '@/dawg/base/ui';
+import { ui } from '@/base/ui';
 import { addDisposableListener } from '@/utils';
 import { log } from '@/dawg/extensions/core/log';
 import { emitter } from '@/dawg/events';

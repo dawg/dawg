@@ -6,7 +6,7 @@
   >
     <v-list dense style="height: 100%; display: flex; flex-direction: column">
       <v-list-tile
-        v-for="item in dawg.ui.activityBar"
+        v-for="item in base.ui.activityBar"
         :key="item.name"
         @click="clickActivityBar(item)"
       >
@@ -25,7 +25,7 @@
       <v-list-tile>
         <v-icon 
           medium
-          :color="iconColor"
+          :color="base.theme.foreground"
           @click="openSettings"
         >
           settings
@@ -46,34 +46,35 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
-import Sidebar from '@/components/SideBar.vue';
-import * as dawg from '@/dawg';
+import * as base from '@/base';
 import { activityBar } from '@/dawg/extensions/core/activity-bar';
+import { createComponent, value } from 'vue-function-api';
 
-@Component
-export default class ActivityBar extends Vue {
-  public dawg = dawg;
-  public open = false;
-  public x = 0;
-  public y = 0;
+export default createComponent({
+  name: 'ActivityBar',
+  setup() {
+    const open = value(false);
+    const x = value(0);
+    const y = value(0);
 
-  get iconColor() {
-    return dawg.theme.foreground;
-  }
+    function clickActivityBar(tab: base.ActivityBarItem) {
+      base.clickActivityBarItem(tab);
+      // TODO
+      // activityBar.openedSideTab.value = tab.name;
+    }
 
-  public clickActivityBar(tab: Sidebar) {
-    activityBar.openedSideTab.value = tab.name;
-  }
+    function openSettings(e: MouseEvent) {
+      open.value = true;
+      x.value = e.clientX;
+      y.value = e.clientY;
+    }
 
-  public openSettings(e: MouseEvent) {
-    this.open = true;
-    this.x = e.clientX;
-    this.y = e.clientY;
-  }
-}
+    return {
+      base,
+      open,
+      x,
+      y,
+    };
+  },
+});
 </script>
-
-<style lang="sass" scoped>
-
-</style>

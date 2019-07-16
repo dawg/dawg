@@ -1,6 +1,7 @@
 import { VueConstructor } from 'vue';
 import { Wrapper } from 'vue-function-api';
 import { DawgCommand } from '@/dawg/commands';
+import { emitter } from '@/dawg/events';
 
 export type ClickCommand = DawgCommand<[MouseEvent]>;
 
@@ -64,24 +65,37 @@ interface StatusBarItem {
 
 // FIXME(1) add function and that return a dispose function
 // This should be added to the base later
-interface UI {
-  global: VueConstructor[];
-  statusBar: StatusBarItem[];
-  activityBar: ActivityBarItem[];
-  panels: PanelItem[];
-  mainSection: VueConstructor[];
-  toolbar: ToolbarItem[];
-  trackContext: Array<DawgCommand<[number]>>;
-  settings: Array<StringField | BooleanField | SelectField | VueConstructor>;
-}
+const global: VueConstructor[] = [];
+const statusBar: StatusBarItem[] = [];
+const activityBar: ActivityBarItem[] = [];
+const panels: PanelItem[] = [];
+const mainSection: VueConstructor[] = [];
+const toolbar: ToolbarItem[] = [];
+const trackContext: Array<DawgCommand<[number]>> = [];
+const settings: Array<StringField | BooleanField | SelectField | VueConstructor> = [];
 
-export const ui: UI = {
-  global: [],
-  trackContext: [],
-  statusBar: [],
-  activityBar: [],
-  panels: [],
-  mainSection: [],
-  toolbar: [],
-  settings: [],
+const events = emitter<{ clickActivityBarItem: (item: ActivityBarItem) => void }>();
+
+export const ui = {
+  global,
+  trackContext,
+  statusBar,
+  activityBar,
+  panels,
+  mainSection,
+  toolbar,
+  settings,
+};
+
+export const onDidClickActivityBarItem = (listener: (item: ActivityBarItem) => void) => {
+  events.addListener('clickActivityBarItem', listener);
+  return {
+    dispose() {
+      events.removeListener('clickActivityBarItem', listener);
+    },
+  };
+};
+
+export const clickActivityBarItem = (item: ActivityBarItem) => {
+  events.emit('clickActivityBarItem', item);
 };

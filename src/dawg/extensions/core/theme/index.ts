@@ -1,14 +1,15 @@
 import { Extension, createExtension } from '@/dawg/extensions';
-import { Theme, Classes } from '@/dawg/extensions/core/theme/types';
+import { Classes } from '@/dawg/extensions/core/theme/types';
 import { defaults } from '@/dawg/extensions/core/theme/defaults';
 import tinycolor from 'tinycolor2';
 import { palette } from '@/dawg/extensions/core/palette';
 import { commands } from '@/dawg/extensions/core/commands';
 import { manager } from '@/dawg/extensions/manager';
 import * as t from 'io-ts';
+import * as base from '@/base';
 
 export interface ThemeAugmentation {
-  $theme: Theme;
+  $theme: base.Theme;
 }
 
 const PERCENTAGES = [2, 4, 8, 12, 20, 32];
@@ -20,7 +21,7 @@ const add = (classes: Classes, name: string, color: string, suffix = '') => {
   classes[`${name}${suffix}--fill`] = `fill: #${color}!important;`;
 };
 
-function createClasses(newTheme: Theme) {
+function createClasses(newTheme: base.Theme) {
   const classes: Classes = {};
   Object.entries(newTheme).forEach(([name, color]) => {
     add(classes, name, color);
@@ -46,7 +47,7 @@ function classesToString(classes: Classes) {
 
 let style: Node | null = null;
 
-export function insertTheme(newTheme: Theme) {
+export function insertTheme(newTheme: base.Theme) {
   if (style) {
     document.body.removeChild(style);
     style = null;
@@ -54,7 +55,7 @@ export function insertTheme(newTheme: Theme) {
 
   const hex: { [k: string]: string } = {};
   Object.keys(newTheme).forEach((key) => {
-    hex[key] = `#${newTheme[key as keyof Theme]}`;
+    hex[key] = `#${newTheme[key as keyof base.Theme]}`;
   });
 
   const variables = Object.entries(newTheme).map(([name, color]) => {
@@ -90,19 +91,6 @@ body {
 // https://github.com/Microsoft/vscode-extension-samples/blob/master/helloworld-sample/src/extension.ts
 
 type ThemeNames = keyof typeof defaults;
-
-interface ITheme {
-  foreground: string;
-  background: string;
-  primary: string;
-  secondary: string;
-  accent: string;
-  error: string;
-  info: string;
-  success: string;
-  warning: string;
-  insertStoredTheme: () => void;
-}
 
 const extension = createExtension({
   id: 'dawg.theme',
@@ -152,16 +140,8 @@ const extension = createExtension({
     }
 
     return {
-      foreground: '',
-      background: '',
-      primary: '',
-      secondary: '',
-      accent: '',
-      error: '',
-      info: '',
-      success: '',
-      warning: '',
       insertStoredTheme,
+      ...base.theme,
     };
   },
 });

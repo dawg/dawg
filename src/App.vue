@@ -118,7 +118,7 @@ import { Component, Vue } from 'vue-property-decorator';
 import { automation } from '@/modules/knobs';
 import Panels from '@/dawg/extensions/core/panels/Panels.vue';
 import PanelHeaders from '@/dawg/extensions/core/panels/PanelHeaders.vue';
-import ActivityBar from '@/dawg/extensions/core/activity-bar/ActivityBar.vue';
+import ActivityBar from '@/components/ActivityBar.vue';
 import { TOOLBAR_HEIGHT, STATUS_BAR_HEIGHT } from '@/constants';
 import { Automatable } from '@/core/automation';
 import * as Audio from '@/modules/audio';

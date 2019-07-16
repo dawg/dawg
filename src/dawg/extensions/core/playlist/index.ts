@@ -6,7 +6,7 @@ import { project } from '@/dawg/extensions/core/project';
 import { record } from '@/dawg/extensions/core/record';
 import { ScheduledPattern, ScheduledSample } from '@/core';
 import { value } from 'vue-function-api';
-import { ui } from '@/dawg/base/ui';
+import { ui } from '@/base/ui';
 import { Ghost } from '@/core/ghost';
 import { applicationContext } from '@/dawg/extensions/core/application-context';
 import { log } from '@/dawg/extensions/core/log';

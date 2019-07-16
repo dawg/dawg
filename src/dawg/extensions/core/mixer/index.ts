@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Mixer from '@/dawg/extensions/core/mixer/Mixer.vue';
-import { ui } from '@/dawg/base/ui';
+import { ui } from '@/base/ui';
 import { createExtension } from '@/dawg/extensions';
 import { commands } from '@/dawg/extensions/core/commands';
 import { panels } from '@/dawg/extensions/core/panels';
