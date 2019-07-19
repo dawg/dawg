@@ -1,4 +1,4 @@
-import { emitter } from '@/dawg/events';
+import { emitter } from '@/base/events';
 export const events = emitter<{ add: (notification: Notification) => void }>();
 
 export interface NotificationConfig {

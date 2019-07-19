@@ -5,7 +5,7 @@ import { Beats } from '@/core/types';
 import { IProject, Project, ProjectType } from '@/project';
 import { createExtension, IExtensionContext } from '@/dawg/extensions';
 import { remote } from 'electron';
-import { manager } from '@/dawg/extensions/manager';
+import { manager } from '@/base/manager';
 import { MemoryLoader } from '@/core/loaders/memory';
 import { notify } from '@/dawg/extensions/core/notify';
 import { DG_EXTENSION, FILTERS } from '@/constants';
@@ -17,7 +17,7 @@ import { applicationContext } from '@/dawg/extensions/core/application-context';
 import { ui } from '@/base/ui';
 import { addDisposableListener } from '@/utils';
 import { log } from '@/dawg/extensions/core/log';
-import { emitter } from '@/dawg/events';
+import { emitter } from '@/base/events';
 
 export interface InitializationError {
   type: 'error';

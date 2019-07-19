@@ -4,7 +4,7 @@ import { defaults } from '@/dawg/extensions/core/theme/defaults';
 import tinycolor from 'tinycolor2';
 import { palette } from '@/dawg/extensions/core/palette';
 import { commands } from '@/dawg/extensions/core/commands';
-import { manager } from '@/dawg/extensions/manager';
+import { manager } from '@/base/manager';
 import * as t from 'io-ts';
 import * as base from '@/base';
 
@@ -75,15 +75,22 @@ body {
   node.innerHTML = css;
   style = document.body.appendChild(node);
 
-  theme.foreground = hex.foreground;
-  theme.background = hex.background;
-  theme.primary = hex.primary;
-  theme.secondary = hex.secondary;
-  theme.accent = hex.accent;
-  theme.error = hex.error;
-  theme.info = hex.info;
-  theme.success = hex.success;
-  theme.warning = hex.warning;
+  const keys = [
+    'foreground',
+    'background',
+    'primary',
+    'secondary',
+    'accent',
+    'error',
+    'info',
+    'success',
+    'warning',
+  ] as const;
+
+  // TODO
+  for (const key of keys) {
+    theme[key] = base.theme[key] = hex[key];
+  }
 }
 
 // https://github.com/Microsoft/vscode/blob/master/src/vs/vscode.d.ts

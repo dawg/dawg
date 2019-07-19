@@ -116,8 +116,8 @@ export default class Slider extends Mixins(Draggable) {
   }
 
   public contextmenu(event: MouseEvent) {
-    dawg.menu.context({
-      event,
+    dawg.context({
+      position: event,
       items: [
         {
           text: 'Create Automation Clip',

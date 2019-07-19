@@ -1,7 +1,7 @@
 import { Component, Vue, Prop } from 'vue-property-decorator';
 import { CreateElement } from 'vue';
 import { Watch } from '@/modules/update';
-import * as events from '@/dawg/events';
+import * as events from '@/base/events';
 
 export interface PaletteOptions {
   /**

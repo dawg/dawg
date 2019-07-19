@@ -1,5 +1,5 @@
 import * as t from 'io-ts';
-import { manager } from '@/dawg/extensions/manager';
+import { manager } from '@/base/manager';
 
 export const panels = manager.activate({
   id: 'dawg.panels',

@@ -1,4 +1,4 @@
-import { manager } from '@/dawg/extensions/manager';
+import { manager } from '@/base/manager';
 import log4js from 'log4js';
 
 interface Logger extends log4js.Logger {

@@ -20,16 +20,16 @@
     <vue-perfect-scrollbar class="scrollbar" style="height: 100%">
       <base-tabs
         ref="tabs"
-        :selected-tab.sync="openedSideTab.value"
-        :first="dawg.ui.activityBar[0] ? dawg.ui.activityBar[0].name : undefined"
+        :selected-tab.sync="base.ui.openedSideTab.value"
+        :first="base.ui.activityBar[0] ? base.ui.activityBar[0].name : undefined"
       >
         <side-bar
-          v-for="tab in dawg.ui.activityBar"
+          v-for="tab in base.ui.activityBar"
           :key="tab.name"
           :name="tab.name"
           :icon="tab.icon"
           :icon-props="tab.iconProps"
-          :selected-tab="openedSideTab.value"
+          :selected-tab="base.ui.openedSideTab.value"
         >
           <component
             :is="tab.component"
@@ -42,68 +42,69 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
 import BaseTabs from '@/components/BaseTabs.vue';
 import SideBar from '@/components/SideBar.vue';
-import { Watch } from '@/modules/update';
 import { TOOLBAR_HEIGHT } from '@/constants';
 import { Sample } from '@/core';
-import * as dawg from '@/dawg';
-import { ActivityBarItem } from '@/base/ui';
+import * as base from '@/base';
+import { createComponent, computed } from 'vue-function-api';
 
-@Component({
+export default createComponent({
+  name: 'SideTabs',
   components: {
     BaseTabs,
     SideBar,
   },
-})
-export default class SideTabs extends Vue {
-  public dawg = dawg;
-
-  get iconColor() {
-    return dawg.theme.foreground;
-  }
-
-  get openedSideTab() {
-    return dawg.activityBar.openedSideTab;
-  }
-
-  get headerStyle() {
-    return {
-      borderBottom: `1px solid ${dawg.theme.background}`,
-      minHeight: `${TOOLBAR_HEIGHT + 1}px`,
-      display: 'flex',
-      alignItems: 'center',
-    };
-  }
-
-  get itemLookup() {
-    const lookup: { [name: string]: ActivityBarItem } = {};
-    dawg.ui.activityBar.forEach((item) => {
-      lookup[item.name] = item;
+  setup() {
+    const iconColor = computed(() => {
+      return base.theme.foreground;
     });
 
-    return lookup;
-  }
+    const headerStyle = computed(() => {
+      return {
+        borderBottom: `1px solid ${base.theme.background}`,
+        minHeight: `${TOOLBAR_HEIGHT + 1}px`,
+        display: 'flex',
+        alignItems: 'center',
+      };
+    });
 
-  get actions() {
-    if (this.openedSideTab.value === undefined) {
-      return [];
-    }
+    const itemLookup = computed(() => {
+      const lookup: { [name: string]: base.ActivityBarItem } = {};
+      base.ui.activityBar.forEach((item) => {
+        lookup[item.name] = item;
+      });
 
-    if (this.itemLookup[this.openedSideTab.value] === undefined) {
-      return [];
-    }
+      return lookup;
+    });
 
-    return this.itemLookup[this.openedSideTab.value].actions || [];
-  }
+    const actions = computed(() => {
+      if (base.ui.openedSideTab.value === undefined) {
+        return [];
+      }
 
-  get header() {
-    if (this.openedSideTab.value) {
-      return this.openedSideTab.value.toUpperCase();
-    }
-  }
-}
+      if (itemLookup.value[base.ui.openedSideTab.value] === undefined) {
+        return [];
+      }
+
+      return itemLookup.value[base.ui.openedSideTab.value].actions || [];
+    });
+
+    const header = computed(() => {
+      if (base.ui.openedSideTab.value) {
+        return base.ui.openedSideTab.value.toUpperCase();
+      }
+    });
+
+    return {
+      base,
+      iconColor,
+      actions,
+      header,
+      headerStyle,
+    };
+  },
+});
 </script>
 
 <style lang="sass" scoped>

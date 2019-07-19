@@ -1,9 +1,12 @@
-import { VueConstructor } from 'vue';
-import { Wrapper } from 'vue-function-api';
-import { DawgCommand } from '@/dawg/commands';
-import { emitter } from '@/dawg/events';
+// FIXME For some reason, it only works if I place this Vue.use statement here
+import Vue from 'vue';
+import { plugin } from 'vue-function-api';
+Vue.use(plugin);
 
-export type ClickCommand = DawgCommand<[MouseEvent]>;
+import { VueConstructor } from 'vue';
+import { Wrapper, value } from 'vue-function-api';
+import { DawgCommand } from '@/dawg/commands';
+import { emitter } from '@/base/events';
 
 export interface TabAction {
   icon: Wrapper<string>;
@@ -73,6 +76,7 @@ const mainSection: VueConstructor[] = [];
 const toolbar: ToolbarItem[] = [];
 const trackContext: Array<DawgCommand<[number]>> = [];
 const settings: Array<StringField | BooleanField | SelectField | VueConstructor> = [];
+const openedSideTab = value<undefined | string>(undefined);
 
 const events = emitter<{ clickActivityBarItem: (item: ActivityBarItem) => void }>();
 
@@ -85,17 +89,6 @@ export const ui = {
   mainSection,
   toolbar,
   settings,
+  openedSideTab,
 };
 
-export const onDidClickActivityBarItem = (listener: (item: ActivityBarItem) => void) => {
-  events.addListener('clickActivityBarItem', listener);
-  return {
-    dispose() {
-      events.removeListener('clickActivityBarItem', listener);
-    },
-  };
-};
-
-export const clickActivityBarItem = (item: ActivityBarItem) => {
-  events.emit('clickActivityBarItem', item);
-};

@@ -289,8 +289,8 @@ export default class Knob extends Mixins(Draggable) {
       return;
     }
 
-    dawg.menu.context({
-      event,
+    dawg.context({
+      position: event,
       items: [
         {
           text: 'Create Automation Clip',

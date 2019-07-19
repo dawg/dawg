@@ -1,6 +1,5 @@
-import { manager } from '@/dawg/extensions/manager';
-import { IpcRenderer } from '@/ipc';
-import { ipcRenderer } from 'electron';
+import { manager } from '@/base/manager';
+import { ipcRenderer } from '@/ipc';
 import { Command } from '@/dawg/extensions/core/commands';
 import { uniqueId } from '@/utils';
 
@@ -22,23 +21,31 @@ interface SubMenu {
 //   this.menuItems.saveAs,
 // ],
 
+const callbacks: { [k: string]: () => void | undefined } = {};
+
+ipcRenderer.on('menuBarCallback', (_, uniqueEvent) => {
+  const callback = callbacks[uniqueEvent];
+  callback();
+});
+
 export type Menu = SubMenu[];
 
 export const menubar = manager.activate({
   id: 'dawg.menubar',
   activate() {
-    const events: IpcRenderer = ipcRenderer;
-
     const transform = (menu: string, item: Command) => {
       let accelerator: string | undefined;
       if (item.shortcut) {
         accelerator = item.shortcut.join('+');
       }
 
+      const uniqueEvent = uniqueId();
+      callbacks[uniqueEvent] = item.callback;
+
       return {
         menu,
         label: item.text,
-        uniqueEvent: uniqueId(),
+        uniqueEvent,
         accelerator,
       };
     };
@@ -46,18 +53,12 @@ export const menubar = manager.activate({
     return {
       addItem: (menu: string, item: Command) => {
         const electronItem = transform(menu, item);
-        events.send('addToMenu', electronItem);
-
-        // This solution is a bit weird but it works
-        // You can't pass functions, so we create a unique ID and add a listener
-        events.on(electronItem.uniqueEvent as any, () => {
-          item.callback();
-        });
+        ipcRenderer.send('addToMenuBar', electronItem);
 
         return {
           dispose() {
-            events.send('removeFromMenu', electronItem);
-            events.removeAllListeners(electronItem.uniqueEvent as any);
+            ipcRenderer.send('removeFromMenuBar', electronItem);
+            delete callbacks[electronItem.uniqueEvent];
           },
         };
       },

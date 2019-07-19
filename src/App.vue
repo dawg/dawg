@@ -123,6 +123,7 @@ import { TOOLBAR_HEIGHT, STATUS_BAR_HEIGHT } from '@/constants';
 import { Automatable } from '@/core/automation';
 import * as Audio from '@/modules/audio';
 import * as dawg from '@/dawg';
+import * as base from '@/base';
 import { Menu } from '@/dawg/extensions/core/menubar';
 
 // TO VERIFY
@@ -152,33 +153,33 @@ export default class App extends Vue {
   public loaded = false;
 
   get mainComponent() {
-    if (dawg.ui.mainSection.length) {
-      return dawg.ui.mainSection[dawg.ui.mainSection.length - 1];
+    if (base.ui.mainSection.length) {
+      return base.ui.mainSection[base.ui.mainSection.length - 1];
     }
   }
 
   get toolbarLeft() {
-    return dawg.ui.toolbar.filter((item) => item.position === 'left');
+    return base.ui.toolbar.filter((item) => item.position === 'left');
   }
 
   get toolbarRight() {
-    return dawg.ui.toolbar.filter((item) => item.position === 'right');
+    return base.ui.toolbar.filter((item) => item.position === 'right');
   }
 
   get iconColor() {
-    return dawg.theme.foreground;
+    return base.theme.foreground;
   }
 
   get lineStyle() {
-    return `border-left: 1px solid ${dawg.theme.foreground}`;
+    return `border-left: 1px solid ${base.theme.foreground}`;
   }
 
   get statusBarRight() {
-    return dawg.ui.statusBar.filter((item) => item.position === 'right');
+    return base.ui.statusBar.filter((item) => item.position === 'right');
   }
 
   get statusBarLeft() {
-    return dawg.ui.statusBar.filter((item) => item.position === 'left');
+    return base.ui.statusBar.filter((item) => item.position === 'left');
   }
 
   get statusBarStyle() {

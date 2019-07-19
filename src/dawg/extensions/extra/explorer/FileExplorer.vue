@@ -114,8 +114,8 @@ export default class FileEplorer extends Vue {
   }
 
   public context(folder: string, event: MouseEvent) {
-    dawg.menu.context({
-      event,
+    dawg.context({
+      position: event,
       items: [
         {
           text: 'Remove Folder From Workspace',

@@ -1,12 +1,8 @@
-// FIXME For some reason, it only works if I place this Vue.use statement here
-import Vue from 'vue';
-import { plugin } from 'vue-function-api';
-Vue.use(plugin);
-
 import * as t from 'io-ts';
 import { createExtension } from '@/dawg/extensions';
-import { manager } from '@/dawg/extensions/manager';
+import { manager } from '@/base/manager';
 
+// TODO sync base stuff to FS
 const extension = createExtension({
   id: 'dawg.activity-bar',
   workspace: {

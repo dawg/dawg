@@ -1,4 +1,4 @@
-import { manager } from '@/dawg/extensions/manager';
+import { manager } from '@/base/manager';
 import { ui } from '@/base/ui';
 import { Palette, paletteEvents, DetailedItem } from '@/dawg/extensions/core/palette/palette';
 

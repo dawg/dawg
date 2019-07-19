@@ -1,4 +1,4 @@
-import { manager } from '@/dawg/extensions/manager';
+import { manager } from '@/base/manager';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { shell, remote } from 'electron';
 

@@ -1,9 +1,9 @@
-import { platform } from '@/dawg/platform';
-import { manager } from '@/dawg/extensions/manager';
+import { platform } from '@/base/platform';
+import { manager } from '@/base/manager';
 import { palette } from '@/dawg/extensions/core/palette';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { DawgCommand } from '@/dawg/commands';
-import { Key, KeyCode, codeLookup } from '@/dawg/keyboard';
+import { Key, KeyCode, codeLookup } from '@/base/keyboard';
 
 export type Command = DawgCommand<[]>;
 

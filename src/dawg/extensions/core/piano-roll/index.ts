@@ -5,7 +5,7 @@ import Note from '@/dawg/extensions/core/piano-roll/Note.vue';
 import { instruments } from '@/dawg/extensions/core/instruments';
 import { patterns } from '@/dawg/extensions/core/patterns';
 import { ui, TabAction } from '@/base/ui';
-import { manager } from '@/dawg/extensions/manager';
+import { manager } from '@/base/manager';
 import { positionable, selectable } from '@/modules/sequencer/helpers';
 import { resizable } from '@/modules/sequencer/helpers';
 import { commands } from '@/dawg/extensions/core/commands';

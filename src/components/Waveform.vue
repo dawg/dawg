@@ -15,7 +15,7 @@ import { Vue, Component, Prop, Mixins } from 'vue-property-decorator';
 import { Player } from 'tone';
 import { Nullable } from '@/utils';
 import { Watch } from '@/modules/update';
-import * as dawg from '@/dawg';
+import * as base from '@/base';
 
 @Component
 export default class Waveform extends Vue {
@@ -29,7 +29,7 @@ export default class Waveform extends Vue {
   }
 
   get color() {
-    return dawg.theme.foreground;
+    return base.theme.foreground;
   }
 
   get h2() {

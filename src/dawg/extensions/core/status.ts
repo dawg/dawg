@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import { createComponent, computed, Wrapper, value } from 'vue-function-api';
 import * as dawg from '@/dawg';
-import { manager } from '@/dawg/extensions/manager';
+import { manager } from '@/base/manager';
 
 type Status = string | { text: string, value: string } | null;
 const statusValue: Wrapper<Status> = value(null);

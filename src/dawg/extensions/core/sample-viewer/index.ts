@@ -2,7 +2,7 @@ import Vue from 'vue';
 import SampleViewer from '@/dawg/extensions/core/sample-viewer/SampleViewer.vue';
 import { Action } from '@/dawg/extensions/core/sample-viewer/types';
 import { ui } from '@/base/ui';
-import { manager } from '@/dawg/extensions/manager';
+import { manager } from '@/base/manager';
 import { value } from 'vue-function-api';
 import { Sample } from '@/core';
 

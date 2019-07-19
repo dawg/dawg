@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import VerticalSwitch from '@/dawg/extensions/core/application-context/VerticalSwitch.vue';
-import { manager } from '@/dawg/extensions/manager';
+import { manager } from '@/base/manager';
 import { value } from 'vue-function-api';
 import { ui } from '@/base/ui';
 import { commands } from '@/dawg/extensions/core/commands';

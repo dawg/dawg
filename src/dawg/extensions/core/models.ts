@@ -2,7 +2,7 @@ import fs from '@/fs';
 import * as t from 'io-ts';
 import { PythonShell, Options } from 'python-shell';
 import path from 'path';
-import { manager } from '@/dawg/extensions/manager';
+import { manager } from '@/base/manager';
 import { computed, Wrapper } from 'vue-function-api';
 import { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 import { busy } from '@/dawg/extensions/core/busy';

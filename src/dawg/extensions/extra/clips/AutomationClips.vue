@@ -34,8 +34,8 @@ export default class AutomationClips extends Vue {
   }
 
   public context(event: MouseEvent, i: number) {
-    dawg.menu.context({
-      event,
+    dawg.context({
+      position: event,
       items: [
         {
           text: 'Delete',

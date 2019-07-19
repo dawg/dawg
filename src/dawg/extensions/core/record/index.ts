@@ -12,7 +12,7 @@ import { ChunkGhost } from '@/core/ghost';
 import { remote } from 'electron';
 import { Sample, ScheduledSample } from '@/core';
 import { value, watch } from 'vue-function-api';
-import { manager } from '@/dawg/extensions/manager';
+import { manager } from '@/base/manager';
 import { project } from '@/dawg/extensions/core/project';
 import { applicationContext } from '@/dawg/extensions/core/application-context';
 import { positionable } from '@/modules/sequencer/helpers';

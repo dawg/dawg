@@ -12,7 +12,7 @@
       >
         <tooltip-icon 
           medium 
-          :color="iconColor" 
+          :color="base.theme.foreground" 
           :tooltip="item.name"
           right
           v-bind="item.iconProps"
@@ -47,7 +47,6 @@
 
 <script lang="ts">
 import * as base from '@/base';
-import { activityBar } from '@/dawg/extensions/core/activity-bar';
 import { createComponent, value } from 'vue-function-api';
 
 export default createComponent({
@@ -58,9 +57,7 @@ export default createComponent({
     const y = value(0);
 
     function clickActivityBar(tab: base.ActivityBarItem) {
-      base.clickActivityBarItem(tab);
-      // TODO
-      // activityBar.openedSideTab.value = tab.name;
+      base.ui.openedSideTab.value = tab.name;
     }
 
     function openSettings(e: MouseEvent) {
@@ -70,6 +67,8 @@ export default createComponent({
     }
 
     return {
+      openSettings,
+      clickActivityBar,
       base,
       open,
       x,

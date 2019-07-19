@@ -20,7 +20,7 @@ import { Nullable } from '@/utils';
 import { Score, Instrument, Pattern } from '@/core';
 import { Watch } from '@/modules/update';
 import { notify } from '@/dawg/extensions/core/notify';
-import { menu } from '@/dawg/extensions/core/menu';
+import * as base from '@/base';
 import { project } from '@/dawg/extensions/core/project';
 
 @Component({ components: { Synth } })
@@ -66,8 +66,8 @@ export default class Synths extends Vue {
   }
 
   public contextmenu(event: MouseEvent, i: number) {
-    menu.context({
-      event,
+    base.context({
+      position: event,
       items: [
         {
           callback: () => project.project.deleteInstrument(i),

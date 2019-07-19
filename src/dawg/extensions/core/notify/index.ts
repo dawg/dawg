@@ -1,7 +1,7 @@
 import { events, NotificationConfig } from '@/dawg/extensions/core/notify/events';
 import { ui } from '@/base/ui';
 import Notifications from '@/dawg/extensions/core/notify/Notifications.vue';
-import { manager } from '@/dawg/extensions/manager';
+import { manager } from '@/base/manager';
 
 interface NotificationFunctions {
   info(message: string, params?: NotificationConfig): void;

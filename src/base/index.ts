@@ -6,7 +6,10 @@ export {
 export {
   ui,
   ActivityBarItem,
-  clickActivityBarItem,
-  onDidClickActivityBarItem,
 } from '@/base/ui';
 
+
+export {
+  menu,
+  context,
+} from '@/base/menu';

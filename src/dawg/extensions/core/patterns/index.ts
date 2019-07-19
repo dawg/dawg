@@ -3,7 +3,7 @@ import Patterns from '@/dawg/extensions/core/patterns/Patterns.vue';
 import { value, computed, createComponent } from 'vue-function-api';
 import { makeLookup } from '@/modules/utils';
 import { Pattern } from '@/core';
-import { manager } from '@/dawg/extensions/manager';
+import { manager } from '@/base/manager';
 import { ui } from '@/base/ui';
 import { project } from '@/dawg/extensions/core/project';
 

@@ -18,7 +18,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Watch } from '@/modules/update';
 import { Track as T } from '@/core/track';
 import { boolean } from 'io-ts';
-import * as dawg from '@/dawg';
+import * as base from '@/base';
 
 @Component
 export default class Track extends Vue {
@@ -28,7 +28,7 @@ export default class Track extends Vue {
   public active = !this.track.mute;
 
   get color() {
-    return dawg.theme.error;
+    return base.theme.error;
   }
 
   @Watch<Track>('active')

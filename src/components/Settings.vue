@@ -1,7 +1,7 @@
 <template>
   <v-card dark class="settings secondary">
     <v-list class="secondary" style="padding-top: 20px">
-      <v-list-tile v-for="(setting, i) in dawg.ui.settings" :key="i">
+      <v-list-tile v-for="(setting, i) in base.ui.settings" :key="i">
 
         <v-list-tile-title v-if="setting.type === 'boolean'">{{ setting.title }}</v-list-tile-title>
         
@@ -40,11 +40,11 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import * as dawg from '@/dawg';
+import * as base from '@/base';
 
 @Component
 export default class Settings extends Vue {
-  public dawg = dawg;
+  public base = base;
 
   public close() {
     this.$emit('input', false);

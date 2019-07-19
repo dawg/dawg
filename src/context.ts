@@ -1,5 +1,5 @@
 import electron from 'electron';
-import { isDevelopment } from './dev';
+import { isDevelopment } from './electron/environment';
 import cliTruncate from 'cli-truncate';
 
 const webContents = (win: any) => win.webContents || win.getWebContents();

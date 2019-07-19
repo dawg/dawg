@@ -1,114 +1,16 @@
 'use strict';
 
-import { app, protocol, BrowserWindow, Menu, ipcMain, MenuItemConstructorOptions } from 'electron';
-import menu from './main/context';
+import { app, protocol, BrowserWindow } from 'electron';
+import menu from './context';
 import path from 'path';
 import {
   createProtocol,
   installVueDevtools,
 } from 'vue-cli-plugin-electron-builder/lib';
-import { IpcMain, ElectronMenuItem } from '@/ipc';
 
-let menuLookup: { [k: string]: MenuItemConstructorOptions } = {};
-
-const renderMenu = () => {
-  const template = Object.values(menuLookup);
-
-  // The first menu item is associated with the application
-  // Just look at the menu and you will see what I mean
-  if (process.platform === 'darwin') {
-    template.unshift({ label: '' });
-  }
-
-  // Set the application menu every time.
-  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
-};
-
-const events = ipcMain as IpcMain;
-events.on('removeMenu', () => {
-  menuLookup = {};
-  Menu.setApplicationMenu(Menu.buildFromTemplate([]));
-});
-
-events.on('addToMenu', (event, itemsOrItem) => {
-  const addItem = (item: ElectronMenuItem) => {
-    if (!menuLookup[item.menu]) {
-      menuLookup[item.menu] = {
-        label: item.menu,
-      };
-    }
-
-    const singleMenu = menuLookup[item.menu];
-    if (!singleMenu.submenu) {
-      singleMenu.submenu = [];
-    }
-
-    if (!Array.isArray(singleMenu.submenu)) {
-      // This condition should never happen, but we have to satisfy TypeScript
-      return;
-    }
-
-    if (item.label === null) {
-      singleMenu.submenu.push({
-        type: 'separator',
-      });
-    } else {
-      singleMenu.submenu.push({
-        label: item.label,
-        click: () => {
-          event.sender.send(item.uniqueEvent);
-        },
-        accelerator: item.accelerator,
-        // The renderer process will be handling this
-        registerAccelerator: false,
-      });
-    }
-  };
-
-  if (Array.isArray(itemsOrItem)) {
-    itemsOrItem.forEach(addItem);
-  } else {
-    addItem(itemsOrItem);
-  }
-
-  renderMenu();
-});
-
-events.on('removeFromMenu', (_, itemsOrItem) => {
-  const removeItem = (item: ElectronMenuItem) => {
-    if (item.label === null) {
-      return;
-    }
-
-    if (!menuLookup[item.menu]) {
-      return;
-    }
-
-    const singleMenu = menuLookup[item.menu];
-    if (!singleMenu.submenu) {
-      return;
-    }
-
-    if (!Array.isArray(singleMenu.submenu)) {
-      // this condition should never occur
-      return;
-    }
-
-    singleMenu.submenu = singleMenu.submenu.filter((menuItem) => {
-      return item.label !== menuItem.label;
-    });
-  };
-
-  if (Array.isArray(itemsOrItem)) {
-    itemsOrItem.forEach(removeItem);
-  } else {
-    removeItem(itemsOrItem);
-  }
-
-  renderMenu();
-});
-
-const isDevelopment = process.env.NODE_ENV !== 'production';
+import './electron/menubar';
+import './electron/menu';
+import { isDevelopment } from './electron/environment';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.

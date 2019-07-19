@@ -16,7 +16,7 @@ import { FileLoader, FileWriter } from '@/core/loaders/file';
 import uuid from 'uuid';
 import { value } from 'vue-function-api';
 import { PathReporter } from 'io-ts/lib/PathReporter';
-import { emitter } from '@/dawg/events';
+import { emitter } from '@/base/events';
 
 const events = emitter<{ setOpenedFile: () => void }>();
 

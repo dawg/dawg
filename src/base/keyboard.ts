@@ -1,4 +1,4 @@
-import * as platform from '@/dawg/platform';
+import * as platform from '@/base/platform';
 
 export type Key =
   'Shift' |
