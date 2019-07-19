@@ -25,18 +25,13 @@
 
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator';
-import BaseTabs from '@/components/BaseTabs.vue';
-import { Nullable } from '@/utils';
-import { Watch } from '@/modules/update';
-import { Player } from 'soundfont-player';
-import * as dawg from '@/dawg';
-import { PanelItem } from '@/base/ui';
+import * as base from '@/base';
 
 @Component
 export default class PanelHeaders extends Vue {
   get itemLookup() {
-    const lookup: { [name: string]: PanelItem } = {};
-    dawg.ui.panels.forEach((item) => {
+    const lookup: { [name: string]: base.PanelItem } = {};
+    base.ui.panels.forEach((item) => {
       lookup[item.name] = item;
     });
 
@@ -44,11 +39,11 @@ export default class PanelHeaders extends Vue {
   }
 
   get actions() {
-    if (dawg.panels.openedPanel.value === undefined) {
+    if (base.ui.openedPanel.value === undefined) {
       return [];
     }
 
-    const panel = this.itemLookup[dawg.panels.openedPanel.value];
+    const panel = this.itemLookup[base.ui.openedPanel.value];
     if (!panel) {
       return [];
     }
@@ -57,17 +52,17 @@ export default class PanelHeaders extends Vue {
   }
 
   get tabs() {
-    return dawg.ui.panels;
+    return base.ui.panels;
   }
 
-  public isActive(tab: PanelItem) {
-    if (tab.name === dawg.panels.openedPanel.value) {
+  public isActive(tab: base.PanelItem) {
+    if (tab.name === base.ui.openedPanel.value) {
       return 'is-active';
     }
   }
 
   public selectPanel(name: string) {
-    dawg.panels.openedPanel.value = name;
+    base.ui.openedPanel.value = name;
   }
 }
 

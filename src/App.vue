@@ -10,7 +10,7 @@
         <split 
           collapsible 
           :min-size="100"
-          :initial.sync="dawg.sizes.sideBarSize.value"
+          :initial.sync="base.ui.sideBarSize.value"
         >
           <side-tabs 
             v-if="loaded"
@@ -67,7 +67,7 @@
             direction="vertical"
             :style="border('top')"
             keep
-            :initial.sync="dawg.sizes.panelsSize.value"
+            :initial.sync="base.ui.panelsSize.value"
           >
             <split :initial="55" fixed>
               <panel-headers></panel-headers>
@@ -102,7 +102,7 @@
       </split>
     </split>
     <component
-      v-for="(global, i) in dawg.ui.global"
+      v-for="(global, i) in base.ui.global"
       :key="i"
       :is="global"
     ></component>
@@ -115,16 +115,12 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import { automation } from '@/modules/knobs';
-import Panels from '@/dawg/extensions/core/panels/Panels.vue';
-import PanelHeaders from '@/dawg/extensions/core/panels/PanelHeaders.vue';
+import Panels from '@/components/Panels.vue';
+import PanelHeaders from '@/components/PanelHeaders.vue';
 import ActivityBar from '@/components/ActivityBar.vue';
 import { TOOLBAR_HEIGHT, STATUS_BAR_HEIGHT } from '@/constants';
 import { Automatable } from '@/core/automation';
-import * as Audio from '@/modules/audio';
-import * as dawg from '@/dawg';
 import * as base from '@/base';
-import { Menu } from '@/dawg/extensions/core/menubar';
 
 // TO VERIFY
 // 1. Recording
@@ -141,7 +137,6 @@ import { Menu } from '@/dawg/extensions/core/menubar';
   },
 })
 export default class App extends Vue {
-  public dawg = dawg;
   public TOOLBAR_HEIGHT = TOOLBAR_HEIGHT;
   public STATUS_BAR_HEIGHT = STATUS_BAR_HEIGHT;
 
@@ -192,14 +187,15 @@ export default class App extends Vue {
     // This is called before refresh / close
     // I don't remove this listner because the window is closing anyway
     // I'm not even sure onExit would be called if we removed it in the destroy method
-    window.addEventListener('beforeunload', dawg.manager.dispose);
+    window.addEventListener('beforeunload', base.manager.dispose);
 
-    automation.$on('automate', this.addAutomationClip);
+    // TODO
+    // automation.$on('automate', this.addAutomationClip);
 
     setTimeout(async () => {
       // Log this for debugging purposes
       // tslint:disable-next-line:no-console
-      console.info(dawg);
+      console.info(base);
       this.loaded = true;
     }, 1250);
   }
@@ -220,22 +216,22 @@ export default class App extends Vue {
   }
 
   public online() {
-    dawg.notify.info('Connection has been restored');
+    base.notify.info('Connection has been restored');
   }
 
   public offline() {
-    dawg.notify.warning('You are disconnected', {
+    base.notify.warning('You are disconnected', {
       detail: 'Features may not work as expected.',
     });
   }
 
   public border(side: 'left' | 'right' | 'top' | 'bottom') {
-    return `border-${side}: 1px solid ${dawg.theme.background}`;
+    return `border-${side}: 1px solid ${base.theme.background}`;
   }
 
   public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T & string) {
     // FIXME Fix automation clips
-    // const added = await dawg.project.project.createAutomationClip({
+    // const added = await ddd.project.project.createAutomationClip({
     //   automatable,
     //   key,
     //   start: this.masterStart,
@@ -243,7 +239,7 @@ export default class App extends Vue {
     // });
 
     // if (!added) {
-    //   dawg.notify.warning('Unable to create automation clip', {
+    //   base.notify.warning('Unable to create automation clip', {
     //     detail: 'There are no free tracks. Move elements and try again.',
     //   });
     // }

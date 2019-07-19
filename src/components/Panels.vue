@@ -3,10 +3,10 @@
     class="tabs-panels secondary" 
     ref="panels"
     :selected-tab.sync="openedPanel.value"
-    :first="dawg.ui.panels[0] ? dawg.ui.panels[0].name : undefined"
+    :first="base.ui.panels[0] ? base.ui.panels[0].name : undefined"
   >
     <panel 
-      v-for="item in dawg.ui.panels"
+      v-for="item in base.ui.panels"
       :key="item.name"
       :name="item.name"
       :selected-tab="openedPanel.value"
@@ -24,7 +24,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import BaseTabs from '@/components/BaseTabs.vue';
 import Panel from '@/components/Panel.vue';
 import { Note, EffectName, Channel, EffectOptions } from '@/core';
-import * as dawg from '@/dawg';
+import * as base from '@/base';
 
 @Component({
   components: {
@@ -33,10 +33,10 @@ import * as dawg from '@/dawg';
   },
 })
 export default class Panels extends Vue {
-  public dawg = dawg;
+  public base = base;
 
   get openedPanel() {
-    return dawg.panels.openedPanel;
+    return base.ui.openedPanel;
   }
 }
 </script>

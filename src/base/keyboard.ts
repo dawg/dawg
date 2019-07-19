@@ -35,19 +35,15 @@ export type Key =
   'Esc' |
   'Tab';
 
-
-type CommandCallback = () => void;
-
 export type KeyCode = number | { [p in platform.Platform]: number };
-export type KeyCodeLookup = { [k in Key]: KeyCode };
 
-export const codeLookup: KeyCodeLookup = {
+export const codeLookup: { [k in Key]: KeyCode } = {
   Shift: 16,
   CmdOrCtrl: {
     [platform.Platform.Windows]: 17,
     [platform.Platform.Mac]: 91,
     [platform.Platform.Linux]: 17,
-  }, // 55 is the Mac command key
+  },
   Ctrl: 17,
   A: 65,
   B: 66,

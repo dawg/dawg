@@ -6,7 +6,6 @@ Vue.use(plugin);
 import { VueConstructor } from 'vue';
 import { Wrapper, value } from 'vue-function-api';
 import { DawgCommand } from '@/dawg/commands';
-import { emitter } from '@/base/events';
 
 export interface TabAction {
   icon: Wrapper<string>;
@@ -77,8 +76,9 @@ const toolbar: ToolbarItem[] = [];
 const trackContext: Array<DawgCommand<[number]>> = [];
 const settings: Array<StringField | BooleanField | SelectField | VueConstructor> = [];
 const openedSideTab = value<undefined | string>(undefined);
-
-const events = emitter<{ clickActivityBarItem: (item: ActivityBarItem) => void }>();
+const openedPanel = value<undefined | string>(undefined);
+const panelsSize = value(250);
+const sideBarSize = value(250);
 
 export const ui = {
   global,
@@ -90,5 +90,8 @@ export const ui = {
   toolbar,
   settings,
   openedSideTab,
+  openedPanel,
+  panelsSize,
+  sideBarSize,
 };
 
