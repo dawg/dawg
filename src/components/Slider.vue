@@ -24,109 +24,125 @@
       class="primary--fill"
       :style="style"
     ></rect>
-    <polygon
+    <drag-element
+      tag="polygon"
+      curse="pointer"
       @contextmenu="contextmenu"
       @mouseenter="update"
       @mouseleave="afterMove"
       :points="points" 
       class="level primary--fill" 
-      :ref="dragRef"
-    ></polygon>
+    ></drag-element>
   </svg>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Mixins } from 'vue-property-decorator';
-import { Draggable } from '@/modules/draggable';
-import { scale } from '@/utils';
+import { DragElement } from '@/modules/draggable';
+import { scale, createComponent } from '@/utils';
 import * as dawg from '@/dawg';
+import { computed } from 'vue-function-api';
 
-@Component
-export default class Slider extends Mixins(Draggable) {
-  @Prop({ type: Number, default: 150 }) public height!: number;
-  @Prop({ type: Number, default: 6 }) public width!: number;
-  @Prop({ type: Number, required: true }) public right!: number;
-  @Prop({ type: Number, required: true }) public left!: number;
-  @Prop({ type: Number, required: true }) public value!: number;
-  @Prop({ type: Number, default: 1 }) public max!: number;
-  @Prop({ type: Number, default: 0 }) public min!: number;
+export default createComponent({
+  name: 'Slider',
+  components: { DragElement },
+  props: {
+    height: { type: Number, default: 150 },
+    width: { type: Number, default: 6 },
+    right: { type: Number, required: true },
+    left: { type: Number, required: true },
+    value: { type: Number, required: true },
+    max: { type: Number, default: 1 },
+    min: { type: Number, default: 0 },
+  },
+  setup(props, context) {
+    const bgClass = 'secondary--fill';
+    const cursor = 'pointer';
 
-  public style = { x: `${this.width + 2}px` };
-  public bgClass = 'secondary--fill';
-  public fg = '#3cb7d8';
-  public cursor = 'pointer';
+    const points = computed(() => {
+      const width = 8;
+      const height = 16;
 
-  public $refs!: {
-    drag: HTMLElement,
-    svg: HTMLElement,
-  };
+      const left = (2 * props.width) + 6;
+      const right = left + width;
 
-  get points() {
-    const width = 8;
-    const height = 16;
+      const p1 = { x: left, y: position.value };
+      const p2 = { x: right, y: position.value - (height / 2) };
+      const p3 = { x: right, y: position.value + (height / 2) };
 
-    const left = (2 * this.width) + 6;
-    const right = left + width;
-
-    return `${left},${this.position} ${right},${this.position - (height / 2)} ${right},${this.position + (height / 2)}`;
-  }
-
-  get scaled() {
-    return scale(this.value, [this.min, this.max], [0, 1]);
-  }
-
-  get position() {
-    return this.height - (this.height * this.scaled);
-  }
-
-  get rightHeight() {
-    return this.right * this.height;
-  }
-
-  get leftHeight() {
-    return this.left * this.height;
-  }
-
-  public move(e: MouseEvent) {
-    let volume = this.$refs.svg.getBoundingClientRect().top + this.height - e.clientY;
-    volume /= this.height;
-    volume = Math.max(Math.min(volume, 1), 0);
-    volume = scale(volume, [0, 1], [this.min, this.max]);
-    this.$emit('input', volume);
-    this.update();
-  }
-
-  public getFormatted() {
-    return Math.round(this.value * 100) + '%';
-  }
-
-  public update() {
-    dawg.status.set({
-      text: 'Volume',
-      value: this.getFormatted(),
+      return `${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}`;
     });
-  }
 
-  public afterMove() {
-    dawg.status.set(null);
-  }
-
-  public getPosition(level: number) {
-    return this.height - level;
-  }
-
-  public contextmenu(event: MouseEvent) {
-    dawg.context({
-      position: event,
-      items: [
-        {
-          text: 'Create Automation Clip',
-          callback: () => this.$emit('automate'),
-        },
-      ],
+    const scaled = computed(() => {
+      return scale(props.value, [props.min, props.max], [0, 1]);
     });
-  }
-}
+
+    const position = computed(() => {
+      return props.height - (props.height * scaled.value);
+    });
+
+    const rightHeight = computed(() => {
+      return props.right * props.height;
+    });
+
+    const leftHeight = computed(() => {
+      return props.left * props.height;
+    });
+
+    function move(e: MouseEvent) {
+      const svg = context.refs.svg as SVGElement;
+      let volume = svg.getBoundingClientRect().top + props.height - e.clientY;
+      volume /= props.height;
+      volume = Math.max(Math.min(volume, 1), 0);
+      volume = scale(volume, [0, 1], [props.min, props.max]);
+      context.emit('input', volume);
+      update();
+    }
+
+    function getFormatted() {
+      return Math.round(props.value * 100) + '%';
+    }
+
+    function update() {
+      dawg.status.set({
+        text: 'Volume',
+        value: getFormatted(),
+      });
+    }
+
+    function afterMove() {
+      dawg.status.set(null);
+    }
+
+    function getPosition(level: number) {
+      return props.height - level;
+    }
+
+    function contextmenu(event: MouseEvent) {
+      dawg.context({
+        position: event,
+        items: [
+          {
+            text: 'Create Automation Clip',
+            callback: () => context.emit('automate'),
+          },
+        ],
+      });
+    }
+
+    return {
+      bgClass,
+      contextmenu,
+      getPosition,
+      update,
+      afterMove,
+      move,
+      style: computed(() => ({ x: `${props.width + 2}px` })),
+      points,
+      leftHeight,
+      rightHeight,
+    };
+  },
+});
 </script>
 
 <style scoped lang="sass">

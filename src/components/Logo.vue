@@ -20,12 +20,14 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
+import { createComponent } from 'vue-function-api';
 
-@Component
-export default class Logo extends Vue {
-  @Prop({ type: String, default: 'white' }) public color!: string;
-}
+export default createComponent({
+  name: 'Logo',
+  props: {
+    color: { type: String, default: 'white' },
+  },
+});
 </script>
 
 <style lang="sass" scoped>

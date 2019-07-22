@@ -404,7 +404,7 @@ export class Project implements Serializable<IProject> {
   get instrumentChannelLookup() {
     const lookup: { [k: number]: Array<Instrument<any, any>> } = {};
     this.instruments.forEach((instrument) => {
-      if (instrument.channel !== null) {
+      if (instrument.channel !== undefined) {
         if (!(instrument.channel in lookup)) {
           lookup[instrument.channel] = [];
         }
@@ -504,7 +504,7 @@ export class Project implements Serializable<IProject> {
    * Sets the channel of the instrument to the given channel. If no channel is given, the instrument will be connected
    * to channel (useful for reconnecting to channel after re-initialization from the fs).
    */
-  public setChannel(payload: { instrument: Instrument<any, any>, channel?: number | null }) {
+  public setChannel(payload: { instrument: Instrument<any, any>, channel?: number }) {
     const instrument = payload.instrument;
     let channel = payload.channel;
     if (instrument.channel === channel) {
@@ -520,7 +520,7 @@ export class Project implements Serializable<IProject> {
 
 
     let destination: Tone.AudioNode;
-    if (channel === null) {
+    if (channel === undefined) {
       destination = Tone.Master;
     } else {
       const c = this.channels[channel];

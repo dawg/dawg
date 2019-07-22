@@ -1,9 +1,9 @@
 <template>
   <mini-score
     class="pattern-element"
-    ref="score"
     :style="scoreStyle"
     :notes="notes"
+    :totla-duration,sync="totalDuration"
   ></mini-score>
 </template>
 
@@ -19,7 +19,7 @@ export default class PatternElement extends Vue {
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;
   @Prop({ type: Object, required: true }) public element!: ScheduledPattern;
 
-  public score: MiniScore | null = null;
+  public totalDuration = 0;
 
   get notes() {
     const notes: Note[] = [];
@@ -27,17 +27,9 @@ export default class PatternElement extends Vue {
   }
 
   get scoreStyle() {
-    if (!this.score) {
-      return;
-    }
-
     return {
-      width: `${this.score.totalDuration * this.pxPerBeat}px`,
+      width: `${this.totalDuration * this.pxPerBeat}px`,
     };
-  }
-
-  public mounted() {
-    this.score = this.$refs.score as MiniScore;
   }
 }
 </script>

@@ -1,29 +1,38 @@
 <template>
-  <v-btn icon @click="thing" class="dot-button">
+  <v-btn icon @click="click" class="dot-button">
     <icon name="circle" scale="0.4" :class="color"></icon>
   </v-btn>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator';
+import { createComponent } from '@/utils';
+import { computed } from 'vue-function-api';
 
-@Component
-export default class DotButton extends Vue {
-  @Prop({type: Boolean, required: true}) public value!: boolean;
+export default createComponent({
+  name: 'DotButton',
+  props: {
+    value: { type: Boolean, required: true },
+  },
+  setup(props, context) {
+    const color = computed(() => {
+      if (props.value) {
+        return 'primary--text';
+      } else {
+        return 'background--text';
+      }
+    });
 
-  get color() {
-    if (this.value) {
-      return 'primary--text';
-    } else {
-      return 'background--text';
+    function click(e: MouseEvent) {
+      e.stopPropagation();
+      context.emit('input', !props.value);
     }
-  }
 
-  public thing(e: MouseEvent) {
-    e.stopPropagation();
-    this.$emit('input', !this.value);
-  }
-}
+    return {
+      color,
+      click,
+    };
+  },
+});
 </script>
 
 <style lang="sass" scoped>

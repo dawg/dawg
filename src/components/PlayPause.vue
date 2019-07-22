@@ -3,31 +3,42 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { createComponent } from '@/utils';
+import { computed, value } from 'vue-function-api';
 
-@Component
-export default class PlayPause extends Vue {
-  @Prop({type: String, default: 'PLAY'}) public play!: string;
-  @Prop({type: String, default: 'STOP'}) public stop!: string;
-  public text = this.play;
-  public playing = false;
-  public click() {
-    if (this.playing) {
-      this.text = this.play;
-      this.$emit('stop');
-    } else {
-      this.text = this.stop;
-      this.$emit('play');
+export default createComponent({
+  name: 'PlayPause',
+  props: {
+    play: {type: String, default: 'PLAY'},
+    stop: {type: String, default: 'STOP'},
+  },
+  setup(props, context) {
+    const playing = value(false);
+
+    function click() {
+      if (playing.value) {
+        context.emit('stop');
+      } else {
+        context.emit('play');
+      }
+
+      playing.value = !playing.value;
     }
-    this.playing = !this.playing;
-  }
-}
+
+    return {
+      text: computed(() => {
+        return playing.value ? props.play : props.stop;
+      }),
+      click,
+    };
+  },
+});
 </script>
 
 <style scoped lang="sass">
-  .button
-    border: solid 1px
-    padding: 5px
-    border-radius: 5px
-    user-select: none
+.button
+  border: solid 1px
+  padding: 5px
+  border-radius: 5px
+  user-select: none
 </style>

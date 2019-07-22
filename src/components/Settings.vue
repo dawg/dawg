@@ -39,17 +39,17 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
 import * as base from '@/base';
+import { createComponent } from '@/utils';
 
-@Component
-export default class Settings extends Vue {
-  public base = base;
-
-  public close() {
-    this.$emit('input', false);
-  }
-}
+export default createComponent({
+  name: 'Settings',
+  setup() {
+    return {
+      base,
+    };
+  },
+});
 </script>
 
 <style lang="sass" scoped>

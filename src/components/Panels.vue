@@ -2,19 +2,19 @@
   <base-tabs 
     class="tabs-panels secondary" 
     ref="panels"
-    :selected-tab.sync="openedPanel.value"
+    :selected-tab.sync="openedPanel"
     :first="base.ui.panels[0] ? base.ui.panels[0].name : undefined"
   >
-    <panel 
+    <tab 
       v-for="item in base.ui.panels"
       :key="item.name"
       :name="item.name"
-      :selected-tab="openedPanel.value"
+      :selected-tab="openedPanel"
     >
       <component
         :is="item.component"
       ></component>
-    </panel>
+    </tab>
 
   </base-tabs>
 </template>
@@ -22,25 +22,21 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import BaseTabs from '@/components/BaseTabs.vue';
-import Panel from '@/components/Panel.vue';
-import { Note, EffectName, Channel, EffectOptions } from '@/core';
+import Tab from '@/components/Tab.vue';
 import * as base from '@/base';
+import { createComponent } from '@/utils';
 
-@Component({
+export default createComponent({
+  name: 'Panels',
   components: {
     BaseTabs,
-    Panel,
+    Tab,
   },
-})
-export default class Panels extends Vue {
-  public base = base;
-
-  get openedPanel() {
-    return base.ui.openedPanel;
-  }
-}
+  setup() {
+    return {
+      base,
+      openedPanel: base.ui.openedPanel,
+    };
+  },
+});
 </script>
-
-<style lang="sass" scoped>
-
-</style>

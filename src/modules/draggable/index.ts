@@ -169,6 +169,7 @@ export class Draggable extends Vue {
 @Component
 export class DragElement extends Mixins(Draggable) {
   @Prop({ type: String, default: 'div' }) public tag!: string;
+  // TODO Rename to cursor
   @Prop({ type: String, default: 'auto' }) public curse!: string;
 
   public move(e: MouseEvent) {
@@ -181,6 +182,10 @@ export class DragElement extends Mixins(Draggable) {
 
   public afterMove() {
     this.$emit('after-move');
+  }
+
+  public scrollMove(delta: Point) {
+    this.$emit('scroll-move', delta);
   }
 
   public render(createElement: CreateElement) {

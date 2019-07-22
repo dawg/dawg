@@ -1,5 +1,6 @@
 <template>
-  <div 
+  <div
+    ref="el"
     class="editable"
     :contenteditable="contenteditable"
     @blur="blur"
@@ -10,41 +11,53 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
-import { Keys } from '@/utils';
+import { Keys, createComponent } from '@/utils';
+import { onMounted, value } from 'vue-function-api';
 
-@Component
-export default class NAME extends Vue {
-  @Prop({ type: String, required: true }) public value!: string;
-  public contenteditable = false;
-  public $el!: HTMLElement;
+export default createComponent({
+  name: 'Editable',
+  props: {
+    value: { type: String, required: true },
+  },
+  setup(props, context) {
+    const refs = context.refs as { el: HTMLElement };
+    const contenteditable = value(false);
 
-  public mounted() {
-    this.$el.innerText = this.value;
-  }
-
-  public dblclick() {
-    this.contenteditable = true;
-    this.$nextTick(() => {
-      this.$el.focus();
-      // Select all of the text in the div!
-      document.execCommand('selectall', undefined, undefined);
+    onMounted(() => {
+      refs.el.innerText = props.value;
     });
-  }
 
-  public blur() {
-    this.contenteditable = false;
-  }
+    function dblclick() {
+      contenteditable.value = true;
+      context.root.$nextTick(() => {
+        refs.el.focus();
+        // Select all of the text in the div!
+        document.execCommand('selectall', undefined, undefined);
+      });
+    }
 
-  public input(e: any) {
-    this.$emit('input', e.currentTarget.innerText);
-  }
+    function blur() {
+      contenteditable.value = false;
+    }
 
-  public keydown(e: KeyboardEvent) {
-    if (e.keyCode !== Keys.ENTER) { return; }
-    this.$el.blur();
-  }
-}
+    function input(e: any) {
+      context.emit('input', e.currentTarget.innerText);
+    }
+
+    function keydown(e: KeyboardEvent) {
+      if (e.keyCode !== Keys.ENTER) { return; }
+      refs.el.blur();
+    }
+
+    return {
+      contenteditable,
+      blur,
+      dblclick,
+      input,
+      keydown,
+    };
+  },
+});
 </script>
 
 <style lang="sass" scoped>

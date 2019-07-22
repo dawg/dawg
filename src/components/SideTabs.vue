@@ -23,18 +23,16 @@
         :selected-tab.sync="base.ui.openedSideTab.value"
         :first="base.ui.activityBar[0] ? base.ui.activityBar[0].name : undefined"
       >
-        <side-bar
+        <tab
           v-for="tab in base.ui.activityBar"
           :key="tab.name"
           :name="tab.name"
-          :icon="tab.icon"
-          :icon-props="tab.iconProps"
           :selected-tab="base.ui.openedSideTab.value"
         >
           <component
             :is="tab.component"
           ></component>
-        </side-bar>
+        </tab>
 
       </base-tabs>
     </vue-perfect-scrollbar>
@@ -43,9 +41,8 @@
 
 <script lang="ts">
 import BaseTabs from '@/components/BaseTabs.vue';
-import SideBar from '@/components/SideBar.vue';
+import Tab from '@/components/Tab.vue';
 import { TOOLBAR_HEIGHT } from '@/constants';
-import { Sample } from '@/core';
 import * as base from '@/base';
 import { createComponent, computed } from 'vue-function-api';
 
@@ -53,7 +50,7 @@ export default createComponent({
   name: 'SideTabs',
   components: {
     BaseTabs,
-    SideBar,
+    Tab,
   },
   setup() {
     const iconColor = computed(() => {

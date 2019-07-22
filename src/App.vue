@@ -119,7 +119,6 @@ import Panels from '@/components/Panels.vue';
 import PanelHeaders from '@/components/PanelHeaders.vue';
 import ActivityBar from '@/components/ActivityBar.vue';
 import { TOOLBAR_HEIGHT, STATUS_BAR_HEIGHT } from '@/constants';
-import { Automatable } from '@/core/automation';
 import * as base from '@/base';
 
 // TO VERIFY
@@ -139,6 +138,7 @@ import * as base from '@/base';
 export default class App extends Vue {
   public TOOLBAR_HEIGHT = TOOLBAR_HEIGHT;
   public STATUS_BAR_HEIGHT = STATUS_BAR_HEIGHT;
+  public base = base;
 
   // This loaded flag is important
   // Bugs can appear if we render before we load the project file
@@ -229,7 +229,7 @@ export default class App extends Vue {
     return `border-${side}: 1px solid ${base.theme.background}`;
   }
 
-  public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T & string) {
+  // public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T & string) {
     // FIXME Fix automation clips
     // const added = await ddd.project.project.createAutomationClip({
     //   automatable,
@@ -243,7 +243,7 @@ export default class App extends Vue {
     //     detail: 'There are no free tracks. Move elements and try again.',
     //   });
     // }
-  }
+  // }
 }
 </script>
 

@@ -33,7 +33,7 @@ export default class Mixer extends Vue {
   @Prop({ type: Boolean, required: true }) public play!: boolean;
   public openedEffect: null | AnyEffect = null;
 
-  public addEffect(channel: Channel, { effect, index }: { effect: AnyEffect, index: number }) {
+  public addEffect(channel: C, { effect, index }: { effect: AnyEffect, index: number }) {
     this.$emit('add', { channel, effect, index });
   }
 
@@ -45,7 +45,7 @@ export default class Mixer extends Vue {
     }
   }
 
-  public deleteEffect(channel: Channel, effect: AnyEffect) {
+  public deleteEffect(channel: C, effect: AnyEffect) {
     this.$emit('delete', { channel, effect });
   }
 }

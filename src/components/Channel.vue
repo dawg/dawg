@@ -60,12 +60,13 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { range, scale, clamp } from '@/utils';
+import { range, scale, clamp, createComponent } from '@/utils';
 import { Watch } from '@/modules/update';
 import { AnyEffect } from '@/core/filters/effect';
 import { Channel as C } from '@/core/channel';
 import { EffectMap, EffectName } from '@/core';
 import * as base from '@/base';
+import { value, computed, watch } from 'vue-function-api';
 
 function sentenceCase(text: string) {
   // const result = text.replace( /([A-Z])/g, ' $1' );
@@ -75,105 +76,124 @@ function sentenceCase(text: string) {
 
 // Beware, we are modifying data in the store directly here.
 // We will want to change this evetually.
-@Component({
+export default createComponent({
+  name: 'Channel',
   filters: {
     sentenceCase,
   },
-})
-export default class Channel extends Vue {
-  @Prop({ type: Object, required: true }) public channel!: C;
-  @Prop({ type: Boolean, required: true }) public play!: boolean;
+  props: {
+    channel: { type: Object as () => C, required: true },
+    play: { type: Boolean, required: true },
+  },
+  setup(props, context) {
+    const right = value(0);
+    const left = value(0);
 
-  public right = 0;
-  public left = 0;
-
-  get effectLookup() {
-    const o: { [k: number]: AnyEffect } = {};
-    this.channel.effects.forEach((effect) => {
-      o[effect.slot] = effect;
+    const effectLookup = computed(() => {
+      const o: { [k: number]: AnyEffect } = {};
+      props.channel.effects.forEach((effect) => {
+        o[effect.slot] = effect;
+      });
+      return o;
     });
-    return o;
-  }
 
-  get effects() {
-    return range(10).map((i) => this.effectLookup[i]);
-  }
-
-  get options() {
-    return Object.keys(EffectMap) as EffectName[];
-  }
-
-  public showEffects(event: MouseEvent, i: number) {
-    const items = this.options.map((option) => ({
-      text: sentenceCase(option), callback: () => this.addEffect(option, i),
-    }));
-
-    base.menu({
-      position: event,
-      items,
+    const effects = computed(() => {
+      return range(10).map((i) => effectLookup.value[i]);
     });
-  }
 
-  public addEffect(effect: EffectName, i: number) {
-    this.$emit('add', { effect, index: i });
-  }
-
-  public select(event: MouseEvent, effect: AnyEffect) {
-    event.stopPropagation();
-    this.$emit('select', effect);
-  }
-
-  public contextmenu(event: MouseEvent, effect: AnyEffect) {
-    base.context({
-      position: event,
-      items: [{
-        text: 'Delete',
-        callback: () => this.$emit('delete', effect),
-      }],
+    const options = computed(() => {
+      return Object.keys(EffectMap) as EffectName[];
     });
-  }
 
-  public mute() {
-    this.channel.mute = !this.channel.mute;
-  }
+    function showEffects(event: MouseEvent, i: number) {
+      const items = options.value.map((option) => ({
+        text: sentenceCase(option), callback: () => addEffect(option, i),
+      }));
 
-  public process(level: number) {
-    return clamp(scale(level, [-100, 6], [0, 1]), 0, 1);
-  }
-
-  public renderMeter() {
-    if (this.play) {
-      requestAnimationFrame(this.renderMeter);
-      this.left = this.process(this.channel.left.getLevel());
-      this.right = this.process(this.channel.right.getLevel());
-    } else {
-      this.left = 0;
-      this.right = 0;
+      base.menu({
+        position: event,
+        items,
+      });
     }
-  }
 
-  public automatePan() {
-    this.$automate(this.channel, 'panner');
-  }
-
-  public automateVolume() {
-    this.$automate(this.channel, 'volume');
-  }
-
-  public panInput(value: number) {
-    this.channel.panner.value = value;
-  }
-
-  public volumeInput(value: number) {
-    this.channel.volume.value = value;
-  }
-
-  @Watch<Channel>('play')
-  public start() {
-    if (this.play) {
-      this.renderMeter();
+    function addEffect(effect: EffectName, i: number) {
+      context.emit('add', { effect, index: i });
     }
-  }
+
+    function select(event: MouseEvent, effect: AnyEffect) {
+      event.stopPropagation();
+      context.emit('select', effect);
+    }
+
+    function contextmenu(event: MouseEvent, effect: AnyEffect) {
+      base.context({
+        position: event,
+        items: [{
+          text: 'Delete',
+          callback: () => context.emit('delete', effect),
+        }],
+      });
+    }
+
+    function mute() {
+      props.channel.mute = !props.channel.mute;
+    }
+
+    function process(level: number) {
+      return clamp(scale(level, [-100, 6], [0, 1]), 0, 1);
+    }
+
+    function renderMeter() {
+      if (props.play) {
+        requestAnimationFrame(renderMeter);
+        left.value = process(props.channel.left.getLevel());
+        right.value = process(props.channel.right.getLevel());
+      } else {
+        left.value = 0;
+        right.value = 0;
+      }
+    }
+
+    function automatePan() {
+      context.root.$automate(props.channel, 'panner');
+    }
+
+    function automateVolume() {
+      context.root.$automate(props.channel, 'volume');
+    }
+
+    function panInput(v: number) {
+      props.channel.panner.value = v;
+    }
+
+    function volumeInput(v: number) {
+      props.channel.volume.value = v;
+    }
+
+    watch(() => props.play, () => {
+      if (props.play) {
+        renderMeter();
+      }
+    });
+
+    return {
+      showEffects,
+      automatePan,
+      automateVolume,
+      panInput,
+      volumeInput,
+      mute,
+      contextmenu,
+      effects,
+      left,
+      right,
+    };
+  },
+});
+
+
+export class Channel extends Vue {
+
 }
 </script>
 

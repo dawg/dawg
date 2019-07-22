@@ -13,24 +13,29 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
+import { createComponent } from '@/utils';
 
-// v-bind and v-on does not work with v-model
-// https://github.com/vuejs/vue/issues/6216
-@Component
-export default class Pan extends Vue {
-  @Prop({ type: Number, required: true }) public value!: number;
+export default createComponent({
+  name: 'Pan',
+  props: {
+    value: { type: Number, required: true },
+  },
+  setup(props) {
+    function format(value: number) {
+      let text = (Math.round(Math.abs(props.value) * 100)) + '%';
 
-  public format(value: number) {
-    let text = (Math.round(Math.abs(this.value) * 100)) + '%';
+      if (props.value < 0) {
+        text += ' left';
+      } else if (props.value > 0) {
+        text += ' right';
+      }
 
-    if (this.value < 0) {
-      text += ' left';
-    } else if (this.value > 0) {
-      text += ' right';
+      return text;
     }
 
-    return text;
-  }
-}
+    return {
+      format,
+    };
+  },
+});
 </script>

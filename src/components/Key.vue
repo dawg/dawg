@@ -19,92 +19,107 @@
 import { Component, Prop, Inject, Vue } from 'vue-property-decorator';
 import Tone from 'tone';
 import * as base from '@/base';
+import { createComponent } from '@/utils';
+import { value, computed } from 'vue-function-api';
 
-@Component
-export default class Key extends Vue {
-  @Prop({ type: Number, required: true }) public keyHeight!: number;
-  @Prop({ type: String, required: true }) public value!: string;
-  @Prop({ type: Object, required: false }) public synth?: Tone.Synth;
-  @Prop({ type: Number, default: 80 }) public width!: number;
-  @Prop({ type: Number, default: 0.55 }) public widthProportion!: number;
-  @Prop({ type: Number, default: 0.50 }) public heightProportion!: number;
-  @Prop(Boolean) public borderBottom!: boolean;
+export default createComponent({
+  name: 'Key',
+  props: {
+    keyHeight: { type: Number, required: true },
+    value: { type: String, required: true },
+    synth: { type: Object as () => Tone.Synth | undefined, required: false },
+    width: { type: Number, default: 80 },
+    widthProportion: { type: Number, default: 0.55 },
+    heightProportion: { type: Number, default: 0.50 },
+    borderBottom: Boolean as () => boolean | undefined,
+  },
+  setup(props, context) {
+    const down = value(false);
+    const hover = value(false);
 
-  public down = false;
-  public hover = false;
+    const color = computed(() => {
+      return props.value.includes('#') ? 'black' : 'white';
+    });
 
-  get color() {
-    return this.value.includes('#') ? 'black' : 'white';
-  }
+    const height = computed(() => {
+      return props.keyHeight * (12 / 7);  // all keys / white keys
+    });
 
-  get height() {
-    return this.keyHeight * (12 / 7);  // all keys / white keys
-  }
-
-  get keyClass() {
-    return {
-      'c': this.isC,
-      'primary-lighten-4': this.down,
-      [`key--${this.color} ${this.value}`]: true,
-    };
-  }
-
-  get isC() {
-    return this.value.startsWith('C') && this.color === 'white';
-  }
-
-  get text() {
-    if (this.isC) {
-      return this.value;
-    }
-  }
-
-  get percentage() {
-    return this.hover ? 50 : this.isC ? 30 : 10;
-  }
-
-  get keyOverlay() {
-    return {
-      backgroundColor: base.theme.primary + this.percentage,
-      borderBottom: `1px solid ${base.theme.primary + 10}`,
-    };
-  }
-
-  get keyStyle() {
-    if (this.color === 'black') {
+    const keyClass = computed(() => {
       return {
-        transform: `translate(0, -${(this.height * this.heightProportion) / 2}px)`,
-        height: `${this.height * this.heightProportion}px`,
-        width: `${this.width * this.widthProportion}px`,
+        'c': isC.value,
+        'primary-lighten-4': down.value,
+        [`key--${color.value} ${props.value}`]: true,
       };
+    });
+
+    const isC = computed(() => {
+      return props.value.startsWith('C') && color.value === 'white';
+    });
+
+    const text = computed(() => {
+      if (isC.value) {
+        return props.value;
+      }
+    });
+
+    const percentage = computed(() => {
+      return hover.value ? 50 : isC.value ? 30 : 10;
+    });
+
+    const keyOverlay = computed(() => {
+      return {
+        backgroundColor: base.theme.primary + percentage.value,
+        borderBottom: `1px solid ${base.theme.primary + 10}`,
+      };
+    });
+
+    const keyStyle = computed(() => {
+      if (color.value === 'black') {
+        return {
+          transform: `translate(0, -${(height.value * props.heightProportion) / 2}px)`,
+          height: `${height.value * props.heightProportion}px`,
+          width: `${props.width * props.widthProportion}px`,
+        };
+      }
+      return {
+        borderBottom: props.borderBottom ? 'solid 1px rgba(0, 0, 0, 0.06)' : '',
+        height: `${height.value}px`,
+        width: `${props.width}px`,
+      };
+    });
+
+    function mousedown() {
+      context.emit('start', props.value);
+      down.value = true;
+      window.addEventListener('mouseup', mouseup);
     }
+
+    function mouseup() {
+      window.removeEventListener('mouseup', mouseup);
+      down.value = false;
+      context.emit('stop', props.value);
+    }
+
+    function enter() {
+      hover.value = true;
+    }
+
+    function exit() {
+      hover.value = false;
+    }
+
     return {
-      borderBottom: this.borderBottom ? 'solid 1px rgba(0, 0, 0, 0.06)' : '',
-      height: `${this.height}px`,
-      width: `${this.width}px`,
+      keyClass,
+      keyStyle,
+      mousedown,
+      enter,
+      exit,
+      keyOverlay,
+      text,
     };
-  }
-
-  public mousedown() {
-    this.$emit('start', this.value);
-    this.down = true;
-    window.addEventListener('mouseup', this.mouseup);
-  }
-
-  public mouseup() {
-    window.removeEventListener('mouseup', this.mouseup);
-    this.down = false;
-    this.$emit('stop', this.value);
-  }
-
-  public enter() {
-    this.hover = true;
-  }
-
-  public exit() {
-    this.hover = false;
-  }
-}
+  },
+});
 </script>
 
 <style scoped lang="sass">

@@ -35,6 +35,7 @@
     "tinycolor2": "^1.4.1",
     "tmp": "0.0.33",
     "tone": "^13.8.3",
+    "typescript-parser": "^2.6.1",
     "uuid": "^3.3.2",
     "vue": "^2.6.10",
     "vue-awesome": "^3.1.2",

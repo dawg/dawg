@@ -107,7 +107,7 @@ export const copy = <T>(o: T): T => {
 };
 
 
-export const Nullable = (o: new() => object ) => {
+export const Nullable = <V, T extends new() => V>(o: T) => {
   return {
     required: true,
     validator: (prop: any) => {
@@ -268,3 +268,9 @@ export function createComponent<Props>(
 }
 
 // Remove until here
+
+export const update = <Props, K extends keyof Props, V extends Props[K]>(
+  props: Props, context: { emit: (event: string, value: V) => void }, key: K, value: V,
+) => {
+  context.emit(`update:${key}`, value);
+};

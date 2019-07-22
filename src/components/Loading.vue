@@ -11,21 +11,34 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { range } from '@/utils';
+import { range, createComponent } from '@/utils';
+import { computed } from 'vue-function-api';
+
+export default createComponent({
+  name: 'Loading',
+  props: {
+    numBars: { type: Number, default: 5 },
+    value: { type: Boolean, default: true },
+  },
+  setup(props) {
+    return {
+      styles: computed(() => {
+        return range(props.numBars).map((i) => {
+          return {
+            left: `${11 * i}px`,
+            animationDelay: `${0.2 * i}s`,
+          };
+        });
+      }),
+    };
+  },
+});
 
 @Component
-export default class Loading extends Vue {
-  @Prop({ type: Number, default: 5 }) public numBars!: number;
-  @Prop({ type: Boolean, default: true }) public value!: boolean;
+export class Loading extends Vue {
 
-  get styles() {
-    return range(this.numBars).map((i) => {
-      return {
-        left: `${11 * i}px`,
-        animationDelay: `${0.2 * i}s`,
-      };
-    });
-  }
+
+
 }
 </script>
 

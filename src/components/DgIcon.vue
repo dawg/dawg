@@ -8,19 +8,24 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
+import { createComponent } from '@/utils';
+import { computed } from 'vue-function-api';
 
-@Component
-export default class Ico extends Vue {
-  @Prop(Boolean) public fa!: boolean;
-  get icon() {
-    const slot = this.$slots.default;
-    if (!slot || !slot[0]) {
-      return '';
-    }
+export default createComponent({
+  name: 'DgIcon',
+  props: {
+    fa: Boolean as () => boolean | undefined,
+  },
+  setup: (props, context) => ({
+    icon: computed(() => {
+      const slot = context.slots.default;
+      if (!slot || !slot[0]) {
+        return '';
+      }
 
-    const text = slot[0].text || '';
-    return text.trim();
-  }
-}
+      const text = slot[0].text || '';
+      return text.trim();
+    }),
+  }),
+});
 </script>

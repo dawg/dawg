@@ -11,70 +11,93 @@
 
 <script lang="ts">
 
-import { Vue, Component, Prop, Mixins } from 'vue-property-decorator';
 import { Player } from 'tone';
-import { Nullable } from '@/utils';
+import { Nullable, createComponent } from '@/utils';
 import { Watch } from '@/modules/update';
 import * as base from '@/base';
+import { computed } from 'vue-function-api';
 
-@Component
-export default class Waveform extends Vue {
-  @Prop({ type: AudioBuffer, required: true }) public buffer!: AudioBuffer;
-  @Prop({ type: Number, default: 0 }) public offset!: number;
-  @Prop({ type: Number, default: 50 }) public height!: number;
-  @Prop({ type: Number, default: 100 }) public width!: number;
+export default createComponent({
+  name: 'Waveform',
+  props: {
+    buffer: { type: Object as () => AudioBuffer, required: true },
+    offset: { type: Number, default: 0 },
+    height: { type: Number, default: 50 },
+    width: { type: Number, default: 100 },
+  },
+  setup(props) {
+    const viewBox = computed(() => {
+      return '0 0 ' + steps.value + ' ' + props.height;
+    });
 
-  get viewBox() {
-    return '0 0 ' + this.steps + ' ' + this.height;
-  }
+    const color = computed(() => {
+      return base.theme.foreground;
+    });
 
-  get color() {
-    return base.theme.foreground;
-  }
+    const h2 = computed(() => {
+      return props.height / 2;
+    });
 
-  get h2() {
-    return this.height / 2;
-  }
+    const steps = computed(() => {
+      return props.width * 100;
+    });
 
-  get steps() {
-    return this.width * 100;
-  }
-  // make getters
-  get points() {
-    const data0 = this.buffer.getChannelData( 0 );
-    const data1 = this.buffer.numberOfChannels > 1 ? this.buffer.getChannelData( 1 ) : data0;
-    const duration = this.buffer.duration - this.offset;
+    const data0 = computed(() => {
+      return props.buffer.getChannelData(0);
+    });
 
-    const dataLen = data0.length;
-    const ind = Math.floor(( this.offset / this.buffer.duration ) * dataLen );
-    const step = duration / this.buffer.duration * dataLen / this.steps;
-    let dots0 = '0,' + ( this.h2 + data0[ ind ] * this.h2 );
-    let dots1 = '0,' + ( this.h2 + data1[ ind ] * this.h2 );
-    const iinc = Math.floor(Math.max( 1, step / 100));
+    const data1 = computed(() => {
+      return props.buffer.numberOfChannels > 1 ? props.buffer.getChannelData(1) : data0.value;
+    });
 
-    for ( let p = 1; p < this.steps; p += 1 ) {
-      let lmin = Infinity;
-      let rmax = -Infinity;
-      let i = Math.floor( ind + ( p - 1 ) * step );
-      const iend = i + step;
+    const dataLen = computed(() => {
+      return data0.value.length;
+    });
 
-      for ( ; i < iend; i += iinc ) {
-        lmin = Math.min( lmin, data0[ i ], data1[ i ] );
-        rmax = Math.max( rmax, data0[ i ], data1[ i ] );
+    const duration = computed(() => {
+      return props.buffer.duration - props.offset;
+    });
+
+    const step = computed(() => {
+      return duration.value / props.buffer.duration * dataLen.value / steps.value;
+    });
+
+    const ind = computed(() => {
+      return Math.floor((props.offset / props.buffer.duration) * dataLen.value);
+    });
+
+    const inc = computed(() => {
+      return Math.floor(Math.max(1, step.value / 100));
+    });
+
+    const points = computed(() => {
+      let dots0 = '0,' + (h2.value + data0.value[ind.value] * h2.value);
+      let dots1 = '0,' + (h2.value + data1.value[ind.value] * h2.value);
+
+      for (let p = 1; p < steps.value; p += 1) {
+        let lmin = Infinity;
+        let rmax = -Infinity;
+        let i = Math.floor(ind.value + (p - 1) * step.value);
+        const iend = i + step.value;
+
+        for (; i < iend; i += inc.value) {
+          lmin = Math.min(lmin, data0.value[i], data1.value[i]);
+          rmax = Math.max(rmax, data0.value[i], data1.value[i]);
+        }
+
+        if (Math.abs(rmax - lmin) * h2.value < 1) {
+          rmax += 1 / props.height;
+          lmin -= 1 / props.height;
+        }
+
+        dots0 += ' ' + p + ',' + (h2.value + lmin * h2.value);
+        dots1  =       p + ',' + (h2.value + rmax * h2.value) + ' ' + dots1;
       }
 
-      if ( Math.abs( rmax - lmin ) * this.h2 < 1 ) {
-        rmax += 1 / this.height;
-        lmin -= 1 / this.height;
-      }
-
-      dots0 += ' ' + p + ',' + ( this.h2 + lmin * this.h2 );
-      dots1  =       p + ',' + ( this.h2 + rmax * this.h2 ) + ' ' + dots1;
-    }
-
-    return dots0 + ' ' + dots1;
-  }
-}
+      return dots0 + ' ' + dots1;
+    });
+  },
+});
 </script>
 
 <style scoped>

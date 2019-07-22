@@ -32,12 +32,14 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
 import { EffectName } from '@/core/filters/effects';
 import { EffectConstrainsType, EffectConstrains } from '@/core/filters/bounds';
 import { Effect as E } from '@/core/filters/effect';
+import { createComponent } from '@/utils';
+import { computed } from 'vue-function-api';
 
-@Component({
+export default createComponent({
+  name: 'Effect',
   filters: {
     titleCase(text: string) {
       const result = text.replace( /([A-Z])/g, ' $1' );
@@ -47,27 +49,36 @@ import { Effect as E } from '@/core/filters/effect';
       return text.toUpperCase();
     },
   },
-})
-export default class Effect<T extends EffectName> extends Vue {
-  @Prop({ type: Object, required: true }) public effect!: E<T>;
-  public size = 30;
+  props: {
+    effect: { type: Object as () => E<EffectName>, required: true },
+  },
+  setup(props) {
+    const size = 30;
 
-  get name() {
-    return this.effect.type;
-  }
+    const name = computed(() => {
+      return props.effect.type;
+    });
 
-  get options() {
-    return this.effect.options;
-  }
+    const options = computed(() => {
+      return props.effect.options;
+    });
 
-  get keys() {
-    return Object.keys(this.options);
-  }
+    const keys = computed(() => {
+      return Object.keys(options.value);
+    });
 
-  public constraints(name: keyof EffectConstrainsType[T]) {
-    return EffectConstrains[this.effect.type][name];
-  }
-}
+    function constraints(n: keyof EffectConstrainsType[EffectName]) {
+      return EffectConstrains[props.effect.type][n];
+    }
+
+    return {
+      name,
+      options,
+      keys,
+      constraints,
+    };
+  },
+});
 </script>
 
 <style lang="sass" scoped>

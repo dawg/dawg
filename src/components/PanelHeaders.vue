@@ -24,48 +24,57 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component } from 'vue-property-decorator';
 import * as base from '@/base';
+import { createComponent } from '@/utils';
+import { computed } from 'vue-function-api';
 
-@Component
-export default class PanelHeaders extends Vue {
-  get itemLookup() {
-    const lookup: { [name: string]: base.PanelItem } = {};
-    base.ui.panels.forEach((item) => {
-      lookup[item.name] = item;
+export default createComponent({
+  name: 'PanelHeaders',
+  setup() {
+    const itemLookup = computed(() => {
+      const lookup: { [name: string]: base.PanelItem } = {};
+      base.ui.panels.forEach((item) => {
+        lookup[item.name] = item;
+      });
+
+      return lookup;
     });
 
-    return lookup;
-  }
+    const actions = computed(() => {
+      if (base.ui.openedPanel.value === undefined) {
+        return [];
+      }
 
-  get actions() {
-    if (base.ui.openedPanel.value === undefined) {
-      return [];
+      const panel = itemLookup.value[base.ui.openedPanel.value];
+      if (!panel) {
+        return [];
+      }
+
+      return panel.actions || [];
+    });
+
+    const tabs = computed(() => {
+      return base.ui.panels;
+    });
+
+    function isActive(tab: base.PanelItem) {
+      if (tab.name === base.ui.openedPanel.value) {
+        return 'is-active';
+      }
     }
 
-    const panel = this.itemLookup[base.ui.openedPanel.value];
-    if (!panel) {
-      return [];
+    function selectPanel(name: string) {
+      base.ui.openedPanel.value = name;
     }
 
-    return panel.actions || [];
-  }
-
-  get tabs() {
-    return base.ui.panels;
-  }
-
-  public isActive(tab: base.PanelItem) {
-    if (tab.name === base.ui.openedPanel.value) {
-      return 'is-active';
-    }
-  }
-
-  public selectPanel(name: string) {
-    base.ui.openedPanel.value = name;
-  }
-}
-
+    return {
+      isActive,
+      selectPanel,
+      tabs,
+      actions,
+    };
+  },
+});
 </script>
 
 <style lang="sass" scoped>
