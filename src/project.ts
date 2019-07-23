@@ -202,7 +202,7 @@ export class Project implements Serializable<IProject> {
       ...i,
       stepsPerBeat: i.stepsPerBeat,
       beatsPerMeasure: i.beatsPerMeasure,
-      name,
+      name: i.name,
       patterns,
       instruments,
       channels,

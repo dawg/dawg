@@ -235,6 +235,15 @@ export class Palette extends Vue {
           item,
           selected: this.selected === i,
         },
+        nativeOn: {
+          click: (e: MouseEvent) => {
+            e.stopImmediatePropagation();
+            if (item) {
+              paletteEvents.emit('select', item.text);
+              this.$emit('input', false); // close it
+            }
+          },
+        },
       });
     });
 

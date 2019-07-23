@@ -83,9 +83,17 @@ export const extension: Extension = {
         return;
       }
 
-      notify.success('MIDI Input Detected', {
-        detail: `${event.port.name} is now connected to Vusic.`,
-      });
+      // FIXME This should be added back
+      // But we should do something like what Alex does where we cache the name
+      // We should also default to having nothing selected
+      // And then we would only show this notification when the item in the cache is connected
+      // Without this, we just get random MIDI devices that connect
+      // this.$notify.success('MIDI Input Detected', {
+      //   detail: `${event.port.name} is now connected to Vusic.`,
+      // });
+      // notify.success('MIDI Input Detected', {
+      //   detail: `${event.port.name} is now connected to Vusic.`,
+      // });
 
       input.addListener('noteon', 'all', onDidNoteOn);
       input.addListener('noteoff', 'all', onDidNoteOff);

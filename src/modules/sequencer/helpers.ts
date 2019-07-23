@@ -149,6 +149,9 @@ export const resizable = (component: VueConstructor) => {
     public render(createElement: CreateElement) {
       const element = createHOC(component, createElement, this, {
         style: this.componentStyle,
+        attrs: {
+          width: this.width,
+        },
       });
 
       const resizeArea = createElement('div', {

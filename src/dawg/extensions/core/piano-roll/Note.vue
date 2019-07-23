@@ -17,29 +17,53 @@
 
 <script lang="ts">
 import { Mixins, Prop, Component, Inject, Vue } from 'vue-property-decorator';
-import { allKeys } from '@/utils';
+import { allKeys, createComponent } from '@/utils';
 import { Watch } from '@/modules/update';
-import { Note as N } from '@/core';
+import { Note } from '@/core';
+import { computed } from 'vue-function-api';
+
+export default createComponent({
+  name: 'Note',
+  props: {
+    pxPerBeat: { type: Number, required: true },
+    width: { type: Number, required: true },
+    element: { type: Object as () => Note, required: true },
+    height: { type: Number, required: true },
+    fontSize: { type: Number, default: 14 },
+  },
+  setup(props) {
+    const noteName = computed(() => {
+      return allKeys[props.element.row].value;
+    });
+
+    const textConfig = computed(() => {
+      return {
+        top: `${(props.height / 2) - ((props.fontSize / 2) + 1)}px`,
+        color: '#fff',
+        fontSize: `${props.fontSize}px`,
+      };
+    });
+
+    const threshold = computed(() => {
+      // 1.45 just seems to work well
+      return props.fontSize * noteName.value.length / 1.45;
+    });
+
+    const text = computed(() => {
+      return props.width > threshold.value ? allKeys[props.element.row].value : undefined;
+    });
+
+    return {
+      text,
+      textConfig,
+    };
+  },
+});
 
 @Component
-export default class Note extends Vue {
-  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
+export class NNN extends Vue {
 
-  @Prop({ type: Object, required: true }) public element!: N;
-  @Prop({ type: Number, required: true }) public height!: number;
-  @Prop({ type: Number, default: 14 }) public fontSize!: number;
 
-  get text() {
-    return allKeys[this.element.row].value;
-  }
-
-  get textConfig() {
-    return {
-      top: `${(this.height / 2) - ((this.fontSize / 2) + 1)}px`,
-      color: '#fff',
-      fontSize: `${this.fontSize}px`,
-    };
-  }
 }
 </script>
 

@@ -10,10 +10,10 @@ export const createHOC = (component: VueConstructor, createElement: CreateElemen
 
   return createElement(component, {
     ...data,
-    // props: {
-    //   ...hoc.$props,
-    //   ...data.props,
-    // },
+    props: {
+      // ...hoc.$props,
+      ...data.props,
+    },
     attrs: {
       ...hoc.$attrs,
       ...hoc.$props,
