@@ -14,8 +14,7 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch, Mixins } from 'vue-property-decorator';
-import { Draggable } from '@/modules/draggable';
+import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
 
 export type Direction = 'horizontal' | 'vertical';
 
@@ -23,7 +22,7 @@ const isSplit = (vue: Vue): vue is Split => {
   return (vue.constructor as any as { options: { name: string } }).options.name === Split.name;
 };
 
-@Component({ components: { Draggable } })
+@Component
 export default class Split extends Vue {
   @Prop(String) public direction?: Direction;
   @Prop(Boolean) public keep!: boolean;

@@ -59,7 +59,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Provider, bus } from '@/dawg/extensions/core/busy/helpers';
-import * as dawg from '@/dawg';
+import * as base from '@/base';
 
 @Component
 export default class BusySignal extends Vue {
@@ -70,7 +70,7 @@ export default class BusySignal extends Vue {
   public disposers: Array<{ dispose: () => void }> = [];
 
   get loadingColor() {
-    return dawg.theme.foreground;
+    return base.theme.foreground;
   }
 
   get inProgress() {
@@ -78,7 +78,7 @@ export default class BusySignal extends Vue {
   }
 
   get color() {
-    return dawg.theme.foreground;
+    return base.theme.foreground;
   }
 
   get progresStyle() {

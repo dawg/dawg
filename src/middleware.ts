@@ -23,12 +23,6 @@ import { DragElement } from '@/modules/draggable';
 import Knobs from '@/modules/knobs';
 import Split from '@/modules/split';
 
-import Piano from '@/components/Piano.vue';
-import DTrack from '@/components/DTrack.vue';
-import TooltipIcon from '@/components/TooltipIcon.vue';
-import DotButton from '@/components/DotButton.vue';
-
-
 const middleware = () => {
   // This imports all .vue files in the components folder
   // See https://vuejs.org/v2/guide/components-registration.html
@@ -78,14 +72,8 @@ const middleware = () => {
   Vue.use(sequencer);
   Vue.component('VuePerfectScrollbar', VuePerfectScrollbar);
 
-  Vue.use(Vuetify, {theme: false});
+  Vue.use(Vuetify, { theme: false });
   Vue.component('icon', Icon);
-
-  Vue.component('Piano', Piano);
-  Vue.component('DTrack', DTrack);
-  Vue.component('DotButton', DotButton);
-  Vue.component('TooltipIcon', TooltipIcon);
-
   Vue.component('DragElement', DragElement);
 };
 

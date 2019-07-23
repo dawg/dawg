@@ -8,7 +8,6 @@
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { makeLookup, Nullable, createComponent, update } from '@/utils';
-import { Watch } from '@/modules/update';
 import { watch } from 'vue-function-api';
 
 export default createComponent({

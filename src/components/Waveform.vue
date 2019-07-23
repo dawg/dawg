@@ -13,7 +13,6 @@
 
 import { Player } from 'tone';
 import { Nullable, createComponent } from '@/utils';
-import { Watch } from '@/modules/update';
 import * as base from '@/base';
 import { computed } from 'vue-function-api';
 

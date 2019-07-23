@@ -39,7 +39,7 @@
 <script lang="ts">
 import { DragElement } from '@/modules/draggable';
 import { scale, createComponent } from '@/utils';
-import * as dawg from '@/dawg';
+import * as base from '@/base';
 import { computed } from 'vue-function-api';
 
 export default createComponent({
@@ -103,14 +103,14 @@ export default createComponent({
     }
 
     function update() {
-      dawg.status.set({
+      base.status.value = {
         text: 'Volume',
         value: getFormatted(),
-      });
+      };
     }
 
     function afterMove() {
-      dawg.status.set(null);
+      base.status.value = null;
     }
 
     function getPosition(level: number) {
@@ -118,7 +118,7 @@ export default createComponent({
     }
 
     function contextmenu(event: MouseEvent) {
-      dawg.context({
+      base.context({
         position: event,
         items: [
           {

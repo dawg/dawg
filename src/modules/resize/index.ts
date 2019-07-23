@@ -7,6 +7,7 @@ export interface Directions {
   didVertical: boolean;
 }
 
+// TODO become a hook
 @Component
 export class ResponsiveMixin extends Vue {
   public width = 0;

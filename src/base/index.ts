@@ -19,8 +19,12 @@ export {
   manager,
 } from '@/base/manager';
 
-import * as notify from '@/base/notify';
+export {
+  Status,
+  status,
+} from '@/base/status';
 
+import * as notify from '@/base/notify';
 
 export {
   notify,

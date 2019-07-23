@@ -1,10 +1,7 @@
 import Vue from 'vue';
-import { createComponent, computed, Wrapper, value } from 'vue-function-api';
-import * as dawg from '@/dawg';
+import { createComponent, computed } from 'vue-function-api';
 import { manager } from '@/base/manager';
-
-type Status = string | { text: string, value: string } | null;
-const statusValue: Wrapper<Status> = value(null);
+import * as base from '@/base';
 
 const component = Vue.extend(createComponent({
   template: `
@@ -18,21 +15,21 @@ const component = Vue.extend(createComponent({
   setup() {
     return {
       status: computed(() => {
-        if (!statusValue.value) {
+        if (!base.status.value) {
           return '';
-        } else if (typeof statusValue.value === 'string') {
-          return statusValue;
+        } else if (typeof base.status.value === 'string') {
+          return base.status;
         } else {
-          return statusValue.value.text;
+          return base.status.value.text;
         }
       }),
       value: computed(() => {
-        if (!statusValue.value) {
+        if (!base.status.value) {
           return null;
-        } else if (typeof statusValue.value === 'string') {
+        } else if (typeof base.status.value === 'string') {
           return null;
         } else {
-          return statusValue.value.value;
+          return base.status.value.value;
         }
       }),
     };
@@ -42,15 +39,15 @@ const component = Vue.extend(createComponent({
 export const status = manager.activate({
   id: 'dawg.status',
   activate() {
-    dawg.ui.statusBar.push({
+    base.ui.statusBar.push({
       component,
       position: 'left',
       order: 3,
     });
 
     return {
-      set: (s: Status) => {
-        statusValue.value = s;
+      set: (s: base.Status) => {
+        base.status.value = s;
       },
     };
   },
