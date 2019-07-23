@@ -84,18 +84,18 @@
 
 <script lang="ts">
 import { Component, Prop, Mixins, Inject, Vue } from 'vue-property-decorator';
-import { Draggable } from '@/modules/draggable';
-import { range, Nullable, Keys, reverse } from '@/utils';
+import { range, Nullable, Keys, reverse, addEventListeners } from '@/utils';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import Progression from '@/modules/sequencer/Progression.vue';
 import { Watch } from '@/modules/update';
 import { Schedulable } from '@/core';
 import { Ghost } from '@/core/ghost';
 
+// TODO Make sure moving actually works haha
 @Component({
   components: { Progression, BeatLines },
 })
-export default class SequencerGrid extends Mixins(Draggable) {
+export default class SequencerGrid extends Vue {
   // name is used for debugging
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, required: true }) public rowHeight!: number;
@@ -484,7 +484,15 @@ export default class SequencerGrid extends Mixins(Draggable) {
     }
 
     this.dragStartEvent = e;
-    this.addListeners(e, targetIndex);
+
+    document.documentElement.style.cursor = 'move';
+    const disposer = addEventListeners({
+      mousemove: (event) => this.move(event, targetIndex),
+      mouseup: () => {
+        document.documentElement.style.cursor = 'auto';
+        disposer.dispose();
+      },
+    });
   }
 
   public afterMove() {

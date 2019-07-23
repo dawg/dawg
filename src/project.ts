@@ -4,7 +4,7 @@ import { findUniqueName, range } from '@/utils';
 import * as Audio from '@/modules/audio';
 import uuid from 'uuid';
 import { loadBuffer, loadBufferSync } from '@/modules/wav/local';
-import { makeLookup, chain } from '@/modules/utils';
+import { makeLookup, chain } from '@/utils';
 import { Signal } from '@/modules/audio';
 import * as t from 'io-ts';
 import { PatternType, Pattern } from '@/core/pattern';

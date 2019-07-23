@@ -1,7 +1,10 @@
 import Tone from 'tone';
-import Vue from 'vue';
+import Vue, { VueConstructor, CreateElement, VNodeData } from 'vue';
 import { PropsDefinition, ComponentOptions } from 'vue/types/options';
 import { Context } from 'vue-function-api/dist/types/vue';
+import Component from 'vue-class-component';
+import ResizeObserver from 'resize-observer-polyfill';
+import throttle from 'lodash.throttle';
 
 export enum StyleType {
   PRIMARY = 'primary',
@@ -18,14 +21,6 @@ interface StyleOptions {
   lighten?: number;
   text?: boolean;
 }
-
-export const makeLookup = <T>(items: T[], getter: (item: T) => string) => {
-  const lookup: {[key: string]: T} = {};
-  items.forEach((item) => {
-    lookup[getter(item)] = item;
-  });
-  return lookup;
-};
 
 export const makeStyle = (type: StyleType, options?: StyleOptions) => {
   options = options || {};
@@ -106,6 +101,9 @@ export const copy = <T>(o: T): T => {
   return JSON.parse(JSON.stringify(o));
 };
 
+export function mapRange(x: number, inMin: number, inMax: number, outMin: number, outMax: number) {
+  return (((x - inMin) * (outMax - outMin)) / (inMax - inMin)) + outMin;
+}
 
 export const Nullable = <V, T extends new() => V>(o: T) => {
   return {
@@ -206,21 +204,71 @@ export function literal<T extends Primitive>(value: T): T {
   return value;
 }
 
+type Events = keyof WindowEventMap;
 
-export class UnreachableCaseError extends Error {
-  constructor(value: never) {
-    super(`Unreachable case: ${value}`);
-  }
-}
+type EventListener<K extends Events> = (ev: WindowEventMap[K]) => any;
 
-export const addDisposableListener = <K extends keyof WindowEventMap>(
-  type: K, cb: (ev: WindowEventMap[K]) => any,
+type EventListeners = {
+  [P in keyof WindowEventMap]?: EventListener<P> | 'remove';
+};
+
+/**
+ * Add 0 or more event listeners and return an object with a dispose method to remove the listeners.
+ *
+ * @param events The events.
+ * @param options The options.
+ */
+export const addEventListeners = (
+  events: EventListeners,
+  options?: boolean | AddEventListenerOptions,
 ) => {
-  window.addEventListener(type, cb);
+  const types = Object.keys(events) as Events[];
+
+  const remove = () => {
+    for (const type of types) {
+      const ev = events[type];
+      if (ev === 'remove') {
+        continue;
+      }
+
+      window.removeEventListener(type, ev as any);
+    }
+  };
+
+  for (const type of types) {
+    const ev = events[type];
+    if (ev === 'remove') {
+      // @ts-ignore
+      // There is a weird error with union types
+      // Going to just ignore this
+      events[type] = remove;
+    }
+    window.addEventListener(type, ev as any, options);
+  }
+
 
   return {
-    dispose() {
-      window.removeEventListener(type, cb);
+    dispose: remove,
+  };
+};
+
+/**
+ * Add an event listener (like normal) but return an object with a dispose method to remove the same listener.
+ *
+ * @param type The event.
+ * @param ev The listener.
+ * @param options The options.
+ */
+export const addEventListener = <K extends Events>(
+  type: K,
+  ev: EventListener<K>,
+  options?: boolean | AddEventListenerOptions,
+) => {
+  window.addEventListener(type, ev, options);
+
+  return {
+    dispose: () => {
+      window.removeEventListener(type, ev);
     },
   };
 };
@@ -274,3 +322,86 @@ export const update = <Props, K extends keyof Props, V extends Props[K]>(
 ) => {
   context.emit(`update:${key}`, value);
 };
+
+export interface Directions {
+  didHorizontal: boolean;
+  didVertical: boolean;
+}
+
+// TODO become a hook
+@Component
+export class ResponsiveMixin extends Vue {
+  public width = 0;
+  public height = 0;
+  public mounted() {
+    this.$nextTick(() => {
+      const handleResize = throttle((entries) => {
+        const cr = entries[0].contentRect;
+        const didHorizontal = this.width !== cr.width;
+        const didVertical = this.height !== cr.height;
+        this.width = cr.width;
+        this.height = cr.height;
+
+        if (!didHorizontal && !didVertical) { return; }
+        this.onResize({ didHorizontal, didVertical });
+      }, 200);
+
+      const observer = new ResizeObserver(handleResize);
+      if (this.$el instanceof Element) {
+        observer.observe(this.$el);
+      } else {
+        // tslint:disable-next-line:no-console
+        console.warn('Not adding resize watcher');
+      }
+    });
+  }
+  public onResize(direction: Directions) {
+    //
+  }
+}
+
+
+export const createHOC = (
+  component: VueConstructor, createElement: CreateElement, hoc: Vue, data: VNodeData = {},
+) => {
+  // Pass on the...
+  // 1. Props
+  // 2. Attrs
+  // 3. Listeners
+  // 4. Slots
+  const slots = Object.values(hoc.$slots);
+
+  return createElement(component, {
+    ...data,
+    props: {
+      // ...hoc.$props,
+      ...data.props,
+    },
+    attrs: {
+      ...hoc.$attrs,
+      ...hoc.$props,
+      ...data.attrs,
+    },
+    on: {
+      ...hoc.$listeners,
+      ...data.on,
+    },
+  }, slots);
+};
+
+export function* chain<T>(...arrays: T[][]) {
+  for (const array of arrays) {
+    for (const item of array) {
+      yield item;
+    }
+  }
+}
+
+export const makeLookup = <T extends { id: string }>(array: Iterable<T>) => {
+  const lookup: { [k: string]: T } = {};
+  for (const item of array) {
+    lookup[item.id] = item;
+  }
+  return lookup;
+};
+

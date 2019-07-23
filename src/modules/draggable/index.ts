@@ -10,7 +10,6 @@ interface Point {
 export class Draggable extends Vue {
   public previous: Point | null = null;
   public cursor = 'auto';
-  public dragRef = 'drag';
   public moving = false;
   public in = false;
   public disabled = false;
@@ -114,10 +113,6 @@ export class Draggable extends Vue {
     return Math.max(low, Math.min(high, v));
   }
 
-  public mapRange(x: number, inMin: number, inMax: number, outMin: number, outMax: number) {
-    return (((x - inMin) * (outMax - outMin)) / (inMax - inMin)) + outMin;
-  }
-
   public prevent(e: Event) {
     if (e && e.preventDefault) { e.preventDefault(); }
     if (e && e.stopPropagation) { e.stopPropagation(); }
@@ -169,6 +164,7 @@ export class Draggable extends Vue {
 @Component
 export class DragElement extends Mixins(Draggable) {
   @Prop({ type: String, default: 'div' }) public tag!: string;
+  @Prop({ type: Boolean }) public within!: boolean;
   // TODO Rename to cursor
   @Prop({ type: String, default: 'auto' }) public curse!: string;
 
@@ -205,6 +201,11 @@ export class DragElement extends Mixins(Draggable) {
   @Watch('curse', { immediate: true })
   public change() {
     this.cursor = this.curse;
+  }
+
+  @Watch('in', { immediate: true })
+  public updateWithin() {
+    this.$update('within', this.in);
   }
 }
 

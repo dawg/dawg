@@ -1,7 +1,7 @@
 import { VueConstructor, CreateElement } from 'vue';
 import { Drag, Drop } from 'vue-drag-drop';
 import { Prop, Component, Vue } from 'vue-property-decorator';
-import { createHOC } from '@/modules/utils';
+import { createHOC } from '@/utils';
 
 let dragging: string | null = null;
 

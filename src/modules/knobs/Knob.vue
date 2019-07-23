@@ -55,9 +55,9 @@
 </template>
 
 <script lang="ts">
-import { Draggable } from '@/modules/draggable';
-import { Component, Prop, Mixins, Watch } from 'vue-property-decorator';
+import { Component, Prop, Mixins, Watch, Vue } from 'vue-property-decorator';
 import * as dawg from '@/dawg';
+import { mapRange } from '../../utils';
 
 // Credit to the styling goes to this codepen: https://codepen.io/mavrK/pen/erQPvP
 // They actually have some nice dials we may want to use
@@ -67,7 +67,7 @@ import * as dawg from '@/dawg';
 // 2. The rotation of the knob is clockwise so the minimum variables are actually the larger values
 
 @Component
-export default class Knob extends Mixins(Draggable) {
+export default class Knob extends Vue {
   @Prop({ type: Number }) public value!: number;
   @Prop({ type: String }) public name?: string;
   @Prop({ type: Function }) public format?: (value: number) => string;
@@ -90,7 +90,7 @@ export default class Knob extends Mixins(Draggable) {
   }
 
   get rotation() {
-    return this.mapRange(this.value, this.min, this.max, -this.angle, this.angle);
+    return mapRange(this.value, this.min, this.max, -this.angle, this.angle);
   }
 
   get strokeColor() {
@@ -100,7 +100,7 @@ export default class Knob extends Mixins(Draggable) {
   get midDegrees() {
     let midValue = this.midValue;
     if (midValue === undefined) { midValue = this.min; }
-    return this.mapRange(midValue, this.min, this.max, this.minDegrees, this.maxDegrees);
+    return mapRange(midValue, this.min, this.max, this.minDegrees, this.maxDegrees);
   }
 
   get minDegrees() {
@@ -272,7 +272,7 @@ export default class Knob extends Mixins(Draggable) {
     // For example, as they move farther away from their inital x position, the factor decreases
     let rotation = this.rotation - e.movementY * 1.5;
     rotation = Math.max(-132, Math.min(this.angle, rotation));
-    const value = this.mapRange(rotation, -this.angle, this.angle, this.min, this.max);
+    const value = mapRange(rotation, -this.angle, this.angle, this.min, this.max);
     this.$emit('input', value);
     this.enter();
   }

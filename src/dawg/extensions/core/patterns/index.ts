@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Patterns from '@/dawg/extensions/core/patterns/Patterns.vue';
 import { value, computed, createComponent } from 'vue-function-api';
-import { makeLookup } from '@/modules/utils';
+import { makeLookup } from '@/utils';
 import { Pattern } from '@/core';
 import { manager } from '@/base/manager';
 import { ui } from '@/base/ui';

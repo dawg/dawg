@@ -46,7 +46,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch, Mixins, Inject } from 'vue-property-decorator';
-import { ResponsiveMixin, Directions } from '@/modules/resize';
+import { ResponsiveMixin, Directions } from '@/utils';
 import { Button } from '@/utils';
 import { range, Nullable } from '@/utils';
 import Progression from '@/modules/sequencer/Progression.vue';
