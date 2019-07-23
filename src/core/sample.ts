@@ -3,7 +3,7 @@ import path from 'path';
 import * as t from 'io-ts';
 import uuid from 'uuid';
 import * as Audio from '@/modules/audio';
-import { Serializable } from './serializable';
+import { Serializable } from '@/core/serializable';
 import { disposeHelp } from '@/utils';
 
 export const SampleType = t.type({

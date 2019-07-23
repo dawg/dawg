@@ -7,30 +7,36 @@
     <dot-button
       v-else
       v-model="recording"
-      :value="$theme.error"
+      :value="color"
     ></dot-button>
     <div class="name">{{ track.name }}</div>
   </div>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
-import { Watch } from '@/modules/update';
 import { Track as T } from '@/core/track';
-import { boolean } from 'io-ts';
+import * as base from '@/base';
+import { createComponent } from '@/utils';
+import { watch, value, computed } from 'vue-function-api';
 
-@Component
-export default class Track extends Vue {
-  @Prop({ type: Object, required: true }) public track!: T;
-  @Prop({ type: Boolean, required: false, default: false }) public recording!: boolean;
+export default createComponent({
+  name: 'DgTrack',
+  props: {
+    track: { type: Object as () => T, required: true },
+    recording: { type: Boolean, default: false },
+  },
+  setup(props) {
+    const active = value(!props.track.mute);
+    watch(active, () => {
+      props.track.mute = !active.value;
+    });
 
-  public active = !this.track.mute;
-
-  @Watch<Track>('active')
-  public changeMute() {
-    this.track.mute = !this.active;
-  }
-}
+    return {
+      active,
+      color: computed(() => base.theme.error),
+    };
+  },
+});
 </script>
 
 <style lang="sass" scoped>
@@ -38,7 +44,7 @@ export default class Track extends Vue {
 .name
   user-select: none
 
-// TODO 20px and 5px is hardcoded! 
+// FIXME 20px and 5px is hardcoded! 
 .track
   display: flex
   border: 0 solid

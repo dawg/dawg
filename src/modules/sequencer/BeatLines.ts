@@ -1,8 +1,8 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { CreateElement } from 'vue';
+import * as dawg from '@/dawg';
 
-// Make this an actual component
-// TODO
+
 @Component
 export default class BeatLines extends Vue {
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;
@@ -12,16 +12,16 @@ export default class BeatLines extends Vue {
   public $el!: HTMLElement;
 
   get measureColor() {
-    return this.$theme.background;
+    return dawg.theme.background;
   }
 
   get stepColor() {
-    return this.$theme.background + '50';
+    return dawg.theme.background + '50';
   }
 
   get beatColor() {
   // public beatColor = 'rgba(0,0,0,.2)';
-    return this.$theme.background;
+    return dawg.theme.background;
   }
 
   get viewBox() {

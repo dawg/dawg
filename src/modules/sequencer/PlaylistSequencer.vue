@@ -29,6 +29,9 @@ import Sequencer from '@/modules/sequencer/Sequencer.vue';
 import { Track } from '@/core';
 import { toTickTime } from '@/utils';
 import Transport from '@/modules/audio/transport';
+import { theme } from '@/dawg/extensions/core/theme';
+import * as base from '@/base';
+import { ui } from '@/base/ui';
 
 @Component({
   components: { Sequencer },
@@ -41,21 +44,23 @@ export default class PlaylistSequencer extends Vue {
   public prototype = null;
 
   public trackOptions(event: MouseEvent, i: number) {
-    this.$context({
-      event,
-      items: [
-        {
-          text: 'Record',
-          callback: () => this.$emit('record', i),
-        },
-      ],
+    base.context({
+      position: event,
+      items: ui.trackContext.map((item) => {
+        return {
+          ...item,
+          callback: () => {
+            item.callback(i);
+          },
+        };
+      }),
     });
   }
 
 
   public rowStyle() {
     return {
-      borderBottom: `1px solid ${this.$theme.background}`,
+      borderBottom: `1px solid ${theme.background}`,
     };
   }
 }

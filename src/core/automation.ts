@@ -3,10 +3,10 @@ import { PointType, IPoint, Point } from '@/core/automation/point';
 import uuid from 'uuid';
 import * as Audio from '@/modules/audio';
 import { toTickTime } from '@/utils';
-import { Serializable } from './serializable';
-import { Channel } from './channel';
-import { Instrument } from './instrument/instrument';
-import { Beats } from './types';
+import { Serializable } from '@/core/serializable';
+import { Channel } from '@/core/channel';
+import { Instrument } from '@/core/instrument/instrument';
+import { Beats } from '@/core/types';
 
 export const AutomationType = t.type({
   context: t.union([t.literal('channel'), t.literal('instrument')]),

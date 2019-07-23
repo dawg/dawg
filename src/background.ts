@@ -1,13 +1,16 @@
 'use strict';
 
 import { app, protocol, BrowserWindow } from 'electron';
-import menu from 'electron-context-menu';
+import menu from './context';
 import path from 'path';
 import {
   createProtocol,
   installVueDevtools,
 } from 'vue-cli-plugin-electron-builder/lib';
-const isDevelopment = process.env.NODE_ENV !== 'production';
+
+import './electron/menubar';
+import './electron/menu';
+import { isDevelopment } from './electron/environment';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -23,12 +26,12 @@ function createWindow() {
     minHeight: 600,
     minWidth: 800,
     // @ts-ignore
-    icon: path.join(__static, 'icon.png'),
-    frame: false,
+    icon: path.join(__static as string, 'icon.png'),
   });
 
+  // Make the menu initially not visible
+  // Basically, get rid of the default menu
   win.setMenuBarVisibility(false);
-
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode

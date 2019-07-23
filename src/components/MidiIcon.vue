@@ -30,10 +30,11 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
+import { createComponent } from 'vue-function-api';
 
-@Component
-export default class MidiIcon extends Vue {}
+export default createComponent({
+  name: 'MidiIcon',
+});
 </script>
 
 <style scoped>

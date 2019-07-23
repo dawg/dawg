@@ -96,7 +96,7 @@ export abstract class Schedulable {
   public abstract copy(): Schedulable;
 
   protected updateDuration(duration: number) {
-    // TODO move to event emitter
+    // FIXME move to event emitter
   }
 
   /**

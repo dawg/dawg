@@ -1,33 +1,35 @@
 import Vue from 'vue';
-import { remote } from 'electron';
-import Context from '@/modules/context';
-import Notification from '@/modules/notification';
-import storybook from '@/storybook';
+import * as backup from '@/dawg/extensions/extra/backup';
+import * as explorer from '@/dawg/extensions/extra/explorer';
+import * as time from '@/dawg/extensions/extra/time';
+import * as bpm from '@/dawg/extensions/extra/bpm';
+import * as audioFiles from '@/dawg/extensions/extra/audio-files';
+import * as clips from '@/dawg/extensions/extra/clips';
+import * as spectrogram from '@/dawg/extensions/extra/spectrogram';
+import * as projectName from '@/dawg/extensions/extra/project-name';
+import * as mixer from '@/dawg/extensions/core/mixer';
+import * as dawg from '@/dawg';
 
-const inspect = {
-  text: 'Inspect',
-  callback: (e: MouseEvent) => {
-    // Wait for context menu to close before opening the Dev Tools!
-    // If you don't, it will focus on the context menu.
-    setTimeout(() => {
-      const window = remote.getCurrentWindow();
-      window.webContents.inspectElement(e.x, e.y);
-      if (window.webContents.isDevToolsOpened()) {
-        window.webContents.devToolsWebContents.focus();
-      }
-    }, 1000);
-  },
-};
+import Vuetify from 'vuetify';
+import 'vue-awesome/icons';
+import 'vuetify/dist/vuetify.css';
+import '@/styles/material.css';
+import Icon from 'vue-awesome/components/Icon.vue';
+import Update from '@/modules/update';
+import sequencer from '@/modules/sequencer';
+import DragNDrop from '@/modules/dragndrop';
+import VuePerfectScrollbar from 'vue-perfect-scrollbar';
+import { DragElement } from '@/modules/draggable';
+import Knobs from '@/modules/knobs';
+import Split from '@/modules/split';
+
+import Piano from '@/components/Piano.vue';
+import DTrack from '@/components/DTrack.vue';
+import TooltipIcon from '@/components/TooltipIcon.vue';
+import DotButton from '@/components/DotButton.vue';
+
 
 const middleware = () => {
-  Vue.use(Context, {
-    // Only have inspect in development
-    default: process.env.NODE_ENV !== 'production' ? [inspect] : [],
-  });
-  Vue.use(Notification);
-
-  storybook();
-
   // This imports all .vue files in the components folder
   // See https://vuejs.org/v2/guide/components-registration.html
   const components = require.context(
@@ -53,6 +55,38 @@ const middleware = () => {
       componentConfig.default || componentConfig,
     );
   });
+
+  // dawg.manager.activate(backup.extension);
+  [
+    explorer,
+    audioFiles,
+    clips,
+    mixer,
+    time,
+    bpm,
+    projectName,
+    spectrogram,
+    backup,
+  ].forEach(({ extension }) => {
+    dawg.manager.activate(extension);
+  });
+
+  Vue.use(Split);
+  Vue.use(Update);
+  Vue.use(DragNDrop);
+  Vue.use(Knobs);
+  Vue.use(sequencer);
+  Vue.component('VuePerfectScrollbar', VuePerfectScrollbar);
+
+  Vue.use(Vuetify, {theme: false});
+  Vue.component('icon', Icon);
+
+  Vue.component('Piano', Piano);
+  Vue.component('DTrack', DTrack);
+  Vue.component('DotButton', DotButton);
+  Vue.component('TooltipIcon', TooltipIcon);
+
+  Vue.component('DragElement', DragElement);
 };
 
 export default middleware;

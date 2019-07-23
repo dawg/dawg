@@ -1,4 +1,5 @@
 const config = {
+  runtimeCompiler: true,
   pluginOptions: {
     karma: {
       // Include spec files in src/

@@ -23,7 +23,7 @@
           v-show="showRight"
           :d="rightRangePath" 
           fill="none" 
-          :stroke="$theme.primary"
+          :stroke="primary"
           :stroke-width="strokeWidth"
           :style="rightStrokeStyle"
         ></path>
@@ -31,7 +31,7 @@
           v-show="showLeft"
           :d="leftRangePath"
           fill="none" 
-          :stroke="$theme.primary"
+          :stroke="primary"
           :stroke-width="strokeWidth"
           :style="lefStrokeStyle"
         ></path>
@@ -39,7 +39,7 @@
           :width="rectWidth"
           :x="center - rectWidth / 2"
           :height="rectHeight"
-          :fill="$theme.primary"
+          :fill="primary"
           :transform="transform"
         ></rect>
       </svg>
@@ -57,6 +57,7 @@
 <script lang="ts">
 import { Draggable } from '@/modules/draggable';
 import { Component, Prop, Mixins, Watch } from 'vue-property-decorator';
+import * as dawg from '@/dawg';
 
 // Credit to the styling goes to this codepen: https://codepen.io/mavrK/pen/erQPvP
 // They actually have some nice dials we may want to use
@@ -84,12 +85,16 @@ export default class Knob extends Mixins(Draggable) {
   public rectWidth = 3;
   public rectHeight = this.size / 4;
 
+  get primary() {
+    return dawg.theme.primary;
+  }
+
   get rotation() {
     return this.mapRange(this.value, this.min, this.max, -this.angle, this.angle);
   }
 
   get strokeColor() {
-    return this.$theme.background + '60';
+    return dawg.theme.background + '60';
   }
 
   get midDegrees() {
@@ -169,7 +174,7 @@ export default class Knob extends Mixins(Draggable) {
   }
   get knobStyle() {
     return {
-      color: this.$theme.primary,
+      color: dawg.theme.primary,
       height: `${this.size}px`,
       width: `${this.size}px`,
     };
@@ -250,7 +255,7 @@ export default class Knob extends Mixins(Draggable) {
 
   public enter() {
     if (this.name) {
-      this.$status.set({
+      dawg.status.set({
         text: this.name,
         value: this.format ? this.format(this.value) : this.defaultFormat(),
       });
@@ -258,7 +263,7 @@ export default class Knob extends Mixins(Draggable) {
   }
 
   public leave() {
-    this.$status.clear();
+    dawg.status.set(null);
   }
 
   public move(e: MouseEvent) {
@@ -276,7 +281,7 @@ export default class Knob extends Mixins(Draggable) {
     // This isn't ideal but it works
     // For example, if they are still on the element, it will clear it
     // Even though we probably still want to display the value
-    this.$status.clear();
+    dawg.status.set(null);
   }
 
   public contextmenu(event: MouseEvent) {
@@ -284,8 +289,8 @@ export default class Knob extends Mixins(Draggable) {
       return;
     }
 
-    this.$context({
-      event,
+    dawg.context({
+      position: event,
       items: [
         {
           text: 'Create Automation Clip',

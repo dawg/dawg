@@ -1,6 +1,6 @@
 import Tone from 'tone';
-import { Time, TransportTime } from './types';
-import Transport from './transport';
+import { Time, TransportTime } from '@/modules/audio/types';
+import Transport from '@/modules/audio/transport';
 
 interface Event {
   state: Tone.TransportState;

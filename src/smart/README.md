@@ -1,1 +1,0 @@
-I'm trying to go for the smart/dumb component pattern. As you can see, I'm just getting started. There will be more than one file in here later.

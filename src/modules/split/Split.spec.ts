@@ -1,10 +1,6 @@
 import { expect } from 'chai';
 import { shallowMount } from '@vue/test-utils';
 import Split from './Split.vue';
-import Vue from 'vue';
-import VueLogger from 'vuejs-logger';
-
-Vue.use(VueLogger);
 
 describe(Split.name, () => {
   it('should have correct gutter style', () => {

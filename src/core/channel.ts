@@ -2,7 +2,7 @@ import * as t from 'io-ts';
 import uuid from 'uuid';
 import Tone from 'tone';
 import * as Audio from '@/modules/audio';
-import { Serializable } from './serializable';
+import { Serializable } from '@/core/serializable';
 import { EffectType, AnyEffect, Effect } from '@/core/filters/effect';
 
 export const ChannelTypeRequired = t.type({

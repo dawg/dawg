@@ -36,11 +36,12 @@
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import { Point, ScheduledAutomation } from '@/core';
 import { scale } from '@/utils';
+import * as dawg from '@/dawg';
 
 @Component
 export default class AutomationClipElement extends Vue {
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;
-  // TODO small bug height !== true height
+  // FIXME(2) small bug height !== true height
   @Prop({ type: Number, required: true }) public height!: number;
   @Prop({ type: Number, required: true }) public snap!: number;
 
@@ -106,7 +107,7 @@ export default class AutomationClipElement extends Vue {
   }
 
   public getTimeValue(e: MouseEvent) {
-    // TODO duplication
+    // FIXME(3) duplication
     const rect = this.$el.getBoundingClientRect();
     const x = e.clientX - rect.left;
     let time = x / this.pxPerBeat;
@@ -135,13 +136,13 @@ export default class AutomationClipElement extends Vue {
     time = Math.max(lowerBound, Math.min(upperBound, time));
 
     this.clip.setTime(i, time);
-    // TODO this needs a better home
+    // FIXME(2) this needs a better home
     this.element.duration = Math.max(this.element.duration, time);
 
     value = Math.max(0, Math.min(1, value));
     value = 1 - scale(value, [0, 1], this.fromRange);
 
-    this.$log.debug(`Changing ${this.clip.points[i].value} -> ${value}`);
+    dawg.log.debug(`Changing ${this.clip.points[i].value} -> ${value}`);
     this.clip.setValue(i, value);
     this.$set(this.points, i, this.points[i]);
   }
@@ -155,8 +156,8 @@ export default class AutomationClipElement extends Vue {
   }
 
   public pointContext(event: MouseEvent, i: number) {
-    this.$context({
-      event,
+    dawg.context({
+      position: event,
       items: [
         {
           text: 'Delete',

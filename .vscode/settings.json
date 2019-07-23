@@ -27,14 +27,18 @@
     "hacky",
     "mixins",
     "monorepo",
+    "ondataavailable",
     "pianoroll",
     "resizable",
     "scrollbar",
+    "soundfont",
     "soundfonts",
+    "submenu",
     "submenus",
     "tinycolor",
     "vuejs",
     "vuetify",
+    "webmidi",
     "wheeldown",
     "wheelup"
   ]

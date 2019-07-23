@@ -1,24 +1,29 @@
 <template>
-  <div class="screen foreground--text" :ref="dragRef">
+  <drag-element class="screen foreground--text" curse="ns-resize" @move="move">
     <div class="text">{{ value }}</div>
     <div class="small-text">bpm</div>
-  </div>
+  </drag-element>
 </template>
 
 <script lang="ts">
 import { Component, Prop, Mixins } from 'vue-property-decorator';
-import { Draggable } from '@/modules/draggable';
+import { DragElement } from '@/modules/draggable';
+import { createComponent } from '@/utils';
 
-@Component
-export default class Bpm extends Mixins(Draggable) {
-  @Prop({ type: Number, required: true }) public value!: any;
-
-  public cursor = 'ns-resize';
-
-  public move(e: Event, { changeY }: { changeY: number }) {
-    this.$emit('input', Math.max(0, this.value - changeY));
-  }
-}
+export default createComponent({
+  name: 'Bpm',
+  components: { DragElement },
+  props: {
+    value: { type: Number, required: true },
+  },
+  setup(props, context) {
+    return {
+      move: (e: Event, { changeY }: { changeY: number }) => {
+        context.emit('input', Math.max(0, props.value - changeY));
+      },
+    };
+  },
+});
 </script>
 
 <style scoped lang="sass">

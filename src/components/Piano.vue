@@ -20,31 +20,31 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import Tone from 'tone';
-import { Component, Prop } from 'vue-property-decorator';
-import { allKeys } from '@/utils';
+import { allKeys, createComponent } from '@/utils';
 import Key from '@/components/Key.vue';
 import { Instrument } from '@/core';
 
-@Component({
+export default createComponent({
+  name: 'Piano',
   components: { Key },
-})
-export default class Piano extends Vue {
-  @Prop({ type: Number, required: true }) public keyHeight!: number;
-  @Prop({ type: Object, required: true }) public synth!: Instrument<any, any>;
-  public allKeys = allKeys;
-
-  public start(value: string) {
-    this.synth.triggerAttack(value);
-  }
-
-  public stop(value: string) {
-    // I'm not sure what would happen if there were two notes playing.
-    // I assume it would stop both. I didn't see a way to only stops one.
-    this.synth.triggerRelease(value);
-  }
-}
+  props: {
+    keyHeight: { type: Number, required: true },
+    synth: { type: Object as () => Instrument<any, any>, required: true },
+  },
+  setup(props) {
+    return {
+      allKeys,
+      start(value: string) {
+        props.synth.triggerAttack(value);
+      },
+      stop(value: string) {
+        // I'm not sure what would happen if there were two notes playing.
+        // I assume it would stop both. I didn't see a way to only stops one.
+        props.synth.triggerRelease(value);
+      },
+    };
+  },
+});
 </script>
 
 <style scoped lang="sass">

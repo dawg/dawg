@@ -61,58 +61,70 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import Tone from 'tone';
 import DotButton from '@/components/DotButton.vue';
-import MiniScore from '@/modules/dawg/MiniScore.vue';
+import MiniScore from '@/components/MiniScore.vue';
 import ChannelSelect from '@/components/ChannelSelect.vue';
-import { Component, Prop } from 'vue-property-decorator';
 import { Note, Instrument } from '@/core';
-import { Watch } from '@/modules/update';
-import { Nullable } from '@/utils';
+import { createComponent, update } from '@/utils';
+import { computed, watch, value } from 'vue-function-api';
 
-@Component({ components: { DotButton, MiniScore, ChannelSelect } })
-export default class Synth extends Vue {
-  @Prop({ type: Object, required: true }) public instrument!: Instrument<any, any>;
-  @Prop({ type: Number, default: 50 }) public height!: number;
-  @Prop({ type: Array, default: () => [] }) public notes!: Note[];
-  @Prop(Nullable(Number)) public channel!: number | null;
+export default createComponent({
+  name: 'Synth',
+  components: { DotButton, MiniScore, ChannelSelect },
+  props: {
+    instrument: { type: Object as () => Instrument<any, any>, required: true },
+    height: { type: Number, default: 50 },
+    notes: { type: Array as () => Note[], default: () => [] },
+    channel: Number as () => number | undefined,
+  },
+  setup(props, context) {
+    const active = value(!props.instrument.mute);
+    const expand = false;
+    const strokeWidth = 2.5;
 
-  public active = !this.instrument.mute;
-  public expand = false;
-  public strokeWidth = 2.5;
+    const synthStyle = computed(() => {
+      return {
+        height: `${props.height}px`,
+      };
+    });
 
-  get synthStyle() {
+    function setChannel(v: number | undefined) {
+      update(props, context, 'channel', v);
+    }
+
+    function volumeInput(v: number) {
+      props.instrument.volume.value = v;
+    }
+
+    function panInput(v: number) {
+      props.instrument.pan.value = v;
+    }
+
+    function automateVolume() {
+      context.root.$automate(props.instrument, 'volume');
+    }
+
+    function automatePan() {
+      context.root.$automate(props.instrument, 'pan');
+    }
+
+    watch(active, () => {
+      props.instrument.mute = !active.value;
+    });
+
     return {
-      height: `${this.height}px`,
+      active,
+      automatePan,
+      automateVolume,
+      panInput,
+      volumeInput,
+      setChannel,
+      synthStyle,
+      expand,
+      strokeWidth,
     };
-  }
-
-  public setChannel(value: number | null) {
-    this.$update('channel', value);
-  }
-
-  public volumeInput(value: number) {
-    this.instrument.volume.value = value;
-  }
-
-  public panInput(value: number) {
-    this.instrument.pan.value = value;
-  }
-
-  public automateVolume() {
-    this.$automate(this.instrument, 'volume');
-  }
-
-  public automatePan() {
-    this.$automate(this.instrument, 'pan');
-  }
-
-  @Watch<Synth>('active')
-  public changeMute() {
-    this.instrument.mute = !this.active;
-  }
-}
+  },
+});
 </script>
 
 <style scoped lang="sass">

@@ -16,10 +16,11 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
+import { createComponent } from '@/utils';
 
-@Component
-export default class WavIcon extends Vue {}
+export default createComponent({
+  name: 'WavIcon',
+});
 </script>
 
 <style lang="sass" scoped>

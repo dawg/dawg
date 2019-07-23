@@ -1,4 +1,7 @@
 import Tone from 'tone';
+import Vue from 'vue';
+import { PropsDefinition, ComponentOptions } from 'vue/types/options';
+import { Context } from 'vue-function-api/dist/types/vue';
 
 export enum StyleType {
   PRIMARY = 'primary',
@@ -104,7 +107,7 @@ export const copy = <T>(o: T): T => {
 };
 
 
-export const Nullable = (o: new() => object ) => {
+export const Nullable = <V, T extends new() => V>(o: T) => {
   return {
     required: true,
     validator: (prop: any) => {
@@ -142,7 +145,7 @@ export const Button = {
 };
 
 export function toTickTime(time: number) {
-  // TODO is ceil right?
+  // FIXME(3) is ceil right?
   return `${Math.ceil(time * Tone.Transport.PPQ)}i`;
 }
 
@@ -209,3 +212,65 @@ export class UnreachableCaseError extends Error {
     super(`Unreachable case: ${value}`);
   }
 }
+
+export const addDisposableListener = <K extends keyof WindowEventMap>(
+  type: K, cb: (ev: WindowEventMap[K]) => any,
+) => {
+  window.addEventListener(type, cb);
+
+  return {
+    dispose() {
+      window.removeEventListener(type, cb);
+    },
+  };
+};
+
+export const keys = <O>(o: O): Array<keyof O & string> => {
+  return Object.keys(o) as Array<keyof O & string>;
+};
+
+export const mapObject = <V, T, O extends { [k: string]: V }>(o: O, f: (v: V) => T) => {
+  const transformed: { [k: string]: T } = {};
+  for (const key of keys(o)) {
+    transformed[key] = f(o[key]);
+  }
+  return transformed as { [K in keyof O]: T };
+};
+
+export const uniqueId = () => {
+  return Math.random().toString().substr(2, 9);
+};
+
+// FIXME Remove when https://github.com/vuejs/vue-function-api/issues/15 is resolved
+type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
+type ComponentOptionsWithSetup<Props> = Omit<ComponentOptions<Vue>, 'props' | 'setup'> & {
+  props?: PropsDefinition<Props>;
+  setup?: (
+    this: undefined,
+    props: Readonly<Props>,
+    context: Context,
+  ) => object | null | undefined | void;
+};
+
+// when props is an object
+export function createComponent<Props>(
+  compOptions: ComponentOptionsWithSetup<Props>,
+): ComponentOptions<Vue>;
+// when props is an array
+export function createComponent<Props extends string = never>(
+  compOptions: ComponentOptionsWithSetup<Record<Props, any>>,
+): ComponentOptions<Vue>;
+
+export function createComponent<Props>(
+  compOptions: ComponentOptionsWithSetup<Props>,
+): ComponentOptions<Vue> {
+  return (compOptions as any) as ComponentOptions<Vue>;
+}
+
+// Remove until here
+
+export const update = <Props, K extends keyof Props, V extends Props[K]>(
+  props: Props, context: { emit: (event: string, value: V) => void }, key: K, value: V,
+) => {
+  context.emit(`update:${key}`, value);
+};

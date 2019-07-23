@@ -33,7 +33,7 @@ export abstract class Instrument<T, V extends string> {
    */
   public abstract types: V[];
 
-  public channel: number | null;
+  public channel?: number;
 
   protected source: Audio.Source<T> | null;
   private destination: Tone.AudioNode | null = Tone.Master;
@@ -58,7 +58,7 @@ export abstract class Instrument<T, V extends string> {
 
     this.name = i.name;
     this.id = i.id || uuid.v4();
-    this.channel = i.channel === undefined ? null : i.channel;
+    this.channel = i.channel === null ? undefined : i.channel;
     this.muted = !!i.mute;
     this.mute = !!i.mute;
     this.pan.value = i.pan || 0;

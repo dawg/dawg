@@ -12,36 +12,46 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
+import { createComponent } from '@/utils';
+import { computed } from 'vue-function-api';
 
-@Component
-export default class TooltipIcon extends Vue {
-  @Prop({ type: Boolean, default: false }) public fa!: boolean;
-  @Prop({ type: Boolean, default: false }) public right!: boolean;
-  @Prop({ type: Boolean, default: false }) public left!: boolean;
-  @Prop({ type: Boolean, default: false }) public top!: boolean;
-  @Prop({ type: Boolean, default: false }) public bottom!: boolean;
-  @Prop({ type: String, required: true }) public tooltip!: boolean;
-  @Prop({ type: String, default: 'white' }) public color!: boolean;
+export default createComponent({
+  name: 'TooltipIcon',
+  props: {
+    fa: { type: Boolean, default: false },
+    right: { type: Boolean, default: false },
+    left: { type: Boolean, default: false },
+    top: { type: Boolean, default: false },
+    bottom: { type: Boolean, default: false },
+    tooltip: { type: String, required: true },
+    color: { type: String, default: 'white' },
+  },
+  setup(props, context) {
+    const icon = computed(() => {
+      const slot = context.slots.default;
+      if (!slot || !slot[0]) {
+        return '';
+      }
 
-  get icon() {
-    const slot = this.$slots.default;
-    if (!slot || !slot[0]) {
-      return '';
-    }
+      const text = slot[0].text || '';
+      return text.trim();
+    });
 
-    const text = slot[0].text || '';
-    return text.trim();
-  }
+    const showTooltip = computed(() => {
+      return !!props.tooltip;
+    });
 
-  get showTooltip() {
-    return !!this.tooltip;
-  }
+    const style = computed(() => {
+      return { color: props.color };
+    });
 
-  get style() {
-    return { color: this.color };
-  }
-}
+    return {
+      style,
+      showTooltip,
+      icon,
+    };
+  },
+});
 </script>
 
 <style lang="sass" scoped>

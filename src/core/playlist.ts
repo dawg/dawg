@@ -1,9 +1,9 @@
 import * as t from 'io-ts';
 import * as Audio from '@/modules/audio';
-import { ScheduledPattern, ScheduledPatternType } from './scheduled/pattern';
-import { ScheduledSample, ScheduledSampleType } from './scheduled/sample';
-import { ScheduledAutomation, ScheduledAutomationType } from './scheduled/automation';
-import { Serializable } from './serializable';
+import { ScheduledPattern, ScheduledPatternType } from '@/core/scheduled/pattern';
+import { ScheduledSample, ScheduledSampleType } from '@/core/scheduled/sample';
+import { ScheduledAutomation, ScheduledAutomationType } from '@/core/scheduled/automation';
+import { Serializable } from '@/core/serializable';
 
 export const PlaylistType = t.partial({
   elements: t.array(t.union([

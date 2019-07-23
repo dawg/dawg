@@ -1,8 +1,8 @@
 import * as t from 'io-ts';
 import * as Audio from '@/modules/audio';
-import { SchedulableType, Schedulable } from './schedulable';
+import { SchedulableType, Schedulable } from '@/core/scheduled/schedulable';
 import { Pattern } from '@/core/pattern';
-import { Serializable } from '../serializable';
+import { Serializable } from '@/core/serializable';
 import { toTickTime, literal } from '@/utils';
 
 export const ScheduledPatternType = t.intersection([
