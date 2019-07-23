@@ -89,7 +89,7 @@ export default class BusySignal extends Vue {
 
   get spacerStyle() {
     return {
-      borderColor: dawg.theme.foreground + 50,
+      borderColor: base.theme.foreground + 50,
       margin: '10px 0',
     };
   }

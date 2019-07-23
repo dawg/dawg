@@ -254,6 +254,6 @@ $width: 26px;
 }
 
 .right {
-  width: calc(100% - $width);
+  width: calc(100% - #{$width});
 }
 </style>

@@ -34,6 +34,11 @@ cache:
 #  - sh -e /etc/init.d/xvfb start
 #  - sleep 3 # give xvfb some time to start
 
+branches:
+  only:
+    - master
+    - develop
+
 install:
   npm i
 
@@ -49,6 +54,7 @@ deploy:
   file:
     - "dist_electron/Vusic 0.1.1.AppImage"
     - "dist_electron/vusic_0.1.1_amd64.deb"
+    - "dist_electron/vusic_0.1.1.rpm" # FIXME this could be wrong
     - "dist_electron/Vusic-0.1.1.dmg"
     - "dist_electron\\Vusic Setup 0.1.1.exe"
   skip_cleanup: true
