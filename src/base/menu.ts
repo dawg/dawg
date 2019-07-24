@@ -59,13 +59,19 @@ ipcRenderer.on('menuCallback', (_, uniqueEvent, position) => {
 });
 
 ipcRenderer.on('closeMenu', (_, payload) => {
-  payload.items.forEach((item) => {
-    if (!item) {
-      return;
-    }
+  // Ok so the only reason we are doing this is to clean up after ourselves.
+  // There is not reason we have to do it immediately so we delay by 5 seconds.
+  // We do this because this event is fired before menuCallback, thus, the callbacks
+  // are deleted before the 'menuCallback' callback function is called!
+  setTimeout(() => {
+    payload.items.forEach((item) => {
+      if (!item) {
+        return;
+      }
 
-    delete callbacks[item.uniqueEvent];
-  });
+      delete callbacks[item.uniqueEvent];
+    });
+  }, 5000);
 });
 
 export const context: ContextFunction = (opts) => {

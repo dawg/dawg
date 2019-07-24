@@ -5,6 +5,7 @@ export {
 
 export {
   ui,
+  TabAction,
   ActivityBarItem,
   PanelItem,
 } from '@/base/ui';

@@ -279,14 +279,18 @@ export const extension = createExtension({
 
     const manager = createBackupAPI(backup);
 
-    auth.watchUser({
-      authenticated: (user) => {
-        manager.setUser(user);
-      },
-      unauthenticated: () => {
-        manager.setUser(null);
-      },
-    });
+    try {
+      auth.watchUser({
+        authenticated: (user) => {
+          manager.setUser(user);
+        },
+        unauthenticated: () => {
+          manager.setUser(null);
+        },
+      });
+    } catch (e) {
+      // Ignore this error, it means we can't connect to the server (ie. internet is down)
+    }
 
     const open = {
       text: 'Open From Backup',
@@ -295,15 +299,15 @@ export const extension = createExtension({
       },
     };
 
-    dawg.commands.registerCommand(open);
-    menubar.addItem('File', open);
+    context.subscriptions.push(dawg.commands.registerCommand(open));
+    context.subscriptions.push(menubar.addItem('File', open));
 
-    dawg.commands.registerCommand({
+    context.subscriptions.push(dawg.commands.registerCommand({
       text: 'Delete Backup',
       callback: () => {
         manager.deleteBackup();
       },
-    });
+    }));
 
     context.subscriptions.push(dawg.project.onDidSave((encoded) => {
       manager.updateProject(encoded);

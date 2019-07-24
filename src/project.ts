@@ -3,7 +3,7 @@ import Tone from 'tone';
 import { findUniqueName, range } from '@/utils';
 import * as Audio from '@/modules/audio';
 import uuid from 'uuid';
-import { loadBuffer, loadBufferSync } from '@/modules/wav/local';
+import { loadBufferSync } from '@/modules/wav/local';
 import { makeLookup, chain } from '@/utils';
 import { Signal } from '@/modules/audio';
 import * as t from 'io-ts';
@@ -22,9 +22,8 @@ import { Score } from '@/core/score';
 import { EffectName } from '@/core/filters/effects';
 import { Effect, AnyEffect } from '@/core/filters/effect';
 import { Serializable } from '@/core/serializable';
-import { FileLoader } from '@/core/loaders/file';
-import { Error } from '@/core/loaders/loader';
 import { Instrument } from '@/core/instrument/instrument';
+import * as base from '@/base';
 
 const ProjectTypeRequired = t.type({
   id: t.string,
@@ -114,14 +113,24 @@ export class Project implements Serializable<IProject> {
       }
     });
 
+    const notFound: string[] = [];
     const samples = (i.samples || []).map((iSample) => {
       let buffer: AudioBuffer | null = null;
       if (fs.existsSync(iSample.path)) {
         buffer = loadBufferSync(iSample.path);
+      } else {
+        notFound.push(iSample.path);
       }
 
       return new Sample(buffer, iSample);
     });
+
+    if (notFound.length !== 0) {
+      base.notify.warning(
+        `Audio files not found`,
+        { detail: notFound.join('\n'), duration: Infinity },
+      );
+    }
 
     const instrumentLookup = makeLookup(instruments);
     const channelLookup = makeLookup(channels);

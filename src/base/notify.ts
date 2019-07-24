@@ -14,19 +14,12 @@ export interface Notification {
   message: string;
   params: NotificationConfig;
   type: NotificationType;
-  icon: string;
 }
 
 const notifications: Notification[] = [];
 
-// TODO
-// 'info-circle'
-// 'check'
-// 'exclamation-triangle'
-// 'ban'
-
 const notify = (type: NotificationType) => (message: string, params?: NotificationConfig) => {
-  const notification = { message, params: params || {}, type, icon: 'info-circle' };
+  const notification = { message, params: params || {}, type };
   notifications.push(notification);
   events.emit('add', notification);
 };

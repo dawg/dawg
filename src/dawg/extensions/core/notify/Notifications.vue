@@ -42,14 +42,25 @@
 </template>
 
 <script lang="ts">
-import { events, Notification } from '@/dawg/extensions/core/notify/events';
 import { Vue, Component, Prop} from 'vue-property-decorator';
 import { reverse } from '@/utils';
+import * as base from '@/base';
 
 const directions = {
   x: ['left', 'center', 'right'],
   y: ['top', 'bottom'],
 };
+
+const ICON_LOOKUP = {
+  info: 'info-circle',
+  success: 'check',
+  warning: 'exclamation-triangle',
+  error: 'ban',
+};
+
+interface Notification extends base.notify.Notification {
+  icon: string;
+}
 
 export const Id = ((i) => () => i++)(0);
 
@@ -75,7 +86,12 @@ export default class Notifications extends Vue {
   public timers: {[s: string]: NodeJS.Timer} = {};
 
   public mounted() {
-    events.on('add', this.addItem);
+    base.notify.subscribe((notification) => {
+      this.addItem({
+        ...notification,
+        icon: ICON_LOOKUP[notification.type],
+      });
+    });
   }
 
   get styles() {

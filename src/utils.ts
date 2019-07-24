@@ -405,3 +405,10 @@ export const makeLookup = <T extends { id: string }>(array: Iterable<T>) => {
   return lookup;
 };
 
+interface Ordered {
+  order?: number;
+}
+
+export const sortOrdered = (a: Ordered, b: Ordered) => {
+  return (a.order || 0) - (b.order || 0);
+};

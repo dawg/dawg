@@ -3,7 +3,7 @@
     class="pattern-element"
     :style="scoreStyle"
     :notes="notes"
-    :totla-duration,sync="totalDuration"
+    :total-duration.sync="totalDuration"
   ></mini-score>
 </template>
 

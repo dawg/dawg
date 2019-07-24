@@ -97,6 +97,7 @@ export default createComponent({
 
     return {
       rects,
+      viewBox,
     };
   },
 });

@@ -120,6 +120,8 @@ import PanelHeaders from '@/components/PanelHeaders.vue';
 import ActivityBar from '@/components/ActivityBar.vue';
 import { TOOLBAR_HEIGHT, STATUS_BAR_HEIGHT } from '@/constants';
 import * as base from '@/base';
+import { sortOrdered } from './utils';
+import * as dawg from '@/dawg';
 
 // TO VERIFY
 // 1. Recording
@@ -154,11 +156,11 @@ export default class App extends Vue {
   }
 
   get toolbarLeft() {
-    return base.ui.toolbar.filter((item) => item.position === 'left');
+    return base.ui.toolbar.filter((item) => item.position === 'left').sort(sortOrdered);
   }
 
   get toolbarRight() {
-    return base.ui.toolbar.filter((item) => item.position === 'right');
+    return base.ui.toolbar.filter((item) => item.position === 'right').sort(sortOrdered).reverse();
   }
 
   get iconColor() {
@@ -170,11 +172,11 @@ export default class App extends Vue {
   }
 
   get statusBarRight() {
-    return base.ui.statusBar.filter((item) => item.position === 'right');
+    return base.ui.statusBar.filter((item) => item.position === 'right').sort(sortOrdered).reverse();
   }
 
   get statusBarLeft() {
-    return base.ui.statusBar.filter((item) => item.position === 'left');
+    return base.ui.statusBar.filter((item) => item.position === 'left').sort(sortOrdered);
   }
 
   get statusBarStyle() {
@@ -196,6 +198,8 @@ export default class App extends Vue {
       // Log this for debugging purposes
       // tslint:disable-next-line:no-console
       console.info(base);
+      // tslint:disable-next-line:no-console
+      console.info(dawg);
       this.loaded = true;
     }, 1250);
   }

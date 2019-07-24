@@ -6,6 +6,7 @@ import * as bpm from '@/dawg/extensions/extra/bpm';
 import * as audioFiles from '@/dawg/extensions/extra/audio-files';
 import * as clips from '@/dawg/extensions/extra/clips';
 import * as spectrogram from '@/dawg/extensions/extra/spectrogram';
+import * as play from '@/dawg/extensions/extra/play';
 import * as projectName from '@/dawg/extensions/extra/project-name';
 import * as mixer from '@/dawg/extensions/core/mixer';
 import * as dawg from '@/dawg';
@@ -61,6 +62,7 @@ const middleware = () => {
     projectName,
     spectrogram,
     backup,
+    play,
   ].forEach(({ extension }) => {
     dawg.manager.activate(extension);
   });

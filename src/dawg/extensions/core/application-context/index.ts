@@ -2,7 +2,7 @@ import Vue from 'vue';
 import VerticalSwitch from '@/dawg/extensions/core/application-context/VerticalSwitch.vue';
 import { manager } from '@/base/manager';
 import { value } from 'vue-function-api';
-import { ui } from '@/base/ui';
+import * as base from '@/base';
 import { commands } from '@/dawg/extensions/core/commands';
 
 export type ApplicationContext = 'playlist' | 'pianoroll';
@@ -28,9 +28,10 @@ export const applicationContext = manager.activate({
       },
     });
 
-    ui.toolbar.push({
+    base.ui.toolbar.push({
       position: 'right',
       component,
+      order: 1,
     });
 
     context.subscriptions.push(commands.registerCommand({
