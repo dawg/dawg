@@ -320,9 +320,10 @@ const extension = createExtension({
       },
     };
 
+    const file = menubar.getMenu('File');
     const toDispose = [save, saveAs, open, newProject].map((command) => {
       context.subscriptions.push(commands.registerCommand(command));
-      return menubar.addItem('File', command);
+      return file.addItem(command);
     });
 
     context.subscriptions.push(...toDispose);

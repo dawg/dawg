@@ -79,7 +79,7 @@ export default createComponent({
   },
   setup(props, context) {
     const active = value(!props.instrument.mute);
-    const expand = false;
+    const expand = value(false);
     const strokeWidth = 2.5;
 
     const synthStyle = computed(() => {

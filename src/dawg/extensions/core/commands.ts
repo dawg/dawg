@@ -122,7 +122,8 @@ export const commands = manager.activate({
     };
 
     registerCommand(openCommandPalette);
-    context.subscriptions.push(menubar.addItem('View', openCommandPalette));
+    const view = menubar.getMenu('View');
+    context.subscriptions.push(view.addItem(openCommandPalette));
 
     return {
       registerCommand,

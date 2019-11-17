@@ -102,7 +102,6 @@ export const resizable = (component: VueConstructor) => {
     @Prop({ type: String, required: false }) public hoverColor?: string;
     @Prop({ type: Number, default: 8 }) public dragAreaWidth!: number;
 
-    public cursor = 'ew-resize';
     public in = false;
 
     get style() {
@@ -154,12 +153,12 @@ export const resizable = (component: VueConstructor) => {
         },
       });
 
-      // TODO ensure changes actually work!!
       const resizeArea = createElement(DragElement, {
         style: this.style,
         class: 'resize-area',
         props: {
           within: this.in,
+          curse: 'ew-resize',
         },
         on: {
           'move': this.move,

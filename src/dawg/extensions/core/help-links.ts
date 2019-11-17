@@ -35,8 +35,9 @@ export const helpLinks = manager.activate({
       },
     ];
 
+    const help = menubar.getMenu('Edit');
     commands.forEach((command) => {
-      context.subscriptions.push(menubar.addItem('Help', command));
+      context.subscriptions.push(help.addItem(command));
     });
   },
 });

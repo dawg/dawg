@@ -299,8 +299,9 @@ export const extension = createExtension({
       },
     };
 
+    const file = menubar.getMenu('File');
     context.subscriptions.push(dawg.commands.registerCommand(open));
-    context.subscriptions.push(menubar.addItem('File', open));
+    context.subscriptions.push(file.addItem(open));
 
     context.subscriptions.push(dawg.commands.registerCommand({
       text: 'Delete Backup',

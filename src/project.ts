@@ -510,18 +510,13 @@ export class Project implements Serializable<IProject> {
   }
 
   /**
-   * Sets the channel of the instrument to the given channel. If no channel is given, the instrument will be connected
-   * to channel (useful for reconnecting to channel after re-initialization from the fs).
+   * Sets the channel of the instrument to the given channel.
    */
   public setChannel(payload: { instrument: Instrument<any, any>, channel?: number }) {
     const instrument = payload.instrument;
-    let channel = payload.channel;
+    const channel = payload.channel;
     if (instrument.channel === channel) {
       return;
-    }
-
-    if (channel === undefined) {
-      channel = instrument.channel;
     }
 
     instrument.channel = channel;
