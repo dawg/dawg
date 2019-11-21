@@ -34,7 +34,6 @@ import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import Sequencer from '@/modules/sequencer/Sequencer.vue';
 import { allKeys, toTickTime, keyLookup } from '@/utils';
 import { INotes } from '@/midi-parser';
-import Transport from '@/modules/audio/transport';
 import { Note, Instrument, Playlist, Pattern, Score } from '@/core';
 import { Watch } from '@/modules/update';
 

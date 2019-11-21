@@ -2,6 +2,10 @@ import electron from 'electron';
 import { isDevelopment } from './electron/environment';
 import cliTruncate from 'cli-truncate';
 
+interface Options {
+  showInspectElement?: boolean;
+}
+
 const webContents = (win: any) => win.webContents || win.getWebContents();
 
 const decorateMenuItem = (menuItem: any) => {
@@ -29,12 +33,8 @@ const removeUnusedMenuItems = (menuTemplate: any[]) => {
     });
 };
 
-const create = (win: any, options: any) => {
+const create = (win: any, options: Options) => {
   webContents(win).on('context-menu', (event: any, props: any) => {
-    if (typeof options.shouldShowMenu === 'function' && options.shouldShowMenu(event, props) === false) {
-      return;
-    }
-
     const {editFlags} = props;
     const hasText = props.selectionText.trim().length > 0;
     const isLink = Boolean(props.linkURL);
@@ -119,7 +119,6 @@ const create = (win: any, options: any) => {
 
     let menuTemplate = [
       defaultActions.separator(),
-      options.showLookUpSelection !== false && defaultActions.lookUpSelection(),
       defaultActions.separator(),
       defaultActions.cut(),
       defaultActions.copy(),
@@ -129,40 +128,14 @@ const create = (win: any, options: any) => {
       defaultActions.copyLink(),
       defaultActions.separator(),
       options.showInspectElement && defaultActions.inspect(),
-      options.showServices && defaultActions.services(),
       defaultActions.separator(),
     ];
-
-    if (options.menu) {
-      menuTemplate = options.menu(defaultActions, props, win);
-    }
-
-    if (options.prepend) {
-      const result = options.prepend(defaultActions, props, win);
-
-      if (Array.isArray(result)) {
-        menuTemplate.unshift(...result);
-      }
-    }
-
-    if (options.append) {
-      const result = options.append(defaultActions, props, win);
-
-      if (Array.isArray(result)) {
-        menuTemplate.push(...result);
-      }
-    }
 
     // Filter out leading/trailing separators
     // TODO: https://github.com/electron/electron/issues/5869
     menuTemplate = removeUnusedMenuItems(menuTemplate);
 
     for (const menuItem of menuTemplate) {
-      // Apply custom labels for default menu items
-      if (options.labels && options.labels[menuItem.id]) {
-        menuItem.label = options.labels[menuItem.id];
-      }
-
       // Replace placeholders in menu item labels
       if (typeof menuItem.label === 'string' && menuItem.label.includes('{selection}')) {
         const selectionString = typeof props.selectionText === 'string' ? props.selectionText.trim() : '';
@@ -185,21 +158,7 @@ const create = (win: any, options: any) => {
   });
 };
 
-export default (options: any = {}) => {
-  if (options.window) {
-    const win = options.window;
-
-    // When window is a webview that has not yet finished loading webContents is not available
-    if (webContents(win) === undefined) {
-      win.addEventListener('dom-ready', () => {
-        create(win, options);
-      }, {once: true});
-      return;
-    }
-
-    return create(win, options);
-  }
-
+export default (options: Options = {}) => {
   for (const win of (electron.BrowserWindow || electron.remote.BrowserWindow).getAllWindows()) {
     create(win, options);
   }
