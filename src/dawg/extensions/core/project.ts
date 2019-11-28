@@ -15,7 +15,7 @@ import { computed, value, watch } from 'vue-function-api';
 import { patterns } from '@/dawg/extensions/core/patterns';
 import { applicationContext } from '@/dawg/extensions/core/application-context';
 import { ui } from '@/base/ui';
-import { addDisposableListener } from '@/utils';
+import { addEventListener } from '@/utils';
 import { log } from '@/dawg/extensions/core/log';
 import { emitter } from '@/base/events';
 
@@ -255,7 +255,7 @@ const extension = createExtension({
   activate(context) {
     const api = projectApi(context);
 
-    context.subscriptions.push(addDisposableListener('online', online(api.project)));
+    context.subscriptions.push(addEventListener('online', online(api.project)));
 
     // Pause every time the context changes
     watch(applicationContext.context, () => {
@@ -320,9 +320,10 @@ const extension = createExtension({
       },
     };
 
+    const file = menubar.getMenu('File');
     const toDispose = [save, saveAs, open, newProject].map((command) => {
       context.subscriptions.push(commands.registerCommand(command));
-      return menubar.addItem('File', command);
+      return file.addItem(command);
     });
 
     context.subscriptions.push(...toDispose);

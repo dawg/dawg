@@ -48,7 +48,7 @@ function createWindow() {
   });
 }
 
-menu();
+menu({ showInspectElement: true });
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {

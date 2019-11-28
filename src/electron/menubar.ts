@@ -3,10 +3,12 @@
 import { Menu, MenuItemConstructorOptions } from 'electron';
 import { ipcMain, ElectronMenuBarItem } from '../ipc';
 
-const menuLookup: { [k: string]: MenuItemConstructorOptions } = {};
+const menuLookup: { [k: string]: { options: MenuItemConstructorOptions, order: number } } = {};
 
 const renderMenu = () => {
-  const template = Object.values(menuLookup);
+  const template = Object.values(menuLookup).sort(
+    (a, b) => a.order > b.order ? 1 : -1,
+  ).map(({ options }) => options);
 
   // The first menu item is associated with the application
   // Just look at the menu and you will see what I mean
@@ -28,44 +30,47 @@ const removeItem = (item: ElectronMenuBarItem) => {
   }
 
   const singleMenu = menuLookup[item.menu];
-  if (!singleMenu.submenu) {
+  if (!singleMenu.options.submenu) {
     return;
   }
 
-  if (!Array.isArray(singleMenu.submenu)) {
+  if (!Array.isArray(singleMenu.options.submenu)) {
     // this condition should never occur
     return;
   }
 
-  singleMenu.submenu = singleMenu.submenu.filter((menuItem) => {
+  singleMenu.options.submenu = singleMenu.options.submenu.filter((menuItem) => {
     return item.label !== menuItem.label;
   });
 };
 
+// Defines a new menu. If one already exists then nothing happens.
+ipcMain.on('defineMenu', (_, payload) => {
+  if (menuLookup[payload.menu]) {
+    return;
+  }
+
+  menuLookup[payload.menu] = { options: { label: payload.menu }, order: payload.order };
+});
+
 ipcMain.on('addToMenuBar', (event, itemsOrItem) => {
   const addItem = (item: ElectronMenuBarItem) => {
-    if (!menuLookup[item.menu]) {
-      menuLookup[item.menu] = {
-        label: item.menu,
-      };
-    }
-
     const singleMenu = menuLookup[item.menu];
-    if (!singleMenu.submenu) {
-      singleMenu.submenu = [];
+    if (!singleMenu.options.submenu) {
+      singleMenu.options.submenu = [];
     }
 
-    if (!Array.isArray(singleMenu.submenu)) {
+    if (!Array.isArray(singleMenu.options.submenu)) {
       // This condition should never happen, but we have to satisfy TypeScript
       return;
     }
 
     if (item.label === null) {
-      singleMenu.submenu.push({
+      singleMenu.options.submenu.push({
         type: 'separator',
       });
     } else {
-      singleMenu.submenu.push({
+      singleMenu.options.submenu.push({
         label: item.label,
         click: () => {
           event.sender.send('menuBarCallback', item.uniqueEvent);

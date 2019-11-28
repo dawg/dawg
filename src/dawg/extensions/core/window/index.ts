@@ -28,8 +28,9 @@ export const window = manager.activate({
       callback: reload,
     };
 
+    const view = menubar.getMenu('View');
     context.subscriptions.push(commands.registerCommand(reloadCommand));
-    context.subscriptions.push(menubar.addItem('View', reloadCommand));
+    context.subscriptions.push(view.addItem(reloadCommand));
 
     return {
       reload,

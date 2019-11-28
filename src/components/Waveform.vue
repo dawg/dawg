@@ -19,7 +19,7 @@ import { computed } from 'vue-function-api';
 export default createComponent({
   name: 'Waveform',
   props: {
-    buffer: { type: Object as () => AudioBuffer, required: true },
+    buffer: { type: AudioBuffer, required: true },
     offset: { type: Number, default: 0 },
     height: { type: Number, default: 50 },
     width: { type: Number, default: 100 },
@@ -95,6 +95,12 @@ export default createComponent({
 
       return dots0 + ' ' + dots1;
     });
+
+    return {
+      viewBox,
+      points,
+      color,
+    };
   },
 });
 </script>

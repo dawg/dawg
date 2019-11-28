@@ -76,3 +76,15 @@ export const codeLookup: { [k in Key]: KeyCode } = {
   Tab: 9,
   Esc: 27.,
 };
+
+
+export const hasKey = (pressedKeys: Set<number>, key: Key) => {
+  // Here we account for platform specific codes
+  // ie ctrl for windows and command for macs
+  let code = codeLookup[key];
+  if (typeof code === 'object') {
+    code = code[platform.platform];
+  }
+
+  return pressedKeys.has(code);
+};

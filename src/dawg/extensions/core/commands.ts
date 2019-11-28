@@ -3,7 +3,7 @@ import { manager } from '@/base/manager';
 import { palette } from '@/dawg/extensions/core/palette';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { DawgCommand } from '@/dawg/commands';
-import { Key, KeyCode, codeLookup } from '@/base/keyboard';
+import { Key, hasKey } from '@/base/keyboard';
 
 export type Command = DawgCommand<[]>;
 
@@ -18,17 +18,7 @@ function shortcutPressed(shortcut: Key[], pressedKeys: Set<number>) {
     return false;
   }
 
-  const has = (code: KeyCode) => {
-    // Here we account for platform specific codes
-    // ie ctrl for windows and command for macs
-    if (typeof code === 'object') {
-      code = code[platform];
-    }
-
-    return pressedKeys.has(code);
-  };
-
-  if (!shortcut.every((key) => has(codeLookup[key]))) {
+  if (!shortcut.every((key) => hasKey(pressedKeys, key))) {
     return false;
   }
 
@@ -52,6 +42,13 @@ export class KeyboardShortcuts {
   }
 
   public keydown(e: KeyboardEvent) {
+    // ignore all targets that aren't the body
+    // For example, ignore keys typed in an input
+    // This won't work
+    if (!hasKey(this.pressedKeys, 'CmdOrCtrl') && e.target !== document.body) {
+      return;
+    }
+
     // We do not add the enter key since it will never be used in a shortcut and causes bugs
     // For example, if we open the file dialog, keyup is never fired for enter.
     if (e.which !== 13) { // ENTER
@@ -125,7 +122,8 @@ export const commands = manager.activate({
     };
 
     registerCommand(openCommandPalette);
-    context.subscriptions.push(menubar.addItem('View', openCommandPalette));
+    const view = menubar.getMenu('View');
+    context.subscriptions.push(view.addItem(openCommandPalette));
 
     return {
       registerCommand,

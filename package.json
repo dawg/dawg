@@ -71,5 +71,9 @@
     "vue-cli-plugin-unit-karma": "^0.5.0",
     "vue-template-compiler": "^2.6.10"
   },
-  "main": "background.js"
+  "main": "background.js",
+  "engines": {
+    "node": ">=10.0.0",
+    "npm": ">=6.0.0"
+  }
 }

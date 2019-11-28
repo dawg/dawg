@@ -17,7 +17,7 @@ export const extension = createExtension({
     dawg.ui.toolbar.push({
       component: stop,
       position: 'right',
-      order: 1,
+      order: 2,
     });
 
     const playPause = Vue.extend(createComponent({
@@ -32,7 +32,7 @@ export const extension = createExtension({
             dawg.project.playPause();
           },
           icon: computed(() => {
-            return dawg.project.state.value === 'started' ? 'play' : 'pause';
+            return dawg.project.state.value === 'started' ? 'pause' : 'play';
           }),
         };
       },
@@ -41,7 +41,7 @@ export const extension = createExtension({
     dawg.ui.toolbar.push({
       component: playPause,
       position: 'right',
-      order: 2,
+      order: 3,
     });
   },
 });

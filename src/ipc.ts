@@ -70,6 +70,7 @@ type IEvents = {
   addToMenuBar: [ElectronMenuBarItem | ElectronMenuBarItem[]];
   removeFromMenuBar: [ElectronMenuBarItem | ElectronMenuBarItem[]];
   menuBarCallback: [string];
+  defineMenu: [{ menu: string, order: number }];
   showMenu: [ElectronMenuOptions];
   closeMenu: [ElectronMenuOptions];
   menuCallback: [string, ElectronMenuPosition];

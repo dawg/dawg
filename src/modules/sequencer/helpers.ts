@@ -1,8 +1,8 @@
 import Vue, { CreateElement, VueConstructor } from 'vue';
-import { Prop, Component, Mixins } from 'vue-property-decorator';
+import { Prop, Component } from 'vue-property-decorator';
 import tinycolor from 'tinycolor2';
-import { Draggable } from '@/modules/draggable';
-import { createHOC } from '@/modules/utils';
+import { DragElement } from '@/modules/draggable';
+import { createHOC } from '@/utils';
 
 export const positionable = (component: VueConstructor) => {
   @Component
@@ -93,17 +93,16 @@ export const selectable = (component: VueConstructor) => {
 
 export const resizable = (component: VueConstructor) => {
   @Component
-  class Resizable extends Mixins(Draggable) {
+  class Resizable extends Vue {
     @Prop({ type: Number, required: true }) public snap!: number;
     @Prop({ type: Number, required: true }) public pxPerBeat!: number;
-
     @Prop({ type: Number, required: true }) public height!: number;
     @Prop({ type: Number, required: true }) public duration!: number;
     @Prop({ type: String, required: false }) public hoverClass?: string;
     @Prop({ type: String, required: false }) public hoverColor?: string;
     @Prop({ type: Number, default: 8 }) public dragAreaWidth!: number;
 
-    public cursor = 'ew-resize';
+    public in = false;
 
     get style() {
       const style: { [k: string]: string | number } = {
@@ -154,13 +153,18 @@ export const resizable = (component: VueConstructor) => {
         },
       });
 
-      const resizeArea = createElement('div', {
+      const resizeArea = createElement(DragElement, {
         style: this.style,
         class: 'resize-area',
+        props: {
+          within: this.in,
+          curse: 'ew-resize',
+        },
         on: {
-          mouseenter: this.onHover,
-          mouseleave: this.afterHover,
-          mousedown: this.addListeners,
+          'move': this.move,
+          'update:within': (value: boolean) => {
+            this.in = value;
+          },
         },
       });
 

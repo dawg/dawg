@@ -13,7 +13,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import { createComponent, update } from '@/utils';
-import { onMounted } from 'vue-function-api';
+import { onMounted, computed } from 'vue-function-api';
 
 export default createComponent({
   name: 'Tab',
@@ -29,7 +29,7 @@ export default createComponent({
     });
 
     return {
-      isActive: props.name === props.selectedTab,
+      isActive: computed(() => props.name === props.selectedTab),
     };
   },
 });

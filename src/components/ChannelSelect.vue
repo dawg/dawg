@@ -23,7 +23,7 @@ export default createComponent({
     const leftover = value(0);
 
     const display = computed(() => {
-      return props.value === null ? '——' : props.value;
+      return props.value === undefined ? '——' : props.value;
     });
 
     function move(e: MouseEvent) {
