@@ -51,8 +51,6 @@
         :settings="{ suppressScrollY: true, handlers: ['wheel'] }"
       >
         <sequencer-grid
-          @added="added"
-          @removed="removed"
           :elements="elements"
           :sequencer-loop-end.sync="sequencerLoopEnd"
           :loop-start="loopStart"
@@ -80,10 +78,11 @@ import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import Tone from 'tone';
 import { Watch } from '@/modules/update';
 import { Schedulable } from '@/core';
-import Transport from '@/modules/audio/transport';
-import { toTickTime, clamp } from '@/utils';
+import { Transport } from '@/modules/audio/transport';
+import { clamp } from '@/utils';
 import SequencerGrid from '@/modules/sequencer/SequencerGrid.vue';
 import Timeline from '@/modules/sequencer/Timeline.vue';
+import { Context } from '../audio/context';
 
 @Component({
   components: { SequencerGrid, Timeline },
@@ -175,24 +174,13 @@ export default class Sequencer extends Vue {
   }
 
   public seek(beat: number) {
-    const time = toTickTime(beat);
-    this.transport.seconds = new Tone.Time(time).toSeconds();
+    this.transport.beat = beat;
     this.update();
-  }
-
-  public added(element: Schedulable) {
-    element.schedule(this.transport);
-    this.$emit('added', element);
-  }
-
-  public removed(element: Schedulable) {
-    element.remove(this.transport);
-    this.$emit('removed', element);
   }
 
   public update() {
     if (this.transport.state === 'started') { requestAnimationFrame(this.update); }
-    this.progress = this.transport.progress;
+    this.progress = this.transport.getProgress();
   }
 
   public scroll() {
@@ -215,15 +203,13 @@ export default class Sequencer extends Vue {
 
   @Watch<Sequencer>('loopEnd', { immediate: true })
   public onLoopEndChange() {
-    const time = toTickTime(this.loopEnd);
-    this.transport.loopEnd = new Tone.TransportTime(time).toSeconds();
+    this.transport.loopEnd = this.loopEnd;
     this.$update('end', this.loopEnd);
   }
 
   @Watch<Sequencer>('loopStart', { immediate: true })
   public onLoopStartChange() {
-    const time = toTickTime(this.loopStart);
-    this.transport.loopStart = new Tone.TransportTime(time).toSeconds();
+    this.transport.loopStart = this.loopStart;
     this.$update('start', this.loopStart);
   }
 

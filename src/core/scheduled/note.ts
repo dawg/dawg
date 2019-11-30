@@ -30,11 +30,15 @@ export class Note extends Schedulable implements Serializable<INote> {
   }
 
   public add(transport: Audio.Transport) {
-    return transport.schedule((exact: number) => {
-      const duration = toTickTime(this.duration);
-      const value = allKeys[this.row].value;
-      this.instrument.triggerAttackRelease(value, duration, exact, this.velocity);
-    }, this.tickTime);
+    return transport.schedule({
+      onStart: (exact: number) => {
+        const duration = toTickTime(this.duration);
+        const value = allKeys[this.row].value;
+        this.instrument.triggerAttackRelease(value, duration, exact, this.velocity);
+      },
+      time: this.time,
+      duration: 0, // FIXME We shouldn't have to set a duration. This is explained more in the Transport class file.
+    });
   }
 
   public serialize() {

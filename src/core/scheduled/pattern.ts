@@ -3,7 +3,7 @@ import * as Audio from '@/modules/audio';
 import { SchedulableType, Schedulable } from '@/core/scheduled/schedulable';
 import { Pattern } from '@/core/pattern';
 import { Serializable } from '@/core/serializable';
-import { toTickTime, literal } from '@/utils';
+import { literal } from '@/utils';
 
 export const ScheduledPatternType = t.intersection([
   t.type({
@@ -53,6 +53,6 @@ export class ScheduledPattern extends Schedulable implements Serializable<ISched
   }
 
   protected add(transport: Audio.Transport) {
-    return transport.embed(this.pattern.transport, this.tickTime, toTickTime(this.duration));
+    return transport.embed(this.pattern.transport, this.time, this.duration);
   }
 }

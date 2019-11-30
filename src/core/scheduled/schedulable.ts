@@ -1,7 +1,6 @@
 import * as t from 'io-ts';
-import Tone from 'tone';
 import * as Audio from '@/modules/audio';
-import { toTickTime } from '@/utils';
+import { StrictEventEmitter } from '@/modules/audio/events';
 
 export const SchedulableType = t.type({
   row: t.number,
@@ -11,7 +10,7 @@ export const SchedulableType = t.type({
 
 export type ISchedulable = t.TypeOf<typeof SchedulableType>;
 
-export abstract class Schedulable {
+export abstract class Schedulable extends StrictEventEmitter<{ remove: [] }> {
   /**
    * The component name to mount in the `Sequencer`.
    */
@@ -32,10 +31,10 @@ export abstract class Schedulable {
    * Private duration in beats.
    */
   private beats: number;
-  private eventId?: string;
-  private transport?: Audio.Transport;
+  private controller?: Audio.TransportEventController;
 
   constructor(i: ISchedulable) {
+    super();
     this.row = i.row;
     this.time = i.time;
     this.beats = i.duration;
@@ -51,58 +50,32 @@ export abstract class Schedulable {
 
   set duration(value: number) {
     this.beats = value;
-    this.updateDuration(value);
-
-    if (this.transport && this.eventId) {
-      const event = this.transport.get(this.eventId);
-
-      if (!(event instanceof Tone.TransportRepeatEvent)) {
-        return;
-      }
-
-      event.duration = new Tone.Ticks(toTickTime(value));
+    if (this.controller) {
+      this.controller.setDuration(value);
     }
-  }
-
-  get tickTime() {
-    return toTickTime(this.time);
   }
 
   get endBeat() {
     return this.time + this.duration;
   }
 
-  public remove(transport: Audio.Transport) {
-    if (this.eventId !== undefined) {
-      transport.clear(this.eventId);
+  public remove() {
+    if (this.controller) {
+      this.controller.remove();
+      this.emit('remove');
     }
   }
 
   public schedule(transport: Audio.Transport) {
-    this.transport = transport;
-
-    const eventId = this.add(transport);
-    if (eventId !== undefined && eventId !== null) {
-      this.eventId = eventId;
-    }
-  }
-
-  public dispose() {
-    if (this.transport && this.eventId !== undefined) {
-      this.transport.clear(this.eventId);
-    }
+    this.controller = this.add(transport);
   }
 
   public abstract copy(): Schedulable;
-
-  protected updateDuration(duration: number) {
-    // FIXME move to event emitter
-  }
 
   /**
    * Add yourself to the transport. Return null if it's not possible.
    *
    * @param transport The target transport.
    */
-  protected abstract add(transport: Audio.Transport): string | null;
+  protected abstract add(transport: Audio.Transport): Audio.TransportEventController | undefined;
 }

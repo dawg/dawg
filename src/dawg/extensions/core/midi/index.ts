@@ -28,8 +28,8 @@ export const extension: Extension = {
 
       if (recording.value) {
         recordedNotes[e.note.name + e.note.octave] = e;
-        const transportLocation = transport.progress * (transport.loopEnd - transport.loopStart);
-        notesStartTimes[e.note.name + e.note.octave] = transportLocation / 60  * project.project.bpm;
+        const transportLocation = transport.getProgress() * (transport.loopEnd - transport.loopStart);
+        notesStartTimes[e.note.name + e.note.octave] = transportLocation;
       }
 
       if (selectedScore.value) {

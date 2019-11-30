@@ -15,6 +15,7 @@
     "ordered-imports": false,
     "object-literal-sort-keys": false,
     "no-consecutive-blank-lines": false,
-    "max-classes-per-file": false
+    "max-classes-per-file": false,
+    "max-line-length": [true, 120]
   }
 }

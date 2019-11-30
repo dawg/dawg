@@ -58,18 +58,26 @@ export class ScheduledSample extends Schedulable implements Serializable<ISchedu
     };
   }
 
-  protected updateDuration(duration: number) {
-    if (this.sample && this.sample.player) {
-      this.sample.player.setDuration(toTickTime(duration));
-    }
-  }
-
   protected add(transport: Audio.Transport) {
     if (!this.sample.player) {
-      return null;
+      return;
     }
 
-    const duration = toTickTime(this.duration);
-    return this.sample.player.sync(transport, this.tickTime, 0, duration);
+    const player = this.sample.player;
+    return transport.schedule({
+      time: this.time,
+      duration: this.duration,
+      onStart: (seconds) => {
+        // TODO duration is in beats
+        player.start(seconds, 0, this.duration);
+      },
+      onMidStart: ({ seconds, secondsOffset }) => {
+        // TODO duration is in beats
+        player.start(seconds, secondsOffset, this.duration);
+      },
+      onEnd: (seconds) => {
+        player.stop(seconds);
+      },
+    });
   }
 }

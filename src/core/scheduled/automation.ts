@@ -49,6 +49,6 @@ export class ScheduledAutomation extends Schedulable implements Serializable<ISc
   }
 
   protected add(transport: Audio.Transport) {
-    return this.clip.control.sync(transport, this.tickTime, toTickTime(this.duration));
+    return this.clip.control.sync(transport, this.time, this.duration);
   }
 }

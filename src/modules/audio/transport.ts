@@ -1,192 +1,185 @@
 import Tone from 'tone';
-import { ContextTime, TransportTime, Time } from '@/modules/audio/types';
+import { Timeline } from '@/modules/audio/timeline';
+import { ContextTime, Time, Ticks, Seconds, Beat } from '@/modules/audio/types';
+import { Context } from '@/modules/audio/context';
 
-// An interface doesn't work for some reason
-// tslint:disable-next-line:interface-over-type-literal
-type Events = {
-  start: [number, number];
-  stop: [number];
-  pause: [number];
-  loopStart: [number, number];
-  loopEnd: [number];
-  loop: [number];
-};
+// FIXME Ok so this type definition is not 100% correct as the duration does not NEED to be defined iff onEnd AND onTick
+// are undefined.
+export interface TransportEvent {
+  time: Ticks;
+  // Must be defined if `onMidStart` OR `onEnd` OR `onTick` are defined
+  duration: Ticks;
+  // Called ONLY at the start of the event
+  onStart?: (currentTime: ContextTime, currentTick: Ticks) => void;
+  // Called when the event is started at ANY point during its duration, EXCLUDING the start
+  onMidStart?: (context: { seconds: ContextTime, ticks: Ticks, secondsOffset: Seconds, ticksOffset: Ticks }) => void;
+  // Called when the event is stopped at ANY point during its duration, EXCLUDING the end
+  onMidEnd?: (context: { seconds: ContextTime, ticks: Ticks, secondsOffset: Seconds, ticksOffset: Ticks }) => void;
+  // Called when the event is finished. This includes at the end its end time, when the clock is paused, when the
+  // the clock is stopped, if the event is suddenly rescheduled such that the end time is less than the current time
+  // or if the event is suddenly rescheduled such that the start time is after the current time.
+  onEnd?: (currentTime: ContextTime, currentTick: Ticks) => void;
+  // Called on each tick while the event is active (when the current time >= start time AND the current time <= start
+  // time + duration).
+  onTick?: (currentTime: ContextTime, currentTick: Ticks) => void;
+}
 
-Tone.TransportRepeatEvent.prototype._createEvents = function(time) {
-  // schedule the next event
-  const ticks = this.Transport.getTicksAtTime(time);
+export interface TransportEventController {
+  setStartTime(startTime: Ticks): void;
+  setDuration(startTime: Ticks): void;
+  remove(): void;
+}
 
-  // @ts-ignore
-  if (ticks >= this.time && ticks >= this._nextTick && this._nextTick + this._interval < this.time + this.duration) {
-    // @ts-ignore
-    this._nextTick += this._interval;
-    // @ts-ignore
-    this._currentId = this._nextId;
-    // @ts-ignore
-    this._nextId = this.Transport.scheduleOnce(this.invoke.bind(this), Tone.Ticks(this._nextTick));
-  }
-};
-
-
-// A little hack to pass on time AND ticks
-Tone.TransportEvent.prototype.invoke = function(time, ticks) {
-  if (this.callback) {
-    this.callback(time, ticks);
-    if (this._once && this.Transport) {
-      this.Transport.clear(this.id);
-    }
-  }
-};
-
-Tone.TransportRepeatEvent.prototype.invoke = function(time, ticks) {
-  // create more events if necessary
-  this._createEvents(time);
-  // call the super class
-  Tone.TransportEvent.prototype.invoke.call(this, time, ticks);
-};
-
-type Event = Tone.TransportEvent | Tone.TransportRepeatEvent;
-
-export default class Transport extends Tone.Emitter<Events> {
-  public loop = true;
-  public timeline = new Tone.Timeline<Event>();
+export class Transport {
   public bpm: Tone.TickSignal;
-  /**
-   * Measured in ticks.
-   */
-  private startPosition = 0;
 
+  private startPosition: Ticks = 0;
+
+  private timeline = new Timeline<TransportEvent>();
+
+  private active: TransportEvent[] = [];
+
+  // TODO I don't think this is used???
+  // Like it probably shouldn't live here
+  // It did in Tone as the Transport was a singleton
   private ppq = 192;
+
   // tslint:disable-next-line:variable-name
-  private _loopStart = 0;
+  private _loopStart: Ticks = 0;
   // tslint:disable-next-line:variable-name
-  private _loopEnd = 0;
+  private _loopEnd: Ticks = 0;
   private clock = new Tone.Clock({
     callback: this.processTick.bind(this),
     frequency: 0,
   });
-  private scheduledEvents: { [id: string]: Event } = {};
 
   constructor() {
-    super();
-
+    // FIXME Uh I hate this
     this.bpm = this.clock.frequency;
-    this.bpm._toUnits = this.toUnits.bind(this);
-    this.bpm._fromUnits = this.fromUnits.bind(this);
+    this.bpm._toUnits = (freq: number) => {
+      return (freq / this.PPQ) * 60;
+    };
+    this.bpm._fromUnits = (bpm: number) => {
+      return 1 / (60 / bpm / this.PPQ);
+    };
+
+    // TODO Uh this should be defined someplace
     this.bpm.value = 120;
-
-
-    this.clock.on('start', (time, offset) => {
-      offset = new Tone.Ticks(offset).toSeconds();
-      this.emit('start', time, offset);
-    });
-
-    this.clock.on('stop', (time) => {
-      this.emit('stop', time);
-    });
-
-    this.clock.on('pause', (time) => {
-      this.emit('pause', time);
-    });
   }
 
   /**
    * Schedule an event.
    */
-  public schedule(callback: Tone.TransportCallback, time: TransportTime) {
-    // @ts-ignore
-    const event = new Tone.TransportEvent(this, {
-      time: new Tone.TransportTime(time),
-      callback,
-    });
+  public schedule(event: TransportEvent) {
+    // make a copy so setting values does nothing
+    event = { ...event };
+    this.timeline.add(event);
+    return {
+      setStartTime: (startTime: Ticks) => {
+        event.time = startTime;
+        if (!this.active) {
+          return;
+        }
+      },
+      setDuration: (duration: Ticks) => {
+        event.duration = duration;
+        if (!this.active) {
+          return;
+        }
 
-    return this.addEvent(event);
-  }
+        if (!event.onTick && !event.onEnd) {
+          return;
+        }
 
-  public scheduleRepeat(
-    callback: Tone.TransportCallback,
-    interval: Time,
-    startTime: TransportTime = 0,
-    duration: Time = Infinity,
-  ) {
-    // @ts-ignore
-    const event = new Tone.TransportRepeatEvent(this, {
-      callback,
-      interval: new Tone.Time(interval),
-      time: new Tone.TransportTime(startTime),
-      duration: new Tone.Time(duration),
-    });
+        const current = this.clock.ticks;
+        if (
+          event.time > current ||
+          (event.time + duration) < current
+        ) {
+          return;
+        }
 
-    return this.addEvent(event);
-  }
+        const index = this.active.indexOf(event);
+        if (index === -1) {
+          return;
+        }
+      },
+      remove: () => {
+        this.timeline.remove(event);
+        if (!this.active) {
+          return;
+        }
 
-  public embed(child: Transport, time: TransportTime, duration: TransportTime) {
-    const t = new Tone.Time(time);
-    const ticksOffset = t.toTicks();
+        const i = this.active.indexOf(event);
+        if (i >= 0) {
+          if (event.onEnd) {
+            event.onEnd(this.clock.ticks, this.clock.seconds);
+          }
 
-    const callback = (exact: number, ticks: number) => {
-      child.processTick(exact, ticks - ticksOffset);
+          this.active.splice(i, 1);
+        }
+      },
     };
-
-    return this.scheduleRepeat(callback, '1i', time, duration);
   }
 
-  public clear(eventId: string) {
-    if (this.scheduledEvents.hasOwnProperty(eventId)) {
-      const event = this.scheduledEvents[eventId];
-      this.timeline.remove(event);
-      event.dispose();
-      delete this.scheduledEvents[eventId];
-    }
-    return this;
+  public embed(child: Transport, tick: Ticks, duration: Ticks) {
+    return this.schedule({
+      onTick: (exact: number, currentTick: number) => {
+        // We subtract the `tick` value because the given transport is positioned relative to this transport.
+        // For example, if we embed transport A in transport B at tick 1 and the callback is called at tick 2, we want
+        // transport A to think it is time tick 1
+        child.processTick(exact, currentTick - tick);
+      },
+      time: tick,
+      duration,
+    });
   }
 
   /**
    * Start playback from current position.
    */
-  public start(time?: ContextTime, offset?: TransportTime) {
-    if (offset !== undefined) {
-      offset = this.toTicks(offset!) as number;
-    }
-
-    if (time === undefined) {
-      time = Tone.Transport.context.now();
-    }
-
-    this.clock.start(time, offset);
-    return this;
+  public start() {
+    this.checkMidStartEvents();
+    this.clock.start();
   }
 
   /**
    * Pause playback.
    */
-  public pause(time?: ContextTime) {
-    this.clock.pause(time);
-    return this;
+  public pause() {
+    this.clock.pause();
+    // TODO consolidate pause and stop
+    this.active.forEach((event) => {
+      if (event.onEnd) {
+        // TODO is the clock.seconds and clock.ticks correct?
+        event.onEnd(this.clock.seconds, this.clock.ticks);
+      }
+    });
+    this.active = [];
   }
 
   /**
    * Stop playback and return to the beginning.
    */
-  public stop(time?: ContextTime) {
-    this.clock.stop(time);
+  public stop() {
+    this.clock.stop();
+    this.active.forEach((event) => {
+      if (event.onEnd) {
+        // TODO is the clock.seconds and clock.ticks correct?
+        event.onEnd(this.clock.seconds, this.clock.ticks);
+      }
+    });
+    this.active = [];
     this.ticks = this.startPosition;
-    return this;
-  }
-
-  public setLoopPoints(loopStart: number, loopEnd: number) {
-    this.loopStart = loopStart;
-    this.loopEnd = loopEnd;
-    return this;
   }
 
   get loopStart() {
     return new Tone.Ticks(this._loopStart).toSeconds();
   }
 
-  set loopStart(loopStart: number) {
-    this._loopStart = this.toTicks(loopStart);
-    this.seconds = this.toSeconds(loopStart);
+  set loopStart(loopStart: Ticks) {
+    this._loopStart = loopStart * this.PPQ;
+    this.ticks = loopStart * this.PPQ;
   }
 
   get seconds() {
@@ -199,12 +192,13 @@ export default class Transport extends Tone.Emitter<Events> {
     this.ticks = ticks.toTicks();
   }
 
+  // TODO change everything that references this to ticks
   get loopEnd() {
-    return new Tone.Ticks(this._loopEnd).toSeconds();
+    return this._loopEnd;
   }
 
-  set loopEnd(loopEnd: number) {
-    this._loopEnd = this.toTicks(loopEnd);
+  set loopEnd(loopEnd: Beat) {
+    this._loopEnd = loopEnd * this.PPQ;
   }
 
   get ticks() {
@@ -218,9 +212,7 @@ export default class Transport extends Tone.Emitter<Events> {
       // stop everything synced to the transport
       if (this.state === 'started') {
         // restart it with the new time
-        this.emit('stop', now);
         this.clock.setTicksAtTime(t, now);
-        this.emit('start', now, this.seconds);
       } else {
         this.clock.setTicksAtTime(t, now);
       }
@@ -229,10 +221,15 @@ export default class Transport extends Tone.Emitter<Events> {
     }
   }
 
-  get beats() {
+  get beat() {
     return this.ticks / this.PPQ;
   }
 
+  set beat(beat: number) {
+    this.ticks = beat * this.PPQ;
+  }
+
+  // TODO refactor
   get PPQ() {
     return this.ppq;
   }
@@ -247,70 +244,94 @@ export default class Transport extends Tone.Emitter<Events> {
     return this.clock.state;
   }
 
-  get progress() {
-    if (this.loop) {
-      const now = Tone.Transport.context.now();
-      const ticks = this.clock.getTicksAtTime(now);
-      return (ticks - this._loopStart) / (this._loopEnd - this._loopStart);
-    } else {
-      return 0;
-    }
-  }
-
-  public get(eventId: string) {
-    return this.scheduledEvents[eventId];
+  public getProgress() {
+    const now = Tone.Transport.context.now();
+    const ticks = this.clock.getTicksAtTime(now);
+    return (ticks - this._loopStart) / (this._loopEnd - this._loopStart);
   }
 
   public getTicksAtTime(time: number) {
     return Math.round(this.clock.getTicksAtTime(time));
   }
 
-  public scheduleOnce(callback: Tone.TransportCallback, time: TransportTime) {
-    // @ts-ignore
-    const event = new Tone.TransportEvent(this, {
-      time : new Tone.TransportTime(time),
-      callback,
-      once : true,
-    });
-    return this.addEvent(event);
-  }
-
   public getSecondsAtTime(time: Time) {
     return this.clock.getSecondsAtTime(time);
   }
 
-  private processTick(exact: ContextTime, ticks: number) {
-    // do the loop test
-    if (this.loop) {
-      if (ticks >= this._loopEnd) {
-        this.emit('loopEnd', exact);
-        this.clock.setTicksAtTime(this._loopStart, exact);
-        ticks = this._loopStart;
-        this.emit('loopStart', exact, this.clock.getSecondsAtTime(exact));
-        this.emit('loop', exact);
+  private checkMidStartEvents() {
+    // The upper bound is exclusive but we don't care about checking about events that haven't started yet.
+    // On the first tick these events will be found.
+    this.timeline.forEachBetween(0, this.clock.ticks, (event) => {
+      if (event.time + event.duration < this.clock.ticks) {
+        return;
       }
-    }
-    // invoke the timeline events scheduled on this tick
-    this.timeline.forEachAtTime(ticks, (event) => {
-      event.invoke(exact, ticks);
+
+      if (event.onMidStart) {
+        const ticksOffset = this.clock.ticks - event.time;
+        const secondsOffset = Context.ticksToSeconds(ticksOffset);
+        event.onMidStart({
+          seconds: this.clock.seconds,
+          ticks: this.clock.ticks,
+          secondsOffset,
+          ticksOffset,
+        });
+      }
+
+      // Again, we DON't CARE about event that don't need to ba called again
+      if (event.onEnd || event.onTick) {
+        this.active.push(event);
+      }
     });
   }
 
-  private addEvent(event: Event) {
-    this.timeline.add(event);
-    this.scheduledEvents[event.id.toString()] = event;
-    return event.id;
-  }
+  private processTick(exact: ContextTime, ticks: number) {
+    if (ticks >= this._loopEnd) {
+      // TODO duplication
+      this.active.forEach((event) => {
+        if (event.onEnd) {
+          // TODO is the clock.seconds and clock.ticks correct?
+          event.onEnd(this.clock.seconds, this.clock.ticks);
+        }
+      });
+      this.checkMidStartEvents();
+      this.active = [];
 
-  private fromUnits(bpm: number) {
-    return 1 / (60 / bpm / this.PPQ);
-  }
+      this.clock.setTicksAtTime(this._loopStart, exact);
+      ticks = this._loopStart;
+    }
 
-  private toUnits(freq: number) {
-    return (freq / this.PPQ) * 60;
+    // Invoke onTick callbacks for events scheduled on this tick.
+    // Also, add them to the active list of events if required.
+    this.timeline.forEachAtTime(ticks, (event) => {
+      if (event.onStart) {
+        event.onStart(exact, ticks);
+      }
+
+      // If neither of these is defined then we don't really care about it anymore
+      if (event.onTick || event.onEnd) {
+        this.active.push(event);
+      }
+    });
+
+    this.active = this.active.filter((event) => {
+      const endTime = event.time + event.duration;
+      if (endTime < ticks) {
+        // This occurs if the start time was reduced or the duration was reduced such that the end time became less
+        // than the current time.
+        if (event.onEnd) { event.onEnd(exact, ticks); }
+      } else if (endTime === ticks) {
+        // If we've reached the end of the event than still call onTick and then onEnd as well.
+        if (event.onTick) { event.onTick(exact, ticks); }
+        if (event.onEnd) { event.onEnd(exact, ticks); }
+      } else if (event.time > ticks) {
+        // This can happen if the event is rescheduled such that it starts after the current time
+        if (event.onEnd) { event.onEnd(exact, ticks); }
+      } else {
+        if (event.onTick) { event.onTick(exact, ticks); }
+      }
+
+      // Keep iff the end time has not passed and the start time has passed
+      return ticks < endTime && event.time < ticks;
+    });
   }
 }
-
-export {
-  Transport,
-};

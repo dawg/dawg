@@ -88,7 +88,7 @@ import { range, Nullable, Keys, reverse, addEventListeners } from '@/utils';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import Progression from '@/modules/sequencer/Progression.vue';
 import { Watch } from '@/modules/update';
-import { Schedulable } from '@/core';
+import { Schedulable, Sequence } from '@/core';
 import { Ghost } from '@/core/ghost';
 
 // TODO Make sure moving actually works haha
@@ -99,7 +99,8 @@ export default class SequencerGrid extends Vue {
   // name is used for debugging
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, required: true }) public rowHeight!: number;
-  @Prop({ type: Array, required: true }) public elements!: Schedulable[];
+  @Prop({ type: Object, required: true }) public sequence!: Sequence<Schedulable>;
+  // @Prop({ type: Array, required: true }) public elements!: Schedulable[];
   @Prop({ type: Array, default: null }) public ghosts!: Ghost[] | null;
   @Prop({ type: Number, default: 0.25 }) public snap!: number;
 
@@ -138,6 +139,10 @@ export default class SequencerGrid extends Vue {
   public itemLoopEnd: number | null = null;
   // selected[i] indicates whether elements[i] is selected
   public selected: boolean[] = [];
+
+  get elements() {
+    return this.sequence.elements;
+  }
 
   get components() {
     return this.elements.map((item) => {
@@ -341,8 +346,7 @@ export default class SequencerGrid extends Vue {
     item.time = time;
 
     this.selected.push(false);
-    this.elements.push(item);
-    this.$emit('added', item);
+    this.sequence.push(item);
   }
 
   public move(e: MouseEvent, i: number) {
@@ -391,14 +395,8 @@ export default class SequencerGrid extends Vue {
     }
 
     itemsToMove.forEach(([item, ind]) => {
-      const newTime = item.time + timeDiff;
-      const newItem = item.copy();
-      newItem.time = newTime;
-      newItem.row = item.row + rowDiff;
-
-      this.$set(this.elements, ind, newItem);
-      this.$emit('removed', item, ind);
-      this.$emit('added', newItem);
+      item.time = item.time + timeDiff;
+      item.row = item.row + rowDiff;
     });
   }
 
@@ -409,9 +407,8 @@ export default class SequencerGrid extends Vue {
 
   public removeAtIndex(i: number) {
     const item = this.elements[i];
+    item.remove(); // this removes it from the list
     this.$delete(this.selected, i);
-    this.$delete(this.elements, i);
-    this.$emit('removed', item, i);
   }
 
   public checkLoopEnd() {
@@ -451,8 +448,7 @@ export default class SequencerGrid extends Vue {
       // Thus, it will be displayed on top (which we want)
       // Try copying selected files and you will notice the selected notes stay on top
       this.selected.push(true);
-      this.elements.push(newItem);
-      this.$emit('added', newItem);
+      this.sequence.push(newItem);
     };
 
     let targetIndex = i;
