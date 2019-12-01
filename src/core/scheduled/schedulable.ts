@@ -64,7 +64,7 @@ export abstract class Schedulable extends StrictEventEmitter<{ remove: [] }> {
   set time(time: Beat) {
     this._time = time;
     if (this.controller) {
-      this.controller.setDuration(time);
+      this.controller.setStartTime(time);
     }
   }
 

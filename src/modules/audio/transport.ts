@@ -26,8 +26,8 @@ export interface TransportEvent {
 }
 
 export interface TransportEventController {
-  setStartTime(startTime: Ticks): void;
-  setDuration(startTime: Ticks): void;
+  setStartTime(startTime: Beat): void;
+  setDuration(duration: Beat): void;
   remove(): void;
 }
 
@@ -121,6 +121,8 @@ export class Transport {
       setStartTime: (startTime: Beat) => {
         startTime = Context.beatsToTicks(startTime);
         event.time = startTime;
+        this.timeline.remove(event);
+        this.timeline.add(event);
         checkNowActive();
       },
       setDuration: (duration: Beat) => {

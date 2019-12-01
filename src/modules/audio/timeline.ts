@@ -7,7 +7,7 @@ import { StrictEventEmitter } from '@/modules/audio/events';
  *         Internally, events are stored in time order for fast
  *         retrieval.
  */
-export class Timeline<T extends { time: Ticks; }> extends StrictEventEmitter<{ add: [T], remove: [T] }> {
+export class Timeline<T extends { time: Ticks; }> {
   protected timeline: T[] = [];
 
   public add(event: T) {
@@ -18,11 +18,8 @@ export class Timeline<T extends { time: Ticks; }> extends StrictEventEmitter<{ a
       result.type === 'between' ? result.indexB :
       result.lastOccurrenceIndex + 1;
 
-    console.log(`Adding event ({ time: ${event.time} }) at index ${index}`);
     // This inserts the event at the given index
     this.timeline.splice(index, 0, event);
-
-    this.emit('add', event);
   }
 
   /**
@@ -33,7 +30,6 @@ export class Timeline<T extends { time: Ticks; }> extends StrictEventEmitter<{ a
   public remove(event: T) {
     const index = this.timeline.indexOf(event);
     if (index !== -1) {
-      this.emit('remove', this.timeline[index]);
       this.timeline.splice(index, 1);
     }
   }
@@ -70,7 +66,6 @@ export class Timeline<T extends { time: Ticks; }> extends StrictEventEmitter<{ a
   public forEachAtTime(ticks: Ticks, callback: (event: T) => void) {
     // The index of the first event with the given time
     const result = this.search(ticks);
-    console.log(result.type);
     if (result.type !== 'hit') {
       return;
     }

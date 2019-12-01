@@ -385,16 +385,14 @@ export default class SequencerGrid extends Vue {
     const timeDiff = time - oldItem.time;
     const rowDiff = row - oldItem.row;
 
-    let itemsToMove: Array<[Schedulable, number]>;
+    let itemsToMove: Schedulable[];
     if (this.selected[i]) {
-      itemsToMove = this.elements.map((item, ind) => {
-        return [item, ind] as [Schedulable, number];
-      }).filter(([item, ind]) => this.selected[ind]);
+      itemsToMove = this.elements.filter((item, ind) => this.selected[ind]);
     } else {
-      itemsToMove = [[oldItem, i]];
+      itemsToMove = [oldItem];
     }
 
-    itemsToMove.forEach(([item, ind]) => {
+    itemsToMove.forEach((item) => {
       item.time = item.time + timeDiff;
       item.row = item.row + rowDiff;
     });
