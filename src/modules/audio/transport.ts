@@ -5,6 +5,7 @@ import { Context } from '@/modules/audio/context';
 
 // FIXME Ok so this type definition is not 100% correct as the duration does not NEED to be defined iff onEnd AND onTick
 // are undefined.
+// TODO make all of the objects accept on object, now two numbers
 export interface TransportEvent {
   time: Ticks;
   // Must be defined if `onMidStart` OR `onEnd` OR `onTick` are defined
@@ -32,17 +33,9 @@ export interface TransportEventController {
 
 export class Transport {
   public bpm: Tone.TickSignal;
-
   private startPosition: Ticks = 0;
-
   private timeline = new Timeline<TransportEvent>();
-
   private active: TransportEvent[] = [];
-
-  // TODO I don't think this is used???
-  // Like it probably shouldn't live here
-  // It did in Tone as the Transport was a singleton
-  private ppq = 192;
 
   // tslint:disable-next-line:variable-name
   private _loopStart: Ticks = 0;
@@ -57,10 +50,10 @@ export class Transport {
     // FIXME Uh I hate this
     this.bpm = this.clock.frequency;
     this.bpm._toUnits = (freq: number) => {
-      return (freq / this.PPQ) * 60;
+      return (freq / Context.PPQ) * 60;
     };
     this.bpm._fromUnits = (bpm: number) => {
-      return 1 / (60 / bpm / this.PPQ);
+      return 1 / (60 / bpm / Context.PPQ);
     };
 
     // TODO Uh this should be defined someplace
@@ -72,37 +65,68 @@ export class Transport {
    */
   public schedule(event: TransportEvent) {
     // make a copy so setting values does nothing
-    event = { ...event };
+    event = {
+      ...event,
+      duration: Context.beatsToTicks(event.duration),
+      time: Context.beatsToTicks(event.time),
+    };
     this.timeline.add(event);
+
+    const checkNowActive = () => {
+      // If the event hasn't started yet or if it has already ended, we don't care
+      const current = this.clock.ticks;
+      const startTime = event.time;
+      const endTime = startTime + event.duration;
+      if (
+        startTime > current ||
+        endTime < current
+      ) {
+        return;
+      }
+
+      // If it's already in there, we don't need to add it
+      const index = this.active.indexOf(event);
+      if (index !== -1) {
+        return;
+      }
+
+      // Ok now we now that the event needs to be retroactively added to the active list
+      if (event.onTick || event.onEnd || event.onMidEnd) {
+        this.active.push(event);
+      }
+
+      // Ok so we the event is now active, but we have to make sure to call the correct function
+      if (startTime === current) {
+        if (event.onStart) {
+          event.onStart(this.clock.seconds, this.clock.ticks);
+        }
+      } else {
+        if (event.onStart) {
+          if (event.onMidStart) {
+            // TODO duplication
+            const ticksOffset = this.clock.ticks - event.time;
+            const secondsOffset = Context.ticksToSeconds(ticksOffset);
+            event.onMidStart({
+              seconds: this.clock.seconds,
+              ticks: this.clock.ticks,
+              secondsOffset,
+              ticksOffset,
+            });
+          }
+        }
+      }
+    };
+
     return {
-      setStartTime: (startTime: Ticks) => {
+      setStartTime: (startTime: Beat) => {
+        startTime = Context.beatsToTicks(startTime);
         event.time = startTime;
-        if (!this.active) {
-          return;
-        }
+        checkNowActive();
       },
-      setDuration: (duration: Ticks) => {
+      setDuration: (duration: Beat) => {
+        duration = Context.beatsToTicks(duration);
         event.duration = duration;
-        if (!this.active) {
-          return;
-        }
-
-        if (!event.onTick && !event.onEnd) {
-          return;
-        }
-
-        const current = this.clock.ticks;
-        if (
-          event.time > current ||
-          (event.time + duration) < current
-        ) {
-          return;
-        }
-
-        const index = this.active.indexOf(event);
-        if (index === -1) {
-          return;
-        }
+        checkNowActive();
       },
       remove: () => {
         this.timeline.remove(event);
@@ -178,8 +202,8 @@ export class Transport {
   }
 
   set loopStart(loopStart: Ticks) {
-    this._loopStart = loopStart * this.PPQ;
-    this.ticks = loopStart * this.PPQ;
+    this._loopStart = loopStart * Context.PPQ;
+    this.ticks = loopStart * Context.PPQ;
   }
 
   get seconds() {
@@ -198,7 +222,7 @@ export class Transport {
   }
 
   set loopEnd(loopEnd: Beat) {
-    this._loopEnd = loopEnd * this.PPQ;
+    this._loopEnd = loopEnd * Context.PPQ;
   }
 
   get ticks() {
@@ -222,22 +246,11 @@ export class Transport {
   }
 
   get beat() {
-    return this.ticks / this.PPQ;
+    return this.ticks / Context.PPQ;
   }
 
   set beat(beat: number) {
-    this.ticks = beat * this.PPQ;
-  }
-
-  // TODO refactor
-  get PPQ() {
-    return this.ppq;
-  }
-
-  set PPQ(ppq: number) {
-    const bpm = this.bpm;
-    this.ppq = ppq;
-    this.bpm = bpm;
+    this.ticks = beat * Context.PPQ;
   }
 
   get state() {
@@ -278,7 +291,7 @@ export class Transport {
       }
 
       // Again, we DON't CARE about event that don't need to ba called again
-      if (event.onEnd || event.onTick) {
+      if (event.onTick || event.onEnd || event.onMidEnd) {
         this.active.push(event);
       }
     });
@@ -308,7 +321,7 @@ export class Transport {
       }
 
       // If neither of these is defined then we don't really care about it anymore
-      if (event.onTick || event.onEnd) {
+      if (event.onTick || event.onEnd || event.onMidEnd) {
         this.active.push(event);
       }
     });

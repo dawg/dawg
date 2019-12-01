@@ -45,7 +45,7 @@ export default class Synths extends Vue {
 
   public getNotes(instrument: Instrument<any, any>) {
     if (instrument.id in this.scoreLookup) {
-      return this.scoreLookup[instrument.id].notes;
+      return this.scoreLookup[instrument.id].notes.slice();
     }
   }
 

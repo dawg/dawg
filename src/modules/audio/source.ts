@@ -1,6 +1,5 @@
 import Tone from 'tone';
-import { Time, Ticks } from '@/modules/audio/types';
-import Transport from '@/modules/audio/transport';
+import { Ticks } from '@/modules/audio/types';
 
 export abstract class Source extends Tone.AudioNode {
   public volume: Tone.Signal;

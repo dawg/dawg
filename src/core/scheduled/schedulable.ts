@@ -1,6 +1,7 @@
 import * as t from 'io-ts';
 import * as Audio from '@/modules/audio';
 import { StrictEventEmitter } from '@/modules/audio/events';
+import { Beat } from '@/modules/audio/types';
 
 export const SchedulableType = t.type({
   row: t.number,
@@ -22,10 +23,8 @@ export abstract class Schedulable extends StrictEventEmitter<{ remove: [] }> {
    */
   public row: number;
 
-  /**
-   * Time in beats.
-   */
-  public time: number;
+  // tslint:disable-next-line:variable-name
+  private _time: number;
 
   /**
    * Private duration in beats.
@@ -36,7 +35,7 @@ export abstract class Schedulable extends StrictEventEmitter<{ remove: [] }> {
   constructor(i: ISchedulable) {
     super();
     this.row = i.row;
-    this.time = i.time;
+    this._time = i.time;
     this.beats = i.duration;
     this.duration = i.duration;
   }
@@ -55,6 +54,20 @@ export abstract class Schedulable extends StrictEventEmitter<{ remove: [] }> {
     }
   }
 
+  /**
+   * Time in beats.
+   */
+  get time() {
+    return this._time;
+  }
+
+  set time(time: Beat) {
+    this._time = time;
+    if (this.controller) {
+      this.controller.setDuration(time);
+    }
+  }
+
   get endBeat() {
     return this.time + this.duration;
   }
@@ -68,6 +81,11 @@ export abstract class Schedulable extends StrictEventEmitter<{ remove: [] }> {
 
   public schedule(transport: Audio.Transport) {
     this.controller = this.add(transport);
+  }
+
+  public dispose() {
+    this.remove();
+    super.dispose();
   }
 
   public abstract copy(): Schedulable;

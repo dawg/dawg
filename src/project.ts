@@ -158,16 +158,17 @@ export class Project implements Serializable<IProject> {
     });
 
     const patterns = (i.patterns || []).map((iPattern) => {
+      const transport = new Audio.Transport();
       const scores = (iPattern.scores || []).map((iScore) => {
         if (!(iScore.instrumentId in instrumentLookup)) {
           throw Error(`Instrument from score ${iScore.id} was not found in instrument list.`);
         }
 
         const instrument = instrumentLookup[iScore.instrumentId];
-        return new Score(instrument, iScore);
+        return new Score(transport, instrument, iScore);
       });
 
-      const pattern = new Pattern(iPattern, scores);
+      const pattern = new Pattern(iPattern, transport, scores);
       // Make sure we set the bpm because the transports will not remember
       pattern.transport.bpm.value = i.bpm;
       return pattern;
@@ -301,17 +302,16 @@ export class Project implements Serializable<IProject> {
 
     // This isn' the best solution but it works
     // There must be a better pattern / object oriented way
-    this.master.elements = this.master.elements.filter((element) => {
+    this.master.elements.forEach((element) => {
       if (!(element instanceof ScheduledSample)) {
-        return true;
+        return;
       }
 
       if (element.sample !== sample) {
-        return true;
+        return;
       }
 
       element.dispose();
-      return false;
     });
 
     sample.dispose();
@@ -325,17 +325,16 @@ export class Project implements Serializable<IProject> {
 
     const pattern = this.patterns[i];
 
-    this.master.elements = this.master.elements.filter((element) => {
+    this.master.elements.forEach((element) => {
       if (!(element instanceof ScheduledPattern)) {
-        return true;
+        return;
       }
 
       if (element.pattern !== pattern) {
-        return true;
+        return;
       }
 
       element.dispose();
-      return false;
     });
 
     pattern.dispose();
@@ -393,13 +392,15 @@ export class Project implements Serializable<IProject> {
   }
 
   public addScore(payload: { pattern: Pattern, instrument: Instrument<any, any>} ) {
-    payload.pattern.scores.forEach((pattern) => {
-      if (pattern.instrumentId === payload.instrument.id) {
+    const { pattern } = payload;
+
+    pattern.scores.forEach((score) => {
+      if (score.instrumentId === payload.instrument.id) {
         throw Error(`An score already exists for ${payload.instrument.id}`);
       }
     });
 
-    payload.pattern.scores.push(Score.create(payload.instrument));
+    pattern.scores.push(Score.create(pattern.transport, payload.instrument));
   }
 
   public addSample(payload: Sample) {
@@ -543,17 +544,16 @@ export class Project implements Serializable<IProject> {
 
     // This isn' the best solution but it works
     // There must be a better pattern / object oriented way
-    this.master.elements = this.master.elements.filter((element) => {
+    this.master.elements.filter((element) => {
       if (element.component !== 'automation-clip-element') {
-        return true;
+        return;
       }
 
       if (element.clip !== clip) {
-        return true;
+        return;
       }
 
       element.dispose();
-      return false;
     });
 
     clip.dispose();

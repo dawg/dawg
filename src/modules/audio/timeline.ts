@@ -18,6 +18,7 @@ export class Timeline<T extends { time: Ticks; }> extends StrictEventEmitter<{ a
       result.type === 'between' ? result.indexB :
       result.lastOccurrenceIndex + 1;
 
+    console.log(`Adding event ({ time: ${event.time} }) at index ${index}`);
     // This inserts the event at the given index
     this.timeline.splice(index, 0, event);
 
@@ -69,6 +70,7 @@ export class Timeline<T extends { time: Ticks; }> extends StrictEventEmitter<{ a
   public forEachAtTime(ticks: Ticks, callback: (event: T) => void) {
     // The index of the first event with the given time
     const result = this.search(ticks);
+    console.log(result.type);
     if (result.type !== 'hit') {
       return;
     }
@@ -85,7 +87,7 @@ export class Timeline<T extends { time: Ticks; }> extends StrictEventEmitter<{ a
    *  @return The result. Either the time was was a hit, it was between two of the events, it was before all of the
    *  events or it was after all of the events.
    */
-  protected search(tick: Ticks): (
+  public search(tick: Ticks): (
     { type: 'hit', firstOccurrenceIndex: number, lastOccurrenceIndex: number } |
     { type: 'before' } |
     { type: 'between', indexA: number, indexB: number } |
@@ -98,7 +100,7 @@ export class Timeline<T extends { time: Ticks; }> extends StrictEventEmitter<{ a
     let beginning = 0;
     const len = this.timeline.length;
     let end = len;
-    if (len > 0 && this.timeline[len - 1].time <= tick) {
+    if (len > 0 && this.timeline[len - 1].time < tick) {
       return { type: 'after' };
     }
 
@@ -109,7 +111,7 @@ export class Timeline<T extends { time: Ticks; }> extends StrictEventEmitter<{ a
       const nextEvent = this.timeline[midPoint + 1];
       if (event.time === tick) {
         let firstOccurrenceIndex = midPoint;
-        for (let i = midPoint; i > 0; i--) {
+        for (let i = midPoint; i >= 0; i--) {
           if (this.timeline[i].time !== tick) {
             break;
           }

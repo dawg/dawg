@@ -4,7 +4,7 @@ import { manager } from '@/base/manager';
 import { project } from '@/dawg/extensions/core/project';
 // FIXME(2) Remove this import
 import { record } from '@/dawg/extensions/core/record';
-import { ScheduledPattern, ScheduledSample } from '@/core';
+import { ScheduledPattern, ScheduledSample, Sequence } from '@/core';
 import { value } from 'vue-function-api';
 import { ui } from '@/base/ui';
 import { Ghost } from '@/core/ghost';
@@ -35,7 +35,7 @@ export const playlist = manager.activate({
       template: `
       <playlist-sequencer
         :tracks="project.tracks"
-        :elements="project.master.elements"
+        :sequence="project.master.elements"
         :transport="project.master.transport"
         :play="playlistPlay"
         :start.sync="masterStart.value"

@@ -1,6 +1,6 @@
 import Tone from 'tone';
 import { TransportTime, Ticks } from '@/modules/audio/types';
-import Transport from '@/modules/audio/transport';
+import { Transport } from '@/modules/audio/transport';
 import { Signal } from '@/modules/audio';
 
 interface IAutomationEvent {

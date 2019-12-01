@@ -4,6 +4,7 @@ import { ScheduledPattern, ScheduledPatternType } from '@/core/scheduled/pattern
 import { ScheduledSample, ScheduledSampleType } from '@/core/scheduled/sample';
 import { ScheduledAutomation, ScheduledAutomationType } from '@/core/scheduled/automation';
 import { Serializable } from '@/core/serializable';
+import { Sequence } from '@/core/scheduled/sequence';
 
 export const PlaylistType = t.partial({
   elements: t.array(t.union([
@@ -24,7 +25,7 @@ export class Playlist implements Serializable<IPlaylist> {
   /**
    * The elements currently scheduled on the transport.
    */
-  public elements: PlaylistElements[];
+  public elements: Sequence<PlaylistElements>;
 
   /**
    * The master transport.
@@ -32,7 +33,7 @@ export class Playlist implements Serializable<IPlaylist> {
   public transport = new Audio.Transport();
 
   constructor(elements: PlaylistElements[]) {
-    this.elements = elements;
+    this.elements = new Sequence(this.transport, elements);
     this.elements.forEach((element) => {
       element.schedule(this.transport);
     });

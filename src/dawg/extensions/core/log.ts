@@ -1,24 +1,48 @@
 import { manager } from '@/base/manager';
-import log4js from 'log4js';
 
-interface Logger extends log4js.Logger {
-  level: 'info' | 'debug' | 'error' | 'fatal' | 'trace' | 'warn';
-}
+type Level = 'info' | 'debug' | 'error' | 'fatal' | 'trace' | 'warn';
 
-const logger = log4js.getLogger();
+// TODO fix level
+const getLogger = (base?: string) => {
+  base = base === undefined ? '' : base + ': ';
+  return {
+    trace: (message: string) => {
+      // tslint:disable-next-line:no-console
+      console.trace(base + message);
+    },
+    debug: (message: string) => {
+      // tslint:disable-next-line:no-console
+      console.debug(base + message);
+    },
+    info: (message: string) => {
+      // tslint:disable-next-line:no-console
+      console.info(base + message);
+    },
+    warn: (message: string) => {
+      // tslint:disable-next-line:no-console
+      console.warn(base + message);
+    },
+    error: (message: string) => {
+      // tslint:disable-next-line:no-console
+      console.error(base + message);
+    },
+  };
+};
+
+const logger = getLogger();
 
 export const log = manager.activate({
   id: 'dawg.log',
   activate() {
     return {
-      getLogger(level?: Logger['level']) {
+      getLogger(level?: Level) {
         if (!manager.activating.length) {
           throw Error('`getLogger` must be called while activating an extension');
         }
 
         const last = manager.activating[manager.activate.length - 1];
-        const newLogger =  log4js.getLogger(last.id);
-        newLogger.level = level || 'info';
+        const newLogger =  getLogger(last.id);
+        // newLogger.level = level || 'info';
         return newLogger;
       },
       info: logger.info,
@@ -26,7 +50,6 @@ export const log = manager.activate({
       trace: logger.trace,
       warn: logger.warn,
       error: logger.error,
-      fatal: logger.fatal,
     };
   },
 });

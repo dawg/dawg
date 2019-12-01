@@ -182,6 +182,7 @@ const projectApi = (context: IExtensionContext) => {
       transport.value.stop();
       state.value = 'paused';
     },
+    // FIXME this is soooo dumb
     project: getProject(),
     getTime() {
       if (!transport.value) {

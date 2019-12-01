@@ -7,7 +7,6 @@
     :row-class="() => 'secondary'"
     :row-style="rowStyle"
     :side-width="130"
-    :transport="transport"
     name="Playlist"
     :prototype.sync="prototype"
   >
@@ -28,7 +27,6 @@ import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import Sequencer from '@/modules/sequencer/Sequencer.vue';
 import { Track } from '@/core';
 import { toTickTime } from '@/utils';
-import Transport from '@/modules/audio/transport';
 import { theme } from '@/dawg/extensions/core/theme';
 import * as base from '@/base';
 import { ui } from '@/base/ui';
@@ -39,7 +37,6 @@ import { ui } from '@/base/ui';
 export default class PlaylistSequencer extends Vue {
   @Prop({ type: Number, required: true }) public rowHeight!: number;
   @Prop({ type: Array, required: true }) public tracks!: Track[];
-  @Prop({ type: Object, required: true }) public transport!: Transport;
 
   public prototype = null;
 

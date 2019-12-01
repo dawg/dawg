@@ -51,7 +51,6 @@
         :settings="{ suppressScrollY: true, handlers: ['wheel'] }"
       >
         <sequencer-grid
-          :elements="elements"
           :sequencer-loop-end.sync="sequencerLoopEnd"
           :loop-start="loopStart"
           :loop-end="loopEnd"
@@ -95,7 +94,6 @@ export default class Sequencer extends Vue {
 
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, default: 80 }) public sideWidth!: number;
-  @Prop({ type: Array, required: true }) public elements!: Schedulable[];
   @Prop({ type: Boolean, default: false }) public play!: boolean;
   @Prop({ type: Object, required: true }) public transport!: Transport;
   @Prop({ type: Boolean, default: false }) public isRecording!: boolean;
