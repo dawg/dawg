@@ -121,6 +121,8 @@ export class Transport {
       setStartTime: (startTime: Beat) => {
         startTime = Context.beatsToTicks(startTime);
         event.time = startTime;
+        // So we need to reposition the element in the sorted array after setting the time
+        // This is a very simple way to do it but it could be done more efficiently
         this.timeline.remove(event);
         this.timeline.add(event);
         checkNowActive();
