@@ -1,4 +1,4 @@
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import * as Audio from '@/modules/audio';
 import { ScheduledPattern, ScheduledPatternType } from '@/core/scheduled/pattern';
 import { ScheduledSample, ScheduledSampleType } from '@/core/scheduled/sample';

@@ -1,5 +1,5 @@
 import fs from '@/fs';
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import { Loader, RetrievalTypes, Error } from '@/core/loaders/loader';
 
 export class FileLoader<T> extends Loader<T, { path: string }> {

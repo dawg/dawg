@@ -1,4 +1,4 @@
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import { PointType, IPoint, Point } from '@/core/automation/point';
 import uuid from 'uuid';
 import * as Audio from '@/modules/audio';

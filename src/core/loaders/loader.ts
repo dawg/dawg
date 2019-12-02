@@ -1,5 +1,5 @@
-import * as t from 'io-ts';
-import { Error, DecodeSuccess, decodeItem } from '@/io';
+import * as t from '@/modules/io';
+import { Error, DecodeSuccess, decodeItem } from '@/modules/io';
 
 export {
   Error,

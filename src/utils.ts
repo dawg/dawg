@@ -328,7 +328,25 @@ export interface Directions {
   didVertical: boolean;
 }
 
-// TODO become a hook
+// FIXME become a hook I'm almost ready
+// export const useResponsive = (el: Element, opts: { wait?: number } = {}) => {
+//   const { wait = 200 } = opts;
+//   const height = value(0);
+//   const width = value(0);
+
+//   const observer = new ResizeObserver(throttle((entries) => {
+//     const cr = entries[0].contentRect;
+//     width.value = cr.width;
+//     height.value = cr.height;
+//   }, wait));
+
+//   observer.observe(el);
+
+//   return {
+//     height,
+//     width,
+//   };
+// };
 @Component
 export class ResponsiveMixin extends Vue {
   public width = 0;

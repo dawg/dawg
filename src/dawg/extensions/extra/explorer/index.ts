@@ -1,5 +1,5 @@
 import * as dawg from '@/dawg';
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import SmartFileExplorer from '@/dawg/extensions/extra/explorer/SmartFileExplorer.vue';
 import Vue from 'vue';
 import { remote } from 'electron';

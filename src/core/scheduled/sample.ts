@@ -1,4 +1,4 @@
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import * as Audio from '@/modules/audio';
 import { SchedulableType, Schedulable } from '@/core/scheduled/schedulable';
 import { Serializable } from '@/core/serializable';
@@ -70,10 +70,18 @@ export class ScheduledSample extends Schedulable implements Serializable<ISchedu
       time: this.time,
       duration: this.duration,
       onStart: ({ seconds }) => {
-        controller = player.start(seconds, 0, Context.beatsToTicks(this.duration));
+        controller = player.start({
+          startTime: seconds,
+          offset: 0,
+          duration: Context.beatsToSeconds(this.duration),
+        });
       },
-      onMidStart: ({ ticks, ticksOffset }) => {
-        controller = player.start(ticks, ticksOffset, Context.beatsToTicks(this.duration));
+      onMidStart: ({ seconds, secondsOffset }) => {
+        controller = player.start({
+          startTime: seconds,
+          offset: secondsOffset,
+          duration: Context.beatsToSeconds(this.duration),
+        });
       },
       onEnd: ({ seconds }) => {
         // `controller` should never be null but we need to satisfy TypeScript

@@ -1,4 +1,4 @@
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import * as Audio from '@/modules/audio';
 import { StrictEventEmitter } from '@/modules/audio/events';
 import { Beat } from '@/modules/audio/types';

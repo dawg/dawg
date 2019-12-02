@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import { createExtension } from '@/dawg/extensions';
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import { commands } from '@/dawg/extensions/core/commands';
 import { palette } from '@/dawg/extensions/core/palette';
 import { notify } from '@/dawg/extensions/core/notify';

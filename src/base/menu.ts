@@ -75,12 +75,6 @@ ipcRenderer.on('closeMenu', (_, payload) => {
 });
 
 export const context: ContextFunction = (opts) => {
-  // TODO Add back??
-  // if (isMouseEvent(opts.event)) {
-  //   opts.event.preventDefault();
-  //   opts.event.stopPropagation();
-  // }
-
   let items = opts.items;
   if (defaultItems.length !== 0) {
     items = [...opts.items, null, ...defaultItems];

@@ -1,4 +1,4 @@
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import {
   Extension,
   ExtensionContext,
@@ -17,7 +17,7 @@ import uuid from 'uuid';
 import { value } from 'vue-function-api';
 import { PathReporter } from 'io-ts/lib/PathReporter';
 import { emitter } from '@/base/events';
-import { decodeItem } from '@/io';
+import { decodeItem } from '@/modules/io';
 
 const events = emitter<{ setOpenedFile: () => void }>();
 

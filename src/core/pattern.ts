@@ -1,4 +1,4 @@
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import uuid from 'uuid';
 import * as Audio from '@/modules/audio';
 import { Serializable } from '@/core/serializable';

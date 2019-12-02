@@ -10,7 +10,7 @@ interface Point {
 export class DragElement extends Vue {
   @Prop({ type: String, default: 'div' }) public tag!: string;
   @Prop({ type: Boolean }) public within!: boolean;
-  // TODO Rename to cursor
+  // FIXME Rename to cursor
   @Prop({ type: String, default: 'auto' }) public curse!: string;
 
   public previous: Point | null = null;

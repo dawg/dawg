@@ -8,10 +8,14 @@ export class Context {
   public static BPM = value(120);
 
   public static ticksToSeconds(ticks: Ticks) {
-    return (ticks / Context.PPQ) / Context.BPM.value / 60;
+    return (ticks / Context.PPQ) / Context.BPM.value * 60;
   }
   public static beatsToTicks(beat: Beat) {
-    return beat * Context.PPQ;
+    // FIXME is ceil right?
+    return Math.ceil(beat * Context.PPQ);
+  }
+  public static beatsToSeconds(beat: Beat) {
+    return beat / Context.BPM.value * 60;
   }
   private constructor() {}
 }

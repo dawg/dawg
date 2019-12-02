@@ -1,5 +1,4 @@
 import { Ticks } from '@/modules/audio/types';
-import { StrictEventEmitter } from '@/modules/audio/events';
 
 /**
  *  @class A Timeline class for scheduling and maintaining state

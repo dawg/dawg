@@ -1,8 +1,25 @@
-// TODO make everything use this and move to better location
 import { PathReporter } from 'io-ts/lib/PathReporter';
 import * as t from 'io-ts';
-export { string, boolean, undefined, array, type, partial, union } from 'io-ts';
-
+export {
+  string,
+  number,
+  literal,
+  object,
+  Type,
+  boolean,
+  undefined,
+  array,
+  type,
+  partial,
+  union,
+  TypeOf,
+  intersection,
+  StringC,
+  NumberC,
+  BooleanC,
+  ArrayC,
+  nullType as null,
+} from 'io-ts';
 
 export interface DecodeSuccess<T> {
   type: 'success';

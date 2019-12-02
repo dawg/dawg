@@ -4,6 +4,11 @@ import { ContextTime, Time, Ticks, Seconds, Beat } from '@/modules/audio/types';
 import { Context, context } from '@/modules/audio/context';
 import { watch } from 'vue-function-api';
 
+interface EventContext {
+  seconds: ContextTime;
+  ticks: Ticks;
+}
+
 // FIXME Ok so this type definition is not 100% correct as the duration does not NEED to be defined iff onEnd AND onTick
 // are undefined.
 export interface TransportEvent {
@@ -11,16 +16,16 @@ export interface TransportEvent {
   // Must be defined if `onMidStart` OR `onEnd` OR `onTick` are defined
   duration: Ticks;
   // Called ONLY at the start of the event
-  onStart?: (context: { seconds: ContextTime, ticks: Ticks }) => void;
+  onStart?: (context: EventContext) => void;
   // Called when the event is started at ANY point during its duration, EXCLUDING the start
   onMidStart?: (context: { seconds: ContextTime, ticks: Ticks, secondsOffset: Seconds, ticksOffset: Ticks }) => void;
   // Called when the event is finished. This includes at the end its end time, when the clock is paused, when the
   // the clock is stopped, if the event is suddenly rescheduled such that the end time is less than the current time
   // or if the event is suddenly rescheduled such that the start time is after the current time.
-  onEnd?: (context: { seconds: ContextTime, ticks: Ticks }) => void;
+  onEnd?: (context: EventContext) => void;
   // Called on each tick while the event is active (when the current time >= start time AND the current time <= start
   // time + duration).
-  onTick?: (context: { seconds: ContextTime, ticks: Ticks }) => void;
+  onTick?: (context: EventContext) => void;
 }
 
 export interface TransportEventController {
@@ -33,6 +38,7 @@ export class Transport {
   private startPosition: Ticks = 0;
   private timeline = new Timeline<TransportEvent>();
   private active: TransportEvent[] = [];
+  private isFirstTick = false;
 
   // tslint:disable-next-line:variable-name
   private _loopStart: Ticks = 0;
@@ -64,6 +70,10 @@ export class Transport {
     this.timeline.add(event);
 
     const checkNowActive = () => {
+      if (this.state !== 'started') {
+        return;
+      }
+
       // If the event hasn't started yet or if it has already ended, we don't care
       const current = this.clock.ticks;
       const startTime = event.time;
@@ -90,24 +100,15 @@ export class Transport {
       if (startTime === current) {
         if (event.onStart) {
           event.onStart({
-            seconds: this.clock.seconds,
+            seconds: context.currentTime,
             ticks: this.clock.ticks,
           });
         }
       } else {
-        if (event.onStart) {
-          if (event.onMidStart) {
-            // TODO duplication
-            const ticksOffset = this.clock.ticks - event.time;
-            const secondsOffset = Context.ticksToSeconds(ticksOffset);
-            event.onMidStart({
-              seconds: this.clock.seconds,
-              ticks: this.clock.ticks,
-              secondsOffset,
-              ticksOffset,
-            });
-          }
-        }
+        this.checkMidStart(event, {
+          seconds: context.currentTime,
+          ticks: this.clock.ticks,
+        });
       }
     };
 
@@ -137,7 +138,7 @@ export class Transport {
           if (event.onEnd) {
             event.onEnd({
               ticks: this.clock.ticks,
-              seconds: this.clock.seconds,
+              seconds: context.currentTime,
             });
           }
 
@@ -164,7 +165,7 @@ export class Transport {
    * Start playback from current position.
    */
   public start() {
-    this.checkMidStartEvents();
+    this.isFirstTick = true;
     this.clock.start();
   }
 
@@ -172,35 +173,24 @@ export class Transport {
    * Pause playback.
    */
   public pause() {
-    this.clock.pause();
-    // TODO consolidate pause and stop
-    this.active.forEach((event) => {
-      if (event.onEnd) {
-        // TODO is the clock.seconds and clock.ticks correct?
-        event.onEnd({
-          seconds: this.clock.seconds,
-          ticks: this.clock.ticks,
-        });
-      }
+    const seconds = context.currentTime;
+    this.clock.pause(seconds);
+    this.checkOnEndEventsAndResetActive({
+      seconds,
+      ticks: this.clock.ticks,
     });
-    this.active = [];
   }
 
   /**
    * Stop playback and return to the beginning.
    */
   public stop() {
-    this.clock.stop();
-    this.active.forEach((event) => {
-      if (event.onEnd) {
-        // TODO is the clock.seconds and clock.ticks correct?
-        event.onEnd({
-          seconds: this.clock.seconds,
-          ticks: this.clock.ticks,
-        });
-      }
+    const seconds = context.currentTime;
+    this.clock.stop(seconds);
+    this.checkOnEndEventsAndResetActive({
+      seconds,
+      ticks: this.clock.ticks,
     });
-    this.active = [];
     this.ticks = this.startPosition;
   }
 
@@ -223,7 +213,6 @@ export class Transport {
     this.ticks = ticks.toTicks();
   }
 
-  // TODO change everything that references this to ticks
   get loopEnd() {
     return this._loopEnd;
   }
@@ -278,49 +267,53 @@ export class Transport {
     return this.clock.getSecondsAtTime(time);
   }
 
-  private checkMidStartEvents() {
-    // The upper bound is exclusive but we don't care about checking about events that haven't started yet.
-    // On the first tick these events will be found.
-    this.timeline.forEachBetween(0, this.clock.ticks, (event) => {
-      if (event.time + event.duration < this.clock.ticks) {
-        return;
-      }
+  private checkMidStart(event: TransportEvent, c: EventContext) {
+    if (event.onMidStart) {
+      const ticksOffset = c.ticks - event.time;
+      const secondsOffset = Context.ticksToSeconds(ticksOffset);
+      event.onMidStart({
+        ...c,
+        secondsOffset,
+        ticksOffset,
+      });
+    }
+  }
 
-      if (event.onMidStart) {
-        const ticksOffset = this.clock.ticks - event.time;
-        const secondsOffset = Context.ticksToSeconds(ticksOffset);
-        event.onMidStart({
-          seconds: this.clock.seconds,
-          ticks: this.clock.ticks,
-          secondsOffset,
-          ticksOffset,
-        });
-      }
-
-      // Again, we DON't CARE about event that don't need to ba called again
-      if (event.onTick || event.onEnd) {
-        this.active.push(event);
+  private checkOnEndEventsAndResetActive(c: EventContext) {
+    this.active.forEach((event) => {
+      if (event.onEnd) {
+        event.onEnd(c);
       }
     });
+    this.active = [];
   }
 
   private processTick(seconds: ContextTime, ticks: number) {
     if (ticks >= this._loopEnd) {
-      // TODO duplication
-      this.active.forEach((event) => {
-        if (event.onEnd) {
-          // TODO is the clock.seconds and clock.ticks correct?
-          event.onEnd({
-            seconds: this.clock.seconds,
-            ticks: this.clock.ticks,
-          });
-        }
-      });
-      this.checkMidStartEvents();
-      this.active = [];
-
+      this.checkOnEndEventsAndResetActive({ seconds, ticks });
       this.clock.setTicksAtTime(this._loopStart, seconds);
       ticks = this._loopStart;
+      this.isFirstTick = true;
+    }
+
+    if (this.isFirstTick) {
+      // The upper bound is exclusive but we don't care about checking about events that haven't started yet.
+      this.timeline.forEachBetween(0, ticks, (event) => {
+        if (event.time + event.duration < ticks) {
+          return;
+        }
+
+        this.checkMidStart(event, {
+          seconds,
+          ticks,
+        });
+
+        // Again, we DON't CARE about event that don't need to ba called again
+        if (event.onTick || event.onEnd) {
+          this.active.push(event);
+        }
+      });
+      this.isFirstTick = false;
     }
 
     // Invoke onTick callbacks for events scheduled on this tick.

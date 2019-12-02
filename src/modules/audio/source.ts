@@ -29,5 +29,7 @@ export abstract class Source extends Tone.AudioNode {
     this._volume.mute = mute;
   }
 
-  public abstract start(startTime: Ticks, offset: Ticks, duration: Ticks): { stop: (seconds: ContextTime) => void };
+  public abstract start(
+    o: { startTime: Ticks, offset: Ticks, duration: Ticks },
+  ): { stop: (seconds: ContextTime) => void };
 }

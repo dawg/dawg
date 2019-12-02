@@ -6,7 +6,7 @@ import uuid from 'uuid';
 import { loadBufferSync } from '@/modules/wav/local';
 import { makeLookup, chain } from '@/utils';
 import { Signal } from '@/modules/audio';
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import { PatternType, Pattern } from '@/core/pattern';
 import { SynthType, Synth } from '@/core/instrument/synth';
 import { SoundfontType, Soundfont } from '@/core/instrument/soundfont';

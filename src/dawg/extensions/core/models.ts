@@ -1,5 +1,5 @@
 import fs from '@/fs';
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import { PythonShell, Options } from 'python-shell';
 import path from 'path';
 import { manager } from '@/base/manager';

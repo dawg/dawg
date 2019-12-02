@@ -1,18 +1,14 @@
 import Tone from 'tone';
 import { Source } from '@/modules/audio/source';
-import { Ticks, ContextTime } from '@/modules/audio/types';
-import { Context, context } from '@/modules/audio/context';
+import { ContextTime, Seconds } from '@/modules/audio/types';
 
 export class Player extends Source {
   constructor(public buffer: AudioBuffer) {
     super();
   }
 
-  public start(startTime: Ticks, offset: Ticks, duration: Ticks) {
-    offset = Context.ticksToSeconds(offset);
-    duration = Context.ticksToSeconds(duration);
-    startTime = Context.ticksToSeconds(startTime);
-
+  public start(o: { startTime: Seconds, offset: Seconds, duration: Seconds }) {
+    const { offset, duration, startTime } = o;
     const source = this.createSource();
 
     source.start(startTime, offset, duration);

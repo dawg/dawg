@@ -1,4 +1,4 @@
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import { ui } from '@/base/ui';
 import { watch } from 'vue-function-api';
 import { createExtension } from '@/dawg/extensions';
