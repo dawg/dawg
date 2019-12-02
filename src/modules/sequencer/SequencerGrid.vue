@@ -91,7 +91,6 @@ import { Watch } from '@/modules/update';
 import { Schedulable, Sequence } from '@/core';
 import { Ghost } from '@/core/ghost';
 
-// TODO Make sure moving actually works haha
 @Component({
   components: { Progression, BeatLines },
 })

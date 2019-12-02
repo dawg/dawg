@@ -33,7 +33,7 @@ const transform = (opts: MenuOptions): ElectronMenuOptions => {
 
 type ContextFunction = (opts: MenuOptions) => void;
 
-// TODO remove
+// FIXME remove
 const inspect: MenuCommand = {
   text: 'Inspect',
   callback: (e: ElectronMenuPosition) => {

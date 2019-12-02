@@ -46,11 +46,11 @@ export class Controller extends Tone.Signal {
   }
 
   public sync(transport: Transport, time: Ticks, duration: Ticks) {
-    const onEndAndStart = (t: number) => {
-      const val = this.getValueAtTime(Tone.Transport.seconds);
+    const onEndAndStart = ({ seconds }: { seconds: number }) => {
+      const val = this.getValueAtTime(transport.seconds);
       this.lastValue = val;
-      this.output.cancelScheduledValues(t);
-      this.output.setValueAtTime(val, t);
+      this.output.cancelScheduledValues(seconds);
+      this.output.setValueAtTime(val, seconds);
     };
 
     return transport.schedule({
@@ -62,12 +62,12 @@ export class Controller extends Tone.Signal {
     });
   }
 
-  public onTick(time: number, ticks: number) {
+  public onTick({ seconds, ticks }: { seconds: number, ticks: number }) {
     const val = this.getValueAtTime(`${ticks}i`);
     if (this.lastValue !== val) {
       this.lastValue = val;
       // approximate ramp curves with linear ramps
-      this.output.linearRampToValueAtTime(val, time);
+      this.output.linearRampToValueAtTime(val, seconds);
       this.output.value = val;
     }
   }
@@ -114,6 +114,7 @@ export class Controller extends Tone.Signal {
   }
 
   private anchorValue(time: number) {
+    // FIXME this whole file IDK and get rid of Tone.Transport
     const val = this.getValueAtTime(Tone.Transport.seconds);
     this.lastValue = val;
     this.output.cancelScheduledValues(time);

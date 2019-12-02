@@ -1,5 +1,5 @@
 import Tone from 'tone';
-import { Ticks } from '@/modules/audio/types';
+import { Ticks, ContextTime } from '@/modules/audio/types';
 
 export abstract class Source extends Tone.AudioNode {
   public volume: Tone.Signal;
@@ -29,6 +29,5 @@ export abstract class Source extends Tone.AudioNode {
     this._volume.mute = mute;
   }
 
-  public abstract start(startTime: Ticks, offset: Ticks, duration: Ticks): void;
-  public abstract stop(time: Ticks): void;
+  public abstract start(startTime: Ticks, offset: Ticks, duration: Ticks): { stop: (seconds: ContextTime) => void };
 }

@@ -24,6 +24,7 @@ import { Effect, AnyEffect } from '@/core/filters/effect';
 import { Serializable } from '@/core/serializable';
 import { Instrument } from '@/core/instrument/instrument';
 import * as base from '@/base';
+import { Context } from '@/modules/audio/context';
 
 const ProjectTypeRequired = t.type({
   id: t.string,
@@ -87,6 +88,8 @@ export class Project implements Serializable<IProject> {
   }
 
   public static load(i: IProject) {
+    Context.BPM.value = i.bpm;
+
     const channels =  (i.channels || []).map((iChannel) => {
       return new Channel(iChannel);
     });
@@ -169,8 +172,6 @@ export class Project implements Serializable<IProject> {
       });
 
       const pattern = new Pattern(iPattern, transport, scores);
-      // Make sure we set the bpm because the transports will not remember
-      pattern.transport.bpm.value = i.bpm;
       return pattern;
     });
 
@@ -205,8 +206,6 @@ export class Project implements Serializable<IProject> {
     });
 
     const master = new Playlist(elements);
-    master.transport.bpm.value = i.bpm;
-    Tone.Transport.bpm.value = i.bpm;
 
     return new Project({
       ...i,
@@ -264,11 +263,7 @@ export class Project implements Serializable<IProject> {
     // I want it to be reactive
     // Sub/pub ??
     // Also we shouldn't have to update the Transport bpm but we do
-    this.master.transport.bpm.value = bpm;
-    Tone.Transport.bpm.value = bpm;
-    this.patterns.forEach((pattern) => {
-      pattern.transport.bpm.value = bpm;
-    });
+    Context.BPM.value = bpm;
   }
 
   public setName(name: string) {
@@ -278,8 +273,6 @@ export class Project implements Serializable<IProject> {
   public addPattern() {
     const name = findUniqueName(this.patterns, 'Pattern');
     const pattern = Pattern.create(name);
-    // We also have to make sure new transports of the same bpm
-    pattern.transport.bpm.value = this.bpm;
     this.patterns.push(pattern);
   }
 

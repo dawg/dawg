@@ -1,28 +1,26 @@
 import Tone from 'tone';
 import { Timeline } from '@/modules/audio/timeline';
 import { ContextTime, Time, Ticks, Seconds, Beat } from '@/modules/audio/types';
-import { Context } from '@/modules/audio/context';
+import { Context, context } from '@/modules/audio/context';
+import { watch } from 'vue-function-api';
 
 // FIXME Ok so this type definition is not 100% correct as the duration does not NEED to be defined iff onEnd AND onTick
 // are undefined.
-// TODO make all of the objects accept on object, now two numbers
 export interface TransportEvent {
   time: Ticks;
   // Must be defined if `onMidStart` OR `onEnd` OR `onTick` are defined
   duration: Ticks;
   // Called ONLY at the start of the event
-  onStart?: (currentTime: ContextTime, currentTick: Ticks) => void;
+  onStart?: (context: { seconds: ContextTime, ticks: Ticks }) => void;
   // Called when the event is started at ANY point during its duration, EXCLUDING the start
   onMidStart?: (context: { seconds: ContextTime, ticks: Ticks, secondsOffset: Seconds, ticksOffset: Ticks }) => void;
-  // Called when the event is stopped at ANY point during its duration, EXCLUDING the end
-  onMidEnd?: (context: { seconds: ContextTime, ticks: Ticks, secondsOffset: Seconds, ticksOffset: Ticks }) => void;
   // Called when the event is finished. This includes at the end its end time, when the clock is paused, when the
   // the clock is stopped, if the event is suddenly rescheduled such that the end time is less than the current time
   // or if the event is suddenly rescheduled such that the start time is after the current time.
-  onEnd?: (currentTime: ContextTime, currentTick: Ticks) => void;
+  onEnd?: (context: { seconds: ContextTime, ticks: Ticks }) => void;
   // Called on each tick while the event is active (when the current time >= start time AND the current time <= start
   // time + duration).
-  onTick?: (currentTime: ContextTime, currentTick: Ticks) => void;
+  onTick?: (context: { seconds: ContextTime, ticks: Ticks }) => void;
 }
 
 export interface TransportEventController {
@@ -32,7 +30,6 @@ export interface TransportEventController {
 }
 
 export class Transport {
-  public bpm: Tone.TickSignal;
   private startPosition: Ticks = 0;
   private timeline = new Timeline<TransportEvent>();
   private active: TransportEvent[] = [];
@@ -47,17 +44,11 @@ export class Transport {
   });
 
   constructor() {
-    // FIXME Uh I hate this
-    this.bpm = this.clock.frequency;
-    this.bpm._toUnits = (freq: number) => {
-      return (freq / Context.PPQ) * 60;
-    };
-    this.bpm._fromUnits = (bpm: number) => {
-      return 1 / (60 / bpm / Context.PPQ);
-    };
-
-    // TODO Uh this should be defined someplace
-    this.bpm.value = 120;
+    // FIXME Maybe all of the clocks could share one "ticker"?? IDK? Then we wouldn't have to "watch" the BBM
+    // Note, this will run automatically
+    watch(Context.BPM, () => {
+      this.clock.frequency.value = 1 / (60 / Context.BPM.value / Context.PPQ);
+    });
   }
 
   /**
@@ -91,14 +82,17 @@ export class Transport {
       }
 
       // Ok now we now that the event needs to be retroactively added to the active list
-      if (event.onTick || event.onEnd || event.onMidEnd) {
+      if (event.onTick || event.onEnd) {
         this.active.push(event);
       }
 
       // Ok so we the event is now active, but we have to make sure to call the correct function
       if (startTime === current) {
         if (event.onStart) {
-          event.onStart(this.clock.seconds, this.clock.ticks);
+          event.onStart({
+            seconds: this.clock.seconds,
+            ticks: this.clock.ticks,
+          });
         }
       } else {
         if (event.onStart) {
@@ -141,7 +135,10 @@ export class Transport {
         const i = this.active.indexOf(event);
         if (i >= 0) {
           if (event.onEnd) {
-            event.onEnd(this.clock.ticks, this.clock.seconds);
+            event.onEnd({
+              ticks: this.clock.ticks,
+              seconds: this.clock.seconds,
+            });
           }
 
           this.active.splice(i, 1);
@@ -150,15 +147,15 @@ export class Transport {
     };
   }
 
-  public embed(child: Transport, tick: Ticks, duration: Ticks) {
+  public embed(child: Transport, ticks: Ticks, duration: Ticks) {
     return this.schedule({
-      onTick: (exact: number, currentTick: number) => {
+      onTick: ({ seconds, ticks: currentTick }) => {
         // We subtract the `tick` value because the given transport is positioned relative to this transport.
         // For example, if we embed transport A in transport B at tick 1 and the callback is called at tick 2, we want
         // transport A to think it is time tick 1
-        child.processTick(exact, currentTick - tick);
+        child.processTick(seconds, currentTick - ticks);
       },
-      time: tick,
+      time: ticks,
       duration,
     });
   }
@@ -180,7 +177,10 @@ export class Transport {
     this.active.forEach((event) => {
       if (event.onEnd) {
         // TODO is the clock.seconds and clock.ticks correct?
-        event.onEnd(this.clock.seconds, this.clock.ticks);
+        event.onEnd({
+          seconds: this.clock.seconds,
+          ticks: this.clock.ticks,
+        });
       }
     });
     this.active = [];
@@ -194,7 +194,10 @@ export class Transport {
     this.active.forEach((event) => {
       if (event.onEnd) {
         // TODO is the clock.seconds and clock.ticks correct?
-        event.onEnd(this.clock.seconds, this.clock.ticks);
+        event.onEnd({
+          seconds: this.clock.seconds,
+          ticks: this.clock.ticks,
+        });
       }
     });
     this.active = [];
@@ -215,7 +218,7 @@ export class Transport {
   }
 
   set seconds(s: number) {
-    const now = Tone.Transport.context.now();
+    const now = context.currentTime;
     const ticks = this.clock.frequency.timeToTicks(s, now);
     this.ticks = ticks.toTicks();
   }
@@ -236,7 +239,7 @@ export class Transport {
 
   set ticks(t: number) {
     if (this.clock.ticks !== t) {
-      const now = Tone.Transport.context.now();
+      const now = context.currentTime;
       // stop everything synced to the transport
       if (this.state === 'started') {
         // restart it with the new time
@@ -262,7 +265,7 @@ export class Transport {
   }
 
   public getProgress() {
-    const now = Tone.Transport.context.now();
+    const now = context.currentTime;
     const ticks = this.clock.getTicksAtTime(now);
     return (ticks - this._loopStart) / (this._loopEnd - this._loopStart);
   }
@@ -295,25 +298,28 @@ export class Transport {
       }
 
       // Again, we DON't CARE about event that don't need to ba called again
-      if (event.onTick || event.onEnd || event.onMidEnd) {
+      if (event.onTick || event.onEnd) {
         this.active.push(event);
       }
     });
   }
 
-  private processTick(exact: ContextTime, ticks: number) {
+  private processTick(seconds: ContextTime, ticks: number) {
     if (ticks >= this._loopEnd) {
       // TODO duplication
       this.active.forEach((event) => {
         if (event.onEnd) {
           // TODO is the clock.seconds and clock.ticks correct?
-          event.onEnd(this.clock.seconds, this.clock.ticks);
+          event.onEnd({
+            seconds: this.clock.seconds,
+            ticks: this.clock.ticks,
+          });
         }
       });
       this.checkMidStartEvents();
       this.active = [];
 
-      this.clock.setTicksAtTime(this._loopStart, exact);
+      this.clock.setTicksAtTime(this._loopStart, seconds);
       ticks = this._loopStart;
     }
 
@@ -321,11 +327,14 @@ export class Transport {
     // Also, add them to the active list of events if required.
     this.timeline.forEachAtTime(ticks, (event) => {
       if (event.onStart) {
-        event.onStart(exact, ticks);
+        event.onStart({
+          seconds,
+          ticks,
+        });
       }
 
       // If neither of these is defined then we don't really care about it anymore
-      if (event.onTick || event.onEnd || event.onMidEnd) {
+      if (event.onTick || event.onEnd) {
         this.active.push(event);
       }
     });
@@ -335,16 +344,16 @@ export class Transport {
       if (endTime < ticks) {
         // This occurs if the start time was reduced or the duration was reduced such that the end time became less
         // than the current time.
-        if (event.onEnd) { event.onEnd(exact, ticks); }
+        if (event.onEnd) { event.onEnd({ seconds, ticks }); }
       } else if (endTime === ticks) {
         // If we've reached the end of the event than still call onTick and then onEnd as well.
-        if (event.onTick) { event.onTick(exact, ticks); }
-        if (event.onEnd) { event.onEnd(exact, ticks); }
+        if (event.onTick) { event.onTick({ seconds, ticks }); }
+        if (event.onEnd) { event.onEnd({ seconds, ticks }); }
       } else if (event.time > ticks) {
         // This can happen if the event is rescheduled such that it starts after the current time
-        if (event.onEnd) { event.onEnd(exact, ticks); }
+        if (event.onEnd) { event.onEnd({ seconds, ticks }); }
       } else {
-        if (event.onTick) { event.onTick(exact, ticks); }
+        if (event.onTick) { event.onTick({ seconds, ticks }); }
       }
 
       // Keep iff the end time has not passed and the start time has passed

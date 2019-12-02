@@ -1,39 +1,41 @@
 import { manager } from '@/base/manager';
 
-type Level = 'info' | 'debug' | 'error' | 'fatal' | 'trace' | 'warn';
-
-// TODO fix level
-const getLogger = (base?: string) => {
-  base = base === undefined ? '' : base + ': ';
-  return {
-    trace: (message: string) => {
-      // tslint:disable-next-line:no-console
-      console.trace(base + message);
-    },
-    debug: (message: string) => {
-      // tslint:disable-next-line:no-console
-      console.debug(base + message);
-    },
-    info: (message: string) => {
-      // tslint:disable-next-line:no-console
-      console.info(base + message);
-    },
-    warn: (message: string) => {
-      // tslint:disable-next-line:no-console
-      console.warn(base + message);
-    },
-    error: (message: string) => {
-      // tslint:disable-next-line:no-console
-      console.error(base + message);
-    },
-  };
+type Level = 'info' | 'debug' | 'error' | 'trace' | 'warn';
+type LevelLookup = { [L in Level]: number };
+const levelLookup: LevelLookup = {
+  trace: 0,
+  debug: 1,
+  info: 2,
+  warn: 3,
+  error: 4,
 };
 
-const logger = getLogger();
+type Logger = { [L in Level]: (message: string) => void } & { level: Level };
+
+const logMessage = (setLevel: Level, level: Level, message: string) => {
+  if (levelLookup[level] < levelLookup[setLevel]) {
+    return;
+  }
+
+  console[level](message);
+};
+
+const getLogger = (base?: string): Logger => {
+  base = base === undefined ? '' : base + ': ';
+  return {
+    level: 'info',
+    trace(message: string) { logMessage(this.level, 'trace', message); },
+    debug(message: string) { logMessage(this.level, 'debug', message); },
+    info(message: string) { logMessage(this.level, 'info', message); },
+    warn(message: string) { logMessage(this.level, 'warn', message); },
+    error(message: string) { logMessage(this.level, 'error', message); },
+  };
+};
 
 export const log = manager.activate({
   id: 'dawg.log',
   activate() {
+    const logger = getLogger();
     return {
       getLogger(level?: Level) {
         if (!manager.activating.length) {
@@ -42,7 +44,7 @@ export const log = manager.activate({
 
         const last = manager.activating[manager.activate.length - 1];
         const newLogger =  getLogger(last.id);
-        // newLogger.level = level || 'info';
+        newLogger.level = level || 'info';
         return newLogger;
       },
       info: logger.info,

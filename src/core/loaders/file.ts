@@ -1,7 +1,6 @@
 import fs from '@/fs';
 import * as t from 'io-ts';
 import { Loader, RetrievalTypes, Error } from '@/core/loaders/loader';
-import { PathReporter } from 'io-ts/lib/PathReporter';
 
 export class FileLoader<T> extends Loader<T, { path: string }> {
   get path() {

@@ -1,8 +1,8 @@
-import { manager } from '@/base/manager';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { shell, remote } from 'electron';
+import { createExtension } from '@/dawg/extensions';
 
-export const helpLinks = manager.activate({
+export const extension = createExtension({
   id: 'dawg.help-inks',
   activate(context) {
     const commands = [

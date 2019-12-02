@@ -65,19 +65,22 @@ export class ScheduledSample extends Schedulable implements Serializable<ISchedu
     }
 
     const player = this.sample.player;
+    let controller: { stop: (seconds: Audio.ContextTime) => void } | null = null;
     return transport.schedule({
       time: this.time,
       duration: this.duration,
-      onStart: (seconds) => {
-        // TODO duration is in beats
-        player.start(seconds, 0, Context.beatsToTicks(this.duration));
+      onStart: ({ seconds }) => {
+        controller = player.start(seconds, 0, Context.beatsToTicks(this.duration));
       },
-      onMidStart: ({ seconds, secondsOffset }) => {
-        // TODO duration is in beats
-        player.start(seconds, secondsOffset, Context.beatsToTicks(this.duration));
+      onMidStart: ({ ticks, ticksOffset }) => {
+        controller = player.start(ticks, ticksOffset, Context.beatsToTicks(this.duration));
       },
-      onEnd: (seconds) => {
-        player.stop(seconds);
+      onEnd: ({ seconds }) => {
+        // `controller` should never be null but we need to satisfy TypeScript
+        // If, for some reason, it is null, then we don't really care about calling stop
+        if (controller) {
+          controller.stop(seconds);
+        }
       },
     });
   }

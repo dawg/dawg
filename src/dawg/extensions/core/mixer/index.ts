@@ -3,7 +3,6 @@ import Mixer from '@/dawg/extensions/core/mixer/Mixer.vue';
 import { ui } from '@/base/ui';
 import { createExtension } from '@/dawg/extensions';
 import { commands } from '@/dawg/extensions/core/commands';
-import { panels } from '@/dawg/extensions/core/panels';
 import { project } from '@/dawg/extensions/core/project';
 
 export const extension = createExtension({
@@ -13,7 +12,7 @@ export const extension = createExtension({
       text: 'Open Mixer',
       shortcut: ['CmdOrCtrl', 'M'],
       callback: () => {
-        panels.openedPanel.value = 'Mixer';
+        ui.openedPanel.value = 'Mixer';
       },
     }));
 
