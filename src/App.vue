@@ -191,15 +191,13 @@ export default class App extends Vue {
     // I'm not even sure onExit would be called if we removed it in the destroy method
     window.addEventListener('beforeunload', base.manager.dispose);
 
-    // TODO
+    // FIXME
     // automation.$on('automate', this.addAutomationClip);
 
     setTimeout(async () => {
       // Log this for debugging purposes
-      // tslint:disable-next-line:no-console
-      console.info(base);
-      // tslint:disable-next-line:no-console
-      console.info(dawg);
+      (window as any).base = base;
+      (window as any).dawg = dawg;
       this.loaded = true;
     }, 1250);
   }

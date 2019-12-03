@@ -1,11 +1,10 @@
 import * as dawg from '@/dawg';
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import SmartFileExplorer from '@/dawg/extensions/extra/explorer/SmartFileExplorer.vue';
 import Vue from 'vue';
 import { remote } from 'electron';
 import { Sample } from '@/core';
 import { commands } from '@/dawg/extensions/core/commands';
-import { panels } from '@/dawg/extensions/core/panels';
 import { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 import { createExtension } from '@/dawg/extensions';
 
@@ -25,7 +24,7 @@ export const extension = createExtension({
       shortcut: ['CmdOrCtrl', 'E'],
       callback: () => {
         // This must match the tab name below
-        dawg.activityBar.openedSideTab.value = 'Explorer';
+        dawg.ui.openedSideTab.value = 'Explorer';
       },
     }));
 
@@ -56,7 +55,7 @@ export const extension = createExtension({
     const openSample = (sample: Sample) => {
       // FIXME(1) This should go in sample extension
       sampleViewer.openedSample.value = sample;
-      panels.openedPanel.value = 'Sample';
+      dawg.ui.openedPanel.value = 'Sample';
     };
 
     const remove = (target: string) => {

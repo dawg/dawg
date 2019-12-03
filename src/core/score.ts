@@ -1,8 +1,10 @@
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import uuid from 'uuid';
 import { Instrument } from '@/core/instrument/instrument';
 import { Serializable } from '@/core/serializable';
 import { Note, NoteType } from '@/core/scheduled/note';
+import { Transport } from '@/modules/audio';
+import { Sequence } from '@/core/scheduled/sequence';
 
 const ScoreTypeRequired = t.type({
   instrumentId: t.string,
@@ -18,8 +20,8 @@ export const ScoreType = t.intersection([ScoreTypeRequired, ScoreTypePartial]);
 export type IScore = t.TypeOf<typeof ScoreType>;
 
 export class Score implements Serializable<IScore> {
-  public static create(instrument: Instrument<any, any>) {
-    const score = new Score(instrument, {
+  public static create(transport: Transport, instrument: Instrument<any, any>) {
+    const score = new Score(transport, instrument, {
       id: uuid.v4(),
       instrumentId: instrument.id,
     });
@@ -27,14 +29,16 @@ export class Score implements Serializable<IScore> {
   }
   public id: string;
   public instrumentId: string;
-  public notes: Note[];
+  public notes: Sequence<Note>;
 
-  constructor(public instrument: Instrument<any, any>, i: IScore) {
+  constructor(transport: Transport, public instrument: Instrument<any, any>, i: IScore) {
     this.id = i.id;
     this.instrumentId = i.instrumentId;
-    this.notes = (i.notes || []).map((iNote) => {
+    const notes = (i.notes || []).map((iNote) => {
       return new Note(this.instrument, iNote);
     });
+
+    this.notes = new Sequence(transport, notes);
   }
 
   public serialize() {

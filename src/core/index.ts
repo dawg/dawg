@@ -15,3 +15,4 @@ export { Instrument } from '@/core/instrument/instrument';
 export { Pattern } from '@/core/pattern';
 export { ScheduledPattern } from '@/core/scheduled/pattern';
 export { AnyEffect } from '@/core/filters/effect';
+export { Sequence } from '@/core/scheduled/sequence';

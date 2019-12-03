@@ -1,5 +1,5 @@
 import Vue, { VueConstructor } from 'vue';
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import PianoRollSequencer from '@/dawg/extensions/core/piano-roll/PianoRollSequencer.vue';
 import Note from '@/dawg/extensions/core/piano-roll/Note.vue';
 import { instruments } from '@/dawg/extensions/core/instruments';
@@ -8,7 +8,6 @@ import { manager } from '@/base/manager';
 import { positionable, selectable } from '@/modules/sequencer/helpers';
 import { resizable } from '@/modules/sequencer/helpers';
 import { commands } from '@/dawg/extensions/core/commands';
-import { panels } from '@/dawg/extensions/core/panels';
 import { applicationContext } from '@/dawg/extensions/core/application-context';
 import { value, watch } from 'vue-function-api';
 import { project } from '@/dawg/extensions/core/project';
@@ -34,7 +33,7 @@ export const pianoRoll = manager.activate({
       text: 'Open Piano Roll',
       shortcut: ['CmdOrCtrl', 'P'],
       callback: () => {
-        panels.openedPanel.value = 'Piano Roll';
+        base.ui.openedPanel.value = 'Piano Roll';
       },
     }));
 

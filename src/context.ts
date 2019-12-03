@@ -132,7 +132,7 @@ const create = (win: any, options: Options) => {
     ];
 
     // Filter out leading/trailing separators
-    // TODO: https://github.com/electron/electron/issues/5869
+    // FIXME: https://github.com/electron/electron/issues/5869
     menuTemplate = removeUnusedMenuItems(menuTemplate);
 
     for (const menuItem of menuTemplate) {

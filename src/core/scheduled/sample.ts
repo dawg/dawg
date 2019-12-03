@@ -1,9 +1,10 @@
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import * as Audio from '@/modules/audio';
 import { SchedulableType, Schedulable } from '@/core/scheduled/schedulable';
 import { Serializable } from '@/core/serializable';
 import { Sample } from '@/core/sample';
 import { literal, toTickTime } from '@/utils';
+import { Context } from '@/modules/audio/context';
 
 export const ScheduledSampleType = t.intersection([
   t.type({
@@ -58,18 +59,37 @@ export class ScheduledSample extends Schedulable implements Serializable<ISchedu
     };
   }
 
-  protected updateDuration(duration: number) {
-    if (this.sample && this.sample.player) {
-      this.sample.player.setDuration(toTickTime(duration));
-    }
-  }
-
   protected add(transport: Audio.Transport) {
     if (!this.sample.player) {
-      return null;
+      return;
     }
 
-    const duration = toTickTime(this.duration);
-    return this.sample.player.sync(transport, this.tickTime, 0, duration);
+    const player = this.sample.player;
+    let controller: { stop: (seconds: Audio.ContextTime) => void } | null = null;
+    return transport.schedule({
+      time: this.time,
+      duration: this.duration,
+      onStart: ({ seconds }) => {
+        controller = player.start({
+          startTime: seconds,
+          offset: 0,
+          duration: Context.beatsToSeconds(this.duration),
+        });
+      },
+      onMidStart: ({ seconds, secondsOffset }) => {
+        controller = player.start({
+          startTime: seconds,
+          offset: secondsOffset,
+          duration: Context.beatsToSeconds(this.duration),
+        });
+      },
+      onEnd: ({ seconds }) => {
+        // `controller` should never be null but we need to satisfy TypeScript
+        // If, for some reason, it is null, then we don't really care about calling stop
+        if (controller) {
+          controller.stop(seconds);
+        }
+      },
+    });
   }
 }

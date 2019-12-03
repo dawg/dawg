@@ -6,7 +6,7 @@ import uuid from 'uuid';
 import { loadBufferSync } from '@/modules/wav/local';
 import { makeLookup, chain } from '@/utils';
 import { Signal } from '@/modules/audio';
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import { PatternType, Pattern } from '@/core/pattern';
 import { SynthType, Synth } from '@/core/instrument/synth';
 import { SoundfontType, Soundfont } from '@/core/instrument/soundfont';
@@ -24,6 +24,7 @@ import { Effect, AnyEffect } from '@/core/filters/effect';
 import { Serializable } from '@/core/serializable';
 import { Instrument } from '@/core/instrument/instrument';
 import * as base from '@/base';
+import { Context } from '@/modules/audio/context';
 
 const ProjectTypeRequired = t.type({
   id: t.string,
@@ -87,6 +88,8 @@ export class Project implements Serializable<IProject> {
   }
 
   public static load(i: IProject) {
+    Context.BPM.value = i.bpm;
+
     const channels =  (i.channels || []).map((iChannel) => {
       return new Channel(iChannel);
     });
@@ -158,18 +161,17 @@ export class Project implements Serializable<IProject> {
     });
 
     const patterns = (i.patterns || []).map((iPattern) => {
+      const transport = new Audio.Transport();
       const scores = (iPattern.scores || []).map((iScore) => {
         if (!(iScore.instrumentId in instrumentLookup)) {
           throw Error(`Instrument from score ${iScore.id} was not found in instrument list.`);
         }
 
         const instrument = instrumentLookup[iScore.instrumentId];
-        return new Score(instrument, iScore);
+        return new Score(transport, instrument, iScore);
       });
 
-      const pattern = new Pattern(iPattern, scores);
-      // Make sure we set the bpm because the transports will not remember
-      pattern.transport.bpm.value = i.bpm;
+      const pattern = new Pattern(iPattern, transport, scores);
       return pattern;
     });
 
@@ -204,8 +206,6 @@ export class Project implements Serializable<IProject> {
     });
 
     const master = new Playlist(elements);
-    master.transport.bpm.value = i.bpm;
-    Tone.Transport.bpm.value = i.bpm;
 
     return new Project({
       ...i,
@@ -263,11 +263,7 @@ export class Project implements Serializable<IProject> {
     // I want it to be reactive
     // Sub/pub ??
     // Also we shouldn't have to update the Transport bpm but we do
-    this.master.transport.bpm.value = bpm;
-    Tone.Transport.bpm.value = bpm;
-    this.patterns.forEach((pattern) => {
-      pattern.transport.bpm.value = bpm;
-    });
+    Context.BPM.value = bpm;
   }
 
   public setName(name: string) {
@@ -277,8 +273,6 @@ export class Project implements Serializable<IProject> {
   public addPattern() {
     const name = findUniqueName(this.patterns, 'Pattern');
     const pattern = Pattern.create(name);
-    // We also have to make sure new transports of the same bpm
-    pattern.transport.bpm.value = this.bpm;
     this.patterns.push(pattern);
   }
 
@@ -301,17 +295,16 @@ export class Project implements Serializable<IProject> {
 
     // This isn' the best solution but it works
     // There must be a better pattern / object oriented way
-    this.master.elements = this.master.elements.filter((element) => {
+    this.master.elements.forEach((element) => {
       if (!(element instanceof ScheduledSample)) {
-        return true;
+        return;
       }
 
       if (element.sample !== sample) {
-        return true;
+        return;
       }
 
       element.dispose();
-      return false;
     });
 
     sample.dispose();
@@ -325,17 +318,16 @@ export class Project implements Serializable<IProject> {
 
     const pattern = this.patterns[i];
 
-    this.master.elements = this.master.elements.filter((element) => {
+    this.master.elements.forEach((element) => {
       if (!(element instanceof ScheduledPattern)) {
-        return true;
+        return;
       }
 
       if (element.pattern !== pattern) {
-        return true;
+        return;
       }
 
       element.dispose();
-      return false;
     });
 
     pattern.dispose();
@@ -393,13 +385,15 @@ export class Project implements Serializable<IProject> {
   }
 
   public addScore(payload: { pattern: Pattern, instrument: Instrument<any, any>} ) {
-    payload.pattern.scores.forEach((pattern) => {
-      if (pattern.instrumentId === payload.instrument.id) {
+    const { pattern } = payload;
+
+    pattern.scores.forEach((score) => {
+      if (score.instrumentId === payload.instrument.id) {
         throw Error(`An score already exists for ${payload.instrument.id}`);
       }
     });
 
-    payload.pattern.scores.push(Score.create(payload.instrument));
+    pattern.scores.push(Score.create(pattern.transport, payload.instrument));
   }
 
   public addSample(payload: Sample) {
@@ -543,17 +537,16 @@ export class Project implements Serializable<IProject> {
 
     // This isn' the best solution but it works
     // There must be a better pattern / object oriented way
-    this.master.elements = this.master.elements.filter((element) => {
+    this.master.elements.filter((element) => {
       if (element.component !== 'automation-clip-element') {
-        return true;
+        return;
       }
 
       if (element.clip !== clip) {
-        return true;
+        return;
       }
 
       element.dispose();
-      return false;
     });
 
     clip.dispose();

@@ -5,7 +5,7 @@ import tinycolor from 'tinycolor2';
 import { palette } from '@/dawg/extensions/core/palette';
 import { commands } from '@/dawg/extensions/core/commands';
 import { manager } from '@/base/manager';
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import * as base from '@/base';
 
 export interface ThemeAugmentation {
@@ -87,7 +87,6 @@ body {
     'warning',
   ] as const;
 
-  // TODO
   for (const key of keys) {
     theme[key] = base.theme[key] = hex[key];
   }

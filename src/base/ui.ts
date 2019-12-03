@@ -5,7 +5,6 @@ Vue.use(plugin);
 
 import { VueConstructor } from 'vue';
 import { Wrapper, value } from 'vue-function-api';
-import { DawgCommand } from '@/dawg/commands';
 
 export interface TabAction {
   icon: Wrapper<string>;
@@ -73,7 +72,7 @@ const activityBar: ActivityBarItem[] = [];
 const panels: PanelItem[] = [];
 const mainSection: VueConstructor[] = [];
 const toolbar: ToolbarItem[] = [];
-const trackContext: Array<DawgCommand<[number]>> = [];
+const trackContext: Array<{ text: string; callback: (index: number) => void; }> = [];
 const settings: Array<StringField | BooleanField | SelectField | VueConstructor> = [];
 const openedSideTab = value<undefined | string>(undefined);
 const openedPanel = value<undefined | string>(undefined);

@@ -1,6 +1,6 @@
 import Tone from 'tone';
-import { TransportTime } from '@/modules/audio/types';
-import Transport from '@/modules/audio/transport';
+import { TransportTime, Ticks } from '@/modules/audio/types';
+import { Transport } from '@/modules/audio/transport';
 import { Signal } from '@/modules/audio';
 
 interface IAutomationEvent {
@@ -27,8 +27,6 @@ export class AutomationEvent implements IAutomationEvent {
 export class Controller extends Tone.Signal {
   private lastValue: number;
   private output: Signal;
-  private callback: (time: number) => void;
-  private transports: { [id: string]: Transport } = {};
   private scheduledEvents: { [id: string]: AutomationEvent } = {};
   // tslint:disable-next-line:variable-name
   private _events: Tone.Timeline<AutomationEvent>;
@@ -40,7 +38,6 @@ export class Controller extends Tone.Signal {
     this.output = signal;
 
     this.lastValue = this.value;
-    this.callback = this.anchorValue.bind(this);
 
     // This overrides the parent _events which doesn't use AutomationEvent
     // We only really need to do this because of TypeScript
@@ -48,19 +45,29 @@ export class Controller extends Tone.Signal {
     this._events.memory = Infinity;
   }
 
-  public sync(transport: Transport, time: TransportTime, duration: TransportTime) {
-    transport.on('start', this.callback).on('stop', this.callback).on('pause', this.callback);
-    const eventId = transport.scheduleRepeat(this.onTick.bind(this), '1i', time, duration);
-    this.transports[eventId] = transport;
-    return eventId;
+  public sync(transport: Transport, time: Ticks, duration: Ticks) {
+    const onEndAndStart = ({ seconds }: { seconds: number }) => {
+      const val = this.getValueAtTime(transport.seconds);
+      this.lastValue = val;
+      this.output.cancelScheduledValues(seconds);
+      this.output.setValueAtTime(val, seconds);
+    };
+
+    return transport.schedule({
+      time,
+      duration,
+      onTick: this.onTick.bind(this),
+      onStart: onEndAndStart,
+      onEnd: onEndAndStart,
+    });
   }
 
-  public onTick(time: number, ticks: number) {
+  public onTick({ seconds, ticks }: { seconds: number, ticks: number }) {
     const val = this.getValueAtTime(`${ticks}i`);
     if (this.lastValue !== val) {
       this.lastValue = val;
       // approximate ramp curves with linear ramps
-      this.output.linearRampToValueAtTime(val, time);
+      this.output.linearRampToValueAtTime(val, seconds);
       this.output.value = val;
     }
   }
@@ -101,17 +108,13 @@ export class Controller extends Tone.Signal {
   }
 
   public dispose() {
-    // I'm not a huge fan of this. There must be a better pattern.
-    Object.values(this.transports).forEach((transport) => {
-      transport.off('start', this.callback).off('stop', this.callback).off('pause', this.callback);
-    });
-
     this._events.cancel(0);
     super.dispose.call(this);
     return this;
   }
 
   private anchorValue(time: number) {
+    // FIXME this whole file IDK and get rid of Tone.Transport
     const val = this.getValueAtTime(Tone.Transport.seconds);
     this.lastValue = val;
     this.output.cancelScheduledValues(time);

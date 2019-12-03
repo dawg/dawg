@@ -1,4 +1,4 @@
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import uuid from 'uuid';
 import Tone from 'tone';
 import * as Audio from '@/modules/audio';

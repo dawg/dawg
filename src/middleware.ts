@@ -9,6 +9,8 @@ import * as spectrogram from '@/dawg/extensions/extra/spectrogram';
 import * as play from '@/dawg/extensions/extra/play';
 import * as projectName from '@/dawg/extensions/extra/project-name';
 import * as mixer from '@/dawg/extensions/core/mixer';
+import * as helpLinks from '@/dawg/extensions/extra/help-links';
+import * as restorer from '@/dawg/extensions/extra/restorer';
 import * as dawg from '@/dawg';
 
 import Vuetify from 'vuetify';
@@ -63,6 +65,8 @@ const middleware = () => {
     spectrogram,
     backup,
     play,
+    helpLinks,
+    restorer,
   ].forEach(({ extension }) => {
     dawg.manager.activate(extension);
   });

@@ -1,5 +1,5 @@
 import * as dawg from '@/dawg';
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import { User } from 'firebase';
 import Vue from 'vue';
 import ProjectModal from '@/dawg/extensions/extra/backup/ProjectModal.vue';
@@ -11,7 +11,7 @@ import firebase from 'firebase/app';
 import 'firebase/database';
 import 'firebase/auth';
 import { menubar } from '@/dawg/extensions/core/menubar';
-import { computed, watch, Wrapper, value, createComponent } from 'vue-function-api';
+import { computed, watch, value, createComponent } from 'vue-function-api';
 import { ui } from '@/base/ui';
 import { project } from '@/dawg/extensions/core/project';
 import { createExtension } from '@/dawg/extensions';

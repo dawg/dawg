@@ -9,15 +9,13 @@
       v-bind="$attrs"
       :beats-per-measure="beatsPerMeasure"
       :row-height="rowHeight"
-      :elements="notes"
+      :sequence="score.notes"
       :transport="transport"
       :num-rows="allKeys.length"
       :prototype.sync="note"
       :row-class="rowClass"
       :set-loop-end="setLoopEnd"
       name="Piano Roll"
-      @added="added"
-      @removed="removed"
     >
       <template slot="side">
         <piano 
@@ -34,7 +32,7 @@ import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import Sequencer from '@/modules/sequencer/Sequencer.vue';
 import { allKeys, toTickTime, keyLookup } from '@/utils';
 import { INotes } from '@/midi-parser';
-import { Note, Instrument, Playlist, Pattern, Score } from '@/core';
+import { Note, Instrument, Playlist, Pattern, Score, Sequence } from '@/core';
 import { Watch } from '@/modules/update';
 
 @Component({
@@ -47,6 +45,7 @@ export default class PianoRollSequencer extends Vue {
   @Prop({ type: Number, required: true }) public rowHeight!: number;
 
   public lastNote: null | Note = null;
+  public eventDisposer?: { dispose: () => void };
 
   // This is the prototype
   // row and time are overwritten so they can be set to 0 here
@@ -55,10 +54,6 @@ export default class PianoRollSequencer extends Vue {
 
   get instrument() {
     return this.score.instrument;
-  }
-
-  get notes() {
-    return this.score.notes;
   }
 
   get transport() {
@@ -94,22 +89,8 @@ export default class PianoRollSequencer extends Vue {
         velocity: iNote.velocity,
       });
 
-      // FIXME Refactor this
-      this.notes.push(note);
-      note.schedule(this.transport);
+      this.score.notes.push(note);
     });
-  }
-
-  public added(el: Note) {
-    if (el.endBeat > this.playlistLoopEnd) {
-      this.lastNote = el;
-    }
-  }
-
-  public removed(el: Note) {
-    if (el === this.lastNote) {
-      this.checkAll();
-    }
   }
 
   public checkAll() {
@@ -133,6 +114,32 @@ export default class PianoRollSequencer extends Vue {
   @Watch<PianoRollSequencer>('instrument', { immediate: true })
   public setPrototype() {
     this.note = new Note(this.instrument, { row: 0, time: 0, duration: 1 });
+  }
+
+  @Watch<PianoRollSequencer>('score', { immediate: true })
+  public addListener() {
+    if (this.eventDisposer) {
+      this.eventDisposer.dispose();
+    }
+
+    const addedDisposer = this.score.notes.on('added', (el) => {
+      if (el.endBeat > this.playlistLoopEnd) {
+        this.lastNote = el;
+      }
+    });
+
+    const removedDisposer = this.score.notes.on('removed', (el) => {
+      if (el === this.lastNote) {
+        this.checkAll();
+      }
+    });
+
+    this.eventDisposer = {
+      dispose: () => {
+        addedDisposer.dispose();
+        removedDisposer.dispose();
+      },
+    };
   }
 }
 </script>

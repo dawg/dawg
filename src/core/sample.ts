@@ -1,10 +1,11 @@
 import Tone from 'tone';
 import path from 'path';
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import uuid from 'uuid';
 import * as Audio from '@/modules/audio';
 import { Serializable } from '@/core/serializable';
 import { disposeHelp } from '@/utils';
+import { Context } from '@/modules/audio/context';
 
 export const SampleType = t.type({
   id: t.string,
@@ -37,7 +38,7 @@ export class Sample implements Serializable<ISample> {
   get beats() {
     if (this.buffer) {
       const minutes = this.buffer.length / this.buffer.sampleRate / 60;
-      return minutes * Tone.Transport.bpm.value;
+      return minutes * Context.BPM.value;
     } else {
       return 0;
     }
@@ -61,12 +62,6 @@ export class Sample implements Serializable<ISample> {
         // DO nothing
         // BufferSource will throw an error if it is already stopped
       }
-    }
-  }
-
-  public stop() {
-    if (this.player) {
-      this.player.stop();
     }
   }
 

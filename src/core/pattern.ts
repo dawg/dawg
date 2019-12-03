@@ -1,4 +1,4 @@
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import uuid from 'uuid';
 import * as Audio from '@/modules/audio';
 import { Serializable } from '@/core/serializable';
@@ -19,14 +19,12 @@ export type IPattern = t.TypeOf<typeof PatternType>;
 
 export class Pattern implements Serializable<IPattern> {
   public static create(name: string) {
-    return new Pattern({ name, id: uuid.v4() }, []);
+    return new Pattern({ name, id: uuid.v4() }, new Audio.Transport(), []);
   }
   public id: string;
   public name: string;
-  public scores: Score[];
-  public transport = new Audio.Transport();
 
-  constructor(i: IPattern, scores: Score[]) {
+  constructor(i: IPattern, public transport: Audio.Transport, public scores: Score[]) {
     this.id = i.id;
     this.name = i.name;
     this.scores = scores;

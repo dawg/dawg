@@ -1,4 +1,4 @@
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 
 export const TrackType = t.type({
   mute: t.boolean,

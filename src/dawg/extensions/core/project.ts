@@ -82,11 +82,11 @@ const projectApi = (context: IExtensionContext) => {
   }
 
   async function openTempProject(p: IProject) {
-    const { name } = tmp.fileSync({ keep: true });
-    await fs.writeFile(name, JSON.stringify(p, null, 4));
+    const { name: path } = tmp.fileSync({ keep: true });
+    await fs.writeFile(path, JSON.stringify(p, null, 4));
 
-    logger.info(`Writing ${name} as backup`);
-    manager.setOpenedFile({ path: name, id: p.id }, { isTemp: true });
+    logger.info(`Writing ${path} as backup`);
+    manager.setOpenedFile(path, { isTemp: true });
 
     const window = remote.getCurrentWindow();
     window.reload();
@@ -130,7 +130,7 @@ const projectApi = (context: IExtensionContext) => {
       // The cache is what is written to the filesystem
       // and the general is the file that is currently opened
       logger.info(`Setting opened project as ${projectPath}`);
-      manager.setOpenedFile({ path: projectPath, id: p.id });
+      manager.setOpenedFile(projectPath);
     }
 
     const encoded = p.serialize();
@@ -140,14 +140,11 @@ const projectApi = (context: IExtensionContext) => {
   }
 
   async function removeOpenedFile() {
-    await manager.setOpenedFile(undefined);
+    await manager.setOpenedFile();
   }
 
   async function setOpenedFile(path: string) {
-    await manager.setOpenedFile({
-      path,
-      id: get().id,
-    });
+    await manager.setOpenedFile(path);
   }
 
   const api = {
@@ -182,6 +179,7 @@ const projectApi = (context: IExtensionContext) => {
       transport.value.stop();
       state.value = 'paused';
     },
+    // FIXME this is soooo dumb
     project: getProject(),
     getTime() {
       if (!transport.value) {

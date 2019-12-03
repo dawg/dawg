@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import { createExtension } from '@/dawg/extensions';
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import { commands } from '@/dawg/extensions/core/commands';
 import { palette } from '@/dawg/extensions/core/palette';
 import { notify } from '@/dawg/extensions/core/notify';
@@ -73,7 +73,7 @@ export const extension = createExtension({
     const startRecording = async (trackId: number) => {
       project.stopIfStarted();
       applicationContext.context.value = 'playlist';
-      const time = project.project.master.transport.beats;
+      const time = project.project.master.transport.beat;
 
       if (microphoneIn === undefined) {
         notify.info('Please select a microphone from the settings.');

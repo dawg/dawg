@@ -1,10 +1,9 @@
-import { PathReporter } from 'io-ts/lib/PathReporter';
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
+import { Error, DecodeSuccess, decodeItem } from '@/modules/io';
 
-export interface Error {
-  type: 'error';
-  message: string;
-}
+export {
+  Error,
+};
 
 export interface RetrievalSuccess {
   type: 'retrieval-success';
@@ -13,34 +12,17 @@ export interface RetrievalSuccess {
 
 export type RetrievalTypes = Error | RetrievalSuccess;
 
-export interface DecodeSuccess<T> {
-  type: 'success';
-  decoded: T;
-}
 
 export abstract class Loader<T, O> {
   constructor(public type: t.Type<T>, public opts: O) {}
 
   public load(): Error | DecodeSuccess<T> {
-    const retrieval = this.get();
-    if (retrieval.type === 'error') {
-      return retrieval;
+    const result = this.get();
+    if (result.type === 'error') {
+      return result;
     }
 
-    const item = retrieval.item;
-    const i = this.type.decode(item);
-    if (i.isLeft()) {
-      const errors = PathReporter.report(i);
-      return {
-        type: 'error',
-        message: errors.join('\n'),
-      };
-    }
-
-    return {
-      type: 'success',
-      decoded: i.value,
-    };
+    return decodeItem(this.type, result.item);
   }
 
   protected abstract get(): RetrievalTypes;

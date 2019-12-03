@@ -1,11 +1,14 @@
-import { platform } from '@/base/platform';
+import * as keyboard from '@/base/keyboard';
 import { manager } from '@/base/manager';
 import { palette } from '@/dawg/extensions/core/palette';
 import { menubar } from '@/dawg/extensions/core/menubar';
-import { DawgCommand } from '@/dawg/commands';
 import { Key, hasKey } from '@/base/keyboard';
 
-export type Command = DawgCommand<[]>;
+export interface Command {
+  text: string;
+  shortcut?: keyboard.Key[];
+  callback: () => void;
+}
 
 // FIXME(1) move from here into lower layer
 function shortcutPressed(shortcut: Key[], pressedKeys: Set<number>) {

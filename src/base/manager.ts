@@ -1,4 +1,4 @@
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import {
   Extension,
   ExtensionContext,
@@ -17,6 +17,7 @@ import uuid from 'uuid';
 import { value } from 'vue-function-api';
 import { PathReporter } from 'io-ts/lib/PathReporter';
 import { emitter } from '@/base/events';
+import { decodeItem } from '@/modules/io';
 
 const events = emitter<{ setOpenedFile: () => void }>();
 
@@ -25,17 +26,16 @@ const events = emitter<{ setOpenedFile: () => void }>();
 // data is loaded on startup and written back at the end. Thus,
 // stuff can easily be overwritten
 
-export const ProjectInformationType = t.type({
-  path: t.string,
+export const PastProjectsType = t.partial({
+  projectPath: t.string,
+  tempPath: t.string,
+});
+
+// To try and parse the ID from the project file
+export const ProjectIdType = t.type({
   id: t.string,
 });
 
-export const PastProjectsType = t.partial({
-  projectPath: ProjectInformationType,
-  tempPath: ProjectInformationType,
-});
-
-type ProjectInformation = t.TypeOf<typeof ProjectInformationType>;
 type PastProject = t.TypeOf<typeof PastProjectsType>;
 
 let pastProject: PastProject = {};
@@ -116,44 +116,21 @@ class Manager {
       pastProject = result.decoded;
     }
 
-    const createNewProjectInfo = (): ProjectInfo => {
-      return { id: uuid.v4(), path: null };
-    };
-
-    type TempInfo = { isTemp: false, path: null } | { isTemp: true, path: string };
-
     const toOpen = pastProject.tempPath ? pastProject.tempPath : pastProject.projectPath;
-    let info: ProjectInfo;
-    let tempInfo: TempInfo = { isTemp: false, path: null };
-    if (toOpen === undefined) {
-      info = createNewProjectInfo();
-    } else {
-      if (pastProject.tempPath !== undefined) {
-        tempInfo = { isTemp: true, path: toOpen.path };
-      }
-
-      info = { id: toOpen.id, path: toOpen.path };
-    }
-
-    const projectId = info.id;
-
     let projectContents: string | null = null;
-    try {
-      if (info.path) {
-        projectContents = fs.readFileSync(info.path).toString();
+    if (toOpen) {
+      try {
+        projectContents = fs.readFileSync(toOpen).toString();
+      } catch (e) {
+        // tslint:disable-next-line:no-console
+        console.error(`Unable to load project from ${toOpen}: ${e.message}`);
       }
-    } catch (e) {
-      // tslint:disable-next-line:no-console
-      console.error(`Unable to load project from ${info.path}: ${e.message}`);
-
-      // If we throw an error while opening the file, set the opened file to null
-      info = createNewProjectInfo();
     }
 
-    if (tempInfo.isTemp) {
+    if (pastProject.tempPath) {
       // Always remove temporary information once the file has been read
       // Even if there are errors we do this
-      fs.unlink(tempInfo.path);
+      fs.unlink(pastProject.tempPath);
       pastProject.tempPath = undefined;
       const writer = new FileWriter(PastProjectsType, { path: PROJECT_PATH, data: pastProject });
       writer.write();
@@ -166,11 +143,26 @@ class Manager {
       }
     } catch (e) {
       // tslint:disable-next-line:no-console
-      console.error(`Unable to parse project ${info.path}: ${e.message}`);
+      console.error(`Unable to parse project ${toOpen}: ${e.message}`);
+    }
 
-      // Same thing with parsing the file
-      // If we can't actually parse the file, then we haven't actually opened the file
-      info = createNewProjectInfo();
+    let info: ProjectInfo | null = null;
+    if (parsedProject) {
+      const r = decodeItem(ProjectIdType, parsedProject);
+      if (r.type === 'success') {
+        info = {
+          // toOpen has to be defined at this point given that the project has been decoded
+          path: toOpen!,
+          id: r.decoded.id,
+        };
+      } else {
+        // tslint:disable-next-line:no-console
+        console.error(`Unable to parse ID from project: ${toOpen}: ${r.message}`);
+      }
+    }
+
+    if (!info) {
+      info = { id: uuid.v4(), path: null };
     }
 
     let global: JSON = {};
@@ -184,7 +176,7 @@ class Manager {
     }
 
     try {
-      workspace = loadWorkspace(projectId, WORKSPACE_PATH);
+      workspace = loadWorkspace(info.id, WORKSPACE_PATH);
     } catch (e) {
       // tslint:disable-next-line:no-console
       console.error(`Unable to load workspace at ${WORKSPACE_PATH}: ${e.message}`);
@@ -205,25 +197,18 @@ export type ProjectInfo =
   { id: string, path: string } |
   { id: string, path: null };
 
-let projectManager: Manager | null = null;
+const projectManager = Manager.fromFileSystem();
 
 // FIXME(1) Add interface with message, description, showUser
 // Also, write to file
 const notificationQueue: string[] = [];
 
 export const manager = {
+  projectManager,
   getOpenedFile() {
-    if (!projectManager) {
-      projectManager = Manager.fromFileSystem();
-    }
-
     return projectManager.projectInfo.path;
   },
   getProjectJSON() {
-    if (!projectManager) {
-      projectManager = Manager.fromFileSystem();
-    }
-
     return projectManager.parsedProject;
   },
   onDidSetOpenedFile(listener: () => void) {
@@ -234,13 +219,16 @@ export const manager = {
       },
     };
   },
-  async setOpenedFile(projectInfo?: ProjectInformation, opts: { isTemp?: boolean } = {}) {
-    if (!projectManager) {
-      projectManager = Manager.fromFileSystem();
-    }
-
-    if (projectInfo) {
-      projectManager.projectInfo = projectInfo;
+  /**
+   * Sets the path of the opened file and writes this information to the file system so that the next time the DAW is
+   * opened, the correct file will open. Note that is NOT possible to change the ID of the currently opened project.
+   *
+   * @param projectPath The project path.
+   * @param opts The options.
+   */
+  async setOpenedFile(projectPath?: string, opts: { isTemp?: boolean } = {}) {
+    if (projectPath) {
+      projectManager.projectInfo.path = projectPath;
     } else {
       projectManager.projectInfo = {
         id: projectManager.projectInfo.id,
@@ -249,9 +237,9 @@ export const manager = {
     }
 
     if (opts.isTemp) {
-      pastProject.tempPath = projectInfo;
+      pastProject.tempPath = projectPath;
     } else {
-      pastProject.projectPath = projectInfo;
+      pastProject.projectPath = projectPath;
     }
 
     events.emit('setOpenedFile');
@@ -300,10 +288,6 @@ export const manager = {
   activate<W extends ExtensionProps, WD extends ExtensionDefaults<W>, G extends ExtensionProps, V, GD extends ExtensionDefaults<G>>(
     extension: Extension<W, WD, G, GD, V>,
   ): V {
-    if (!projectManager) {
-      projectManager = Manager.fromFileSystem();
-    }
-
     // tslint:disable-next-line:no-console
     console.info('Activating ' + extension.id);
     resolved[extension.id] = false;
@@ -357,6 +341,8 @@ export const manager = {
     const reactiveWorkspace = makeReactive(extension.workspace, extension.workspaceDefaults, w);
     const reactiveGlobal = makeReactive(extension.global, extension.globalDefaults, g);
 
+    const copy = { ...reactiveWorkspace };
+    Object.keys(copy).forEach((key) => (copy as any)[key] = copy[key].value);
     const context = new ExtensionContext<W, WD, G, GD>(reactiveWorkspace, reactiveGlobal);
 
     // beware of the any type
@@ -380,8 +366,6 @@ export const manager = {
     extensionsStack = [];
   },
   get<T extends Extension<any, any, any>>(extension: T): ReturnType<T['activate']> {
-    // tslint:disable-next-line:no-console
-    console.log(resolved, extension.id);
     if (extensions.hasOwnProperty(extension.id)) {
       if (!resolved[extension.id]) {
         throw Error(`Circular dependency detected with ${extension.id}`);

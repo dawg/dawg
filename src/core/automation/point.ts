@@ -1,4 +1,4 @@
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import { Beats } from '@/core/types';
 import { Serializable } from '@/core/serializable';
 

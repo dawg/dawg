@@ -1,4 +1,4 @@
-import * as t from 'io-ts';
+import * as t from '@/modules/io';
 import { Wrapper } from 'vue-function-api';
 
 export type Primitive = t.BooleanC | t.StringC | t.NumberC;

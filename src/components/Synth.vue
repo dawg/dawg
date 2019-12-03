@@ -36,7 +36,7 @@
       <div class="foreground--text name">{{ instrument.name }}</div>
       <mini-score
         v-if="notes.length"
-        :notes="notes" 
+        :notes="notes"
         class="score secondary"
       ></mini-score>
       <div style="flex: 1"></div>
@@ -64,7 +64,7 @@
 import DotButton from '@/components/DotButton.vue';
 import MiniScore from '@/components/MiniScore.vue';
 import ChannelSelect from '@/components/ChannelSelect.vue';
-import { Note, Instrument } from '@/core';
+import { Note, Instrument, Sequence } from '@/core';
 import { createComponent, update } from '@/utils';
 import { computed, watch, value } from 'vue-function-api';
 
