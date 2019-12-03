@@ -150,11 +150,17 @@ export class Transport {
 
   public embed(child: Transport, ticks: Ticks, duration: Ticks) {
     return this.schedule({
-      onTick: ({ seconds, ticks: currentTick }) => {
+      onStart: () => {
+        child.isFirstTick = true;
+      },
+      onMidStart: () => {
+        child.isFirstTick = true;
+      },
+      onTick({ seconds, ticks: currentTick }) {
         // We subtract the `tick` value because the given transport is positioned relative to this transport.
         // For example, if we embed transport A in transport B at tick 1 and the callback is called at tick 2, we want
         // transport A to think it is time tick 1
-        child.processTick(seconds, currentTick - ticks);
+        child.processTick(seconds, currentTick - this.time, true);
       },
       time: ticks,
       duration,
@@ -288,8 +294,8 @@ export class Transport {
     this.active = [];
   }
 
-  private processTick(seconds: ContextTime, ticks: number) {
-    if (ticks >= this._loopEnd) {
+  private processTick(seconds: ContextTime, ticks: Ticks, isChild = false) {
+    if (!isChild && ticks >= this._loopEnd) {
       this.checkOnEndEventsAndResetActive({ seconds, ticks });
       this.clock.setTicksAtTime(this._loopStart, seconds);
       ticks = this._loopStart;
@@ -350,7 +356,7 @@ export class Transport {
       }
 
       // Keep iff the end time has not passed and the start time has passed
-      return ticks < endTime && event.time < ticks;
+      return ticks < endTime && event.time <= ticks;
     });
   }
 }

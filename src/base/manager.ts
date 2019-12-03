@@ -366,8 +366,6 @@ export const manager = {
     extensionsStack = [];
   },
   get<T extends Extension<any, any, any>>(extension: T): ReturnType<T['activate']> {
-    // tslint:disable-next-line:no-console
-    console.log(resolved, extension.id);
     if (extensions.hasOwnProperty(extension.id)) {
       if (!resolved[extension.id]) {
         throw Error(`Circular dependency detected with ${extension.id}`);

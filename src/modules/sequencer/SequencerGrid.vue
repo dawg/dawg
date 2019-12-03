@@ -395,6 +395,8 @@ export default class SequencerGrid extends Vue {
       item.time = item.time + timeDiff;
       item.row = item.row + rowDiff;
     });
+
+    this.checkLoopEnd();
   }
 
   public remove(e: MouseEvent, i: number) {
