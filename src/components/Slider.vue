@@ -38,9 +38,9 @@
 
 <script lang="ts">
 import { DragElement } from '@/modules/draggable';
-import { scale, createComponent } from '@/utils';
+import { scale } from '@/utils';
 import * as base from '@/base';
-import { computed } from 'vue-function-api';
+import { computed, createComponent, ref } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Slider',
@@ -88,9 +88,12 @@ export default createComponent({
       return props.left * props.height;
     });
 
+    const svg = ref<SVGElement>(null);
     function move(e: MouseEvent) {
-      const svg = context.refs.svg as SVGElement;
-      let volume = svg.getBoundingClientRect().top + props.height - e.clientY;
+      if (!svg.value) {
+        return;
+      }
+      let volume = svg.value.getBoundingClientRect().top + props.height - e.clientY;
       volume /= props.height;
       volume = Math.max(Math.min(volume, 1), 0);
       volume = scale(volume, [0, 1], [props.min, props.max]);
@@ -140,6 +143,7 @@ export default createComponent({
       points,
       leftHeight,
       rightHeight,
+      svg,
     };
   },
 });

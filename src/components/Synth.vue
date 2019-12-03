@@ -65,8 +65,8 @@ import DotButton from '@/components/DotButton.vue';
 import MiniScore from '@/components/MiniScore.vue';
 import ChannelSelect from '@/components/ChannelSelect.vue';
 import { Note, Instrument, Sequence } from '@/core';
-import { createComponent, update } from '@/utils';
-import { computed, watch, value } from 'vue-function-api';
+import { update } from '@/utils';
+import { createComponent, computed, watch, ref } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Synth',
@@ -78,8 +78,8 @@ export default createComponent({
     channel: Number as () => number | undefined,
   },
   setup(props, context) {
-    const active = value(!props.instrument.mute);
-    const expand = value(false);
+    const active = ref(!props.instrument.mute);
+    const expand = ref(false);
     const strokeWidth = 2.5;
 
     const synthStyle = computed(() => {

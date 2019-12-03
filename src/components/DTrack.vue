@@ -16,8 +16,7 @@
 <script lang="ts">
 import { Track as T } from '@/core/track';
 import * as base from '@/base';
-import { createComponent } from '@/utils';
-import { watch, value, computed } from 'vue-function-api';
+import { watch, ref, computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'DgTrack',
@@ -26,7 +25,7 @@ export default createComponent({
     recording: { type: Boolean, default: false },
   },
   setup(props) {
-    const active = value(!props.track.mute);
+    const active = ref(!props.track.mute);
     watch(active, () => {
       props.track.mute = !active.value;
     });

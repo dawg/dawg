@@ -47,14 +47,14 @@
 
 <script lang="ts">
 import * as base from '@/base';
-import { createComponent, value } from 'vue-function-api';
+import { createComponent, ref } from '@vue/composition-api';
 
 export default createComponent({
   name: 'ActivityBar',
   setup() {
-    const open = value(false);
-    const x = value(0);
-    const y = value(0);
+    const open = ref(false);
+    const x = ref(0);
+    const y = ref(0);
 
     function clickActivityBar(tab: base.ActivityBarItem) {
       base.ui.openedSideTab.value = tab.name;

@@ -17,10 +17,10 @@
 
 <script lang="ts">
 import { Mixins, Prop, Component, Inject, Vue } from 'vue-property-decorator';
-import { allKeys, createComponent } from '@/utils';
+import { allKeys } from '@/utils';
 import { Watch } from '@/modules/update';
 import { Note } from '@/core';
-import { computed } from 'vue-function-api';
+import { computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Note',

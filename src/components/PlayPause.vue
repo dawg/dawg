@@ -3,8 +3,7 @@
 </template>
 
 <script lang="ts">
-import { createComponent } from '@/utils';
-import { computed, value } from 'vue-function-api';
+import { computed, ref, createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'PlayPause',
@@ -13,7 +12,7 @@ export default createComponent({
     stop: {type: String, default: 'STOP'},
   },
   setup(props, context) {
-    const playing = value(false);
+    const playing = ref(false);
 
     function click() {
       if (playing.value) {

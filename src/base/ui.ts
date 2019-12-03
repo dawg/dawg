@@ -1,14 +1,14 @@
 // FIXME For some reason, it only works if I place this Vue.use statement here
 import Vue from 'vue';
-import { plugin } from 'vue-function-api';
-Vue.use(plugin);
+import VueCompositionApi from '@vue/composition-api';
+Vue.use(VueCompositionApi);
 
 import { VueConstructor } from 'vue';
-import { Wrapper, value } from 'vue-function-api';
+import { Ref, ref } from '@vue/composition-api';
 
 export interface TabAction {
-  icon: Wrapper<string>;
-  tooltip: Wrapper<string>;
+  icon: Ref<string>;
+  tooltip: Ref<string>;
   callback: (e: MouseEvent) => void;
   props?: { [k: string]: string };
 }
@@ -36,26 +36,26 @@ export interface ToolbarItem {
 export interface StringField {
   title: string;
   description: string;
-  disabled?: Wrapper<boolean>;
+  disabled?: Ref<boolean>;
   type: 'string';
-  value: Wrapper<string | undefined>;
+  value: Ref<string | undefined>;
 }
 
 export interface SelectField {
   title: string;
   description: string;
-  disabled?: Wrapper<boolean>;
+  disabled?: Ref<boolean>;
   type: 'select';
-  value: Wrapper<string | undefined>;
+  value: Ref<string | undefined>;
   options: string[];
 }
 
 export interface BooleanField {
   title: string;
   description: string;
-  disabled?: Wrapper<boolean>;
+  disabled?: Ref<boolean>;
   type: 'boolean';
-  value: Wrapper<boolean>;
+  value: Ref<boolean>;
 }
 
 interface StatusBarItem {
@@ -74,10 +74,10 @@ const mainSection: VueConstructor[] = [];
 const toolbar: ToolbarItem[] = [];
 const trackContext: Array<{ text: string; callback: (index: number) => void; }> = [];
 const settings: Array<StringField | BooleanField | SelectField | VueConstructor> = [];
-const openedSideTab = value<undefined | string>(undefined);
-const openedPanel = value<undefined | string>(undefined);
-const panelsSize = value(250);
-const sideBarSize = value(250);
+const openedSideTab = ref<undefined | string>(undefined);
+const openedPanel = ref<undefined | string>(undefined);
+const panelsSize = ref(250);
+const sideBarSize = ref(250);
 
 export const ui = {
   global,

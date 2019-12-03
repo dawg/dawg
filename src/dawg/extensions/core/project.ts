@@ -11,7 +11,7 @@ import { notify } from '@/dawg/extensions/core/notify';
 import { DG_EXTENSION, FILTERS } from '@/constants';
 import { commands, Command } from '@/dawg/extensions/core/commands';
 import { menubar } from '@/dawg/extensions/core/menubar';
-import { computed, value, watch } from 'vue-function-api';
+import { computed, ref, watch } from '@vue/composition-api';
 import { patterns } from '@/dawg/extensions/core/patterns';
 import { applicationContext } from '@/dawg/extensions/core/application-context';
 import { ui } from '@/base/ui';
@@ -35,8 +35,8 @@ const events = emitter<{ save: (encoded: IProject) => void }>();
 const projectApi = (context: IExtensionContext) => {
   // tslint:disable-next-line:variable-name
   let _p: Project | null = null;
-  const state = value<'stopped' | 'started' | 'paused'>('stopped');
-  const openedFile = value(manager.getOpenedFile());
+  const state = ref<'stopped' | 'started' | 'paused'>('stopped');
+  const openedFile = ref(manager.getOpenedFile());
   const logger = log.getLogger();
 
   context.subscriptions.push(manager.onDidSetOpenedFile(() => {
@@ -332,7 +332,7 @@ const extension = createExtension({
     }));
 
     const p = api.getProject();
-    const name = value(p.name);
+    const name = ref(p.name);
     watch(name, () => {
       p.name = name.value;
     });

@@ -44,7 +44,7 @@ import BaseTabs from '@/components/BaseTabs.vue';
 import Tab from '@/components/Tab.vue';
 import { TOOLBAR_HEIGHT } from '@/constants';
 import * as base from '@/base';
-import { createComponent, computed } from 'vue-function-api';
+import { createComponent, computed } from '@vue/composition-api';
 
 export default createComponent({
   name: 'SideTabs',

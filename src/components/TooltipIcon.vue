@@ -12,8 +12,7 @@
 </template>
 
 <script lang="ts">
-import { createComponent } from '@/utils';
-import { computed } from 'vue-function-api';
+import { createComponent, computed } from '@vue/composition-api';
 
 export default createComponent({
   name: 'TooltipIcon',
@@ -28,7 +27,7 @@ export default createComponent({
   },
   setup(props, context) {
     const icon = computed(() => {
-      const slot = context.slots.default;
+      const slot = context.slots.default();
       if (!slot || !slot[0]) {
         return '';
       }

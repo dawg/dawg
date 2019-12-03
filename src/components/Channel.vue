@@ -60,12 +60,12 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { range, scale, clamp, createComponent } from '@/utils';
+import { range, scale, clamp } from '@/utils';
 import { AnyEffect } from '@/core/filters/effect';
 import { Channel as C } from '@/core/channel';
 import { EffectMap, EffectName } from '@/core';
 import * as base from '@/base';
-import { value, computed, watch } from 'vue-function-api';
+import { ref, computed, watch, createComponent } from '@vue/composition-api';
 
 function sentenceCase(text: string) {
   // const result = text.replace( /([A-Z])/g, ' $1' );
@@ -85,8 +85,8 @@ export default createComponent({
     play: { type: Boolean, required: true },
   },
   setup(props, context) {
-    const right = value(0);
-    const left = value(0);
+    const right = ref(0);
+    const left = ref(0);
 
     const effectLookup = computed(() => {
       const o: { [k: number]: AnyEffect } = {};

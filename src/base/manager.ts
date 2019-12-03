@@ -14,7 +14,7 @@ import { GLOBAL_PATH, WORKSPACE_PATH, PROJECT_PATH } from '@/constants';
 import { reverse, keys } from '@/utils';
 import { FileLoader, FileWriter } from '@/core/loaders/file';
 import uuid from 'uuid';
-import { value } from 'vue-function-api';
+import { ref } from '@vue/composition-api';
 import { PathReporter } from 'io-ts/lib/PathReporter';
 import { emitter } from '@/base/events';
 import { decodeItem } from '@/modules/io';
@@ -329,7 +329,7 @@ export const manager = {
         }
 
         // FIXME remove this any
-        reactive[key] = value(decodedValue as any);
+        reactive[key] = ref(decodedValue as any);
       }
 
       return reactive;

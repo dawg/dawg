@@ -8,7 +8,7 @@ import { Note } from '@/core';
 import * as Audio from '@/modules/audio';
 import { theme } from '@/dawg/extensions/core/theme';
 import { pianoRoll } from '@/dawg/extensions/core/piano-roll';
-import { value, computed, watch } from 'vue-function-api';
+import { ref, computed, watch } from '@vue/composition-api';
 import { project } from '@/dawg/extensions/core/project';
 
 export const extension: Extension = {
@@ -19,7 +19,7 @@ export const extension: Extension = {
     const notesStartTimes: {[key: string]: number} = {};
     let transport: Audio.Transport | null = null;
 
-    const recording = value(false);
+    const recording = ref(false);
 
     const onDidNoteOn = (e: InputEventNoteon) => {
       if (!transport) {
@@ -147,7 +147,7 @@ export const extension: Extension = {
     });
 
     pianoRoll.addAction({
-      icon: value('fiber_manual_record'),
+      icon: ref('fiber_manual_record'),
       tooltip: computed(() => recording.value ? 'Stop Recording' : 'Start Recording'),
       callback: () => {
         if (recording.value) {

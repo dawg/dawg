@@ -8,8 +8,7 @@
 </template>
 
 <script lang="ts">
-import { createComponent } from '@/utils';
-import { computed } from 'vue-function-api';
+import { computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'DgIcon',
@@ -18,7 +17,7 @@ export default createComponent({
   },
   setup: (props, context) => ({
     icon: computed(() => {
-      const slot = context.slots.default;
+      const slot = context.slots.default();
       if (!slot || !slot[0]) {
         return '';
       }

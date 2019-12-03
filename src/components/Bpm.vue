@@ -8,7 +8,7 @@
 <script lang="ts">
 import { Component, Prop, Mixins } from 'vue-property-decorator';
 import { DragElement } from '@/modules/draggable';
-import { createComponent } from '@/utils';
+import { createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Bpm',

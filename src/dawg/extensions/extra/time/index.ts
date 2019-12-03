@@ -1,13 +1,13 @@
-import Vue from 'vue';
 import { createExtension } from '@/dawg/extensions';
 import TimeDisplay from '@/dawg/extensions/extra/time/TimeDisplay.vue';
 import * as dawg from '@/dawg';
-import { createComponent, value, watch } from 'vue-function-api';
+import { createComponent, ref, watch } from '@vue/composition-api';
+import { vueExtend } from '@/utils';
 
 export const extension = createExtension({
   id: 'dawg.time',
   activate() {
-    const component = Vue.extend(createComponent({
+    const component = vueExtend(createComponent({
       components: { TimeDisplay },
       template: `
       <time-display
@@ -16,7 +16,7 @@ export const extension = createExtension({
       ></time-display>
       `,
       setup() {
-        const seconds = value(0);
+        const seconds = ref(0);
 
         const update = () => {
           if (dawg.project.state.value === 'started') {

@@ -5,8 +5,7 @@
 </template>
 
 <script lang="ts">
-import { createComponent } from '@/utils';
-import { computed } from 'vue-function-api';
+import { computed , createComponent} from '@vue/composition-api';
 
 export default createComponent({
   name: 'DotButton',

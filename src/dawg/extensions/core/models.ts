@@ -3,7 +3,6 @@ import * as t from '@/modules/io';
 import { PythonShell, Options } from 'python-shell';
 import path from 'path';
 import { manager } from '@/base/manager';
-import { computed, Wrapper } from 'vue-function-api';
 import { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 import { busy } from '@/dawg/extensions/core/busy';
 import { notify } from '@/dawg/extensions/core/notify';

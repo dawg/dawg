@@ -1,8 +1,6 @@
 import * as dawg from '@/dawg';
 import * as t from '@/modules/io';
 import { User } from 'firebase';
-import Vue from 'vue';
-import ProjectModal from '@/dawg/extensions/extra/backup/ProjectModal.vue';
 import backend, { ProjectInfo } from '@/dawg/extensions/extra/backup/backend';
 import { ProjectType, IProject } from '@/project';
 import { PathReporter } from 'io-ts/lib/PathReporter';
@@ -11,10 +9,11 @@ import firebase from 'firebase/app';
 import 'firebase/database';
 import 'firebase/auth';
 import { menubar } from '@/dawg/extensions/core/menubar';
-import { computed, watch, value, createComponent } from 'vue-function-api';
+import { computed, watch, ref, createComponent } from '@vue/composition-api';
 import { ui } from '@/base/ui';
 import { project } from '@/dawg/extensions/core/project';
 import { createExtension } from '@/dawg/extensions';
+import { vueExtend } from '@/utils';
 
 export const extension = createExtension({
   id: 'dawg.backup',
@@ -34,11 +33,11 @@ export const extension = createExtension({
       messagingSenderId: '540203128797',
     });
 
-    const user = value<User | null>(null);
-    const projects = value<ProjectInfo[]>([]);
+    const user = ref<User | null>(null);
+    const projects = ref<ProjectInfo[]>([]);
     // const item = dawg.ui.createStatusBarItem();
-    const error = value(false);
-    const syncing = value(false);
+    const error = ref(false);
+    const syncing = ref(false);
 
     const icon = computed(() => {
       if (!backup.value) {
@@ -64,7 +63,7 @@ export const extension = createExtension({
       }
     });
 
-    const component = Vue.extend(createComponent({
+    const component = vueExtend(createComponent({
       template: `
       <tooltip-icon
         v-if="error"
@@ -287,7 +286,7 @@ export const extension = createExtension({
       }
     }));
 
-    const googleButton = Vue.extend(createComponent({
+    const googleButton = vueExtend(createComponent({
       template: `
       <div>
         <div

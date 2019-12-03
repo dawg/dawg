@@ -1,10 +1,9 @@
 import Tone from 'tone';
 import Vue, { VueConstructor, CreateElement, VNodeData } from 'vue';
-import { PropsDefinition, ComponentOptions } from 'vue/types/options';
-import { Context } from 'vue-function-api/dist/types/vue';
 import Component from 'vue-class-component';
 import ResizeObserver from 'resize-observer-polyfill';
 import throttle from 'lodash.throttle';
+import { createComponent } from '@vue/composition-api';
 
 export enum StyleType {
   PRIMARY = 'primary',
@@ -289,38 +288,16 @@ export const uniqueId = () => {
   return Math.random().toString().substr(2, 9);
 };
 
-// FIXME Remove when https://github.com/vuejs/vue-function-api/issues/15 is resolved
-type Omit<T, K> = Pick<T, Exclude<keyof T, K>>;
-type ComponentOptionsWithSetup<Props> = Omit<ComponentOptions<Vue>, 'props' | 'setup'> & {
-  props?: PropsDefinition<Props>;
-  setup?: (
-    this: undefined,
-    props: Readonly<Props>,
-    context: Context,
-  ) => object | null | undefined | void;
-};
-
-// when props is an object
-export function createComponent<Props>(
-  compOptions: ComponentOptionsWithSetup<Props>,
-): ComponentOptions<Vue>;
-// when props is an array
-export function createComponent<Props extends string = never>(
-  compOptions: ComponentOptionsWithSetup<Record<Props, any>>,
-): ComponentOptions<Vue>;
-
-export function createComponent<Props>(
-  compOptions: ComponentOptionsWithSetup<Props>,
-): ComponentOptions<Vue> {
-  return (compOptions as any) as ComponentOptions<Vue>;
-}
-
-// Remove until here
-
 export const update = <Props, K extends keyof Props, V extends Props[K]>(
   props: Props, context: { emit: (event: string, value: V) => void }, key: K, value: V,
 ) => {
   context.emit(`update:${key}`, value);
+};
+
+// This is a temporary workaround. Right now, TypeScript throws an error when you pass in the return type of
+// createComponent to the Vue.extend function
+export const vueExtend = (proxy: ReturnType<typeof createComponent>) => {
+  return Vue.extend(proxy as any);
 };
 
 export interface Directions {
@@ -331,8 +308,8 @@ export interface Directions {
 // FIXME become a hook I'm almost ready
 // export const useResponsive = (el: Element, opts: { wait?: number } = {}) => {
 //   const { wait = 200 } = opts;
-//   const height = value(0);
-//   const width = value(0);
+//   const height = ref(0);
+//   const width = ref(0);
 
 //   const observer = new ResizeObserver(throttle((entries) => {
 //     const cr = entries[0].contentRect;

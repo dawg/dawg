@@ -5,7 +5,7 @@ import { project } from '@/dawg/extensions/core/project';
 // FIXME(2) Remove this import
 import { record } from '@/dawg/extensions/core/record';
 import { ScheduledPattern, ScheduledSample } from '@/core';
-import { value } from 'vue-function-api';
+import { ref } from '@vue/composition-api';
 import { ui } from '@/base/ui';
 import { Ghost } from '@/core/ghost';
 import { applicationContext } from '@/dawg/extensions/core/application-context';
@@ -22,8 +22,8 @@ export const playlist = manager.activate({
     playlistBeatWidth: 80,
   },
   activate(context) {
-    const masterStart = value(0);
-    const masterEnd = value(0);
+    const masterStart = ref(0);
+    const masterEnd = ref(0);
     const ghosts: Ghost[] = [];
 
     const playlistRowHeight = context.workspace.playlistRowHeight;

@@ -25,8 +25,7 @@
 
 <script lang="ts">
 import * as base from '@/base';
-import { createComponent } from '@/utils';
-import { computed } from 'vue-function-api';
+import { computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'PanelHeaders',

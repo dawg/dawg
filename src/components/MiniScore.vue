@@ -18,8 +18,8 @@
 
 <script lang="ts">
 import { Note } from '@/core';
-import { createComponent, update } from '@/utils';
-import { computed, watch } from 'vue-function-api';
+import { update } from '@/utils';
+import { computed, watch, createComponent } from '@vue/composition-api';
 
 /**
  * This class is used in the synth components to show the score associated with that synth.

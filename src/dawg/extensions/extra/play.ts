@@ -1,12 +1,12 @@
-import Vue from 'vue';
 import { createExtension } from '@/dawg/extensions';
 import * as dawg from '@/dawg';
-import { createComponent, computed } from 'vue-function-api';
+import { createComponent, computed } from '@vue/composition-api';
+import { vueExtend } from '@/utils';
 
 export const extension = createExtension({
   id: 'dawg.play',
   activate() {
-    const stop = Vue.extend(createComponent({
+    const stop = vueExtend(createComponent({
       template: `
       <v-btn icon style="margin: 0">
         <dg-icon fa>stop</dg-icon>
@@ -20,7 +20,7 @@ export const extension = createExtension({
       order: 2,
     });
 
-    const playPause = Vue.extend(createComponent({
+    const playPause = vueExtend(createComponent({
       template: `
       <v-btn icon style="margin: 0" @click="toggle">
         <icon :name="icon" class="foreground--text"></icon>

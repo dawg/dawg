@@ -35,8 +35,7 @@
 import { EffectName } from '@/core/filters/effects';
 import { EffectConstrainsType, EffectConstrains } from '@/core/filters/bounds';
 import { Effect as E } from '@/core/filters/effect';
-import { createComponent } from '@/utils';
-import { computed } from 'vue-function-api';
+import { computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Effect',

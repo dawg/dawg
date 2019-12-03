@@ -1,5 +1,5 @@
 import * as t from '@/modules/io';
-import { Wrapper } from 'vue-function-api';
+import { Ref } from '@vue/composition-api';
 
 export type Primitive = t.BooleanC | t.StringC | t.NumberC;
 export type ArrayPrimitive = t.ArrayC<t.BooleanC> | t.ArrayC<t.StringC> | t.ArrayC<t.NumberC>;
@@ -16,7 +16,7 @@ export type ExtensionDefaults<P extends ExtensionProps> = {
 export type ReactiveDefinition<
   P extends ExtensionProps,
   D extends ExtensionDefaults<P>,
-> = { [K in keyof P]: Wrapper<t.TypeOf<P[K]> | D[K]> };
+> = { [K in keyof P]: Ref<t.TypeOf<P[K]> | D[K]> };
 
 export interface IExtensionContext<
   W extends ExtensionProps = ExtensionProps,

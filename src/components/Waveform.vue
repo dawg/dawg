@@ -12,9 +12,9 @@
 <script lang="ts">
 
 import { Player } from 'tone';
-import { Nullable, createComponent } from '@/utils';
+import { Nullable } from '@/utils';
 import * as base from '@/base';
-import { computed } from 'vue-function-api';
+import { createComponent, computed } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Waveform',

@@ -11,8 +11,8 @@
 </template>
 
 <script lang="ts">
-import { Keys, createComponent } from '@/utils';
-import { onMounted, value } from 'vue-function-api';
+import { Keys } from '@/utils';
+import { onMounted, ref, createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Editable',
@@ -20,17 +20,21 @@ export default createComponent({
     value: { type: String, required: true },
   },
   setup(props, context) {
-    const refs = context.refs as { el: HTMLElement };
-    const contenteditable = value(false);
+    const el = ref<HTMLElement>(null);
+    const contenteditable = ref(false);
 
     onMounted(() => {
-      refs.el.innerText = props.value;
+      if (el.value) {
+        el.value.innerText = props.value;
+      }
     });
 
     function dblclick() {
       contenteditable.value = true;
       context.root.$nextTick(() => {
-        refs.el.focus();
+        if (el.value) {
+          el.value.focus();
+        }
         // Select all of the text in the div!
         document.execCommand('selectall', undefined, undefined);
       });
@@ -46,7 +50,9 @@ export default createComponent({
 
     function keydown(e: KeyboardEvent) {
       if (e.keyCode !== Keys.ENTER) { return; }
-      refs.el.blur();
+      if (el.value) {
+        el.value.blur();
+      }
     }
 
     return {
@@ -55,6 +61,7 @@ export default createComponent({
       dblclick,
       input,
       keydown,
+      el,
     };
   },
 });

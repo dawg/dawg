@@ -9,7 +9,7 @@ import { positionable, selectable } from '@/modules/sequencer/helpers';
 import { resizable } from '@/modules/sequencer/helpers';
 import { commands } from '@/dawg/extensions/core/commands';
 import { applicationContext } from '@/dawg/extensions/core/application-context';
-import { value, watch } from 'vue-function-api';
+import { ref, watch } from '@vue/composition-api';
 import { project } from '@/dawg/extensions/core/project';
 import * as base from '@/base';
 
@@ -42,7 +42,7 @@ export const pianoRoll = manager.activate({
 
     Vue.component('Note', createElement(Vue.extend(Note)));
 
-    const recording = value(false);
+    const recording = ref(false);
     const component = Vue.extend({
       components: { PianoRollSequencer },
       template: `

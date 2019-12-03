@@ -1,9 +1,9 @@
-import Vue from 'vue';
-import { createComponent, computed } from 'vue-function-api';
+import { createComponent, computed } from '@vue/composition-api';
 import { manager } from '@/base/manager';
 import * as base from '@/base';
+import { vueExtend } from '@/utils';
 
-const component = Vue.extend(createComponent({
+const component = vueExtend(createComponent({
   template: `
   <span v-if="value === null">{{ status }}</span>
   <div v-else>

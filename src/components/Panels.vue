@@ -24,7 +24,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import BaseTabs from '@/components/BaseTabs.vue';
 import Tab from '@/components/Tab.vue';
 import * as base from '@/base';
-import { createComponent } from '@/utils';
+import { createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Panels',

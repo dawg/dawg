@@ -20,9 +20,10 @@
 </template>
 
 <script lang="ts">
-import { allKeys, createComponent } from '@/utils';
+import { allKeys } from '@/utils';
 import Key from '@/components/Key.vue';
 import { Instrument } from '@/core';
+import { createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Piano',

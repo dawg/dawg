@@ -2,7 +2,7 @@ import Tone from 'tone';
 import { Timeline } from '@/modules/audio/timeline';
 import { ContextTime, Time, Ticks, Seconds, Beat } from '@/modules/audio/types';
 import { Context, context } from '@/modules/audio/context';
-import { watch } from 'vue-function-api';
+import { watch } from '@vue/composition-api';
 
 interface EventContext {
   seconds: ContextTime;

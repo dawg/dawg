@@ -12,8 +12,8 @@
 
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
-import { createComponent, update } from '@/utils';
-import { onMounted, computed } from 'vue-function-api';
+import { update } from '@/utils';
+import { createComponent, onMounted, computed } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Tab',

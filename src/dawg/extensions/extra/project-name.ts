@@ -2,7 +2,7 @@ import Vue from 'vue';
 import { createExtension } from '..';
 import * as dawg from '@/dawg';
 import path from 'path';
-import { computed } from 'vue-function-api';
+import { computed } from '@vue/composition-api';
 
 export const extension = createExtension({
   id: 'dawg.project-name',
