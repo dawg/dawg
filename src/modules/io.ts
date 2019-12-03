@@ -15,10 +15,12 @@ export {
   TypeOf,
   intersection,
   StringC,
+  Props,
   NumberC,
   BooleanC,
   ArrayC,
   nullType as null,
+  Any,
 } from 'io-ts';
 
 export interface DecodeSuccess<T> {

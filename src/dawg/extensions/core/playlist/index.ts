@@ -14,12 +14,16 @@ import { log } from '@/dawg/extensions/core/log';
 export const playlist = manager.activate({
   id: 'dawg.playlist',
   workspace: {
-    playlistRowHeight: t.number,
-    playlistBeatWidth: t.number,
-  },
-  workspaceDefaults: {
-    playlistRowHeight: 40,
-    playlistBeatWidth: 80,
+    playlistRowHeight: {
+      type: t.number,
+      default: 40,
+      expose: false,
+    },
+    playlistBeatWidth: {
+      type: t.number,
+      default: 80,
+      expose: false,
+    },
   },
   activate(context) {
     const masterStart = ref(0);

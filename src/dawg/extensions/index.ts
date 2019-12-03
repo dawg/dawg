@@ -6,27 +6,51 @@ export type ArrayPrimitive = t.ArrayC<t.BooleanC> | t.ArrayC<t.StringC> | t.Arra
 export type StateType = Primitive | ArrayPrimitive;
 
 export interface ExtensionProps {
-  [key: string]: StateType;
+  [key: string]: StateType | FieldOptions<StateType>;
 }
 
-export type ExtensionDefaults<P extends ExtensionProps> = {
-  [K in keyof P]: t.TypeOf<P[K]> | undefined;
+type Prop<T extends StateType> = FieldOptions<T> | t.TypeOf<T>;
+export type FieldOptions<T extends StateType> = {
+  type: T;
+  expose: false;
+  default?: t.TypeOf<T>;
+} | {
+  type: T;
+  expose: true;
+  definition: string;
+  label: string;
+  default?: t.TypeOf<T>;
 };
+
+type InferPropType<T> =
+  T extends StateType ?
+  t.TypeOf<T> : T extends Prop<infer V> ?
+  t.TypeOf<V> : unknown;
+
+declare type RequiredKeys<T> = {
+  [K in keyof T]: T[K] extends { default: any; } ? K : never;
+}[keyof T];
+declare type OptionalKeys<T> = Exclude<keyof T, RequiredKeys<T>>;
+
+export type ExtensionData<
+  P extends ExtensionProps,
+> =
+  { [K in RequiredKeys<P>]: InferPropType<P[K]> } &
+  { [K in OptionalKeys<P>]: InferPropType<P[K]> | undefined };
 
 export type ReactiveDefinition<
   P extends ExtensionProps,
-  D extends ExtensionDefaults<P>,
-> = { [K in keyof P]: Ref<t.TypeOf<P[K]> | D[K]> };
+> =
+  { [K in RequiredKeys<P>]: Ref<InferPropType<P[K]>> } &
+  { [K in OptionalKeys<P>]: Ref<InferPropType<P[K]> | undefined> };
 
 export interface IExtensionContext<
   W extends ExtensionProps = ExtensionProps,
-  WD extends ExtensionDefaults<W> = ExtensionDefaults<W>,
   G extends ExtensionProps = ExtensionProps,
-  GD extends ExtensionDefaults<G> = ExtensionDefaults<G>,
 > {
   subscriptions: Subscription[];
-  workspace: ReactiveDefinition<W, WD>;
-  global: ReactiveDefinition<G, GD>;
+  workspace: ReactiveDefinition<W>;
+  global: ReactiveDefinition<G>;
 }
 
 export interface Subscription {
@@ -35,15 +59,13 @@ export interface Subscription {
 
 export class ExtensionContext<
   W extends ExtensionProps,
-  WD extends ExtensionDefaults<W>,
   G extends ExtensionProps,
-  GD extends ExtensionDefaults<G>,
-> implements IExtensionContext<W, WD, G, GD> {
+> implements IExtensionContext<W, G> {
   public subscriptions: Subscription[] = [];
-  public workspace: ReactiveDefinition<W, WD>;
-  public global: ReactiveDefinition<G, GD>;
+  public workspace: ReactiveDefinition<W>;
+  public global: ReactiveDefinition<G>;
 
-  constructor(workspace: ReactiveDefinition<W, WD>, global: ReactiveDefinition<G, GD>) {
+  constructor(workspace: ReactiveDefinition<W>, global: ReactiveDefinition<G>) {
     this.workspace = workspace;
     this.global = global;
   }
@@ -51,26 +73,20 @@ export class ExtensionContext<
 
 export interface Extension<
   W extends ExtensionProps = ExtensionProps,
-  WD extends ExtensionDefaults<W> = ExtensionDefaults<W>,
   G extends ExtensionProps = ExtensionProps,
-  GD extends ExtensionDefaults<G> = ExtensionDefaults<G>,
   V = void,
 > {
   id: string;
   workspace?: W;
-  workspaceDefaults?: WD;
   global?: G;
-  globalDefaults?: GD;
-  activate(context: IExtensionContext<W, WD, G, GD>): V;
-  deactivate?(context: IExtensionContext<W, WD, G, GD>): void;
+  activate(context: IExtensionContext<W, G>): V;
+  deactivate?(context: IExtensionContext<W, G>): void;
 }
 
 export const createExtension = <
   W extends ExtensionProps,
-  WD extends ExtensionDefaults<W>,
   G extends ExtensionProps,
-  GD extends ExtensionDefaults<G>,
   V
->(extension: Extension<W, WD, G, GD, V>) => {
+>(extension: Extension<W, G, V>) => {
   return extension;
 };

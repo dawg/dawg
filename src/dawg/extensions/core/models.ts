@@ -85,8 +85,18 @@ export async function runModel(opts: PythonOptions) {
 export const models = manager.activate({
   id: 'dawg.models',
   global: {
-    modelsPath: t.string,
-    pythonPath: t.string,
+    modelsPath: {
+      type: t.string,
+      expose: true,
+      definition: 'The path of the models.',
+      label: 'Models Path',
+    },
+    pythonPath: {
+      type: t.string,
+      expose: true,
+      definition: 'The path to your python environment.',
+      label: 'Python Path',
+    },
   },
   activate(context) {
     const modelsPath = context.global.modelsPath;

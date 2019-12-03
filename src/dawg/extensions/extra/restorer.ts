@@ -8,14 +8,16 @@ export const extension = createExtension({
   workspace: {
     openedSideTab: t.string,
     openedPanel: t.string,
-    sideBarSize: t.number,
-    panelsSize: t.number,
-  },
-  workspaceDefaults: {
-    openedSideTab: undefined,
-    openedPanel: undefined,
-    sideBarSize: 250,
-    panelsSize: 250,
+    sideBarSize: {
+      type: t.number,
+      default: 250,
+      expose: false,
+    },
+    panelsSize: {
+      type: t.number,
+      default: 250,
+      expose: false,
+    },
   },
   activate(context) {
     // watch everything for changes

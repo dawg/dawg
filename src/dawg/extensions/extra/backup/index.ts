@@ -18,10 +18,11 @@ import { vueExtend } from '@/utils';
 export const extension = createExtension({
   id: 'dawg.backup',
   workspace: {
-    backup: t.boolean,
-  },
-  workspaceDefaults: {
-    backup: false,
+    backup: {
+      type: t.boolean,
+      default: false,
+      expose: false,
+    },
   },
   activate(context) {
     firebase.initializeApp({

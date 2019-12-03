@@ -11,10 +11,11 @@ import { createExtension } from '@/dawg/extensions';
 export const extension = createExtension({
   id: 'dawg.explorer',
   global: {
-    folders: t.array(t.string),
-  },
-  globalDefaults: {
-    folders: [] as string[],
+    folders: {
+      type: t.array(t.string),
+      expose: false,
+      default: [],
+    },
   },
   activate(context) {
     const folders = context.global.folders.value;
