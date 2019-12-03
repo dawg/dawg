@@ -1,11 +1,11 @@
 import Tone from 'tone';
 import { Ticks, Beat } from '@/modules/audio/types';
-import { value } from 'vue-function-api';
+import { ref } from '@vue/composition-api';
 
 export const context = (Tone.context as any)._context as unknown as AudioContext;
 export class Context {
   public static PPQ = 192;
-  public static BPM = value(120);
+  public static BPM = ref(120);
 
   public static ticksToSeconds(ticks: Ticks) {
     return (ticks / Context.PPQ) / Context.BPM.value * 60;

@@ -7,8 +7,8 @@
 <script lang="ts">
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import { makeLookup, Nullable, createComponent, update } from '@/utils';
-import { watch } from 'vue-function-api';
+import { makeLookup, Nullable, update } from '@/utils';
+import { watch, createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'BaseTabs',

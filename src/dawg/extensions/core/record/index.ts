@@ -11,7 +11,7 @@ import fs from '@/fs';
 import { ChunkGhost } from '@/core/ghost';
 import { remote } from 'electron';
 import { Sample, ScheduledSample } from '@/core';
-import { value, watch } from 'vue-function-api';
+import { ref, watch } from '@vue/composition-api';
 import { manager } from '@/base/manager';
 import { project } from '@/dawg/extensions/core/project';
 import { applicationContext } from '@/dawg/extensions/core/application-context';
@@ -58,7 +58,7 @@ export const extension = createExtension({
     microphoneIn: t.string,
   },
   activate(context) {
-    const recording = value(false);
+    const recording = ref(false);
 
     let mediaRecorder: MediaRecorder | null = null;
 

@@ -10,8 +10,7 @@
 import Tone from 'tone';
 import tinycolor from 'tinycolor2';
 import * as Audio from '@/modules/audio';
-import { createComponent } from '@/utils';
-import { computed, onDestroyed } from 'vue-function-api';
+import { computed, onUnmounted, createComponent, ref } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Spectrogram',
@@ -46,15 +45,15 @@ export default createComponent({
       });
     });
 
+    const canvas = ref<HTMLCanvasElement>(null);
     function mounted() {
-      const canvas = context.refs.canvas as HTMLCanvasElement;
-      ctx = canvas.getContext('2d');
+      ctx = canvas.value!.getContext('2d');
       analyserNode.fftSize = 1024;
       output.connect(analyserNode);
       requestAnimationFrame(doRender);
     }
 
-    onDestroyed(() => {
+    onUnmounted(() => {
       output.connect(analyserNode);
     });
 
@@ -134,6 +133,7 @@ export default createComponent({
 
     return {
       width,
+      canvas,
     };
   },
 });

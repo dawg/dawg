@@ -11,8 +11,8 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { range, createComponent } from '@/utils';
-import { computed } from 'vue-function-api';
+import { range } from '@/utils';
+import { computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Loading',

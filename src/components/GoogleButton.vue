@@ -15,7 +15,7 @@
 
 <script lang="ts">
 import firebase from 'firebase';
-import { createComponent } from 'vue-function-api';
+import { createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'GoogleButton',

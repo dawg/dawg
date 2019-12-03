@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Synths from '@/dawg/extensions/core/instruments/Synths.vue';
 import { manager } from '@/base/manager';
-import { value, Wrapper, computed, watch } from 'vue-function-api';
+import { ref, Ref, computed, watch } from '@vue/composition-api';
 import { patterns } from '@/dawg/extensions/core/patterns';
 import { Score } from '@/core';
 import { ui } from '@/base/ui';
@@ -50,13 +50,13 @@ export const instruments = manager.activate({
       name: 'Instruments',
       component,
       actions: [{
-        icon: value('add'),
-        tooltip: value('Add Instrument'),
+        icon: ref('add'),
+        tooltip: ref('Add Instrument'),
         callback: addInstrument,
       }],
     });
 
-    const selectedScoreId: Wrapper<string | null> = value(null);
+    const selectedScoreId: Ref<string | null> = ref(null);
 
     const scoreLookup = computed(() => {
       if (!patterns.selectedPattern.value) { return null; }
@@ -69,21 +69,21 @@ export const instruments = manager.activate({
       return scores;
     });
 
-    const selectedScore = computed(
-      () => {
+    const selectedScore = computed({
+      get: () => {
         if (!selectedScoreId.value) { return null; }
         if (!scoreLookup.value) { return null; }
         if (!scoreLookup.value.hasOwnProperty(selectedScoreId.value)) { return null; }
         return scoreLookup.value[selectedScoreId.value];
       },
-      (pattern) => {
+      set: (pattern) => {
         if (pattern) {
           selectedScoreId.value = pattern.id;
         } else {
           selectedScoreId.value = null;
         }
       },
-    );
+    });
 
     watch(patterns.selectedPattern, () => {
       if (!selectedScoreId.value || !scoreLookup.value) {

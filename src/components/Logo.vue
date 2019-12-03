@@ -20,7 +20,7 @@
 </template>
 
 <script lang="ts">
-import { createComponent } from 'vue-function-api';
+import { createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Logo',

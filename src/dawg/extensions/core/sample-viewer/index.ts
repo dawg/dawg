@@ -3,14 +3,14 @@ import SampleViewer from '@/dawg/extensions/core/sample-viewer/SampleViewer.vue'
 import { Action } from '@/dawg/extensions/core/sample-viewer/types';
 import { ui } from '@/base/ui';
 import { manager } from '@/base/manager';
-import { value } from 'vue-function-api';
+import { ref } from '@vue/composition-api';
 import { Sample } from '@/core';
 
 export const sampleViewer = manager.activate({
   id: 'dawg.sample-viewer',
   activate() {
     const actions: Action[] = [];
-    const openedSample = value<Sample | null>(null);
+    const openedSample = ref<Sample | null>(null);
 
     const component = Vue.extend({
       components: { SampleViewer },

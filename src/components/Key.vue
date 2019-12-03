@@ -19,8 +19,7 @@
 import { Component, Prop, Inject, Vue } from 'vue-property-decorator';
 import Tone from 'tone';
 import * as base from '@/base';
-import { createComponent } from '@/utils';
-import { value, computed } from 'vue-function-api';
+import { ref, computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Key',
@@ -34,8 +33,8 @@ export default createComponent({
     borderBottom: Boolean as () => boolean | undefined,
   },
   setup(props, context) {
-    const down = value(false);
-    const hover = value(false);
+    const down = ref(false);
+    const hover = ref(false);
 
     const color = computed(() => {
       return props.value.includes('#') ? 'black' : 'white';

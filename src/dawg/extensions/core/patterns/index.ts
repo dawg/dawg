@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Patterns from '@/dawg/extensions/core/patterns/Patterns.vue';
-import { value, computed, createComponent } from 'vue-function-api';
-import { makeLookup } from '@/utils';
+import { ref, computed, createComponent } from '@vue/composition-api';
+import { makeLookup, vueExtend } from '@/utils';
 import { Pattern } from '@/core';
 import { manager } from '@/base/manager';
 import { ui } from '@/base/ui';
@@ -10,7 +10,7 @@ import { project } from '@/dawg/extensions/core/project';
 export const patterns = manager.activate({
   id: 'dawg.patterns',
   activate() {
-    const selectedPatternId = value<null | string>(null);
+    const selectedPatternId = ref<null | string>(null);
 
     const patternLookup = computed(() => {
       return makeLookup(project.project.patterns);
@@ -34,7 +34,15 @@ export const patterns = manager.activate({
       }
     };
 
-    const wrapper = Vue.extend(createComponent({
+    Vue.extend({
+      props: [],
+    });
+
+    Vue.extend({
+      props: {},
+    });
+
+    const wrapper = vueExtend(createComponent({
       components: { Patterns },
       template: `
       <patterns

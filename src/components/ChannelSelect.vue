@@ -8,9 +8,8 @@
 </template>
 
 <script lang="ts">
-import { createComponent } from '@/utils';
 import { DragElement } from '@/modules/draggable';
-import { value, computed } from 'vue-function-api';
+import { ref, computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'ChannelSelect',
@@ -19,8 +18,8 @@ export default createComponent({
     value: Number as () => number | undefined,
   },
   setup(props, context) {
-    const factor = value(0.2);
-    const leftover = value(0);
+    const factor = ref(0.2);
+    const leftover = ref(0);
 
     const display = computed(() => {
       return props.value === undefined ? '——' : props.value;

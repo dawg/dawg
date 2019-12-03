@@ -1,6 +1,6 @@
 import * as t from '@/modules/io';
 import { ui } from '@/base/ui';
-import { watch } from 'vue-function-api';
+import { watch } from '@vue/composition-api';
 import { createExtension } from '@/dawg/extensions';
 
 export const extension = createExtension({
