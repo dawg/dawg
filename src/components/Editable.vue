@@ -11,17 +11,18 @@
 </template>
 
 <script lang="ts">
-import { Keys } from '@/utils';
-import { onMounted, ref, createComponent } from '@vue/composition-api';
+import { Keys, update } from '@/utils';
+import { onMounted, ref, createComponent, watch } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Editable',
   props: {
     value: { type: String, required: true },
+    contenteditable: { type: Boolean, required: false },
+    disableDblClick: { type: Boolean, required: false },
   },
   setup(props, context) {
     const el = ref<HTMLElement>(null);
-    const contenteditable = ref(false);
 
     onMounted(() => {
       if (el.value) {
@@ -30,7 +31,18 @@ export default createComponent({
     });
 
     function dblclick() {
-      contenteditable.value = true;
+      if (props.disableDblClick) {
+        return;
+      }
+
+      update(props, context, 'contenteditable', true);
+    }
+
+    watch(() => {
+      if (!props.contenteditable) {
+        return;
+      }
+
       context.root.$nextTick(() => {
         if (el.value) {
           el.value.focus();
@@ -38,10 +50,10 @@ export default createComponent({
         // Select all of the text in the div!
         document.execCommand('selectall', undefined, undefined);
       });
-    }
+    });
 
     function blur() {
-      contenteditable.value = false;
+      update(props, context, 'contenteditable', false);
     }
 
     function input(e: any) {
@@ -56,7 +68,6 @@ export default createComponent({
     }
 
     return {
-      contenteditable,
       blur,
       dblclick,
       input,

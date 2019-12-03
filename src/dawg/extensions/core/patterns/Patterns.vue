@@ -10,7 +10,12 @@
       @click.native="click(item.pattern)"
       @contextmenu.native="context($event, i)"
     >
-      {{ item.pattern.name }}
+      <editable 
+        v-model="item.pattern.name"
+        :contenteditable.sync="contenteditable"
+        disableDblClick
+        class="label"
+      ></editable>
     </drag>
   </div>
 </template>
@@ -27,6 +32,7 @@ import { theme } from '@/dawg/extensions/core/theme';
 export default class Patterns extends Vue {
   @Prop(Nullable(Object)) public value!: Pattern | null;
   @Prop({ type: Array, required: true }) public patterns!: Pattern[];
+  public contenteditable = false;
 
   get items() {
     return this.patterns.map((pattern) => {
@@ -52,6 +58,10 @@ export default class Patterns extends Vue {
         {
           text: 'Delete',
           callback: () => this.$emit('remove', i),
+        },
+        {
+          text: 'Rename',
+          callback: () => this.contenteditable = true,
         },
       ],
     });

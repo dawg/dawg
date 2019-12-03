@@ -2,6 +2,7 @@
   <div 
     class="synth-wrapper"
     style="position: relative; z-index: 10;"
+    @contextmenu="contextmenu"
   >
     <div 
       class="bar primary"
@@ -33,7 +34,13 @@
         @input="panInput"
         @automate="automatePan"
       ></pan>
-      <div class="foreground--text name">{{ instrument.name }}</div>
+      <editable
+        v-model="instrument.name"
+        :contenteditable.sync="contenteditable"
+        disableDblClick
+        class="foreground--text name"
+      ></editable>
+      <!-- <div class="foreground--text name">{{ instrument.name }}</div> -->
       <mini-score
         v-if="notes.length"
         :notes="notes"
@@ -67,6 +74,7 @@ import ChannelSelect from '@/components/ChannelSelect.vue';
 import { Note, Instrument, Sequence } from '@/core';
 import { update } from '@/utils';
 import { createComponent, computed, watch, ref } from '@vue/composition-api';
+import * as base from '@/base';
 
 export default createComponent({
   name: 'Synth',
@@ -81,6 +89,7 @@ export default createComponent({
     const active = ref(!props.instrument.mute);
     const expand = ref(false);
     const strokeWidth = 2.5;
+    const contenteditable = ref(false);
 
     const synthStyle = computed(() => {
       return {
@@ -112,8 +121,29 @@ export default createComponent({
       props.instrument.mute = !active.value;
     });
 
+    function contextmenu(event: MouseEvent) {
+      base.context({
+        position: event,
+        items: [
+          {
+            callback: () => context.emit('delete'),
+            text: 'Delete',
+          },
+          {
+            callback: () => context.emit('open'),
+            text: 'Open In Piano Roll',
+          },
+          {
+            callback: () => contenteditable.value = true,
+            text: 'Rename',
+          },
+        ],
+      });
+    }
+
     return {
       active,
+      contextmenu,
       automatePan,
       automateVolume,
       panInput,
@@ -122,6 +152,7 @@ export default createComponent({
       synthStyle,
       expand,
       strokeWidth,
+      contenteditable,
     };
   },
 });

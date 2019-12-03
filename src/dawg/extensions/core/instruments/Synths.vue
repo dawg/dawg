@@ -2,8 +2,9 @@
   <div class="synths">
     <synth
       v-for="(instrument, i) in instruments"
-      :key="instrument.name"
-      @contextmenu.native="contextmenu($event, i)"
+      :key="i"
+      @delete="deleteInstrument(i)"
+      @open="openScore(i)"
       :instrument="instrument"
       :notes="getNotes(instrument)"
       :channel="instrument.channel"
@@ -65,20 +66,8 @@ export default class Synths extends Vue {
     this.$update('selectedScore', this.scoreLookup[instrument.id]);
   }
 
-  public contextmenu(event: MouseEvent, i: number) {
-    base.context({
-      position: event,
-      items: [
-        {
-          callback: () => project.project.deleteInstrument(i),
-          text: 'Delete',
-        },
-        {
-          callback: () => this.openScore(i),
-          text: 'Open In Piano Roll',
-        },
-      ],
-    });
+  public deleteInstrument(i: number) {
+    project.project.deleteInstrument(i);
   }
 
   @Watch<Synths>('selectedPattern', { immediate: true })
