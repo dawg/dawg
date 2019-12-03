@@ -18,7 +18,6 @@ export class Sequence<T extends Schedulable> extends StrictEventEmitter<{ added:
   public map = this.elements.map.bind(this.elements);
   public filter = this.elements.filter.bind(this.elements);
   public forEach = this.elements.forEach.bind(this.elements);
-  public slice = this.elements.slice.bind(this.elements);
 
   constructor(private transport: Transport, public elements: T[]) {
     super();
@@ -30,6 +29,10 @@ export class Sequence<T extends Schedulable> extends StrictEventEmitter<{ added:
     element.schedule(this.transport);
     watchElement(this.elements, element, this.onRemove.bind(this));
     this.emit('added', element);
+  }
+
+  public slice() {
+    return this.elements.slice();
   }
 
   private onRemove(element: T) {

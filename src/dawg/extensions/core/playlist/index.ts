@@ -4,7 +4,7 @@ import { manager } from '@/base/manager';
 import { project } from '@/dawg/extensions/core/project';
 // FIXME(2) Remove this import
 import { record } from '@/dawg/extensions/core/record';
-import { ScheduledPattern, ScheduledSample, Sequence } from '@/core';
+import { ScheduledPattern, ScheduledSample } from '@/core';
 import { value } from 'vue-function-api';
 import { ui } from '@/base/ui';
 import { Ghost } from '@/core/ghost';
@@ -76,12 +76,12 @@ export const playlist = manager.activate({
           }
 
           const sample = prototype.sample;
-          if (this.project.samples.indexOf(prototype.sample) >= 0) {
+          if (project.project.samples.indexOf(prototype.sample) >= 0) {
             return;
           }
 
           logger.debug('Adding a sample!');
-          this.project.addSample(sample);
+          project.project.addSample(sample);
         },
       },
     });
