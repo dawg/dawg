@@ -60,17 +60,21 @@ export function insertTheme(newTheme: base.Theme) {
 
   const variables = Object.entries(newTheme).map(([name, color]) => {
     return `--${name}: #${color};`;
-  });
+  }).concat(Object.entries(newTheme).map(([name, color]) => {
+    const rgb = tinycolor(color).toRgb();
+    return `--${name}--rgb: ${rgb.r}, ${rgb.g}, ${rgb.b};`;
+  }));
 
   const node = document.createElement('style');
   const classes = createClasses(newTheme);
-  let css = classesToString(classes);
-  css += '\n';
-  css += `
+
+  let css = `
 body {
-  ${variables.join('  \n')}
+${variables.join('  \n')}
 }
   `;
+  css += '\n';
+  css += classesToString(classes);
 
   node.innerHTML = css;
   style = document.body.appendChild(node);

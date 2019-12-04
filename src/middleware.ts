@@ -80,7 +80,7 @@ const middleware = () => {
   Vue.use(sequencer);
   Vue.component('VuePerfectScrollbar', VuePerfectScrollbar);
 
-  Vue.use(Vuetify, { theme: false });
+  Vue.use(Vuetify);
   Vue.component('icon', Icon);
   Vue.component('DragElement', DragElement);
 };

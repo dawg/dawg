@@ -82,21 +82,19 @@
       <split :initial="STATUS_BAR_HEIGHT" fixed>
 
         <div class="primary footer position foreground--text" :style="statusBarStyle">
-          <component
+          <div
             v-for="(item, i) in statusBarLeft"
             class="status-bar-item-left"
-            :key="`status-bar-left-${i}`"
-            :is="item.component"
-          ></component>
+            :key="`status-bar-left-${i}`" 
+          ><component :is="item.component"></component></div>
 
           <div style="flex: 1"></div>
 
-          <component
+          <div
             v-for="(item, i) in statusBarRight"
             class="status-bar-item-right"
             :key="`status-bar-right-${i}`"
-            :is="item.component"
-          ></component>
+          ><component :is="item.component"></component></div>
         </div>
 
       </split>

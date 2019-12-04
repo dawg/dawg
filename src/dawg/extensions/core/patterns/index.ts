@@ -61,7 +61,7 @@ export const patterns = manager.activate({
     }));
 
     ui.activityBar.push({
-      icon: 'queue_play',
+      icon: 'queue',
       name: 'Patterns',
       component: wrapper,
     });

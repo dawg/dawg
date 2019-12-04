@@ -1,9 +1,9 @@
 <template>
   <div class="icon__wrapper">
     <v-tooltip :right="right" :left="left" :top="top" :bottom="bottom" z-index="2000">
-      <template slot="activator">
-        <icon v-if="fa" :name="icon" :style="style" v-bind="$attrs"></icon>
-        <v-icon v-else class="icon" :style="style" v-bind="$attrs">{{ icon }}</v-icon>
+      <template v-slot:activator="{ on }">
+        <icon v-if="fa" :name="icon" :style="style" v-bind="$attrs" v-on="on"></icon>
+        <v-icon v-else class="icon" :style="style" v-bind="$attrs" v-on="on">{{ icon }}</v-icon>
       </template>
       <span>{{ tooltip }}</span>
     </v-tooltip>

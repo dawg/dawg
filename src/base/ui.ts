@@ -68,6 +68,7 @@ interface StatusBarItem {
 // This should be added to the base later
 const global: VueConstructor[] = [];
 const statusBar: StatusBarItem[] = [];
+// TODO introduce order
 const activityBar: ActivityBarItem[] = [];
 const panels: PanelItem[] = [];
 const mainSection: VueConstructor[] = [];

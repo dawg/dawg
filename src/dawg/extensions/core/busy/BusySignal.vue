@@ -5,24 +5,26 @@
     :min-width="300"
   >
 
-    <div slot="activator">
-      <icon 
-        class="activator icon"
-        name="circle" 
-        :style="iconStyle"
-        :scale="0.4" 
-        :color="color"
-      ></icon>
-      <v-progress-circular
-        v-if="providers.length"
-        class="activator circle"
-        :size="size"
-        :color="loadingColor"
-        :style="progresStyle"
-        :width="1"
-        indeterminate
-      ></v-progress-circular>
-    </div>
+    <template v-slot:activator="{ on }">
+      <div v-on="on">
+        <icon
+          class="activator icon"
+          name="circle" 
+          :style="iconStyle"
+          :scale="0.4" 
+          :color="color"
+        ></icon>
+        <v-progress-circular
+          v-if="providers.length"
+          class="activator circle"
+          :size="size"
+          :color="loadingColor"
+          :style="progresStyle"
+          :width="1"
+          indeterminate
+        ></v-progress-circular>
+      </div>
+    </template>
 
     <div v-if="!providers.length">
       Idle
@@ -96,7 +98,7 @@ export default class BusySignal extends Vue {
 
   get iconStyle() {
     return {
-      left: `${this.size / 2 - this.iconSize / 2}px`,
+      marginLeft: `-${this.size / 2 - this.iconSize / 2}px`,
       marginTop: `${-this.iconSize / 2}px`,
     };
   }

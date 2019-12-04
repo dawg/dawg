@@ -4,13 +4,14 @@
     mini-variant
     class="secondary-lighten-2"
   >
-    <v-list dense style="height: 100%; display: flex; flex-direction: column">
-      <v-list-tile
+    <dg-list style="height: 100%;">
+      <dg-list-item
         v-for="item in base.ui.activityBar"
         :key="item.name"
         @click="clickActivityBar(item)"
       >
-        <tooltip-icon 
+        <tooltip-icon
+          class="icon"
           medium 
           :color="base.theme.foreground" 
           :tooltip="item.name"
@@ -19,19 +20,20 @@
         >
           {{ item.icon }}
         </tooltip-icon>
-      </v-list-tile>
+      </dg-list-item>
 
       <div style="flex-grow: 1"></div>
-      <v-list-tile>
-        <v-icon 
+      <dg-list-item style="display: flex">
+        <v-icon
+          class="icon"
           medium
           :color="base.theme.foreground"
           @click="openSettings"
         >
           settings
         </v-icon>
-      </v-list-tile>
-    </v-list>
+      </dg-list-item>
+    </dg-list>
   </v-navigation-drawer>
 </template>
 
@@ -59,3 +61,11 @@ export default createComponent({
   },
 });
 </script>
+
+<style lang="scss">
+.icon {
+  // this centers the icons
+  margin: auto;
+  display: flex;
+}
+</style>
