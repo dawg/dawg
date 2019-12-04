@@ -4,10 +4,13 @@ import { palette } from '@/dawg/extensions/core/palette';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { Key, hasKey } from '@/base/keyboard';
 
-export interface Command {
-  text: string;
+export interface Shortcut {
   shortcut?: keyboard.Key[];
   callback: () => void;
+}
+
+export interface Command extends Shortcut {
+  text: string;
 }
 
 // FIXME(1) move from here into lower layer
@@ -58,7 +61,7 @@ export class KeyboardShortcuts {
       this.pressedKeys.add(e.which);
     }
 
-    items.forEach((item) => {
+    const check = (item: Shortcut) => {
       if (!item.shortcut) {
         return;
       }
@@ -67,7 +70,10 @@ export class KeyboardShortcuts {
         e.preventDefault();
         item.callback();
       }
-    });
+    };
+
+    shorcuts.forEach(check);
+    cmmds.forEach(check);
   }
 
   public keyup(e: KeyboardEvent) {
@@ -80,23 +86,24 @@ export class KeyboardShortcuts {
   }
 }
 
-const items: Command[] = [];
+const cmmds: Command[] = [];
+const shorcuts: Shortcut[] = [];
 
-class CommandManager {
-  constructor(private command: Command) {
-    items.push(command);
-  }
+const pushAndReturnDispose = (items: Shortcut[], item: Shortcut) => {
+  items.push(item);
 
-  public dispose() {
-    const i = items.indexOf(this.command);
-    if (i < 0) {
-      return;
-    }
+  return {
+    dispose() {
+      const i = items.indexOf(item);
+      if (i < 0) {
+        return;
+      }
 
-    // Remove command from the list
-    items.splice(i, 1);
-  }
-}
+      // Remove command from the list
+      items.splice(i, 1);
+    },
+  };
+};
 
 export const commands = manager.activate({
   id: 'dawg.commands',
@@ -104,17 +111,21 @@ export const commands = manager.activate({
     context.subscriptions.push(new KeyboardShortcuts());
 
     const registerCommand = (command: Command) => {
-      return new CommandManager(command);
+      return pushAndReturnDispose(cmmds, command);
+    };
+
+    const registerShortcut = (shortcut: Shortcut) => {
+      return pushAndReturnDispose(shorcuts, shortcut);
     };
 
     const openCommandPalette: Command = {
       text: 'Command Palette',
       shortcut: ['CmdOrCtrl', 'Shift', 'P'],
       callback: () => {
-        const paletteItems = items.map((item) => ({
+        const paletteItems = cmmds.map((item) => ({
           ...item,
           action: item.shortcut ? item.shortcut.join('+') : undefined,
-        }));
+        })).filter((o) => o.text); // we just are filtering out the empty strings here
 
         palette.selectFromItems(paletteItems, {
           onDidSelect: (item) => {
@@ -130,6 +141,7 @@ export const commands = manager.activate({
 
     return {
       registerCommand,
+      registerShortcut,
       clear() {
         // bus.$emit('clear');
       },

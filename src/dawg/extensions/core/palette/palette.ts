@@ -12,7 +12,7 @@ export interface PaletteOptions {
 }
 
 interface PaletteEvents {
-  show: (items: DetailedItem[], opts?: PaletteOptions) => void;
+  show: (items: PaletteItem[], opts?: PaletteOptions) => void;
   cancel: () => void;
   select: (text: string) => void;
   focus: (text: string) => void;
@@ -20,14 +20,14 @@ interface PaletteEvents {
 
 export const paletteEvents = events.emitter<PaletteEvents>();
 
-export interface DetailedItem {
+export interface PaletteItem {
   text: string;
   action?: string;
 }
 
 @Component
 class Result extends Vue {
-  @Prop({ type: Object, required: true }) public item!: DetailedItem;
+  @Prop({ type: Object, required: true }) public item!: PaletteItem;
   @Prop({ type: Boolean, required: true }) public selected!: boolean;
 
   public hover = false;
@@ -111,7 +111,7 @@ export class TextField extends Vue {
 @Component
 export class Palette extends Vue {
   public value = false;
-  public items: DetailedItem[] = [];
+  public items: PaletteItem[] = [];
   public placeholder = '';
   public searchText = '';
   public selected = 0;
@@ -149,7 +149,7 @@ export class Palette extends Vue {
     paletteEvents.removeListener('show', this.show);
   }
 
-  public show(items: DetailedItem[], opts: PaletteOptions = {}) {
+  public show(items: PaletteItem[], opts: PaletteOptions = {}) {
     this.items = items;
     this.value = true;
     this.searchText = '';

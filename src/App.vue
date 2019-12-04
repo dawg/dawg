@@ -4,7 +4,7 @@
 
       <split direction="horizontal" resizable>
         <split :initial="65" fixed>
-          <activity-bar></activity-bar>
+          <activity-bar @open-settings="openSettings"></activity-bar>
         </split>
 
         <split 
@@ -101,6 +101,7 @@
 
       </split>
     </split>
+    <settings v-model="settings"></settings>
     <component
       v-for="(global, i) in base.ui.global"
       :key="i"
@@ -141,6 +142,7 @@ export default class App extends Vue {
   public TOOLBAR_HEIGHT = TOOLBAR_HEIGHT;
   public STATUS_BAR_HEIGHT = STATUS_BAR_HEIGHT;
   public base = base;
+  public settings = false;
 
   // This loaded flag is important
   // Bugs can appear if we render before we load the project file
@@ -229,6 +231,10 @@ export default class App extends Vue {
 
   public border(side: 'left' | 'right' | 'top' | 'bottom') {
     return `border-${side}: 1px solid ${base.theme.background}`;
+  }
+
+  public openSettings() {
+    this.settings = true;
   }
 
   // public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T & string) {

@@ -79,7 +79,7 @@ const getPartialFromDefinition = (props: ExtensionProps) => {
   const partial: t.Props = {};
   Object.keys(props).forEach((key) => {
     const fieldInformation = props[key];
-    props[key] = isState(fieldInformation) ? fieldInformation : fieldInformation.type;
+    partial[key] = isState(fieldInformation) ? fieldInformation : fieldInformation.type;
   }, {});
   return t.partial(partial);
 };
@@ -219,12 +219,16 @@ export type ProjectInfo =
 
 const projectManager = Manager.fromFileSystem();
 
-// FIXME(1) Add interface with message, description, showUser
+// TODO Add interface with message, description, showUser
 // Also, write to file
 const notificationQueue: string[] = [];
+const exposed: Array<{
+  extension: Extension,
+  workspace: ReactiveDefinition<ExtensionProps>
+  global: ReactiveDefinition<ExtensionProps>,
+}> = [];
 
 export const manager = {
-  projectManager,
   getOpenedFile() {
     return projectManager.projectInfo.path;
   },
@@ -304,7 +308,6 @@ export const manager = {
     await write(GLOBAL_PATH, g);
     await write(WORKSPACE_PATH, projectManager.workspace);
   },
-  // tslint:disable-next-line:max-line-length
   activate<W extends ExtensionProps, G extends ExtensionProps, V>(
     extension: Extension<W, G, V>,
   ): V {
@@ -361,6 +364,26 @@ export const manager = {
     const reactiveWorkspace = makeReactive(extension.workspace, w);
     const reactiveGlobal = makeReactive(extension.global, g);
 
+    exposed.push({ extension: extension as Extension, workspace: {}, global: {} });
+    const entry = exposed[exposed.length - 1];
+    const addToExposed = (wg: 'workspace' | 'global') => {
+      const reactive = wg === 'workspace' ? reactiveWorkspace : reactiveGlobal;
+      const definition = extension[wg];
+      if (!definition) {
+        return;
+      }
+
+      keys(definition).forEach((key) => {
+        const fieldInformation = definition[key];
+        if (isFieldOptions(fieldInformation) && fieldInformation.expose) {
+          entry[wg][key] = reactive[key as keyof typeof reactive] as any;
+        }
+      });
+    };
+
+    addToExposed('workspace');
+    addToExposed('global');
+
     const context = new ExtensionContext<W, G>(reactiveWorkspace, reactiveGlobal);
 
     // beware of the any type
@@ -381,6 +404,7 @@ export const manager = {
       }
     });
 
+    // TODO make sure to reset everything
     extensionsStack = [];
   },
   get<T extends Extension<any, any, any>>(extension: T): ReturnType<T['activate']> {
@@ -397,4 +421,5 @@ export const manager = {
   },
   notificationQueue,
   activating: [] as Array<Extension<any, any, any>>,
+  exposed,
 };

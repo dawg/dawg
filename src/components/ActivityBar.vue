@@ -30,16 +30,6 @@
         >
           settings
         </v-icon>
-        <v-menu
-          v-model="open"
-          :close-on-content-click="false"
-          :position-x="x"
-          :position-y="y"
-          right
-          top
-        >
-          <settings></settings>
-        </v-menu>
       </v-list-tile>
     </v-list>
   </v-navigation-drawer>
@@ -51,19 +41,13 @@ import { createComponent, ref } from '@vue/composition-api';
 
 export default createComponent({
   name: 'ActivityBar',
-  setup() {
-    const open = ref(false);
-    const x = ref(0);
-    const y = ref(0);
-
+  setup(_, context) {
     function clickActivityBar(tab: base.ActivityBarItem) {
       base.ui.openedSideTab.value = tab.name;
     }
 
     function openSettings(e: MouseEvent) {
-      open.value = true;
-      x.value = e.clientX;
-      y.value = e.clientY;
+      context.emit('open-settings');
     }
 
     return {
@@ -71,8 +55,6 @@ export default createComponent({
       clickActivityBar,
       base,
       open,
-      x,
-      y,
     };
   },
 });

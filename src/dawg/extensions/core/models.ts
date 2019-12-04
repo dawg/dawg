@@ -7,6 +7,7 @@ import { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 import { busy } from '@/dawg/extensions/core/busy';
 import { notify } from '@/dawg/extensions/core/notify';
 import { ui } from '@/base/ui';
+import { createExtension } from '@/dawg/extensions';
 
 interface PythonError {
   type: 'error';
@@ -82,7 +83,7 @@ export async function runModel(opts: PythonOptions) {
   }
 }
 
-export const models = manager.activate({
+export const extension = createExtension({
   id: 'dawg.models',
   global: {
     modelsPath: {
@@ -156,11 +157,5 @@ export const models = manager.activate({
       title: 'Models Path',
       description: 'The path to the `models` repository',
     });
-
-    return {
-      modelsPath,
-      pythonPath,
-      runModel,
-    };
   },
 });

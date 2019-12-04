@@ -1,6 +1,9 @@
 import { manager } from '@/base/manager';
 import { ui } from '@/base/ui';
-import { Palette, paletteEvents, DetailedItem } from '@/dawg/extensions/core/palette/palette';
+import { Palette, paletteEvents, PaletteItem } from '@/dawg/extensions/core/palette/palette';
+export {
+  PaletteItem,
+};
 
 type QuickPickCallback<T> = (item: T) => void;
 
@@ -22,10 +25,10 @@ export const palette = manager.activate({
       selectFromStrings<T extends string>(items: T[], options: QuickPickOptions<T>) {
         this.selectFromTuples(items.map((item) => [{ text: item }, item]), options);
       },
-      selectFromItems<T extends DetailedItem>(items: T[], options: QuickPickOptions<T>) {
+      selectFromItems<T extends PaletteItem>(items: T[], options: QuickPickOptions<T>) {
         this.selectFromTuples(items.map((item) => [item, item]), options);
       },
-      selectFromTuples<T>(items: Array<[DetailedItem, T]>, options: QuickPickOptions<T>) {
+      selectFromTuples<T>(items: Array<[PaletteItem, T]>, options: QuickPickOptions<T>) {
         const lookup: InputItemLookup<T> = {};
         items.forEach(([info, item]) => {
           lookup[info.text] = item;
