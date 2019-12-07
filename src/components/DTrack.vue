@@ -1,5 +1,5 @@
 <template>
-  <div class="track foreground--text secondary">
+  <div class="track text-default secondary">
     <dot-button
       v-if="!recording"
       v-model="active"

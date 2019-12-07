@@ -7,6 +7,7 @@ import { VueConstructor } from 'vue';
 import { Ref, ref } from '@vue/composition-api';
 
 export interface TabAction {
+  // TODO make none of these REFS
   icon: Ref<string>;
   tooltip: Ref<string>;
   callback: (e: MouseEvent) => void;
@@ -53,6 +54,7 @@ const openedSideTab = ref<undefined | string>(undefined);
 const openedPanel = ref<undefined | string>(undefined);
 const panelsSize = ref(250);
 const sideBarSize = ref(250);
+const rootClasses: string[] = [];
 
 export const ui = {
   global,
@@ -66,5 +68,6 @@ export const ui = {
   openedPanel,
   panelsSize,
   sideBarSize,
+  rootClasses,
 };
 

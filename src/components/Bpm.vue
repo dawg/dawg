@@ -1,5 +1,5 @@
 <template>
-  <drag-element class="screen foreground--text" curse="ns-resize" @move="move">
+  <drag-element class="screen text-default" curse="ns-resize" @move="move">
     <div class="text">{{ value }}</div>
     <div class="small-text">bpm</div>
   </drag-element>

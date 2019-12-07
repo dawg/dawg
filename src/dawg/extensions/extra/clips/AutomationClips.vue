@@ -5,7 +5,7 @@
       group="arranger"
       :key="i"
       @contextmenu.native="context($event, i)"
-      class="clip foreground--text"
+      class="clip text-default"
       :transfer-data="item.prototype"
     >
       {{ item.name }}

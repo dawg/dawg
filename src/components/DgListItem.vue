@@ -13,10 +13,6 @@ export default createComponent({
 </script>
 
 <style lang="scss" scoped>
-@function append($hex, $percent) {
-  @return $hex + $percent;
-}
-
 .dg-list-item {
   padding: 10px 5px;
 

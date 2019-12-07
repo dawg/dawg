@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* For some reason, this class is not appearing in the output CSS */
+.border-default {
+  border-color: var(--default);
+}

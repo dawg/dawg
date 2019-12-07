@@ -60,7 +60,7 @@ class Result extends Vue {
         },
       },
       style: this.style,
-      class: 'foreground--text',
+      class: 'text-default',
     }, [text, spacer, shortcut]);
   }
 }
@@ -278,7 +278,7 @@ export class Palette extends Vue {
           this.value = false;
         },
       },
-      class: 'foreground--text',
+      class: 'text-default',
     }, children);
   }
 }

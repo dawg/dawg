@@ -26,17 +26,17 @@ export default class VerticalSwitch extends Vue {
 
   get topClass() {
     if (this.top) {
-      return 'primary';
+      return 'bg-primary';
     } else {
-      return 'primary-lighten-6';
+      return 'bg-white';
     }
   }
 
   get bottomClass() {
     if (this.bottom) {
-      return 'primary';
+      return 'bg-primary';
     } else {
-      return 'primary-lighten-6';
+      return 'bg-white';
     }
   }
 
@@ -71,7 +71,6 @@ $size: 30px
   border: 2px solid transparent
   background-clip: padding-box
   content: ""
-  background-color: #FFFFFF
   transition: .5s
   border-radius: 4px
 

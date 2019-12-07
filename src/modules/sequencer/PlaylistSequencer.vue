@@ -57,7 +57,7 @@ export default class PlaylistSequencer extends Vue {
 
   public rowStyle() {
     return {
-      borderBottom: `1px solid ${theme.background}`,
+      borderBottom: `1px solid ${theme['text-inverse']}`,
     };
   }
 }

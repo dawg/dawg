@@ -1,6 +1,6 @@
 <template>
   <div class="effect secondary">
-    <div class="title foreground--text">{{ name | upper }}</div>
+    <div class="title text-default">{{ name | upper }}</div>
     <div style="display: flex; flex-direction: column">
       <knob
         class="option"

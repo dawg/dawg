@@ -6,7 +6,7 @@
       :key="i"
       @click.native="start(item.sample)"
       @contextmenu.native="context($event, i)"
-      class="sample foreground--text"
+      class="sample text-default"
       :transfer-data="item.prototype"
     >
       {{ item.sample.name }}

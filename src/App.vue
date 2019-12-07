@@ -1,5 +1,5 @@
 <template>
-  <v-app class="app">
+  <v-app class="app" :class="base.ui.rootClasses">
     <split direction="vertical">
 
       <split direction="horizontal" resizable>
@@ -21,19 +21,9 @@
 
         <split direction="vertical" resizable>
           <split :initial="TOOLBAR_HEIGHT" fixed>
-            <v-toolbar 
-              class="secondary toolbar" 
-              :style="border('bottom')"
-              :height="TOOLBAR_HEIGHT" 
-            >
-              <logo
-                :color="iconColor"
-              ></logo>
-
-              <div 
-                class="tall-line"
-                :style="lineStyle"
-              ></div>
+            <div class="bg-default h-full px-5 flex items-center border-b border-default-darken-3">
+              <logo class="text-default"></logo>
+              <div class="text-default border-l mx-6" style="height: 60%"></div>
 
               <component
                 v-for="(item, i) in toolbarLeft"
@@ -41,16 +31,14 @@
                 :is="item.component"
               ></component>
 
-              <v-spacer
-                class="drag-area"
-              ></v-spacer>
+              <div class="flex-grow drag-area"></div>
 
               <component
                 v-for="(item, i) in toolbarRight"
                 :key="`toolbar-right-${i}`"
                 :is="item.component"
               ></component>
-            </v-toolbar>
+            </div>
           </split>
 
           <split>
@@ -81,7 +69,7 @@
       </split>
       <split :initial="STATUS_BAR_HEIGHT" fixed>
 
-        <div class="primary footer position foreground--text" :style="statusBarStyle">
+        <div class="bg-primary h-full flex items-center position text-default">
           <div
             v-for="(item, i) in statusBarLeft"
             class="status-bar-item-left"
@@ -163,12 +151,8 @@ export default class App extends Vue {
     return base.ui.toolbar.filter((item) => item.position === 'right').sort(sortOrdered).reverse();
   }
 
-  get iconColor() {
-    return base.theme.foreground;
-  }
-
   get lineStyle() {
-    return `border-left: 1px solid ${base.theme.foreground}`;
+    return `border-left: 1px solid ${base.theme['text-default']}`;
   }
 
   get statusBarRight() {
@@ -177,12 +161,6 @@ export default class App extends Vue {
 
   get statusBarLeft() {
     return base.ui.statusBar.filter((item) => item.position === 'left').sort(sortOrdered);
-  }
-
-  get statusBarStyle() {
-    return {
-      lineHeight: `${STATUS_BAR_HEIGHT}px`,
-    };
   }
 
   public async created() {
@@ -228,7 +206,7 @@ export default class App extends Vue {
   }
 
   public border(side: 'left' | 'right' | 'top' | 'bottom') {
-    return `border-${side}: 1px solid ${base.theme.background}`;
+    return `border-${side}: 1px solid ${base.theme['text-inverse']}`;
   }
 
   public openSettings() {
@@ -271,34 +249,10 @@ html
   display: flex
   flex-direction: column
 
-.toolbar
-  z-index: 10
-  border-bottom: 1px solid
-  padding: 0
-  box-shadow: none
-
-.toolbar /deep/ .v-toolbar__content
-  padding: 0 20px
-
-.tall-line
-  height: 60% 
-  margin: 20px
-
-.footer
-  display: flex
-  width: 100%
-  font-size: 12px
-  height: 100%
-  text-align: center
-  position: unset
-  align-items: center
-
 .status-bar-item-left
   margin-left: 15px
-  padding-top: 1px
 
 .status-bar-item-right
   margin-right: 15px
-  padding-top: 1px
 </style>
 

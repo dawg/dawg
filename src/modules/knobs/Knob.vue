@@ -94,7 +94,7 @@ export default class Knob extends Vue {
   }
 
   get strokeColor() {
-    return dawg.theme.background + '60';
+    return dawg.theme['text-inverse'] + '60';
   }
 
   get midDegrees() {

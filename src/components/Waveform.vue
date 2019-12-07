@@ -30,7 +30,7 @@ export default createComponent({
     });
 
     const color = computed(() => {
-      return base.theme.foreground;
+      return base.theme['text-default'];
     });
 
     const h2 = computed(() => {

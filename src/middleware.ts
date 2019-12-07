@@ -14,9 +14,11 @@ import * as helpLinks from '@/dawg/extensions/extra/help-links';
 import * as restorer from '@/dawg/extensions/extra/restorer';
 import * as dawg from '@/dawg';
 
+// TODO remove vue-awesome
 import Vuetify from 'vuetify';
 import 'vue-awesome/icons';
-import 'vuetify/dist/vuetify.css';
+// TODO remove
+// import 'vuetify/dist/vuetify.css';
 import '@/styles/material.css';
 import '@/main.css';
 import Icon from 'vue-awesome/components/Icon.vue';
@@ -27,8 +29,12 @@ import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { DragElement } from '@/modules/draggable';
 import Knobs from '@/modules/knobs';
 import Split from '@/modules/split';
+// tslint:disable-next-line:no-var-requires
+const VTooltip = require('v-tooltip');
 
 const middleware = () => {
+  Vue.use(VTooltip);
+
   // This imports all .vue files in the components folder
   // See https://vuejs.org/v2/guide/components-registration.html
   const components = require.context(

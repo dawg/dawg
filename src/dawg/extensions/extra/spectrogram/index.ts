@@ -9,7 +9,7 @@ export const extension = createExtension({
       template: `
       <spectrogram
         class="item"
-        :color="theme.foreground"
+        :color="theme['text-default']"
       ></spectrogram>
       `,
       data: () => ({
@@ -17,10 +17,11 @@ export const extension = createExtension({
       }),
     });
 
-    dawg.ui.statusBar.push({
-      component,
-      position: 'left',
-      order: 2,
-    });
+    // FIXME add this back in sometime
+    // dawg.ui.statusBar.push({
+    //   component,
+    //   position: 'left',
+    //   order: 2,
+    // });
   },
 });

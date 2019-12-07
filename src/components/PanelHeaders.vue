@@ -6,7 +6,7 @@
       :class="isActive(tab)"
       class="tabs-header"
     >
-      <div @click="selectPanel(tab.name)" class="text foreground--text">{{ tab.name }}</div>
+      <div @click="selectPanel(tab.name)" class="text text-default">{{ tab.name }}</div>
     </li>
     <div style="flex-grow: 1"></div>
     <tooltip-icon

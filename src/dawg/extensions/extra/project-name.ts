@@ -14,12 +14,9 @@ export const extension = createExtension({
 
     const component = Vue.extend({
       template: `
-      <v-tooltip top>
-        <template v-slot:activator="{ on }">
-          <div class="name item" v-on="on">{{ projectName.value }}</div>
-        </template>
-        <div>Project Name</div>
-      </v-tooltip>
+        <div v-tooltip="'Project Name'" class="text-default">
+          {{ projectName.value }}
+        </div>
       `,
       data: () => ({
         projectName,

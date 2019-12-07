@@ -1,5 +1,5 @@
 <template>
-  <div class="screen foreground--text">
+  <div class="screen text-default">
     <span class="text">{{ minutes }}</span>
     <span class="text colon">:</span>
     <span class="text">{{ formattedSeconds }}</span>

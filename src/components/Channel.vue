@@ -9,7 +9,7 @@
           v-if="effect"
           @click="select($event, effect)"
           @contextmenu="contextmenu($event, effect)"
-          class="effect secondary foreground--text"
+          class="effect secondary text-default"
         >
           {{ effect.type | sentenceCase }}
         </div>
@@ -35,7 +35,7 @@
           ></pan>
           <div style="flex-grow: 1"></div>
           <div 
-            class="mute foreground--text"
+            class="mute text-default"
             :class="{ 'primary-lighten-2': !channel.mute }"
             @click="mute"
           >

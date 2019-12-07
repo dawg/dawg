@@ -14,87 +14,59 @@ export interface ThemeAugmentation {
 
 const PERCENTAGES = [2, 4, 8, 12, 20, 32];
 
-const add = (classes: Classes, name: string, color: string, suffix = '') => {
-  classes[`${name}${suffix}`] = `background-color: #${color}!important;`;
-  classes[`${name}${suffix}--text`] = `color: #${color}!important;`;
-  classes[`${name}${suffix}--stroke`] = `stroke: #${color}!important;`;
-  classes[`${name}${suffix}--fill`] = `fill: #${color}!important;`;
-};
-
-function createClasses(newTheme: base.Theme) {
-  const classes: Classes = {};
+function createVariables(newTheme: base.Theme) {
+  const variables: Classes = {};
   Object.entries(newTheme).forEach(([name, color]) => {
-    add(classes, name, color);
+    variables[name] = color;
     return PERCENTAGES.forEach((percentage, n) => {
-      add(classes, name, tinycolor(color).darken(percentage).toHex(), `-darken-${n}`);
-      add(classes, name, tinycolor(color).lighten(percentage).toHex(), `-lighten-${n}`);
+      variables[name + `-darken-${n}`] = tinycolor(color).darken(percentage).toHex();
+      variables[name + `-lighten-${n}`] = tinycolor(color).lighten(percentage).toHex();
     });
   });
-  return classes;
+  return variables;
 }
 
-function classesToString(classes: Classes) {
-  const css: string[] = [];
-  Object.keys(classes).forEach((name) => {
-    css.push(
-    `.${name} {
-      ${classes[name]}
-    }
-    `);
+export function createCss(name: ThemeNames) {
+  const newTheme = defaults[name];
+  const variables = createVariables(newTheme);
+  const variablesList = Object.entries(variables).map(([varName, varColor]) => {
+    return `  --${varName}: #${varColor};`;
   });
-  return css.join('\n');
+
+  let css = `
+.${name} {
+${variablesList.join('\n')}
+}
+  `;
+  css += '\n';
+
+  return css;
 }
 
 let style: Node | null = null;
-
-export function insertTheme(newTheme: base.Theme) {
+const insertThemes = () => {
   if (style) {
     document.body.removeChild(style);
     style = null;
   }
 
-  const hex: { [k: string]: string } = {};
-  Object.keys(newTheme).forEach((key) => {
-    hex[key] = `#${newTheme[key as keyof base.Theme]}`;
-  });
-
-  const variables = Object.entries(newTheme).map(([name, color]) => {
-    return `--${name}: #${color};`;
-  }).concat(Object.entries(newTheme).map(([name, color]) => {
-    const rgb = tinycolor(color).toRgb();
-    return `--${name}--rgb: ${rgb.r}, ${rgb.g}, ${rgb.b};`;
-  }));
-
+  const themeNames = Object.keys(defaults) as ThemeNames[];
+  const css = themeNames.map(createCss).join('\n\n');
   const node = document.createElement('style');
-  const classes = createClasses(newTheme);
-
-  let css = `
-body {
-${variables.join('  \n')}
-}
-  `;
-  css += '\n';
-  css += classesToString(classes);
-
   node.innerHTML = css;
   style = document.body.appendChild(node);
+};
 
-  const keys = [
-    'foreground',
-    'background',
-    'primary',
-    'secondary',
-    'accent',
-    'error',
-    'info',
-    'success',
-    'warning',
-  ] as const;
-
-  for (const key of keys) {
-    theme[key] = base.theme[key] = hex[key];
+let oldTheme: ThemeNames;
+const insertTheme = (name: ThemeNames) => {
+  // make a `dispose` call
+  if (oldTheme) {
+    base.ui.rootClasses.splice(base.ui.rootClasses.indexOf(oldTheme));
   }
-}
+
+  base.ui.rootClasses.push(name);
+  oldTheme = name;
+};
 
 // https://github.com/Microsoft/vscode/blob/master/src/vs/vscode.d.ts
 // https://code.visualstudio.com/api/references/contribution-points#contributes.configuration
@@ -108,35 +80,36 @@ const extension = createExtension({
     theme: t.string,
   },
   activate(context) {
-    const themeNames = Object.keys(defaults) as ThemeNames[];
 
-    const checkIsValidTheme = (candidate: string | undefined) => {
+    const themeNames = Object.keys(defaults) as ThemeNames[];
+    const checkIsValidTheme = (candidate: string | undefined): ThemeNames => {
       if (candidate === undefined) {
-        return 'Default';
+        return 'default';
       }
 
       if (themeNames.indexOf(candidate as ThemeNames) === -1) {
-        return 'Default';
+        return 'default';
       }
 
       return candidate as ThemeNames;
     };
 
+    insertThemes();
+
     const disposable = commands.registerCommand({
       text: 'Change Theme',
       callback: () => {
-        // this is an annoying cast
         const currentThemeName = context.workspace.theme.value;
         palette.selectFromStrings(themeNames, {
           onDidSelect: (themeName) => {
             context.workspace.theme.value = themeName;
-            insertTheme(defaults[themeName]);
+            insertTheme(themeName);
           },
           onDidKeyboardFocus: (themeName) => {
-            insertTheme(defaults[themeName]);
+            insertTheme(themeName);
           },
           onDidCancel: () => {
-            insertTheme(defaults[checkIsValidTheme(currentThemeName)]);
+            insertTheme(checkIsValidTheme(currentThemeName));
           },
         });
       },
@@ -146,7 +119,7 @@ const extension = createExtension({
 
     function insertStoredTheme() {
       const name = context.workspace.theme.value;
-      insertTheme(defaults[checkIsValidTheme(name)]);
+      insertTheme(checkIsValidTheme(name));
     }
 
     return {

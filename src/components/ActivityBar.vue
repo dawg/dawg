@@ -1,40 +1,27 @@
 <template>
-  <v-navigation-drawer
-    permanent
-    mini-variant
-    class="secondary-lighten-2"
-  >
-    <dg-list style="height: 100%;">
-      <dg-list-item
-        v-for="item in base.ui.activityBar"
-        :key="item.name"
-        @click="clickActivityBar(item)"
-      >
-        <tooltip-icon
-          class="icon"
-          medium 
-          :color="base.theme.foreground" 
-          :tooltip="item.name"
-          right
-          v-bind="item.iconProps"
-        >
-          {{ item.icon }}
-        </tooltip-icon>
-      </dg-list-item>
+  <div class="flex flex-col bg-default-lighten-2" style="height: 100%;">
+    <div
+      v-for="item in base.ui.activityBar"
+      :key="item.name"
+      class="pt-3 pb-3 text-center cursor-pointer hover:bg-default-lighten-1"
+      @click="clickActivityBar(item)"
+    >
+      <dg-mat-icon
+        class="text-2xl text-default"
+        v-tooltip.right="item.name"
+        :icon="item.icon"
+      ></dg-mat-icon>
+    </div>
 
-      <div style="flex-grow: 1"></div>
-      <dg-list-item style="display: flex">
-        <v-icon
-          class="icon"
-          medium
-          :color="base.theme.foreground"
-          @click="openSettings"
-        >
-          settings
-        </v-icon>
-      </dg-list-item>
-    </dg-list>
-  </v-navigation-drawer>
+    <div class="flex-grow"></div>
+    <div class="pt-3 pb-3 text-center cursor-pointer" @click="openSettings">
+      <dg-mat-icon
+        class="text-2xl text-default"
+        v-tooltip.right="'Settings'"
+        icon="settings"
+      ></dg-mat-icon>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -61,11 +48,3 @@ export default createComponent({
   },
 });
 </script>
-
-<style lang="scss">
-.icon {
-  // this centers the icons
-  margin: auto;
-  display: flex;
-}
-</style>

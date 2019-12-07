@@ -5,9 +5,9 @@
       <!-- Modal content-->
       <div class="modal-content secondary">
         <div class="modal-header">
-          <h4 class="modal-title foreground--text">Settings</h4>
+          <h4 class="modal-title text-default">Settings</h4>
           <div style="flex: 1"></div>
-          <v-icon small @click="close" :color="base.theme.foreground">close</v-icon>
+          <v-icon small @click="close" :color="base.theme['text-default']">close</v-icon>
         </div>
         <div class="modal-body">
           <div class="section" v-for="(section, i) in processed" :key="i">
@@ -18,7 +18,7 @@
               <dg-text-field
                 class="max-w-full text-field"
                 v-if="setting.type === 'string'"
-                :color="dawg.theme.foreground"
+                :color="dawg.theme['text-default']"
                 v-model="setting.value.value"
                 :disabled="setting.disabled ? setting.disabled.value : false"
               ></dg-text-field>

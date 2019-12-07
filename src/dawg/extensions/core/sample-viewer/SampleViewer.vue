@@ -8,7 +8,7 @@
         :buffer="buffer"
       ></waveform>
     </div>
-    <div class="sample-controls foreground--text">
+    <div class="sample-controls text-default">
       <div style="flex: 1"></div>
       <span class="control">
         <play-pause

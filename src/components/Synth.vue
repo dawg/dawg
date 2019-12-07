@@ -38,9 +38,9 @@
         v-model="instrument.name"
         :contenteditable.sync="contenteditable"
         disableDblClick
-        class="foreground--text name"
+        class="text-default name"
       ></editable>
-      <!-- <div class="foreground--text name">{{ instrument.name }}</div> -->
+      <!-- <div class="text-default name">{{ instrument.name }}</div> -->
       <mini-score
         v-if="notes.length"
         :notes="notes"

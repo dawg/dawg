@@ -82,7 +82,7 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
 
   get timelineStyle() {
     return {
-      color: `${dawg.theme.foreground}90`,
+      color: `${dawg.theme['text-default']}90`,
     };
   }
 

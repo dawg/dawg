@@ -2,7 +2,7 @@
   <drag-element class="channel-select screen secondary" curse="ns-resize" @move="move" @scrol-move="scrollMove">
     <div 
       style="line-height: 38px"
-      class="foreground--text"
+      class="text-default"
     >{{ display }}</div>
   </drag-element>
 </template>

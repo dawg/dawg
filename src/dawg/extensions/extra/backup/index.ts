@@ -63,29 +63,28 @@ export const extension = createExtension({
       }
     });
 
+    // flex centers the icons which is why we add it
     const component = vueExtend(createComponent({
       template: `
-      <tooltip-icon
+      <dg-mat-icon
         v-if="error"
-        :color="theme.foreground"
-        size="18"
-        tooltip="Cloud Backup Error"
-        top
-        left
-      >
-        error_outline
-      </tooltip-icon>
+        class="flex text-default text-sm"
+        v-tooltip.top.left="'Cloud Backup Error'"
+        icon="error_outline"
+      ></dg-mat-icon>
 
-      <v-progress-circular
+      <dg-spinner
         v-else-if="syncing"
-        :size="15"
-        :width="2"
-        indeterminate
-      ></v-progress-circular>
+        class="flex text-default text-sm"
+        v-tooltip.top.left="'Syncing Backup'"
+      ></dg-spinner>
 
-      <v-icon v-else :color="theme.foreground" size="20">
-        {{ icon }}
-      </v-icon>
+      <dg-mat-icon
+        v-else
+        class="flex text-default
+        text-sm"
+        :icon="icon"
+      ></dg-mat-icon>
       `,
       setup() {
         return {

@@ -138,12 +138,12 @@ export const extension: Extension = {
     }
 
     const props = {
-      color: theme.foreground,
+      color: theme['text-default'],
       size: '14px',
     };
 
     watch(recording, () => {
-      props.color = recording.value ? theme.error : theme.foreground;
+      props.color = recording.value ? theme.error : theme['text-default'];
     });
 
     pianoRoll.addAction({

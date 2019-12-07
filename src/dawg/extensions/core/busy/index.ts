@@ -27,13 +27,8 @@ export const busy = manager.activate({
       return provider;
     };
 
-    const component = Vue.extend({
-      template: `<busy-signal style="margin-right: 25px"></busy-signal>`,
-      components: { BusySignal },
-    });
-
     ui.statusBar.push({
-      component,
+      component: BusySignal,
       position: 'right',
       order: 2,
     });
