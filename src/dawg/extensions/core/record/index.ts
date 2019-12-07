@@ -52,19 +52,10 @@ function makeFileName() {
 
 let ghosts: ChunkGhost[] = [];
 
-// global options that are passed into the microphone options
-const options: string[] = [];
-
 export const extension = createExtension({
   id: 'dawg.record',
   global: {
-    microphoneIn: {
-      type: t.string,
-      expose: true,
-      label: 'Microphone In',
-      description: 'The source of the microphone',
-      options,
-    },
+    microphoneIn: t.string,
   },
   activate(context) {
     const recording = ref(false);
@@ -179,6 +170,7 @@ export const extension = createExtension({
 
     context.subscriptions.push(disposable);
 
+    const options: string[] = [];
     navigator.mediaDevices.enumerateDevices().then((media) => {
       media.forEach((device) => {
         if (device.kind === 'audioinput') {
@@ -188,6 +180,14 @@ export const extension = createExtension({
     });
 
     Vue.component('ChunkGhost', ChunkGhostComponent);
+
+    context.settings.push({
+      type: 'select',
+      label: 'Microphone In',
+      description: 'The source of the microphone',
+      value: context.global.microphoneIn,
+      options,
+    });
 
     ui.trackContext.push({
       text: 'Record',

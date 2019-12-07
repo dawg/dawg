@@ -337,10 +337,10 @@ const extension = createExtension({
       p.name = name.value;
     });
 
-    ui.settings.push({
+    context.settings.push({
       type: 'string',
-      title: 'Project Name',
-      description: 'The project name',
+      label: 'Project Name',
+      description: 'Give your project a better name to make it more identifiable.',
       value: name,
     });
 

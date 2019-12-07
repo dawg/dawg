@@ -12,7 +12,7 @@ import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, watch, ref, createComponent } from '@vue/composition-api';
 import { ui } from '@/base/ui';
 import { project } from '@/dawg/extensions/core/project';
-import { createExtension } from '@/dawg/extensions';
+import { createExtension, VueInput, BooleanInput } from '@/dawg/extensions';
 import { vueExtend } from '@/utils';
 
 export const extension = createExtension({
@@ -21,7 +21,6 @@ export const extension = createExtension({
     backup: {
       type: t.boolean,
       default: false,
-      expose: false,
     },
   },
   activate(context) {
@@ -290,12 +289,6 @@ export const extension = createExtension({
     const googleButton = vueExtend(createComponent({
       template: `
       <div>
-        <div
-          v-if="authenticated"
-          style="font-size: 0.9em; padding: 5px 0px; color: rgba(255, 255, 255, 0.7)"
-        >
-          Signed in as {{ name }}
-        </div>
         <google-button @click="signInOrSignOut">
           {{ text }}
         </google-button>
@@ -340,24 +333,35 @@ export const extension = createExtension({
           text,
           signInOrSignOut,
           authenticated: computed(() => !!user.value),
-          name: computed(() => {
-            if (user.value) {
-              return user.value.displayName;
-            }
-          }),
         };
       },
     }));
 
-    ui.settings.push(googleButton);
-    ui.settings.push({
-      title: 'Cloud Backup',
+    const name = computed(() => {
+      if (user.value) {
+        return user.value.displayName;
+      }
+    });
+
+    const button: VueInput = {
+      label: 'Google Login',
+      description: '',
+      type: 'component',
+      component: googleButton,
+    };
+
+    watch(() => { button.description = `Login with google. Currently in as ${name.value}`; });
+    context.settings.push(button);
+
+    const toggle: BooleanInput = {
+      label: 'Cloud Backup',
       description: 'Whether to sync this project to the cloud',
       type: 'boolean',
       value: backup,
-      disabled: computed(() => {
-        return !project.project.name || !user.value;
-      }),
-    });
+      disabled: true,
+    };
+
+    watch(() => { toggle.disabled = !project.project.name || !user.value; });
+    context.settings.push(toggle);
   },
 });

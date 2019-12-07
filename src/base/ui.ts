@@ -33,31 +33,6 @@ export interface ToolbarItem {
   order?: number;
 }
 
-export interface StringField {
-  title: string;
-  description: string;
-  disabled?: Ref<boolean>;
-  type: 'string';
-  value: Ref<string | undefined>;
-}
-
-export interface SelectField {
-  title: string;
-  description: string;
-  disabled?: Ref<boolean>;
-  type: 'select';
-  value: Ref<string | undefined>;
-  options: string[];
-}
-
-export interface BooleanField {
-  title: string;
-  description: string;
-  disabled?: Ref<boolean>;
-  type: 'boolean';
-  value: Ref<boolean>;
-}
-
 interface StatusBarItem {
   component: VueConstructor;
   position: 'right' | 'left';
@@ -74,7 +49,6 @@ const panels: PanelItem[] = [];
 const mainSection: VueConstructor[] = [];
 const toolbar: ToolbarItem[] = [];
 const trackContext: Array<{ text: string; callback: (index: number) => void; }> = [];
-const settings: Array<StringField | BooleanField | SelectField | VueConstructor> = [];
 const openedSideTab = ref<undefined | string>(undefined);
 const openedPanel = ref<undefined | string>(undefined);
 const panelsSize = ref(250);
@@ -88,7 +62,6 @@ export const ui = {
   panels,
   mainSection,
   toolbar,
-  settings,
   openedSideTab,
   openedPanel,
   panelsSize,

@@ -10,73 +10,48 @@
           <v-icon small @click="close" :color="base.theme.foreground">close</v-icon>
         </div>
         <div class="modal-body">
-          <v-tabs
-            v-model="tab" 
-            class="tabs" 
-            :color="base.theme.foreground"
-            :background-color="base.theme.secondary"
-          >
-            <v-tab>Workspace</v-tab>
-            <v-tab>Global</v-tab>
-          </v-tabs>
-          
-          <v-tabs-items v-model="tab">
-            <v-tab-item>
-              Hello Workspace
-            </v-tab-item>
-            <v-tab-item>
-              Hello Global
-            </v-tab-item>
-          </v-tabs-items>
+          <div class="section" v-for="(section, i) in processed" :key="i">
+            <h1 class="section-title">{{ section.title }}</h1>
+            <div v-for="setting in section.settings" :key="setting.label">
+              <label class="setting-label">{{ setting.label }}</label>
+              <div class="description" v-html="setting.description"></div>
+              <dg-text-field
+                class="max-w-full text-field"
+                v-if="setting.type === 'string'"
+                :color="dawg.theme.foreground"
+                v-model="setting.value.value"
+                :disabled="setting.disabled ? setting.disabled.value : false"
+              ></dg-text-field>
+              <v-switch
+                v-else-if="setting.type === 'boolean'"
+                v-model="setting.value.value"
+                color="primary"
+                :disabled="setting.disabled ? setting.disabled.value : false"
+              ></v-switch>
+              <v-select
+                v-else-if="setting.type === 'select'"
+                class="select"
+                dense
+                :items="setting.options"
+                v-model="setting.value.value"
+                :disabled="setting.disabled ? setting.disabled.value : false"
+              ></v-select>
+              <component v-else-if="setting.type === 'component'" :is="setting.component"></component>
+            </div>
+          </div>
 
         </div>
       </div>
 
     </div>
   </div>
-  <!-- <v-card dark class="settings secondary">
-    <v-list class="secondary" style="padding-top: 20px">
-      <v-list-item v-for="(setting, i) in base.ui.settings" :key="i">
-
-        <v-list-item-title v-if="setting.type === 'boolean'">{{ setting.title }}</v-list-item-title>
-        
-        <v-list-item-action v-if="setting.title">
-          <v-text-field
-            v-if="setting.type === 'string'"
-            class="text-field"
-            :label="setting.title"
-            v-model="setting.value.value"
-            :disabled="setting.disabled ? setting.disabled.value : false"
-          ></v-text-field>
-          <v-switch
-            v-if="setting.type === 'boolean'"
-            v-model="setting.value.value"
-            color="primary"
-            :disabled="setting.disabled ? setting.disabled.value : false"
-          ></v-switch>
-          <v-select
-            v-if="setting.type === 'select'"
-            class="select"
-            dense
-            dark
-            :label="setting.label"
-            :items="setting.options"
-            v-model="setting.value.value"
-          ></v-select>
-        </v-list-item-action>
-
-        <component v-else :is="setting"></component>
-
-      </v-list-item>
-
-    </v-list>
-  </v-card> -->
 </template>
 
 <script lang="ts">
 import * as base from '@/base';
+import { Marked } from 'marked-ts';
 import * as dawg from '@/dawg';
-import { createComponent, watch } from '@vue/composition-api';
+import { createComponent, watch, computed } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Settings',
@@ -100,9 +75,25 @@ export default createComponent({
       }
     });
 
+    const processed = computed(() => {
+      return dawg.manager.settings.map(({ title, settings }) => {
+        return {
+          title,
+          settings: settings.map((setting): typeof setting => {
+            return {
+              ...setting,
+              description: Marked.parse(setting.description),
+            };
+          }),
+        };
+      }).filter((section) => section.settings.length > 0).sort((a, b) => {
+        return a.title.localeCompare(b.title);
+      });
+    });
+
     return {
       base,
-      tab: 0,
+      dawg,
       close: () => {
         if (dispose) {
           dispose();
@@ -110,6 +101,7 @@ export default createComponent({
 
         context.emit('input', false);
       },
+      processed,
     };
   },
 });
@@ -123,6 +115,24 @@ export default createComponent({
   bottom: 0;
   left: 0;
   z-index: 1050;
+  overflow: scroll;
+  padding: 30px 0;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.description, 
+.section-title,
+.setting-label {
+  color: var(--foreground)!important;
+}
+
+.setting-label {
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.section-title {
+  font-size: 30px;
 }
 
 .modal-title {
@@ -132,14 +142,6 @@ export default createComponent({
 
 .model.fade .modal-dialog {
   transition: transform .3s ease-out,-webkit-transform .3s ease-out,-o-transform .3s ease-out;
-}
-
-.tabs ::v-deep .v-tabs__slider {
-  background-color: var(--foreground)!important;
-}
-
-.tabs ::v-deep .v-tab {
-  color: inherit!important;
 }
 
 .modal-dialog {

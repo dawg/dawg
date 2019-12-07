@@ -18,6 +18,7 @@ import Vuetify from 'vuetify';
 import 'vue-awesome/icons';
 import 'vuetify/dist/vuetify.css';
 import '@/styles/material.css';
+import '@/main.css';
 import Icon from 'vue-awesome/components/Icon.vue';
 import Update from '@/modules/update';
 import sequencer from '@/modules/sequencer';

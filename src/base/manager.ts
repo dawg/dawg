@@ -1,14 +1,14 @@
 import * as t from '@/modules/io';
 import {
   Extension,
-  ExtensionContext,
+  createExtensionContext,
   IExtensionContext,
   StateType,
   ExtensionData,
   ExtensionProps,
   FieldOptions,
   ReactiveDefinition,
-  StoredProps,
+  Setting,
 } from '@/dawg/extensions';
 import fs from '@/fs';
 import path from 'path';
@@ -46,6 +46,7 @@ interface JSON {
   [k: string]: any;
 }
 
+const settings: Array<{ title: string, settings: Setting[] }> = [];
 const extensions: { [id: string]: any } = {};
 const resolved: { [id: string]: boolean } = {};
 
@@ -223,11 +224,6 @@ const projectManager = Manager.fromFileSystem();
 // TODO Add interface with message, description, showUser
 // Also, write to file
 const notificationQueue: string[] = [];
-const exposed: Array<{
-  extension: Extension,
-  workspace: ReactiveDefinition<StoredProps>
-  global: ReactiveDefinition<StoredProps>,
-}> = [];
 
 export const manager = {
   getOpenedFile() {
@@ -365,27 +361,11 @@ export const manager = {
     const reactiveWorkspace = makeReactive(extension.workspace, w);
     const reactiveGlobal = makeReactive(extension.global, g);
 
-    exposed.push({ extension: extension as Extension, workspace: {}, global: {} });
-    const entry = exposed[exposed.length - 1];
-    const addToExposed = (wg: 'workspace' | 'global') => {
-      const reactive = wg === 'workspace' ? reactiveWorkspace : reactiveGlobal;
-      const definition = extension[wg];
-      if (!definition) {
-        return;
-      }
-
-      keys(definition).forEach((key) => {
-        const fieldInformation = definition[key];
-        if (isFieldOptions(fieldInformation) && fieldInformation.expose) {
-          entry[wg][key] = reactive[key as keyof typeof reactive] as any;
-        }
-      });
-    };
-
-    addToExposed('workspace');
-    addToExposed('global');
-
-    const context = new ExtensionContext<W, G>(reactiveWorkspace, reactiveGlobal);
+    const context = createExtensionContext<W, G>(reactiveWorkspace, reactiveGlobal);
+    settings.push({
+      title: extension.name || extension.id,
+      settings: context.settings,
+    });
 
     // beware of the any type
     const api = extension.activate(context);
@@ -422,5 +402,5 @@ export const manager = {
   },
   notificationQueue,
   activating: [] as Array<Extension<any, any, any>>,
-  exposed,
+  settings,
 };

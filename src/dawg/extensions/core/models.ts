@@ -86,18 +86,8 @@ export async function runModel(opts: PythonOptions) {
 export const extension = createExtension({
   id: 'dawg.models',
   global: {
-    modelsPath: {
-      type: t.string,
-      expose: true,
-      definition: 'The path of the models.',
-      label: 'Models Path',
-    },
-    pythonPath: {
-      type: t.string,
-      expose: true,
-      definition: 'The path to your python environment.',
-      label: 'Python Path',
-    },
+    modelsPath: t.string,
+    pythonPath: t.string,
   },
   activate(context) {
     const modelsPath = context.global.modelsPath;
@@ -144,18 +134,18 @@ export const extension = createExtension({
       ),
     });
 
-    ui.settings.push({
+    context.settings.push({
       type: 'string',
       value: pythonPath,
-      title: 'Python Path',
-      description: 'The path to your python interpreter',
+      label: 'Python Path',
+      description: 'The path to your `python` interpreter.',
     });
 
-    ui.settings.push({
+    context.settings.push({
       type: 'string',
       value: modelsPath,
-      title: 'Models Path',
-      description: 'The path to the `models` repository',
+      label: 'Models Path',
+      description: 'The path to the `models` repository.',
     });
   },
 });
