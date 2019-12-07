@@ -26,6 +26,7 @@
     "firebase": "^5.8.6",
     "io-ts": "^1.8.5",
     "lodash.throttle": "^4.1.1",
+    "marked-ts": "^1.0.0-beta.4",
     "mz": "^2.7.0",
     "node-wav": "0.0.2",
     "python-shell": "^1.0.7",

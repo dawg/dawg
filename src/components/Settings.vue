@@ -10,7 +10,12 @@
           <v-icon small @click="close" :color="base.theme.foreground">close</v-icon>
         </div>
         <div class="modal-body">
-          <v-tabs v-model="tab" class="tabs" :color="base.theme.secondary">
+          <v-tabs
+            v-model="tab" 
+            class="tabs" 
+            :color="base.theme.foreground"
+            :background-color="base.theme.secondary"
+          >
             <v-tab>Workspace</v-tab>
             <v-tab>Global</v-tab>
           </v-tabs>
@@ -131,6 +136,10 @@ export default createComponent({
 
 .tabs ::v-deep .v-tabs__slider {
   background-color: var(--foreground)!important;
+}
+
+.tabs ::v-deep .v-tab {
+  color: inherit!important;
 }
 
 .modal-dialog {

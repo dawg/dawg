@@ -9,6 +9,11 @@ export interface ExtensionProps {
   [key: string]: StateType | FieldOptions<StateType>;
 }
 
+// What we actually store as it's much easier to not have to work with union types
+export interface StoredProps {
+  [key: string]: FieldOptions<StateType>;
+}
+
 type Prop<T extends StateType> = FieldOptions<T> | t.TypeOf<T>;
 export type FieldOptions<T extends StateType> = {
   type: T;
@@ -17,8 +22,9 @@ export type FieldOptions<T extends StateType> = {
 } | {
   type: T;
   expose: true;
-  definition: string;
+  description: string;
   label: string;
+  options?: string[],
   default?: t.TypeOf<T>;
 };
 

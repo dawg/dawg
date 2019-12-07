@@ -8,6 +8,7 @@ import {
   ExtensionProps,
   FieldOptions,
   ReactiveDefinition,
+  StoredProps,
 } from '@/dawg/extensions';
 import fs from '@/fs';
 import path from 'path';
@@ -224,8 +225,8 @@ const projectManager = Manager.fromFileSystem();
 const notificationQueue: string[] = [];
 const exposed: Array<{
   extension: Extension,
-  workspace: ReactiveDefinition<ExtensionProps>
-  global: ReactiveDefinition<ExtensionProps>,
+  workspace: ReactiveDefinition<StoredProps>
+  global: ReactiveDefinition<StoredProps>,
 }> = [];
 
 export const manager = {
