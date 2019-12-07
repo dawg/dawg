@@ -51,7 +51,7 @@
           </split>
 
           <split
-            class="secondary" 
+            class="bg-default" 
             direction="vertical"
             :style="border('top')"
             keep

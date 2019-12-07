@@ -1,25 +1,28 @@
 <template>
-  <ul class="tabs-headers">
+  <ul class="flex items-stretch">
     <li
       v-for="(tab, i) in tabs"
       :key="i" 
-      :class="isActive(tab)"
-      class="tabs-header"
+      class="text-sm font-semibold p-3"
     >
-      <div @click="selectPanel(tab.name)" class="text text-default">{{ tab.name }}</div>
+      <div 
+        @click="selectPanel(tab.name)"
+        :class="addUnderline(tab)"
+        class="text text-default select-none"
+      >
+        {{ tab.name }}
+      </div>
     </li>
-    <div style="flex-grow: 1"></div>
-    <tooltip-icon
-      class="action"
+    <div class="flex-grow"></div>
+    <dg-mat-icon
+      class="text-default select-none px-3 py-2 cursor-pointer"
       v-for="action in actions"
       :key="action.icon.value"
-      :tooltip="action.tooltip.value"
+      :icon="action.icon.value"
       v-bind="action.props"
-      bottom
-      @click.native="action.callback"
-    >
-      {{ action.icon.value }}
-    </tooltip-icon>
+      v-tooltip.bottom="action.tooltip.value"
+      @click="action.callback"
+    ></dg-mat-icon>
   </ul>
 </template>
 
@@ -56,9 +59,9 @@ export default createComponent({
       return base.ui.panels;
     });
 
-    function isActive(tab: base.PanelItem) {
+    function addUnderline(tab: base.PanelItem) {
       if (tab.name === base.ui.openedPanel.value) {
-        return 'is-active';
+        return 'border-b';
       }
     }
 
@@ -67,7 +70,7 @@ export default createComponent({
     }
 
     return {
-      isActive,
+      addUnderline,
       selectPanel,
       tabs,
       actions,
@@ -75,40 +78,3 @@ export default createComponent({
   },
 });
 </script>
-
-<style lang="sass" scoped>
-.tabs-headers
-  align-items: stretch
-  display: flex
-  padding: 0
-
-.tabs-header
-    position: relative
-    color: #999
-    font-size: 14px
-    font-weight: 600
-    list-style: none
-    text-align: center
-    padding: .75em 1em
-
-    &.is-active
-      color: #000
-      box-shadow: unset
-      
-      & .text
-        border-bottom: 1px solid
-
-.action
-  padding: .75em 1em
-  user-select: none
-
-.text
-  align-items: center
-  text-decoration: none
-  display: inline-block
-  padding: 0 2px
-  user-select: none
-
-  &:hover
-    cursor: default
-</style>

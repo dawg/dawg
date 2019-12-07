@@ -6,3 +6,7 @@
 .border-default {
   border-color: var(--default);
 }
+
+html {
+  font-size: 16px;
+}
