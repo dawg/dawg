@@ -14,7 +14,7 @@ ipcMain.on('showMenu', (event, payload) => {
       accelerator: item.accelerator,
       registerAccelerator: false,
       click: () => {
-        event.sender.send('menuCallback', item.uniqueEvent, payload.position);
+        event.sender.send('menuCallback', item.uniqueEvent);
       },
     };
   });
@@ -24,7 +24,5 @@ ipcMain.on('showMenu', (event, payload) => {
     event.sender.send('closeMenu', payload);
   });
 
-  menu.popup({
-    ...payload.position,
-  });
+  menu.popup();
 });

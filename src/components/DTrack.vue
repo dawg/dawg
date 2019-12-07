@@ -38,19 +38,21 @@ export default createComponent({
 });
 </script>
 
-<style lang="sass" scoped>
+<style lang="scss" scoped>
 
-.name
-  user-select: none
+.name {
+  user-select: none;
+}
 
 // FIXME 20px and 5px is hardcoded! 
-.track
-  display: flex
-  border: 0 solid
-  user-select: none
-  border-width: 1px 0
-  border-top-color: rgba(255, 255, 255, .07)
-  border-bottom-color: rgba(255, 255, 255, .07)
-  align-items: center
-  padding: 5px 20px 2px 5px
+.track {
+  display: flex;
+  border: 0 solid;
+  user-select: none;
+  border-width: 1px 0;
+  border-top-color: rgba(255, 255, 255, .07);
+  border-bottom-color: rgba(255, 255, 255, .07);
+  align-items: center;
+  padding: 5px 10px 2px 5px;
+}
 </style>

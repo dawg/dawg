@@ -34,9 +34,11 @@ export default createComponent({
 });
 </script>
 
-<style lang="sass" scoped>
-.dot-button
-  height: 20px
-  width: 20px
-  margin: 5px
+<style lang="scss" scoped>
+.dot-button {
+  // overriding Vuetify
+  height: 20px!important;
+  min-width: 20px!important;
+  margin: 5px;
+}
 </style>
