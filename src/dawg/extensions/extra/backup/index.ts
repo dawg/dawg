@@ -358,6 +358,8 @@ export const extension = createExtension({
       type: 'boolean',
       value: backup,
       disabled: true,
+      checkedValue: 'Syncing',
+      uncheckedValue: 'Not Syncing',
     };
 
     watch(() => { toggle.disabled = !project.project.name || !user.value; });

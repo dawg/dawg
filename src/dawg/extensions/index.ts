@@ -61,6 +61,8 @@ export interface BooleanInput {
   disabled?: boolean;
   type: 'boolean';
   value: Ref<boolean>;
+  checkedValue: string;
+  uncheckedValue: string;
 }
 
 export interface VueInput {

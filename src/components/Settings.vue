@@ -1,58 +1,63 @@
 <template>
-  <div v-if="value" class="modal fade in" role="dialog">
-    <div class="modal-dialog">
-
-      <!-- Modal content-->
-      <div class="modal-content bg-default">
-        <div class="modal-header">
-          <h4 class="modal-title text-default">Settings</h4>
-          <div style="flex: 1"></div>
-          <dg-mat-icon 
-            class="text-sm cursor-pointer text-default"
-            @click="close"
-            icon="close"
-          ></dg-mat-icon>
-        </div>
-        <div class="modal-body">
-          <div class="section" v-for="(section, i) in processed" :key="i">
-            <h1 class="section-title">{{ section.title }}</h1>
-            <div v-for="setting in section.settings" :key="setting.label">
-              <label class="setting-label">{{ setting.label }}</label>
-              <div class="description" v-html="setting.description"></div>
-              <dg-text-field
-                class="max-w-full text-field"
-                v-if="setting.type === 'string'"
-                :color="dawg.theme['text-default']"
-                v-model="setting.value.value"
-                :disabled="setting.disabled ? setting.disabled.value : false"
-              ></dg-text-field>
+  <dg-modal :value="value" @update="update">
+    <template v-slot:header>
+      <div class="flex px-4 py-4">
+        <div class="text-default">Settings</div>
+        <div class="flex-grow"></div>
+        <dg-mat-icon 
+          class="text-sm cursor-pointer text-default"
+          @click="close"
+          icon="close"
+        ></dg-mat-icon>
+      </div>
+    </template>
+    <template v-slot:body>
+      <div class="pb-4">
+        <div class="px-4 pt-4" v-for="(section, i) in processed" :key="i">
+          <h1 class="text-default text-3xl">{{ section.title }}</h1>
+          <div v-for="(setting, j) in section.settings" :key="setting.label">
+            <h2
+              class="text-default font-semibold text-lg"
+              :class="j !== 0 ? 'mt-3' : ''"
+            >{{ setting.label }}</h2>
+            <div class="text-default text-sm mb-1" v-html="setting.description"></div>
+            <dg-text-field
+              class="max-w-full text-default"
+              v-if="setting.type === 'string'"
+              v-model="setting.value.value"
+              :disabled="setting.disabled ? setting.disabled.value : false"
+            ></dg-text-field>
+            <label
+              v-else-if="setting.type === 'boolean'" 
+              class="text-default flex"
+            >
               <input 
-                v-else-if="setting.type === 'boolean'"
                 class="mr-2 leading-tight"
                 type="checkbox"
                 v-model="setting.value.value"
                 :disabled="setting.disabled ? setting.disabled.value : false"
               >
-              <dg-select
-                v-else-if="setting.type === 'select'"
-                class="select"
-                :items="setting.options"
-                v-model="setting.value.value"
-                :disabled="setting.disabled ? setting.disabled.value : false"
-              ></dg-select>
-              <component v-else-if="setting.type === 'component'" :is="setting.component"></component>
-            </div>
+              <span class="text-xs leading-snug font-bold">
+                {{setting.value.value ? setting.checkedValue : setting.uncheckedValue }}
+              </span>
+            </label>
+            
+            <dg-select
+              v-else-if="setting.type === 'select'"
+              class="select"
+              v-model="setting.value.value"
+              :options="setting.options"
+              :disabled="setting.disabled ? setting.disabled.value : false"
+            ></dg-select>
+            <component v-else-if="setting.type === 'component'" :is="setting.component"></component>
           </div>
-
         </div>
       </div>
-
-    </div>
-  </div>
+    </template>
+  </dg-modal>
 </template>
 
 <script lang="ts">
-import * as base from '@/base';
 import { Marked } from 'marked-ts';
 import * as dawg from '@/dawg';
 import { createComponent, watch, computed } from '@vue/composition-api';
@@ -63,120 +68,34 @@ export default createComponent({
     value: { type: Boolean, required: true },
   },
   setup(props, context) {
-    let dispose: (() => void) | undefined;
-    watch(() => {
-      if (props.value) {
-        if (dispose) {
-          dispose();
-        }
-
-        dispose = dawg.commands.registerShortcut({
-          shortcut: ['Esc'],
-          callback: () => {
-            context.emit('input', false);
-          },
-        }).dispose;
-      }
-    });
-
-    const processed = computed(() => {
-      return dawg.manager.settings.map(({ title, settings }) => {
-        return {
-          title,
-          settings: settings.map((setting): typeof setting => {
-            return {
-              ...setting,
-              description: Marked.parse(setting.description),
-            };
-          }),
-        };
-      }).filter((section) => section.settings.length > 0).sort((a, b) => {
-        return a.title.localeCompare(b.title);
-      });
-    });
-
     return {
-      base,
-      dawg,
+      update: (value: boolean) => {
+        context.emit('input', value);
+      },
       close: () => {
-        if (dispose) {
-          dispose();
-        }
-
         context.emit('input', false);
       },
-      processed,
+      processed: computed(() => {
+        return dawg.manager.settings.map(({ title, settings }) => {
+          return {
+            title,
+            settings: settings.map((setting): typeof setting => {
+              return {
+                ...setting,
+                description: Marked.parse(setting.description),
+              };
+            }),
+          };
+        }).filter((section) => section.settings.length > 0).sort((a, b) => {
+          return a.title.localeCompare(b.title);
+        });
+      }),
     };
   },
 });
 </script>
 
 <style lang="scss" scoped>
-.modal {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 1050;
-  overflow: scroll;
-  padding: 30px 0;
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-.description, 
-.section-title,
-.setting-label {
-  color: var(--foreground)!important;
-}
-
-.setting-label {
-  font-weight: 600;
-  font-size: 18px;
-}
-
-.section-title {
-  font-size: 30px;
-}
-
-.modal-title {
-  font-weight: 300;
-  font-size: 14px;
-}
-
-.model.fade .modal-dialog {
-  transition: transform .3s ease-out,-webkit-transform .3s ease-out,-o-transform .3s ease-out;
-}
-
-.modal-dialog {
-  position: relative;
-  width: 600px;
-  margin: auto;
-}
-
-.modal-header {
-  padding: 15px;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid #e5e5e5;
-}
-
-.modal-body {
-  position: relative;
-  padding: 0 15px;
-}
-
-.modal-content {
-  position: relative;
-  background-color: #fff;
-  background-clip: padding-box;
-  border: 1px solid #999;
-  border: 1px solid rgba(0,0,0,.2);
-  border-radius: 6px;
-  box-shadow: 0 3px 9px rgba(0,0,0,.5);
-  outline: 0;
-}
-
 .fade.in {
   opacity: 1;
 }

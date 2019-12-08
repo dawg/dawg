@@ -44,7 +44,7 @@ export default createComponent({
   name: 'DgSelect',
   props: {
     options: { type: Array as () => SelectOption[], required: true },
-    value: { type: String, required: true },
+    value: { type: String, required: false },
   },
   setup(props) {
     return {

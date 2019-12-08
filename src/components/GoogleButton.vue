@@ -1,6 +1,6 @@
 <template>
   <button 
-    type="button" 
+    type="button"
     class="google-button"
     v-on="$listeners"
   >
