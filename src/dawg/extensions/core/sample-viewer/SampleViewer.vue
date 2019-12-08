@@ -100,7 +100,6 @@ export default class SampleViewer extends Vue {
   
 
 .sample-controls
-  // text-align: center
   padding-top: 20px
   position: fixed
   bottom: 35px

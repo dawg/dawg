@@ -2,8 +2,9 @@
   <svg class="waveform" preserveAspectRatio="none" :viewBox="viewBox">
     <polygon 
       :points="points" 
-      :fill="color"
-      :stoke="color"
+      fill="currentColor"
+      stoke="currentColor"
+      class="text-default"
       style="stroke-width:0.2; shape-rendering: geometricPrecision"
     ></polygon>
   </svg>
@@ -27,10 +28,6 @@ export default createComponent({
   setup(props) {
     const viewBox = computed(() => {
       return '0 0 ' + steps.value + ' ' + props.height;
-    });
-
-    const color = computed(() => {
-      return base.theme['text-default'];
     });
 
     const h2 = computed(() => {
@@ -99,7 +96,6 @@ export default createComponent({
     return {
       viewBox,
       points,
-      color,
     };
   },
 });

@@ -10,3 +10,19 @@
 html {
   font-size: 16px;
 }
+
+.tooltip {
+  margin: 5px;
+  @apply z-50;
+}
+
+
+.tooltip-inner {
+  @apply text-sm p-2 rounded text-white;
+}
+
+.tooltip .tooltip-inner {
+  display: inline;
+  background: rgba(0, 0, 0, 0.9);
+  box-shadow: 0 5px 30px rgba(black, .1);
+}

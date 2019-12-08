@@ -14,7 +14,7 @@ export const extension = createExtension({
 
     const component = Vue.extend({
       template: `
-        <div v-tooltip="'Project Name'" class="text-default text-sm">
+        <div v-tooltip.top="'Project Name'" class="text-default text-sm">
           {{ projectName.value }}
         </div>
       `,
