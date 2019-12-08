@@ -1,13 +1,13 @@
 <template>
-  <div class="note primary">
+  <div class="note bg-primary">
     <div 
       class="body"
       v-on="$listeners"
     ></div>
 
     <div 
-      class="text"
-      :style="textConfig"
+      class="absolute text-sm text-default select-none pl-1"
+      :style="textStyle"
     >
       {{ text }}
     </div>
@@ -29,24 +29,21 @@ export default createComponent({
     width: { type: Number, required: true },
     element: { type: Object as () => Note, required: true },
     height: { type: Number, required: true },
-    fontSize: { type: Number, default: 14 },
   },
   setup(props) {
     const noteName = computed(() => {
       return allKeys[props.element.row].value;
     });
 
-    const textConfig = computed(() => {
+    const textStyle = computed(() => {
       return {
-        top: `${(props.height / 2) - ((props.fontSize / 2) + 1)}px`,
-        color: '#fff',
-        fontSize: `${props.fontSize}px`,
+        lineHeight: `${props.height}px`,
       };
     });
 
     const threshold = computed(() => {
-      // 1.45 just seems to work well
-      return props.fontSize * noteName.value.length / 1.45;
+      // TODO fix this somehow??
+      return 12;
     });
 
     const text = computed(() => {
@@ -55,7 +52,7 @@ export default createComponent({
 
     return {
       text,
-      textConfig,
+      textStyle,
     };
   },
 });
@@ -71,12 +68,8 @@ export class NNN extends Vue {
 .note
   position: relative
 
-.text, .drag, .body
+.drag, .body
   position: absolute
-
-.text
-  left: 3px
-  user-select: none
 
 .body
   width: 100%

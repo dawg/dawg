@@ -250,7 +250,7 @@ export class Palette extends Vue {
     const results = h('div', { style: { margin: '5px' } }, items);
 
     const palette = h('div', {
-      class: 'secondary', // sets the theme
+      class: 'bg-default', // sets the theme
       style: {
         width: '400px',
         height: 'fit-content',

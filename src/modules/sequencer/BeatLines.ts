@@ -11,16 +11,15 @@ export default class BeatLines extends Vue {
   public $el!: HTMLElement;
 
   get measureColor() {
-    return dawg.theme['text-inverse'];
+    return dawg.theme.default;
   }
 
   get stepColor() {
-    return dawg.theme['text-inverse'] + '50';
+    return dawg.theme.darken(dawg.theme.default, 3);
   }
 
   get beatColor() {
-  // public beatColor = 'rgba(0,0,0,.2)';
-    return dawg.theme['text-inverse'];
+    return dawg.theme.darken(dawg.theme.default, 5);
   }
 
   get viewBox() {

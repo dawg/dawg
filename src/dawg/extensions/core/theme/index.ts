@@ -1,4 +1,4 @@
-import { Extension, createExtension } from '@/dawg/extensions';
+import { createExtension } from '@/dawg/extensions';
 import { Classes } from '@/dawg/extensions/core/theme/types';
 import { defaults } from '@/dawg/extensions/core/theme/defaults';
 import tinycolor from 'tinycolor2';
@@ -7,6 +7,7 @@ import { commands } from '@/dawg/extensions/core/commands';
 import { manager } from '@/base/manager';
 import * as t from '@/modules/io';
 import * as base from '@/base';
+import { keys } from '@/utils';
 
 export interface ThemeAugmentation {
   $theme: base.Theme;
@@ -66,6 +67,11 @@ const insertTheme = (name: ThemeNames) => {
 
   base.ui.rootClasses.push(name);
   oldTheme = name;
+
+  const themeObject = defaults[name];
+  keys(themeObject).forEach((key) => {
+    theme[key] = base.theme[key] = themeObject[key];
+  });
 };
 
 // https://github.com/Microsoft/vscode/blob/master/src/vs/vscode.d.ts
@@ -124,6 +130,12 @@ const extension = createExtension({
 
     return {
       insertStoredTheme,
+      darken: (hex: string, amount: 1 | 2 | 3 | 4 | 5) => {
+        return tinycolor(hex).darken(PERCENTAGES[amount - 1]).toHexString();
+      },
+      lighten: (hex: string, amount: 1 | 2 | 3 | 4 | 5) => {
+        return tinycolor(hex).lighten(PERCENTAGES[amount - 1]).toHexString();
+      },
       ...base.theme,
     };
   },

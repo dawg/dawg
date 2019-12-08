@@ -12,16 +12,14 @@
       @contextmenu.native="context(project[0], $event)"
     ></tree>
   </div>
-  <div v-else class="button-wrapper">
-      <p class="white--text text">You do not have any opened folders.</p>
-      <v-btn 
-        @click="openExplorer" 
-        small 
-        block
-        class="primary button"
+  <div v-else class="flex flex-col py-5 px-6">
+      <p class="text-default text-xs mb-1">You have not opened a folder.</p>
+      <dg-button
+        @click="openExplorer"
+        type="primary"
       >
-        Open Folder
-      </v-btn>
+        OPEN FOLDER
+      </dg-button>
   </div>
 </template>
 
@@ -155,15 +153,3 @@ export default class FileEplorer extends Vue {
   }
 }
 </script>
-
-<style scoped>
-.button-wrapper {
-  display: flex;
-  flex-direction: column;
-  padding: 10px 20px;
-}
-
-.text {
-  font-size: 0.9em;
-}
-</style>

@@ -75,7 +75,7 @@ export default class PianoRollSequencer extends Vue {
 
   public rowClass(i: number) {
     const key = allKeys[i].value;
-    return key.includes('#') ? 'secondary-darken-1' : 'secondary';
+    return key.includes('#') ? 'bg-default-darken-1' : 'bg-default';
   }
 
   public addNotes(notes: INotes) {
@@ -143,7 +143,3 @@ export default class PianoRollSequencer extends Vue {
   }
 }
 </script>
-
-<style lang="sass" scoped>
-
-</style>

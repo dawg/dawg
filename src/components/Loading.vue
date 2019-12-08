@@ -61,7 +61,7 @@ export class Loading extends Vue {
   bottom: 0px;
   width: 9px;
   height: 5px;
-  background: var(--accent);
+  background: var(--secondary);
   margin: 0 1px;
   animation: audio-wave 1.5s infinite ease-in-out;
 }
@@ -72,7 +72,7 @@ export class Loading extends Vue {
   
   0% {
     height: 5px;
-    background: var(--accent);
+    background: var(--secondary);
   }
 
   25% {
@@ -82,12 +82,12 @@ export class Loading extends Vue {
 
   50% {
     height: 5px;
-    background: var(--accent);
+    background: var(--secondary);
   }
 
   100% {
     height: 5px;
-    background: var(--accent);
+    background: var(--secondary);
   }
 }
 

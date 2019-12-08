@@ -1,12 +1,17 @@
+import FileExplorer from '@/dawg/extensions/extra/explorer/FileExplorer.vue';
 import * as dawg from '@/dawg';
 import * as t from '@/modules/io';
-import SmartFileExplorer from '@/dawg/extensions/extra/explorer/SmartFileExplorer.vue';
-import Vue from 'vue';
 import { remote } from 'electron';
-import { Sample } from '@/core';
+import { Extensions } from '@/dawg/extensions/extra/explorer/types';
+import { loadBuffer } from '@/modules/wav/local';
+import parser from '@/midi-parser';
+import fs from '@/fs';
+import { ScheduledSample, Sample } from '@/core';
 import { commands } from '@/dawg/extensions/core/commands';
 import { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 import { createExtension } from '@/dawg/extensions';
+import { createComponent } from '@vue/composition-api';
+import { vueExtend } from '@/utils';
 
 export const extension = createExtension({
   id: 'dawg.explorer',
@@ -40,7 +45,6 @@ export const extension = createExtension({
 
 
       const folder = toAdd[0];
-
       if (folders.indexOf(folder) !== -1) {
         return;
       }
@@ -68,32 +72,74 @@ export const extension = createExtension({
       folders.splice(i, 1);
     };
 
-    const options = {
-      components: { SmartFileExplorer },
+    const component = vueExtend(createComponent({
+      components: { FileExplorer },
       template: `
-      <smart-file-explorer
+      <file-explorer
+        :extensions="extensions"
         :folders="folders"
         @open-explorer="openFolder"
-        @open-sample="openSample"
         @remove="remove"
-      ></smart-file-explorer>
+      ></file-explorer>
       `,
-      data() {
+      setup() {
+        const loadMidi = async (path: string) => {
+          const buffer = await fs.readFile(path);
+          const ab = new ArrayBuffer(buffer.length);
+          const view = new Uint8Array(ab);
+          buffer.forEach((value, i) => {
+            view[i] = value;
+          });
+
+          return parser.parse(ab, dawg.project.project.bpm);
+        };
+
+        const extensions: Extensions = {
+          wav: {
+            dragGroup: 'arranger',
+            iconComponent: 'wav-icon',
+            load: async (path: string) => {
+              const buffer = await loadBuffer(path);
+              const sample = Sample.create(path, buffer);
+              return sample;
+            },
+            createTransferData: (sample: Sample) => {
+              return ScheduledSample.create(sample);
+            },
+            preview: (sample: Sample) => {
+              sample.preview();
+            },
+            stopPreview: (sample: Sample) => {
+              sample.stopPreview();
+            },
+            open: openSample,
+          },
+          mid: {
+            dragGroup: 'midi',
+            iconComponent: 'midi-icon',
+            load: loadMidi,
+          },
+          midi: {
+            dragGroup: 'midi',
+            iconComponent: 'midi-icon',
+            load: loadMidi,
+          },
+        };
+
+
         return {
           folders,
           openFolder,
-          openSample,
           remove,
+          extensions,
         };
       },
-    };
-
-    const wrapper = Vue.extend(options);
+    }));
 
     dawg.ui.activityBar.push({
       icon: 'folder',
       name: 'Explorer',
-      component: wrapper,
+      component,
     });
 
     const addFolder = dawg.commands.registerCommand({

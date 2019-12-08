@@ -39,7 +39,7 @@
           <pan
             :value="channel.panner.raw"
             @input="panInput"
-            stroke-class="secondary-lighten-2--stroke"
+            stroke-class="fg-default-lighten-2"
             :size="30"
             @automate="automatePan"
           ></pan>

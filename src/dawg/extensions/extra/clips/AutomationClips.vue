@@ -1,11 +1,11 @@
 <template>
-  <div class="automation-clips">
+  <div>
     <drag
       v-for="(item, i) in items"
       group="arranger"
       :key="i"
       @contextmenu.native="context($event, i)"
-      class="clip text-default"
+      class="text-default text-sm py-2 px-4 cursor-pointer hover:bg-default-lighten-2"
       :transfer-data="item.prototype"
     >
       {{ item.name }}
@@ -46,13 +46,3 @@ export default class AutomationClips extends Vue {
   }
 }
 </script>
-
-<style lang="sass" scoped>
-.clip
-  padding: 10px 20px
-  color: white
-
-  &:hover
-    box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.1)
-    cursor: pointer
-</style>

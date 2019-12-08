@@ -3,7 +3,7 @@
     <div class="modal-dialog">
 
       <!-- Modal content-->
-      <div class="modal-content secondary">
+      <div class="modal-content bg-default">
         <div class="modal-header">
           <h4 class="modal-title text-default">Settings</h4>
           <div style="flex: 1"></div>

@@ -4,7 +4,7 @@
       @click="click" 
       @mousedown="loadData"
       @dblclick="doubleClick"
-      style="display: flex" 
+      class="flex items-center hover-pointer py-1 px-2 hover:bg-default-lighten-2"
       :class="nodeClass" 
       :style="textStyle" 
     >
@@ -15,14 +15,13 @@
       <dg-icon
         v-else 
         fa 
-        class="icon" 
         :style="iconStyle"
       >
         caret-right
       </dg-icon>
       
       <drag
-        class="white--text path"
+        class="text-default ml-2 text-sm select-none truncate"
         :group="dragGroup"
         :transfer-data="transferData"
         :draggable="draggable"
@@ -136,7 +135,7 @@ export default class Tree extends Vue {
   }
 
   get nodeClass() {
-    return this.isSelected ? 'selected-node' : 'node';
+    return this.isSelected ? 'bg-default-lighten-1' : '';
   }
 
   get fileName() {
@@ -314,32 +313,3 @@ export default class Tree extends Vue {
   }
 }
 </script>
-
-<style lang="sass" scoped>
-.path
-  margin-left: 8px
-  font-size: 0.85em
-  user-select: none
-  white-space: nowrap
-  overflow: hidden
-  text-overflow: ellipsis
-
-.node:hover
-  background: rgba(255,255,255,0.12)
-  cursor: pointer
-
-.node
-  font-size: 15px
-  padding: 4px 8px
-
-.selected-node
-  font-size: 15px
-  padding: 4px 8px
-  background: rgba(255,255,255,0.12)
-
-.selected-node:hover
-  cursor: pointer
-
-.icon
-  padding: 2px
-</style>

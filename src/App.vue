@@ -14,7 +14,7 @@
         >
           <side-tabs 
             v-if="loaded"
-            :style="border('right')"
+            class="border-r border-default-darken-3"
           ></side-tabs>
           <blank v-else></blank>
         </split>
@@ -51,9 +51,8 @@
           </split>
 
           <split
-            class="bg-default" 
             direction="vertical"
-            :style="border('top')"
+            class="bg-default border-t border-default-darken-3"
             keep
             :initial.sync="base.ui.panelsSize.value"
           >
@@ -94,7 +93,7 @@
       :is="global"
     ></component>
     <loading 
-      class="secondary"
+      class="bg-default"
       :value="!loaded"
     ></loading>
   </v-app>
@@ -203,10 +202,6 @@ export default class App extends Vue {
     base.notify.warning('You are disconnected', {
       detail: 'Features may not work as expected.',
     });
-  }
-
-  public border(side: 'left' | 'right' | 'top' | 'bottom') {
-    return `border-${side}: 1px solid ${base.theme['text-inverse']}`;
   }
 
   public openSettings() {

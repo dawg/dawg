@@ -1,7 +1,7 @@
 <template>
   <drag-element class="rela-inline knob" @move="move" @after-move="afterMove">
     <div 
-      class="rela-block knob-dial" 
+      class="rela-block knob-dial fg-primary" 
       :style="knobStyle"
       @contextmenu="contextmenu"
       @mouseenter="enter"
@@ -88,10 +88,6 @@ export default class Knob extends Vue {
   public rectWidth = 3;
   public rectHeight = this.size / 4;
 
-  get primary() {
-    return dawg.theme.primary;
-  }
-
   get rotation() {
     return mapRange(this.value, this.min, this.max, -this.angle, this.angle);
   }
@@ -173,7 +169,6 @@ export default class Knob extends Vue {
   }
   get knobStyle() {
     return {
-      color: dawg.theme.primary,
       height: `${this.size}px`,
       width: `${this.size}px`,
     };

@@ -1,6 +1,6 @@
 <template>
   <div 
-    class="sample-viewer secondary"
+    class="sample-viewer bg-default"
   >
     <div class="sample">    
       <waveform class="wave" 

@@ -4,8 +4,7 @@
     v-bind="$attrs"
     :num-rows="tracks.length"
     :row-height="rowHeight"
-    :row-class="() => 'secondary'"
-    :row-style="rowStyle"
+    :row-class="rowClass"
     :side-width="130"
     name="Playlist"
     :prototype.sync="prototype"
@@ -55,10 +54,8 @@ export default class PlaylistSequencer extends Vue {
   }
 
 
-  public rowStyle() {
-    return {
-      borderBottom: `1px solid ${theme['text-inverse']}`,
-    };
+  public rowClass() {
+    return 'bg-default border-b border-default-darken-2';
   }
 }
 </script>

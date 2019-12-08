@@ -1,6 +1,6 @@
 <template>
   <drop 
-    class="sequencer sequencer-child"
+    class="w-full inline-block relative"
     group="arranger"
     @drop="handleDrop"
   >
@@ -11,7 +11,7 @@
     <!-- <div class="sequencer-child" @scroll="scroll" ref="scroller"> -->
     <div class="select-area" :style="selectStyle"></div>
     <div
-      class="layer rows" 
+      class="layer flex flex-col absolute" 
       ref="rows" 
       :style="`height: ${numRows * rowHeight}px`"
     >
@@ -32,7 +32,7 @@
       :beats-per-measure="beatsPerMeasure"
       :steps-per-beat="stepsPerBeat"
       :style="sequencerStyle"
-      class="layer lines"
+      class="layer h-full relative pointer-events-none"
     ></beat-lines>
     <component
       v-for="(ghost, i) in ghostsComponents"
@@ -540,29 +540,6 @@ export default class SequencerGrid extends Vue {
 </script>
 
 <style scoped lang="sass">
-.sequencer
-  width: 100%
-  background: #303030
-  display: inline-block
-  position: relative
-
-.measure, .section
-  display: flex
-
-.rows
-  display: flex
-  flex-direction: column
-  position: absolute
-
-.lines
-  height: 100%
-  z-index: 1 
-  position: relative
-  pointer-events: none
-
-.sequencer-child
-  position: relative
-
 .progress-bar
   width: 1px
   background-color: #ffa

@@ -43,6 +43,7 @@
         :notes="notes"
         class="score bg-default flex-shrink flex-grow"
       ></mini-score>
+      <div v-else class="flex-grow"></div>
       <channel-select
         class="flex-shrink-0"
         :value="channel"

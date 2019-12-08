@@ -6,7 +6,7 @@
       :key="i"
       @click.native="start(item.sample)"
       @contextmenu.native="context($event, i)"
-      class="sample text-default"
+      class="text-default text-sm py-2 px-4 cursor-pointer hover:bg-default-lighten-2"
       :transfer-data="item.prototype"
     >
       {{ item.sample.name }}
@@ -54,12 +54,3 @@ export default class AudioFiles extends Vue {
   }
 }
 </script>
-
-<style lang="sass" scoped>
-.sample
-  padding: 10px 20px
-
-  &:hover
-    box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.1)
-    cursor: pointer
-</style>
