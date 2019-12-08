@@ -12,13 +12,12 @@
         v-if="isLeaf"
         :is="iconComponent"
       ></component>
-      <dg-icon
+      <dg-fa-icon
+        class="text-default"
         v-else 
-        fa 
         :style="iconStyle"
-      >
-        caret-right
-      </dg-icon>
+        icon="caret-right"
+      ></dg-fa-icon>
       
       <drag
         class="text-default ml-2 text-sm select-none truncate"

@@ -40,11 +40,9 @@
     "uuid": "^3.3.2",
     "v-tooltip": "^2.0.2",
     "vue": "^2.6.10",
-    "vue-awesome": "^3.1.2",
     "vue-drag-drop": "^1.1.4",
     "vue-perfect-scrollbar": "^0.1.0",
     "vue-property-decorator": "^7.0.0",
-    "vuetify": "^2.1.13",
     "webmidi": "^2.3.3"
   },
   "devDependencies": {

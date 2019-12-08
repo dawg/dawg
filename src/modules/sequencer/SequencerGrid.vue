@@ -1,50 +1,33 @@
 <template>
   <drop 
-    class="w-full inline-block relative"
+    class="w-full relative flex flex-col"
+    style="height: fit-content"
     group="arranger"
+    ref="rows"
     @drop="handleDrop"
   >
-    <!-- 
-      We need this child element for scroll reasons.
-      See https://stackoverflow.com/questions/16670931/hide-scroll-bar-but-while-still-being-able-to-scroll
-     -->
-    <!-- <div class="sequencer-child" @scroll="scroll" ref="scroller"> -->
-    <div class="select-area" :style="selectStyle"></div>
-    <div
-      class="layer flex flex-col absolute" 
-      ref="rows" 
-      :style="`height: ${numRows * rowHeight}px`"
-    >
-      <div
-        v-for="row in numRows" 
-        :key="row"
-        :row="row - 1"
-        :total-beats="displayBeats"
-        :style="actualRowStyle(row - 1)"
-        :class="rowClass(row - 1)"
-        @click="add($event)"
-        @contextmenu="$event.preventDefault()"
-        @mousedown="selectStart"
-      ></div>
-    </div>
+    <div class="absolute" :style="selectStyle"></div>
     <beat-lines
+      class="absolute h-full pointer-events-none"
       :px-per-beat="pxPerBeat"
       :beats-per-measure="beatsPerMeasure"
       :steps-per-beat="stepsPerBeat"
       :style="sequencerStyle"
-      class="layer h-full relative pointer-events-none"
     ></beat-lines>
+
     <component
       v-for="(ghost, i) in ghostsComponents"
       :is="ghost.name"
       :left="ghost.left"
       :top="ghost.top"
       :px-per-beat="pxPerBeat"
-      :style="{ position: 'absolute', 'z-index': 2, height: `${rowHeight}px` }"
+      class="absolute z-1"
+      :style="{ height: `${rowHeight}px` }"
       :key="i"
       :ghost="ghost.ghost"
     ></component>
     <component
+      class="absolute z-1"
       v-for="(component, i) in components"
       :is="component.name"
       :left="component.left"
@@ -53,7 +36,6 @@
       :height="rowHeight"
       :snap="snap"
       :px-per-beat="pxPerBeat"
-      style="position: absolute; z-index: 2"
       :key="i"
       :element="component.element"
       :selected="selected[i]"
@@ -79,6 +61,19 @@
       class="loop-background loop-background--right" 
       :style="rightStyle"
     ></div>
+
+    <div
+      v-for="row in numRows" 
+      :key="row"
+      :row="row - 1"
+      :total-beats="displayBeats"
+      :style="actualRowStyle(row - 1)"
+      :class="rowClass(row - 1)"
+      @click="add($event)"
+      @contextmenu="$event.preventDefault()"
+      @mousedown="selectStart"
+    ></div>
+
   </drop>
 </template>
 
@@ -244,7 +239,6 @@ export default class SequencerGrid extends Vue {
     });
 
     return {
-      position: 'absolute',
       borderRadius: '5px',
       border: 'solid 1px red',
       backgroundColor: 'rgba(255, 51, 51, 0.3)',
@@ -257,7 +251,7 @@ export default class SequencerGrid extends Vue {
   }
 
   public mounted() {
-    this.rows = this.$refs.rows as HTMLElement;
+    this.rows = (this.$refs.rows as Vue).$el as HTMLElement;
     this.checkLoopEnd();
     window.addEventListener('keydown', this.keydown);
     window.addEventListener('keyup', this.keyup);
@@ -272,7 +266,7 @@ export default class SequencerGrid extends Vue {
     const style = this.rowStyle(i);
     return {
       ...style,
-      height: `${this.rowHeight}px`,
+      flex: `0 0 ${this.rowHeight}px`,
       width: `${this.pxPerBeat * this.displayBeats}px`,
     };
   }

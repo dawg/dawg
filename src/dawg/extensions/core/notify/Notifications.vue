@@ -8,7 +8,7 @@
         :key="item.id"
       >
         <div :class="notifyIconClass(item)" class="left">
-          <icon :name="item.icon"></icon>
+          <dg-fa-icon :icon="item.icon"></dg-fa-icon>
         </div>
         <div :class="notifyBodyClass(item)" class="right">
           <div style="display: flex">
@@ -18,17 +18,15 @@
               v-html="item.title"
             ></div>
             <div style="flex: 1"></div>
-            <v-btn 
+            <dg-button 
               v-if="list.length > 1 && i === 0"
               :class="buttonClass(item)"
               @click="destroyAll"
-              flat
               style="margin-top: -2px"
-              small
             >
               Close All
-            </v-btn>
-            <v-icon small @click="destroy(i)">close</v-icon>
+            </dg-button>
+            <dg-mat-icon class="text-sm cursor-pointer" @click="destroy(i)" icon="close"></dg-mat-icon>
           </div>
           <vue-perfect-scrollbar
             v-if="item.text"
@@ -157,28 +155,28 @@ export default class Notifications extends Vue {
   public notifyClass(item: NotificationItem) {
     return [
       'notification',
-      `${item.type}-darken-3--text`,
+      `fg-${item.type}-darken-3`,
     ];
   }
 
   public buttonClass(item: NotificationItem) {
     return [
       'close-all',
-      `${item.type}-darken-3--text`,
+      `fg-${item.type}-darken-3`,
     ];
   }
 
   public notifyIconClass(item: NotificationItem) {
     return [
       'icon',
-      item.type,
+      `bg-${item.type}`,
     ];
   }
 
   public notifyBodyClass(item: NotificationItem) {
     return [
       'notification-body',
-      `${item.type}-lighten-4`,
+      `bg-${item.type}-lighten-4`,
     ];
   }
 

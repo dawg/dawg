@@ -42,30 +42,25 @@
           name="side"
         ></slot>
       </scroller>
-      <div
-        class="sequencer scroller overflow-x-scroll sequencer-child" 
-        @scroll="scroll" 
+      <sequencer-grid
+        class="sequencer scroller overflow-x-scroll" 
+        @scroll.native="scroll"
         ref="scrollX"
-        :settings="{ suppressScrollY: true, handlers: ['wheel'] }"
-      >
-        <sequencer-grid
-          :sequencer-loop-end.sync="sequencerLoopEnd"
-          :loop-start="loopStart"
-          :loop-end="loopEnd"
-          :set-loop-start="userLoopStart"
-          :set-loop-end="userLoopEnd"
-          :steps-per-beat="stepsPerBeat"
-          :beats-per-measure="beatsPerMeasure"
-          :px-per-beat="pxPerBeat"
-          :row-height="rowHeight"
-          :progress="progress"
-          :name="name"
-          :display-loop-end.sync="displayLoopEnd"
-          v-bind="$attrs"
-          v-on="$listeners"
-        ></sequencer-grid>
-      </div>
-
+        :sequencer-loop-end.sync="sequencerLoopEnd"
+        :loop-start="loopStart"
+        :loop-end="loopEnd"
+        :set-loop-start="userLoopStart"
+        :set-loop-end="userLoopEnd"
+        :steps-per-beat="stepsPerBeat"
+        :beats-per-measure="beatsPerMeasure"
+        :px-per-beat="pxPerBeat"
+        :row-height="rowHeight"
+        :progress="progress"
+        :name="name"
+        :display-loop-end.sync="displayLoopEnd"
+        v-bind="$attrs"
+        v-on="$listeners"
+      ></sequencer-grid>
     </div>
   </div>
 </template>
@@ -124,7 +119,7 @@ export default class Sequencer extends Vue {
   public horizontalScroller: Element | null = null;
 
   public $refs!: {
-    scrollX: Element;
+    scrollX: Vue;
     scrollY: Element;
   };
 
@@ -181,7 +176,7 @@ export default class Sequencer extends Vue {
 
   public scroll() {
     // This only handles horizontal scrolls!
-    this.scrollLeft = this.$refs.scrollX.scrollLeft;
+    this.scrollLeft = this.$refs.scrollX.$el.scrollLeft;
   }
 
   public setPxPerBeat(pxPerStep: number) {
@@ -193,7 +188,7 @@ export default class Sequencer extends Vue {
   }
 
   public mounted() {
-    this.horizontalScroller = this.$refs.scrollX;
+    this.horizontalScroller = this.$refs.scrollX.$el;
     this.verticalScroller = this.$refs.scrollY;
   }
 

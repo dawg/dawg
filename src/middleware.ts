@@ -14,14 +14,9 @@ import * as helpLinks from '@/dawg/extensions/extra/help-links';
 import * as restorer from '@/dawg/extensions/extra/restorer';
 import * as dawg from '@/dawg';
 
-// TODO remove vue-awesome
-import Vuetify from 'vuetify';
-import 'vue-awesome/icons';
-// TODO remove
-// import 'vuetify/dist/vuetify.css';
+
 import '@/styles/material.css';
 import '@/main.css';
-import Icon from 'vue-awesome/components/Icon.vue';
 import Update from '@/modules/update';
 import sequencer from '@/modules/sequencer';
 import DragNDrop from '@/modules/dragndrop';
@@ -86,9 +81,6 @@ const middleware = () => {
   Vue.use(Knobs);
   Vue.use(sequencer);
   Vue.component('VuePerfectScrollbar', VuePerfectScrollbar);
-
-  Vue.use(Vuetify);
-  Vue.component('icon', Icon);
   Vue.component('DragElement', DragElement);
 };
 

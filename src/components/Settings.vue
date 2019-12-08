@@ -7,7 +7,11 @@
         <div class="modal-header">
           <h4 class="modal-title text-default">Settings</h4>
           <div style="flex: 1"></div>
-          <v-icon small @click="close" :color="base.theme['text-default']">close</v-icon>
+          <dg-mat-icon 
+            class="text-sm cursor-pointer text-default"
+            @click="close"
+            icon="close"
+          ></dg-mat-icon>
         </div>
         <div class="modal-body">
           <div class="section" v-for="(section, i) in processed" :key="i">
@@ -22,20 +26,20 @@
                 v-model="setting.value.value"
                 :disabled="setting.disabled ? setting.disabled.value : false"
               ></dg-text-field>
-              <v-switch
+              <input 
                 v-else-if="setting.type === 'boolean'"
+                class="mr-2 leading-tight"
+                type="checkbox"
                 v-model="setting.value.value"
-                color="primary"
                 :disabled="setting.disabled ? setting.disabled.value : false"
-              ></v-switch>
-              <v-select
+              >
+              <dg-select
                 v-else-if="setting.type === 'select'"
                 class="select"
-                dense
                 :items="setting.options"
                 v-model="setting.value.value"
                 :disabled="setting.disabled ? setting.disabled.value : false"
-              ></v-select>
+              ></dg-select>
               <component v-else-if="setting.type === 'component'" :is="setting.component"></component>
             </div>
           </div>

@@ -1,5 +1,5 @@
 <template>
-  <v-app class="app" :class="base.ui.rootClasses">
+  <div class="flex flex-col" :class="base.ui.rootClasses">
     <split direction="vertical">
 
       <split direction="horizontal" resizable>
@@ -96,7 +96,7 @@
       class="bg-default"
       :value="!loaded"
     ></loading>
-  </v-app>
+  </div>
 </template>
 
 <script lang="ts">
@@ -240,10 +240,6 @@ html
 </style>
 
 <style lang="sass" scoped>
-.app
-  display: flex
-  flex-direction: column
-
 .status-bar-item-left
   margin-left: 15px
 
