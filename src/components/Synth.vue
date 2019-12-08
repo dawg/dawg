@@ -1,25 +1,22 @@
 <template>
   <div 
-    class="synth-wrapper"
-    style="position: relative; z-index: 10;"
+    class="flex flex-col relative z-10"
     @contextmenu="contextmenu"
   >
-    <div 
-      class="bar primary"
-    ></div>
-    <div 
-      class="synth secondary-lighten-1" 
+    <div style="height: 5px" class="bar bg-primary"></div>
+    <div
+      class="pr-2 flex items-center bg-default-lighten-1"
       color="white"
-      :style="synthStyle"
+      style="height: 50px"
       @dblclick="expand = !expand"
       @click="$emit('click', $event)"
     >
       <dot-button
-        class="mute"
+        class="m-3 flex-shrink-0"
         v-model="active"
       ></dot-button>
       <knob
-        class="knob"
+        class="m-3 flex-shrink-0"
         text-color="white"
         :stroke-width="strokeWidth"
         :value="instrument.volume.raw"
@@ -30,6 +27,7 @@
         :max="instrument.volume.maxValue"
       ></knob>
       <pan
+        class="flex-shrink-0"
         :value="instrument.pan.raw"
         @input="panInput"
         @automate="automatePan"
@@ -38,31 +36,28 @@
         v-model="instrument.name"
         :contenteditable.sync="contenteditable"
         disableDblClick
-        class="text-default name"
+        class="text-default name flex-shrink-0"
       ></editable>
-      <!-- <div class="text-default name">{{ instrument.name }}</div> -->
       <mini-score
         v-if="notes.length"
         :notes="notes"
-        class="score secondary"
+        class="score bg-default flex-shrink flex-grow"
       ></mini-score>
-      <div style="flex: 1"></div>
       <channel-select
+        class="flex-shrink-0"
         :value="channel"
         @input="setChannel"
       ></channel-select>
     </div>
     <div 
-      class="options secondary-lighten-1"
+      class="options bg-default-lighten-1"
       :class="{ expand }"
     >
-      <v-select
-        class="synth-dropdown"
-        dense
-        dark
-        :items="instrument.types"
+      <dg-select
+        class="my-2 mx-5 grid"
+        :options="instrument.types"
         v-model="instrument.type"
-      ></v-select>
+      ></dg-select>
     </div>
   </div>
 </template>
@@ -90,12 +85,6 @@ export default createComponent({
     const expand = ref(false);
     const strokeWidth = 2.5;
     const contenteditable = ref(false);
-
-    const synthStyle = computed(() => {
-      return {
-        height: `${props.height}px`,
-      };
-    });
 
     function setChannel(v: number | undefined) {
       update(props, context, 'channel', v);
@@ -149,7 +138,6 @@ export default createComponent({
       panInput,
       volumeInput,
       setChannel,
-      synthStyle,
       expand,
       strokeWidth,
       contenteditable,
@@ -158,51 +146,29 @@ export default createComponent({
 });
 </script>
 
-<style scoped lang="sass">
-.synth
-  align-items: center
-  display: flex
-  padding-right: 10px
+<style scoped lang="scss">
+.name {
+  font-size: 1.2em;
+  min-width: 140px;
+  display: block;
+  padding-left: 10px;
+  user-select: none;
+}
 
-.mute
-  height: 20px
-  width: 20px
-  margin: 5px
+.options {
+  transition: height .5s;
+  height: 0;
+  overflow: hidden;
+}
 
-.synth-dropdown
-  padding: 5px 18px
+.expand {
+  height: 55px;
+}
 
-.synth-dropdown /deep/ .v-input__slot
-  margin: 0!important
-
-.knob
-  margin: 5px
-
-.name
-  font-size: 1.2em
-  min-width: 140px
-  display: block
-  padding-left: 10px
-  user-select: none
-
-.synth-wrapper
-  display: flex
-  flex-direction: column
-
-.bar
-  height: 5px
-
-.options
-  transition: height .5s
-  height: 0
-  overflow: hidden
-
-.expand
-  height: 55px
-
-.score
-  margin: 5px 10px
-  padding: 2px 5px
-  height: 75%
-  border-radius: 3px
+.score {
+  margin: 5px 10px;
+  padding: 2px 5px;
+  height: 75%;
+  border-radius: 3px;
+}
 </style>

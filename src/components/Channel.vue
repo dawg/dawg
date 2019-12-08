@@ -1,31 +1,41 @@
 <template>
-  <div class="channel">
-    <div class="primary color"></div>
-    <editable v-model="channel.name" class="secondary label"></editable>
+  <div class="inline-block border-r border-default-darken-3">
+    <div class="bg-primary" style="height: 5px"></div>
+    <editable
+      v-model="channel.name" 
+      class="bg-default text-center text-default"
+      style="line-height: 30px"
+    ></editable>
     <ul>
-      <li v-for="(effect, i) in effects" :key="i" class="slot" @click="showEffects($event, i)">
-        <div v-if="effect" class="primary" style="height: 2px"></div>
+      <li
+        v-for="(effect, i) in effects"
+        :key="i"
+        class="group border-t last:border-b relative border-default-darken-2 cursor-pointer hover:bg-default-lighten-5"
+        style="height: 25px"
+        @click="showEffects($event, i)"
+      >
+        <div v-if="effect" class="bg-primary" style="height: 2px"></div>
         <div
           v-if="effect"
           @click="select($event, effect)"
           @contextmenu="contextmenu($event, effect)"
-          class="effect secondary text-default"
+          class="bg-default text-default text-center truncate select-none"
+          style="line-height: 23px"
         >
           {{ effect.type | sentenceCase }}
         </div>
-        <v-icon 
+        <dg-mat-icon
           v-else
-          size="13px" 
-          class="close-icon"
-        >
-          add
-        </v-icon>
+          icon="add"
+          class="right-0 pr-2 absolute z-10 text-sm group-hover:block hidden"
+          style="line-height: 23px"
+        ></dg-mat-icon>
       </li>
     </ul>
     <div class="spacer"></div>
-    <div class="controls">
-      <div style="display: flex">
-        <div style="display: flex; flex-direction: column; align-items: center">
+    <div class="p-2">
+      <div class="flex">
+        <div class="flex flex-col items-center">
           <pan
             :value="channel.panner.raw"
             @input="panInput"
@@ -35,14 +45,15 @@
           ></pan>
           <div style="flex-grow: 1"></div>
           <div 
-            class="mute text-default"
-            :class="{ 'primary-lighten-2': !channel.mute }"
+            class="mute text-default text-center select-none cursor-pointer"
+            :class="{ 'bg-primary-lighten-1': !channel.mute, 'bg-primary-darken-3': channel.mute }"
+            style="line-height: 40px; width: 40px"
             @click="mute"
           >
             {{ channel.number }}
           </div>
         </div>
-        <div class="slider" style="display: flex">
+        <div class="ml-4 flex">
           <slider 
             :value="channel.volume.raw"
             :min="channel.volume.minValue"
@@ -195,86 +206,3 @@ export class Channel extends Vue {
 
 }
 </script>
-
-<style lang="sass" scoped>
-$dark: #282c34
-$between: #26282b
-$light: #767a82
-
-ul
-  list-style: none
-  padding-left: 0
-
-.color
-  height: 5px
-
-.label
-  height: 30px
-  line-height: 30px
-  color: white
-  text-align: center
-  vertical-align: text-bottom
-
-.channel
-  width: 100px
-  min-height: 100%
-  height: initial
-  display: inline-block
-  border-right: solid 1px $dark
-  margin-bottom: 10px
-
-.slot
-  height: 25px
-  border-top: solid 1px $between
-  position: relative
-
-  &:hover
-    cursor: pointer
-    background-color: darken($light, 2%)
-
-    .close-icon
-      transform: scale(1)
-      transition-duration: .1s
-
-  &:last-of-type
-    border-bottom: solid 1px $between
-
-.close-icon
-  right: 0.5em
-  z-index: 2
-  width: 1.5em
-  height: 1.5em
-  line-height: 1.5
-  text-align: center
-  border-radius: 3px
-  overflow: hidden
-  transform: scale(0)
-  transition: transform .08s
-  position: absolute
-
-.controls
-  padding: 10px
-
-.mute
-  height: 40px
-  background-color: #333
-  line-height: 40px
-  text-align: center
-  width: 40px
-  user-select: none
-
-  &:hover
-    cursor: pointer
-
-.slider
-  margin-left: 10px
-
-.effect
-  height: 23px
-  line-height: 23px
-  width: 100%
-  text-align: center
-  white-space: nowrap
-  overflow: hidden
-  text-overflow: ellipsis
-</style>

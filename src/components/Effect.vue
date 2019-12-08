@@ -1,5 +1,5 @@
 <template>
-  <div class="effect secondary">
+  <div class="effect bg-default">
     <div class="title text-default">{{ name | upper }}</div>
     <div style="display: flex; flex-direction: column">
       <knob
@@ -8,7 +8,7 @@
         :name="key"
         :key="key"
         :label="key | titleCase"
-        stroke-class="secondary-lighten-2--stroke"
+        stroke-class="fg-default-lighten-2"
         :value="options[key]"
         @input="effect.set({ key, value: $event })"
         :min="constraints(key).min"
@@ -20,7 +20,7 @@
         class="option"
         name="Wet"
         label="Wet"
-        stroke-class="secondary-lighten-2--stroke"
+        stroke-class="fg-default-lighten-2"
         v-model="effect.wet.value"
         :min="0"
         :max="1"

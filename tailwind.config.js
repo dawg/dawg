@@ -9,11 +9,17 @@ const colorNames = [
   'warning',
 ];
 
+const fgColor = {};
 const textColor = {};
 const backgroundColor = {};
 const borderColor = {};
 colorNames.forEach((name) => {
-  [['', borderColor], ['', backgroundColor], ['text-', textColor]].forEach(([prefix, o]) => {
+  [
+    ['', fgColor],
+    ['', borderColor],
+    ['', backgroundColor],
+    ['text-', textColor]
+  ].forEach(([prefix, o]) => {
     o[name] = {
       'lighten-1': `var(--${prefix}${name}-lighten-1)`,
       'lighten-2': `var(--${prefix}${name}-lighten-2)`,
@@ -34,6 +40,21 @@ module.exports = {
   theme: {
     extend: { backgroundColor, textColor, borderColor, },
   },
-  variants: {},
-  plugins: []
+  variants: {
+    display: ['responsive', 'group-hover'],
+  },
+  plugins: [
+    ({ addUtilities }) => {
+      const newUtilities = {};
+      Object.entries(fgColor).forEach(([name, o]) => {
+        Object.keys(o).map((key) => {
+          newUtilities['.fg-' + name + (key === 'default' ? '' : `-${key}`)] = {
+            color: o[key],
+          };
+        });
+      });
+
+      addUtilities(newUtilities, ['hover'])
+    }
+  ]
 };

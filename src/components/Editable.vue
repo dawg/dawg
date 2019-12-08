@@ -2,7 +2,7 @@
   <div
     ref="el"
     class="editable"
-    :contenteditable="contenteditable"
+    :contenteditable="editable"
     @blur="blur"
     @dblclick="dblclick" 
     @input="input"
@@ -23,6 +23,13 @@ export default createComponent({
   },
   setup(props, context) {
     const el = ref<HTMLElement>(null);
+    const editable = ref(props.contenteditable);
+
+    watch(() => {
+      if (context.listeners['update:contenteditable']) {
+        editable.value = props.contenteditable;
+      }
+    });
 
     onMounted(() => {
       if (el.value) {
@@ -35,11 +42,12 @@ export default createComponent({
         return;
       }
 
+      editable.value = true;
       update(props, context, 'contenteditable', true);
     }
 
     watch(() => {
-      if (!props.contenteditable) {
+      if (!editable.value) {
         return;
       }
 
@@ -53,6 +61,7 @@ export default createComponent({
     });
 
     function blur() {
+      editable.value = false;
       update(props, context, 'contenteditable', false);
     }
 
@@ -73,6 +82,7 @@ export default createComponent({
       input,
       keydown,
       el,
+      editable,
     };
   },
 });

@@ -1,27 +1,31 @@
 <template>
-  <svg ref="svg">
+  <svg ref="svg" class="overflow-visible">
     <rect 
       :height="height" 
       :width="width" 
-      :class="bgClass"
+      fill="currentColor"
+      class="fg-default"
     ></rect>
     <rect 
       :height="leftHeight" 
       :y="getPosition(leftHeight)" 
       :width="width"
-      class="primary--fill"
+      fill="currentColor"
+      class="fg-primary"
     ></rect>
     <rect 
       :height="height" 
       :width="width"
-      :class="bgClass"
+      fill="currentColor"
+      class="fg-default"
       :style="style"
     ></rect>
     <rect
       :height="rightHeight"
       :y="getPosition(rightHeight)"
       :width="width"
-      class="primary--fill"
+      fill="currentColor"
+      class="fg-primary"
       :style="style"
     ></rect>
     <drag-element
@@ -30,8 +34,10 @@
       @contextmenu="contextmenu"
       @mouseenter="update"
       @mouseleave="afterMove"
+      @move="move"
       :points="points" 
-      class="level primary--fill" 
+      fill="currentColor"
+      class="fg-primary"
     ></drag-element>
   </svg>
 </template>
@@ -55,9 +61,6 @@ export default createComponent({
     min: { type: Number, default: 0 },
   },
   setup(props, context) {
-    const bgClass = 'secondary--fill';
-    const cursor = 'pointer';
-
     const points = computed(() => {
       const width = 8;
       const height = 16;
@@ -133,7 +136,6 @@ export default createComponent({
     }
 
     return {
-      bgClass,
       contextmenu,
       getPosition,
       update,
@@ -148,8 +150,3 @@ export default createComponent({
   },
 });
 </script>
-
-<style scoped lang="sass">
-svg
-  overflow: visible!important
-</style>
