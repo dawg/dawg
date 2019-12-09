@@ -1,7 +1,7 @@
 <template>
   <button 
     type="button"
-    class="google-button"
+    class="google-button w-48"
     v-on="$listeners"
   >
     <span class="google-button__icon">
@@ -27,7 +27,6 @@ export default createComponent({
 // https://developers.google.com/+/branding-guidelines
 
 .google-button {
-  width: 100%;
   height: 40px;
   border-width: 0;
   background: white;

@@ -61,7 +61,7 @@ export const playlist = manager.activate({
         masterStart,
         masterEnd,
         ghosts,
-        project: project.getProject(),
+        project: project.project,
         playlistRowHeight,
         playlistBeatWidth,
       }),

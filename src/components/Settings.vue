@@ -1,7 +1,7 @@
 <template>
   <dg-modal :value="value" @update="update">
     <template v-slot:header>
-      <div class="flex px-4 py-4">
+      <div class="flex items-center px-4 py-4">
         <div class="text-default">Settings</div>
         <div class="flex-grow"></div>
         <dg-mat-icon 
@@ -12,45 +12,18 @@
       </div>
     </template>
     <template v-slot:body>
-      <div class="pb-4">
-        <div class="px-4 pt-4" v-for="(section, i) in processed" :key="i">
+      <div class="pt-3 pb-8">
+        <div class="px-4" :class="i !== 0 ? 'pt-6' : ''" v-for="(section, i) in processed" :key="i">
           <h1 class="text-default text-3xl">{{ section.title }}</h1>
-          <div v-for="(setting, j) in section.settings" :key="setting.label">
-            <h2
-              class="text-default font-semibold text-lg"
-              :class="j !== 0 ? 'mt-3' : ''"
-            >{{ setting.label }}</h2>
-            <div class="text-default text-sm mb-1" v-html="setting.description"></div>
-            <dg-text-field
-              class="max-w-full text-default"
-              v-if="setting.type === 'string'"
-              v-model="setting.value.value"
-              :disabled="setting.disabled ? setting.disabled.value : false"
-            ></dg-text-field>
-            <label
-              v-else-if="setting.type === 'boolean'" 
-              class="text-default flex"
-            >
-              <input 
-                class="mr-2 leading-tight"
-                type="checkbox"
-                v-model="setting.value.value"
-                :disabled="setting.disabled ? setting.disabled.value : false"
-              >
-              <span class="text-xs leading-snug font-bold">
-                {{setting.value.value ? setting.checkedValue : setting.uncheckedValue }}
-              </span>
-            </label>
-            
-            <dg-select
-              v-else-if="setting.type === 'select'"
-              class="select"
-              v-model="setting.value.value"
-              :options="setting.options"
-              :disabled="setting.disabled ? setting.disabled.value : false"
-            ></dg-select>
-            <component v-else-if="setting.type === 'component'" :is="setting.component"></component>
-          </div>
+          <settings-input 
+            :setting="section.settings[0]"
+          ></settings-input>
+          <!-- <settings-input 
+            v-for="(setting, j) in section.settings" 
+            :key="setting.label" 
+            :class="j !== 0 ? 'mt-3' : ''"
+            :setting="setting"
+          ></settings-input> -->
         </div>
       </div>
     </template>
@@ -58,7 +31,6 @@
 </template>
 
 <script lang="ts">
-import { Marked } from 'marked-ts';
 import * as dawg from '@/dawg';
 import { createComponent, watch, computed } from '@vue/composition-api';
 
@@ -76,17 +48,9 @@ export default createComponent({
         context.emit('input', false);
       },
       processed: computed(() => {
-        return dawg.manager.settings.map(({ title, settings }) => {
-          return {
-            title,
-            settings: settings.map((setting): typeof setting => {
-              return {
-                ...setting,
-                description: Marked.parse(setting.description),
-              };
-            }),
-          };
-        }).filter((section) => section.settings.length > 0).sort((a, b) => {
+        return dawg.manager.settings.filter((section) => {
+          return section.settings.length > 0;
+        }).sort((a, b) => {
           return a.title.localeCompare(b.title);
         });
       }),

@@ -1,14 +1,14 @@
 <template>
-  <div class="inline-block relative">
+  <div class="inline-block relative w-full">
     <select
       class="
-        block 
+        block
         appearance-none
         w-full
-        bg-default
+        bg-default-lighten-1
         text-default
         border
-        border-default-lighten-2
+        border-default-lighten-4
         hover:border-default-lighten-3
         px-4 
         py-2 
@@ -17,7 +17,7 @@
         shadow 
         leading-tight 
         focus:outline-none 
-        focus:shadow-outline
+        focus:shadow-none
       "
     >
       <option 
@@ -64,7 +64,3 @@ export default createComponent({
   },
 });
 </script>
-
-<style lang="sass" scoped>
-
-</style>

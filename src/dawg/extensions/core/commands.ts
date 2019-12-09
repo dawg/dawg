@@ -51,7 +51,7 @@ export class KeyboardShortcuts {
     // ignore all targets that aren't the body
     // For example, ignore keys typed in an input
     // This won't work
-    if (!hasKey(this.pressedKeys, 'CmdOrCtrl') && e.target !== document.body) {
+    if (e.target !== document.body) {
       return;
     }
 

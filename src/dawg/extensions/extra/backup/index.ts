@@ -349,20 +349,50 @@ export const extension = createExtension({
       component: googleButton,
     };
 
-    watch(() => { button.description = `Login with google. Currently in as ${name.value}`; });
+    watch(() => { button.description = `Login with google. Currently logged in as \`${name.value}\``; });
     context.settings.push(button);
 
     const toggle: BooleanInput = {
       label: 'Cloud Backup',
-      description: 'Whether to sync this project to the cloud',
+      description: '',
       type: 'boolean',
       value: backup,
-      disabled: true,
+      disabled: true, // initially false
       checkedValue: 'Syncing',
       uncheckedValue: 'Not Syncing',
     };
 
-    watch(() => { toggle.disabled = !project.project.name || !user.value; });
+
+    watch(() => {
+      const both = !project.name.value && !user.value;
+      const either = !project.name.value || !user.value;
+
+      toggle.disabled = either;
+      toggle.description = 'Whether to sync this project to the cloud.';
+
+      if (either) {
+        toggle.description += ' Before you can enable this, please ';
+      }
+
+      if (!project.name.value) {
+        toggle.description += 'give your project a name';
+      }
+
+      if (both) {
+        toggle.description += ' and ';
+      }
+
+      if (!user.value) {
+        toggle.description += 'login using your Google Account';
+      }
+
+      if (either) {
+        toggle.description += '.';
+      }
+
+      console.log(toggle);
+    });
+
     context.settings.push(toggle);
   },
 });

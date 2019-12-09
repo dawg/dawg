@@ -1,5 +1,26 @@
 <template>
-  <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" id="username" type="text">
+  <input 
+    class="
+      dg-text-field
+      bg-default-lighten-1 
+      shadow 
+      appearance-none 
+      border 
+      rounded 
+      w-full 
+      py-2 
+      px-3 
+      leading-tight
+      border-default-lighten-4
+      focus:border-primary
+      focus:shadow-none
+      focus:outline-none 
+    " 
+    id="username" 
+    type="text"
+    :value="value"
+    @input="input"
+  >
 </template>
 
 <script lang="ts">
@@ -13,10 +34,16 @@ export default createComponent({
   },
   setup(props, context) {
     return {
-      input(value: string) {
-        context.emit('input', value);
+      input(value: InputEvent) {
+        context.emit('input', (value.target! as HTMLInputElement).value);
       },
     };
   },
 });
 </script>
+
+<style scoped>
+.dg-text-field {
+  transition: border 300ms ease-in-out;
+}
+</style>
