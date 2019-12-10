@@ -39,26 +39,26 @@ export type ReactiveDefinition<
   { [K in OptionalKeys<P>]: Ref<InferPropType<P[K]> | undefined> };
 
 export interface StringInput {
-  label: string;
-  description: string;
-  disabled?: boolean;
+  label: string | Ref<string>;
+  description: string | Ref<string>;
+  disabled?: boolean | Ref<boolean>;
   type: 'string';
   value: Ref<string | undefined>;
 }
 
 export interface SelectInput<T extends string> {
-  label: string;
-  description: string;
-  disabled?: boolean;
+  label: string | Ref<string>;
+  description: string | Ref<string>;
+  disabled?: boolean | Ref<boolean>;
   type: 'select';
   value: Ref<T | undefined>;
   options: T[];
 }
 
 export interface BooleanInput {
-  label: string;
-  description: string;
-  disabled?: boolean;
+  label: string | Ref<string>;
+  description: string | Ref<string>;
+  disabled?: boolean | Ref<boolean>;
   type: 'boolean';
   value: Ref<boolean>;
   checkedValue: string;
@@ -66,8 +66,8 @@ export interface BooleanInput {
 }
 
 export interface VueInput {
-  label: string;
-  description: string;
+  label: string | Ref<string>;
+  description: string | Ref<string>;
   type: 'component';
   component: VueConstructor;
 }

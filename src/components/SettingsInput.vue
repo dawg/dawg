@@ -2,13 +2,13 @@
   <div>
     <h2
       class="text-default font-semibold text-lg"
-    >{{ setting.label }}</h2>
+    >{{ unwrap(setting.label) }}</h2>
     <div class="text-default text-sm leading-snug mb-1" v-html="description"></div>
     <dg-text-field
       class="max-w-full text-default"
       v-if="setting.type === 'string'"
       v-model="setting.value.value"
-      :disabled="setting.disabled"
+      :disabled="unwrap(setting.disabled)"
     ></dg-text-field>
     <label
       v-else-if="setting.type === 'boolean'" 
@@ -16,7 +16,7 @@
     >
       <dg-checkbox
         v-model="setting.value.value"
-        :disabled="setting.disabled"
+        :disabled="unwrap(setting.disabled)"
         class="mr-2"
       ></dg-checkbox>
       <span class="text-xs leading-snug font-bold">
@@ -29,7 +29,7 @@
       class="select"
       v-model="setting.value.value"
       :options="setting.options"
-      :disabled="setting.disabled"
+      :disabled="unwrap(setting.disabled)"
     ></dg-select>
     <component v-else-if="setting.type === 'component'" :is="setting.component"></component>
   </div>
@@ -39,6 +39,7 @@
 import { createComponent, computed } from '@vue/composition-api';
 import { Setting } from '@/dawg/extensions';
 import { Marked } from 'marked-ts';
+import { unwrap } from '../utils';
 
 export default createComponent({
   name: 'SettingsInput',
@@ -48,8 +49,9 @@ export default createComponent({
   setup(props) {
     return {
       description: computed(() => {
-        return Marked.parse(props.setting.description);
+        return Marked.parse(unwrap(props.setting.description));
       }),
+      unwrap,
     };
   },
 });

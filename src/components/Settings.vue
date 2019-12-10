@@ -16,14 +16,11 @@
         <div class="px-4" :class="i !== 0 ? 'pt-6' : ''" v-for="(section, i) in processed" :key="i">
           <h1 class="text-default text-3xl">{{ section.title }}</h1>
           <settings-input 
-            :setting="section.settings[0]"
-          ></settings-input>
-          <!-- <settings-input 
             v-for="(setting, j) in section.settings" 
             :key="setting.label" 
             :class="j !== 0 ? 'mt-3' : ''"
             :setting="setting"
-          ></settings-input> -->
+          ></settings-input>
         </div>
       </div>
     </template>

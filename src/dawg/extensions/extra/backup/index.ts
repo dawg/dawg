@@ -352,45 +352,42 @@ export const extension = createExtension({
     watch(() => { button.description = `Login with google. Currently logged in as \`${name.value}\``; });
     context.settings.push(button);
 
-    const toggle: BooleanInput = {
+    const toggle = {
       label: 'Cloud Backup',
-      description: '',
+      description: ref(''),
       type: 'boolean',
       value: backup,
-      disabled: true, // initially false
+      disabled: ref(true),
       checkedValue: 'Syncing',
       uncheckedValue: 'Not Syncing',
-    };
+    } as const;
 
-
-    watch(() => {
+    watch([project.name, user], () => {
       const both = !project.name.value && !user.value;
       const either = !project.name.value || !user.value;
 
-      toggle.disabled = either;
-      toggle.description = 'Whether to sync this project to the cloud.';
+      toggle.disabled.value = either;
+      toggle.description.value = 'Whether to sync this project to the cloud.';
 
       if (either) {
-        toggle.description += ' Before you can enable this, please ';
+        toggle.description.value += ' Before you can enable this, please ';
       }
 
       if (!project.name.value) {
-        toggle.description += 'give your project a name';
+        toggle.description.value += 'give your project a name';
       }
 
       if (both) {
-        toggle.description += ' and ';
+        toggle.description.value += ' and ';
       }
 
       if (!user.value) {
-        toggle.description += 'login using your Google Account';
+        toggle.description.value += 'login using your Google Account';
       }
 
       if (either) {
-        toggle.description += '.';
+        toggle.description.value += '.';
       }
-
-      console.log(toggle);
     });
 
     context.settings.push(toggle);

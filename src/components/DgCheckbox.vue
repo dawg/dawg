@@ -33,7 +33,6 @@ export default createComponent({
           return;
         }
 
-
         context.emit('input', !props.value);
       },
       classes: computed(() => {

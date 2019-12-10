@@ -3,9 +3,23 @@ import Vue, { VueConstructor, CreateElement, VNodeData } from 'vue';
 import Component from 'vue-class-component';
 import ResizeObserver from 'resize-observer-polyfill';
 import throttle from 'lodash.throttle';
-import { createComponent } from '@vue/composition-api';
+import { createComponent, Ref } from '@vue/composition-api';
 
 type Color = 'black' | 'white';
+
+export const unwrap = <T extends string | boolean | number | undefined>(t: T | Ref<T>): T => {
+  if (typeof t === 'string') {
+    return t;
+  } else if (typeof t === 'boolean') {
+    return t;
+  } else if (typeof t === 'number') {
+    return t;
+  } else if (typeof t === 'undefined') {
+    return t;
+  } else {
+    return (t as Ref<T>).value;
+  }
+};
 
 export const range = (a: number, b = 0, interval = 1) => {
   let start;
