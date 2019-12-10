@@ -188,7 +188,7 @@ const extension = createExtension({
       playPause() {
         if (!transport.value) {
           notify.warning('Please select a Pattern.', {
-            detail: 'Please create and select a Pattern first or switch the Playlist context.',
+            detail: 'Please create and select a `Pattern` first or switch the `Playlist` context.',
           });
           return;
         }

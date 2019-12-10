@@ -21,7 +21,7 @@ import * as dawg from '@/dawg';
 
 @Component
 export default class AudioFiles extends Vue {
-  public currentlyPlaying: Sample | null = null;
+  public dispose: (() => void) | null = null;
 
   get items() {
     return dawg.project.project.samples.map((sample) => {
@@ -45,12 +45,15 @@ export default class AudioFiles extends Vue {
   }
 
   public start(sample: Sample) {
-    if (this.currentlyPlaying) {
-      this.currentlyPlaying.stopPreview();
+    if (this.dispose) {
+      this.dispose();
+      this.dispose = null;
     }
 
-    sample.preview();
-    this.currentlyPlaying = sample;
+    const result = sample.preview();
+    if (result.started) {
+      this.dispose = result.dispose;
+    }
   }
 }
 </script>

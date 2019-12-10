@@ -11,75 +11,94 @@
     <div class="sample-controls text-default">
       <div style="flex: 1"></div>
       <span class="control">
-        <play-pause
-          @play="playSample"
-          @stop="pauseSample"
-        ></play-pause>
+        <dg-button @click="playPause" type="text">
+          {{ buttonText }}
+        </dg-button>
       </span>
-      <span
-        class="control" 
+      <dg-button
         v-for="(action, i) in actionsWithSamplePath"
+        class="ml-2"
+        type="text"
         :key="i"
+        @click="action.callback"
       >
-        <button class="button" @click="action.callback"> {{ action.text }} </button>
-      </span>
+        {{ action.text }}
+      </dg-button>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
-import PlayPause from '@/components/PlayPause.vue';
-import Tone from 'tone';
-import { Watch } from '@/modules/update';
 import { Sample } from '@/core';
 import { Nullable } from '@/utils';
 import { Action } from '@/dawg/extensions/core/sample-viewer/types';
+import { createComponent, computed } from '@vue/composition-api';
 
-@Component({components: { PlayPause }})
-export default class SampleViewer extends Vue {
-  @Prop(Nullable(Object)) public sample!: Sample | null;
-  @Prop({ type: Array, required: true }) public actions!: Action[];
-
-  get actionsWithSamplePath() {
-    return this.actions.map((action) => {
-      return {
-        text: action.text,
-        callback: () => {
-          if (this.samplePath) {
-            action.callback(this.samplePath);
-          }
-        },
-      };
+export default createComponent({
+  name: 'SampleViewer',
+  props: {
+    sample: { type: Nullable(Object) as any as () => Sample | null },
+    actions: { type: Array as () => Action[], required: true },
+  },
+  setup(props) {
+    const actionsWithSamplePath = computed(() => {
+      return props.actions.map((action) => {
+        return {
+          text: action.text,
+          callback: () => {
+            if (samplePath.value) {
+              action.callback(samplePath.value);
+            }
+          },
+        };
+      });
     });
-  }
 
-  get buffer() {
-    if (this.sample) {
-      return this.sample.buffer;
-    } else {
-      return null;
-    }
-  }
+    const buffer = computed(() => {
+      if (props.sample) {
+        return props.sample.buffer;
+      } else {
+        return null;
+      }
+    });
 
-  get samplePath() {
-    if (this.sample) {
-      return this.sample.path;
-    }
-  }
+    const samplePath = computed(() => {
+      if (props.sample) {
+        return props.sample.path;
+      }
+    });
 
-  public playSample() {
-    if (this.sample) {
-      this.sample.preview();
+    let disposer: { dispose: () => void } | null = null;
+    function playPause() {
+      if (props.sample) {
+        if (disposer) {
+          disposer.dispose();
+          disposer = null;
+        } else {
+          const result = props.sample.preview({
+            onended: () => {
+              if (disposer) {
+                disposer.dispose();
+              }
+            },
+          });
+          if (result.started) {
+            disposer = result;
+          }
+        }
+      }
     }
-  }
 
-  public pauseSample() {
-    if (this.sample) {
-      this.sample.stopPreview();
-    }
-  }
-}
+    return {
+      playPause,
+      actionsWithSamplePath,
+      buffer,
+      buttonText: computed(() => {
+        return disposer ? 'Stop' : 'Play';
+      }),
+    };
+  },
+});
 </script>
 
 <style lang="sass" scoped>
@@ -97,18 +116,9 @@ export default class SampleViewer extends Vue {
 .wave
   height: 100%
   width: 100%
-  
 
 .sample-controls
   padding-top: 20px
   position: fixed
   bottom: 35px
-
-.control
-  margin-right: 10px
-
-.button
-  border: solid 1px 
-  padding: 5px
-  border-radius: 5px
 </style>

@@ -18,8 +18,9 @@
               v-html="item.title"
             ></div>
             <div style="flex: 1"></div>
-            <dg-button 
+            <dg-button
               v-if="list.length > 1 && i === 0"
+              type="text"
               :class="buttonClass(item)"
               @click="destroyAll"
               style="margin-top: -2px"
@@ -31,7 +32,7 @@
           <vue-perfect-scrollbar
             v-if="item.text"
             class="notification-content"
-            v-html="item.text"
+            v-html="parse(item.text)"
           ></vue-perfect-scrollbar>
         </div>
       </div>
@@ -43,6 +44,7 @@
 import { Vue, Component, Prop} from 'vue-property-decorator';
 import { reverse } from '@/utils';
 import * as base from '@/base';
+import { Marked } from 'marked-ts';
 
 const directions = {
   x: ['left', 'center', 'right'],
@@ -82,6 +84,10 @@ export default class Notifications extends Vue {
   public list: NotificationItem[] = [];
   public speed = 300;
   public timers: {[s: string]: NodeJS.Timer} = {};
+
+  public parse(text: string) {
+    return Marked.parse(text);
+  }
 
   public mounted() {
     base.notify.subscribe((notification) => {

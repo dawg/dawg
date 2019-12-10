@@ -1,5 +1,5 @@
 <template>
-  <dg-modal :value="value" @update="update">
+  <dg-modal :value="value" @input="update">
     <template v-slot:header>
       <div class="flex items-center px-4 py-4">
         <div class="text-default">Settings</div>
@@ -55,31 +55,3 @@ export default createComponent({
   },
 });
 </script>
-
-<style lang="scss" scoped>
-.fade.in {
-  opacity: 1;
-}
-
-.fade {
-  transition: opacity .15s linear;
-}
-
-.settings {
-  padding: 0 0 10px 0;
-}
-
-.select /deep/ .v-input__slot {
-  margin: 0!important;
-  max-width: 250px;
-}
-
-.select /deep/ .v-select__selections {
-  margin: 0!important;
-  max-width: 220px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-</style>
