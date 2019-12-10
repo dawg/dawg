@@ -1,7 +1,7 @@
 <template>
-  <drag-element class="screen text-default" curse="ns-resize" @move="move">
-    <div class="text">{{ value }}</div>
-    <div class="small-text">bpm</div>
+  <drag-element class="text-default flex items-baseline select-none" curse="ns-resize" @move="move">
+    <div class="text-3xl">{{ value }}</div>
+    <div class="text-xs ml-1">bpm</div>
   </drag-element>
 </template>
 
@@ -25,7 +25,3 @@ export default createComponent({
   },
 });
 </script>
-
-<style scoped lang="sass">
-  @import '~@/styles/screen'
-</style>

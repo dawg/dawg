@@ -71,7 +71,7 @@
         <div class="bg-primary h-full flex items-center position text-default">
           <div
             v-for="(item, i) in statusBarLeft"
-            class="status-bar-item-left"
+            class="ml-6"
             :key="`status-bar-left-${i}`" 
           ><component :is="item.component"></component></div>
 
@@ -79,7 +79,7 @@
 
           <div
             v-for="(item, i) in statusBarRight"
-            class="status-bar-item-right"
+            class="mr-6"
             :key="`status-bar-right-${i}`"
           ><component :is="item.component"></component></div>
         </div>
@@ -225,25 +225,3 @@ export default class App extends Vue {
   // }
 }
 </script>
-
-<style lang="sass">
-html
-  overflow: hidden
-
-*
-  font-family: monospace
-
-.center--vertial
-  display: flex
-  flex-direction: column
-  justify-content: center
-</style>
-
-<style lang="sass" scoped>
-.status-bar-item-left
-  margin-left: 15px
-
-.status-bar-item-right
-  margin-right: 15px
-</style>
-

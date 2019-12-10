@@ -1,7 +1,7 @@
 <template>
   <div
     ref="el"
-    class="editable"
+    class="select-none cursor-default"
     :contenteditable="editable"
     @blur="blur"
     @dblclick="dblclick" 
@@ -87,9 +87,3 @@ export default createComponent({
   },
 });
 </script>
-
-<style lang="sass" scoped>
-.editable
-  user-select: none
-  cursor: default
-</style>

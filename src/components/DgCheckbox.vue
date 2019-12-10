@@ -1,17 +1,23 @@
 <template>
   <div 
+    role="checkbox"
+    tabindex="0"
     class="
       h-5
       w-5 
       rounded-sm 
       dg-checkbox 
-      relative 
+      relative
+      border
       flex 
       items-center 
-      justify-center 
+      justify-center
+      focus:border-primary
+      focus:outline-none
     "
     :class="classes"
     @click="click"
+    @keydown="keydown"
   >
     <span class="focuser"></span>
     <span v-if="value" class="tick h-5 w-3"></span>
@@ -20,6 +26,7 @@
 
 <script lang="ts">
 import { createComponent, computed, watch } from '@vue/composition-api';
+import { Keys } from '../utils';
 
 export default createComponent({
   props: {
@@ -46,6 +53,11 @@ export default createComponent({
           return 'bg-default-lighten-1 border-default-lighten-4 cursor-pointer';
         }
       }),
+      keydown: (e: KeyboardEvent) => {
+        if (e.which === Keys.SPACE) {
+          context.emit('input', !props.value);
+        }
+      },
     };
   },
 });
@@ -53,9 +65,6 @@ export default createComponent({
 
 <style lang="scss" scoped>
 .dg-checkbox {
-  position: relative;
-  border-width: 1px;
-  border-style: solid;
   transition: all linear 250ms;
 }
 

@@ -12,7 +12,6 @@ export default {
 
 <style lang="scss" scoped>
 // Here is where the magic happens
-
 $offset: 187;
 $duration: 1.4s;
 

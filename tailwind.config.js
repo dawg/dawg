@@ -42,6 +42,7 @@ module.exports = {
   },
   variants: {
     display: ['responsive', 'group-hover'],
+    backgroundColor: ['responsive', 'hover', 'focus'],
   },
   plugins: [
     ({ addUtilities }) => {

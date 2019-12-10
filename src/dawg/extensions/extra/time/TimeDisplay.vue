@@ -1,9 +1,9 @@
 <template>
-  <div class="screen text-default">
-    <span class="text">{{ minutes }}</span>
-    <span class="text colon">:</span>
-    <span class="text">{{ formattedSeconds }}</span>
-    <span class="small-text">.{{ formattedMillis }}</span>
+  <div class="text-default flex items-baseline select-none">
+    <span class="text-3xl">{{ minutes }}</span>
+    <span class="text-3xl">:</span>
+    <span class="text-3xl">{{ formattedSeconds }}</span>
+    <span class="text-xs">.{{ formattedMillis }}</span>
   </div>
 </template>
 
@@ -48,10 +48,3 @@ export default class TimeDisplay extends Vue {
   }
 }
 </script>
-
-<style scoped lang="sass">
-  @import '~@/styles/screen'
-
-  .colon
-    margin: 0 2px
-</style>
