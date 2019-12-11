@@ -19,17 +19,18 @@ export class Player extends Source {
     };
   }
 
-  public preview() {
-    const source = this.createSource();
+  public preview(o?: { onended?: () => void }) {
+    const source = this.createSource(o);
     source.start();
     return source;
   }
 
-  private createSource() {
+  private createSource(o?: { onended?: () => void }) {
      // make the source
      return new Tone.BufferSource({
       buffer: this.buffer,
       fadeOut: 0,
+      ...o,
       // playbackRate: this.playbackRate,
     }).connect(this.output);
   }

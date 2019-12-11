@@ -12,16 +12,16 @@ import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, watch, ref, createComponent } from '@vue/composition-api';
 import { ui } from '@/base/ui';
 import { project } from '@/dawg/extensions/core/project';
-import { createExtension } from '@/dawg/extensions';
+import { createExtension, VueInput, BooleanInput } from '@/dawg/extensions';
 import { vueExtend } from '@/utils';
 
 export const extension = createExtension({
   id: 'dawg.backup',
   workspace: {
-    backup: t.boolean,
-  },
-  workspaceDefaults: {
-    backup: false,
+    backup: {
+      type: t.boolean,
+      default: false,
+    },
   },
   activate(context) {
     firebase.initializeApp({
@@ -63,29 +63,28 @@ export const extension = createExtension({
       }
     });
 
+    // flex centers the icons which is why we add it
     const component = vueExtend(createComponent({
       template: `
-      <tooltip-icon
+      <dg-mat-icon
         v-if="error"
-        :color="theme.foreground"
-        size="18"
-        tooltip="Cloud Backup Error"
-        top
-        left
-      >
-        error_outline
-      </tooltip-icon>
+        class="flex text-default text-sm"
+        v-tooltip.top.left="'Cloud Backup Error'"
+        icon="error_outline"
+      ></dg-mat-icon>
 
-      <v-progress-circular
+      <dg-spinner
         v-else-if="syncing"
-        :size="15"
-        :width="2"
-        indeterminate
-      ></v-progress-circular>
+        class="flex text-default text-sm"
+        v-tooltip.top.left="'Syncing Backup'"
+      ></dg-spinner>
 
-      <v-icon v-else :color="theme.foreground" size="20">
-        {{ icon }}
-      </v-icon>
+      <dg-mat-icon
+        v-else
+        class="flex text-default
+        text-sm"
+        :icon="icon"
+      ></dg-mat-icon>
       `,
       setup() {
         return {
@@ -289,12 +288,6 @@ export const extension = createExtension({
     const googleButton = vueExtend(createComponent({
       template: `
       <div>
-        <div
-          v-if="authenticated"
-          style="font-size: 0.9em; padding: 5px 0px; color: rgba(255, 255, 255, 0.7)"
-        >
-          Signed in as {{ name }}
-        </div>
         <google-button @click="signInOrSignOut">
           {{ text }}
         </google-button>
@@ -339,24 +332,64 @@ export const extension = createExtension({
           text,
           signInOrSignOut,
           authenticated: computed(() => !!user.value),
-          name: computed(() => {
-            if (user.value) {
-              return user.value.displayName;
-            }
-          }),
         };
       },
     }));
 
-    ui.settings.push(googleButton);
-    ui.settings.push({
-      title: 'Cloud Backup',
-      description: 'Whether to sync this project to the cloud',
+    const name = computed(() => {
+      if (user.value) {
+        return user.value.displayName;
+      }
+    });
+
+    const button: VueInput = {
+      label: 'Google Login',
+      description: '',
+      type: 'component',
+      component: googleButton,
+    };
+
+    watch(() => { button.description = `Login with google. Currently logged in as \`${name.value}\``; });
+    context.settings.push(button);
+
+    const toggle = {
+      label: 'Cloud Backup',
+      description: ref(''),
       type: 'boolean',
       value: backup,
-      disabled: computed(() => {
-        return !project.project.name || !user.value;
-      }),
+      disabled: ref(true),
+      checkedValue: 'Syncing',
+      uncheckedValue: 'Not Syncing',
+    } as const;
+
+    watch([project.name, user], () => {
+      const both = !project.name.value && !user.value;
+      const either = !project.name.value || !user.value;
+
+      toggle.disabled.value = either;
+      toggle.description.value = 'Whether to sync this project to the cloud.';
+
+      if (either) {
+        toggle.description.value += ' Before you can enable this, please ';
+      }
+
+      if (!project.name.value) {
+        toggle.description.value += 'give your project a name';
+      }
+
+      if (both) {
+        toggle.description.value += ' and ';
+      }
+
+      if (!user.value) {
+        toggle.description.value += 'login using your Google Account';
+      }
+
+      if (either) {
+        toggle.description.value += '.';
+      }
     });
+
+    context.settings.push(toggle);
   },
 });

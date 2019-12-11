@@ -14,6 +14,7 @@
     "Vuex",
     "auto",
     "backend",
+    "cmmds",
     "comparator",
     "dawgjs",
     "deserialize",
@@ -38,7 +39,6 @@
     "submenus",
     "tinycolor",
     "vuejs",
-    "vuetify",
     "webmidi",
     "wheeldown",
     "wheelup"

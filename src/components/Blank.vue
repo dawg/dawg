@@ -1,5 +1,5 @@
 <template>
-  <div class="secondary blank"></div>
+  <div class="bg-default h-full w-full"></div>
 </template>
 
 <script lang="ts">
@@ -9,9 +9,3 @@ export default createComponent({
   name: 'Blank',
 });
 </script>
-
-<style lang="sass" scoped>
-.blank
-  height: 100%
-  width: 100%
-</style>

@@ -48,20 +48,19 @@ export class Sample implements Serializable<ISample> {
     return path.basename(this.path);
   }
 
-  public preview() {
+  public preview(opts?: { onended: () => void }): { started: true, dispose: () => void } | { started: false } {
     if (this.player) {
-      this.previewSource = this.player.preview();
-    }
-  }
-
-  public stopPreview() {
-    if (this.previewSource) {
-      try {
-        this.previewSource.stop();
-      } catch (e) {
-        // DO nothing
-        // BufferSource will throw an error if it is already stopped
-      }
+      const source = this.player.preview(opts);
+      return {
+        started: true,
+        dispose: () => {
+          source.stop();
+        },
+      };
+    } else {
+      return {
+        started: false,
+      };
     }
   }
 

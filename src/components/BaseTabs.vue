@@ -1,5 +1,5 @@
 <template>
-  <div class="base-tabs">
+  <div class="h-full">
     <slot></slot>
   </div>
 </template>
@@ -33,9 +33,3 @@ export default createComponent({
   },
 });
 </script>
-
-
-<style lang="sass" scoped>
-.base-tabs
-  height: 100%
-</style>

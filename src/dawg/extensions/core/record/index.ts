@@ -181,11 +181,11 @@ export const extension = createExtension({
 
     Vue.component('ChunkGhost', ChunkGhostComponent);
 
-    ui.settings.push({
-      title: 'Microphone',
-      description: '',
+    context.settings.push({
       type: 'select',
-      value: microphoneIn,
+      label: 'Microphone In',
+      description: 'The source of the microphone',
+      value: context.global.microphoneIn,
       options,
     });
 

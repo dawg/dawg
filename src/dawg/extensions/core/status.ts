@@ -39,11 +39,12 @@ const component = vueExtend(createComponent({
 export const status = manager.activate({
   id: 'dawg.status',
   activate() {
-    base.ui.statusBar.push({
-      component,
-      position: 'left',
-      order: 3,
-    });
+    // FIXME add this back in
+    // base.ui.statusBar.push({
+    //   component,
+    //   position: 'left',
+    //   order: 3,
+    // });
 
     return {
       set: (s: base.Status) => {

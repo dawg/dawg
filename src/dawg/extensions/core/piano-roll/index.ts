@@ -21,12 +21,16 @@ const createElement = (o: VueConstructor) => {
 export const pianoRoll = manager.activate({
   id:  'dawg.piano-roll',
   workspace: {
-    pianoRollRowHeight: t.number,
-    pianoRollBeatWidth: t.number,
-  },
-  workspaceDefaults: {
-    pianoRollRowHeight: 16,
-    pianoRollBeatWidth: 80,
+    pianoRollRowHeight: {
+      type: t.number,
+      default: 16,
+      expose: false,
+    },
+    pianoRollBeatWidth: {
+      type: t.number,
+      default: 80,
+      expose: false,
+    },
   },
   activate(context) {
     context.subscriptions.push(commands.registerCommand({

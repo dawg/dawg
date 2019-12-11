@@ -1,24 +1,38 @@
 export const theme: Theme = {
-  foreground: '',
-  background: '',
-  primary: '',
-  secondary: '',
-  accent: '',
-  error: '',
-  info: '',
-  success: '',
-  warning: '',
+  'primary': '',
+  'text-primary': '',
+  'secondary': '',
+  'text-secondary': '',
+  'default': '',
+  'text-default': '',
+  'inverse': '',
+  'text-inverse': '',
+  'error': '',
+  'text-error': '',
+  'info': '',
+  'text-info': '',
+  'success': '',
+  'text-success': '',
+  'warning': '',
+  'text-warning': '',
 };
 
 
 export interface Theme {
-  foreground: string;
-  background: string;
   primary: string;
+  'text-primary': string;
   secondary: string;
-  accent: string;
+  'text-secondary': string;
+  default: string;
+  'text-default': string;
+  inverse: string;
+  'text-inverse': string;
   error: string;
+  'text-error': string;
   info: string;
+  'text-info': string;
   success: string;
+  'text-success': string;
   warning: string;
+  'text-warning': string;
 }

@@ -58,7 +58,6 @@ export interface ElectronMenuPosition {
 }
 
 export interface ElectronMenuOptions {
-  position: ElectronMenuPosition;
   items: Array<ElectronMenuItem | null>;
   left?: boolean;
 }
@@ -73,7 +72,7 @@ type IEvents = {
   defineMenu: [{ menu: string, order: number }];
   showMenu: [ElectronMenuOptions];
   closeMenu: [ElectronMenuOptions];
-  menuCallback: [string, ElectronMenuPosition];
+  menuCallback: [string];
 };
 
 export type IpcMain = IpcMainGeneric<IEvents>;

@@ -1,76 +1,122 @@
 import * as t from '@/modules/io';
 import { Ref } from '@vue/composition-api';
+import { VueConstructor } from 'vue';
 
 export type Primitive = t.BooleanC | t.StringC | t.NumberC;
 export type ArrayPrimitive = t.ArrayC<t.BooleanC> | t.ArrayC<t.StringC> | t.ArrayC<t.NumberC>;
 export type StateType = Primitive | ArrayPrimitive;
 
 export interface ExtensionProps {
-  [key: string]: StateType;
+  [key: string]: StateType | FieldOptions<StateType>;
 }
 
-export type ExtensionDefaults<P extends ExtensionProps> = {
-  [K in keyof P]: t.TypeOf<P[K]> | undefined;
-};
+type Prop<T extends StateType> = FieldOptions<T> | t.TypeOf<T>;
+export interface FieldOptions<T extends StateType> {
+  type: T;
+  default?: t.TypeOf<T>;
+}
+
+type InferPropType<T> =
+  T extends StateType ?
+  t.TypeOf<T> : T extends Prop<infer V> ?
+  t.TypeOf<V> : unknown;
+
+declare type RequiredKeys<T> = {
+  [K in keyof T]: T[K] extends { default: any; } ? K : never;
+}[keyof T];
+declare type OptionalKeys<T> = Exclude<keyof T, RequiredKeys<T>>;
+
+export type ExtensionData<
+  P extends ExtensionProps,
+> =
+  { [K in RequiredKeys<P>]: InferPropType<P[K]> } &
+  { [K in OptionalKeys<P>]: InferPropType<P[K]> | undefined };
 
 export type ReactiveDefinition<
   P extends ExtensionProps,
-  D extends ExtensionDefaults<P>,
-> = { [K in keyof P]: Ref<t.TypeOf<P[K]> | D[K]> };
+> =
+  { [K in RequiredKeys<P>]: Ref<InferPropType<P[K]>> } &
+  { [K in OptionalKeys<P>]: Ref<InferPropType<P[K]> | undefined> };
+
+export interface StringInput {
+  label: string | Ref<string>;
+  description: string | Ref<string>;
+  disabled?: boolean | Ref<boolean>;
+  type: 'string';
+  value: Ref<string | undefined>;
+}
+
+export interface SelectInput<T extends string> {
+  label: string | Ref<string>;
+  description: string | Ref<string>;
+  disabled?: boolean | Ref<boolean>;
+  type: 'select';
+  value: Ref<T | undefined>;
+  options: T[];
+}
+
+export interface BooleanInput {
+  label: string | Ref<string>;
+  description: string | Ref<string>;
+  disabled?: boolean | Ref<boolean>;
+  type: 'boolean';
+  value: Ref<boolean>;
+  checkedValue: string;
+  uncheckedValue: string;
+}
+
+export interface VueInput {
+  label: string | Ref<string>;
+  description: string | Ref<string>;
+  type: 'component';
+  component: VueConstructor;
+}
+
+export type Setting = StringInput | SelectInput<string> | BooleanInput | VueInput;
 
 export interface IExtensionContext<
   W extends ExtensionProps = ExtensionProps,
-  WD extends ExtensionDefaults<W> = ExtensionDefaults<W>,
   G extends ExtensionProps = ExtensionProps,
-  GD extends ExtensionDefaults<G> = ExtensionDefaults<G>,
 > {
   subscriptions: Subscription[];
-  workspace: ReactiveDefinition<W, WD>;
-  global: ReactiveDefinition<G, GD>;
+  workspace: ReactiveDefinition<W>;
+  global: ReactiveDefinition<G>;
+  settings: Setting[];
 }
 
 export interface Subscription {
   dispose: () => void;
 }
 
-export class ExtensionContext<
+export const createExtensionContext = <
   W extends ExtensionProps,
-  WD extends ExtensionDefaults<W>,
   G extends ExtensionProps,
-  GD extends ExtensionDefaults<G>,
-> implements IExtensionContext<W, WD, G, GD> {
-  public subscriptions: Subscription[] = [];
-  public workspace: ReactiveDefinition<W, WD>;
-  public global: ReactiveDefinition<G, GD>;
-
-  constructor(workspace: ReactiveDefinition<W, WD>, global: ReactiveDefinition<G, GD>) {
-    this.workspace = workspace;
-    this.global = global;
-  }
-}
+>(workspace: ReactiveDefinition<W>, global: ReactiveDefinition<G>): IExtensionContext<W, G> => {
+  return {
+    subscriptions: [],
+    workspace,
+    global,
+    settings: [],
+  };
+};
 
 export interface Extension<
   W extends ExtensionProps = ExtensionProps,
-  WD extends ExtensionDefaults<W> = ExtensionDefaults<W>,
   G extends ExtensionProps = ExtensionProps,
-  GD extends ExtensionDefaults<G> = ExtensionDefaults<G>,
   V = void,
 > {
   id: string;
+  name?: string;
   workspace?: W;
-  workspaceDefaults?: WD;
   global?: G;
-  globalDefaults?: GD;
-  activate(context: IExtensionContext<W, WD, G, GD>): V;
-  deactivate?(context: IExtensionContext<W, WD, G, GD>): void;
+  activate(context: IExtensionContext<W, G>): V;
+  deactivate?(context: IExtensionContext<W, G>): void;
 }
 
 export const createExtension = <
   W extends ExtensionProps,
-  WD extends ExtensionDefaults<W>,
   G extends ExtensionProps,
-  GD extends ExtensionDefaults<G>,
   V
->(extension: Extension<W, WD, G, GD, V>) => {
+>(extension: Extension<W, G, V>) => {
   return extension;
 };

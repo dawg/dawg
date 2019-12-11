@@ -6,7 +6,7 @@
       :key="i"
       @click.native="start(item.sample)"
       @contextmenu.native="context($event, i)"
-      class="sample foreground--text"
+      class="text-default text-sm py-2 px-4 cursor-pointer hover:bg-default-lighten-2"
       :transfer-data="item.prototype"
     >
       {{ item.sample.name }}
@@ -21,7 +21,7 @@ import * as dawg from '@/dawg';
 
 @Component
 export default class AudioFiles extends Vue {
-  public currentlyPlaying: Sample | null = null;
+  public dispose: (() => void) | null = null;
 
   get items() {
     return dawg.project.project.samples.map((sample) => {
@@ -45,21 +45,15 @@ export default class AudioFiles extends Vue {
   }
 
   public start(sample: Sample) {
-    if (this.currentlyPlaying) {
-      this.currentlyPlaying.stopPreview();
+    if (this.dispose) {
+      this.dispose();
+      this.dispose = null;
     }
 
-    sample.preview();
-    this.currentlyPlaying = sample;
+    const result = sample.preview();
+    if (result.started) {
+      this.dispose = result.dispose;
+    }
   }
 }
 </script>
-
-<style lang="sass" scoped>
-.sample
-  padding: 10px 20px
-
-  &:hover
-    box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.1)
-    cursor: pointer
-</style>

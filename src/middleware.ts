@@ -9,15 +9,15 @@ import * as spectrogram from '@/dawg/extensions/extra/spectrogram';
 import * as play from '@/dawg/extensions/extra/play';
 import * as projectName from '@/dawg/extensions/extra/project-name';
 import * as mixer from '@/dawg/extensions/core/mixer';
+import * as models from '@/dawg/extensions/core/models';
 import * as helpLinks from '@/dawg/extensions/extra/help-links';
 import * as restorer from '@/dawg/extensions/extra/restorer';
 import * as dawg from '@/dawg';
 
-import Vuetify from 'vuetify';
-import 'vue-awesome/icons';
-import 'vuetify/dist/vuetify.css';
+
 import '@/styles/material.css';
-import Icon from 'vue-awesome/components/Icon.vue';
+import '@/styles/fontawesome/all.css';
+import '@/main.css';
 import Update from '@/modules/update';
 import sequencer from '@/modules/sequencer';
 import DragNDrop from '@/modules/dragndrop';
@@ -25,8 +25,12 @@ import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { DragElement } from '@/modules/draggable';
 import Knobs from '@/modules/knobs';
 import Split from '@/modules/split';
+// tslint:disable-next-line:no-var-requires
+const VTooltip = require('v-tooltip');
 
 const middleware = () => {
+  Vue.use(VTooltip);
+
   // This imports all .vue files in the components folder
   // See https://vuejs.org/v2/guide/components-registration.html
   const components = require.context(
@@ -59,6 +63,7 @@ const middleware = () => {
     audioFiles,
     clips,
     mixer,
+    models,
     time,
     bpm,
     projectName,
@@ -77,9 +82,6 @@ const middleware = () => {
   Vue.use(Knobs);
   Vue.use(sequencer);
   Vue.component('VuePerfectScrollbar', VuePerfectScrollbar);
-
-  Vue.use(Vuetify, { theme: false });
-  Vue.component('icon', Icon);
   Vue.component('DragElement', DragElement);
 };
 

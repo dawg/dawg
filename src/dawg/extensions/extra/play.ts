@@ -8,9 +8,7 @@ export const extension = createExtension({
   activate() {
     const stop = vueExtend(createComponent({
       template: `
-      <v-btn icon style="margin: 0">
-        <dg-icon fa>stop</dg-icon>
-      </v-btn>
+      <dg-mat-icon class="text-default cursor-pointer" icon="stop"></dg-mat-icon>
       `,
     }));
 
@@ -22,9 +20,7 @@ export const extension = createExtension({
 
     const playPause = vueExtend(createComponent({
       template: `
-      <v-btn icon style="margin: 0" @click="toggle">
-        <icon :name="icon" class="foreground--text"></icon>
-      </v-btn>
+      <dg-mat-icon class="text-default cursor-pointer" :icon="icon" @click="toggle"></dg-mat-icon>
       `,
       setup() {
         return {
@@ -32,7 +28,7 @@ export const extension = createExtension({
             dawg.project.playPause();
           },
           icon: computed(() => {
-            return dawg.project.state.value === 'started' ? 'pause' : 'play';
+            return dawg.project.state.value === 'started' ? 'pause' : 'play_arrow';
           }),
         };
       },

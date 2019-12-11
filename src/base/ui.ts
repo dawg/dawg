@@ -4,9 +4,10 @@ import VueCompositionApi from '@vue/composition-api';
 Vue.use(VueCompositionApi);
 
 import { VueConstructor } from 'vue';
-import { Ref, ref } from '@vue/composition-api';
+import { Ref, ref, createComponent } from '@vue/composition-api';
 
 export interface TabAction {
+  // FIXME make all of these optionally refs
   icon: Ref<string>;
   tooltip: Ref<string>;
   callback: (e: MouseEvent) => void;
@@ -33,31 +34,6 @@ export interface ToolbarItem {
   order?: number;
 }
 
-export interface StringField {
-  title: string;
-  description: string;
-  disabled?: Ref<boolean>;
-  type: 'string';
-  value: Ref<string | undefined>;
-}
-
-export interface SelectField {
-  title: string;
-  description: string;
-  disabled?: Ref<boolean>;
-  type: 'select';
-  value: Ref<string | undefined>;
-  options: string[];
-}
-
-export interface BooleanField {
-  title: string;
-  description: string;
-  disabled?: Ref<boolean>;
-  type: 'boolean';
-  value: Ref<boolean>;
-}
-
 interface StatusBarItem {
   component: VueConstructor;
   position: 'right' | 'left';
@@ -66,18 +42,19 @@ interface StatusBarItem {
 
 // FIXME(1) add function and that return a dispose function
 // This should be added to the base later
-const global: VueConstructor[] = [];
+const global: Array<VueConstructor | ReturnType<typeof createComponent>> = [];
 const statusBar: StatusBarItem[] = [];
+// FIXME introduce order
 const activityBar: ActivityBarItem[] = [];
 const panels: PanelItem[] = [];
 const mainSection: VueConstructor[] = [];
 const toolbar: ToolbarItem[] = [];
 const trackContext: Array<{ text: string; callback: (index: number) => void; }> = [];
-const settings: Array<StringField | BooleanField | SelectField | VueConstructor> = [];
 const openedSideTab = ref<undefined | string>(undefined);
 const openedPanel = ref<undefined | string>(undefined);
 const panelsSize = ref(250);
 const sideBarSize = ref(250);
+const rootClasses: string[] = [];
 
 export const ui = {
   global,
@@ -87,10 +64,10 @@ export const ui = {
   panels,
   mainSection,
   toolbar,
-  settings,
   openedSideTab,
   openedPanel,
   panelsSize,
   sideBarSize,
+  rootClasses,
 };
 

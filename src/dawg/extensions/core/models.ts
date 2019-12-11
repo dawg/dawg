@@ -2,11 +2,11 @@ import fs from '@/fs';
 import * as t from '@/modules/io';
 import { PythonShell, Options } from 'python-shell';
 import path from 'path';
-import { manager } from '@/base/manager';
+import { watch } from '@vue/composition-api';
 import { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 import { busy } from '@/dawg/extensions/core/busy';
 import { notify } from '@/dawg/extensions/core/notify';
-import { ui } from '@/base/ui';
+import { createExtension } from '@/dawg/extensions';
 
 interface PythonError {
   type: 'error';
@@ -82,7 +82,7 @@ export async function runModel(opts: PythonOptions) {
   }
 }
 
-export const models = manager.activate({
+export const extension = createExtension({
   id: 'dawg.models',
   global: {
     modelsPath: t.string,
@@ -133,24 +133,18 @@ export const models = manager.activate({
       ),
     });
 
-    ui.settings.push({
+    context.settings.push({
       type: 'string',
       value: pythonPath,
-      title: 'Python Path',
-      description: 'The path to your python interpreter',
+      label: 'Python Path',
+      description: 'The path to your `python` interpreter.',
     });
 
-    ui.settings.push({
+    context.settings.push({
       type: 'string',
       value: modelsPath,
-      title: 'Models Path',
-      description: 'The path to the `models` repository',
+      label: 'Models Path',
+      description: 'The path to the `models` repository.',
     });
-
-    return {
-      modelsPath,
-      pythonPath,
-      runModel,
-    };
   },
 });

@@ -3,56 +3,23 @@ import Vue, { VueConstructor, CreateElement, VNodeData } from 'vue';
 import Component from 'vue-class-component';
 import ResizeObserver from 'resize-observer-polyfill';
 import throttle from 'lodash.throttle';
-import { createComponent } from '@vue/composition-api';
-
-export enum StyleType {
-  PRIMARY = 'primary',
-  SECONDARY = 'secondary',
-  ACCENT = 'accent',
-  ERROR = 'error',
-  INFO = 'info',
-  SUCCESS = 'success',
-  WARNING = 'warning',
-}
-
-interface StyleOptions {
-  darken?: number;
-  lighten?: number;
-  text?: boolean;
-}
-
-export const makeStyle = (type: StyleType, options?: StyleOptions) => {
-  options = options || {};
-
-  if (options.darken !== undefined && options.lighten !== undefined) {
-      throw Error('both `darken` and `lighten` cannot be given');
-    }
-
-  const validate = (v?: number) => {
-      if (v === undefined) { return; }
-      if (v >= 0 && v <= 4) { return; }
-      throw Error('`darken` or `lighten` must be >= 0 and <= 4, not ' + v);
-    };
-
-  validate(options.darken);
-  validate(options.lighten);
-
-  let str = `${type}`;
-
-  if (options.lighten !== undefined && options.lighten !== 0) {
-      str += `-lighten-${options.lighten}`;
-    } else if (options.darken !== undefined && options.darken !== 0) {
-      str += `-darken-${options.darken}`;
-    }
-
-  if (options.text !== undefined) {
-      str += '--text';
-    }
-
-  return str;
-};
+import { createComponent, Ref } from '@vue/composition-api';
 
 type Color = 'black' | 'white';
+
+export const unwrap = <T extends string | boolean | number | undefined>(t: T | Ref<T>): T => {
+  if (typeof t === 'string') {
+    return t;
+  } else if (typeof t === 'boolean') {
+    return t;
+  } else if (typeof t === 'number') {
+    return t;
+  } else if (typeof t === 'undefined') {
+    return t;
+  } else {
+    return (t as Ref<T>).value;
+  }
+};
 
 export const range = (a: number, b = 0, interval = 1) => {
   let start;

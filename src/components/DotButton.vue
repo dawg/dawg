@@ -1,7 +1,11 @@
 <template>
-  <v-btn icon @click="click" class="dot-button">
-    <icon name="circle" scale="0.4" :class="color"></icon>
-  </v-btn>
+  <dg-fa-icon
+    @click="click" 
+    class="cursor-pointer"
+    :class="color"
+    style="font-size: 8px;"
+    icon="circle"
+  ></dg-fa-icon>
 </template>
 
 <script lang="ts">
@@ -15,9 +19,9 @@ export default createComponent({
   setup(props, context) {
     const color = computed(() => {
       if (props.value) {
-        return 'primary--text';
+        return 'fg-primary';
       } else {
-        return 'background--text';
+        return 'fg-default-darken-3';
       }
     });
 
@@ -33,10 +37,3 @@ export default createComponent({
   },
 });
 </script>
-
-<style lang="sass" scoped>
-.dot-button
-  height: 20px
-  width: 20px
-  margin: 5px
-</style>

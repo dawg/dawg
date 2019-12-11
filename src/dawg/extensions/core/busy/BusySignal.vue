@@ -1,59 +1,60 @@
 <template>
-  <v-tooltip
-    class="busy-signal"
-    top
-    :min-width="300"
+  <v-popover
+    class="relative"
+    trigger="hover"
+    placement="top"
+    :style="sizeStyle"
   >
-
-    <div slot="activator">
-      <icon 
-        class="activator icon"
-        name="circle" 
+    <!-- The icon and the spinner -->
+    <div>
+      <dg-fa-icon
+        class="absolute text-default icon"
+        icon="circle"
         :style="iconStyle"
-        :scale="0.4" 
-        :color="color"
-      ></icon>
-      <v-progress-circular
+      ></dg-fa-icon>
+      <dg-spinner
         v-if="providers.length"
-        class="activator circle"
+        class="absolute text-default circle"
         :size="size"
-        :color="loadingColor"
         :style="progresStyle"
         :width="1"
         indeterminate
-      ></v-progress-circular>
+      ></dg-spinner>
     </div>
 
-    <div v-if="!providers.length">
-      Idle
-    </div>
+    <!-- The tooltip itself -->
+    <div slot="popover">
+      <div v-if="!providers.length">
+        Idle
+      </div>
 
-    <div v-else>
-      <div
-        v-for="(provider, i) in providers"
-        :key="i"
-      >
-        <div>
-          {{ provider.message }}
-        </div>
-        
-        <v-progress-linear
-          :color="$theme.foreground"
-          class="linear"
-          :height="4"
-          v-model="provider.progress"
-          :indeterminate="provider.progress === null"
-        ></v-progress-linear>
-        
-        <!-- This is just a little spacer -->
+      <div v-else>
         <div
-          :style="spacerStyle"
-          v-if="i !== providers.length - 1"
-        ></div>
+          v-for="(provider, i) in providers"
+          :key="i"
+        >
+          <div>
+            {{ provider.message }}
+          </div>
+          
+          <v-progress-linear
+            :color="$theme['text-default']"
+            class="linear"
+            :height="4"
+            v-model="provider.progress"
+            :indeterminate="provider.progress === null"
+          ></v-progress-linear>
+          
+          <!-- This is just a little spacer -->
+          <div
+            :style="spacerStyle"
+            v-if="i !== providers.length - 1"
+          ></div>
+        </div>
       </div>
     </div>
 
-  </v-tooltip>
+  </v-popover>
 </template>
 
 <script lang="ts">
@@ -65,31 +66,33 @@ import * as base from '@/base';
 export default class BusySignal extends Vue {
   @Prop({ type: Number, default: 18 }) public size!: number;
 
-  public iconSize = 6;
+  public iconSize = 7;
   public providers: Provider[] = [];
   public disposers: Array<{ dispose: () => void }> = [];
 
-  get loadingColor() {
-    return base.theme.foreground;
-  }
 
   get inProgress() {
     return !!this.providers.length;
   }
 
-  get color() {
-    return base.theme.foreground;
+  get sizeStyle() {
+    return {
+      height: `${this.size}px`,
+      width: `${this.size}px`,
+    };
   }
 
   get progresStyle() {
     return {
-      marginTop: `${-this.size / 2}px`,
+      ...this.sizeStyle,
+      top: 0,
+      left: 0,
     };
   }
 
   get spacerStyle() {
     return {
-      borderColor: base.theme.foreground + 50,
+      borderColor: base.theme['text-default'] + 50,
       margin: '10px 0',
     };
   }
@@ -97,7 +100,8 @@ export default class BusySignal extends Vue {
   get iconStyle() {
     return {
       left: `${this.size / 2 - this.iconSize / 2}px`,
-      marginTop: `${-this.iconSize / 2}px`,
+      top: `${this.size / 2 - this.iconSize / 2}px`,
+      fontSize: `${this.iconSize}px`,
     };
   }
 
@@ -130,14 +134,6 @@ export default class BusySignal extends Vue {
 </script>
 
 <style scoped>
-.busy-signal {
-  position: relative;
-}
-
-.activator {
-  position: absolute;
-}
-
 .linear {
   margin-top: 4px;
   margin-bottom: 5px;

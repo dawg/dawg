@@ -1,9 +1,15 @@
-import * as command from '@/base/command';
+import * as keyboard from '@/base/keyboard';
 import { remote } from 'electron';
 import { ipcRenderer, ElectronMenuOptions, ElectronMenuPosition, ElectronMenuItem } from '@/ipc';
 import { uniqueId } from '@/utils';
 
-export type MenuCommand = command.Command<[ElectronMenuPosition]>;
+export interface Command<T extends any[]> {
+  text: string;
+  shortcut?: keyboard.Key[];
+  callback: (...args: T) => void;
+}
+
+export type MenuCommand = Command<[ElectronMenuPosition]>;
 
 export interface MenuOptions {
   position: ElectronMenuPosition;
@@ -20,7 +26,10 @@ const transform = (opts: MenuOptions): ElectronMenuOptions => {
       }
 
       const uniqueEvent = uniqueId();
-      callbacks[uniqueEvent] = item.callback;
+      callbacks[uniqueEvent] = {
+        callback: item.callback,
+        position: opts.position,
+      };
 
       return {
         label: item.text,
@@ -49,12 +58,14 @@ const inspect: MenuCommand = {
   },
 };
 
-const callbacks: { [k: string]: (position: ElectronMenuPosition) => void | undefined } = {};
+const callbacks: {
+  [k: string]: { callback: (position: ElectronMenuPosition) => void | undefined, position: ElectronMenuPosition },
+} = {};
 
 const defaultItems =  process.env.NODE_ENV !== 'production' ? [inspect] : [];
 
-ipcRenderer.on('menuCallback', (_, uniqueEvent, position) => {
-  const callback = callbacks[uniqueEvent];
+ipcRenderer.on('menuCallback', (_, uniqueEvent) => {
+  const { callback, position } = callbacks[uniqueEvent];
   callback(position);
 });
 
@@ -87,9 +98,5 @@ export const context: ContextFunction = (opts) => {
 };
 
 export const menu: ContextFunction = (opts) => {
-  // if (isMouseEvent(opts.event)) {
-  //   opts.event.stopPropagation();
-  // }
-
   ipcRenderer.send('showMenu', transform(opts));
 };

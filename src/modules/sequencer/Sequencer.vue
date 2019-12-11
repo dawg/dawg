@@ -1,18 +1,18 @@
 <template>
-  <div class="sequencer">
-    <div style="display: flex">
-      <div class="empty-block secondary" :style="style"></div>
+  <div class="flex flex-col">
+    <div class="flex" style="flex: 0 0 20px">
+      <div class="bg-default h-full" :style="style"></div>
       <scroller
         :scroller="horizontalScroller"
+        class="w-full h-full"
         :increment="pxPerStep"
         direction="horizontal"
         @update:increment="setPxPerBeat"
-        style="width: 100%"
         @scroll="scroll"
       >
         <timeline 
           v-model="progress" 
-          class="timeline"
+          class="w-full h-full"
           :set-loop-end.sync="userLoopEnd"
           :set-loop-start.sync="userLoopStart"
           :loop-start="loopStart"
@@ -25,9 +25,8 @@
         ></timeline>
       </scroller>
     </div>
-    <vue-perfect-scrollbar 
-      style="overflow-y: scroll; display: flex; height: calc(100% - 20px)"
-      :settings="{ handlers: ['wheel'] }"
+    <div
+      class="flex scroller overflow-y-scroll"
       ref="scrollY"
     >
       <!-- Use a wrapper div to add width attribute -->
@@ -43,32 +42,26 @@
           name="side"
         ></slot>
       </scroller>
-      <vue-perfect-scrollbar
-        class="sequencer sequencer-child" 
-        @ps-scroll-x="scroll" 
+      <sequencer-grid
+        class="sequencer scroller overflow-x-scroll" 
+        @scroll.native="scroll"
         ref="scrollX"
-        style="height: fit-content"
-        :settings="{ suppressScrollY: true, handlers: ['wheel'] }"
-      >
-        <sequencer-grid
-          :sequencer-loop-end.sync="sequencerLoopEnd"
-          :loop-start="loopStart"
-          :loop-end="loopEnd"
-          :set-loop-start="userLoopStart"
-          :set-loop-end="userLoopEnd"
-          :steps-per-beat="stepsPerBeat"
-          :beats-per-measure="beatsPerMeasure"
-          :px-per-beat="pxPerBeat"
-          :row-height="rowHeight"
-          :progress="progress"
-          :name="name"
-          :display-loop-end.sync="displayLoopEnd"
-          v-bind="$attrs"
-          v-on="$listeners"
-        ></sequencer-grid>
-      </vue-perfect-scrollbar>
-
-    </vue-perfect-scrollbar>
+        :sequencer-loop-end.sync="sequencerLoopEnd"
+        :loop-start="loopStart"
+        :loop-end="loopEnd"
+        :set-loop-start="userLoopStart"
+        :set-loop-end="userLoopEnd"
+        :steps-per-beat="stepsPerBeat"
+        :beats-per-measure="beatsPerMeasure"
+        :px-per-beat="pxPerBeat"
+        :row-height="rowHeight"
+        :progress="progress"
+        :name="name"
+        :display-loop-end.sync="displayLoopEnd"
+        v-bind="$attrs"
+        v-on="$listeners"
+      ></sequencer-grid>
+    </div>
   </div>
 </template>
 
@@ -127,7 +120,7 @@ export default class Sequencer extends Vue {
 
   public $refs!: {
     scrollX: Vue;
-    scrollY: Vue;
+    scrollY: Element;
   };
 
   // Horizontal offset in beats.
@@ -196,7 +189,7 @@ export default class Sequencer extends Vue {
 
   public mounted() {
     this.horizontalScroller = this.$refs.scrollX.$el;
-    this.verticalScroller = this.$refs.scrollY.$el;
+    this.verticalScroller = this.$refs.scrollY;
   }
 
   @Watch<Sequencer>('loopEnd', { immediate: true })
@@ -230,16 +223,12 @@ export default class Sequencer extends Vue {
 }
 </script>
 
-<style lang="sass" scoped>
-.sequencer
-  display: block
-
-.timeline
-  width: 100%
-
-.timeline, .empty-block
-  height: 20px
-
-.side-wrapper
+<style lang="scss" scoped>
+.side-wrapper {
   height: fit-content
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
+}
 </style>

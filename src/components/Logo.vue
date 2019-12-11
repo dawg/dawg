@@ -1,5 +1,6 @@
 <template>
   <svg
+    class="fill-current"
     xmlns="http://www.w3.org/2000/svg"
     style="isolation:isolate"
     viewBox="4570 4473 481.595 481.956"

@@ -4,13 +4,13 @@
       group="arranger"
       v-for="(item, i) in items"
       :key="i"
-      class="pattern foreground--text"
+      :class="classes(item.pattern)"
+      class="text-default hover:bg-default-lighten-2 cursor-pointer border py-3 px-4"
       :transfer-data="item.prototype"
-      :style="border(item.pattern)"
       @click.native="click(item.pattern)"
       @contextmenu.native="context($event, i)"
     >
-      <editable 
+      <editable
         v-model="item.pattern.name"
         :contenteditable.sync="contenteditable"
         disableDblClick
@@ -67,11 +67,11 @@ export default class Patterns extends Vue {
     });
   }
 
-  public border(pattern: Pattern) {
+  public classes(pattern: Pattern) {
     if (pattern === this.value) {
-      return {
-        border: `1px solid ${theme.foreground + '30'}`,
-      };
+      return 'border-default-lighten-5';
+    } else {
+      return 'border-default';
     }
   }
 
@@ -83,13 +83,3 @@ export default class Patterns extends Vue {
   }
 }
 </script>
-
-<style lang="sass" scoped>
-.pattern
-  padding: 10px 20px
-  border: 1px solid rgba(0,0,0,0)
-
-  &:hover
-    box-shadow: inset 0 0 100px 100px rgba(255, 255, 255, 0.1)
-    cursor: pointer
-</style>

@@ -1,10 +1,10 @@
 <template>
-  <v-app class="app">
+  <div class="flex flex-col" :class="base.ui.rootClasses">
     <split direction="vertical">
 
       <split direction="horizontal" resizable>
         <split :initial="65" fixed>
-          <activity-bar></activity-bar>
+          <activity-bar @open-settings="openSettings"></activity-bar>
         </split>
 
         <split 
@@ -14,26 +14,16 @@
         >
           <side-tabs 
             v-if="loaded"
-            :style="border('right')"
+            class="border-r border-default-darken-3"
           ></side-tabs>
           <blank v-else></blank>
         </split>
 
         <split direction="vertical" resizable>
           <split :initial="TOOLBAR_HEIGHT" fixed>
-            <v-toolbar 
-              class="secondary toolbar" 
-              :style="border('bottom')"
-              :height="TOOLBAR_HEIGHT" 
-            >
-              <logo
-                :color="iconColor"
-              ></logo>
-
-              <div 
-                class="tall-line"
-                :style="lineStyle"
-              ></div>
+            <div class="bg-default h-full px-5 flex items-center border-b border-default-darken-3">
+              <logo class="text-default"></logo>
+              <div class="text-default border-l mx-6" style="height: 60%"></div>
 
               <component
                 v-for="(item, i) in toolbarLeft"
@@ -41,16 +31,14 @@
                 :is="item.component"
               ></component>
 
-              <v-spacer
-                class="drag-area"
-              ></v-spacer>
+              <div class="flex-grow drag-area"></div>
 
               <component
                 v-for="(item, i) in toolbarRight"
                 :key="`toolbar-right-${i}`"
                 :is="item.component"
               ></component>
-            </v-toolbar>
+            </div>
           </split>
 
           <split>
@@ -63,9 +51,8 @@
           </split>
 
           <split
-            class="secondary" 
             direction="vertical"
-            :style="border('top')"
+            class="bg-default border-t border-default-darken-3"
             keep
             :initial.sync="base.ui.panelsSize.value"
           >
@@ -81,36 +68,35 @@
       </split>
       <split :initial="STATUS_BAR_HEIGHT" fixed>
 
-        <div class="primary footer position foreground--text" :style="statusBarStyle">
-          <component
+        <div class="bg-primary h-full flex items-center position text-default">
+          <div
             v-for="(item, i) in statusBarLeft"
-            class="status-bar-item-left"
-            :key="`status-bar-left-${i}`"
-            :is="item.component"
-          ></component>
+            class="ml-6"
+            :key="`status-bar-left-${i}`" 
+          ><component :is="item.component"></component></div>
 
           <div style="flex: 1"></div>
 
-          <component
+          <div
             v-for="(item, i) in statusBarRight"
-            class="status-bar-item-right"
+            class="mr-6"
             :key="`status-bar-right-${i}`"
-            :is="item.component"
-          ></component>
+          ><component :is="item.component"></component></div>
         </div>
 
       </split>
     </split>
+    <settings v-model="settings"></settings>
     <component
       v-for="(global, i) in base.ui.global"
       :key="i"
       :is="global"
     ></component>
     <loading 
-      class="secondary"
+      class="bg-default"
       :value="!loaded"
     ></loading>
-  </v-app>
+  </div>
 </template>
 
 <script lang="ts">
@@ -141,6 +127,7 @@ export default class App extends Vue {
   public TOOLBAR_HEIGHT = TOOLBAR_HEIGHT;
   public STATUS_BAR_HEIGHT = STATUS_BAR_HEIGHT;
   public base = base;
+  public settings = false;
 
   // This loaded flag is important
   // Bugs can appear if we render before we load the project file
@@ -163,12 +150,8 @@ export default class App extends Vue {
     return base.ui.toolbar.filter((item) => item.position === 'right').sort(sortOrdered).reverse();
   }
 
-  get iconColor() {
-    return base.theme.foreground;
-  }
-
   get lineStyle() {
-    return `border-left: 1px solid ${base.theme.foreground}`;
+    return `border-left: 1px solid ${base.theme['text-default']}`;
   }
 
   get statusBarRight() {
@@ -177,12 +160,6 @@ export default class App extends Vue {
 
   get statusBarLeft() {
     return base.ui.statusBar.filter((item) => item.position === 'left').sort(sortOrdered);
-  }
-
-  get statusBarStyle() {
-    return {
-      lineHeight: `${STATUS_BAR_HEIGHT}px`,
-    };
   }
 
   public async created() {
@@ -227,8 +204,8 @@ export default class App extends Vue {
     });
   }
 
-  public border(side: 'left' | 'right' | 'top' | 'bottom') {
-    return `border-${side}: 1px solid ${base.theme.background}`;
+  public openSettings() {
+    this.settings = true;
   }
 
   // public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T & string) {
@@ -248,53 +225,3 @@ export default class App extends Vue {
   // }
 }
 </script>
-
-<style lang="sass">
-html
-  overflow: hidden
-
-*
-  font-family: monospace
-
-.center--vertial
-  display: flex
-  flex-direction: column
-  justify-content: center
-</style>
-
-<style lang="sass" scoped>
-.app
-  display: flex
-  flex-direction: column
-
-.toolbar
-  z-index: 10
-  border-bottom: 1px solid
-  padding: 0
-  box-shadow: none
-
-.toolbar /deep/ .v-toolbar__content
-  padding: 0 20px
-
-.tall-line
-  height: 60% 
-  margin: 20px
-
-.footer
-  display: flex
-  width: 100%
-  font-size: 12px
-  height: 100%
-  text-align: center
-  position: unset
-  align-items: center
-
-.status-bar-item-left
-  margin-left: 15px
-  padding-top: 1px
-
-.status-bar-item-right
-  margin-right: 15px
-  padding-top: 1px
-</style>
-

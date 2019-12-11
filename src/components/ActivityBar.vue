@@ -1,48 +1,26 @@
 <template>
-  <v-navigation-drawer
-    permanent
-    mini-variant
-    class="secondary-lighten-2"
-  >
-    <v-list dense style="height: 100%; display: flex; flex-direction: column">
-      <v-list-tile
-        v-for="item in base.ui.activityBar"
-        :key="item.name"
-        @click="clickActivityBar(item)"
-      >
-        <tooltip-icon 
-          medium 
-          :color="base.theme.foreground" 
-          :tooltip="item.name"
-          right
-          v-bind="item.iconProps"
-        >
-          {{ item.icon }}
-        </tooltip-icon>
-      </v-list-tile>
+  <div class="flex flex-col bg-default-lighten-2" style="height: 100%;">
+    <div
+      v-for="item in base.ui.activityBar"
+      :key="item.name"
+      v-tooltip.right="item.name"
+      class="pt-3 pb-3 text-center cursor-pointer hover:bg-default-lighten-1"
+      @click="clickActivityBar(item)"
+    >
+      <dg-mat-icon
+        class="text-2xl text-default"
+        :icon="item.icon"
+      ></dg-mat-icon>
+    </div>
 
-      <div style="flex-grow: 1"></div>
-      <v-list-tile>
-        <v-icon 
-          medium
-          :color="base.theme.foreground"
-          @click="openSettings"
-        >
-          settings
-        </v-icon>
-        <v-menu
-          v-model="open"
-          :close-on-content-click="false"
-          :position-x="x"
-          :position-y="y"
-          right
-          top
-        >
-          <settings></settings>
-        </v-menu>
-      </v-list-tile>
-    </v-list>
-  </v-navigation-drawer>
+    <div class="flex-grow"></div>
+    <div class="pt-3 pb-3 text-center cursor-pointer" v-tooltip.right="'Settings'" @click="openSettings">
+      <dg-mat-icon
+        class="text-2xl text-default"
+        icon="settings"
+      ></dg-mat-icon>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">
@@ -51,19 +29,13 @@ import { createComponent, ref } from '@vue/composition-api';
 
 export default createComponent({
   name: 'ActivityBar',
-  setup() {
-    const open = ref(false);
-    const x = ref(0);
-    const y = ref(0);
-
+  setup(_, context) {
     function clickActivityBar(tab: base.ActivityBarItem) {
       base.ui.openedSideTab.value = tab.name;
     }
 
     function openSettings(e: MouseEvent) {
-      open.value = true;
-      x.value = e.clientX;
-      y.value = e.clientY;
+      context.emit('open-settings');
     }
 
     return {
@@ -71,8 +43,6 @@ export default createComponent({
       clickActivityBar,
       base,
       open,
-      x,
-      y,
     };
   },
 });

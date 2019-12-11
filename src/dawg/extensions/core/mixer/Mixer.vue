@@ -1,9 +1,10 @@
 <template>
-  <div class="mixer secondary-lighten-4" style="height: 100%">
-    <vue-perfect-scrollbar style="height: 100%; width: 100%">
+  <div class="whitespace-no-wrap flex bg-default-lighten-4 h-full">
+    <vue-perfect-scrollbar style="w-full h-full">
       <channel
         v-for="(channel, i) in channels"
         :key="i"
+        style="width: 100px"
         :play="play"
         :channel="channel"
         @add="addEffect(channel, $event)"
@@ -50,10 +51,3 @@ export default class Mixer extends Vue {
   }
 }
 </script>
-
-<style scoped lang="sass">
-.mixer
-  white-space: nowrap
-  height: 400px
-  display: flex
-</style>

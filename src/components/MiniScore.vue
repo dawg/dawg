@@ -2,7 +2,7 @@
   <!-- scale(-1, 1) flips the svg vertically -->
   <svg
     preserveAspectRatio="none"
-    class="mini-score primary--text"
+    class="mini-score fg-primary"
     :viewBox="viewBox"
   >
     <rect
@@ -64,7 +64,7 @@ export default createComponent({
     });
 
     const totalDuration = computed(() => {
-      return Math.max(...endTimes.value); // , beatsPerMeasure.value
+      return Math.max(...endTimes.value);
     });
 
     watch(totalDuration, () => {

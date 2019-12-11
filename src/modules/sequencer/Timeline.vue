@@ -1,8 +1,16 @@
 <template>
+<!-- 
+  .timeline {
+	position: relative;
+	overflow: hidden;
+	font: 14px monospace;
+	cursor: default;
+  border-bottom: 1px solid var(--background);
+}
+ -->
   <div 
-    class="timeline secondary" 
+    class="bg-default text-default relative overflow-hidden border-solid text-sm border-b border-default-darken-1" 
     @dblclick="remove"
-    :style="timelineStyle"
     @mousedown="mousedown"
     @contextmenu="disable"
   >
@@ -79,12 +87,6 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   public selectedEnd = false;
   public rendered = false;
   public justDragged = false;
-
-  get timelineStyle() {
-    return {
-      color: `${dawg.theme.foreground}90`,
-    };
-  }
 
   get pxPerStep() {
     return this.pxPerBeat / this.stepsPerBeat;

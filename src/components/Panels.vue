@@ -1,6 +1,6 @@
 <template>
   <base-tabs 
-    class="tabs-panels secondary" 
+    class="tabs-panels" 
     ref="panels"
     :selected-tab.sync="openedPanel"
     :first="base.ui.panels[0] ? base.ui.panels[0].name : undefined"

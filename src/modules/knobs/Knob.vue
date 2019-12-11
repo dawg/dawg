@@ -1,7 +1,7 @@
 <template>
   <drag-element class="rela-inline knob" @move="move" @after-move="afterMove">
     <div 
-      class="rela-block knob-dial" 
+      class="rela-block knob-dial fg-primary" 
       :style="knobStyle"
       @contextmenu="contextmenu"
       @mouseenter="enter"
@@ -15,23 +15,26 @@
         <path
           :d="rangePath"
           fill="none"
+          stroke="currentColor"
+          class="fg-default-lighten-3"
           :class="strokeClass"
-          :stroke="strokeColor"
           :stroke-width="strokeWidth"
         ></path>
         <path 
           v-show="showRight"
           :d="rightRangePath" 
-          fill="none" 
-          :stroke="primary"
+          fill="none"
+          class="fg-primary"
+          stroke="currentColor"
           :stroke-width="strokeWidth"
           :style="rightStrokeStyle"
         ></path>
         <path 
           v-show="showLeft"
           :d="leftRangePath"
-          fill="none" 
-          :stroke="primary"
+          fill="none"
+          class="fg-primary"
+          stroke="currentColor"
           :stroke-width="strokeWidth"
           :style="lefStrokeStyle"
         ></path>
@@ -39,7 +42,8 @@
           :width="rectWidth"
           :x="center - rectWidth / 2"
           :height="rectHeight"
-          :fill="primary"
+          class="fg-primary"
+          fill="currentColor"
           :transform="transform"
         ></rect>
       </svg>
@@ -75,7 +79,6 @@ export default class Knob extends Vue {
   @Prop({ type: Number, default: 100 }) public max!: number;
   @Prop({ type: Number, default: 0 }) public min!: number;
   @Prop({ type: Number, default: 30 }) public size!: number;
-  @Prop({ type: String, default: '#409eff' }) public primaryColor!: string;
   @Prop(String) public label?: string;
   @Prop({ type: Number, default: 2.5 }) public strokeWidth!: number;
   @Prop(Number) public midValue?: number;
@@ -85,16 +88,8 @@ export default class Knob extends Vue {
   public rectWidth = 3;
   public rectHeight = this.size / 4;
 
-  get primary() {
-    return dawg.theme.primary;
-  }
-
   get rotation() {
     return mapRange(this.value, this.min, this.max, -this.angle, this.angle);
-  }
-
-  get strokeColor() {
-    return dawg.theme.background + '60';
   }
 
   get midDegrees() {
@@ -174,7 +169,6 @@ export default class Knob extends Vue {
   }
   get knobStyle() {
     return {
-      color: dawg.theme.primary,
       height: `${this.size}px`,
       width: `${this.size}px`,
     };

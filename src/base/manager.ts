@@ -1,12 +1,14 @@
 import * as t from '@/modules/io';
 import {
   Extension,
-  ExtensionContext,
+  createExtensionContext,
   IExtensionContext,
   StateType,
+  ExtensionData,
   ExtensionProps,
+  FieldOptions,
   ReactiveDefinition,
-  ExtensionDefaults,
+  Setting,
 } from '@/dawg/extensions';
 import fs from '@/fs';
 import path from 'path';
@@ -44,10 +46,13 @@ interface JSON {
   [k: string]: any;
 }
 
+const settings: Array<{ title: string, settings: Setting[] }> = [];
 const extensions: { [id: string]: any } = {};
 const resolved: { [id: string]: boolean } = {};
 
-let extensionsStack: Array<{ extension: Extension, context: IExtensionContext }> = [];
+let extensionsStack: Array<
+  { extension: Extension, context: IExtensionContext }
+> = [];
 
 const makeAndRead = (file: string): JSON => {
   if (!fs.existsSync(file)) {
@@ -64,12 +69,29 @@ const write = async (file: string, contents: any) => {
   await fs.writeFile(file, JSON.stringify(contents, null, 4));
 };
 
-const getDataFromExtensions = (key: 'workspace' | 'global'): { [k: string]: ExtensionDefaults<ExtensionProps> } => {
-  const data: { [k: string]: ExtensionDefaults<ExtensionProps> } = {};
+const isState = (oo: any): oo is StateType => {
+  return oo._tag !== undefined;
+};
+
+const isFieldOptions = (oo: any): oo is FieldOptions<StateType> => {
+  return oo.type !== undefined;
+};
+
+const getPartialFromDefinition = (props: ExtensionProps) => {
+  const partial: t.Props = {};
+  Object.keys(props).forEach((key) => {
+    const fieldInformation = props[key];
+    partial[key] = isState(fieldInformation) ? fieldInformation : fieldInformation.type;
+  }, {});
+  return t.partial(partial);
+};
+
+const getDataFromExtensions = (key: 'workspace' | 'global'): { [k: string]: ExtensionData<ExtensionProps> } => {
+  const data: { [k: string]: ExtensionData<ExtensionProps> } = {};
   for (const { extension, context } of reverse(extensionsStack)) {
     try {
-      const definition = extension[key];
-      if (!definition) {
+      const extensionInfo = extension[key];
+      if (!extensionInfo) {
         continue;
       }
 
@@ -79,7 +101,7 @@ const getDataFromExtensions = (key: 'workspace' | 'global'): { [k: string]: Exte
         toEncode[k] = state[k].value;
       }
 
-      const type = t.partial(definition);
+      const type = getPartialFromDefinition(extensionInfo);
       const encoded = type.encode(toEncode);
       data[extension.id] = encoded;
     } catch (e) {
@@ -199,12 +221,11 @@ export type ProjectInfo =
 
 const projectManager = Manager.fromFileSystem();
 
-// FIXME(1) Add interface with message, description, showUser
+// FIXME Add interface with message, description, showUser
 // Also, write to file
 const notificationQueue: string[] = [];
 
 export const manager = {
-  projectManager,
   getOpenedFile() {
     return projectManager.projectInfo.path;
   },
@@ -284,9 +305,8 @@ export const manager = {
     await write(GLOBAL_PATH, g);
     await write(WORKSPACE_PATH, projectManager.workspace);
   },
-  // tslint:disable-next-line:max-line-length
-  activate<W extends ExtensionProps, WD extends ExtensionDefaults<W>, G extends ExtensionProps, V, GD extends ExtensionDefaults<G>>(
-    extension: Extension<W, WD, G, GD, V>,
+  activate<W extends ExtensionProps, G extends ExtensionProps, V>(
+    extension: Extension<W, G, V>,
   ): V {
     // tslint:disable-next-line:no-console
     console.info('Activating ' + extension.id);
@@ -298,14 +318,13 @@ export const manager = {
     };
 
     const makeReactive = <
-      P extends ExtensionProps,
-      D extends ExtensionDefaults<P>,
-    >(definition: P | undefined, defaults: D | undefined, o: any) => {
-      if (!definition) {
-        return {} as ReactiveDefinition<P, D>;
+      P extends ExtensionProps
+    >(extensionProps: P | undefined, o: any) => {
+      if (!extensionProps) {
+        return {} as ReactiveDefinition<P>;
       }
 
-      const type = t.partial(definition);
+      const type = getPartialFromDefinition(extensionProps);
       const result = type.decode(o);
       let decoded: typeof result['_A'];
       if (result.isLeft()) {
@@ -320,16 +339,17 @@ export const manager = {
         decoded = result.value;
       }
 
-      const reactive = {} as ReactiveDefinition<P, D>;
+      const reactive = {} as ReactiveDefinition<P>;
 
-      for (const key of keys(definition)) {
+      for (const key of keys(extensionProps)) {
+        const props = extensionProps[key];
         let decodedValue = decoded[key];
-        if (decodedValue === undefined && defaults) {
-          decodedValue = defaults[key];
+        if (decodedValue === undefined && isFieldOptions(props)) {
+          decodedValue = props.type;
         }
 
-        // FIXME remove this any
-        reactive[key] = ref(decodedValue as any);
+        // FIXME remove these weird casts
+        reactive[key as keyof typeof reactive] = ref(decodedValue) as any;
       }
 
       return reactive;
@@ -338,12 +358,14 @@ export const manager = {
     const w = getOrEmptyObject(projectManager.workspace, extension.id);
     const g = getOrEmptyObject(projectManager.global, extension.id);
 
-    const reactiveWorkspace = makeReactive(extension.workspace, extension.workspaceDefaults, w);
-    const reactiveGlobal = makeReactive(extension.global, extension.globalDefaults, g);
+    const reactiveWorkspace = makeReactive(extension.workspace, w);
+    const reactiveGlobal = makeReactive(extension.global, g);
 
-    const copy = { ...reactiveWorkspace };
-    Object.keys(copy).forEach((key) => (copy as any)[key] = copy[key].value);
-    const context = new ExtensionContext<W, WD, G, GD>(reactiveWorkspace, reactiveGlobal);
+    const context = createExtensionContext<W, G>(reactiveWorkspace, reactiveGlobal);
+    settings.push({
+      title: extension.name || extension.id,
+      settings: context.settings,
+    });
 
     // beware of the any type
     const api = extension.activate(context);
@@ -351,7 +373,7 @@ export const manager = {
     extensions[extension.id] = api;
     manager.activating.pop();
     resolved[extension.id] = true;
-    extensionsStack.push({ extension, context });
+    extensionsStack.push({ extension: extension as Extension, context: context as IExtensionContext });
 
     return api;
   },
@@ -363,6 +385,9 @@ export const manager = {
       }
     });
 
+    // FIXME make sure to reset everything
+    // ie. reset the settings, extensions, resolved variables
+    // We should create an object called "state" that contains all of this information
     extensionsStack = [];
   },
   get<T extends Extension<any, any, any>>(extension: T): ReturnType<T['activate']> {
@@ -378,5 +403,6 @@ export const manager = {
     return extensions[extension.id] as ReturnType<T['activate']>;
   },
   notificationQueue,
-  activating: [] as Extension[],
+  activating: [] as Array<Extension<any, any, any>>,
+  settings,
 };

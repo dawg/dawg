@@ -1,15 +1,12 @@
 <template>
-  <div class="track foreground--text secondary">
+  <div 
+    class="track border-b border-default-lighten-2 flex items-center text-default bg-default py-2 px-3"
+  >
     <dot-button
-      v-if="!recording"
       v-model="active"
-    ></dot-button>
-    <dot-button
-      v-else
-      v-model="recording"
       :value="color"
     ></dot-button>
-    <div class="name">{{ track.name }}</div>
+    <editable class="select-none h-full ml-3 truncate flex-grow" v-model="track.name"></editable>
   </div>
 </template>
 
@@ -22,7 +19,6 @@ export default createComponent({
   name: 'DgTrack',
   props: {
     track: { type: Object as () => T, required: true },
-    recording: { type: Boolean, default: false },
   },
   setup(props) {
     const active = ref(!props.track.mute);
@@ -37,20 +33,3 @@ export default createComponent({
   },
 });
 </script>
-
-<style lang="sass" scoped>
-
-.name
-  user-select: none
-
-// FIXME 20px and 5px is hardcoded! 
-.track
-  display: flex
-  border: 0 solid
-  user-select: none
-  border-width: 1px 0
-  border-top-color: rgba(255, 255, 255, .07)
-  border-bottom-color: rgba(255, 255, 255, .07)
-  align-items: center
-  padding: 5px 20px 2px 5px
-</style>

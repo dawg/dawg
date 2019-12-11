@@ -1,21 +1,19 @@
 <template>
-  <div class="aside secondary" style="display: flex; flex-direction: column">
+  <div class="aside bg-default flex flex-col">
     <div
-      class="section-header foreground--text"
+      class="section-header text-lg text-default flex items-center border-b border-default-darken-3"
       :style="headerStyle"
     >
       <div class="aside--title">{{ header }}</div>
-      <div style="flex-grow: 1"></div>
-      <tooltip-icon
+      <div class="flex-grow"></div>
+      <dg-mat-icon
         v-for="action in actions"
-        :key="action.icon"
-        :tooltip="action.tooltip"
-        bottom
-        :color="iconColor"
-        @click.native="action.callback"
-      >
-        {{ action.icon }}
-      </tooltip-icon>
+        :key="action.icon.value"
+        class="text-xl text-default cursor-pointer"
+        v-tooltip.bottom="action.tooltip.value"
+        :icon="action.icon.value"
+        @click="action.callback"
+      ></dg-mat-icon>
     </div>
     <vue-perfect-scrollbar class="scrollbar" style="height: 100%">
       <base-tabs
@@ -53,16 +51,9 @@ export default createComponent({
     Tab,
   },
   setup() {
-    const iconColor = computed(() => {
-      return base.theme.foreground;
-    });
-
     const headerStyle = computed(() => {
       return {
-        borderBottom: `1px solid ${base.theme.background}`,
         minHeight: `${TOOLBAR_HEIGHT + 1}px`,
-        display: 'flex',
-        alignItems: 'center',
       };
     });
 
@@ -95,7 +86,6 @@ export default createComponent({
 
     return {
       base,
-      iconColor,
       actions,
       header,
       headerStyle,
@@ -111,7 +101,6 @@ export default createComponent({
   z-index: 3
 
 .section-header
-  font-size: 15px !important
   padding: 0 20px
 
 .scrollbar >>> .ps__scrollbar-y-rail

@@ -1,9 +1,16 @@
 <template>
-  <drag-element class="channel-select screen secondary" curse="ns-resize" @move="move" @scrol-move="scrollMove">
-    <div 
+  <drag-element
+    class="flex justify-center bg-default rounded w-10" 
+    curse="ns-resize"
+    @move="move"
+    @scrol-move="scrollMove"
+  >
+    <div
       style="line-height: 38px"
-      class="foreground--text"
-    >{{ display }}</div>
+      class="text-default select-none"
+    >
+      {{ display }}
+    </div>
   </drag-element>
 </template>
 
@@ -57,11 +64,3 @@ export default createComponent({
   },
 });
 </script>
-
-<style lang="sass" scoped>
-@import '~@/styles/screen'
-.channel-select
-  min-width: 40px
-  display: flex
-  justify-content: center
-</style>
