@@ -16,6 +16,7 @@ import * as dawg from '@/dawg';
 
 
 import '@/styles/material.css';
+import '@/styles/fontawesome/all.css';
 import '@/main.css';
 import Update from '@/modules/update';
 import sequencer from '@/modules/sequencer';

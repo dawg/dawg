@@ -1,9 +1,15 @@
-import * as command from '@/base/command';
+import * as keyboard from '@/base/keyboard';
 import { remote } from 'electron';
 import { ipcRenderer, ElectronMenuOptions, ElectronMenuPosition, ElectronMenuItem } from '@/ipc';
 import { uniqueId } from '@/utils';
 
-export type MenuCommand = command.Command<[ElectronMenuPosition]>;
+export interface Command<T extends any[]> {
+  text: string;
+  shortcut?: keyboard.Key[];
+  callback: (...args: T) => void;
+}
+
+export type MenuCommand = Command<[ElectronMenuPosition]>;
 
 export interface MenuOptions {
   position: ElectronMenuPosition;

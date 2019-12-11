@@ -42,7 +42,8 @@ export default createComponent({
     });
 
     const threshold = computed(() => {
-      // TODO fix this somehow??
+      // FIXME fix this somehow??
+      // Should be based of root font size
       return 12;
     });
 

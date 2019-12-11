@@ -221,7 +221,7 @@ export type ProjectInfo =
 
 const projectManager = Manager.fromFileSystem();
 
-// TODO Add interface with message, description, showUser
+// FIXME Add interface with message, description, showUser
 // Also, write to file
 const notificationQueue: string[] = [];
 
@@ -348,7 +348,7 @@ export const manager = {
           decodedValue = props.type;
         }
 
-        // TODO remove these weird casts
+        // FIXME remove these weird casts
         reactive[key as keyof typeof reactive] = ref(decodedValue) as any;
       }
 
@@ -385,7 +385,9 @@ export const manager = {
       }
     });
 
-    // TODO make sure to reset everything
+    // FIXME make sure to reset everything
+    // ie. reset the settings, extensions, resolved variables
+    // We should create an object called "state" that contains all of this information
     extensionsStack = [];
   },
   get<T extends Extension<any, any, any>>(extension: T): ReturnType<T['activate']> {

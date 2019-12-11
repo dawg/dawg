@@ -21,7 +21,6 @@
 import { createComponent, watch } from '@vue/composition-api';
 import * as dawg from '@/dawg';
 
-// TODO use for palette
 export default createComponent({
   name: 'DgModal',
   props: {

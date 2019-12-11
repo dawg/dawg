@@ -4,10 +4,10 @@ import VueCompositionApi from '@vue/composition-api';
 Vue.use(VueCompositionApi);
 
 import { VueConstructor } from 'vue';
-import { Ref, ref } from '@vue/composition-api';
+import { Ref, ref, createComponent } from '@vue/composition-api';
 
 export interface TabAction {
-  // TODO make none of these REFS
+  // FIXME make all of these optionally refs
   icon: Ref<string>;
   tooltip: Ref<string>;
   callback: (e: MouseEvent) => void;
@@ -42,9 +42,9 @@ interface StatusBarItem {
 
 // FIXME(1) add function and that return a dispose function
 // This should be added to the base later
-const global: VueConstructor[] = [];
+const global: Array<VueConstructor | ReturnType<typeof createComponent>> = [];
 const statusBar: StatusBarItem[] = [];
-// TODO introduce order
+// FIXME introduce order
 const activityBar: ActivityBarItem[] = [];
 const panels: PanelItem[] = [];
 const mainSection: VueConstructor[] = [];

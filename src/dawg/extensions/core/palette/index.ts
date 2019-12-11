@@ -1,9 +1,11 @@
 import { manager } from '@/base/manager';
 import { ui } from '@/base/ui';
-import { Palette, paletteEvents, PaletteItem } from '@/dawg/extensions/core/palette/palette';
+import { paletteEvents, PaletteItem } from '@/dawg/extensions/core/palette/common';
 export {
   PaletteItem,
 };
+import Palette from '@/dawg/extensions/core/palette/Palette.vue';
+
 
 type QuickPickCallback<T> = (item: T) => void;
 

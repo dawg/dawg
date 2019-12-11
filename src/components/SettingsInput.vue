@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="flex flex-col align-stretch">
     <h2
       class="text-default font-semibold text-lg"
     >{{ unwrap(setting.label) }}</h2>
