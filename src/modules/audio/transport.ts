@@ -1,8 +1,9 @@
 import Tone from 'tone';
 import { Timeline } from '@/modules/audio/timeline';
-import { ContextTime, Time, Ticks, Seconds, Beat } from '@/modules/audio/types';
+import { ContextTime, Ticks, Seconds, Beat } from '@/modules/audio/types';
 import { Context, context } from '@/modules/audio/context';
 import { watch } from '@vue/composition-api';
+import { Clock } from '@/modules/audio/clock';
 
 interface EventContext {
   seconds: ContextTime;
@@ -44,7 +45,7 @@ export class Transport {
   private _loopStart: Ticks = 0;
   // tslint:disable-next-line:variable-name
   private _loopEnd: Ticks = 0;
-  private clock = new Tone.Clock({
+  private clock = new Clock({
     callback: this.processTick.bind(this),
     frequency: 0,
   });
@@ -171,8 +172,9 @@ export class Transport {
    * Start playback from current position.
    */
   public start() {
+    const seconds = context.currentTime;
     this.isFirstTick = true;
-    this.clock.start();
+    this.clock.start(seconds);
   }
 
   /**
@@ -267,10 +269,6 @@ export class Transport {
 
   public getTicksAtTime(time: number) {
     return Math.round(this.clock.getTicksAtTime(time));
-  }
-
-  public getSecondsAtTime(time: Time) {
-    return this.clock.getSecondsAtTime(time);
   }
 
   private checkMidStart(event: TransportEvent, c: EventContext) {
