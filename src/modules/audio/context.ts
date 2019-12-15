@@ -67,6 +67,14 @@ export class Context {
     };
   }
 
+  public static now() {
+    return context.currentTime;
+  }
+
+  public static sampleTime() {
+    return 1 / context.sampleRate;
+  }
+
   public static dispose() {
     events.removeAllListeners();
     ticker.dispose();

@@ -896,7 +896,7 @@ declare module 'tone' {
   class TickSignal extends Signal {
     _toUnits(value: number): number;
     _fromUnits(value: number): number;
-    getDurationOfTicks(ticks: number, time: _TimeArg): void;
+    getDurationOfTicks(ticks: number, time: _TimeArg): number;
     timeToTicks(duration: PrimitiveTime, when?: PrimitiveTime): Ticks;
     getTicksAtTime(time: PrimitiveTime): PrimitiveTicks;
     getTimeOfTick(tick: PrimitiveTicks): number;
@@ -939,6 +939,7 @@ declare module 'tone' {
   class TimelineState<T extends { state: TransportState, time: number }> extends Timeline<T> {
     constructor(initial: TransportState);
     cancel(time: number): this;
+    getLastState(state: TransportState, time: number): T;
     setStateAtTime(state: TransportState, time: number): this;
     getValueAtTime(time: number): TransportState;
   }

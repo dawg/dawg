@@ -1,6 +1,7 @@
 import Tone from 'tone';
 import { Context } from '@/modules/audio/context';
 import { ContextTime, Ticks } from '@/modules/audio/types';
+import { TickSource } from '@/modules/audio/tick-source';
 
 interface ClockOptions {
   callback: (seconds: ContextTime, ticks: Ticks) => void;
@@ -15,7 +16,7 @@ interface TimeTicks {
 export class Clock extends Tone.Emitter<{ start: [TimeTicks], pause: [TimeTicks], stop: [TimeTicks] }> {
   public readonly frequency: Tone.TickSignal;
   private callback: (seconds: ContextTime, ticks: Ticks) => void;
-  private tickSource: Tone.TickSource;
+  private tickSource: TickSource;
   private timeline = new Tone.TimelineState('stopped');
   private boundLoop: () => void;
   private lastUpdate = 0;
@@ -23,7 +24,7 @@ export class Clock extends Tone.Emitter<{ start: [TimeTicks], pause: [TimeTicks]
   constructor(options: ClockOptions) {
     super();
     this.callback = options.callback;
-    this.tickSource = new Tone.TickSource(options.frequency);
+    this.tickSource = new TickSource({ frequency: options.frequency });
     this.frequency = this.tickSource.frequency;
     this.timeline.setStateAtTime('stopped', 0);
     this.boundLoop = this.loop.bind(this);
