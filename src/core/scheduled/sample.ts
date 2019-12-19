@@ -3,7 +3,7 @@ import * as Audio from '@/modules/audio';
 import { SchedulableType, Schedulable } from '@/core/scheduled/schedulable';
 import { Serializable } from '@/core/serializable';
 import { Sample } from '@/core/sample';
-import { literal, toTickTime } from '@/utils';
+import { literal } from '@/utils';
 import { Context } from '@/modules/audio/context';
 
 export const ScheduledSampleType = t.intersection([

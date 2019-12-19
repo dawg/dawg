@@ -1,9 +1,10 @@
 import * as t from '@/modules/io';
 import * as Audio from '@/modules/audio';
+import Tone from 'tone';
 import { Schedulable, SchedulableType } from '@/core/scheduled/schedulable';
 import { Serializable } from '@/core/serializable';
 import { Instrument } from '@/core/instrument/instrument';
-import { allKeys, toTickTime } from '@/utils';
+import { allKeys } from '@/utils';
 
 export const NoteType = t.intersection([
   t.partial({
@@ -32,8 +33,8 @@ export class Note extends Schedulable implements Serializable<INote> {
   public add(transport: Audio.Transport) {
     return transport.schedule({
       onStart: ({ seconds }) => {
-        const duration = toTickTime(this.duration);
         const value = allKeys[this.row].value;
+        const duration = new Tone.Ticks(this.duration * Audio.Context.PPQ).toSeconds();
         this.instrument.triggerAttackRelease(value, duration, seconds, this.velocity);
       },
       time: this.time,

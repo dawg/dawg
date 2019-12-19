@@ -1,4 +1,3 @@
-import Tone from 'tone';
 import Vue, { VueConstructor, CreateElement, VNodeData } from 'vue';
 import Component from 'vue-class-component';
 import ResizeObserver from 'resize-observer-polyfill';
@@ -101,18 +100,11 @@ export const Keys = {
   DOWN: 40,
 };
 
-
 export const Button = {
   LEFT: 0,
   MIDDLE: 1,
   RIGHT: 2,
 };
-
-export function toTickTime(time: number) {
-  // FIXME(3) is ceil right?
-  return `${Math.ceil(time * Tone.Transport.PPQ)}i`;
-}
-
 
 export const findUniqueName = (objects: Array<{ name: string }>, prefix: string) => {
   let name: string;

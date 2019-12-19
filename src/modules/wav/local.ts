@@ -1,10 +1,10 @@
 import wav from 'node-wav';
 import fs from '@/fs';
-import Tone from 'tone';
+import * as Audio from '@/modules/audio';
 
 function createBuffer(sampleRate: number, buffer: number[][]) {
   const numberOfChannels = buffer.length;
-  const audioBuffer = Tone.context.createBuffer(numberOfChannels, buffer[0].length, sampleRate);
+  const audioBuffer = Audio.context.createBuffer(numberOfChannels, buffer[0].length, sampleRate);
 
   for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
     // This gives us the actual ArrayBuffer that contains the data

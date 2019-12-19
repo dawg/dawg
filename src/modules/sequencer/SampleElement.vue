@@ -13,7 +13,6 @@
 import { Vue, Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 import Waveform from '@/components/Waveform.vue';
 import { Nullable } from '@/utils';
-import Tone from 'tone';
 import { ScheduledSample } from '@/core';
 
 @Component({

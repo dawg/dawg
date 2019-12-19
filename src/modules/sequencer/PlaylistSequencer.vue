@@ -25,7 +25,6 @@
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import Sequencer from '@/modules/sequencer/Sequencer.vue';
 import { Track } from '@/core';
-import { toTickTime } from '@/utils';
 import { theme } from '@/dawg/extensions/core/theme';
 import * as base from '@/base';
 import { ui } from '@/base/ui';

@@ -1,7 +1,6 @@
-import Tone from 'tone';
 import { Timeline } from '@/modules/audio/timeline';
 import { ContextTime, Ticks, Seconds, Beat } from '@/modules/audio/types';
-import { Context, context } from '@/modules/audio/context';
+import { Context } from '@/modules/audio/context';
 import { watch } from '@vue/composition-api';
 import { Clock } from '@/modules/audio/clock';
 
@@ -205,12 +204,11 @@ export class Transport {
   }
 
   get loopStart() {
-    return new Tone.Ticks(this._loopStart).toSeconds();
+    return this._loopStart / Context.PPQ;
   }
 
-  set loopStart(loopStart: Ticks) {
-    this._loopStart = loopStart * Context.PPQ;
-    this.ticks = loopStart * Context.PPQ;
+  set loopStart(loopStart: Beat) {
+    this.ticks = this._loopStart = loopStart * Context.PPQ;
   }
 
   get seconds() {
@@ -218,7 +216,7 @@ export class Transport {
   }
 
   get loopEnd() {
-    return this._loopEnd;
+    return this._loopEnd / Context.PPQ;
   }
 
   set loopEnd(loopEnd: Beat) {

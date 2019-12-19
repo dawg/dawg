@@ -67,7 +67,6 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
-import Tone from 'tone';
 import { Watch } from '@/modules/update';
 import { Schedulable } from '@/core';
 import { Transport } from '@/modules/audio/transport';
