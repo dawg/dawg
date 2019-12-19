@@ -43,6 +43,7 @@ const ticker = new Ticker(() => events.emit('tick'), 0.03); // updateInterval FI
 export const context = (Tone.context as any)._context as unknown as AudioContext;
 export class Context {
   public static PPQ = 192;
+  public static lookAhead = 0.1;
   public static BPM = ref(120);
 
   public static ticksToSeconds(ticks: Ticks) {
@@ -68,11 +69,15 @@ export class Context {
   }
 
   public static now() {
-    return context.currentTime;
+    return context.currentTime + Context.lookAhead;
   }
 
   public static sampleTime() {
     return 1 / context.sampleRate;
+  }
+
+  public static resume() {
+    context.resume();
   }
 
   public static dispose() {

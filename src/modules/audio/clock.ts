@@ -2,6 +2,7 @@ import Tone from 'tone';
 import { Context } from '@/modules/audio/context';
 import { ContextTime, Ticks } from '@/modules/audio/types';
 import { TickSource } from '@/modules/audio/tick-source';
+import { StrictEventEmitter } from '@/modules/audio/events';
 
 interface ClockOptions {
   callback: (seconds: ContextTime, ticks: Ticks) => void;
@@ -13,11 +14,13 @@ interface TimeTicks {
   ticks: Ticks;
 }
 
-export class Clock extends Tone.Emitter<{ start: [TimeTicks], pause: [TimeTicks], stop: [TimeTicks] }> {
+export class Clock extends StrictEventEmitter<{ started: [TimeTicks], stopped: [TimeTicks] }> {
   public readonly frequency: Tone.TickSignal;
   private callback: (seconds: ContextTime, ticks: Ticks) => void;
   private tickSource: TickSource;
-  private timeline = new Tone.TimelineState('stopped');
+  // tslint:disable-next-line:variable-name
+  private _state: 'stopped' | 'started' = 'stopped';
+  private nextState: 'stopped' | 'started' | null = null;
   private boundLoop: () => void;
   private lastUpdate = 0;
 
@@ -26,7 +29,6 @@ export class Clock extends Tone.Emitter<{ start: [TimeTicks], pause: [TimeTicks]
     this.callback = options.callback;
     this.tickSource = new TickSource({ frequency: options.frequency });
     this.frequency = this.tickSource.frequency;
-    this.timeline.setStateAtTime('stopped', 0);
     this.boundLoop = this.loop.bind(this);
     Context.onDidTick(this.boundLoop);
   }
@@ -36,58 +38,34 @@ export class Clock extends Tone.Emitter<{ start: [TimeTicks], pause: [TimeTicks]
   }
 
   get state() {
-    return this.timeline.getValueAtTime(this.now());
+    return this.nextState || this._state;
   }
 
   get ticks() {
-    return Math.ceil(this.getTicksAtTime(this.now()));
+    return Math.ceil(this.getTicksAtTime(Context.now()));
   }
 
   set ticks(t: number) {
     this.tickSource.ticks = t;
   }
 
-  public start(seconds: ContextTime) {
-    this.context.resume();
-    // start the loop
-    if (this.timeline.getValueAtTime(seconds) !== 'started') {
-      this.timeline.setStateAtTime('started', seconds);
-      this.tickSource.start(seconds);
-      if (seconds < this.lastUpdate) {
-        this.emit('start', {
-          seconds,
-          ticks: this.ticks,
-        });
-      }
-    }
-    return this;
+  public start() {
+    const seconds = Context.now();
+    Context.resume();
+    this.nextState = 'started';
+    this.tickSource.start(seconds);
   }
 
-  public stop(seconds: ContextTime) {
-    this.timeline.cancel(seconds);
-    this.timeline.setStateAtTime('stopped', seconds);
+  public stop() {
+    const seconds = Context.now();
+    this.nextState = 'stopped';
     this.tickSource.stop(seconds);
-    if (seconds < this.lastUpdate) {
-      this.emit('stop', {
-        seconds,
-        ticks: this.ticks,
-      });
-    }
-    return this;
   }
 
-  public pause(seconds: ContextTime) {
-    if (this.timeline.getValueAtTime(seconds) === 'started') {
-      this.timeline.setStateAtTime('paused', seconds);
-      this.tickSource.pause(seconds);
-      if (seconds < this.lastUpdate) {
-        this.emit('pause', {
-          seconds,
-          ticks: this.ticks,
-        });
-      }
-    }
-    return this;
+  public pause() {
+    const seconds = Context.now();
+    this.nextState = 'stopped';
+    this.tickSource.pause(seconds);
   }
 
   public setTicksAtTime(ticks: Ticks, time: ContextTime) {
@@ -101,40 +79,26 @@ export class Clock extends Tone.Emitter<{ start: [TimeTicks], pause: [TimeTicks]
 
   private loop() {
     const startTime = this.lastUpdate;
-    const endTime = this.now();
+    const endTime = Context.now();
     this.lastUpdate = endTime;
 
-    if (startTime !== endTime) {
+    if (this.nextState) {
       const ticks = this.ticks;
-      // the state change events
-      this.timeline.forEachBetween(startTime, endTime, (e) => {
-        const seconds = e.time;
-        switch (e.state) {
-          case 'started' :
-            this.tickSource.getTicksAtTime(seconds);
-            this.emit('start', {
-              seconds,
-              ticks,
-            });
-            break;
-          case 'stopped' :
-            if (seconds !== 0) {
-              this.emit('stop', {
-                seconds,
-                ticks,
-              });
-            }
-            break;
-          case 'paused' :
-            this.emit('pause', {
-              seconds,
-              ticks,
-            });
-            break;
-        }
+      this._state = this.nextState;
+      this.nextState = null;
+      this.emit(this._state, {
+        seconds: endTime,
+        ticks,
       });
-      // the tick callbacks
-      this.tickSource.forEachTickBetween(startTime, endTime, this.callback);
     }
+
+    // Not really necessary but more efficient
+    // This function is always being called
+    if (this._state === 'stopped') {
+      return;
+    }
+
+    // the tick callbacks
+    this.tickSource.forEachTickBetween(startTime, endTime, this.callback);
   }
 }

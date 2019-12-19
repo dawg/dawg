@@ -11,12 +11,10 @@ export const extension = createExtension({
     sideBarSize: {
       type: t.number,
       default: 250,
-      expose: false,
     },
     panelsSize: {
       type: t.number,
       default: 250,
-      expose: false,
     },
   },
   activate(context) {

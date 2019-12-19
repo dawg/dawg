@@ -18,7 +18,6 @@ export const extension = createExtension({
   global: {
     folders: {
       type: t.array(t.string),
-      expose: false,
       default: [],
     },
   },

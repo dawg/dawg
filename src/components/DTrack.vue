@@ -6,7 +6,7 @@
       v-model="active"
       :value="color"
     ></dot-button>
-    <editable class="select-none h-full ml-3 truncate flex-grow" v-model="track.name"></editable>
+    <editable class="select-none ml-3 truncate" v-model="track.name"></editable>
   </div>
 </template>
 

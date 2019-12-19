@@ -17,12 +17,10 @@ export const playlist = manager.activate({
     playlistRowHeight: {
       type: t.number,
       default: 40,
-      expose: false,
     },
     playlistBeatWidth: {
       type: t.number,
       default: 80,
-      expose: false,
     },
   },
   activate(context) {

@@ -24,12 +24,10 @@ export const pianoRoll = manager.activate({
     pianoRollRowHeight: {
       type: t.number,
       default: 16,
-      expose: false,
     },
     pianoRollBeatWidth: {
       type: t.number,
       default: 80,
-      expose: false,
     },
   },
   activate(context) {

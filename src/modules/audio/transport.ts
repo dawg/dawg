@@ -49,6 +49,7 @@ export class Transport {
     callback: this.processTick.bind(this),
     frequency: 0,
   });
+  private disposer: () => void;
 
   constructor() {
     // FIXME Maybe all of the clocks could share one "ticker"?? IDK? Then we wouldn't have to "watch" the BBM
@@ -56,6 +57,14 @@ export class Transport {
     watch(Context.BPM, () => {
       this.clock.frequency.value = 1 / (60 / Context.BPM.value / Context.PPQ);
     });
+
+    const pause = this.clock.on('stopped', (o) => {
+      this.checkOnEndEventsAndResetActive(o);
+    });
+
+    this.disposer = () => {
+      pause.dispose();
+    };
   }
 
   /**
@@ -101,13 +110,13 @@ export class Transport {
       if (startTime === current) {
         if (event.onStart) {
           event.onStart({
-            seconds: context.currentTime,
+            seconds: Context.now(),
             ticks: this.clock.ticks,
           });
         }
       } else {
         this.checkMidStart(event, {
-          seconds: context.currentTime,
+          seconds: Context.now(),
           ticks: this.clock.ticks,
         });
       }
@@ -139,7 +148,7 @@ export class Transport {
           if (event.onEnd) {
             event.onEnd({
               ticks: this.clock.ticks,
-              seconds: context.currentTime,
+              seconds: Context.now(),
             });
           }
 
@@ -172,34 +181,27 @@ export class Transport {
    * Start playback from current position.
    */
   public start() {
-    const seconds = context.currentTime;
     this.isFirstTick = true;
-    this.clock.start(seconds);
+    this.clock.start();
   }
 
   /**
    * Pause playback.
    */
   public pause() {
-    const seconds = context.currentTime;
-    this.clock.pause(seconds);
-    this.checkOnEndEventsAndResetActive({
-      seconds,
-      ticks: this.clock.ticks,
-    });
+    this.clock.pause();
   }
 
   /**
    * Stop playback and return to the beginning.
    */
   public stop() {
-    const seconds = context.currentTime;
-    this.clock.stop(seconds);
-    this.checkOnEndEventsAndResetActive({
-      seconds,
-      ticks: this.clock.ticks,
-    });
+    this.clock.stop();
     this.ticks = this.startPosition;
+  }
+
+  public dispose() {
+    this.disposer();
   }
 
   get loopStart() {
@@ -215,12 +217,6 @@ export class Transport {
     return this.clock.seconds;
   }
 
-  set seconds(s: number) {
-    const now = context.currentTime;
-    const ticks = this.clock.frequency.timeToTicks(s, now);
-    this.ticks = ticks.toTicks();
-  }
-
   get loopEnd() {
     return this._loopEnd;
   }
@@ -233,10 +229,9 @@ export class Transport {
     return this.clock.ticks;
   }
 
-
   set ticks(t: number) {
     if (this.clock.ticks !== t) {
-      const now = context.currentTime;
+      const now = Context.now();
       // stop everything synced to the transport
       if (this.state === 'started') {
         // restart it with the new time
@@ -262,13 +257,7 @@ export class Transport {
   }
 
   public getProgress() {
-    const now = context.currentTime;
-    const ticks = this.clock.getTicksAtTime(now);
-    return (ticks - this._loopStart) / (this._loopEnd - this._loopStart);
-  }
-
-  public getTicksAtTime(time: number) {
-    return Math.round(this.clock.getTicksAtTime(time));
+    return (this.ticks - this._loopStart) / (this._loopEnd - this._loopStart);
   }
 
   private checkMidStart(event: TransportEvent, c: EventContext) {
