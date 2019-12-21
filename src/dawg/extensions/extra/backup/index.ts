@@ -2,7 +2,6 @@ import * as dawg from '@/dawg';
 import * as t from '@/modules/io';
 import { User } from 'firebase';
 import backend, { ProjectInfo } from '@/dawg/extensions/extra/backup/backend';
-import { ProjectType, IProject } from '@/project';
 import { PathReporter } from 'io-ts/lib/PathReporter';
 import auth from '@/dawg/extensions/extra/backup/auth';
 import firebase from 'firebase/app';
@@ -11,8 +10,8 @@ import 'firebase/auth';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, watch, ref, createComponent } from '@vue/composition-api';
 import { ui } from '@/base/ui';
-import { project } from '@/dawg/extensions/core/project';
-import { createExtension, VueInput, BooleanInput } from '@/dawg/extensions';
+import { project, ProjectType, IProject } from '@/dawg/extensions/core/project';
+import { createExtension, VueInput } from '@/dawg/extensions';
 import { vueExtend } from '@/utils';
 
 export const extension = createExtension({

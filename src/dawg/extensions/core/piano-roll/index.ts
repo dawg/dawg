@@ -55,7 +55,7 @@ export const pianoRoll = manager.activate({
       ></piano-roll-sequencer>
       `,
       data: () => ({
-        project: project.project,
+        project,
         selectedScore: instruments.selectedScore,
         selectedPattern: patterns.selectedPattern,
         recording,

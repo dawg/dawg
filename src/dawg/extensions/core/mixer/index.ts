@@ -20,10 +20,10 @@ export const extension = createExtension({
       components: { Mixer },
       template: `
       <mixer
-        :channels="project.project.channels"
+        :channels="project.channels"
         :play="play"
-        @add="(payload) => project.project.addEffect(payload)"
-        @delete="(payload) => project.project.deleteEffect(payload)"
+        @add="(payload) => project.addEffect(payload)"
+        @delete="(payload) => project.deleteEffect(payload)"
       ></mixer>
       `,
       data: () => ({

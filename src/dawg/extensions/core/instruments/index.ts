@@ -23,7 +23,7 @@ export const instruments = manager.activate({
       data() {
         return {
           selectedScore,
-          instruments: project.project.instruments,
+          instruments: project.instruments,
           selectedPattern: patterns.selectedPattern,
         };
       },
@@ -35,11 +35,11 @@ export const instruments = manager.activate({
         items: [
           {
             text: 'Synth',
-            callback: () => project.project.addInstrument('Synth'),
+            callback: () => project.addInstrument('Synth'),
           },
           {
             text: 'Soundfont',
-            callback: () => project.project.addInstrument('Soundfont'),
+            callback: () => project.addInstrument('Soundfont'),
           },
         ],
         left: true,

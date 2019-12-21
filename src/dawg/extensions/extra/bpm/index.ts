@@ -9,13 +9,8 @@ export const extension = createExtension({
     const component = vueExtend(createComponent({
       template: `<bpm v-model="bpm"></bpm>`,
       setup() {
-        const bpm = ref(dawg.project.project.bpm);
-        watch(bpm, () => {
-          dawg.project.project.setBpm(bpm.value);
-        });
-
         return {
-          bpm,
+          bpm: dawg.project.bpm,
         };
       },
     }));

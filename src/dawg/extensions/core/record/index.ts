@@ -70,7 +70,7 @@ export const extension = createExtension({
     const startRecording = async (trackId: number) => {
       project.stopIfStarted();
       applicationContext.context.value = 'playlist';
-      const time = project.project.master.transport.beat;
+      const time = project.master.transport.beat;
 
       if (microphoneIn === undefined) {
         notify.info('Please select a microphone from the settings.');
@@ -131,9 +131,9 @@ export const extension = createExtension({
 
         // add the file to the workspace
         // create a sample from the file.
-        const master = project.project.master;
+        const master = project.master;
         const sample = Sample.create(dst, buffer);
-        project.project.samples.push(sample);
+        project.samples.push(sample);
         const scheduled = new ScheduledSample(sample, {
           type: 'sample',
           sampleId: sample.id,

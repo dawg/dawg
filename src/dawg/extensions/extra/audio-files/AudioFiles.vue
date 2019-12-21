@@ -24,7 +24,7 @@ export default class AudioFiles extends Vue {
   public dispose: (() => void) | null = null;
 
   get items() {
-    return dawg.project.project.samples.map((sample) => {
+    return dawg.project.samples.map((sample) => {
       return {
         prototype: ScheduledSample.create(sample),
         sample,
@@ -38,7 +38,7 @@ export default class AudioFiles extends Vue {
       items: [
         {
           text: 'Delete',
-          callback: () => dawg.project.project.removeSample(i),
+          callback: () => dawg.project.removeSample(i),
         },
       ],
     });

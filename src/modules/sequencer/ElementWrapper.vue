@@ -57,7 +57,7 @@ export default createComponent({
     });
 
     const style = computed(() => {
-      const style: { [k: string]: string | number } = {
+      const s: { [k: string]: string | number } = {
         width: `${props.dragAreaWidth}px`,
         position: 'absolute',
         right: 0,
@@ -66,10 +66,10 @@ export default createComponent({
       };
 
       if (hover.value && props.hoverClass) {
-        style.backgroundColor = props.hoverClass;
+        s.backgroundColor = props.hoverClass;
       }
 
-      return style;
+      return s;
     });
 
     const width = computed(() => {
@@ -80,7 +80,7 @@ export default createComponent({
       return {
         height: `${props.height}px`,
       };
-    })
+    });
 
     function move(e: MouseEvent) {
       if (!context.parent) { return; }
@@ -97,15 +97,15 @@ export default createComponent({
       move,
       style,
       wrapperStyle: computed(() => ({ left: `${props.left}px`, top: `${props.top}px` })),
-      elementWrapperStyle: computed(() => ({ 
+      elementWrapperStyle: computed(() => ({
         width: `${width.value}px`,
         height: `${props.height}px`,
         backgroundColor: props.selected ? '#ff9999!important' : props.colored ? lightColor.value : '',
       })),
       width,
-    }
-  }
-})
+    };
+  },
+});
 </script>
 
 <style lang="sass" scoped>

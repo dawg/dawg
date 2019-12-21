@@ -155,7 +155,7 @@ export default class SequencerGrid extends Vue {
 
   @Prop({ type: Number, required: true }) public displayLoopEnd!: number;
 
-  @Prop({ type: Boolean, required: true }) colored!: boolean;
+  @Prop({ type: Boolean, required: true }) public colored!: boolean;
 
   public cursor = 'move';
   public rows!: HTMLElement;

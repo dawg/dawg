@@ -90,7 +90,7 @@ export const extension = createExtension({
             view[i] = value;
           });
 
-          return parser.parse(ab, dawg.project.project.bpm);
+          return parser.parse(ab, dawg.project.bpm.value);
         };
 
         let dispose: (() => void) | null = null;

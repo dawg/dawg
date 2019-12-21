@@ -32,7 +32,7 @@ export default class ChunkGhost extends Vue {
 
   get bufferWidth() {
     if (this.ghost.buffer) {
-      return this.ghost.buffer.length / this.ghost.buffer.sampleRate / 60 * dawg.project.project.bpm * this.pxPerBeat;
+      return this.ghost.buffer.length / this.ghost.buffer.sampleRate / 60 * dawg.project.bpm.value * this.pxPerBeat;
     } else {
       return 0;
     }
