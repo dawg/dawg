@@ -15,11 +15,8 @@ import { ref, watch } from '@vue/composition-api';
 import { manager } from '@/base/manager';
 import { project } from '@/dawg/extensions/core/project';
 import { applicationContext } from '@/dawg/extensions/core/application-context';
-import { positionable } from '@/modules/sequencer/helpers';
-import GH from '@/dawg/extensions/core/record/ChunkGhost.vue';
+import ChunkGhostComponent from '@/dawg/extensions/core/record/ChunkGhost.vue';
 import { ui } from '@/base/ui';
-
-const ChunkGhostComponent = positionable(GH);
 
 export const DOCUMENTS_PATH = remote.app.getPath('documents');
 export const RECORDING_PATH = path.join(DOCUMENTS_PATH, remote.app.getName(), 'recordings');

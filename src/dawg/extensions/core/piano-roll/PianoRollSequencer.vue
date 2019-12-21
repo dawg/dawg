@@ -15,6 +15,7 @@
       :prototype.sync="note"
       :row-class="rowClass"
       :set-loop-end="setLoopEnd"
+      :colored="false"
       name="Piano Roll"
     >
       <template slot="side">

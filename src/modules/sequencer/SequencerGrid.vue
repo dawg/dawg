@@ -15,37 +15,66 @@
       :style="sequencerStyle"
     ></beat-lines>
 
-    <component
-      v-for="(ghost, i) in ghostsComponents"
-      :is="ghost.name"
-      :left="ghost.left"
-      :top="ghost.top"
-      :px-per-beat="pxPerBeat"
-      class="absolute z-1"
-      :style="{ height: `${rowHeight}px` }"
-      :key="i"
-      :ghost="ghost.ghost"
-    ></component>
-    <component
-      class="absolute z-1"
-      v-for="(component, i) in components"
-      :is="component.name"
-      :left="component.left"
-      :top="component.top"
-      :row="component.row"
-      :height="rowHeight"
-      :snap="snap"
-      :px-per-beat="pxPerBeat"
-      :key="i"
-      :element="component.element"
-      :selected="selected[i]"
-      :duration="component.duration"
-      @update:duration="updateDuration(i, $event)"
-      @contextmenu.native="remove($event, i)"
-      @mousedown.native="select($event, i)"
-      @click.native="clickElement(i)"
-      @dblclick="open($event, i)"
-    ></component>
+    <div class="ghost-elements">
+      <element-wrapper
+        v-for="(ghost, i) in ghostsComponents"
+        :key="i"
+        :px-per-beat="pxPerBeat"
+        :colored="colored"
+        :selected="false"
+        :height="rowHeight"
+        :snap="snap"
+        :resizable="false"
+        :top="ghost.left"
+        :left="ghost.left"
+      >
+        <template v-slot:default="{ width }">
+          <component
+            :is="ghost.name"
+            :row="component.row"
+            :px-per-beat="pxPerBeat"
+            :width="width"
+            :height="rowHeight"
+            :ghost="ghost.ghost"
+          ></component>
+        </template>
+      </element-wrapper>
+    </div>
+    
+    <div class="elements">
+      <element-wrapper
+        v-for="(component, i) in components"
+        :key="i"
+        :left="component.left"
+        :top="component.top"
+        :height="rowHeight"
+        :px-per-beat="pxPerBeat"
+        :resizable="true"
+        :snap="snap"
+        :selected="selected[i]"
+        :duration="component.duration"
+        :colored="colored"
+        @update:duration="updateDuration(i, $event)"
+      >
+        <!-- TODO make sure there are no regressions -->
+        <!-- TODO make sure all of the events work -->
+        <template v-slot:default="{ width }">
+          <component
+            :is="component.name"
+            :row="component.row"
+            :px-per-beat="pxPerBeat"
+            :width="width"
+            :height="rowHeight"
+            :element="component.element"
+            @contextmenu.native="remove($event, i)"
+            @mousedown.native="select($event, i)"
+            @click.native="clickElement(i)"
+            @dblclick="open($event, i)"
+          ></component>
+        </template>
+      </element-wrapper>
+    </div>
+
     <progression
       :loop-start="loopStart"
       :loop-end="loopEnd"
@@ -53,10 +82,12 @@
       :px-per-beat="pxPerBeat"
       class="progress-bar"
     ></progression>
+
     <div 
       class="loop-background loop-background--left" 
       :style="leftStyle"
     ></div>
+
     <div 
       class="loop-background loop-background--right" 
       :style="rightStyle"
@@ -82,12 +113,13 @@ import { Component, Prop, Mixins, Inject, Vue } from 'vue-property-decorator';
 import { range, Nullable, Keys, reverse, addEventListeners } from '@/utils';
 import BeatLines from '@/modules/sequencer/BeatLines';
 import Progression from '@/modules/sequencer/Progression.vue';
+import ElementWrapper from '@/modules/sequencer/ElementWrapper.vue';
 import { Watch } from '@/modules/update';
 import { Schedulable, Sequence } from '@/core';
 import { Ghost } from '@/core/ghost';
 
 @Component({
-  components: { Progression, BeatLines },
+  components: { Progression, BeatLines, ElementWrapper },
 })
 export default class SequencerGrid extends Vue {
   // name is used for debugging
@@ -122,6 +154,8 @@ export default class SequencerGrid extends Vue {
   @Prop(Nullable(Object)) public prototype!: Schedulable | null;
 
   @Prop({ type: Number, required: true }) public displayLoopEnd!: number;
+
+  @Prop({ type: Boolean, required: true }) colored!: boolean;
 
   public cursor = 'move';
   public rows!: HTMLElement;
@@ -158,9 +192,9 @@ export default class SequencerGrid extends Vue {
 
     return this.ghosts.map((item) => {
       return {
-        row: item.row,
         left: item.time * this.pxPerBeat,
         top: item.row * this.rowHeight,
+        row: item.row,
         name: item.component,
         ghost: item,
       };

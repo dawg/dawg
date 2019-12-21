@@ -1,22 +1,26 @@
-import { VueConstructor, CreateElement } from 'vue';
 import { Drag, Drop } from 'vue-drag-drop';
-import { Prop, Component, Vue } from 'vue-property-decorator';
-import { createHOC } from '@/utils';
+import Vue from 'vue';
 
 let dragging: string | null = null;
 
-export const accepting = (component: VueConstructor) => {
-  @Component
-  class Accepting extends Vue {
-    @Prop({ type: String, required: true }) public group!: string;
-
-    public drop(data: any, e: MouseEvent) {
+const DropWithGroup = Vue.extend({
+  components: { Drop },
+  template: `
+  <drop
+    @drop="drop"
+    @dragover="dragover"
+    v-bind="$attrs"
+    v-on="$listeners"
+  ><slot></slot></drop>
+  `,
+  props: { group: { type: String, required: true } },
+  methods: {
+    drop(data: any, e: MouseEvent) {
       if (this.group === dragging) {
         this.$emit('drop', data, e);
       }
-    }
-
-    public handleDragover(_: any, e: DragEvent) {
+    },
+    dragover(_: any, e: DragEvent) {
       if (!e.dataTransfer) {
         return;
       }
@@ -31,50 +35,35 @@ export const accepting = (component: VueConstructor) => {
       } else {
         e.dataTransfer.dropEffect = 'none';
       }
-    }
+    },
+  },
+});
 
-    public render(createElement: CreateElement) {
-      return createHOC(component, createElement, this, {
-        on: {
-          drop: this.drop,
-          dragover: this.handleDragover,
-        },
-      });
-    }
-  }
-
-  return Accepting;
-};
-
-export const giving = (component: VueConstructor) => {
-  @Component
-  class Giving extends Vue {
-    @Prop({ type: String, required: true }) public group!: string;
-
-    public dragstart() {
+const DragWithGroup = Vue.extend({
+  components: { Drag },
+  template: `
+  <drag
+    @dragstart="dragstart"
+    @dragend="dragend"
+    v-bind="$attrs"
+    v-on="$listeners"
+  ><slot></slot></drag>
+  `,
+  props: { group: { type: String, required: true } },
+  methods: {
+    dragstart() {
       dragging = this.group;
-    }
-
-    public dragend() {
+    },
+    dragend() {
       dragging = null;
-    }
+    },
+  },
+});
 
-    public render(createElement: CreateElement) {
-      return createHOC(component, createElement, this, {
-        on: {
-          dragstart: this.dragstart,
-          dragend: this.dragend,
-        },
-      });
-    }
-  }
-
-  return Giving;
-};
 
 export default {
   install() {
-    Vue.component('drag', giving(Drag));
-    Vue.component('drop', accepting(Drop));
+    Vue.component('Drag', DragWithGroup);
+    Vue.component('drop', DropWithGroup);
   },
 };

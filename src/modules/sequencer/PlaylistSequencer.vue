@@ -8,6 +8,7 @@
     :side-width="130"
     name="Playlist"
     :prototype.sync="prototype"
+    :colored="true"
   >
     <template slot="side">
       <d-track

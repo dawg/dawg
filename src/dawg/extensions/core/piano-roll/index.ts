@@ -1,22 +1,15 @@
-import Vue, { VueConstructor } from 'vue';
+import Vue from 'vue';
 import * as t from '@/modules/io';
 import PianoRollSequencer from '@/dawg/extensions/core/piano-roll/PianoRollSequencer.vue';
 import Note from '@/dawg/extensions/core/piano-roll/Note.vue';
 import { instruments } from '@/dawg/extensions/core/instruments';
 import { patterns } from '@/dawg/extensions/core/patterns';
 import { manager } from '@/base/manager';
-import { positionable, selectable } from '@/modules/sequencer/helpers';
-import { resizable } from '@/modules/sequencer/helpers';
 import { commands } from '@/dawg/extensions/core/commands';
 import { applicationContext } from '@/dawg/extensions/core/application-context';
 import { ref, watch } from '@vue/composition-api';
 import { project } from '@/dawg/extensions/core/project';
 import * as base from '@/base';
-
-// FIXME remove HOC and use hooks
-const createElement = (o: VueConstructor) => {
-  return positionable(resizable(selectable(o)));
-};
 
 export const pianoRoll = manager.activate({
   id:  'dawg.piano-roll',
@@ -42,7 +35,7 @@ export const pianoRoll = manager.activate({
     const pianoRollRowHeight = context.workspace.pianoRollRowHeight;
     const pianoRollBeatWidth = context.workspace.pianoRollBeatWidth;
 
-    Vue.component('Note', createElement(Vue.extend(Note)));
+    Vue.component('Note', Vue.extend(Note));
 
     const recording = ref(false);
     const component = Vue.extend({
