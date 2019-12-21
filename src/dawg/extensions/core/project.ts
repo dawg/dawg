@@ -99,6 +99,10 @@ export interface InitializationSuccess {
 
 const events = emitter<{ save: (encoded: IProject) => void }>();
 
+/**
+ * Loads the project from its basic JSON structure into classes. This step is very important as it links a lot of
+ * important audio things that were lost during JSON serialization (e.g. everything needs to be rescheduled).
+ */
 function load(i: IProject): LoadedProject {
   Audio.Context.BPM.value = i.bpm;
 
@@ -285,8 +289,76 @@ const createApi = () => {
     notify.info('Unable to load project.', { detail: result.message, duration: Infinity });
   }
 
-    // tslint:disable-next-line:variable-name
   const prj = result.project;
+  const state = ref<'stopped' | 'started' | 'paused'>('stopped');
+  const openedFile = ref(manager.getOpenedFile());
+  const logger = log.getLogger();
+
+  const transport = computed(() => {
+    if (applicationContext.context.value === 'pianoroll') {
+      const pattern = patternsExtension.selectedPattern;
+      return pattern.value ? pattern.value.transport : null;
+    } else {
+      return prj.master.transport;
+    }
+  });
+
+  async function openTempProject(p: IProject) {
+    const { name: path } = tmp.fileSync({ keep: true });
+    await fs.writeFile(path, JSON.stringify(p, null, 4));
+
+    logger.info(`Writing ${path} as backup`);
+    manager.setOpenedFile(path, { isTemp: true });
+
+    const window = remote.getCurrentWindow();
+    window.reload();
+  }
+
+  function onDidSave(cb: (encoded: IProject) => void) {
+    events.addListener('save', cb);
+    return {
+      dispose() {
+        events.removeListener('save', cb);
+      },
+    };
+  }
+
+  async function saveProject(opts: { forceDialog?: boolean }) {
+    const p = await prj;
+
+    let projectPath = manager.getOpenedFile();
+    if (!projectPath || opts.forceDialog) {
+      projectPath = remote.dialog.showSaveDialog(remote.getCurrentWindow(), {}) || null;
+
+      // If the user cancels the dialog
+      if (!projectPath) {
+        return;
+      }
+
+      if (!projectPath.endsWith(DG_EXTENSION)) {
+        logger.info(`Adding ${DG_EXTENSION} to project path`);
+        projectPath = projectPath + DG_EXTENSION;
+      }
+
+      // Make sure we set the cache and the general
+      // The cache is what is written to the filesystem
+      // and the general is the file that is currently opened
+      logger.info(`Setting opened project as ${projectPath}`);
+      manager.setOpenedFile(projectPath);
+    }
+
+    const encoded = serialize();
+    await fs.writeFile(projectPath, JSON.stringify(encoded, null, 4));
+    events.emit('save', encoded);
+  }
+
+  async function removeOpenedFile() {
+    await manager.setOpenedFile();
+  }
+
+  async function setOpenedFile(path: string) {
+    await manager.setOpenedFile(path);
+  }
 
   function serialize(): IProject {
     return {
@@ -618,17 +690,79 @@ const createApi = () => {
     return makeLookup(prj.channels);
   });
 
+  function playPause() {
+    if (!transport.value) {
+      notify.warning('Please select a Pattern.', {
+        detail: 'Please create and select a `Pattern` first or switch the `Playlist` context.',
+      });
+      return;
+    }
+
+    if (transport.value.state === 'started') {
+      pause();
+    } else {
+      startTransport();
+    }
+  }
+
+  function pause() {
+    if (!transport.value) {
+      return;
+    }
+
+    transport.value.stop();
+    state.value = 'paused';
+  }
+
+  function getTime() {
+    if (!transport.value) {
+      return 0;
+    }
+
+    return transport.value.seconds;
+  }
+
+  function startTransport() {
+    if (!transport.value) {
+      return;
+    }
+
+    transport.value.start();
+    state.value = 'started';
+  }
+
+  function stopIfStarted() {
+    if (transport.value && transport.value.state === 'started') {
+      stopTransport();
+    }
+  }
+
+  function stopTransport() {
+    if (!transport.value) {
+      return;
+    }
+
+    transport.value.stop();
+    state.value = 'stopped';
+  }
+
   return {
     patterns: prj.patterns,
     master: prj.master,
     instruments: prj.instruments,
     samples: prj.samples,
     automationClips: prj.automationClips,
+    tracks: prj.tracks,
     name: prj.name,
     bpm: prj.bpm,
+    channels: prj.channels,
+    beatsPerMeasure: prj.beatsPerMeasure,
+    stepsPerBeat: prj.stepsPerBeat,
     serialize,
     save,
     addPattern,
+    deleteEffect,
+    addEffect,
     addInstrument,
     removeSample,
     removePattern,
@@ -642,176 +776,36 @@ const createApi = () => {
     channelLookup,
     deleteInstrument,
     setChannel,
+    openTempProject,
+    onDidSave,
+    openedFile,
+    saveProject,
+    removeOpenedFile,
+    setOpenedFile,
+    state,
+    playPause,
+    pause,
+    getTime,
+    startTransport,
+    stopIfStarted,
+    stopTransport,
   } as const;
-};
-
-const online = (instruments: Array<Instrument<any, any>>) => () => {
-  instruments.forEach((instrument) => {
-    instrument.online();
-  });
 };
 
 const extension = createExtension({
   id: 'dawg.project',
   activate(context) {
-    // tslint:disable-next-line:variable-name
-    const _p = createApi();
-
-    const state = ref<'stopped' | 'started' | 'paused'>('stopped');
-    const openedFile = ref(manager.getOpenedFile());
-    const logger = log.getLogger();
+    const api = createApi();
 
     context.subscriptions.push(manager.onDidSetOpenedFile(() => {
-      openedFile.value = manager.getOpenedFile();
+      api.openedFile.value = manager.getOpenedFile();
     }));
 
-    const transport = computed(() => {
-      if (applicationContext.context.value === 'pianoroll') {
-        const pattern = patternsExtension.selectedPattern;
-        return pattern.value ? pattern.value.transport : null;
-      } else {
-        return _p.master.transport;
-      }
-    });
-
-    function scheduleMaster(sample: Sample, row: number, time: Beats) {
-      _p.samples.push(sample);
-
-      const scheduled = new ScheduledSample(sample, {
-        type: 'sample',
-        sampleId: sample.id,
-        duration: sample.beats,
-        row,
-        time,
+    context.subscriptions.push(addEventListener('online', () => {
+      api.instruments.forEach((instrument) => {
+        instrument.online();
       });
-
-      scheduled.schedule(_p.master.transport);
-      _p.master.elements.push(scheduled);
-    }
-
-    async function openTempProject(p: IProject) {
-      const { name: path } = tmp.fileSync({ keep: true });
-      await fs.writeFile(path, JSON.stringify(p, null, 4));
-
-      logger.info(`Writing ${path} as backup`);
-      manager.setOpenedFile(path, { isTemp: true });
-
-      const window = remote.getCurrentWindow();
-      window.reload();
-    }
-
-    function onDidSave(cb: (encoded: IProject) => void) {
-      events.addListener('save', cb);
-      return {
-        dispose() {
-          events.removeListener('save', cb);
-        },
-      };
-    }
-
-    async function saveProject(opts: { forceDialog?: boolean }) {
-      const p = await _p;
-
-      let projectPath = manager.getOpenedFile();
-      if (!projectPath || opts.forceDialog) {
-        projectPath = remote.dialog.showSaveDialog(remote.getCurrentWindow(), {}) || null;
-
-        // If the user cancels the dialog
-        if (!projectPath) {
-          return;
-        }
-
-        if (!projectPath.endsWith(DG_EXTENSION)) {
-          logger.info(`Adding ${DG_EXTENSION} to project path`);
-          projectPath = projectPath + DG_EXTENSION;
-        }
-
-        // Make sure we set the cache and the general
-        // The cache is what is written to the filesystem
-        // and the general is the file that is currently opened
-        logger.info(`Setting opened project as ${projectPath}`);
-        manager.setOpenedFile(projectPath);
-      }
-
-      const encoded = p.serialize();
-
-      await fs.writeFile(projectPath, JSON.stringify(encoded, null, 4));
-      events.emit('save', encoded);
-    }
-
-    async function removeOpenedFile() {
-      await manager.setOpenedFile();
-    }
-
-    async function setOpenedFile(path: string) {
-      await manager.setOpenedFile(path);
-    }
-
-    const api = {
-      scheduleMaster,
-      openTempProject,
-      onDidSave,
-      serializeProject: () => _p.serialize(),
-      openedFile,
-      saveProject,
-      removeOpenedFile,
-      setOpenedFile,
-      playPause() {
-        if (!transport.value) {
-          notify.warning('Please select a Pattern.', {
-            detail: 'Please create and select a `Pattern` first or switch the `Playlist` context.',
-          });
-          return;
-        }
-
-        if (transport.value.state === 'started') {
-          api.pause();
-        } else {
-          api.startTransport();
-        }
-      },
-      pause() {
-        if (!transport.value) {
-          return;
-        }
-
-        transport.value.stop();
-        state.value = 'paused';
-      },
-      getTime() {
-        if (!transport.value) {
-          return 0;
-        }
-
-        return transport.value.seconds;
-      },
-      startTransport() {
-        if (!transport.value) {
-          return;
-        }
-
-        transport.value.start();
-        state.value = 'started';
-      },
-      stopIfStarted() {
-        if (transport.value && transport.value.state === 'started') {
-          api.stopTransport();
-        }
-      },
-      stopTransport() {
-        if (!transport.value) {
-          return;
-        }
-
-        transport.value.stop();
-        state.value = 'stopped';
-      },
-      state,
-      // TODO
-      ..._p,
-    } as const;
-
-    context.subscriptions.push(addEventListener('online', online(_p.instruments)));
+    }));
 
     // Pause every time the context changes
     watch(applicationContext.context, () => {

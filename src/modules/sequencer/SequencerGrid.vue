@@ -80,7 +80,7 @@
       :loop-end="loopEnd"
       :progress="progress"
       :px-per-beat="pxPerBeat"
-      class="progress-bar"
+      class="progress-bar z-20"
     ></progression>
 
     <div 
@@ -581,7 +581,6 @@ export default class SequencerGrid extends Vue {
   position: absolute
 
 .loop-background, .progress-bar
-  z-index: 2
   top: 0
   bottom: 0
   pointer-events: none

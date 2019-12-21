@@ -224,7 +224,7 @@ export const extension = createExtension({
 
     watch(backup, async () => {
       if (backup.value) {
-        updateProject(await dawg.project.serializeProject());
+        updateProject(await dawg.project.serialize());
       } else {
         backup.value = false;
       }
