@@ -35,7 +35,7 @@ export default class AutomationClips extends Vue {
       items: [
         {
           text: 'Delete',
-          callback: () => dawg.project.remoteAutomation(i),
+          callback: () => dawg.project.removeAutomation(i),
         },
       ],
     });

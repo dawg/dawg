@@ -24,11 +24,13 @@ export class Sequence<T extends Schedulable> extends StrictEventEmitter<{ added:
     elements.forEach((e) => watchElement(elements, e, this.onRemove.bind(this)));
   }
 
-  public push(element: T) {
-    this.elements.push(element);
-    element.schedule(this.transport);
-    watchElement(this.elements, element, this.onRemove.bind(this));
-    this.emit('added', element);
+  public add(...elements: T[]) {
+    elements.forEach((element) => {
+      this.elements.push(element);
+      element.schedule(this.transport);
+      watchElement(this.elements, element, this.onRemove.bind(this));
+      this.emit('added', element);
+    });
   }
 
   public slice() {

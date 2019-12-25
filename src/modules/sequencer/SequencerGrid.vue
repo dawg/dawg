@@ -157,7 +157,6 @@ export default class SequencerGrid extends Vue {
 
   @Prop({ type: Boolean, required: true }) public colored!: boolean;
 
-  public cursor = 'move';
   public rows!: HTMLElement;
   public selectStartEvent: MouseEvent | null = null;
   public dragStartEvent: MouseEvent | null = null;
@@ -373,7 +372,7 @@ export default class SequencerGrid extends Vue {
     item.time = time;
 
     this.selected.push(false);
-    this.sequence.push(item);
+    this.sequence.add(item);
   }
 
   public move(e: MouseEvent, i: number) {
@@ -475,7 +474,7 @@ export default class SequencerGrid extends Vue {
       // Thus, it will be displayed on top (which we want)
       // Try copying selected files and you will notice the selected notes stay on top
       this.selected.push(true);
-      this.sequence.push(newItem);
+      this.sequence.add(newItem);
     };
 
     let targetIndex = i;

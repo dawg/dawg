@@ -64,12 +64,6 @@ export class Sample implements Serializable<ISample> {
     }
   }
 
-  public dispose() {
-    if (this.player) {
-      disposeHelp(this.player);
-    }
-  }
-
   public serialize() {
     return {
       id: this.id,

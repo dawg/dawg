@@ -2,7 +2,6 @@ import tmp from 'tmp';
 import uuid from 'uuid';
 import fs from '@/fs';
 import * as Audio from '@/modules/audio';
-import { Beats } from '@/core/types';
 import * as t from '@/modules/io';
 import { createExtension } from '@/dawg/extensions';
 import { remote } from 'electron';
@@ -46,8 +45,12 @@ import {
   EffectName,
   AutomationType,
   AnyEffect,
+  PlaylistElements,
+  Node,
+  Note,
 } from '@/core';
 import Tone from 'tone';
+import * as history from '@/dawg/extensions/core/project/history';
 
 const ProjectTypeRequired = t.type({
   id: t.string,
@@ -385,42 +388,56 @@ const createApi = () => {
   function addPattern() {
     const name = findUniqueName(prj.patterns, 'Pattern');
     const pattern = Pattern.create(name);
-    prj.patterns.push(pattern);
+
+    history.execute({
+      execute: () => prj.patterns.push(pattern),
+      undo: () => prj.patterns.pop(),
+    });
   }
 
   async function addInstrument(type: 'Synth' | 'Soundfont') {
     const name = findUniqueName(prj.instruments, type);
+    const instrument = type === 'Soundfont' ?
+      Synth.create(name) :
+      await Soundfont.create('acoustic_grand_piano', name);
 
-    if (type === 'Synth') {
-      prj.instruments.push(Synth.create(name));
-    } else {
-      prj.instruments.push(await Soundfont.create('acoustic_grand_piano', name));
-    }
+    history.execute({
+      execute: () => prj.instruments.push(instrument),
+      undo: () => prj.instruments.pop(),
+    });
   }
 
   function removeSample(i: number) {
     if (i >= prj.samples.length) {
-      throw Error(`Unable to remove sample ${i}. Out of bounds.`);
+      return;
     }
 
     const sample = prj.samples[i];
 
-    // This isn' the best solution but it works
-    // There must be a better pattern / object oriented way
-    prj.master.elements.forEach((element) => {
-      if (!(element instanceof ScheduledSample)) {
-        return;
-      }
+    let elements: ScheduledSample[] = [];
+    history.execute({
+      execute: () => {
+        const isSampleElement = (element: PlaylistElements): element is ScheduledSample => {
+          return element.component === 'sample-element';
+        };
 
-      if (element.sample !== sample) {
-        return;
-      }
+        // This isn' the best solution but it works
+        // There must be a better pattern / object oriented way
+        elements = prj.master.elements.filter(isSampleElement).filter((element) => {
+          return element.sample === sample;
+        });
 
-      element.dispose();
+        elements.forEach((element) => {
+          element.dispose();
+        });
+
+        prj.samples.splice(i, 1);
+      },
+      undo: () => {
+        elements.forEach((element) => prj.master.elements.add(element));
+        prj.samples.splice(i, 0, sample);
+      },
     });
-
-    sample.dispose();
-    prj.samples.splice(i, 1);
   }
 
   function removePattern(i: number) {
@@ -430,20 +447,26 @@ const createApi = () => {
 
     const pattern = prj.patterns[i];
 
-    prj.master.elements.forEach((element) => {
-      if (!(element instanceof ScheduledPattern)) {
-        return;
-      }
+    let elements: ScheduledPattern[] = [];
+    history.execute({
+      execute: () => {
+        const isPatternElement = (element: PlaylistElements): element is ScheduledPattern => {
+          return element.component === 'pattern-element';
+        };
 
-      if (element.pattern !== pattern) {
-        return;
-      }
+        elements = prj.master.elements.filter(isPatternElement).filter((element) => {
+          return element.pattern === pattern;
+        });
 
-      element.dispose();
+        elements.forEach((element) => element.dispose());
+        pattern.dispose();
+        prj.patterns.splice(i, 1);
+      },
+      undo: () => {
+        elements.forEach((element) => prj.master.elements.add(element));
+        prj.patterns.splice(i, 0, pattern);
+      },
     });
-
-    pattern.dispose();
-    prj.patterns.splice(i, 1);
   }
 
   function createAutomationClip<T extends Automatable>(
@@ -485,35 +508,29 @@ const createApi = () => {
     const length = payload.end - payload.start;
     const clip = AutomationClip.create(length, signal, context, automatable.id, key);
     const placed = ScheduledAutomation.create(clip, payload.start, row);
-    pushAutomationClip({ clip, placed });
-
+    prj.automationClips.push(clip);
+    prj.master.elements.add(placed);
+    placed.schedule(prj.master.transport);
     return true;
   }
 
-  function pushAutomationClip(payload: { clip: AutomationClip, placed: ScheduledAutomation }) {
-    prj.automationClips.push(payload.clip);
-    prj.master.elements.push(payload.placed);
-    payload.placed.schedule(prj.master.transport);
-  }
-
-  function addScore(payload: { pattern: Pattern, instrument: Instrument<any, any>} ) {
-    const { pattern } = payload;
-
-    pattern.scores.forEach((score) => {
-      if (score.instrumentId === payload.instrument.id) {
-        throw Error(`An score already exists for ${payload.instrument.id}`);
-      }
+  function addScore({ pattern, instrument }: { pattern: Pattern, instrument: Instrument<any, any>} ) {
+    const score = Score.create(pattern.transport, instrument);
+    history.execute({
+      execute: () => {
+        pattern.scores.push(score);
+      },
+      undo: () => {
+        pattern.scores.pop();
+      },
     });
-
-    pattern.scores.push(Score.create(pattern.transport, payload.instrument));
   }
 
   function addSample(payload: Sample) {
-    if (prj.samples.indexOf(payload) !== -1) {
-      throw Error(`${payload.id} already exists`);
-    }
-
-    prj.samples.push(payload);
+    history.execute({
+      execute: () => prj.samples.push(payload),
+      undo: () => prj.samples.pop(),
+    });
   }
 
   const instrumentChannelLookup = computed(() => {
@@ -531,40 +548,46 @@ const createApi = () => {
   });
 
   function deleteEffect(payload: { channel: Channel, effect: AnyEffect }) {
-    // instruments could be undefined
     const instruments = instrumentChannelLookup.value[payload.channel.number] || [];
-
     const effects = payload.channel.effects;
-    for (const [i, effect] of effects.entries()) {
-      if (effect.slot !== payload.effect.slot) { continue; }
-      const destination = (effects[i + 1] || {}).effect || payload.channel.destination;
-      if (i === 0) {
-        instruments.forEach((instrument) => {
-          instrument.disconnect();
-          instrument.connect(destination);
-        });
-      } else {
-        effects[i - 1].disconnect();
-        effects[i - 1].connect(destination);
-      }
-
-      effects.splice(i, 1);
+    const i = effects.indexOf(payload.effect);
+    if (i === -1) {
       return;
     }
 
-    throw Error(`Unable to delete effect ${payload.effect.slot} from channel ${payload.channel.number}`);
+    const destination = (effects[i + 1] || {}).effect || payload.channel.destination;
+    const inputs: Node[] = [];
+    if (i === 0) {
+      inputs.push(...instruments);
+    } else {
+      inputs.push(effects[i - 1]);
+    }
+
+    history.execute({
+      execute: () => {
+        inputs.forEach((input) => input.disconnect());
+        inputs.forEach((input) => input.connect(destination));
+        effects.splice(i, 1);
+      },
+      undo: () => {
+        inputs.forEach((input) => input.disconnect());
+        inputs.forEach((input) => input.connect(payload.effect.effect));
+        effects.splice(i, 0, payload.effect);
+      },
+    });
   }
 
   function addEffect(payload: { channel: Channel, effect: EffectName, index: number } ) {
     const effects = payload.channel.effects;
-    let toInsert: null | number = null;
-    for (const [index, effect] of effects.entries()) {
+    let toInsert: number;
+    for (toInsert = 0; toInsert < effects.length; toInsert++) {
+      const effect = effects[toInsert];
       if (effect.slot === payload.index) {
-        throw Error(`There already exists an effect in ${effect.slot}`);
+        // An effect already exists in the slot
+        return;
       }
 
       if (effect.slot > payload.index) {
-        toInsert = index;
         break;
       }
     }
@@ -573,46 +596,78 @@ const createApi = () => {
     const instruments = instrumentChannelLookup.value[payload.channel.number] || [];
 
     let destination: Tone.AudioNode;
-    let i: number;
-    const newEffect = Effect.create(payload.index, payload.effect);
-    if (toInsert === null) {
+    if (toInsert === effects.length) {
       destination = payload.channel.destination;
-      i = effects.length;
     } else {
       destination = effects[toInsert].effect;
-      i = toInsert;
     }
 
+    const inputs: Node[] = [];
+    if (toInsert === 0) {
+      inputs.push(...instruments);
+    } else {
+      inputs.push(effects[toInsert - 1]);
+    }
+
+    const newEffect = Effect.create(payload.index, payload.effect);
     newEffect.connect(destination);
-    if (i === 0) {
-      instruments.forEach((instrument) => {
-        instrument.disconnect();
-        instrument.connect(newEffect.effect);
-      });
-    } else {
-      effects[i - 1].disconnect();
-      effects[i - 1].connect(newEffect);
-    }
 
-    if (toInsert !== null) {
-      effects.splice(toInsert, 0, newEffect);
-    } else {
-      toInsert = effects.length;
-      effects.push(newEffect);
-    }
+    history.execute({
+      execute: () => {
+        inputs.forEach((input) => input.disconnect());
+        inputs.forEach((input) => input.connect(newEffect.effect));
+        effects.splice(toInsert, 0, newEffect);
+      },
+      undo: () => {
+        inputs.forEach((input) => input.disconnect());
+        inputs.forEach((input) => input.connect(destination));
+        effects.splice(toInsert, 1);
+      },
+    });
   }
 
   function deleteInstrument(i: number) {
     const instrument = prj.instruments[i];
+    const deleted: Array<{
+      pattern: Pattern,
+      remaining: Score[],
+      removed: Array<{ score: Score, notes: Note[] }>,
+    }> = [];
 
     prj.patterns.forEach((pattern) => {
-      pattern.removeScores((score) => {
-        return score.instrument === instrument;
+      const remaining: Score[] = [];
+      const removed: Array<{ score: Score, notes: Note[] }> = [];
+
+      pattern.scores.forEach((score) => {
+        if (score.instrument === instrument) {
+          removed.push({ score, notes: score.notes.elements });
+        } else {
+          remaining.push(score);
+        }
       });
+
+      deleted.push({ pattern, remaining, removed });
     });
 
-    instrument.dispose();
-    prj.instruments.splice(i, 1);
+    history.execute({
+      execute: () => {
+        deleted.forEach(({ pattern, remaining, removed }) => {
+          removed.forEach(({ score }) => score.dispose());
+          pattern.scores = remaining;
+        });
+        prj.instruments.splice(i, 1);
+      },
+      undo: () => {
+        deleted.forEach(({ pattern, remaining, removed }) => {
+          // So notes are removed during the `dispose` call
+          // We need to add them back (ie. show them visually and schedule them)
+          removed.forEach(({ score, notes }) => score.notes.add(...notes));
+          pattern.scores = [...remaining, ...removed.map(({ score }) => score)];
+        });
+        prj.instruments.splice(i, 0, instrument);
+      },
+    });
+
   }
 
   /**
@@ -625,10 +680,6 @@ const createApi = () => {
       return;
     }
 
-    instrument.channel = channel;
-    instrument.disconnect();
-
-
     let destination: Tone.AudioNode;
     if (channel === undefined) {
       destination = Tone.Master;
@@ -637,47 +688,44 @@ const createApi = () => {
       destination = c.effects.length ? c.effects[0].effect : c.destination;
     }
 
-    instrument.connect(destination);
+    const currentChannel = instrument.channel;
+    const currentDestination = instrument.destination;
+    history.execute({
+      execute: () => {
+        instrument.channel = channel;
+        instrument.disconnect();
+        instrument.connect(destination);
+      },
+      undo: () => {
+        if (!currentDestination) { return; }
+        instrument.channel = currentChannel;
+        instrument.disconnect();
+        instrument.connect(currentDestination);
+      },
+    });
   }
 
-  function remoteAutomation(i: number) {
-    if (i >= prj.automationClips.length) {
-      throw Error(`Unable to remove sample ${i}. Out of bounds.`);
-    }
-
+  function removeAutomation(i: number) {
     const clip = prj.automationClips[i];
+
+    const isAutomationElement = (element: PlaylistElements): element is ScheduledAutomation => {
+      return element.component === 'automation-clip-element';
+    };
 
     // This isn' the best solution but it works
     // There must be a better pattern / object oriented way
-    prj.master.elements.filter((element) => {
-      if (element.component !== 'automation-clip-element') {
-        return;
-      }
+    const elements = prj.master.elements.filter(isAutomationElement).filter((element) => element.clip === clip);
 
-      if (element.clip !== clip) {
-        return;
-      }
-
-      element.dispose();
+    history.execute({
+      execute: () => {
+        elements.forEach((element) => element.dispose());
+        prj.automationClips.splice(i, 1);
+      },
+      undo: () => {
+        elements.forEach((element) => prj.master.elements.add(element));
+        prj.automationClips.splice(i, 0, clip);
+      },
     });
-
-    clip.dispose();
-    prj.automationClips.splice(i, 1);
-  }
-
-  function scheduleMaster(sample: Sample, row: number, time: number) {
-    prj.samples.push(sample);
-
-    const scheduled = new ScheduledSample(sample, {
-      type: 'sample',
-      sampleId: sample.id,
-      duration: sample.beats,
-      row,
-      time,
-    });
-
-    scheduled.schedule(prj.master.transport);
-    prj.master.elements.push(scheduled);
   }
 
   const effectLookup = computed(() => {
@@ -767,11 +815,9 @@ const createApi = () => {
     removeSample,
     removePattern,
     createAutomationClip,
-    pushAutomationClip,
     addScore,
     addSample,
-    remoteAutomation,
-    scheduleMaster,
+    removeAutomation,
     effectLookup,
     channelLookup,
     deleteInstrument,
