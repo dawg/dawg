@@ -1,6 +1,7 @@
 import { Schedulable } from '@/core/scheduled/schedulable';
 import { Transport } from '@/modules/audio/transport';
 import { StrictEventEmitter } from '@/modules/audio/events';
+import * as history from '@/dawg/extensions/core/project/history';
 
 
 const watchElement = <T extends Schedulable>(elements: T[], element: T, onRemove: (event: T) => void) => {
@@ -25,11 +26,18 @@ export class Sequence<T extends Schedulable> extends StrictEventEmitter<{ added:
   }
 
   public add(...elements: T[]) {
-    elements.forEach((element) => {
-      this.elements.push(element);
-      element.schedule(this.transport);
-      watchElement(this.elements, element, this.onRemove.bind(this));
-      this.emit('added', element);
+    history.execute({
+      execute: () => {
+        elements.forEach((e) => {
+          this.elements.push(e);
+          e.schedule(this.transport);
+          watchElement(this.elements, e, this.onRemove.bind(this));
+          this.emit('added', e);
+        });
+      },
+      undo: () => {
+        elements.forEach((element) => element.removeNoHistory());
+      },
     });
   }
 

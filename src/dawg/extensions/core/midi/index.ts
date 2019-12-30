@@ -65,7 +65,7 @@ export const extension: Extension = {
           velocity: noteOn.rawVelocity,
         });
 
-        selectedScore.value.notes.push(note);
+        selectedScore.value.notes.add(note);
 
         if (patterns.selectedPattern.value) {
           note.schedule(transport);

@@ -143,7 +143,7 @@ export const extension = createExtension({
         });
 
         scheduled.schedule(master.transport);
-        master.elements.push(scheduled);
+        master.elements.add(scheduled);
 
         recording.value = false;
       };

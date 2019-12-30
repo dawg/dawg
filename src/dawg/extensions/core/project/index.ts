@@ -916,10 +916,32 @@ const extension = createExtension({
       },
     };
 
+    const undo: Command = {
+      shortcut: ['CmdOrCtrl', 'Z'],
+      text: 'Undo',
+      callback: () => {
+        history.undo();
+      },
+    };
+
+    const redo: Command = {
+      shortcut: ['CmdOrCtrl', 'Shift', 'Z'],
+      text: 'Redo',
+      callback: () => {
+        history.redo();
+      },
+    };
+
     const file = menubar.getMenu('File');
     const toDispose = [save, saveAs, open, newProject].map((command) => {
       context.subscriptions.push(commands.registerCommand(command));
       return file.addItem(command);
+    });
+
+    const edit = menubar.getMenu('Edit');
+    ([undo, redo]).map((command) => {
+      context.subscriptions.push(commands.registerCommand(command));
+      context.subscriptions.push(edit.addItem(command));
     });
 
     context.subscriptions.push(...toDispose);

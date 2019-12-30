@@ -90,7 +90,7 @@ export default class PianoRollSequencer extends Vue {
         velocity: iNote.velocity,
       });
 
-      this.score.notes.push(note);
+      this.score.notes.add(note);
     });
   }
 

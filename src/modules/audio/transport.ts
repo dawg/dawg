@@ -32,6 +32,7 @@ export interface TransportEventController {
   setStartTime(startTime: Beat): void;
   setDuration(duration: Beat): void;
   remove(): void;
+  undoRemove(): void;
 }
 
 export class Transport {
@@ -121,6 +122,7 @@ export class Transport {
       }
     };
 
+    let added = true;
     return {
       setStartTime: (startTime: Beat) => {
         startTime = Context.beatsToTicks(startTime);
@@ -137,7 +139,13 @@ export class Transport {
         checkNowActive();
       },
       remove: () => {
+        if (!added) {
+          return;
+        }
+
         this.timeline.remove(event);
+        added = false;
+
         if (!this.active) {
           return;
         }
@@ -153,6 +161,16 @@ export class Transport {
 
           this.active.splice(i, 1);
         }
+      },
+      undoRemove: () => {
+        if (added) {
+          return;
+        }
+
+        this.timeline.add(event);
+        added = true;
+
+        checkNowActive();
       },
     };
   }

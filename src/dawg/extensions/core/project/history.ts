@@ -7,6 +7,7 @@ const undoHistory: Command[] = [];
 let redoHistory: Command[] = [];
 
 export const execute = (command: Command) => {
+  command.execute();
   undoHistory.push(command);
   redoHistory = [];
 };
@@ -17,6 +18,7 @@ export const undo = (): 'empty' | 'performed' => {
     return 'empty';
   }
 
+  top.undo();
   redoHistory.push(top);
   return 'performed';
 };
@@ -27,6 +29,7 @@ export const redo = (): 'empty' | 'performed' => {
     return 'empty';
   }
 
+  top.execute();
   undoHistory.push(top);
   return 'performed';
 };
