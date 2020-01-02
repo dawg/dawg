@@ -126,7 +126,7 @@ export const commands = manager.activate({
         })).filter((o) => o.text); // we just are filtering out the empty strings here
 
         palette.selectFromItems(paletteItems, {
-          onDidSelect: (item) => {
+          onDidInput: (item) => {
             item.callback();
           },
         });

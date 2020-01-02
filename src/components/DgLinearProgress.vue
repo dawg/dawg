@@ -1,5 +1,5 @@
 <template>
-  <div class="linear-activity bg-primary">
+  <div class="linear-activity bg-primary" :style="containerStyle">
     <div class="determinate" :style="style"></div>
   </div>
 </template>
@@ -14,14 +14,16 @@ export default createComponent({
      * A number between (inclusive) 0 and 100.
      */
     progress: { type: Number, required: true },
+    percentage: { type: Number, default: 75 },
   },
   setup(props) {
     return {
       style: computed(() => {
         return {
-          width: `${props.progress}%`,
+          width: `${props.progress * props.percentage / 100}%`,
         };
       }),
+      containerStyle: computed(() => ({ width: `${props.percentage}%` })),
     };
   },
 });
@@ -30,10 +32,8 @@ export default createComponent({
 <style lang="scss" scoped>
 .linear-activity {
   overflow: hidden;
-  width: 50%;
   height: 4px;
   background-color: #B3E5FC;
-  margin: 20px auto;
 }
 
 .determinate {

@@ -128,7 +128,7 @@ export const extension = createExtension({
 
         dawg.palette.selectFromObject(projectLookup, {
           placeholder: 'Available Projects',
-          onDidSelect: (projectInfo) => {
+          onDidInput: (projectInfo) => {
             openProject(projectInfo);
           },
         });
@@ -270,7 +270,7 @@ export const extension = createExtension({
 
           dawg.palette.selectFromObject(projectLookup, {
             placeholder: 'Available Projects',
-            onDidSelect: (projectInfo) => {
+            onDidInput: (projectInfo) => {
               deleteProject(projectInfo);
             },
           });

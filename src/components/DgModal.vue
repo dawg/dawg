@@ -1,6 +1,8 @@
 <template>
   <div
-    v-if="value" class="fixed top-0 right-0 bottom-0 left-0 z-50 overflow-scroll py-4"
+    v-if="value" 
+    class="fixed top-0 right-0 bottom-0 left-0 z-50 overflow-scroll py-4"
+    :class="classes"
     style="background-color: rgba(0, 0, 0, 0.5);"
     role="dialog"
   >
@@ -26,6 +28,7 @@ export default createComponent({
   props: {
     value: { type: Boolean },
     width: { type: Number, default: 600 },
+    centerVertical: Boolean,
   },
   setup(props, context) {
     let dispose: (() => void) | undefined;
@@ -45,6 +48,10 @@ export default createComponent({
         }).dispose;
       }
     });
+
+    return {
+      classes: props.centerVertical ? 'flex' : '',
+    };
   },
 });
 </script>
