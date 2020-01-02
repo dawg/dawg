@@ -1,8 +1,8 @@
-import * as keyboard from '@/base/keyboard';
+import * as keyboard from '@/keyboard';
 import { manager } from '@/base/manager';
 import { palette } from '@/dawg/extensions/core/palette';
 import { menubar } from '@/dawg/extensions/core/menubar';
-import { Key, hasKey } from '@/base/keyboard';
+import { Key, hasKey } from '@/keyboard';
 
 export interface Shortcut {
   shortcut?: keyboard.Key[];
@@ -13,7 +13,6 @@ export interface Command extends Shortcut {
   text: string;
 }
 
-// FIXME(1) move from here into lower layer
 function shortcutPressed(shortcut: Key[], pressedKeys: Set<number>) {
   if (pressedKeys.size !== shortcut.length) {
     return false;
@@ -48,6 +47,8 @@ export class KeyboardShortcuts {
   }
 
   public keydown(e: KeyboardEvent) {
+    e.preventDefault();
+
     // ignore all targets that aren't the body
     // For example, ignore keys typed in an input
     // This won't work
@@ -67,7 +68,6 @@ export class KeyboardShortcuts {
       }
 
       if (shortcutPressed(item.shortcut, this.pressedKeys)) {
-        e.preventDefault();
         item.callback();
       }
     };
@@ -108,8 +108,6 @@ const pushAndReturnDispose = (items: Shortcut[], item: Shortcut) => {
 export const commands = manager.activate({
   id: 'dawg.commands',
   activate(context) {
-    context.subscriptions.push(new KeyboardShortcuts());
-
     const registerCommand = (command: Command) => {
       return pushAndReturnDispose(cmmds, command);
     };
@@ -142,9 +140,6 @@ export const commands = manager.activate({
     return {
       registerCommand,
       registerShortcut,
-      clear() {
-        // bus.$emit('clear');
-      },
     };
   },
 });

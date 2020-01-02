@@ -49,11 +49,6 @@ export const extension = createExtension({
       }
 
       folders.push(folder);
-
-      // FIXME
-      // the showFileDialog messes with the keyup events
-      // This is a temporary solution
-      dawg.commands.clear();
     };
 
     const openSample = (sample: Sample) => {

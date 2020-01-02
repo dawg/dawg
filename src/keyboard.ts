@@ -1,4 +1,4 @@
-import * as platform from '@/base/platform';
+import * as platform from '@/platform';
 
 export type Key =
   'Shift' |

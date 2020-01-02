@@ -1,5 +1,5 @@
 import Tone from 'tone';
-import { ContextTime, Ticks, Seconds } from '@/modules/audio/types';
+import { ContextTime, Ticks } from '@/modules/audio/types';
 import { Context } from '@/modules/audio/context';
 import { literal } from '@/utils';
 

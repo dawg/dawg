@@ -888,11 +888,6 @@ const extension = createExtension({
           { filters: FILTERS, properties: ['openFile'] },
         );
 
-        // FIXME
-        // the showFileDialog messes with the keyup events
-        // This is a temporary solution
-        commands.clear();
-
         if (!files) {
           return;
         }

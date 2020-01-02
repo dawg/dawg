@@ -3,6 +3,7 @@ import { ContextTime, Ticks, Seconds, Beat } from '@/modules/audio/types';
 import { Context } from '@/modules/audio/context';
 import { watch } from '@vue/composition-api';
 import { Clock } from '@/modules/audio/clock';
+import { StrictEventEmitter } from '@/modules/audio/events';
 
 interface EventContext {
   seconds: ContextTime;
@@ -35,7 +36,7 @@ export interface TransportEventController {
   undoRemove(): void;
 }
 
-export class Transport {
+export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: [] }> {
   private startPosition: Ticks = 0;
   private timeline = new Timeline<TransportEvent>();
   private active: TransportEvent[] = [];
@@ -52,6 +53,7 @@ export class Transport {
   private disposer: () => void;
 
   constructor() {
+    super();
     // FIXME Maybe all of the clocks could share one "ticker"?? IDK? Then we wouldn't have to "watch" the BBM
     // Note, this will run automatically
     watch(Context.BPM, () => {
@@ -299,6 +301,7 @@ export class Transport {
 
   private processTick(seconds: ContextTime, ticks: Ticks, isChild = false) {
     if (!isChild && ticks >= this._loopEnd) {
+      this.emit('beforeEnd');
       this.checkOnEndEventsAndResetActive({ seconds, ticks });
       this.clock.setTicksAtTime(this._loopStart, seconds);
       ticks = this._loopStart;
@@ -306,6 +309,8 @@ export class Transport {
     }
 
     if (this.isFirstTick) {
+      this.emit('beforeStart');
+
       // The upper bound is exclusive but we don't care about checking about events that haven't started yet.
       this.timeline.forEachBetween(0, ticks, (event) => {
         if (event.time + event.duration < ticks) {
