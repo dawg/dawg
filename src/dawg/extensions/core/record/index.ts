@@ -17,23 +17,10 @@ import { project } from '@/dawg/extensions/core/project';
 import { applicationContext } from '@/dawg/extensions/core/application-context';
 import ChunkGhostComponent from '@/dawg/extensions/core/record/ChunkGhost.vue';
 import { ui } from '@/base/ui';
+import { blobsToAudioBuffer } from '@/modules/converter';
 
 export const DOCUMENTS_PATH = remote.app.getPath('documents');
 export const RECORDING_PATH = path.join(DOCUMENTS_PATH, remote.app.getName(), 'recordings');
-
-function blobsToAudioBuffer(blobs: Blob[]): Promise<AudioBuffer> {
-  const reader = new FileReader();
-  return new Promise<AudioBuffer>((resolve) => {
-    reader.onload = (event) => {
-      const buffer = reader.result as ArrayBuffer;
-      Audio.context.decodeAudioData(buffer).then((decodedBuffer) => {
-        resolve(decodedBuffer);
-      });
-    };
-    const audioBlob = new Blob(blobs);
-    reader.readAsArrayBuffer(audioBlob);
-  });
-}
 
 function makeFileName() {
   const date = new Date();
@@ -109,11 +96,11 @@ export const extension = createExtension({
         }
 
         audioBlobs.push(event.data);
-        ghost.buffer = await blobsToAudioBuffer(audioBlobs);
+        ghost.buffer = await blobsToAudioBuffer(Audio.context, audioBlobs);
       };
 
       mediaRecorder.onstop = async () => {
-        const buffer = await blobsToAudioBuffer(audioBlobs);
+        const buffer = await blobsToAudioBuffer(Audio.context, audioBlobs);
         const wavData: ArrayBuffer = audioBufferToWav(buffer, {
           sampleRate: buffer.sampleRate,
           float: true,

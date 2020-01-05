@@ -5,6 +5,8 @@ import ExportProgressModal from '@/dawg/extensions/extra/exporter/ExportProgress
 import { ref } from '@vue/composition-api';
 import * as Audio from '@/modules/audio';
 import { remote } from 'electron';
+import { oggToMp3, blobsToAudioBuffer } from '@/modules/converter';
+import stream from 'stream';
 
 export const extension = createExtension({
   id: 'dawg.spectrogram',
@@ -35,11 +37,7 @@ export const extension = createExtension({
     const command = {
       text: 'Export',
       callback: () => {
-        const record = (name: string) => {
-          if (name === '') {
-            return;
-          }
-
+        const record = (filePath: string) => {
           open.value = true;
           progress.value = 0;
 
@@ -50,13 +48,34 @@ export const extension = createExtension({
             progress.value = dawg.project.master.transport.getProgress() * 100;
           };
 
-          recorder.onstop = () => {
-            const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
-            const url = window.URL.createObjectURL(blob);
-            a.href = url;
-            a.download = name;
-            a.click();
-            window.URL.revokeObjectURL(url);
+          recorder.onstop = async () => {
+            console.log('Recording stopped. Creating blob and then reading in as ArrayBuffer.');
+            // const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
+            const reader = new FileReader();
+            const buffer = await blobsToAudioBuffer(Audio.context, chunks, 'audio/ogg; codecs=opus');
+
+            const onLoadEnd = async () => {
+              console.log('ArrayBuffer loading has finished. The result is: ', reader.result);
+              reader.removeEventListener('loadend', onLoadEnd, false);
+              const buffer = Buffer.from(reader.result as any);
+              const readableInstanceStream = new stream.Readable({
+                read() {
+                  this.push(buffer);
+                  this.push(null);
+                },
+              });
+
+              const result = await oggToMp3(readableInstanceStream, filePath);
+              // go();
+              if (result.result === 'success') {
+                dawg.notify.info('Successfully exported track as Mp3');
+              } else {
+                dawg.notify.error('Unable to convert export track as Mp3: ' + result.error);
+              }
+            };
+
+            reader.addEventListener('loadend', onLoadEnd, false);
+            reader.readAsArrayBuffer(blob);
           };
 
           const beat = dawg.project.master.transport.beat;
@@ -92,10 +111,12 @@ export const extension = createExtension({
           dawg.project.master.transport.start();
         };
 
-        dawg.palette.showInputBox({
-          placeholder: 'File Name',
-          onDidInput: record,
-        });
+        const path = remote.dialog.showSaveDialog(remote.getCurrentWindow(), {}) || null;
+        if (!path) {
+          return;
+        }
+
+        record(path);
       },
     };
 
