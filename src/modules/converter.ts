@@ -1,98 +1,102 @@
-import fs from 'fs';
-import ogg from 'ogg';
-import lame from 'lame';
-import opus from 'node-opus';
-import { Readable } from 'stream';
+interface Options {
+  float32?: number;
+}
 
-type Result =
-  { result: 'success' } |
-  { result: 'error', error: string };
+export function audioBufferToWav(buffer: AudioBuffer, opt?: Options) {
+  opt = opt || {};
 
-export const oggToMp3 = (oggStream: Readable, mp3Path: string): Promise<Result> => {
-  return new Promise((resolve) => {
-    const od = new ogg.Decoder();
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const format = opt.float32 ? 3 : 1;
+  const bitDepth = format === 3 ? 32 : 16;
 
-    od.on('stream', (stream) => {
-      console.log('Starting stream');
-      const vd = new opus.Decoder();
+  let result;
+  if (numChannels === 2) {
+    result = interleave(buffer.getChannelData(0), buffer.getChannelData(1));
+  } else {
+    result = buffer.getChannelData(0);
+  }
 
-      // the "format" event contains the raw PCM format
-      vd.on('format', (format) => {
-        console.log('Given format', format);
-        const bytesPerSample = format.bitDepth / 8;
-        const encoder = new lame.Encoder();
-        const out = fs.createWriteStream(mp3Path);
-        encoder.pipe(out);
+  return encodeWAV(result, format, sampleRate, numChannels, bitDepth);
+}
 
-        let leftover: Uint8Array;
-        vd.on('data', (b: Uint8Array) => {
-          console.log('Data received!');
+function encodeWAV(samples: Float32Array, format: 3 | 1, sampleRate: number, numChannels: number, bitDepth: 32 | 16) {
+  const bytesPerSample = bitDepth / 8;
+  const blockAlign = numChannels * bytesPerSample;
 
-          // first we have to make sure that the Buffer we got is a multiple of
-          // "float" sized, so that it will fit nicely into a Float32Array
-          if (leftover) {
-            b = Buffer.concat([ leftover, b ]);
-          }
-          // tslint:disable-next-line:no-bitwise
-          const len = (b.length / bytesPerSample | 0) * bytesPerSample;
-          if (len !== b.length) {
-            // tslint:disable-next-line:no-console
-            console.error('resizing Buffer from %d to %d', b.length, len);
-            leftover = b.slice(len);
-            b = b.slice(0, len);
-          }
+  const buffer = new ArrayBuffer(44 + samples.length * bytesPerSample);
+  const view = new DataView(buffer);
 
-          // now that we know "b" is aligned to "float" sized, create a TypedArray
-          // from it, and create an output Buffer where the "int" samples will go
-          const floatSamples = new Float32Array(b);
-          const o = new Buffer(floatSamples.length * 2);
-          const intSamples = new Int16Array(o);
+  /* RIFF identifier */
+  writeString(view, 0, 'RIFF');
+  /* RIFF chunk length */
+  view.setUint32(4, 36 + samples.length * bytesPerSample, true);
+  /* RIFF type */
+  writeString(view, 8, 'WAVE');
+  /* format chunk identifier */
+  writeString(view, 12, 'fmt ');
+  /* format chunk length */
+  view.setUint32(16, 16, true);
+  /* sample format (raw) */
+  view.setUint16(20, format, true);
+  /* channel count */
+  view.setUint16(22, numChannels, true);
+  /* sample rate */
+  view.setUint32(24, sampleRate, true);
+  /* byte rate (sample rate * block align) */
+  view.setUint32(28, sampleRate * blockAlign, true);
+  /* block align (channel count * bytes per sample) */
+  view.setUint16(32, blockAlign, true);
+  /* bits per sample */
+  view.setUint16(34, bitDepth, true);
+  /* data chunk identifier */
+  writeString(view, 36, 'data');
+  /* data chunk length */
+  view.setUint32(40, samples.length * bytesPerSample, true);
+  if (format === 1) { // Raw PCM
+    floatTo16BitPCM(view, 44, samples);
+  } else {
+    writeFloat32(view, 44, samples);
+  }
 
-          // we need to convert all the float samples into short int samples
-          // and populate the "intSamples" array
-          for (let i = 0; i < floatSamples.length; i++) {
-            const f = floatSamples[i];
-            let val = Math.floor(f * 32767.0 + 0.5);
+  return buffer;
+}
 
-            // might as well guard against clipping
-            if (val > 32767) {
-              // tslint:disable-next-line:no-console
-              console.error('clipping detected: %d -> %d', val, 32767);
-              val = 32767;
-            }
-            if (val < -32768) {
-              // tslint:disable-next-line:no-console
-              console.error('clipping detected: %d -> %d', val, -32768);
-              val = -32768;
-            }
-            intSamples[i] = val;
-          }
+function interleave(inputL: Float32Array, inputR: Float32Array) {
+  const length = inputL.length + inputR.length;
+  const result = new Float32Array(length);
 
-          // write the populated "intSamples" Buffer to the lame encoder
-          encoder.write(o);
-        });
-      });
+  let index = 0;
+  let inputIndex = 0;
 
-      // an "error" event will get emitted if the stream is not a Vorbis stream
-      // (i.e. it could be a Theora video stream instead)
-      vd.on('error', (error) => {
-        resolve({ result: 'error', error: error.message });
-      });
+  while (index < length) {
+    result[index++] = inputL[inputIndex];
+    result[index++] = inputR[inputIndex];
+    inputIndex++;
+  }
+  return result;
+}
 
-      vd.on('close', () => {
-        resolve({ result: 'success' });
-      });
+function writeFloat32(output: DataView, offset: 44, input: Float32Array) {
+  for (let i = 0; i < input.length; i++, offset += 4) {
+    output.setFloat32(offset, input[i], true);
+  }
+}
 
-      stream.pipe(vd);
-    });
+function floatTo16BitPCM(output: DataView, offset: 44, input: Float32Array) {
+  for (let i = 0; i < input.length; i++, offset += 2) {
+    const s = Math.max(-1, Math.min(1, input[i]));
+    output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+  }
+}
 
-    console.log('Pipping to ogg.Decoder!');
-    // stream = fs.createReadStream(process.argv[2])
-    oggStream.pipe(od);
-  });
-};
+function writeString(view: DataView, offset: 0 | 8 | 12 | 36, str: string) {
+  for (let i = 0; i < str.length; i++) {
+    view.setUint8(offset + i, str.charCodeAt(i));
+  }
+}
 
-export function blobsToAudioBuffer(context: AudioContext, blobs: Blob[], type?: string): Promise<AudioBuffer> {
+export function blobsToAudioBuffer(context: AudioContext, blobs: Blob[]): Promise<AudioBuffer> {
   const reader = new FileReader();
   return new Promise<AudioBuffer>((resolve) => {
     reader.onload = () => {
@@ -102,12 +106,7 @@ export function blobsToAudioBuffer(context: AudioContext, blobs: Blob[], type?: 
       });
     };
 
-    let opts;
-    if (type) {
-      opts = { type };
-    }
-
-    const audioBlob = new Blob(blobs, opts);
+    const audioBlob = new Blob(blobs);
     reader.readAsArrayBuffer(audioBlob);
   });
 }
