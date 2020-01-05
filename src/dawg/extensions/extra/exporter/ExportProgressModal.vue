@@ -13,7 +13,9 @@
 </template>
 
 <script lang="ts">
-export default {
+import { createComponent, watch } from '@vue/composition-api';
+
+export default createComponent({
   name: 'ExportProgressModal',
   filters: {
     round: (value: number) => {
@@ -24,5 +26,5 @@ export default {
     open: { Boolean, required: true },
     progress: { type: Number, required: true },
   },
-};
+});
 </script>

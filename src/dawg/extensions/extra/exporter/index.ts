@@ -7,6 +7,7 @@ import * as Audio from '@/modules/audio';
 import { remote } from 'electron';
 import { blobsToAudioBuffer, audioBufferToWav } from '@/modules/converter';
 import fs from '@/fs';
+import Tone from 'tone';
 
 export const extension = createExtension({
   id: 'dawg.spectrogram',
@@ -54,9 +55,9 @@ export const extension = createExtension({
             const arrayBuffer = await audioBufferToWav(buffer);
             try {
               await fs.writeFile(filePath, Buffer.from(arrayBuffer));
-              dawg.notify.info('Successfully exported track as Mp3 at ' + filePath);
+              dawg.notify.info('Successfully exported track as WAV at ' + filePath);
             } catch (e) {
-              dawg.notify.error('Unable to convert export track as Mp3: ' + e.error);
+              dawg.notify.error('Unable to convert export track as WAV: ' + e.message);
             }
           };
 
@@ -84,16 +85,21 @@ export const extension = createExtension({
               dawg.project.master.transport.loopStart = loopStart;
               dawg.project.master.transport.loopEnd = loopEnd;
               open.value = false;
+              Tone.Master.mute = false;
               recorder.stop();
               disposer.dispose();
             },
           });
 
           dawg.project.stopIfStarted();
+          Tone.Master.mute = true;
           dawg.project.master.transport.start();
         };
 
-        const path = remote.dialog.showSaveDialog(remote.getCurrentWindow(), {}) || null;
+        const path = remote.dialog.showSaveDialog(remote.getCurrentWindow(), {
+          filters: [{ name: 'WAV', extensions: ['wav'] }],
+        });
+
         if (!path) {
           return;
         }

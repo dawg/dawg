@@ -448,8 +448,7 @@ declare module 'tone' {
 
   class MasterClass extends AudioNode {
     volume: Signal;
-    mute(): MasterClass;
-    unmute(): MasterClass;
+    mute: boolean;
     receive(node: any): MasterClass; //todo: AudioNode | tone
     send(node: any): MasterClass; //todo: AudioNode | tone
   }
