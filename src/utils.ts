@@ -1,5 +1,4 @@
-import Tone from 'tone';
-import Vue, { VueConstructor, CreateElement, VNodeData } from 'vue';
+import Vue from 'vue';
 import Component from 'vue-class-component';
 import ResizeObserver from 'resize-observer-polyfill';
 import throttle from 'lodash.throttle';
@@ -101,18 +100,11 @@ export const Keys = {
   DOWN: 40,
 };
 
-
 export const Button = {
   LEFT: 0,
   MIDDLE: 1,
   RIGHT: 2,
 };
-
-export function toTickTime(time: number) {
-  // FIXME(3) is ceil right?
-  return `${Math.ceil(time * Tone.Transport.PPQ)}i`;
-}
-
 
 export const findUniqueName = (objects: Array<{ name: string }>, prefix: string) => {
   let name: string;
@@ -321,35 +313,6 @@ export class ResponsiveMixin extends Vue {
     //
   }
 }
-
-
-export const createHOC = (
-  component: VueConstructor, createElement: CreateElement, hoc: Vue, data: VNodeData = {},
-) => {
-  // Pass on the...
-  // 1. Props
-  // 2. Attrs
-  // 3. Listeners
-  // 4. Slots
-  const slots = Object.values(hoc.$slots);
-
-  return createElement(component, {
-    ...data,
-    props: {
-      // ...hoc.$props,
-      ...data.props,
-    },
-    attrs: {
-      ...hoc.$attrs,
-      ...hoc.$props,
-      ...data.attrs,
-    },
-    on: {
-      ...hoc.$listeners,
-      ...data.on,
-    },
-  }, slots);
-};
 
 export function* chain<T>(...arrays: T[][]) {
   for (const array of arrays) {

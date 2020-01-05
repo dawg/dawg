@@ -17,12 +17,10 @@ export const playlist = manager.activate({
     playlistRowHeight: {
       type: t.number,
       default: 40,
-      expose: false,
     },
     playlistBeatWidth: {
       type: t.number,
       default: 80,
-      expose: false,
     },
   },
   activate(context) {
@@ -61,7 +59,7 @@ export const playlist = manager.activate({
         masterStart,
         masterEnd,
         ghosts,
-        project: project.project,
+        project,
         playlistRowHeight,
         playlistBeatWidth,
       }),
@@ -80,12 +78,12 @@ export const playlist = manager.activate({
           }
 
           const sample = prototype.sample;
-          if (project.project.samples.indexOf(prototype.sample) >= 0) {
+          if (project.samples.indexOf(prototype.sample) >= 0) {
             return;
           }
 
           logger.debug('Adding a sample!');
-          project.project.addSample(sample);
+          project.addSample(sample);
         },
       },
     });

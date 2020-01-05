@@ -35,7 +35,7 @@ export const extension = createExtension({
       },
     ];
 
-    const help = menubar.getMenu('Edit');
+    const help = menubar.getMenu('Help');
     commands.forEach((command) => {
       context.subscriptions.push(help.addItem(command));
     });

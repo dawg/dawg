@@ -8,8 +8,7 @@ import {
   installVueDevtools,
 } from 'vue-cli-plugin-electron-builder/lib';
 
-import './electron/menubar';
-import './electron/menu';
+import './electron/ipc';
 import { isDevelopment } from './electron/environment';
 
 // Keep a global reference of the window object, if you don't, the window will

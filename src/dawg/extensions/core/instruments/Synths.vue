@@ -15,7 +15,6 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import Tone from 'tone';
 import Synth from '@/components/Synth.vue';
 import { Nullable } from '@/utils';
 import { Score, Instrument, Pattern } from '@/core';
@@ -31,7 +30,7 @@ export default class Synths extends Vue {
   @Prop(Nullable(Object)) public selectedPattern!: Pattern | null;
 
   get project() {
-    return project.project;
+    return project;
   }
 
   get scoreLookup() {
@@ -60,14 +59,14 @@ export default class Synths extends Vue {
 
     const instrument = this.instruments[i];
     if (!this.scoreLookup.hasOwnProperty(instrument.id)) {
-      project.project.addScore({ pattern: this.selectedPattern, instrument });
+      project.addScore({ pattern: this.selectedPattern, instrument });
     }
 
     this.$update('selectedScore', this.scoreLookup[instrument.id]);
   }
 
   public deleteInstrument(i: number) {
-    project.project.deleteInstrument(i);
+    project.deleteInstrument(i);
   }
 
   @Watch<Synths>('selectedPattern', { immediate: true })

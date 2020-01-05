@@ -12,6 +12,7 @@ declare module 'tone' {
     toFrequency(freq: any): number;
     toSeconds(time?: _TimeArg): number;
     toTicks(time: _TimeArg): number;
+    now(): number;
 
     sampleTime: number;
     static connectSeries(...args: any[]): Tone;
@@ -447,8 +448,7 @@ declare module 'tone' {
 
   class MasterClass extends AudioNode {
     volume: Signal;
-    mute(): MasterClass;
-    unmute(): MasterClass;
+    mute: boolean;
     receive(node: any): MasterClass; //todo: AudioNode | tone
     send(node: any): MasterClass; //todo: AudioNode | tone
   }
@@ -895,7 +895,7 @@ declare module 'tone' {
   class TickSignal extends Signal {
     _toUnits(value: number): number;
     _fromUnits(value: number): number;
-    getDurationOfTicks(ticks: number, time: _TimeArg): void;
+    getDurationOfTicks(ticks: number, time: _TimeArg): number;
     timeToTicks(duration: PrimitiveTime, when?: PrimitiveTime): Ticks;
     getTicksAtTime(time: PrimitiveTime): PrimitiveTicks;
     getTimeOfTick(tick: PrimitiveTicks): number;
@@ -903,6 +903,8 @@ declare module 'tone' {
 
   class TickSource extends Tone {
     frequency: TickSignal;
+    ticks: number;
+    seconds: number;
     start(time?: PrimitiveTime, offset?: PrimitiveTicks): this;
     pause(time?: PrimitiveTime): void;
     stop(time: PrimitiveTime): this;
@@ -933,9 +935,10 @@ declare module 'tone' {
     dispose(): void;
   }
 
-  class TimelineState<T extends { state: TransportState, time: Time }> extends Timeline<T> {
+  class TimelineState<T extends { state: TransportState, time: number }> extends Timeline<T> {
     constructor(initial: TransportState);
     cancel(time: number): this;
+    getLastState(state: TransportState, time: number): T;
     setStateAtTime(state: TransportState, time: number): this;
     getValueAtTime(time: number): TransportState;
   }

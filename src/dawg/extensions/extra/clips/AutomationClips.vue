@@ -20,12 +20,8 @@ import * as dawg from '@/dawg';
 
 @Component
 export default class AutomationClips extends Vue {
-  get project() {
-    return dawg.project.project;
-  }
-
   get items() {
-    return this.project.automationClips.map((clip, i) => {
+    return dawg.project.automationClips.map((clip, i) => {
       return {
         prototype: ScheduledAutomation.create(clip, 0, 0),
         name: `Automation ${i}`,
@@ -39,7 +35,7 @@ export default class AutomationClips extends Vue {
       items: [
         {
           text: 'Delete',
-          callback: () => this.project.remoteAutomation(i),
+          callback: () => dawg.project.removeAutomation(i),
         },
       ],
     });

@@ -2,6 +2,7 @@ import * as t from '@/modules/io';
 import * as Audio from '@/modules/audio';
 import { StrictEventEmitter } from '@/modules/audio/events';
 import { Beat } from '@/modules/audio/types';
+import * as history from '@/dawg/extensions/core/project/history';
 
 export const SchedulableType = t.type({
   row: t.number,
@@ -11,7 +12,7 @@ export const SchedulableType = t.type({
 
 export type ISchedulable = t.TypeOf<typeof SchedulableType>;
 
-export abstract class Schedulable extends StrictEventEmitter<{ remove: [] }> {
+export abstract class Schedulable extends StrictEventEmitter<{ remove: [], undoRemove: [] }> {
   /**
    * The component name to mount in the `Sequencer`.
    */
@@ -72,19 +73,34 @@ export abstract class Schedulable extends StrictEventEmitter<{ remove: [] }> {
     return this.time + this.duration;
   }
 
-  public remove() {
+  public schedule(transport: Audio.Transport) {
+    this.controller = this.add(transport);
+  }
+
+  public removeNoHistory() {
     if (this.controller) {
       this.controller.remove();
       this.emit('remove');
     }
   }
 
-  public schedule(transport: Audio.Transport) {
-    this.controller = this.add(transport);
+  public remove() {
+    history.execute({
+      execute: () => {
+        this.removeNoHistory();
+      },
+      undo: () => {
+        if (this.controller) {
+          this.controller.undoRemove();
+          this.emit('undoRemove');
+        }
+      },
+
+    });
   }
 
   public dispose() {
-    this.remove();
+    this.removeNoHistory();
     super.dispose();
   }
 

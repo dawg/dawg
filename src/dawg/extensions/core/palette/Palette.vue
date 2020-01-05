@@ -18,6 +18,7 @@
       <dg-text-field
         class="m-2"
         v-model="state.searchText"
+        :placeholder="state.placeholder"
         focus
         @click="stopPropogation"
       ></dg-text-field>
@@ -56,12 +57,16 @@ export default createComponent({
       show: boolean;
       items: PaletteItem[];
       searchText: string;
+      placeholder?: string;
       selected: number;
+      mode: 'select' | 'input';
     }>({
       show: false,
       items: [],
       searchText: '',
       selected: 0,
+      placeholder: '',
+      mode: 'select',
     });
 
     const tokenized = computed(() => {
@@ -91,16 +96,28 @@ export default createComponent({
 
     onMounted(() => {
       paletteEvents.on('show', show);
+      paletteEvents.on('showTextField', showTextField);
     });
 
     onUnmounted(() => {
       paletteEvents.removeListener('show', show);
+      paletteEvents.removeListener('showTextField', showTextField);
     });
 
+    const showTextField = (opts: PaletteOptions = {}) => {
+      state.mode = 'input';
+      state.items = [];
+      state.show = true;
+      state.searchText = '';
+      state.placeholder = opts.placeholder;
+    };
+
     function show(items: PaletteItem[], opts: PaletteOptions = {}) {
+      state.mode = 'select';
       state.items = items;
       state.show = true;
       state.searchText = '';
+      state.placeholder = opts.placeholder;
     }
 
     function open() {
@@ -130,6 +147,12 @@ export default createComponent({
       }
 
       if (e.which === 13) { // ENTER
+        if (state.mode === 'input') {
+          state.show = false;
+          paletteEvents.emit('select', state.searchText);
+          return;
+        }
+
         const item = filtered.value[state.selected];
         if (!item) {
           return;

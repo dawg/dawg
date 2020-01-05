@@ -19,7 +19,7 @@ export type IPlaylist = t.TypeOf<typeof PlaylistType>;
 /**
  * The possible elements that can be scheduled on a playlist.
  */
-type PlaylistElements = ScheduledPattern | ScheduledSample | ScheduledAutomation;
+export type PlaylistElements = ScheduledPattern | ScheduledSample | ScheduledAutomation;
 
 export class Playlist implements Serializable<IPlaylist> {
   /**

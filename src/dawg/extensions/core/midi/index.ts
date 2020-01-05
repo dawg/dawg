@@ -60,12 +60,12 @@ export const extension: Extension = {
       if (selectedScore.value) {
         const note = new Note(selectedScore.value.instrument, {
           row: keyLookup[e.note.name + e.note.octave].id,
-          duration: noteDuration / 1000 / 60 * project.project.bpm,
+          duration: noteDuration / 1000 / 60 * project.bpm.value,
           time: noteStartTime,
           velocity: noteOn.rawVelocity,
         });
 
-        selectedScore.value.notes.push(note);
+        selectedScore.value.notes.add(note);
 
         if (patterns.selectedPattern.value) {
           note.schedule(transport);

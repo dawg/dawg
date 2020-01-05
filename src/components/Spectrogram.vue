@@ -7,7 +7,6 @@
 </template>
 
 <script lang="ts">
-import Tone from 'tone';
 import tinycolor from 'tinycolor2';
 import * as Audio from '@/modules/audio';
 import { computed, onUnmounted, createComponent, ref } from '@vue/composition-api';
@@ -23,11 +22,7 @@ export default createComponent({
     let ctx: CanvasRenderingContext2D | null = null;
     const analyserNode = Audio.context.createAnalyser();
     const analyserData = new Uint8Array(512);
-    const output = (Tone.Master as any).output as AudioNode;
-
-    // function $refs!: {
-    //   canvas: HTMLCanvasElement;
-    // };
+    const output = Audio.MasterAudioNode;
 
     const tiny = computed(() => {
       return tinycolor(props.color);

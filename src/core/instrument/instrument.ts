@@ -34,9 +34,9 @@ export abstract class Instrument<T, V extends string> {
   public abstract types: V[];
 
   public channel?: number;
+  public destination: Tone.AudioNode | null = Tone.Master;
 
   protected source: Audio.Source<T> | null;
-  private destination: Tone.AudioNode | null = Tone.Master;
   private muted: boolean;
   // tslint:disable-next-line:member-ordering
   private panner = new Tone.Panner().toMaster();

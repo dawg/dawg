@@ -2,6 +2,7 @@ import { manager } from '@/base/manager';
 import { ipcRenderer } from '@/ipc';
 import { Command } from '@/dawg/extensions/core/commands';
 import { uniqueId } from '@/utils';
+import { menuBarCallbacks } from '@/ipcRenderer';
 
 interface SubMenu {
   name: string;
@@ -20,13 +21,6 @@ interface SubMenu {
 //   this.menuItems.save,
 //   this.menuItems.saveAs,
 // ],
-
-const callbacks: { [k: string]: () => void | undefined } = {};
-
-ipcRenderer.on('menuBarCallback', (_, uniqueEvent) => {
-  const callback = callbacks[uniqueEvent];
-  callback();
-});
 
 export type Menu = SubMenu[];
 type MenuNames = 'File' | 'Edit' | 'View' | 'Help';
@@ -52,7 +46,7 @@ export const menubar = manager.activate({
       }
 
       const uniqueEvent = uniqueId();
-      callbacks[uniqueEvent] = item.callback;
+      menuBarCallbacks[uniqueEvent] = item.callback;
 
       return {
         menu,
@@ -73,7 +67,7 @@ export const menubar = manager.activate({
             return {
               dispose() {
                 ipcRenderer.send('removeFromMenuBar', electronItem);
-                delete callbacks[electronItem.uniqueEvent];
+                delete menuBarCallbacks[electronItem.uniqueEvent];
               },
             };
           },

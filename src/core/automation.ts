@@ -2,7 +2,6 @@ import * as t from '@/modules/io';
 import { PointType, IPoint, Point } from '@/core/automation/point';
 import uuid from 'uuid';
 import * as Audio from '@/modules/audio';
-import { toTickTime } from '@/utils';
 import { Serializable } from '@/core/serializable';
 import { Channel } from '@/core/channel';
 import { Instrument } from '@/core/instrument/instrument';
@@ -90,7 +89,7 @@ export class AutomationClip implements Serializable<IAutomation> {
 
   public setTime(index: number, time: Beats) {
     const point = this.points[index];
-    this.control.setTime(point.eventId, toTickTime(time));
+    this.control.setTime(point.eventId, time);
     this.points[index].time = time;
   }
 
@@ -119,7 +118,7 @@ export class AutomationClip implements Serializable<IAutomation> {
   }
 
   private schedule(iPoint: IPoint) {
-    const eventId = this.control.add(toTickTime(iPoint.time), iPoint.value);
+    const eventId = this.control.add(iPoint.time, iPoint.value);
     const point = new Point(iPoint, eventId);
     return point;
   }

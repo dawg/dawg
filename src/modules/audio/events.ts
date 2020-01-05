@@ -4,6 +4,8 @@ export interface Events {
   [name: string]: any[];
 }
 
+type EventListeners<E extends Events> = { [K in keyof E]: (...args: E[K]) => void };
+
 type GenericListener = (...args: any[]) => void;
 
 export class StrictEventEmitter<E extends Events> {
@@ -11,6 +13,24 @@ export class StrictEventEmitter<E extends Events> {
 
   public addListener<T extends keyof E & string>(event: T, listener: (...args: E[T]) => void) {
     return this.on(event, listener as GenericListener);
+  }
+
+  public addListeners(listeners: Partial<EventListeners<E>>) {
+    const disposers = Object.entries(listeners).map(([event, listener]) => {
+      if (listener) {
+        return this.on(event, listener);
+      }
+    });
+
+    return {
+      dispose: () => {
+        disposers.forEach((disposer) => {
+          if (disposer) {
+            disposer.dispose();
+          }
+        });
+      },
+    };
   }
 
   public on<T extends keyof E & string>(event: T, listener: (...args: E[T]) => void) {

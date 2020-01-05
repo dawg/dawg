@@ -47,7 +47,6 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import Tone from 'tone';
 import path from 'path';
 import { Keys } from '@/utils';
 import { Component, Prop } from 'vue-property-decorator';

@@ -1,4 +1,4 @@
-import Tone from 'tone';
+import * as Audio from '@/modules/audio';
 
 export function loadFromUrl(url: string) {
   const request = new XMLHttpRequest();
@@ -8,7 +8,7 @@ export function loadFromUrl(url: string) {
   return new Promise<AudioBuffer>((resolve, reject) => {
     request.onreadystatechange = () => {
       if (request.readyState === 4 && request.status === 200) {
-        Tone.context.decodeAudioData(request.response).then((buff) => {
+        Audio.context.decodeAudioData(request.response).then((buff) => {
           resolve(buff);
         });
       }

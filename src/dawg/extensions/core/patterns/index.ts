@@ -13,7 +13,7 @@ export const patterns = manager.activate({
     const selectedPatternId = ref<null | string>(null);
 
     const patternLookup = computed(() => {
-      return makeLookup(project.project.patterns);
+      return makeLookup(project.patterns);
     });
 
     const selectedPattern = computed(() => {
@@ -55,8 +55,8 @@ export const patterns = manager.activate({
       setup: () => ({
         selectedPattern,
         setPattern,
-        patterns: project.project.patterns,
-        remove: (i: number) => project.project.removePattern(i),
+        patterns: project.patterns,
+        remove: (i: number) => project.removePattern(i),
       }),
     }));
 
@@ -68,7 +68,7 @@ export const patterns = manager.activate({
         icon: ref('add'),
         tooltip: ref('Add Pattern'),
         callback: () => {
-          project.project.addPattern();
+          project.addPattern();
         },
       }],
     });

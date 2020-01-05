@@ -107,7 +107,7 @@ const extension = createExtension({
       callback: () => {
         const currentThemeName = context.workspace.theme.value;
         palette.selectFromStrings(themeNames, {
-          onDidSelect: (themeName) => {
+          onDidInput: (themeName) => {
             context.workspace.theme.value = themeName;
             insertTheme(themeName);
           },

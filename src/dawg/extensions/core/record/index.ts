@@ -15,28 +15,12 @@ import { ref, watch } from '@vue/composition-api';
 import { manager } from '@/base/manager';
 import { project } from '@/dawg/extensions/core/project';
 import { applicationContext } from '@/dawg/extensions/core/application-context';
-import { positionable } from '@/modules/sequencer/helpers';
-import GH from '@/dawg/extensions/core/record/ChunkGhost.vue';
+import ChunkGhostComponent from '@/dawg/extensions/core/record/ChunkGhost.vue';
 import { ui } from '@/base/ui';
-
-const ChunkGhostComponent = positionable(GH);
+import { blobsToAudioBuffer } from '@/modules/converter';
 
 export const DOCUMENTS_PATH = remote.app.getPath('documents');
 export const RECORDING_PATH = path.join(DOCUMENTS_PATH, remote.app.getName(), 'recordings');
-
-function blobsToAudioBuffer(blobs: Blob[]): Promise<AudioBuffer> {
-  const reader = new FileReader();
-  return new Promise<AudioBuffer>((resolve) => {
-    reader.onload = (event) => {
-      const buffer = reader.result as ArrayBuffer;
-      Audio.context.decodeAudioData(buffer).then((decodedBuffer) => {
-        resolve(decodedBuffer);
-      });
-    };
-    const audioBlob = new Blob(blobs);
-    reader.readAsArrayBuffer(audioBlob);
-  });
-}
 
 function makeFileName() {
   const date = new Date();
@@ -73,7 +57,7 @@ export const extension = createExtension({
     const startRecording = async (trackId: number) => {
       project.stopIfStarted();
       applicationContext.context.value = 'playlist';
-      const time = project.project.master.transport.beat;
+      const time = project.master.transport.beat;
 
       if (microphoneIn === undefined) {
         notify.info('Please select a microphone from the settings.');
@@ -112,11 +96,11 @@ export const extension = createExtension({
         }
 
         audioBlobs.push(event.data);
-        ghost.buffer = await blobsToAudioBuffer(audioBlobs);
+        ghost.buffer = await blobsToAudioBuffer(Audio.context, audioBlobs);
       };
 
       mediaRecorder.onstop = async () => {
-        const buffer = await blobsToAudioBuffer(audioBlobs);
+        const buffer = await blobsToAudioBuffer(Audio.context, audioBlobs);
         const wavData: ArrayBuffer = audioBufferToWav(buffer, {
           sampleRate: buffer.sampleRate,
           float: true,
@@ -134,9 +118,9 @@ export const extension = createExtension({
 
         // add the file to the workspace
         // create a sample from the file.
-        const master = project.project.master;
+        const master = project.master;
         const sample = Sample.create(dst, buffer);
-        project.project.samples.push(sample);
+        project.samples.push(sample);
         const scheduled = new ScheduledSample(sample, {
           type: 'sample',
           sampleId: sample.id,
@@ -146,7 +130,7 @@ export const extension = createExtension({
         });
 
         scheduled.schedule(master.transport);
-        master.elements.push(scheduled);
+        master.elements.add(scheduled);
 
         recording.value = false;
       };

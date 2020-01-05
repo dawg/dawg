@@ -1,10 +1,11 @@
 import Tone from 'tone';
-import { TransportTime, Ticks } from '@/modules/audio/types';
+import { TransportTime, Ticks, Beat } from '@/modules/audio/types';
 import { Transport } from '@/modules/audio/transport';
 import { Signal } from '@/modules/audio';
+import * as Audio from '@/modules/audio';
 
 interface IAutomationEvent {
-  time: Tone.Time;
+  time: Audio.Beat;
   value: number;
   type: Tone.AutomationType;
 }
@@ -12,7 +13,7 @@ interface IAutomationEvent {
 export class AutomationEvent implements IAutomationEvent {
   public static eventId = 0;
 
-  public time: Tone.Time;
+  public time: Audio.Beat;
   public value: number;
   public type: Tone.AutomationType;
   public id = '' + AutomationEvent.eventId++;
@@ -72,9 +73,9 @@ export class Controller extends Tone.Signal {
     }
   }
 
-  public add(time: TransportTime, value: number) {
+  public add(time: Beat, value: number) {
     const event = new AutomationEvent({
-      time: new Tone.Time(time),
+      time: Audio.Context.beatsToTicks(time),
       value,
       type: 'linearRampToValueAtTime',
     });
@@ -89,10 +90,10 @@ export class Controller extends Tone.Signal {
     return this;
   }
 
-  public setTime(eventId: string, time: TransportTime) {
+  public setTime(eventId: string, time: Audio.Beat) {
     if (this.scheduledEvents.hasOwnProperty(eventId)) {
       const event = this.scheduledEvents[eventId];
-      event.time = new Tone.Time(time);
+      event.time = time;
     }
     return this;
   }

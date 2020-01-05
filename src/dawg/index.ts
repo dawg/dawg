@@ -4,7 +4,7 @@ export { commands } from '@/dawg/extensions/core/commands';
 export { busy } from '@/dawg/extensions/core/busy';
 export { theme } from '@/dawg/extensions/core/theme';
 export { project } from '@/dawg/extensions/core/project';
-export { menu, context } from '@/base/menu';
+export { menu, context } from '@/base';
 export { instruments } from '@/dawg/extensions/core/instruments';
 export { ui } from '@/base/ui';
 export { pianoRoll } from '@/dawg/extensions/core/piano-roll';
@@ -19,9 +19,9 @@ export { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 export { window } from '@/dawg/extensions/core/window';
 export { IExtensionContext, Extension, createExtension, Subscription } from '@/dawg/extensions';
 export { manager } from '@/base/manager';
-export { Key } from '@/base/keyboard';
+export { Key } from '@/keyboard';
 
-import * as platform from '@/base/platform';
+import * as platform from '@/platform';
 import * as events from '@/base/events';
 
 export {

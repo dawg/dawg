@@ -18,7 +18,6 @@ export const extension = createExtension({
   global: {
     folders: {
       type: t.array(t.string),
-      expose: false,
       default: [],
     },
   },
@@ -50,11 +49,6 @@ export const extension = createExtension({
       }
 
       folders.push(folder);
-
-      // FIXME
-      // the showFileDialog messes with the keyup events
-      // This is a temporary solution
-      dawg.commands.clear();
     };
 
     const openSample = (sample: Sample) => {
@@ -91,7 +85,7 @@ export const extension = createExtension({
             view[i] = value;
           });
 
-          return parser.parse(ab, dawg.project.project.bpm);
+          return parser.parse(ab, dawg.project.bpm.value);
         };
 
         let dispose: (() => void) | null = null;

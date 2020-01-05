@@ -345,7 +345,7 @@ export const manager = {
         const props = extensionProps[key];
         let decodedValue = decoded[key];
         if (decodedValue === undefined && isFieldOptions(props)) {
-          decodedValue = props.type;
+          decodedValue = props.default;
         }
 
         // FIXME remove these weird casts

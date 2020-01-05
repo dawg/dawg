@@ -11,8 +11,6 @@
 </template>
 
 <script lang="ts">
-
-import { Player } from 'tone';
 import { Nullable } from '@/utils';
 import * as base from '@/base';
 import { createComponent, computed } from '@vue/composition-api';

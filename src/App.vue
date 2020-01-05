@@ -210,7 +210,7 @@ export default class App extends Vue {
 
   // public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T & string) {
     // FIXME Fix automation clips
-    // const added = await ddd.project.project.createAutomationClip({
+    // const added = await ddd.project.createAutomationClip({
     //   automatable,
     //   key,
     //   start: this.masterStart,

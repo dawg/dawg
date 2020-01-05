@@ -1,8 +1,9 @@
-import Tone from 'tone';
 import { Timeline } from '@/modules/audio/timeline';
-import { ContextTime, Time, Ticks, Seconds, Beat } from '@/modules/audio/types';
-import { Context, context } from '@/modules/audio/context';
+import { ContextTime, Ticks, Seconds, Beat } from '@/modules/audio/types';
+import { Context } from '@/modules/audio/context';
 import { watch } from '@vue/composition-api';
+import { Clock } from '@/modules/audio/clock';
+import { StrictEventEmitter } from '@/modules/audio/events';
 
 interface EventContext {
   seconds: ContextTime;
@@ -32,9 +33,10 @@ export interface TransportEventController {
   setStartTime(startTime: Beat): void;
   setDuration(duration: Beat): void;
   remove(): void;
+  undoRemove(): void;
 }
 
-export class Transport {
+export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: [] }> {
   private startPosition: Ticks = 0;
   private timeline = new Timeline<TransportEvent>();
   private active: TransportEvent[] = [];
@@ -44,17 +46,27 @@ export class Transport {
   private _loopStart: Ticks = 0;
   // tslint:disable-next-line:variable-name
   private _loopEnd: Ticks = 0;
-  private clock = new Tone.Clock({
+  private clock = new Clock({
     callback: this.processTick.bind(this),
     frequency: 0,
   });
+  private disposer: () => void;
 
   constructor() {
+    super();
     // FIXME Maybe all of the clocks could share one "ticker"?? IDK? Then we wouldn't have to "watch" the BBM
     // Note, this will run automatically
     watch(Context.BPM, () => {
       this.clock.frequency.value = 1 / (60 / Context.BPM.value / Context.PPQ);
     });
+
+    const pause = this.clock.on('stopped', (o) => {
+      this.checkOnEndEventsAndResetActive(o);
+    });
+
+    this.disposer = () => {
+      pause.dispose();
+    };
   }
 
   /**
@@ -100,18 +112,19 @@ export class Transport {
       if (startTime === current) {
         if (event.onStart) {
           event.onStart({
-            seconds: context.currentTime,
+            seconds: Context.now(),
             ticks: this.clock.ticks,
           });
         }
       } else {
         this.checkMidStart(event, {
-          seconds: context.currentTime,
+          seconds: Context.now(),
           ticks: this.clock.ticks,
         });
       }
     };
 
+    let added = true;
     return {
       setStartTime: (startTime: Beat) => {
         startTime = Context.beatsToTicks(startTime);
@@ -128,7 +141,13 @@ export class Transport {
         checkNowActive();
       },
       remove: () => {
+        if (!added) {
+          return;
+        }
+
         this.timeline.remove(event);
+        added = false;
+
         if (!this.active) {
           return;
         }
@@ -138,12 +157,22 @@ export class Transport {
           if (event.onEnd) {
             event.onEnd({
               ticks: this.clock.ticks,
-              seconds: context.currentTime,
+              seconds: Context.now(),
             });
           }
 
           this.active.splice(i, 1);
         }
+      },
+      undoRemove: () => {
+        if (added) {
+          return;
+        }
+
+        this.timeline.add(event);
+        added = true;
+
+        checkNowActive();
       },
     };
   }
@@ -179,48 +208,35 @@ export class Transport {
    * Pause playback.
    */
   public pause() {
-    const seconds = context.currentTime;
-    this.clock.pause(seconds);
-    this.checkOnEndEventsAndResetActive({
-      seconds,
-      ticks: this.clock.ticks,
-    });
+    this.clock.pause();
   }
 
   /**
    * Stop playback and return to the beginning.
    */
   public stop() {
-    const seconds = context.currentTime;
-    this.clock.stop(seconds);
-    this.checkOnEndEventsAndResetActive({
-      seconds,
-      ticks: this.clock.ticks,
-    });
+    this.clock.stop();
     this.ticks = this.startPosition;
   }
 
-  get loopStart() {
-    return new Tone.Ticks(this._loopStart).toSeconds();
+  public dispose() {
+    this.disposer();
   }
 
-  set loopStart(loopStart: Ticks) {
-    this._loopStart = loopStart * Context.PPQ;
-    this.ticks = loopStart * Context.PPQ;
+  get loopStart() {
+    return this._loopStart / Context.PPQ;
+  }
+
+  set loopStart(loopStart: Beat) {
+    this.ticks = this._loopStart = loopStart * Context.PPQ;
   }
 
   get seconds() {
     return this.clock.seconds;
   }
 
-  set seconds(s: number) {
-    const now = context.currentTime;
-    const ticks = this.clock.frequency.timeToTicks(s, now);
-    this.ticks = ticks.toTicks();
-  }
-
   get loopEnd() {
-    return this._loopEnd;
+    return this._loopEnd / Context.PPQ;
   }
 
   set loopEnd(loopEnd: Beat) {
@@ -231,10 +247,9 @@ export class Transport {
     return this.clock.ticks;
   }
 
-
   set ticks(t: number) {
     if (this.clock.ticks !== t) {
-      const now = context.currentTime;
+      const now = Context.now();
       // stop everything synced to the transport
       if (this.state === 'started') {
         // restart it with the new time
@@ -260,17 +275,7 @@ export class Transport {
   }
 
   public getProgress() {
-    const now = context.currentTime;
-    const ticks = this.clock.getTicksAtTime(now);
-    return (ticks - this._loopStart) / (this._loopEnd - this._loopStart);
-  }
-
-  public getTicksAtTime(time: number) {
-    return Math.round(this.clock.getTicksAtTime(time));
-  }
-
-  public getSecondsAtTime(time: Time) {
-    return this.clock.getSecondsAtTime(time);
+    return (this.ticks - this._loopStart) / (this._loopEnd - this._loopStart);
   }
 
   private checkMidStart(event: TransportEvent, c: EventContext) {
@@ -296,6 +301,7 @@ export class Transport {
 
   private processTick(seconds: ContextTime, ticks: Ticks, isChild = false) {
     if (!isChild && ticks >= this._loopEnd) {
+      this.emit('beforeEnd');
       this.checkOnEndEventsAndResetActive({ seconds, ticks });
       this.clock.setTicksAtTime(this._loopStart, seconds);
       ticks = this._loopStart;
@@ -303,6 +309,8 @@ export class Transport {
     }
 
     if (this.isFirstTick) {
+      this.emit('beforeStart');
+
       // The upper bound is exclusive but we don't care about checking about events that haven't started yet.
       this.timeline.forEachBetween(0, ticks, (event) => {
         if (event.time + event.duration < ticks) {

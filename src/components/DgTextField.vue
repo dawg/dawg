@@ -20,6 +20,7 @@
     :value="value"
     @input="input"
     @click="click"
+    :placeholder="placeholder"
   >
 </template>
 
@@ -31,7 +32,8 @@ export default createComponent({
   props: {
     value: { type: String, required: false },
     label: { type: String, required: false },
-    focus: { type: String, required: false },
+    placeholder: { type: String, required: false },
+    focus: { type: Boolean, required: false },
   },
   setup(props, context) {
     const el = ref<HTMLInputElement>(null);

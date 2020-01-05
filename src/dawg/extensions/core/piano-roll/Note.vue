@@ -1,5 +1,5 @@
 <template>
-  <div class="note bg-primary">
+  <div class="note bg-primary h-full">
     <div 
       class="body"
       v-on="$listeners"

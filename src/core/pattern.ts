@@ -48,16 +48,6 @@ export class Pattern implements Serializable<IPattern> {
     this.scores.forEach((score) => score.dispose());
   }
 
-  public removeScores(condition: (score: Score) => boolean) {
-    const scores = this.scores.slice(0).reverse();
-    scores.forEach((score, i) => {
-      if (condition(score)) {
-        score.dispose();
-        scores.splice(i, 1);
-      }
-    });
-  }
-
   public serialize() {
     return {
       name: this.name,
