@@ -1,6 +1,6 @@
 <template>
   <div class="whitespace-no-wrap flex bg-default-lighten-4 h-full">
-    <vue-perfect-scrollbar style="w-full h-full">
+    <div style="w-full h-full overflow-y-scroll">
       <channel
         v-for="(channel, i) in channels"
         :key="i"
@@ -11,7 +11,7 @@
         @delete="deleteEffect(channel, $event)"
         @select="openEffect"
       ></channel>
-    </vue-perfect-scrollbar>
+    </div>
     <effect 
       v-if="openedEffect"
       :effect="openedEffect"

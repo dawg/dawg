@@ -29,11 +29,11 @@
             </dg-button>
             <dg-mat-icon class="text-sm cursor-pointer" @click="destroy(i)" icon="close"></dg-mat-icon>
           </div>
-          <vue-perfect-scrollbar
+          <div
             v-if="item.text"
             class="notification-content"
             v-html="parse(item.text)"
-          ></vue-perfect-scrollbar>
+          ></div>
         </div>
       </div>
     </transition-group>
@@ -69,6 +69,8 @@ interface NotificationItem {
   type: string;
   id: number;
   icon: string;
+  text?: string;
+  title: string;
 }
 
 @Component
@@ -261,6 +263,7 @@ export default class Notifications extends Vue {
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   padding: 5px;
   max-height: 150px;
+  overflow-y: scroll;
 }
 
 .close-all {

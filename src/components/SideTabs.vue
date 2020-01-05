@@ -15,17 +15,17 @@
         @click="action.callback"
       ></dg-mat-icon>
     </div>
-    <vue-perfect-scrollbar class="scrollbar" style="height: 100%">
+    <div class="h-full overflow-y-scroll">
       <base-tabs
         ref="tabs"
-        :selected-tab.sync="base.ui.openedSideTab.value"
+        :selected-tab.sync="openedSideTab"
         :first="base.ui.activityBar[0] ? base.ui.activityBar[0].name : undefined"
       >
         <tab
           v-for="tab in base.ui.activityBar"
           :key="tab.name"
           :name="tab.name"
-          :selected-tab="base.ui.openedSideTab.value"
+          :selected-tab="openedSideTab"
         >
           <component
             :is="tab.component"
@@ -33,7 +33,7 @@
         </tab>
 
       </base-tabs>
-    </vue-perfect-scrollbar>
+    </div>
   </div>
 </template>
 
@@ -89,6 +89,7 @@ export default createComponent({
       actions,
       header,
       headerStyle,
+      openedSideTab: base.ui.openedSideTab,
     };
   },
 });
@@ -102,9 +103,6 @@ export default createComponent({
 
 .section-header
   padding: 0 20px
-
-.scrollbar >>> .ps__scrollbar-y-rail
-  background-color: transparent
 
 .aside--title
   user-select: none
