@@ -3,8 +3,8 @@ import { Ref } from '@vue/composition-api';
 export interface File {
   type: 'file';
   parent: Folder | null;
+  index: number;
   path: string;
-  isExpanded: Ref<boolean>;
   isSelected: Ref<boolean>;
   value: string;
 }
@@ -12,12 +12,11 @@ export interface File {
 export interface Folder {
   type: 'folder';
   parent: Folder | null;
+  index: number;
   path: string;
   isExpanded: Ref<boolean>;
   isSelected: Ref<boolean>;
-  children: {
-    [fullPath: string]: Folder | File,
-  };
+  children: Array<Folder | File>;
 }
 
 export type Extension = 'wav' | 'midi' | 'mid';
@@ -29,8 +28,7 @@ export interface ExtensionData<T, V = T> {
   load: (path: string) => T | Promise<T>;
   iconComponent: string;
   createTransferData?: (item: T) => V;
-  preview?: (item: T) => void;
-  stopPreview?: (item: T) => void;
+  preview?: (item: T) => { dispose: () => void };
   open?: (item: T) => void;
 }
 

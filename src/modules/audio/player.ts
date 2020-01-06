@@ -30,7 +30,6 @@ export class Player extends Tone.AudioNode {
   }
 
   public preview(o?: { onended?: () => void }) {
-    console.log('Starting souce');
     const source = this.createSource(o);
     source.start(Context.now(), 0);
     return source;

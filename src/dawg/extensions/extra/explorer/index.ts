@@ -88,7 +88,6 @@ export const extension = createExtension({
           return parser.parse(ab, dawg.project.bpm.value);
         };
 
-        let dispose: (() => void) | null = null;
         const extensions: Extensions = {
           wav: {
             dragGroup: 'arranger',
@@ -102,17 +101,16 @@ export const extension = createExtension({
               return ScheduledSample.create(sample);
             },
             preview: (sample: Sample) => {
-              console.log(sample);
               const result = sample.preview();
               if (result.started) {
-                dispose = result.dispose;
+                return result;
               }
-            },
-            stopPreview: () => {
-              if (dispose) {
-                dispose();
-                dispose = null;
-              }
+
+              return {
+                dispose: () => {
+                  //
+                },
+              };
             },
             open: openSample,
           },

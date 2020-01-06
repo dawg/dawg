@@ -59,14 +59,15 @@ export default class FileEplorer extends Vue {
     return new Set(Object.keys(this.extensions).map((ext) => ext.toLowerCase()));
   }
 
-  public async computeFileTree(dir: string, parent: Folder | null): Promise<Folder> {
+  public async computeFileTree(dir: string, parent: Folder | null, index: number): Promise<Folder> {
     const tree: Folder = {
       type: 'folder',
-      parent: null,
+      parent,
+      index,
       path: dir,
       isExpanded: ref(false),
       isSelected: ref(false),
-      children: {},
+      children: [],
     };
 
     // items = folders and files
@@ -78,23 +79,27 @@ export default class FileEplorer extends Vue {
       return tree;
     }
 
+    let i = 0;
     for (const item of items) {
       const fullPath = path.join(dir, item);
       const stat = await fs.stat(fullPath);
       if (stat.isFile()) {
         if (this.checkExtension(item)) {
-          tree.children[fullPath] = {
+          tree.children.push({
             type: 'file',
-            parent,
+            parent: tree,
+            index: i,
             path: fullPath,
-            isExpanded: ref(false),
             isSelected: ref(false),
             value: fullPath,
-          };
+          });
+          i++;
         }
       } else {
-        tree.children[fullPath] = await this.computeFileTree(fullPath, tree);
+        tree.children.push(await this.computeFileTree(fullPath, tree, i));
+        i++;
       }
+
     }
     return tree;
   }
@@ -126,32 +131,126 @@ export default class FileEplorer extends Vue {
         break;
       }
 
-      item = item.children[currentPath];
+      const newItem: File | Folder | undefined = item.children.find((child) => child.path === currentPath);
+      if (!newItem) {
+        return;
+      }
+
+      item = newItem;
     }
 
     if (this.currentSelection) {
       this.currentSelection.isSelected.value = false;
     }
 
+    // TODO transform to watcher so you only have to set
     item.isSelected.value = true;
+    this.currentSelection = item;
   }
 
   public keydown(event: KeyboardEvent) {
+    const item = this.currentSelection;
+    if (!item) {
+      return;
+    }
+
     if (event.keyCode === Keys.DOWN) {
-      // this.bus.$emit('down', event);
-    }
+      if (item.type === 'folder' && item.isExpanded.value) {
+        const firstChild = item.children[0];
+        if (firstChild) {
+          this.currentSelection = firstChild;
+          firstChild.isSelected.value = true;
+          item.isSelected.value = false;
+          return;
+        }
+      }
 
-    if (event.keyCode === Keys.RIGHT) {
-      // this.bus.$emit('right', event);
-    }
+      const findNext = (tree: File | Folder): File | Folder | null => {
+        if (tree.parent === null) {
+          // nowhere left to go
+          return null;
+        }
 
+        if (tree.index === tree.parent.children.length - 1) {
+          return findNext(tree.parent);
+        }
 
-    if (event.keyCode === Keys.LEFT) {
-      // this.bus.$emit('left', event);
+        return tree.parent.children[tree.index + 1];
+      };
+
+      const toSelect = findNext(item);
+      if (!toSelect) {
+        return;
+      }
+
+      if (toSelect) {
+        this.currentSelection = toSelect;
+        toSelect.isSelected.value = true;
+        item.isSelected.value = false;
+      }
     }
 
     if (event.keyCode === Keys.UP) {
-      // this.bus.$emit('up', event);
+      if (item.index === 0) {
+        if (item.parent === null) {
+          return;
+        }
+
+        item.parent.isSelected.value = true;
+        item.isSelected.value = false;
+        this.currentSelection = item.parent;
+        return;
+      }
+
+      const getLast = (tree: File | Folder): File | Folder => {
+        if (tree.type === 'file') {
+          return tree;
+        }
+
+        if (!tree.isExpanded.value) {
+          return tree;
+        }
+
+        if (tree.children.length === 0) {
+          return tree;
+        }
+
+        return getLast(tree.children[tree.children.length - 1]);
+      };
+
+      if (item.parent === null) {
+        // This condition should never be true
+        return;
+      }
+
+      const sibling = item.parent.children[item.index - 1];
+      const last = getLast(sibling);
+
+      last.isSelected.value = true;
+      item.isSelected.value = false;
+      this.currentSelection = last;
+    }
+
+    if (item.type === 'file') {
+      return;
+    }
+
+    if (event.keyCode === Keys.RIGHT) {
+      if (!item.isExpanded.value) {
+        item.isExpanded.value = true;
+      }
+    }
+
+    if (event.keyCode === Keys.LEFT) {
+      if (item.isExpanded.value) {
+        item.isExpanded.value = false;
+      } else {
+        if (item.parent !== null) {
+          item.isSelected.value = false;
+          item.parent.isSelected.value = true;
+          this.currentSelection = item.parent;
+        }
+      }
     }
   }
 
@@ -190,7 +289,7 @@ export default class FileEplorer extends Vue {
         this.setTrees();
       }));
 
-      this.trees.push([folder, await this.computeFileTree(folder, null)]);
+      this.trees.push([folder, await this.computeFileTree(folder, null, 0)]);
     });
   }
 }
