@@ -1,7 +1,23 @@
-import { Bus } from '@/modules/update';
+import { Ref } from '@vue/composition-api';
 
-export interface FileTree {
-  [fullPath: string]: FileTree | string;
+export interface File {
+  type: 'file';
+  parent: Folder | null;
+  path: string;
+  isExpanded: Ref<boolean>;
+  isSelected: Ref<boolean>;
+  value: string;
+}
+
+export interface Folder {
+  type: 'folder';
+  parent: Folder | null;
+  path: string;
+  isExpanded: Ref<boolean>;
+  isSelected: Ref<boolean>;
+  children: {
+    [fullPath: string]: Folder | File,
+  };
 }
 
 export type Extension = 'wav' | 'midi' | 'mid';
@@ -21,5 +37,3 @@ export interface ExtensionData<T, V = T> {
 export interface Extensions {
   [k: string]: ExtensionData<any, any>;
 }
-
-export type EventBus = Bus<{ up: [KeyboardEvent], down: [KeyboardEvent], dblclick: [MouseEvent] }>;

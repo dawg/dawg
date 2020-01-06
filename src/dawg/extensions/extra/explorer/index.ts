@@ -102,6 +102,7 @@ export const extension = createExtension({
               return ScheduledSample.create(sample);
             },
             preview: (sample: Sample) => {
+              console.log(sample);
               const result = sample.preview();
               if (result.started) {
                 dispose = result.dispose;

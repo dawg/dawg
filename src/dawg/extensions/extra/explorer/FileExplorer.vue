@@ -1,15 +1,15 @@
 <template>
   <div v-if="trees.length">
     <tree
-      refs="trees"
-      v-for="(project, i) in trees"
-      :key="project[0]"
-      :path="project[0]"
-      :tree="project[1]"
+      ref="trees"
+      v-for="(items, i) in trees"
+      :key="items[0]"
+      :path="items[0]"
+      :item="items[1]"
       :index="i"
-      :bus="bus"
       :extensions="extensions"
-      @contextmenu.native="context(project[0], $event)"
+      @contextmenu.native="context(items[0], $event)"
+      @select="select(items[0], items[1], $event)"
     ></tree>
   </div>
   <div v-else class="flex flex-col py-5 px-6">
@@ -29,11 +29,12 @@ import { ipcRenderer } from 'electron';
 import fs, { FSWatcher } from '@/fs';
 import os from 'os';
 import path from 'path';
-import { Extensions, FileTree, EventBus } from '@/dawg/extensions/extra/explorer/types';
+import { Extensions, Folder, File } from '@/dawg/extensions/extra/explorer/types';
 import { Watch, Bus } from '@/modules/update';
 import { Keys } from '@/utils';
 import Tree from '@/dawg/extensions/extra/explorer/Tree.vue';
 import * as dawg from '@/dawg';
+import { ref } from '@vue/composition-api';
 
 @Component({
   components: { Tree },
@@ -50,25 +51,31 @@ export default class FileEplorer extends Vue {
    */
   @Prop({ type: Object, required: true }) public extensions!: Extensions;
 
-  public trees: Array<[string, FileTree]> = [];
+  public trees: Array<[string, Folder]> = [];
   public watchers: FSWatcher[] = [];
-
-  // Event bus to set up/down events
-  public bus: EventBus = new Bus();
+  public currentSelection: File | Folder | null = null;
 
   get extensionSet() {
     return new Set(Object.keys(this.extensions).map((ext) => ext.toLowerCase()));
   }
 
-  public async computeFileTree(dir: string): Promise<FileTree> {
-    const tree: FileTree = {};
+  public async computeFileTree(dir: string, parent: Folder | null): Promise<Folder> {
+    const tree: Folder = {
+      type: 'folder',
+      parent: null,
+      path: dir,
+      isExpanded: ref(false),
+      isSelected: ref(false),
+      children: {},
+    };
 
     // items = folders and files
     let items: string[];
     try {
       items = await fs.readdir(dir);
     } catch (e) {
-      return {};
+      // UHH TODO should we do this?
+      return tree;
     }
 
     for (const item of items) {
@@ -76,10 +83,17 @@ export default class FileEplorer extends Vue {
       const stat = await fs.stat(fullPath);
       if (stat.isFile()) {
         if (this.checkExtension(item)) {
-          tree[fullPath] = fullPath;
+          tree.children[fullPath] = {
+            type: 'file',
+            parent,
+            path: fullPath,
+            isExpanded: ref(false),
+            isSelected: ref(false),
+            value: fullPath,
+          };
         }
       } else {
-        tree[fullPath] = await this.computeFileTree(fullPath);
+        tree.children[fullPath] = await this.computeFileTree(fullPath, tree);
       }
     }
     return tree;
@@ -95,20 +109,50 @@ export default class FileEplorer extends Vue {
     this.$emit('open-explorer');
   }
 
-  public keyup(event: KeyboardEvent) {
-    if (event.keyCode !== Keys.UP) {
-      return;
+  public select(startPath: string, folder: Folder, fullPath: string) {
+    const startParts = startPath.split(path.sep);
+    const fullParts = fullPath.split(path.sep);
+    const endParts = fullParts.slice(startParts.length);
+
+    let currentPath = startPath;
+    let item: Folder | File = folder;
+    for (const part of endParts) {
+      if (part) {
+        currentPath = path.join(currentPath, part);
+      }
+
+      if (item.type === 'file') {
+        // I don't think we will ever hit this
+        break;
+      }
+
+      item = item.children[currentPath];
     }
 
-    this.bus.$emit('up', event);
+    if (this.currentSelection) {
+      this.currentSelection.isSelected.value = false;
+    }
+
+    item.isSelected.value = true;
   }
 
   public keydown(event: KeyboardEvent) {
-    if (event.keyCode !== Keys.DOWN) {
-      return;
+    if (event.keyCode === Keys.DOWN) {
+      // this.bus.$emit('down', event);
     }
 
-    this.bus.$emit('down', event);
+    if (event.keyCode === Keys.RIGHT) {
+      // this.bus.$emit('right', event);
+    }
+
+
+    if (event.keyCode === Keys.LEFT) {
+      // this.bus.$emit('left', event);
+    }
+
+    if (event.keyCode === Keys.UP) {
+      // this.bus.$emit('up', event);
+    }
   }
 
   public context(folder: string, event: MouseEvent) {
@@ -125,12 +169,10 @@ export default class FileEplorer extends Vue {
 
   public mounted() {
     window.addEventListener('keydown', this.keydown);
-    window.addEventListener('keyup', this.keyup);
   }
 
   public destroyed() {
     window.removeEventListener('keydown', this.keydown);
-    window.removeEventListener('keyup', this.keyup);
   }
 
   @Watch<FileEplorer>('folders', { immediate: true })
@@ -148,7 +190,7 @@ export default class FileEplorer extends Vue {
         this.setTrees();
       }));
 
-      this.trees.push([folder, await this.computeFileTree(folder)]);
+      this.trees.push([folder, await this.computeFileTree(folder, null)]);
     });
   }
 }

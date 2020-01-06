@@ -1,7 +1,7 @@
 <template>
   <div style="display: contents">
     <div 
-      @click="click" 
+      @click="$emit('select', path)"
       @mousedown="loadData"
       @dblclick="doubleClick"
       class="flex items-center hover-pointer py-1 px-2 hover:bg-default-lighten-2"
@@ -32,14 +32,14 @@
     <div v-if="showChildren">
       <tree
         ref="trees"
-        v-for="(folder, i) in folders"
-        :key="folder"
-        :path="folder"
-        :tree="tree[folder]"
+        v-for="(child, i) in children"
+        :key="child.path"
+        :path="child.path"
+        :item="child"
         :extensions="extensions"
-        :bus="bus"
         :depth="depth + 1"
         :index="i"
+        @click="$emit('select', $event)"
       ></tree>
     </div>
   </div>
@@ -50,12 +50,12 @@ import Vue from 'vue';
 import path from 'path';
 import { Keys } from '@/utils';
 import { Component, Prop } from 'vue-property-decorator';
-import { FileTree, EventBus, Extensions, Extension, ExtensionData } from '@/dawg/extensions/extra/explorer/types';
+import { Folder, File, Extensions, Extension, ExtensionData } from '@/dawg/extensions/extra/explorer/types';
 import { Watch } from '@/modules/update';
 
 @Component
 export default class Tree extends Vue {
-  @Prop({ type: [Object, String], required: true }) public tree!: FileTree | string;
+  @Prop({ type: [Object, String], required: true }) public item!: Folder | File;
 
   /**
    * The full path to folder or file.
@@ -66,11 +66,6 @@ export default class Tree extends Vue {
    * See the FileExplorer.
    */
   @Prop({ type: Object, required: true }) public extensions!: Extensions;
-
-  /**
-   * The event bus to communicate with the root.
-   */
-  @Prop({ type: Object, required: true }) public bus!: EventBus;
 
   /**
    * The depth. You don't need to set this as it will be set automatically.
@@ -119,21 +114,21 @@ export default class Tree extends Vue {
   }
 
   get isLeaf() {
-    return typeof this.tree === 'string';
+    return typeof this.item === 'string';
   }
 
-  get folders() {
-    if (this.isLeaf) {
+  get children() {
+    if (this.item.type === 'file') {
       // The folders attribute should never be used if this is a leaf.
       // If it is, and empty list will be returned.
       return [];
     } else {
-      return Object.keys(this.tree);
+      return this.item.children;
     }
   }
 
   get nodeClass() {
-    return this.isSelected ? 'bg-default-lighten-1' : '';
+    return this.item.isSelected.value ? 'bg-default-lighten-1' : '';
   }
 
   get fileName() {
@@ -218,9 +213,33 @@ export default class Tree extends Vue {
 
 
   public click() {
-    if (this.isLeaf) {
-      this.select(this.index);
-    } else {
+    const clear = (tree: Tree) => {
+      if (tree !== this && tree.isSelected) {
+        tree.isSelected = false;
+        return;
+      }
+
+      if (tree.isLeaf) {
+        return;
+      }
+
+      if (!tree.showChildren) {
+        return;
+      }
+
+      console.log(tree.path, tree.$refs.trees);
+      tree.$refs.trees.forEach(clear);
+    };
+
+    let root: Tree = this;
+    while (root.$parent.isLeaf !== undefined) {
+      root = root.$parent;
+    }
+
+    clear(root);
+
+    this.isSelected = true;
+    if (!this.isLeaf) {
       this.showChildren = !this.showChildren;
     }
   }
@@ -232,7 +251,7 @@ export default class Tree extends Vue {
 
     setTimeout(() => {
       // FIXME Remove this setTimeout
-      this.select(this.index + 1);
+      this.selectNext();
     }, 100);
   }
 
@@ -241,39 +260,144 @@ export default class Tree extends Vue {
       return;
     }
 
-    this.select(this.index - 1);
+    this.selectPrevious();
+  }
+
+  public left() {
+    if (!this.isSelected) {
+      return;
+    }
+
+    if (this.isLeaf) {
+      return;
+    }
+
+    if (this.showChildren) {
+      this.showChildren = false;
+    } else {
+      this.$parent.isSelected = true;
+      this.isSelected = false;
+    }
+  }
+
+  public right() {
+    if (!this.isSelected) {
+      return;
+    }
+
+    if (this.isLeaf) {
+      return;
+    }
+
+    if (!this.showChildren) {
+      this.showChildren = true;
+    }
   }
 
   public doubleClick(event: MouseEvent) {
     this.open(this.data);
   }
 
-  public async select(index: number) {
-    const trees = this.$parent.$refs.trees;
-    if (index < 0 || index >= trees.length) {
+  @Watch<Tree>('isSelected')
+  public async doSomeStuff(previouslySelected: boolean) {
+    if (!this.isLeaf) {
       return;
     }
 
-    if (!trees[index].isLeaf) {
-      return;
+    if (this.data === null) {
+      await this.loadData();
     }
 
-    trees.forEach(async (tree, i) => {
-      if (i === index) {
-        if (trees[i].data === null) {
-          await trees[i].loadData();
-        }
+    // TODO make sure previouslySelected works
+    if (previouslySelected && this.isSelected) {
+      this.stopPreview(this.data);
+      this.preview(this.data);
+    } else if (this.isSelected) {
+      this.preview(this.data);
+    } else {
+      this.stopPreview(this.data);
+    }
+  }
 
-        // If it's already selected, stop and start the preview
-        if (tree.isSelected) {
-          this.startAndStop();
-        }
-
-        tree.isSelected = true;
-      } else {
-        tree.isSelected = false;
+  public async selectPrevious() {
+    if (this.index === 0) {
+      if (this.$parent.isLeaf === undefined) {
+        return false;
       }
-    });
+
+      this.$parent.isSelected = true;
+      this.isSelected = false;
+
+      return true;
+    }
+
+    const getLast = (tree: Tree): Tree => {
+      if (tree.isLeaf) {
+        return tree;
+      }
+
+      if (!tree.showChildren) {
+        return tree;
+      }
+
+      if (tree.$refs.trees.length === 0) {
+        return tree;
+      }
+
+      return getLast(tree.$refs.trees[tree.$refs.trees.length - 1]);
+    };
+
+    const sibling = this.$parent.$refs.trees[this.index - 1];
+    const last = getLast(sibling);
+
+    last.isSelected = true;
+    this.isSelected = false;
+
+    return true;
+  }
+
+  public async selectNext() {
+    if (!this.isLeaf && this.showChildren) {
+      const firstChild = this.$refs.trees[0];
+      if (firstChild) {
+        firstChild.isSelected = true;
+        this.isSelected = false;
+        return true;
+      }
+    }
+
+    const findNext = (tree: Tree): Tree | null => {
+      if (tree.index === tree.$parent.$refs.trees.length - 1) {
+        if (tree.$parent.isLeaf === undefined) {
+          // nowhere left to go
+          return null;
+        }
+
+        return findNext(tree.$parent);
+      }
+
+      return tree.$parent.$refs.trees[tree.index + 1];
+    };
+
+    const toSelect = findNext(this);
+    if (!toSelect) {
+      return false;
+    }
+
+    if (toSelect) {
+      toSelect.isSelected = true;
+      this.isSelected = false;
+    }
+
+    return true;
+
+
+
+    const sibling = this.$parent.$refs.trees[this.index + 1];
+    sibling.isSelected = true;
+    this.isSelected = false;
+
+    return true;
   }
 
   public async loadData() {
@@ -284,30 +408,6 @@ export default class Tree extends Vue {
     // always await
     this.data = await this.load(this.path);
     this.transferData = this.createTransferData(this.data);
-  }
-
-  public mounted() {
-    this.bus.$on('up', this.moveUp);
-    this.bus.$on('down', this.moveDown);
-  }
-
-  public destroyed() {
-    this.bus.$off('up', this.moveUp);
-    this.bus.$off('down', this.moveDown);
-  }
-
-  public startAndStop() {
-    this.stopPreview(this.data);
-    this.preview(this.data);
-  }
-
-  @Watch<Tree>('isSelected')
-  public startOrStop() {
-    if (this.isSelected) {
-      this.preview(this.data);
-    } else {
-      this.stopPreview(this.data);
-    }
   }
 }
 </script>

@@ -54,7 +54,11 @@ export class Sample implements Serializable<ISample> {
       return {
         started: true,
         dispose: () => {
-          source.stop();
+          try {
+            source.stop();
+          } catch (e) {
+            // Already stopped
+          }
         },
       };
     } else {

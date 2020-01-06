@@ -88,7 +88,7 @@ export default class Scroller extends Vue {
     // of the element (accounting for scrolling) to the mouse position.
     oldPosition += this.scroller[this.scrollAttr];
 
-    const delta = e.deltaY > 0 ? -1 : 1;
+    const delta = e.deltaY > 0 ? -0.5 : 0.5;
     const newSize = clamp(this.increment + delta, 3, 80);
 
     const rowOrCol = Math.floor(this.anchor);
