@@ -9,21 +9,79 @@ import fs from '@/fs';
 import { ScheduledSample, Sample } from '@/core';
 import { commands } from '@/dawg/extensions/core/commands';
 import { createExtension } from '@/dawg/extensions';
-import { createComponent, watch } from '@vue/composition-api';
+import { createComponent } from '@vue/composition-api';
 import { vueExtend } from '@/utils';
+import { createFileExplorer, FileExplorerAPI } from '@/dawg/extensions/extra/explorer/common';
 
-let trees: Array<[string, Folder]> = [];
+const loadMidi = async (path: string) => {
+  const buffer = await fs.readFile(path);
+  const ab = new ArrayBuffer(buffer.length);
+  const view = new Uint8Array(ab);
+  buffer.forEach((value, i) => {
+    view[i] = value;
+  });
+
+  return parser.parse(ab, dawg.project.bpm.value);
+};
+
+const extensions: Extensions = {
+  wav: {
+    dragGroup: 'arranger',
+    iconComponent: 'wav-icon',
+    load: async (path: string) => {
+      const buffer = await loadBuffer(path);
+      const sample = Sample.create(path, buffer);
+      return sample;
+    },
+    createTransferData: (sample: Sample) => {
+      return ScheduledSample.create(sample);
+    },
+    preview: (sample: Sample) => {
+      const result = sample.preview();
+      if (result.started) {
+        return result;
+      }
+
+      return {
+        dispose: () => {
+          //
+        },
+      };
+    },
+  },
+  mid: {
+    dragGroup: 'midi',
+    iconComponent: 'midi-icon',
+    load: loadMidi,
+  },
+  midi: {
+    dragGroup: 'midi',
+    iconComponent: 'midi-icon',
+    load: loadMidi,
+  },
+};
+
+let api: FileExplorerAPI | null = null;
 export const extension = createExtension({
   id: 'dawg.explorer',
   global: {
     folders: {
-      type: t.array(t.type({ folder: t.string, openFolders: t.array(t.string) })),
+      type: t.array(t.type({ rootFolder: t.string, openedFolders: t.array(t.string) })),
       default: [],
     },
-    selected: t.string,
+    selected: t.type({
+      rootFolder: t.string,
+      selectedPath: t.string,
+    }),
   },
-  activate(context) {
-    const folders = context.global.folders.value;
+  async activate(context) {
+    const extensionSet = new Set(Object.keys(extensions).map((ext) => ext.toLowerCase()));
+    const nonNullApi = api = await createFileExplorer(extensionSet);
+
+    api.setMemento({
+      folders: context.global.folders.value,
+      selected: context.global.selected.value,
+    });
 
     context.subscriptions.push(commands.registerCommand({
       text: 'Open File Explorer',
@@ -43,25 +101,8 @@ export const extension = createExtension({
         return;
       }
 
-
-      const folder = toAdd[0];
-
-      // Check if the folder already exists
-      if (folders.find((f) => f.folder === folder)) {
-        return;
-      }
-
-      folders.push({ folder, openFolders: [] });
-    };
-
-    const remove = (target: string) => {
-      const targetInfo = folders.find((folder) => folder.folder === target);
-      if (!targetInfo) {
-        return;
-      }
-
-      const i = folders.indexOf(targetInfo); // 100% confidence that i > 0
-      folders.splice(i, 1);
+      const rootFolder = toAdd[0];
+      nonNullApi.addFolder(rootFolder);
     };
 
     const component = vueExtend(createComponent({
@@ -69,70 +110,15 @@ export const extension = createExtension({
       template: `
       <file-explorer
         :extensions="extensions"
-        :folders="folders"
-        :selected.sync="selected"
+        :trees="trees"
         @open-explorer="openFolder"
         @remove="remove"
-        @update-trees="updateTrees"
       ></file-explorer>
       `,
       setup() {
-        const loadMidi = async (path: string) => {
-          const buffer = await fs.readFile(path);
-          const ab = new ArrayBuffer(buffer.length);
-          const view = new Uint8Array(ab);
-          buffer.forEach((value, i) => {
-            view[i] = value;
-          });
-
-          return parser.parse(ab, dawg.project.bpm.value);
-        };
-
-        const extensions: Extensions = {
-          wav: {
-            dragGroup: 'arranger',
-            iconComponent: 'wav-icon',
-            load: async (path: string) => {
-              const buffer = await loadBuffer(path);
-              const sample = Sample.create(path, buffer);
-              return sample;
-            },
-            createTransferData: (sample: Sample) => {
-              return ScheduledSample.create(sample);
-            },
-            preview: (sample: Sample) => {
-              const result = sample.preview();
-              if (result.started) {
-                return result;
-              }
-
-              return {
-                dispose: () => {
-                  //
-                },
-              };
-            },
-          },
-          mid: {
-            dragGroup: 'midi',
-            iconComponent: 'midi-icon',
-            load: loadMidi,
-          },
-          midi: {
-            dragGroup: 'midi',
-            iconComponent: 'midi-icon',
-            load: loadMidi,
-          },
-        };
-
-
         return {
-          updateTrees: (newTrees: Array<[string, Folder]>) => {
-            trees = newTrees;
-          },
-          folders,
+          trees: nonNullApi.trees,
           openFolder,
-          remove,
           extensions,
           selected: context.global.selected,
         };
@@ -153,30 +139,10 @@ export const extension = createExtension({
     context.subscriptions.push(addFolder);
   },
   deactivate(context) {
-    trees.forEach(([path, rootFolder]) => {
-      const folderInfo = context.global.folders.value.find((folder) => folder.folder === path);
-      if (!folderInfo) {
-        // should never happen
-        return;
-      }
-
-      folderInfo.openFolders = [];
-
-      const recurse = (folder: Folder) => {
-        if (folder.isExpanded.value) {
-          folderInfo.openFolders.push(folder.path);
-        }
-
-        folder.children.forEach((child) => {
-          if (child.type === 'file') {
-            return;
-          }
-
-          recurse(child);
-        });
-      };
-
-      recurse(rootFolder);
-    });
+    if (api) {
+      const memento = api.createMemento();
+      context.global.folders.value = memento.folders;
+      context.global.selected.value = memento.selected;
+    }
   },
 });

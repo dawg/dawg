@@ -7,9 +7,8 @@ export interface File {
   path: string;
   isSelected: Ref<boolean>;
   value: string;
+  select: () => void;
 }
-
-export type Folders = Array<{ folder: string, openFolders: string[] }>;
 
 export interface Folder {
   type: 'folder';
@@ -19,6 +18,7 @@ export interface Folder {
   isExpanded: Ref<boolean>;
   isSelected: Ref<boolean>;
   children: Array<Folder | File>;
+  select: () => void;
 }
 
 export type Extension = 'wav' | 'midi' | 'mid';

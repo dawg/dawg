@@ -1,7 +1,7 @@
 <template>
   <div style="display: contents">
     <drag 
-      @click.native="$emit('select', item.path)"
+      @click.native="select"
       @mousedown.native="loadData"
       class="flex items-center hover-pointer py-1 px-2 hover:bg-default-lighten-2"
       :class="nodeClass" 
@@ -36,7 +36,6 @@
         :extensions="extensions"
         :depth="depth + 1"
         :index="i"
-        @select="$emit('select', $event)"
       ></tree>
     </div>
   </div>
@@ -205,6 +204,9 @@ export default createComponent({
       fileName,
       isExpanded,
       children,
+      select: () => {
+        props.item.select();
+      },
     };
   },
 });
