@@ -31,7 +31,7 @@
         <template v-slot:default="{ width }">
           <component
             :is="ghost.name"
-            :row="component.row"
+            :row="ghost.row"
             :px-per-beat="pxPerBeat"
             :width="width"
             :height="rowHeight"
@@ -186,7 +186,7 @@ export default class SequencerGrid extends Vue {
 
   get ghostsComponents() {
     if (this.ghosts === null) {
-      return;
+      return [];
     }
 
     return this.ghosts.map((item) => {

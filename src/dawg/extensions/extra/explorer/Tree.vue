@@ -1,12 +1,14 @@
 <template>
   <div style="display: contents">
-    <div 
-      @click="$emit('select', item.path)"
-      @mousedown="loadData"
-      @dblclick="doubleClick"
+    <drag 
+      @click.native="$emit('select', item.path)"
+      @mousedown.native="loadData"
       class="flex items-center hover-pointer py-1 px-2 hover:bg-default-lighten-2"
       :class="nodeClass" 
-      :style="textStyle" 
+      :style="textStyle"
+      :group="dragGroup"
+      :transfer-data="transferData"
+      :draggable="draggable"
     >
       <component
         v-if="isLeaf"
@@ -19,16 +21,11 @@
         icon="caret-right"
       ></dg-fa-icon>
       
-      <drag
-        class="text-default ml-2 text-sm select-none truncate"
-        :group="dragGroup"
-        :transfer-data="transferData"
-        :draggable="draggable"
-      >
+      <div class="text-default ml-2 text-sm select-none truncate">
         {{ fileName }}
-      </drag>
+      </div>
 
-    </div>
+    </drag>
     <div v-if="isExpanded">
       <tree
         ref="trees"
@@ -157,13 +154,6 @@ export default createComponent({
       return extensionData.value.iconComponent;
     });
 
-    function doubleClick(event: MouseEvent) {
-      if (extensionData.value.open) {
-        return extensionData.value.open(data);
-      }
-    }
-
-    // @Watch<Tree>('isSelected')
     let disposer: { dispose: () => void } | null = null;
     watch(props.item.isSelected, async () => {
       if (!isLeaf.value) {
@@ -204,7 +194,6 @@ export default createComponent({
 
     return {
       loadData,
-      doubleClick,
       nodeClass,
       textStyle,
       isLeaf,

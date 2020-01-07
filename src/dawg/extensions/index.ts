@@ -2,15 +2,12 @@ import * as t from '@/modules/io';
 import { Ref } from '@vue/composition-api';
 import { VueConstructor } from 'vue';
 
-export type Primitive = t.BooleanC | t.StringC | t.NumberC;
-export type ArrayPrimitive = t.ArrayC<t.BooleanC> | t.ArrayC<t.StringC> | t.ArrayC<t.NumberC>;
-export type StateType = Primitive | ArrayPrimitive;
+export type StateType = t.Mixed;
 
 export interface ExtensionProps {
-  [key: string]: StateType | FieldOptions<StateType>;
+  [key: string]: StateType | FieldOptions<any>;
 }
 
-type Prop<T extends StateType> = FieldOptions<T> | t.TypeOf<T>;
 export interface FieldOptions<T extends StateType> {
   type: T;
   default?: t.TypeOf<T>;
@@ -18,8 +15,15 @@ export interface FieldOptions<T extends StateType> {
 
 type InferPropType<T> =
   T extends StateType ?
-  t.TypeOf<T> : T extends Prop<infer V> ?
+  t.TypeOf<T> : T extends FieldOptions<infer V> ?
   t.TypeOf<V> : unknown;
+
+const ttt = {
+  type: t.array(t.string),
+  default: [],
+};
+
+type TT = InferPropType<typeof ttt>;
 
 declare type RequiredKeys<T> = {
   [K in keyof T]: T[K] extends { default: any; } ? K : never;

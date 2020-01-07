@@ -9,6 +9,8 @@ export interface File {
   value: string;
 }
 
+export type Folders = Array<{ folder: string, openFolders: string[] }>;
+
 export interface Folder {
   type: 'folder';
   parent: Folder | null;
@@ -29,7 +31,6 @@ export interface ExtensionData<T, V = T> {
   iconComponent: string;
   createTransferData?: (item: T) => V;
   preview?: (item: T) => { dispose: () => void };
-  open?: (item: T) => void;
 }
 
 export interface Extensions {

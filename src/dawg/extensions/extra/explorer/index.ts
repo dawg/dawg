@@ -2,24 +2,25 @@ import FileExplorer from '@/dawg/extensions/extra/explorer/FileExplorer.vue';
 import * as dawg from '@/dawg';
 import * as t from '@/modules/io';
 import { remote } from 'electron';
-import { Extensions } from '@/dawg/extensions/extra/explorer/types';
+import { Extensions, Folder } from '@/dawg/extensions/extra/explorer/types';
 import { loadBuffer } from '@/modules/wav/local';
 import parser from '@/midi-parser';
 import fs from '@/fs';
 import { ScheduledSample, Sample } from '@/core';
 import { commands } from '@/dawg/extensions/core/commands';
-import { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 import { createExtension } from '@/dawg/extensions';
-import { createComponent } from '@vue/composition-api';
+import { createComponent, watch } from '@vue/composition-api';
 import { vueExtend } from '@/utils';
 
+let trees: Array<[string, Folder]> = [];
 export const extension = createExtension({
   id: 'dawg.explorer',
   global: {
     folders: {
-      type: t.array(t.string),
+      type: t.array(t.type({ folder: t.string, openFolders: t.array(t.string) })),
       default: [],
     },
+    selected: t.string,
   },
   activate(context) {
     const folders = context.global.folders.value;
@@ -44,25 +45,22 @@ export const extension = createExtension({
 
 
       const folder = toAdd[0];
-      if (folders.indexOf(folder) !== -1) {
+
+      // Check if the folder already exists
+      if (folders.find((f) => f.folder === folder)) {
         return;
       }
 
-      folders.push(folder);
-    };
-
-    const openSample = (sample: Sample) => {
-      // FIXME(1) This should go in sample extension
-      sampleViewer.openedSample.value = sample;
-      dawg.ui.openedPanel.value = 'Sample';
+      folders.push({ folder, openFolders: [] });
     };
 
     const remove = (target: string) => {
-      const i = folders.indexOf(target);
-      if (i < 0) {
+      const targetInfo = folders.find((folder) => folder.folder === target);
+      if (!targetInfo) {
         return;
       }
 
+      const i = folders.indexOf(targetInfo); // 100% confidence that i > 0
       folders.splice(i, 1);
     };
 
@@ -72,8 +70,10 @@ export const extension = createExtension({
       <file-explorer
         :extensions="extensions"
         :folders="folders"
+        :selected.sync="selected"
         @open-explorer="openFolder"
         @remove="remove"
+        @update-trees="updateTrees"
       ></file-explorer>
       `,
       setup() {
@@ -112,7 +112,6 @@ export const extension = createExtension({
                 },
               };
             },
-            open: openSample,
           },
           mid: {
             dragGroup: 'midi',
@@ -128,10 +127,14 @@ export const extension = createExtension({
 
 
         return {
+          updateTrees: (newTrees: Array<[string, Folder]>) => {
+            trees = newTrees;
+          },
           folders,
           openFolder,
           remove,
           extensions,
+          selected: context.global.selected,
         };
       },
     }));
@@ -148,5 +151,32 @@ export const extension = createExtension({
     });
 
     context.subscriptions.push(addFolder);
+  },
+  deactivate(context) {
+    trees.forEach(([path, rootFolder]) => {
+      const folderInfo = context.global.folders.value.find((folder) => folder.folder === path);
+      if (!folderInfo) {
+        // should never happen
+        return;
+      }
+
+      folderInfo.openFolders = [];
+
+      const recurse = (folder: Folder) => {
+        if (folder.isExpanded.value) {
+          folderInfo.openFolders.push(folder.path);
+        }
+
+        folder.children.forEach((child) => {
+          if (child.type === 'file') {
+            return;
+          }
+
+          recurse(child);
+        });
+      };
+
+      recurse(rootFolder);
+    });
   },
 });

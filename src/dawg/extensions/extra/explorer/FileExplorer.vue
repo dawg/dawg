@@ -16,7 +16,7 @@
       <p class="text-default text-xs mb-1">You have not opened a folder.</p>
       <dg-button
         @click="openExplorer"
-        type="primary"
+        type="default"
       >
         OPEN FOLDER
       </dg-button>
@@ -29,7 +29,7 @@ import { ipcRenderer } from 'electron';
 import fs, { FSWatcher } from '@/fs';
 import os from 'os';
 import path from 'path';
-import { Extensions, Folder, File } from '@/dawg/extensions/extra/explorer/types';
+import { Extensions, Folder, File, Folders } from '@/dawg/extensions/extra/explorer/types';
 import { Watch, Bus } from '@/modules/update';
 import { Keys } from '@/utils';
 import Tree from '@/dawg/extensions/extra/explorer/Tree.vue';
@@ -43,7 +43,7 @@ export default class FileEplorer extends Vue {
   /**
    * A list of folder paths. For example, `["/one/path", "/another/path"]
    */
-  @Prop({ type: Array, required: true }) public folders!: string[];
+  @Prop({ type: Array, required: true }) public folders!: Folders;
 
   /**
    * The extensions. The keys represent the case-insensitive extensions (without the `.`) and the
@@ -51,7 +51,16 @@ export default class FileEplorer extends Vue {
    */
   @Prop({ type: Object, required: true }) public extensions!: Extensions;
 
+  /**
+   * The selected folder. Just for syncing.
+   */
+  @Prop(String) public selected?: string;
+
+  /**
+   * The trees. Do not set, just for syncing purposes.
+   */
   public trees: Array<[string, Folder]> = [];
+
   public watchers: FSWatcher[] = [];
   public currentSelection: File | Folder | null = null;
 
@@ -139,13 +148,22 @@ export default class FileEplorer extends Vue {
       item = newItem;
     }
 
+    if (item.type === 'folder') {
+      item.isExpanded.value = !item.isExpanded.value;
+    }
+
     if (this.currentSelection) {
       this.currentSelection.isSelected.value = false;
     }
 
-    // TODO transform to watcher so you only have to set
-    item.isSelected.value = true;
-    this.currentSelection = item;
+    // We are using a watcher to stop/start the preview
+    // If the user clicks on the same item then we first set selected from true -> false -> true
+    // When Vue checks for changes, it doesn't detect anything
+    // So we set to false, wait for the next tick then set to true to make sure the watcher function calls
+    this.$nextTick(() => {
+      item.isSelected.value = true;
+      this.currentSelection = item;
+    });
   }
 
   public keydown(event: KeyboardEvent) {
@@ -274,6 +292,14 @@ export default class FileEplorer extends Vue {
     window.removeEventListener('keydown', this.keydown);
   }
 
+  @Watch<FileEplorer>('currentSelection', { immediate: true })
+  public updateSelected() {
+    if (this.currentSelection) {
+      this.$update('selected', this.currentSelection.path);
+    }
+  }
+
+
   @Watch<FileEplorer>('folders', { immediate: true })
   public async setTrees() {
     this.trees = [];
@@ -283,14 +309,42 @@ export default class FileEplorer extends Vue {
     });
 
     this.watchers = [];
-    this.folders.forEach(async (folder) => {
-      this.watchers.push(fs.watch(folder, () => {
+    this.folders.forEach(async (folderInfo) => {
+      // FIXME We are recomputing everything when the folder/file changes
+      // We would want to be more specific in our re-rendering
+      // We will also want to serialize the isExpanded information and the isSelected information
+      this.watchers.push(fs.watch(folderInfo.folder, () => {
         // Recompute the whole tree structure if something changed
         this.setTrees();
       }));
 
-      this.trees.push([folder, await this.computeFileTree(folder, null, 0)]);
+      const tree = await this.computeFileTree(folderInfo.folder, null, 0);
+      const openFolders = new Set(folderInfo.openFolders);
+
+      const recurse = (folder: Folder) => {
+        if (openFolders.has(folder.path)) {
+          folder.isExpanded.value = true;
+        }
+
+        if (this.selected === folder.path) {
+          folder.isSelected.value = true;
+        }
+
+        folder.children.forEach((child) => {
+          if (child.type === 'file') {
+            return;
+          }
+
+          recurse(child);
+        });
+      };
+
+      recurse(tree);
+
+      this.trees.push([folderInfo.folder, tree]);
     });
+
+    this.$emit('update-trees', this.trees);
   }
 }
 </script>
