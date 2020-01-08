@@ -50,6 +50,16 @@ export class Context {
     return (ticks / Context.PPQ) / Context.BPM.value * 60;
   }
 
+  /**
+   * Round to the nearest precision.
+   *
+   * @param beats The beats.
+   * @returns The rounded beats.
+   */
+  public static round(beats: Beat) {
+    return Math.round(beats * Context.PPQ) / Context.PPQ;
+  }
+
   public static beatsToTicks(beat: Beat) {
     // FIXME is ceil right?
     return Math.ceil(beat * Context.PPQ);

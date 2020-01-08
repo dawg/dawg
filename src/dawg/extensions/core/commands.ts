@@ -14,6 +14,11 @@ const hotKeysLookup: { [K in Key]: HotKey } = {
     [platform.Platform.Mac]: 'command',
     [platform.Platform.Linux]: 'ctrl',
   },
+  AltOrOption: {
+    [platform.Platform.Windows]: 'alt',
+    [platform.Platform.Mac]: 'option',
+    [platform.Platform.Linux]: 'alt',
+  },
   Ctrl: 'ctrl',
   A: 'a',
   B: 'b',

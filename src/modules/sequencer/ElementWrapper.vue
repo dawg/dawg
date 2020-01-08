@@ -35,8 +35,12 @@ export default createComponent({
   name: 'ElementWrapper',
   props: {
     snap: { type: Number, required: true },
+    minSnap: { type: Number, required: true },
     pxPerBeat: { type: Number, required: true },
     height: { type: Number, required: true },
+    /**
+     * Duration in beats.
+     */
     duration: { type: Number, required: true },
     hoverClass: { type: String, required: false },
     hoverColor: { type: String, required: false },
@@ -84,11 +88,23 @@ export default createComponent({
 
     function move(e: MouseEvent) {
       if (!context.parent) { return; }
-      const diff = (e.clientX - props.left) - context.parent.$el.getBoundingClientRect().left;
-      let length = diff / props.pxPerBeat;
-      length = Math.round(length / props.snap) * props.snap;
+
+      const snap = e.altKey ? props.minSnap : props.snap;
+      const remainder = props.duration % props.snap;
+      const pxRemainder = remainder  * props.pxPerBeat;
+
+      // The amount of pixels that the element is from the edge of the of grid
+      const pxFromEdge = props.left - context.parent.$el.scrollLeft;
+
+      // The amount of pixels that the mouse is from the edge of the of grid
+      const pxMouse = e.clientX - context.parent.$el.getBoundingClientRect().left;
+
+      const diff = pxMouse - pxFromEdge - pxRemainder;
+      let length = (Math.round(diff / props.pxPerBeat / snap) * snap) + remainder;
+      length = Math.round(length / props.minSnap) * props.minSnap;
+
       if (props.duration === length) { return; }
-      if (length < props.snap) { return; }
+      if (length <= 0) { return; }
       update(props, context, 'duration', length);
     }
 

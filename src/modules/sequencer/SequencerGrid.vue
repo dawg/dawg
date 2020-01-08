@@ -25,7 +25,7 @@
         :height="rowHeight"
         :snap="snap"
         :resizable="false"
-        :top="ghost.left"
+        :top="ghost.top"
         :left="ghost.left"
       >
         <template v-slot:default="{ width }">
@@ -51,6 +51,7 @@
         :px-per-beat="pxPerBeat"
         :resizable="true"
         :snap="snap"
+        :min-snap="minSnap"
         :selected="selected[i]"
         :duration="component.duration"
         :colored="colored"
@@ -129,6 +130,7 @@ export default class SequencerGrid extends Vue {
   // @Prop({ type: Array, required: true }) public elements!: Schedulable[];
   @Prop({ type: Array, default: null }) public ghosts!: Ghost[] | null;
   @Prop({ type: Number, default: 0.25 }) public snap!: number;
+  @Prop({ type: Number, default: 1 / 24 }) public minSnap!: number;
 
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;
   @Prop({ type: Number, required: true }) public beatsPerMeasure!: number;

@@ -3,9 +3,9 @@
     <polygon 
       :points="points" 
       fill="currentColor"
-      stoke="currentColor"
+      stroke="currentColor"
       class="text-default"
-      style="stroke-width:0.2; shape-rendering: geometricPrecision"
+      style="stroke-width: 0.5; shape-rendering: geometricPrecision"
     ></polygon>
   </svg>
 </template>
@@ -33,7 +33,7 @@ export default createComponent({
     });
 
     const steps = computed(() => {
-      return props.width * 100;
+      return props.width * 50;
     });
 
     const data0 = computed(() => {
@@ -98,6 +98,3 @@ export default createComponent({
   },
 });
 </script>
-
-<style scoped>
-</style>

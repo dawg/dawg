@@ -3,6 +3,7 @@ import * as platform from '@/platform';
 export type Key =
   'Shift' |
   'CmdOrCtrl' |
+  'AltOrOption' |
   'Ctrl' |
   'A' |
   'B' |

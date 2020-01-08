@@ -1,10 +1,8 @@
-import Tone from 'tone';
 import path from 'path';
 import * as t from '@/modules/io';
 import uuid from 'uuid';
 import * as Audio from '@/modules/audio';
 import { Serializable } from '@/core/serializable';
-import { disposeHelp } from '@/utils';
 import { Context } from '@/modules/audio/context';
 
 export const SampleType = t.type({
@@ -25,7 +23,6 @@ export class Sample implements Serializable<ISample> {
   public id: string;
   public path: string;
   public player: Audio.Player | null = null;
-  private previewSource: Tone.BufferSource | null = null;
 
   constructor(public buffer: AudioBuffer | null, i: ISample) {
     this.id = i.id;
@@ -38,7 +35,7 @@ export class Sample implements Serializable<ISample> {
   get beats() {
     if (this.buffer) {
       const minutes = this.buffer.length / this.buffer.sampleRate / 60;
-      return minutes * Context.BPM.value;
+      return Context.round(minutes * Context.BPM.value);
     } else {
       return 0;
     }

@@ -38,10 +38,6 @@ export default createComponent({
       context.emit('open-settings');
     }
 
-    watch(() => [base.ui.activityBar], () => {
-      console.log(base.ui.activityBar.length);
-    });
-
     return {
       openSettings,
       clickActivityBar,
