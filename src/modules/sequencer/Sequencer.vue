@@ -1,7 +1,21 @@
 <template>
   <div class="flex flex-col">
-    <div class="flex" style="flex: 0 0 20px">
-      <div class="bg-default h-full" :style="style"></div>
+    <div class="flex" style="flex: 0 0 25px">
+      <div class="bg-default h-full flex justify-end items-center border-r border-default-darken-1" :style="style">
+        <div 
+          class="cursor-pointer pr-2 text-sm text-default-darken-3 tracking-tight"
+          @click="cycleSnap"
+          title="Measured in steps"
+        >
+          {{ snap.display }}
+        </div>
+        <dg-fa-icon
+          class="cursor-pointer mr-2 text-default-darken-3 text-sm"
+          icon="magnet"
+          @click="cycleSnap"
+          title="Measured in steps"
+        ></dg-fa-icon>
+      </div>
       <scroller
         :scroller="horizontalScroller"
         class="w-full h-full"
@@ -32,7 +46,7 @@
       <!-- Use a wrapper div to add width attribute -->
       <scroller 
         :style="style" 
-        class="side-wrapper"
+        class="side-wrapper border-r border-default-darken-1"
         direction="vertical"
         :scroller="verticalScroller"
         :increment="rowHeight"
@@ -57,6 +71,8 @@
         :row-height="rowHeight"
         :progress="progress"
         :name="name"
+        :snap="snap.value"
+        :min-snap="minSnap"
         :display-loop-end.sync="displayLoopEnd"
         v-bind="$attrs"
         v-on="$listeners"
@@ -116,11 +132,30 @@ export default class Sequencer extends Vue {
 
   public verticalScroller: Element | null = null;
   public horizontalScroller: Element | null = null;
+  public selectedSnap = 0;
 
   public $refs!: {
     scrollX: Vue;
     scrollY: Element;
   };
+
+  get minSnap() {
+    return 1 / this.stepsPerBeat / 24;
+  }
+
+  get snaps() {
+    return [
+      { display: '1', value: 1 / this.stepsPerBeat },
+      { display: '1/2', value: 1 / this.stepsPerBeat / 2 },
+      { display: '1/4', value: 1 / this.stepsPerBeat / 4 },
+      { display: '1/6', value: 1 / this.stepsPerBeat / 6 },
+      { display: 'None', value: this.minSnap },
+    ];
+  }
+
+  get snap() {
+    return this.snaps[this.selectedSnap];
+  }
 
   // Horizontal offset in beats.
   // Used to offset the timeline
@@ -161,6 +196,10 @@ export default class Sequencer extends Vue {
 
   get loopStart() {
     return this.userLoopStart || 0;
+  }
+
+  public cycleSnap() {
+    this.selectedSnap = (this.selectedSnap + 1) % this.snaps.length;
   }
 
   public seek(beat: number) {

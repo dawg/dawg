@@ -129,8 +129,8 @@ export default class SequencerGrid extends Vue {
   @Prop({ type: Object, required: true }) public sequence!: Sequence<Schedulable>;
   // @Prop({ type: Array, required: true }) public elements!: Schedulable[];
   @Prop({ type: Array, default: null }) public ghosts!: Ghost[] | null;
-  @Prop({ type: Number, default: 0.25 }) public snap!: number;
-  @Prop({ type: Number, default: 1 / 24 }) public minSnap!: number;
+  @Prop({ type: Number, required: true }) public snap!: number;
+  @Prop({ type: Number, required: true }) public minSnap!: number;
 
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;
   @Prop({ type: Number, required: true }) public beatsPerMeasure!: number;

@@ -43,7 +43,9 @@ export default class BeatLines extends Vue {
   }
 
   get svg() {
-    const steps = [ `<rect x='0' y='0' height='1px' width='1.5px' fill='${ this.measureColor }'/>` ];
+    const steps = [
+      // `<rect x='0' y='0' height='1px' width='1.5px' fill='${ this.measureColor }'/>`
+    ];
 
     for ( let step = 1; step < this.measureSteps; step++ ) {
       const rectX = this.stepPx + this.stepPx * ( step - 1 ) - .5;
