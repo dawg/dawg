@@ -15,10 +15,12 @@ export interface Memento {
 }
 
 export const createFileExplorer = async (extensions: Set<string>) => {
-  const selected = ref<File | Folder>(null);
+  let selected: File | Folder | null = null;
   const trees: Ref<Folder[]> = ref([]);
   let watchers: FSWatcher[] = [];
-  const listener = (e: KeyboardEvent) => keydown(e, selected);
+  const listener = (e: KeyboardEvent) => {
+    keydown(e, selected, (newSelected) => { selected = newSelected; });
+  };
   window.addEventListener('keydown', listener);
 
   const select = (item: Folder | File) => {
@@ -26,22 +28,22 @@ export const createFileExplorer = async (extensions: Set<string>) => {
       item.isExpanded.value = !item.isExpanded.value;
     }
 
-    if (selected.value) {
-      selected.value.isSelected.value = false;
+    if (selected) {
+      selected.isSelected.value = false;
     }
 
     item.isSelected.value = true;
-    selected.value = item;
+    selected = item;
   };
 
   const createMemento = (): Memento => {
     // tslint:disable-next-line:variable-name
     let _selected: { selectedPath: string, rootFolder: string } | undefined;
-    if (selected.value) {
-      let root = selected.value;
+    if (selected) {
+      let root = selected;
       while (root.parent) { root = root.parent; }
       _selected = {
-        selectedPath: selected.value.path,
+        selectedPath: selected.path,
         rootFolder: root.path,
       };
     }
@@ -77,7 +79,7 @@ export const createFileExplorer = async (extensions: Set<string>) => {
   const setMemento = (memento: Memento) => {
     // const rootFolder = createFileExplorerHelper({ dir, parent: null, index: 0, extensions });
     trees.value = [];
-    selected.value = null;
+    selected = null;
 
     watchers.forEach((watcher) => {
       watcher.close();
@@ -109,7 +111,7 @@ export const createFileExplorer = async (extensions: Set<string>) => {
           memento.selected.rootFolder === tree.path &&
           memento.selected.selectedPath === item.path
         ) {
-          selected.value = item;
+          selected = item;
           item.isSelected.value = true;
         }
 
@@ -144,6 +146,19 @@ export const createFileExplorer = async (extensions: Set<string>) => {
 
       setMemento(memento);
     },
+    removeFolder: (rootFolder: string) => {
+      const memento = createMemento();
+      const targetInfo = memento.folders.find((folder) => folder.rootFolder === rootFolder);
+      if (!targetInfo) {
+        return;
+      }
+
+
+      const i = memento.folders.indexOf(targetInfo); // 100% confidence that i > 0
+      memento.folders.splice(i, 1);
+
+      setMemento(memento);
+    },
     dispose: () => {
       window.removeEventListener('keydown', listener);
       watchers.forEach((watcher) => watcher.close());
@@ -153,8 +168,12 @@ export const createFileExplorer = async (extensions: Set<string>) => {
   } as const;
 };
 
-const keydown = (event: KeyboardEvent, current: Ref<File | Folder | null>) => {
-  const item = current.value;
+const keydown = (
+  event: KeyboardEvent,
+  current: File | Folder | null,
+  setCurrent: (current: File | Folder | null) => void,
+) => {
+  const item = current;
   if (!item) {
     return;
   }
@@ -163,7 +182,7 @@ const keydown = (event: KeyboardEvent, current: Ref<File | Folder | null>) => {
     if (item.type === 'folder' && item.isExpanded.value) {
       const firstChild = item.children[0];
       if (firstChild) {
-        current.value = firstChild;
+        setCurrent(firstChild);
         firstChild.isSelected.value = true;
         item.isSelected.value = false;
         return;
@@ -189,7 +208,7 @@ const keydown = (event: KeyboardEvent, current: Ref<File | Folder | null>) => {
     }
 
     if (toSelect) {
-      current.value = toSelect;
+      setCurrent(toSelect);
       toSelect.isSelected.value = true;
       item.isSelected.value = false;
     }
@@ -203,7 +222,7 @@ const keydown = (event: KeyboardEvent, current: Ref<File | Folder | null>) => {
 
       item.parent.isSelected.value = true;
       item.isSelected.value = false;
-      current.value = item.parent;
+      setCurrent(item.parent);
       return;
     }
 
@@ -233,7 +252,7 @@ const keydown = (event: KeyboardEvent, current: Ref<File | Folder | null>) => {
 
     last.isSelected.value = true;
     item.isSelected.value = false;
-    current.value = last;
+    setCurrent(last);
   }
 
   if (item.type === 'file') {
@@ -253,7 +272,7 @@ const keydown = (event: KeyboardEvent, current: Ref<File | Folder | null>) => {
       if (item.parent !== null) {
         item.isSelected.value = false;
         item.parent.isSelected.value = true;
-        current.value = item.parent;
+        setCurrent(item.parent);
       }
     }
   }

@@ -24,16 +24,9 @@
 
 <script lang="ts">
 import { Component, Vue, Prop } from 'vue-property-decorator';
-import { ipcRenderer } from 'electron';
-import fs, { FSWatcher } from '@/fs';
-import os from 'os';
-import path from 'path';
 import { Extensions, Folder, File } from '@/dawg/extensions/extra/explorer/types';
-import { Watch, Bus } from '@/modules/update';
-import { Keys } from '@/utils';
 import Tree from '@/dawg/extensions/extra/explorer/Tree.vue';
 import * as dawg from '@/dawg';
-import { ref } from '@vue/composition-api';
 
 @Component({
   components: { Tree },
@@ -48,7 +41,7 @@ export default class FileEplorer extends Vue {
   /**
    * The trees.
    */
-  @Prop({ type: Array, required: true }) public trees: Folder[] = [];
+  @Prop({ type: Array, required: true }) public trees!: Folder[];
 
   public openExplorer() {
     this.$emit('open-explorer');

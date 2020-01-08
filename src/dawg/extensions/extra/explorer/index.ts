@@ -77,6 +77,7 @@ export const extension = createExtension({
   async activate(context) {
     const extensionSet = new Set(Object.keys(extensions).map((ext) => ext.toLowerCase()));
     const nonNullApi = api = await createFileExplorer(extensionSet);
+    context.subscriptions.push(nonNullApi);
 
     api.setMemento({
       folders: context.global.folders.value,
@@ -120,7 +121,7 @@ export const extension = createExtension({
           trees: nonNullApi.trees,
           openFolder,
           extensions,
-          selected: context.global.selected,
+          remove: nonNullApi.removeFolder,
         };
       },
     }));
@@ -131,12 +132,10 @@ export const extension = createExtension({
       component,
     });
 
-    const addFolder = dawg.commands.registerCommand({
+    context.subscriptions.push(dawg.commands.registerCommand({
       text: 'Add Folder to Workspace',
       callback: openFolder,
-    });
-
-    context.subscriptions.push(addFolder);
+    }));
   },
   deactivate(context) {
     if (api) {
