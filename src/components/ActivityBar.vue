@@ -4,7 +4,7 @@
       v-for="item in base.ui.activityBar"
       :key="item.name"
       v-tooltip.right="item.name"
-      class="pt-3 pb-3 text-center cursor-pointer hover:bg-default-lighten-1"
+      class="pt-3 pb-3 text-center cursor-pointer flex flex-col hover:bg-default-lighten-1"
       @click="clickActivityBar(item)"
     >
       <dg-mat-icon
@@ -14,7 +14,7 @@
     </div>
 
     <div class="flex-grow"></div>
-    <div class="pt-3 pb-3 text-center cursor-pointer" v-tooltip.right="'Settings'" @click="openSettings">
+    <div class="pt-3 pb-3 text-center cursor-pointer flex flex-col" v-tooltip.right="'Settings'" @click="openSettings">
       <dg-mat-icon
         class="text-2xl text-default"
         icon="settings"
@@ -25,7 +25,7 @@
 
 <script lang="ts">
 import * as base from '@/base';
-import { createComponent, ref } from '@vue/composition-api';
+import { createComponent, ref, watch } from '@vue/composition-api';
 
 export default createComponent({
   name: 'ActivityBar',
@@ -37,6 +37,10 @@ export default createComponent({
     function openSettings(e: MouseEvent) {
       context.emit('open-settings');
     }
+
+    watch(() => [base.ui.activityBar], () => {
+      console.log(base.ui.activityBar.length);
+    });
 
     return {
       openSettings,

@@ -74,9 +74,9 @@ export const extension = createExtension({
       selectedPath: t.string,
     }),
   },
-  async activate(context) {
+  activate(context) {
     const extensionSet = new Set(Object.keys(extensions).map((ext) => ext.toLowerCase()));
-    const nonNullApi = api = await createFileExplorer(extensionSet);
+    const nonNullApi = api = createFileExplorer(extensionSet);
     context.subscriptions.push(nonNullApi);
 
     api.setMemento({

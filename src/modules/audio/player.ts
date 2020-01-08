@@ -36,7 +36,7 @@ export class Player extends Tone.AudioNode {
   }
 
   public createInstance() {
-    return new PlayerInstance(this.createSource());
+    return new PlayerInstance(this.createSource.bind(this));
   }
 
   private createSource(o?: { onended?: () => void }) {
@@ -52,15 +52,20 @@ export class Player extends Tone.AudioNode {
 
 
 export class PlayerInstance {
-  constructor(private source: Tone.BufferSource) {}
+  constructor(private create: () => Tone.BufferSource) {}
 
   public start(o: { startTime: Seconds, offset: Seconds, duration: Seconds }) {
     const { offset, duration, startTime } = o;
+    const source = this.create();
 
-    this.source.start(startTime, offset, duration);
+    source.start(startTime, offset, duration);
     return {
       stop: (seconds: ContextTime) => {
-        this.source.stop(seconds);
+        try {
+          source.stop(seconds);
+        } catch (e) {
+          // already stopped
+        }
       },
     };
   }

@@ -14,7 +14,7 @@ export interface Memento {
   folders: Array<{ rootFolder: string, openedFolders: string[] }>;
 }
 
-export const createFileExplorer = async (extensions: Set<string>) => {
+export const createFileExplorer = (extensions: Set<string>) => {
   let selected: File | Folder | null = null;
   const trees: Ref<Folder[]> = ref([]);
   let watchers: FSWatcher[] = [];
@@ -278,13 +278,13 @@ const keydown = (
   }
 };
 
-const createFileExplorerHelper = async ({ dir, parent, index, extensions, select }: {
+const createFileExplorerHelper = ({ dir, parent, index, extensions, select }: {
   dir: string,
   parent: Folder | null,
   index: number,
   extensions: Set<string>,
   select: (item: Folder | File) => void,
-}): Promise<Folder> => {
+}): Folder => {
   const tree: Folder = {
     type: 'folder',
     parent,
@@ -299,7 +299,7 @@ const createFileExplorerHelper = async ({ dir, parent, index, extensions, select
   // items = folders and files
   let items: string[];
   try {
-    items = await fs.readdir(dir);
+    items = fs.readdirSync(dir);
   } catch (e) {
     // UHH TODO should we do this?
     return tree;
@@ -308,7 +308,7 @@ const createFileExplorerHelper = async ({ dir, parent, index, extensions, select
   let i = 0;
   for (const item of items) {
     const fullPath = path.join(dir, item);
-    const stat = await fs.stat(fullPath);
+    const stat = fs.statSync(fullPath);
     if (stat.isFile()) {
       const parts = item.split('.');
       const extension = parts[parts.length - 1];
@@ -325,7 +325,7 @@ const createFileExplorerHelper = async ({ dir, parent, index, extensions, select
         i++;
       }
     } else {
-      tree.children.push(await createFileExplorerHelper({ dir: fullPath, parent: tree, index: i, extensions, select }));
+      tree.children.push(createFileExplorerHelper({ dir: fullPath, parent: tree, index: i, extensions, select }));
       i++;
     }
 

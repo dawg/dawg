@@ -47,6 +47,8 @@ export default {
   readFile: fs.readFile,
   stat: fs.stat,
   readdir: fs.readdir,
+  readdirSync: fs.readdirSync,
+  statSync: fs.statSync,
   watch: fs.watch,
   unlink: fs.unlink,
   existsSync: fs.existsSync,
