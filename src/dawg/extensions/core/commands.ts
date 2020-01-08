@@ -2,7 +2,50 @@ import * as keyboard from '@/keyboard';
 import { manager } from '@/base/manager';
 import { palette } from '@/dawg/extensions/core/palette';
 import { menubar } from '@/dawg/extensions/core/menubar';
-import { Key, hasKey } from '@/keyboard';
+import { Key } from '@/keyboard';
+import hotkeys from 'hotkeys-js';
+import * as platform from '@/platform';
+
+export type HotKey = string | { [p in platform.Platform]: string };
+const hotKeysLookup: { [K in Key]: HotKey } = {
+  Shift: 'shift',
+  CmdOrCtrl: {
+    [platform.Platform.Windows]: 'ctrl',
+    [platform.Platform.Mac]: 'command',
+    [platform.Platform.Linux]: 'ctrl',
+  },
+  Ctrl: 'ctrl',
+  A: 'a',
+  B: 'b',
+  C: 'c',
+  D: 'd',
+  E: 'e',
+  F: 'f',
+  G: 'g',
+  H: 'h',
+  I: 'i',
+  J: 'j',
+  K: 'k',
+  L: 'l',
+  M: 'm',
+  N: 'n',
+  O: 'o',
+  P: 'p',
+  Q: 'q',
+  R: 'r',
+  S: 's',
+  T: 't',
+  U: 'u',
+  V: 'v',
+  W: 'w',
+  X: 'x',
+  Y: 'y',
+  Z: 'z',
+  Space: 'space',
+  Del: 'delete',
+  Tab: 'tab',
+  Esc: 'esc',
+};
 
 export interface Shortcut {
   shortcut?: keyboard.Key[];
@@ -13,84 +56,16 @@ export interface Command extends Shortcut {
   text: string;
 }
 
-function shortcutPressed(shortcut: Key[], pressedKeys: Set<number>) {
-  if (pressedKeys.size !== shortcut.length) {
-    return false;
-  }
-
-  // Just to be sure. I think the previous if statement is fine though.
-  if (shortcut.length === 0) {
-    return false;
-  }
-
-  if (!shortcut.every((key) => hasKey(pressedKeys, key))) {
-    return false;
-  }
-
-  return true;
-}
-
-export class KeyboardShortcuts {
-  public pressedKeys = new Set<number>();
-  private boundKeydown: (e: KeyboardEvent) => void;
-  private boundKeyup: (e: KeyboardEvent) => void;
-
-  constructor() {
-    this.boundKeydown = this.keydown.bind(this);
-    this.boundKeyup = this.keyup.bind(this);
-    window.addEventListener('keydown', this.boundKeydown);
-    window.addEventListener('keyup', this.boundKeyup);
-  }
-
-  public clear() {
-    this.pressedKeys.clear();
-  }
-
-  public keydown(e: KeyboardEvent) {
-    e.preventDefault();
-
-    // ignore all targets that aren't the body
-    // For example, ignore keys typed in an input
-    // This won't work
-    if (e.target !== document.body) {
-      return;
-    }
-
-    // We do not add the enter key since it will never be used in a shortcut and causes bugs
-    // For example, if we open the file dialog, keyup is never fired for enter.
-    if (e.which !== 13) { // ENTER
-      this.pressedKeys.add(e.which);
-    }
-
-    const check = (item: Shortcut) => {
-      if (!item.shortcut) {
-        return;
-      }
-
-      if (shortcutPressed(item.shortcut, this.pressedKeys)) {
-        item.callback();
-      }
-    };
-
-    shorcuts.forEach(check);
-    cmmds.forEach(check);
-  }
-
-  public keyup(e: KeyboardEvent) {
-    this.pressedKeys.delete(e.which);
-  }
-
-  public dispose() {
-    window.removeEventListener('keydown', this.boundKeydown);
-    window.removeEventListener('keyup', this.boundKeyup);
-  }
-}
-
 const cmmds: Command[] = [];
 const shorcuts: Shortcut[] = [];
 
 const pushAndReturnDispose = (items: Shortcut[], item: Shortcut) => {
   items.push(item);
+  const shortcut = item.shortcut ? item.shortcut.map(((value) => hotKeysLookup[value])).join('+') : undefined;
+  if (shortcut) {
+    hotkeys(shortcut, item.callback);
+  }
+
 
   return {
     dispose() {
@@ -101,6 +76,10 @@ const pushAndReturnDispose = (items: Shortcut[], item: Shortcut) => {
 
       // Remove command from the list
       items.splice(i, 1);
+
+      if (shortcut) {
+        hotkeys.unbind(shortcut, item.callback);
+      }
     },
   };
 };
@@ -115,6 +94,12 @@ export const commands = manager.activate({
     const registerShortcut = (shortcut: Shortcut) => {
       return pushAndReturnDispose(shorcuts, shortcut);
     };
+
+    context.subscriptions.push({
+      dispose() {
+        hotkeys.unbind('*');
+      },
+    });
 
     const openCommandPalette: Command = {
       text: 'Command Palette',

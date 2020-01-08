@@ -22,7 +22,6 @@ import '@/main.css';
 import Update from '@/modules/update';
 import sequencer from '@/modules/sequencer';
 import DragNDrop from '@/modules/dragndrop';
-import VuePerfectScrollbar from 'vue-perfect-scrollbar';
 import { DragElement } from '@/modules/draggable';
 import Knobs from '@/modules/knobs';
 import Split from '@/modules/split';
@@ -83,7 +82,6 @@ const middleware = () => {
   Vue.use(DragNDrop);
   Vue.use(Knobs);
   Vue.use(sequencer);
-  Vue.component('VuePerfectScrollbar', VuePerfectScrollbar);
   Vue.component('DragElement', DragElement);
 };
 

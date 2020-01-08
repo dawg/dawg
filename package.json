@@ -24,6 +24,7 @@
     "audiobuffer-to-wav": "^1.0.0",
     "cli-truncate": "^2.0.0",
     "firebase": "^5.8.6",
+    "hotkeys-js": "^3.7.3",
     "io-ts": "^1.8.5",
     "lodash.throttle": "^4.1.1",
     "marked-ts": "^1.0.0-beta.4",
@@ -41,7 +42,6 @@
     "v-tooltip": "^2.0.2",
     "vue": "^2.6.10",
     "vue-drag-drop": "^1.1.4",
-    "vue-perfect-scrollbar": "^0.1.0",
     "vue-property-decorator": "^7.0.0",
     "webmidi": "^2.3.3"
   },

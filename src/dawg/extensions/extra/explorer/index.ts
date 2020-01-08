@@ -2,27 +2,87 @@ import FileExplorer from '@/dawg/extensions/extra/explorer/FileExplorer.vue';
 import * as dawg from '@/dawg';
 import * as t from '@/modules/io';
 import { remote } from 'electron';
-import { Extensions } from '@/dawg/extensions/extra/explorer/types';
+import { Extensions, Folder } from '@/dawg/extensions/extra/explorer/types';
 import { loadBuffer } from '@/modules/wav/local';
 import parser from '@/midi-parser';
 import fs from '@/fs';
 import { ScheduledSample, Sample } from '@/core';
 import { commands } from '@/dawg/extensions/core/commands';
-import { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 import { createExtension } from '@/dawg/extensions';
 import { createComponent } from '@vue/composition-api';
 import { vueExtend } from '@/utils';
+import { createFileExplorer, FileExplorerAPI } from '@/dawg/extensions/extra/explorer/common';
 
+const loadMidi = async (path: string) => {
+  const buffer = await fs.readFile(path);
+  const ab = new ArrayBuffer(buffer.length);
+  const view = new Uint8Array(ab);
+  buffer.forEach((value, i) => {
+    view[i] = value;
+  });
+
+  return parser.parse(ab, dawg.project.bpm.value);
+};
+
+const extensions: Extensions = {
+  wav: {
+    dragGroup: 'arranger',
+    iconComponent: 'wav-icon',
+    load: async (path: string) => {
+      const buffer = await loadBuffer(path);
+      const sample = Sample.create(path, buffer);
+      return sample;
+    },
+    createTransferData: (sample: Sample) => {
+      return ScheduledSample.create(sample);
+    },
+    preview: (sample: Sample) => {
+      const result = sample.preview();
+      if (result.started) {
+        return result;
+      }
+
+      return {
+        dispose: () => {
+          //
+        },
+      };
+    },
+  },
+  mid: {
+    dragGroup: 'midi',
+    iconComponent: 'midi-icon',
+    load: loadMidi,
+  },
+  midi: {
+    dragGroup: 'midi',
+    iconComponent: 'midi-icon',
+    load: loadMidi,
+  },
+};
+
+let api: FileExplorerAPI | null = null;
 export const extension = createExtension({
   id: 'dawg.explorer',
   global: {
     folders: {
-      type: t.array(t.string),
+      type: t.array(t.type({ rootFolder: t.string, openedFolders: t.array(t.string) })),
       default: [],
     },
+    selected: t.type({
+      rootFolder: t.string,
+      selectedPath: t.string,
+    }),
   },
-  activate(context) {
-    const folders = context.global.folders.value;
+  async activate(context) {
+    const extensionSet = new Set(Object.keys(extensions).map((ext) => ext.toLowerCase()));
+    const nonNullApi = api = await createFileExplorer(extensionSet);
+    context.subscriptions.push(nonNullApi);
+
+    api.setMemento({
+      folders: context.global.folders.value,
+      selected: context.global.selected.value,
+    });
 
     context.subscriptions.push(commands.registerCommand({
       text: 'Open File Explorer',
@@ -42,28 +102,8 @@ export const extension = createExtension({
         return;
       }
 
-
-      const folder = toAdd[0];
-      if (folders.indexOf(folder) !== -1) {
-        return;
-      }
-
-      folders.push(folder);
-    };
-
-    const openSample = (sample: Sample) => {
-      // FIXME(1) This should go in sample extension
-      sampleViewer.openedSample.value = sample;
-      dawg.ui.openedPanel.value = 'Sample';
-    };
-
-    const remove = (target: string) => {
-      const i = folders.indexOf(target);
-      if (i < 0) {
-        return;
-      }
-
-      folders.splice(i, 1);
+      const rootFolder = toAdd[0];
+      nonNullApi.addFolder(rootFolder);
     };
 
     const component = vueExtend(createComponent({
@@ -71,68 +111,17 @@ export const extension = createExtension({
       template: `
       <file-explorer
         :extensions="extensions"
-        :folders="folders"
+        :trees="trees"
         @open-explorer="openFolder"
         @remove="remove"
       ></file-explorer>
       `,
       setup() {
-        const loadMidi = async (path: string) => {
-          const buffer = await fs.readFile(path);
-          const ab = new ArrayBuffer(buffer.length);
-          const view = new Uint8Array(ab);
-          buffer.forEach((value, i) => {
-            view[i] = value;
-          });
-
-          return parser.parse(ab, dawg.project.bpm.value);
-        };
-
-        let dispose: (() => void) | null = null;
-        const extensions: Extensions = {
-          wav: {
-            dragGroup: 'arranger',
-            iconComponent: 'wav-icon',
-            load: async (path: string) => {
-              const buffer = await loadBuffer(path);
-              const sample = Sample.create(path, buffer);
-              return sample;
-            },
-            createTransferData: (sample: Sample) => {
-              return ScheduledSample.create(sample);
-            },
-            preview: (sample: Sample) => {
-              const result = sample.preview();
-              if (result.started) {
-                dispose = result.dispose;
-              }
-            },
-            stopPreview: () => {
-              if (dispose) {
-                dispose();
-                dispose = null;
-              }
-            },
-            open: openSample,
-          },
-          mid: {
-            dragGroup: 'midi',
-            iconComponent: 'midi-icon',
-            load: loadMidi,
-          },
-          midi: {
-            dragGroup: 'midi',
-            iconComponent: 'midi-icon',
-            load: loadMidi,
-          },
-        };
-
-
         return {
-          folders,
+          trees: nonNullApi.trees,
           openFolder,
-          remove,
           extensions,
+          remove: nonNullApi.removeFolder,
         };
       },
     }));
@@ -143,11 +132,16 @@ export const extension = createExtension({
       component,
     });
 
-    const addFolder = dawg.commands.registerCommand({
+    context.subscriptions.push(dawg.commands.registerCommand({
       text: 'Add Folder to Workspace',
       callback: openFolder,
-    });
-
-    context.subscriptions.push(addFolder);
+    }));
+  },
+  deactivate(context) {
+    if (api) {
+      const memento = api.createMemento();
+      context.global.folders.value = memento.folders;
+      context.global.selected.value = memento.selected;
+    }
   },
 });

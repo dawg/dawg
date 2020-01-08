@@ -10,7 +10,6 @@ const DropWithGroup = Vue.extend({
     @drop="drop"
     @dragover="dragover"
     v-bind="$attrs"
-    v-on="$listeners"
   ><slot></slot></drop>
   `,
   props: { group: { type: String, required: true } },
@@ -46,7 +45,6 @@ const DragWithGroup = Vue.extend({
     @dragstart="dragstart"
     @dragend="dragend"
     v-bind="$attrs"
-    v-on="$listeners"
   ><slot></slot></drag>
   `,
   props: { group: { type: String, required: true } },

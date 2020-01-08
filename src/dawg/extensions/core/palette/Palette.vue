@@ -33,9 +33,9 @@
             flex
             items-center
             cursor-pointer 
-            hover:bg-default-lighten-2 
-            focus:bg-default-lighten-2
+            hover:bg-default-lighten-2
           "
+          :class="focusClasses(i)"
           @click="clickResult($event, item)"
         >
           <div>{{ item.text }}</div>
@@ -201,6 +201,10 @@ export default createComponent({
       },
       state,
       filtered,
+      focusClasses: (i: string) => {
+        // string should be number but vetur is wrong
+        return i as any as number === state.selected ? 'bg-default-lighten-2' : '';
+      },
     };
   },
 });

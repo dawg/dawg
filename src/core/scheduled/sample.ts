@@ -64,20 +64,20 @@ export class ScheduledSample extends Schedulable implements Serializable<ISchedu
       return;
     }
 
-    const player = this.sample.player;
+    const instance = this.sample.player.createInstance();
     let controller: { stop: (seconds: Audio.ContextTime) => void } | null = null;
     return transport.schedule({
       time: this.time,
       duration: this.duration,
       onStart: ({ seconds }) => {
-        controller = player.start({
+        controller = instance.start({
           startTime: seconds,
           offset: 0,
           duration: Context.beatsToSeconds(this.duration),
         });
       },
       onMidStart: ({ seconds, secondsOffset }) => {
-        controller = player.start({
+        controller = instance.start({
           startTime: seconds,
           offset: secondsOffset,
           duration: Context.beatsToSeconds(this.duration),

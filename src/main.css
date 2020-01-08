@@ -16,17 +16,22 @@ html {
 }
 
 .tooltip {
-  margin: 5px;
+  margin: 0;
+  padding: 0;
   @apply z-50;
 }
 
 
 .tooltip-inner {
+  padding: 4px!important;
   @apply text-sm p-2 rounded text-white;
 }
 
 .tooltip .tooltip-inner {
   display: inline;
-  background: rgba(0, 0, 0, 0.9);
-  box-shadow: 0 5px 30px rgba(black, .1);
+  background: rgba(53, 53, 53);
+  border: 1px rgba(75, 75, 75, 1) solid;
+  /* box-shadow: 0 5px 30px rgba(black, .1); */
+  box-shadow: 4px 2px 62px -10px rgba(0,0,0,0.75);
+
 }

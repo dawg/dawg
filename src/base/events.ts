@@ -1,3 +1,4 @@
+// TODO Remove
 import { EventEmitter } from 'events';
 import StrictEventEmitter from 'strict-event-emitter-types';
 

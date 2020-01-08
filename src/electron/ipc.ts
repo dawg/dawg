@@ -52,6 +52,8 @@ defaultIpcMain({
           },
           accelerator: item.accelerator,
           // The renderer process will be handling this
+          // registerAccelerator does not work on MacOS BTW
+          // See https://github.com/electron/electron/issues/18295
           registerAccelerator: false,
         });
       }
