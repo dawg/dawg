@@ -6,11 +6,11 @@ import { Ticks } from '@/modules/audio/types';
  *         Internally, events are stored in time order for fast
  *         retrieval.
  */
-export class Timeline<T extends { time: Ticks; }> {
+export class Timeline<T extends { time: Ticks; offset: Ticks }> {
   protected timeline: T[] = [];
 
   public add(event: T) {
-    const result = this.search(event.time);
+    const result = this.search(this.getStart(event));
     const index =
       result.type === 'before' ? 0 :
       result.type === 'after' ? this.timeline.length :
@@ -94,7 +94,7 @@ export class Timeline<T extends { time: Ticks; }> {
     let beginning = 0;
     const len = this.timeline.length;
     let end = len;
-    if (len > 0 && this.timeline[len - 1].time < tick) {
+    if (len > 0 && this.getStart(this.timeline[len - 1]) < tick) {
       return { type: 'after' };
     }
 
@@ -103,10 +103,10 @@ export class Timeline<T extends { time: Ticks; }> {
       const midPoint = Math.floor(beginning + (end - beginning) / 2);
       const event = this.timeline[midPoint];
       const nextEvent = this.timeline[midPoint + 1];
-      if (event.time === tick) {
+      if (this.getStart(event) === tick) {
         let firstOccurrenceIndex = midPoint;
         for (let i = midPoint; i >= 0; i--) {
-          if (this.timeline[i].time !== tick) {
+          if (this.getStart(this.timeline[i]) !== tick) {
             break;
           }
           firstOccurrenceIndex = i;
@@ -114,16 +114,16 @@ export class Timeline<T extends { time: Ticks; }> {
 
         let lastOccurrenceIndex = midPoint;
         for (let i = midPoint; i < this.timeline.length; i++) {
-          if (this.timeline[i].time !== tick) {
+          if (this.getStart(this.timeline[i]) !== tick) {
             break;
           }
           lastOccurrenceIndex = i;
         }
 
         return { type: 'hit', firstOccurrenceIndex, lastOccurrenceIndex };
-      } else if (event.time < tick && nextEvent.time > tick) {
+      } else if (this.getStart(event) < tick && this.getStart(nextEvent) > tick) {
         return { type: 'between', indexA: midPoint, indexB: midPoint + 1 };
-      } else if (event.time > tick) {
+      } else if (this.getStart(event) > tick) {
         // search lower
         end = midPoint;
       } else {
@@ -133,5 +133,9 @@ export class Timeline<T extends { time: Ticks; }> {
     }
 
     return { type: 'before' };
+  }
+
+  private getStart(event: T) {
+    return event.time + event.offset;
   }
 }

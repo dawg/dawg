@@ -5,6 +5,8 @@ import { watch } from '@vue/composition-api';
 import { Clock } from '@/modules/audio/clock';
 import { StrictEventEmitter } from '@/events';
 
+// TODO take into account offset ahhh
+
 interface EventContext {
   seconds: ContextTime;
   ticks: Ticks;
@@ -80,6 +82,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: 
       ...event,
       duration: Context.beatsToTicks(event.duration),
       time: Context.beatsToTicks(event.time),
+      offset: Context.beatsToTicks(event.offset),
     };
     this.timeline.add(event);
 
@@ -90,7 +93,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: 
 
       // If the event hasn't started yet or if it has already ended, we don't care
       const current = this.clock.ticks;
-      const startTime = event.time;
+      const startTime = event.time + event.offset;
       const endTime = startTime + event.duration;
       if (
         startTime > current ||
@@ -129,8 +132,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: 
     let added = true;
     return {
       setStartTime: (startTime: Beat) => {
-        startTime = Context.beatsToTicks(startTime);
-        event.time = startTime;
+        event.time = Context.beatsToTicks(startTime);
         // So we need to reposition the element in the sorted array after setting the time
         // This is a very simple way to do it but it could be done more efficiently
         this.timeline.remove(event);
@@ -138,12 +140,15 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: 
         checkNowActive();
       },
       setDuration: (duration: Beat) => {
-        duration = Context.beatsToTicks(duration);
-        event.duration = duration;
+        event.duration = Context.beatsToTicks(duration);
         checkNowActive();
       },
-      setOffset(offset: Beat) {
-        event.offset = offset;
+      setOffset: (offset: Beat) => {
+        event.offset = Context.beatsToTicks(offset);
+        // We also need to make sure it's sorted here
+        this.timeline.remove(event);
+        this.timeline.add(event);
+        checkNowActive();
       },
       remove: () => {
         if (!added) {
@@ -319,6 +324,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: 
 
       // The upper bound is exclusive but we don't care about checking about events that haven't started yet.
       this.timeline.forEachBetween(0, ticks, (event) => {
+        // Check if it's already finished
         if (event.time + event.duration < ticks) {
           return;
         }
@@ -354,6 +360,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: 
 
     this.active = this.active.filter((event) => {
       const endTime = event.time + event.duration;
+      const startTime = event.time + event.offset;
       if (endTime < ticks) {
         // This occurs if the start time was reduced or the duration was reduced such that the end time became less
         // than the current time.
@@ -362,7 +369,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: 
         // If we've reached the end of the event than still call onTick and then onEnd as well.
         if (event.onTick) { event.onTick({ seconds, ticks }); }
         if (event.onEnd) { event.onEnd({ seconds, ticks }); }
-      } else if (event.time > ticks) {
+      } else if (startTime > ticks) {
         // This can happen if the event is rescheduled such that it starts after the current time
         if (event.onEnd) { event.onEnd({ seconds, ticks }); }
       } else {
@@ -370,7 +377,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: 
       }
 
       // Keep iff the end time has not passed and the start time has passed
-      return ticks < endTime && event.time <= ticks;
+      return ticks < endTime && startTime <= ticks;
     });
   }
 }
