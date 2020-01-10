@@ -1,8 +1,7 @@
 import Tone from 'tone';
 import { Ticks, Beat } from '@/modules/audio/types';
 import { ref } from '@vue/composition-api';
-// TODO we shouldn't reference this here
-import { emitter } from '@/base/events';
+import { emitter } from '@/events';
 
 class Ticker {
   private worker: Worker;
@@ -36,12 +35,13 @@ class Ticker {
   }
 }
 
-const events = emitter<{ tick: () => void }>();
+const events = emitter<{ tick: [] }>();
 const ticker = new Ticker(() => events.emit('tick'), 0.03); // updateInterval FIXME
 
 
 export const context = (Tone.context as any)._context as unknown as AudioContext;
 export class Context {
+  public static context = context;
   public static PPQ = 192;
   public static lookAhead = 0.1;
   public static BPM = ref(120);

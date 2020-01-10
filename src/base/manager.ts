@@ -18,10 +18,10 @@ import { FileLoader, FileWriter } from '@/core/loaders/file';
 import uuid from 'uuid';
 import { ref } from '@vue/composition-api';
 import { PathReporter } from 'io-ts/lib/PathReporter';
-import { emitter } from '@/base/events';
+import { emitter } from '@/events';
 import { decodeItem } from '@/modules/io';
 
-const events = emitter<{ setOpenedFile: () => void }>();
+const events = emitter<{ setOpenedFile: [] }>();
 
 // FIXME IF TWO instances of Vusic are opened at the same time
 // there will be an issue when writing to the fs because the

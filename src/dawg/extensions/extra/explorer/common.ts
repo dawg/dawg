@@ -3,6 +3,7 @@ import { ref, Ref } from '@vue/composition-api';
 import path from 'path';
 import fs, { FSWatcher } from '@/fs';
 import { Keys } from '@/utils';
+import * as dawg from '@/dawg';
 
 // Beware, naming is a bit weird. Hopefully types help you understand what things are.
 
@@ -77,7 +78,6 @@ export const createFileExplorer = (extensions: Set<string>) => {
   };
 
   const setMemento = (memento: Memento) => {
-    // const rootFolder = createFileExplorerHelper({ dir, parent: null, index: 0, extensions });
     trees.value = [];
     selected = null;
 
@@ -96,13 +96,21 @@ export const createFileExplorer = (extensions: Set<string>) => {
         setMemento(createMemento());
       }));
 
-      const tree = await createFileExplorerHelper({
+      const result = await createFileExplorerHelper({
         dir: folderInfo.rootFolder,
         parent: null,
         index: 0,
         extensions,
         select,
       });
+
+      if (result.type === 'error') {
+        dawg.notify.error('Unable to open folder: ' + result.message);
+        return;
+      }
+
+      const tree = result.tree;
+
       const openFolders = new Set(folderInfo.openedFolders);
 
       const recurse = (item: Folder | File) => {
@@ -284,7 +292,7 @@ const createFileExplorerHelper = ({ dir, parent, index, extensions, select }: {
   index: number,
   extensions: Set<string>,
   select: (item: Folder | File) => void,
-}): Folder => {
+}): { type: 'error', message: string } | { type: 'success', tree: Folder } => {
   const tree: Folder = {
     type: 'folder',
     parent,
@@ -301,8 +309,10 @@ const createFileExplorerHelper = ({ dir, parent, index, extensions, select }: {
   try {
     items = fs.readdirSync(dir);
   } catch (e) {
-    // UHH TODO should we do this?
-    return tree;
+    return {
+      type: 'error',
+      message: e.message,
+    };
   }
 
   let i = 0;
@@ -325,13 +335,21 @@ const createFileExplorerHelper = ({ dir, parent, index, extensions, select }: {
         i++;
       }
     } else {
-      tree.children.push(createFileExplorerHelper({ dir: fullPath, parent: tree, index: i, extensions, select }));
+      const result = createFileExplorerHelper({ dir: fullPath, parent: tree, index: i, extensions, select });
+      if (result.type === 'error') {
+        return result;
+      }
+
+      tree.children.push(result.tree);
       i++;
     }
 
   }
 
-  return tree;
+  return {
+    type: 'success',
+    tree,
+  };
 };
 
 type ThenArg<T> = T extends PromiseLike<infer U> ? U : T;

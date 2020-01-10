@@ -20,9 +20,9 @@ export default createComponent({
   setup(props, context) {
     const width = 100;
     let ctx: CanvasRenderingContext2D | null = null;
-    const analyserNode = Audio.context.createAnalyser();
+    const analyserNode = Audio.Context.context.createAnalyser();
     const analyserData = new Uint8Array(512);
-    const output = Audio.MasterAudioNode;
+    const output = Audio.Master;
 
     const tiny = computed(() => {
       return tinycolor(props.color);

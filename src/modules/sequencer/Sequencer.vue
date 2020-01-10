@@ -17,7 +17,7 @@
         ></dg-fa-icon>
       </div>
       <scroller
-        :scroller="horizontalScroller"
+        :scroller="scrollX"
         class="w-full h-full"
         :increment="pxPerStep"
         direction="horizontal"
@@ -25,10 +25,10 @@
         @scroll="scroll"
       >
         <timeline 
-          v-model="progress" 
+          v-model="data.progress" 
           class="w-full h-full"
-          :set-loop-end.sync="userLoopEnd"
-          :set-loop-start.sync="userLoopStart"
+          :set-loop-end.sync="data.userLoopEnd"
+          :set-loop-start.sync="data.userLoopStart"
           :loop-start="loopStart"
           :loop-end="loopEnd"
           :offset="offset"
@@ -48,7 +48,7 @@
         :style="style" 
         class="side-wrapper border-r border-default-darken-1"
         direction="vertical"
-        :scroller="verticalScroller"
+        :scroller="scrollY"
         :increment="rowHeight"
         @update:increment="setRowHeight"
       >
@@ -60,210 +60,220 @@
         class="sequencer scroller overflow-x-scroll" 
         @scroll.native="scroll"
         ref="scrollX"
-        :sequencer-loop-end.sync="sequencerLoopEnd"
+        :sequencer-loop-end.sync="data.sequencerLoopEnd"
         :loop-start="loopStart"
         :loop-end="loopEnd"
-        :set-loop-start="userLoopStart"
-        :set-loop-end="userLoopEnd"
+        :set-loop-start="data.userLoopStart"
+        :set-loop-end="data.userLoopEnd"
         :steps-per-beat="stepsPerBeat"
         :beats-per-measure="beatsPerMeasure"
         :px-per-beat="pxPerBeat"
         :row-height="rowHeight"
-        :progress="progress"
+        :progress="data.progress"
         :name="name"
-        :snap="snap.value"
+        :snap="snap.raw"
         :min-snap="minSnap"
-        :display-loop-end.sync="displayLoopEnd"
+        :display-loop-end.sync="data.displayLoopEnd"
         v-bind="$attrs"
-        v-on="$listeners"
+        v-on="listeners"
       ></sequencer-grid>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
-import { Watch } from '@/modules/update';
+import Vue from 'vue';
 import { Schedulable } from '@/core';
-import { Transport } from '@/modules/audio/transport';
-import { clamp } from '@/utils';
+import { update } from '@/utils';
 import SequencerGrid from '@/modules/sequencer/SequencerGrid.vue';
 import Timeline from '@/modules/sequencer/Timeline.vue';
-import { Context } from '../audio/context';
+import * as Audio from '@/modules/audio';
+import { createComponent, reactive, computed, watch, onMounted, ref } from '@vue/composition-api';
+
+export default createComponent({
+  components: { SequencerGrid, Timeline },
+  name: 'Sequencer',
+  props: {
+    stepsPerBeat: { type: Number, required: true },
+    beatsPerMeasure: { type: Number, required: true },
+    rowHeight: { type: Number, required: true },
+    pxPerBeat: { type: Number, required: true },
+    name: { type: String, required: true },
+    sideWidth: { type: Number, default: 80 },
+    play: { type: Boolean, default: false },
+    transport: { type: Object as () => Audio.Transport, required: true },
+    isRecording: { type: Boolean, default: false },
+
+    /**
+     * Set this if you want to control the end of the loop. This will be ignored if set to 0.
+     */
+    setLoopEnd: { type: Number, required: false },
+
+    /**
+     * This will be synced with the end of the end of the loop.
+     */
+    end: { type: Number, required: false },
+
+    /**
+     * This will be synced with the start of the loop.
+     */
+    start: { type: Number, required: false },
+  },
+  setup(props, context) {
+    const data = reactive({
+      scrollLeft: 0,
+      progress: 0,
+      sequencerLoopEnd: 0,
+      displayLoopEnd: 0,
+
+      // The loop start/end set by the user using the timeline.
+      userLoopStart: null as null | number,
+      userLoopEnd: null as null | number,
+      selectedSnap: 0,
+    });
+
+    const scrollXVue = ref<Vue>();
+    const scrollY = ref<Element>();
+
+    const scrollX = computed(() => {
+      if (scrollXVue.value) {
+        return scrollXVue.value.$el;
+      }
+    });
+
+    const minSnap = computed(() => {
+      return 1 / props.stepsPerBeat / 24;
+    });
+
+    const snaps = computed(() => {
+      return [
+        { display: '1', raw: 1 / props.stepsPerBeat },
+        { display: '1/2', raw: 1 / props.stepsPerBeat / 2 },
+        { display: '1/4', raw: 1 / props.stepsPerBeat / 4 },
+        { display: '1/6', raw: 1 / props.stepsPerBeat / 6 },
+        { display: 'None', raw: minSnap.value },
+      ];
+    });
+
+    const snap = computed(() => {
+      return snaps.value[data.selectedSnap];
+    });
+
+    // Horizontal offset in beats.
+    // Used to offset the timeline
+    const offset = computed(() => {
+      return data.scrollLeft / props.pxPerBeat;
+    });
+
+    const style = computed(() => {
+      return {
+        minWidth: `${props.sideWidth}px`,
+      };
+    });
+
+    const pxPerStep = computed(() => {
+      return props.pxPerBeat / props.stepsPerBeat;
+    });
+
+    const loopEnd = computed(() => {
+      // Prioritize the loop end set by the user
+      // Then check if a specific loop end has been given
+      // Then fallback to the calculated loop end
+
+      if (data.userLoopEnd) {
+        return data.userLoopEnd;
+      }
+
+      if (props.isRecording) {
+        return data.displayLoopEnd;
+      }
+
+      if (props.setLoopEnd) {
+        return props.setLoopEnd;
+      }
+
+
+      return data.sequencerLoopEnd;
+    });
+
+    const loopStart = computed(() => {
+      return data.userLoopStart || 0;
+    });
+
+    function cycleSnap() {
+      data.selectedSnap = (data.selectedSnap + 1) % snaps.value.length;
+    }
+
+    function seek(beat: number) {
+      props.transport.beat = beat;
+      doUpdate();
+    }
+
+    function doUpdate() {
+      if (props.transport.state === 'started') { requestAnimationFrame(doUpdate); }
+      data.progress = props.transport.getProgress();
+    }
+
+    function scroll() {
+      // This only handles horizontal scrolls!
+      if (scrollX.value) {
+        data.scrollLeft = scrollX.value.scrollLeft;
+      }
+    }
+
+    function setPxPerBeat(newPxPerStep: number) {
+      update(props, context, 'pxPerBeat', newPxPerStep * props.stepsPerBeat);
+    }
+
+    function setRowHeight(rowHeight: number) {
+      update(props, context, 'rowHeight', rowHeight);
+    }
+
+    watch(loopEnd, () => {
+      props.transport.loopEnd = loopEnd.value;
+      update(props, context, 'end', loopEnd.value);
+    });
+
+    watch(loopStart, () => {
+      props.transport.loopStart = loopStart.value;
+      update(props, context, 'start', loopStart.value);
+    });
+
+    watch(() => props.transport, () => {
+      data.userLoopStart = null;
+      data.userLoopEnd = null;
+    }, { lazy: true });
+
+    watch(() => props.play, () => {
+      if (props.play) {
+        doUpdate();
+      }
+    });
+
+    return {
+      scrollXVue,
+      scrollX,
+      scrollY,
+      setPxPerBeat,
+      minSnap,
+      snap,
+      data,
+      loopStart,
+      loopEnd,
+      offset,
+      style,
+      cycleSnap,
+      seek,
+      scroll,
+      setRowHeight,
+      pxPerStep,
+      listeners: context.listeners,
+    };
+  },
+});
 
 // TODO
-// 1. Convert to composition API
-// 2. Add offset
 // 3. Remove "curse" thing from drag
-
-@Component({
-  components: { SequencerGrid, Timeline },
-})
-export default class Sequencer extends Vue {
-  @Prop({ type: Number, required: true }) public stepsPerBeat!: number;
-  @Prop({ type: Number, required: true }) public beatsPerMeasure!: number;
-  @Prop({ type: Number, required: true }) public rowHeight!: number;
-  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
-
-  @Prop({ type: String, required: true }) public name!: string;
-  @Prop({ type: Number, default: 80 }) public sideWidth!: number;
-  @Prop({ type: Boolean, default: false }) public play!: boolean;
-  @Prop({ type: Object, required: true }) public transport!: Transport;
-  @Prop({ type: Boolean, default: false }) public isRecording!: boolean;
-
-  /**
-   * Set this if you want to control the end of the loop. This will be ignored if set to 0.
-   */
-  @Prop({ type: Number, required: false }) public setLoopEnd!: number;
-
-  /**
-   * This will be synced with the end of the end of the loop.
-   */
-  @Prop(Number) public end!: number;
-
-  /**
-   * This will be synced with the start of the loop.
-   */
-  @Prop(Number) public start!: number;
-
-  public scrollLeft = 0;
-  public progress = 0;
-  public sequencerLoopEnd = 0;
-  public displayLoopEnd = 0;
-
-  // The loop start/end set by the user using the timeline.
-  public userLoopStart: null | number = null;
-  public userLoopEnd: null | number = null;
-
-  public verticalScroller: Element | null = null;
-  public horizontalScroller: Element | null = null;
-  public selectedSnap = 0;
-
-  public $refs!: {
-    scrollX: Vue;
-    scrollY: Element;
-  };
-
-  get minSnap() {
-    return 1 / this.stepsPerBeat / 24;
-  }
-
-  get snaps() {
-    return [
-      { display: '1', value: 1 / this.stepsPerBeat },
-      { display: '1/2', value: 1 / this.stepsPerBeat / 2 },
-      { display: '1/4', value: 1 / this.stepsPerBeat / 4 },
-      { display: '1/6', value: 1 / this.stepsPerBeat / 6 },
-      { display: 'None', value: this.minSnap },
-    ];
-  }
-
-  get snap() {
-    return this.snaps[this.selectedSnap];
-  }
-
-  // Horizontal offset in beats.
-  // Used to offset the timeline
-  get offset() {
-    return this.scrollLeft / this.pxPerBeat;
-  }
-
-  get style() {
-    return {
-      minWidth: `${this.sideWidth}px`,
-    };
-  }
-
-  get pxPerStep() {
-    return this.pxPerBeat / this.stepsPerBeat;
-  }
-
-  get loopEnd() {
-    // Prioritize the loop end set by the user
-    // Then check if a specific loop end has been given
-    // Then fallback to the calculated loop end
-
-    if (this.userLoopEnd) {
-      return this.userLoopEnd;
-    }
-
-    if (this.isRecording) {
-      return this.displayLoopEnd;
-    }
-
-    if (this.setLoopEnd) {
-      return this.setLoopEnd;
-    }
-
-
-    return this.sequencerLoopEnd;
-  }
-
-  get loopStart() {
-    return this.userLoopStart || 0;
-  }
-
-  public cycleSnap() {
-    this.selectedSnap = (this.selectedSnap + 1) % this.snaps.length;
-  }
-
-  public seek(beat: number) {
-    this.transport.beat = beat;
-    this.update();
-  }
-
-  public update() {
-    if (this.transport.state === 'started') { requestAnimationFrame(this.update); }
-    this.progress = this.transport.getProgress();
-  }
-
-  public scroll() {
-    // This only handles horizontal scrolls!
-    this.scrollLeft = this.$refs.scrollX.$el.scrollLeft;
-  }
-
-  public setPxPerBeat(pxPerStep: number) {
-    this.$update('pxPerBeat', pxPerStep * this.stepsPerBeat);
-  }
-
-  public setRowHeight(rowHeight: number) {
-    this.$update('rowHeight', rowHeight);
-  }
-
-  public mounted() {
-    this.horizontalScroller = this.$refs.scrollX.$el;
-    this.verticalScroller = this.$refs.scrollY;
-  }
-
-  @Watch<Sequencer>('loopEnd', { immediate: true })
-  public onLoopEndChange() {
-    this.transport.loopEnd = this.loopEnd;
-    this.$update('end', this.loopEnd);
-  }
-
-  @Watch<Sequencer>('loopStart', { immediate: true })
-  public onLoopStartChange() {
-    this.transport.loopStart = this.loopStart;
-    this.$update('start', this.loopStart);
-  }
-
-  @Watch<Sequencer>('transport')
-  public resetLoop() {
-    this.userLoopStart = null;
-    this.userLoopEnd = null;
-  }
-
-  @Watch<Sequencer>('play', { immediate: true })
-  public onPlay() {
-    if (this.play) {
-      this.update();
-    } else if (this.transport.state === 'started') {
-      // This may not be the best way
-      // since we are mutating state directly...
-      this.transport.stop();
-    }
-  }
-}
 </script>
 
 <style lang="scss" scoped>

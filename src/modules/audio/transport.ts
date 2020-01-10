@@ -5,8 +5,6 @@ import { watch } from '@vue/composition-api';
 import { Clock } from '@/modules/audio/clock';
 import { StrictEventEmitter } from '@/events';
 
-// TODO take into account offset ahhh
-
 interface EventContext {
   seconds: ContextTime;
   ticks: Ticks;
@@ -40,7 +38,7 @@ export interface TransportEventController {
   undoRemove(): void;
 }
 
-export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: [] }> {
+export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext], beforeEnd: [EventContext] }> {
   private startPosition: Ticks = 0;
   private timeline = new Timeline<TransportEvent>();
   private active: TransportEvent[] = [];
@@ -80,6 +78,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: 
     // make a copy so setting values does nothing
     event = {
       ...event,
+      // FIXME we probably shouldn't be converting to beats here??
       duration: Context.beatsToTicks(event.duration),
       time: Context.beatsToTicks(event.time),
       offset: Context.beatsToTicks(event.offset),
@@ -312,7 +311,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: 
 
   private processTick(seconds: ContextTime, ticks: Ticks, isChild = false) {
     if (!isChild && ticks >= this._loopEnd) {
-      this.emit('beforeEnd');
+      this.emit('beforeEnd', { seconds, ticks });
       this.checkOnEndEventsAndResetActive({ seconds, ticks });
       this.clock.setTicksAtTime(this._loopStart, seconds);
       ticks = this._loopStart;
@@ -320,7 +319,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: 
     }
 
     if (this.isFirstTick) {
-      this.emit('beforeStart');
+      this.emit('beforeStart', { seconds, ticks });
 
       // The upper bound is exclusive but we don't care about checking about events that haven't started yet.
       this.timeline.forEachBetween(0, ticks, (event) => {

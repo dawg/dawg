@@ -29,8 +29,8 @@ export const extension = createExtension({
       }),
     }));
 
-    const dest = Audio.context.createMediaStreamDestination();
-    Audio.MasterAudioNode.connect(dest);
+    const dest = Audio.Context.context.createMediaStreamDestination();
+    Audio.Master.connect(dest);
 
     const a = document.createElement('a');
     document.body.appendChild(a);
@@ -51,7 +51,7 @@ export const extension = createExtension({
 
           recorder.onstop = async () => {
             // const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
-            const buffer = await blobsToAudioBuffer(Audio.context, chunks);
+            const buffer = await blobsToAudioBuffer(Audio.Context.context, chunks);
             const arrayBuffer = await audioBufferToWav(buffer);
             try {
               await fs.writeFile(filePath, Buffer.from(arrayBuffer));
@@ -79,7 +79,7 @@ export const extension = createExtension({
             },
             beforeEnd: () => {
               // This is probably not where we want to stop the recording.
-              // TODO We will have to figure this out.
+              // FIXME We will have to figure this out.
               dawg.project.master.transport.stop();
               dawg.project.master.transport.beat = beat;
               dawg.project.master.transport.loopStart = loopStart;

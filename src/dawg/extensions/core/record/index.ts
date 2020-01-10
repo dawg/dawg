@@ -96,11 +96,11 @@ export const extension = createExtension({
         }
 
         audioBlobs.push(event.data);
-        ghost.buffer = await blobsToAudioBuffer(Audio.context, audioBlobs);
+        ghost.buffer = await blobsToAudioBuffer(Audio.Context.context, audioBlobs);
       };
 
       mediaRecorder.onstop = async () => {
-        const buffer = await blobsToAudioBuffer(Audio.context, audioBlobs);
+        const buffer = await blobsToAudioBuffer(Audio.Context.context, audioBlobs);
         const wavData: ArrayBuffer = audioBufferToWav(buffer, {
           sampleRate: buffer.sampleRate,
           float: true,
