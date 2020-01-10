@@ -91,6 +91,11 @@ import SequencerGrid from '@/modules/sequencer/SequencerGrid.vue';
 import Timeline from '@/modules/sequencer/Timeline.vue';
 import { Context } from '../audio/context';
 
+// TODO
+// 1. Convert to composition API
+// 2. Add offset
+// 3. Remove "curse" thing from drag
+
 @Component({
   components: { SequencerGrid, Timeline },
 })

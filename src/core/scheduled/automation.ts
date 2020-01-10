@@ -23,6 +23,7 @@ export class ScheduledAutomation extends Schedulable implements Serializable<ISc
       type: 'automation',
       duration: clip.duration,
       automationId: clip.id,
+      offset: 0,
     });
   }
 
@@ -45,6 +46,7 @@ export class ScheduledAutomation extends Schedulable implements Serializable<ISc
       type: literal('automation'),
       duration: this.duration,
       automationId: this.automationId,
+      offset: this.offset,
     };
   }
 

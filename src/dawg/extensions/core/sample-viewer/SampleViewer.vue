@@ -3,7 +3,8 @@
     class="sample-viewer bg-default"
   >
     <div class="sample">    
-      <waveform class="wave" 
+      <waveform 
+        class="wave" 
         v-if="buffer"
         :buffer="buffer"
       ></waveform>

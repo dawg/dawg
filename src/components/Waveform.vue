@@ -14,26 +14,30 @@
 import { Nullable } from '@/utils';
 import * as base from '@/base';
 import { createComponent, computed } from '@vue/composition-api';
+import * as Audio from '@/modules/audio';
 
 export default createComponent({
   name: 'Waveform',
   props: {
     buffer: { type: AudioBuffer, required: true },
-    offset: { type: Number, default: 0 },
+    /**
+     * Offset in beats.
+     */
+    offset: { type: Number, required: false },
+    /**
+     * Duration in beats. Does *not* take into account the offset.
+     */
+    duration: { type: Number, required: false },
     height: { type: Number, default: 50 },
-    width: { type: Number, default: 100 },
+    steps: { type: Number, default: 5000 },
   },
   setup(props) {
     const viewBox = computed(() => {
-      return '0 0 ' + steps.value + ' ' + props.height;
+      return '0 0 ' + props.steps + ' ' + props.height;
     });
 
     const h2 = computed(() => {
       return props.height / 2;
-    });
-
-    const steps = computed(() => {
-      return props.width * 50;
     });
 
     const data0 = computed(() => {
@@ -48,16 +52,29 @@ export default createComponent({
       return data0.value.length;
     });
 
+    // The duration, in seconds, from the start of the buffer to the end (where it should stop rendering)
+    // Does not take into account the offset
     const duration = computed(() => {
-      return props.buffer.duration - props.offset;
+      return props.duration === undefined ?
+        props.buffer.duration :
+        Math.min(props.buffer.duration, Audio.Context.beatsToSeconds(props.duration));
+    });
+
+    // The offset in seconds
+    const offset = computed(() => {
+      return props.offset === undefined ? 0 : Audio.Context.beatsToSeconds(props.offset);
+    });
+
+    const actualDuration = computed(() => {
+      return duration.value - offset.value;
     });
 
     const step = computed(() => {
-      return duration.value / props.buffer.duration * dataLen.value / steps.value;
+      return actualDuration.value / props.buffer.duration * dataLen.value / props.steps;
     });
 
     const ind = computed(() => {
-      return Math.floor((props.offset / props.buffer.duration) * dataLen.value);
+      return Math.floor((offset.value / props.buffer.duration) * dataLen.value);
     });
 
     const inc = computed(() => {
@@ -68,7 +85,7 @@ export default createComponent({
       let dots0 = '0,' + (h2.value + data0.value[ind.value] * h2.value);
       let dots1 = '0,' + (h2.value + data1.value[ind.value] * h2.value);
 
-      for (let p = 1; p < steps.value; p += 1) {
+      for (let p = 1; p < props.steps; p += 1) {
         let lmin = Infinity;
         let rmax = -Infinity;
         let i = Math.floor(ind.value + (p - 1) * step.value);

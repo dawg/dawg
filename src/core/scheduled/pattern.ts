@@ -23,6 +23,7 @@ export class ScheduledPattern extends Schedulable implements Serializable<ISched
       type: 'pattern',
       row: 0,
       time: 0,
+      offset: 0,
     });
   }
 
@@ -49,6 +50,7 @@ export class ScheduledPattern extends Schedulable implements Serializable<ISched
       time: this.time,
       patternId: this.patternId,
       type: literal('pattern'),
+      offset: this.offset,
     };
   }
 

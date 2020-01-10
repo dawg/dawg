@@ -16,6 +16,7 @@ export interface TransportEvent {
   time: Ticks;
   // Must be defined if `onMidStart` OR `onEnd` OR `onTick` are defined
   duration: Ticks;
+  offset: Ticks;
   // Called ONLY at the start of the event
   onStart?: (context: EventContext) => void;
   // Called when the event is started at ANY point during its duration, EXCLUDING the start
@@ -31,6 +32,7 @@ export interface TransportEvent {
 
 export interface TransportEventController {
   setStartTime(startTime: Beat): void;
+  setOffset(offset: Beat): void;
   setDuration(duration: Beat): void;
   remove(): void;
   undoRemove(): void;
@@ -72,7 +74,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: 
   /**
    * Schedule an event.
    */
-  public schedule(event: TransportEvent) {
+  public schedule(event: TransportEvent): TransportEventController {
     // make a copy so setting values does nothing
     event = {
       ...event,
@@ -140,6 +142,9 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: 
         event.duration = duration;
         checkNowActive();
       },
+      setOffset(offset: Beat) {
+        event.offset = offset;
+      },
       remove: () => {
         if (!added) {
           return;
@@ -192,6 +197,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [], beforeEnd: 
         child.processTick(seconds, currentTick - this.time, true);
       },
       time: ticks,
+      offset: 0,
       duration,
     });
   }

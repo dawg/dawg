@@ -127,6 +127,7 @@ export const extension = createExtension({
           duration: sample.beats,
           row: trackId,
           time,
+          offset: 0,
         });
 
         scheduled.schedule(master.transport);

@@ -2,6 +2,8 @@
   <waveform
     v-if="buffer"
     :style="waveformStyle"
+    :offset="element.offset"
+    :duration="element.duration"
     :buffer="buffer"
   ></waveform>
   <div v-else>
@@ -14,30 +16,34 @@ import { Vue, Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 import Waveform from '@/components/Waveform.vue';
 import { Nullable } from '@/utils';
 import { ScheduledSample } from '@/core';
+import { createComponent, computed } from '@vue/composition-api';
 
-@Component({
+export default createComponent({
   components: { Waveform },
-})
-export default class SampleElement extends Vue {
-  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
-  @Prop({ type: Number, default: 100 }) public height!: number;
-  @Prop({ type: Object, required: true }) public element!: ScheduledSample;
+  name: 'SampleElement',
+  props: {
+    pxPerBeat: { type: Number, required: true },
+    height: { type: Number, required: true },
+    element: { type: Object as () => ScheduledSample, required: true },
+  },
+  setup(props) {
+    const width = computed(() => {
+      return (Math.min(props.element.duration, props.element.sample.beats) - props.element.offset) * props.pxPerBeat;
+    });
 
-  get buffer() {
-    return this.element.sample.buffer;
-  }
-
-  get waveformStyle() {
     return {
-      width: `${this.bufferWidth}px`,
-      height: `${this.height}px`,
+      buffer: computed(() => {
+        return props.element.sample.buffer;
+      }),
+      waveformStyle: computed(() => {
+        return {
+          width: `${width.value}px`,
+          height: `${props.height}px`,
+        };
+      }),
     };
-  }
-
-  get bufferWidth() {
-    return this.element.sample.beats * this.pxPerBeat;
-  }
-}
+  },
+});
 </script>
 
 <style lang="sass" scoped>

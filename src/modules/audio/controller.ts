@@ -60,6 +60,7 @@ export class Controller extends Tone.Signal {
       onTick: this.onTick.bind(this),
       onStart: onEndAndStart,
       onEnd: onEndAndStart,
+      offset: 0,
     });
   }
 
