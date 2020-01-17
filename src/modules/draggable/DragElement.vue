@@ -13,144 +13,130 @@
 </template>
 
 <script lang="ts">
-import { CreateElement } from 'vue';
-import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
+import { createComponent, ref, onUnmounted } from '@vue/composition-api';
 
-interface Point {
-  x: number;
-  y: number;
-}
+export default createComponent({
+  name: 'DragElement',
+  props: {
+    tag: { type: String, default: 'div' },
+    cursor: { type: String, default: 'auto' },
+  },
+  setup(props, context) {
+    const previous = ref<{ x: number, y: number }>(null);
+    const moving = ref(false);
+    const mousewheelPosition = ref<number>(null);
 
-@Component
-export default class DragElement extends Vue {
-  @Prop({ type: String, default: 'div' }) public tag!: string;
-  @Prop({ type: String, default: 'auto' }) public cursor!: string;
-
-  public previous: Point | null = null;
-  public moving = false;
-  public in = false;
-  public disabled = false;
-  public mousewheelPosition: number | null = null;
-
-  public move(e: MouseEvent) {
-    this.$emit('move', e);
-  }
-
-  public beforeMove() {
-    this.$emit('before-move');
-  }
-
-  public afterMove() {
-    this.$emit('after-move');
-  }
-
-  public scrollMove(delta: Point) {
-    this.$emit('scroll-move', delta);
-  }
-
-  public showCursor() {
-    if (document.documentElement) {
-      document.documentElement.style.cursor = this.cursor;
-    }
-  }
-  public resetCursor() {
-    if (document.documentElement) {
-      document.documentElement.style.cursor = 'auto';
-    }
-  }
-
-  public addListeners(e: MouseEvent) {
-    if (e.which !== 1) { return; } // if not left click
-    if (this.disabled) { return; }
-
-    this.prevent(e);
-    this.showCursor();
-    this.moving = true;
-    this.previous = { x: e.clientX, y: e.clientY };
-
-    this.beforeMove();
-    window.addEventListener('mousemove', this.startMove);
-    window.addEventListener('mouseup', this.removeListeners);
-  }
-
-  public removeListeners(e?: MouseEvent) {
-    if (this.disabled) { return; }
-    if (e) { this.prevent(e); }
-
-    this.resetCursor();
-    this.previous = null;
-    this.moving = false;
-    window.removeEventListener('mousemove', this.startMove);
-    window.removeEventListener('mouseup', this.removeListeners);
-
-    this.afterHover();
-    this.afterMove();
-  }
-
-  public mousewheel(e: MouseWheelEvent) {
-    if (!this.mousewheelPosition) {
-      this.mousewheelPosition = 0;
+    function move(e: MouseEvent) {
+      context.emit('move', e);
     }
 
-    // delta y is negative when scrolling away from user.
-    this.mousewheelPosition -= e.deltaY;
-
-    // 65 was determined from trial and error
-    const y = Math.floor(this.mousewheelPosition / 65);
-    this.mousewheelPosition %= 65;
-
-    // Right now, we only support y movement and not x movement.
-    this.scrollMove({ x: 0, y });
-  }
-
-  public startMove(e: MouseEvent) {
-    if (this.disabled) { return; }
-
-    if (!this.previous) {
-      this.removeListeners();
-      return;
+    function beforeMove() {
+      context.emit('before-move');
     }
 
-    this.prevent(e);
-    this.previous = { x: e.clientX, y: e.clientY };
-    this.move(e);
-  }
+    function afterMove() {
+      context.emit('after-move');
+    }
 
-  public squash(v: number, low: number, high: number) {
-    return Math.max(low, Math.min(high, v));
-  }
+    function scrollMove(delta: { x: number, y: number }) {
+      context.emit('scroll-move', delta);
+    }
 
-  public prevent(e: Event) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
+    function showCursor() {
+      if (document.documentElement) {
+        document.documentElement.style.cursor = props.cursor;
+      }
+    }
+    function resetCursor() {
+      if (document.documentElement) {
+        document.documentElement.style.cursor = 'auto';
+      }
+    }
 
-  public onHover() {
-    if (this.moving) { return; }
-    this.in = true;
-    this.showCursor();
-  }
+    function addListeners(e: MouseEvent) {
+      if (e.which !== 1) { return; } // if not left click
 
-  public afterHover() {
-    if (this.moving) { return; }
-    this.in = false;
-    this.mousewheelPosition = null;
-    this.resetCursor();
-  }
+      prevent(e);
+      showCursor();
+      moving.value = true;
+      previous.value = { x: e.clientX, y: e.clientY };
 
-  public stopClick(e: MouseEvent) {
-    e.stopPropagation();
-  }
+      beforeMove();
+      window.addEventListener('mousemove', startMove);
+      window.addEventListener('mouseup', removeListeners);
+    }
 
-  public destroyed() {
+    function removeListeners(e?: MouseEvent) {
+      if (e) { prevent(e); }
+
+      resetCursor();
+      previous.value = null;
+      moving.value = false;
+      window.removeEventListener('mousemove', startMove);
+      window.removeEventListener('mouseup', removeListeners);
+
+      afterHover();
+      afterMove();
+    }
+
+    function mousewheel(e: MouseWheelEvent) {
+      if (!mousewheelPosition.value) {
+        mousewheelPosition.value = 0;
+      }
+
+      // delta y is negative when scrolling away from user.
+      mousewheelPosition.value -= e.deltaY;
+
+      // 65 was determined from trial and error
+      const y = Math.floor(mousewheelPosition.value / 65);
+      mousewheelPosition.value %= 65;
+
+      // Right now, we only support y movement and not x movement.
+      scrollMove({ x: 0, y });
+    }
+
+    function startMove(e: MouseEvent) {
+      if (!previous.value) {
+        removeListeners();
+        return;
+      }
+
+      prevent(e);
+      previous.value = { x: e.clientX, y: e.clientY };
+      move(e);
+    }
+
+    function prevent(e: Event) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    function onHover() {
+      if (moving.value) { return; }
+      showCursor();
+    }
+
+    function afterHover() {
+      if (moving.value) { return; }
+      mousewheelPosition.value = null;
+      resetCursor();
+    }
+
+    function stopClick(e: MouseEvent) {
+      e.stopPropagation();
+    }
+
     // Always reset when destroyed
     // We can get into weird states where the component is destroyed while hovering
-    this.afterHover();
-  }
-}
+    onUnmounted(afterHover);
 
+    return {
+      mousewheel,
+      addListeners,
+      onHover,
+      afterHover,
+      stopClick,
+    };
+  },
+});
 </script>
-
-<style lang="sass" scoped>
-
-</style>

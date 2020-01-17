@@ -18,8 +18,8 @@ export default createComponent({
   },
   setup(props, context) {
     return {
-      move: (e: Event, { changeY }: { changeY: number }) => {
-        context.emit('input', Math.max(0, props.value - changeY));
+      move: (e: MouseEvent) => {
+        context.emit('input', Math.max(0, props.value - e.movementY));
       },
     };
   },
