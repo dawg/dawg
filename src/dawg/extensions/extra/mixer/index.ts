@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import Mixer from '@/dawg/extensions/core/mixer/Mixer.vue';
+import Mixer from '@/dawg/extensions/extra/mixer/Mixer.vue';
 import { ui } from '@/base/ui';
 import { createExtension } from '@/dawg/extensions';
 import { commands } from '@/dawg/extensions/core/commands';

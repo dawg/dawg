@@ -1,19 +1,6 @@
 import Vue from 'vue';
-import * as backup from '@/dawg/extensions/extra/backup';
-import * as explorer from '@/dawg/extensions/extra/explorer';
-import * as time from '@/dawg/extensions/extra/time';
-import * as bpm from '@/dawg/extensions/extra/bpm';
-import * as audioFiles from '@/dawg/extensions/extra/audio-files';
-import * as clips from '@/dawg/extensions/extra/clips';
-import * as spectrogram from '@/dawg/extensions/extra/spectrogram';
-import * as play from '@/dawg/extensions/extra/play';
-import * as projectName from '@/dawg/extensions/extra/project-name';
-import * as mixer from '@/dawg/extensions/core/mixer';
-import * as exporter from '@/dawg/extensions/extra/exporter';
-import * as models from '@/dawg/extensions/core/models';
-import * as helpLinks from '@/dawg/extensions/extra/help-links';
-import * as restorer from '@/dawg/extensions/extra/restorer';
 import * as dawg from '@/dawg';
+import path from 'path';
 
 
 import '@/styles/material.css';
@@ -22,7 +9,7 @@ import '@/main.css';
 import Update from '@/modules/update';
 import sequencer from '@/modules/sequencer';
 import DragNDrop from '@/modules/dragndrop';
-import { DragElement } from '@/modules/draggable';
+import Draggable from '@/modules/draggable';
 import Knobs from '@/modules/knobs';
 import Split from '@/modules/split';
 // tslint:disable-next-line:no-var-requires
@@ -32,7 +19,6 @@ const middleware = () => {
   Vue.use(VTooltip);
 
   // This imports all .vue files in the components folder
-  // See https://vuejs.org/v2/guide/components-registration.html
   const components = require.context(
     './components',
     // Whether or not to look in subfolders
@@ -57,24 +43,41 @@ const middleware = () => {
     );
   });
 
-  // dawg.manager.activate(backup.extension);
-  [
-    explorer,
-    audioFiles,
-    clips,
-    mixer,
-    exporter,
-    models,
-    time,
-    bpm,
-    projectName,
-    spectrogram,
-    backup,
-    play,
-    helpLinks,
-    restorer,
-  ].forEach(({ extension }) => {
-    dawg.manager.activate(extension);
+  const extensions = require.context(
+    './dawg/extensions/extra',
+    // Whether or not to look in subfolders
+    true,
+    /^.+\.ts$/,
+  );
+
+  extensions.keys().forEach((fileNameOrFolderName) => {
+    // slice(1) to remove "."
+    const parts = fileNameOrFolderName.split(path.sep).slice(1);
+    let extensionModule: any;
+    switch (parts.length) {
+      case 0:
+        return;
+      case 1:
+        extensionModule = extensions(fileNameOrFolderName);
+        break;
+      case 2:
+        if (parts[1] === 'index.ts') {
+          extensionModule = extensions(fileNameOrFolderName);
+          break;
+        } else {
+          return;
+        }
+      default:
+        return;
+    }
+
+    if (!extensionModule.extension) {
+      // tslint:disable-next-line:no-console
+      console.error(`${fileNameOrFolderName} does not export "extension"`);
+      return;
+    }
+
+    dawg.manager.activate(extensionModule.extension);
   });
 
   Vue.use(Split);
@@ -82,7 +85,7 @@ const middleware = () => {
   Vue.use(DragNDrop);
   Vue.use(Knobs);
   Vue.use(sequencer);
-  Vue.component('DragElement', DragElement);
+  Vue.use(Draggable);
 };
 
 export default middleware;

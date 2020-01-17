@@ -1,7 +1,7 @@
 <template>
   <drag-element
     class="flex justify-center bg-default rounded w-10" 
-    curse="ns-resize"
+    cursor="ns-resize"
     @move="move"
     @scrol-move="scrollMove"
   >

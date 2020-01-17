@@ -59,7 +59,7 @@
       <sequencer-grid
         class="sequencer scroller overflow-x-scroll" 
         @scroll.native="scroll"
-        ref="scrollX"
+        ref="scrollXVue"
         :sequencer-loop-end.sync="data.sequencerLoopEnd"
         :loop-start="loopStart"
         :loop-end="loopEnd"
@@ -133,11 +133,13 @@ export default createComponent({
     });
 
     const scrollXVue = ref<Vue>();
-    const scrollY = ref<Element>();
+    const scrollY = ref<Element>(null);
 
     const scrollX = computed(() => {
       if (scrollXVue.value) {
         return scrollXVue.value.$el;
+      } else {
+        return null;
       }
     });
 

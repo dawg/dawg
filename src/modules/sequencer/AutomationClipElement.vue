@@ -18,7 +18,7 @@
       v-for="(point, i) in processed"
       :key="i"
       tag="circle"
-      curse="pointer"
+      cursor="pointer"
       @move="move($event, i)"
       @contextmenu.native="pointContext($event, i)"
       v-bind="point"

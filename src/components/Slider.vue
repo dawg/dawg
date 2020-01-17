@@ -30,7 +30,7 @@
     ></rect>
     <drag-element
       tag="polygon"
-      curse="pointer"
+      cursor="pointer"
       @contextmenu="contextmenu"
       @mouseenter="update"
       @mouseleave="afterMove"

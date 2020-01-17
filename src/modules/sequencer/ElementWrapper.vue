@@ -18,15 +18,13 @@
     <drag-element
       v-if="resizable && !disableOffset"
       :style="style('left')"
-      :within="hover"
-      curse="ew-resize"
+      cursor="ew-resize"
       @move="moveLeft"
     ></drag-element>
     <drag-element
       v-if="resizable"
       :style="style('right')"
-      :within="hover"
-      curse="ew-resize"
+      cursor="ew-resize"
       @move="moveRight"
     ></drag-element>
   </div>
@@ -62,8 +60,6 @@ export default createComponent({
     color: { type: String, default: '#ccc' },
   },
   setup(props, context) {
-    const hover = ref(false);
-
     const lightColor = computed(() => {
       const color = tinycolor(props.color).lighten(15).setAlpha(.1).toRgbString();
       return `${color}`;
@@ -78,9 +74,10 @@ export default createComponent({
         height: `${props.height}px`,
       };
 
-      if (hover.value && props.hoverClass) {
-        s.backgroundColor = props.hoverClass;
-      }
+      // TODO
+      // if (hover.value && props.hoverClass) {
+      //   s.backgroundColor = props.hoverClass;
+      // }
 
       return s;
     };
@@ -141,7 +138,6 @@ export default createComponent({
     }
 
     return {
-      hover,
       moveRight,
       moveLeft,
       style,
