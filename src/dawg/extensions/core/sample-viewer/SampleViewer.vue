@@ -1,21 +1,15 @@
 <template>
   <div 
-    class="sample-viewer bg-default"
+    class="pt-1 pb-5 px-6 h-full bg-default flex justify-end flex-col"
   >
-    <div class="sample">    
-      <waveform 
-        class="wave" 
-        v-if="buffer"
-        :buffer="buffer"
-      ></waveform>
-    </div>
-    <div class="sample-controls text-default">
+    <waveform
+      @click.native="playPause"
+      class="flex-grow w-full cursor-pointer" 
+      v-if="buffer"
+      :buffer="buffer"
+    ></waveform>
+    <div class="pt-4 text-default">
       <div style="flex: 1"></div>
-      <span class="control">
-        <dg-button @click="playPause" type="text">
-          {{ buttonText }}
-        </dg-button>
-      </span>
       <dg-button
         v-for="(action, i) in actionsWithSamplePath"
         class="ml-2"
@@ -38,7 +32,7 @@ import { createComponent, computed } from '@vue/composition-api';
 export default createComponent({
   name: 'SampleViewer',
   props: {
-    sample: { type: Nullable(Object) as any as () => Sample | null },
+    sample: Object as () => Sample,
     actions: { type: Array as () => Action[], required: true },
   },
   setup(props) {
@@ -71,22 +65,28 @@ export default createComponent({
 
     let disposer: { dispose: () => void } | null = null;
     function playPause() {
-      if (props.sample) {
-        if (disposer) {
-          disposer.dispose();
-          disposer = null;
-        } else {
-          const result = props.sample.preview({
-            onended: () => {
-              if (disposer) {
-                disposer.dispose();
-              }
-            },
-          });
-          if (result.started) {
-            disposer = result;
+      if (!props.sample) {
+        return;
+      }
+
+      // if started but not stopped
+      if (disposer) {
+        disposer.dispose();
+        disposer = null;
+        return;
+      }
+
+      const result = props.sample.preview({
+        onended: () => {
+          if (disposer) {
+            disposer.dispose();
+            disposer = null;
           }
-        }
+        },
+      });
+
+      if (result.started) {
+        disposer = result;
       }
     }
 
@@ -94,32 +94,7 @@ export default createComponent({
       playPause,
       actionsWithSamplePath,
       buffer,
-      buttonText: computed(() => {
-        return disposer ? 'Stop' : 'Play';
-      }),
     };
   },
 });
 </script>
-
-<style lang="sass" scoped>
-.sample-viewer
-  height: 100%
-  padding-bottom: 70px
-  padding-top: 5px
-  padding-left: 40px
-  padding-right: 40px
-
-.sample
-  height: 100%
-  width: 100%
-
-.wave
-  height: 100%
-  width: 100%
-
-.sample-controls
-  padding-top: 20px
-  position: fixed
-  bottom: 35px
-</style>

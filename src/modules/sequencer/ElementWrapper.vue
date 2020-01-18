@@ -148,7 +148,7 @@ export default createComponent({
       elementWrapperStyle: computed(() => ({
         width: `${width.value}px`,
         height: `${props.height}px`,
-        backgroundColor: props.selected ? '#ff9999!important' : props.colored ? lightColor.value : '',
+        backgroundColor: props.selected ? '#ff999950!important' : props.colored ? lightColor.value : '',
       })),
       width,
     };
