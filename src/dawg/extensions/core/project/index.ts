@@ -7,7 +7,6 @@ import { createExtension } from '@/framework/extensions';
 import { remote } from 'electron';
 import { loadBufferSync } from '@/modules/wav/local';
 import * as framework from '@/framework';
-import { MemoryLoader } from '@/core/loaders/memory';
 import { notify } from '@/dawg/extensions/core/notify';
 import { DG_EXTENSION, FILTERS } from '@/constants';
 import { commands, Command } from '@/dawg/extensions/core/commands';
@@ -259,7 +258,7 @@ function emptyProject(): LoadedProject {
 
 
 function loadProject(): InitializationError | InitializationSuccess {
-  const projectJSON = manager.getProjectJSON();
+  const projectJSON = framework.manager.getProjectJSON();
 
   if (!projectJSON) {
     return {
@@ -268,8 +267,7 @@ function loadProject(): InitializationError | InitializationSuccess {
     };
   }
 
-  const loader = new MemoryLoader(ProjectType, { data: projectJSON });
-  const result = loader.load();
+  const result = t.decodeItem(ProjectType, { data: projectJSON });
   if (result.type === 'error') {
     return {
       type: 'error',
@@ -291,7 +289,7 @@ const createApi = () => {
   }
 
   const prj = result.project;
-  const openedFile = ref(manager.getOpenedFile());
+  const openedFile = ref(framework.manager.getOpenedFile());
   const logger = log.getLogger();
 
   async function openTempProject(p: IProject) {
@@ -299,7 +297,7 @@ const createApi = () => {
     await fs.writeFile(path, JSON.stringify(p, null, 4));
 
     logger.info(`Writing ${path} as backup`);
-    manager.setOpenedFile(path, { isTemp: true });
+    framework.manager.setOpenedFile(path, { isTemp: true });
 
     const window = remote.getCurrentWindow();
     window.reload();
@@ -317,7 +315,7 @@ const createApi = () => {
   async function saveProject(opts: { forceDialog?: boolean }) {
     const p = await prj;
 
-    let projectPath = manager.getOpenedFile();
+    let projectPath = framework.manager.getOpenedFile();
     if (!projectPath || opts.forceDialog) {
       projectPath = remote.dialog.showSaveDialog(remote.getCurrentWindow(), {}) || null;
 
@@ -335,7 +333,7 @@ const createApi = () => {
       // The cache is what is written to the filesystem
       // and the general is the file that is currently opened
       logger.info(`Setting opened project as ${projectPath}`);
-      manager.setOpenedFile(projectPath);
+      framework.manager.setOpenedFile(projectPath);
     }
 
     const encoded = serialize();
@@ -344,11 +342,11 @@ const createApi = () => {
   }
 
   async function removeOpenedFile() {
-    await manager.setOpenedFile();
+    await framework.manager.setOpenedFile();
   }
 
   async function setOpenedFile(path: string) {
-    await manager.setOpenedFile(path);
+    await framework.manager.setOpenedFile(path);
   }
 
   function serialize(): IProject {
@@ -772,8 +770,8 @@ const extension = createExtension({
   activate(context) {
     const api = createApi();
 
-    context.subscriptions.push(manager.onDidSetOpenedFile(() => {
-      api.openedFile.value = manager.getOpenedFile();
+    context.subscriptions.push(framework.manager.onDidSetOpenedFile(() => {
+      api.openedFile.value = framework.manager.getOpenedFile();
     }));
 
     context.subscriptions.push(addEventListener('online', () => {

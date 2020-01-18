@@ -14,7 +14,6 @@ import fs from '@/fs';
 import path from 'path';
 import { GLOBAL_PATH, WORKSPACE_PATH, PROJECT_PATH } from '@/constants';
 import { reverse, keys } from '@/utils';
-import { FileLoader, FileWriter } from '@/core/loaders/file';
 import uuid from 'uuid';
 import { ref } from '@vue/composition-api';
 import { PathReporter } from 'io-ts/lib/PathReporter';
@@ -129,8 +128,7 @@ const loadWorkspace = (projectId: string, file: string) => {
 
 class Manager {
   public static fromFileSystem() {
-    const loader = new FileLoader(PastProjectsType, { path: PROJECT_PATH });
-    const result = loader.load();
+    const result = t.read(PastProjectsType, { path: PROJECT_PATH });
 
     if (result.type === 'error') {
       notificationQueue.push(`Unable to load previously opened project information. Opening blank project instead.`);
@@ -154,8 +152,7 @@ class Manager {
       // Even if there are errors we do this
       fs.unlink(pastProject.tempPath);
       pastProject.tempPath = undefined;
-      const writer = new FileWriter(PastProjectsType, { path: PROJECT_PATH, data: pastProject });
-      writer.write();
+      t.write(PastProjectsType, { path: PROJECT_PATH, data: pastProject });
     }
 
     let parsedProject: JSON | null = null;
@@ -247,7 +244,7 @@ export const manager = {
    * @param projectPath The project path.
    * @param opts The options.
    */
-  async setOpenedFile(projectPath?: string, opts: { isTemp?: boolean } = {}) {
+  setOpenedFile(projectPath?: string, opts: { isTemp?: boolean } = {}) {
     if (projectPath) {
       projectManager.projectInfo.path = projectPath;
     } else {
@@ -265,8 +262,7 @@ export const manager = {
 
     events.emit('setOpenedFile');
 
-    const writer = new FileWriter(PastProjectsType, { path: PROJECT_PATH, data: pastProject });
-    return await writer.write();
+    return t.write(PastProjectsType, { path: PROJECT_PATH, data: pastProject });
   },
   async dispose() {
     if (!projectManager) {
