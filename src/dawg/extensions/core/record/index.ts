@@ -14,7 +14,7 @@ import { Sample, ScheduledSample } from '@/core';
 import { ref, watch } from '@vue/composition-api';
 import { manager } from '@/base/manager';
 import { project } from '@/dawg/extensions/core/project';
-import { applicationContext } from '@/dawg/extensions/core/application-context';
+import { controls } from '@/dawg/extensions/core/controls';
 import ChunkGhostComponent from '@/dawg/extensions/core/record/ChunkGhost.vue';
 import { ui } from '@/base/ui';
 import { blobsToAudioBuffer } from '@/modules/converter';
@@ -46,7 +46,7 @@ export const extension = createExtension({
 
     let mediaRecorder: MediaRecorder | null = null;
 
-    watch(project.state, () => {
+    watch(controls.state, () => {
       if (mediaRecorder) {
         stopRecording();
       }
@@ -55,8 +55,8 @@ export const extension = createExtension({
     const microphoneIn = context.global.microphoneIn;
 
     const startRecording = async (trackId: number) => {
-      project.stopIfStarted();
-      applicationContext.context.value = 'playlist';
+      controls.stopIfStarted();
+      controls.context.value = 'playlist';
       const time = project.master.transport.beat;
 
       if (microphoneIn === undefined) {
@@ -92,7 +92,7 @@ export const extension = createExtension({
       mediaRecorder.ondataavailable = async (event: BlobEvent) => {
         if (!recording.value) {
           recording.value = true;
-          project.startTransport();
+          controls.startTransport();
         }
 
         audioBlobs.push(event.data);

@@ -49,8 +49,6 @@ export default createComponent({
     duration: { type: Number, required: true },
     offset: { type: Number, required: true },
     disableOffset: { type: Boolean, required: true },
-    hoverClass: { type: String, required: false },
-    hoverColor: { type: String, required: false },
     dragAreaWidth: { type: Number, default: 8 },
     time: { type: Number, required: true },
     top: { type: Number, required: true },
@@ -73,11 +71,6 @@ export default createComponent({
         [side]: 0,
         height: `${props.height}px`,
       };
-
-      // TODO
-      // if (hover.value && props.hoverClass) {
-      //   s.backgroundColor = props.hoverClass;
-      // }
 
       return s;
     };

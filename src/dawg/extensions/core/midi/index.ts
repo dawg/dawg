@@ -10,6 +10,7 @@ import { theme } from '@/dawg/extensions/core/theme';
 import { pianoRoll } from '@/dawg/extensions/core/piano-roll';
 import { ref, computed, watch } from '@vue/composition-api';
 import { project } from '@/dawg/extensions/core/project';
+import { controls } from '@/dawg/extensions/core/controls';
 
 export const extension: Extension = {
   id: 'dawg.midi',
@@ -127,14 +128,14 @@ export const extension: Extension = {
       if (patterns.selectedPattern.value) {
         transport = patterns.selectedPattern.value.transport;
         transport.start();
-        project.startTransport();
+        controls.startTransport();
       }
     }
 
     function stopRecording() {
       transport = null;
       recording.value = !recording.value;
-      project.stopTransport();
+      controls.stopTransport();
     }
 
     const props = {

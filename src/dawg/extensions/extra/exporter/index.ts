@@ -91,7 +91,7 @@ export const extension = createExtension({
             },
           });
 
-          dawg.project.stopIfStarted();
+          dawg.controls.stopIfStarted();
           Tone.Master.mute = true;
           dawg.project.master.transport.start();
         };

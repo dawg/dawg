@@ -6,9 +6,9 @@ import { instruments } from '@/dawg/extensions/core/instruments';
 import { patterns } from '@/dawg/extensions/core/patterns';
 import { manager } from '@/base/manager';
 import { commands } from '@/dawg/extensions/core/commands';
-import { applicationContext } from '@/dawg/extensions/core/application-context';
 import { ref, watch } from '@vue/composition-api';
 import { project } from '@/dawg/extensions/core/project';
+import { controls } from '@/dawg/extensions/core/controls';
 import * as base from '@/base';
 
 export const pianoRoll = manager.activate({
@@ -64,7 +64,7 @@ export const pianoRoll = manager.activate({
       }),
       computed: {
         pianoRollPlay() {
-          return project.state.value === 'started' && applicationContext.context.value === 'pianoroll';
+          return controls.state.value === 'started' && controls.context.value === 'pianoroll';
         },
       },
     });

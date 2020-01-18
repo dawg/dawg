@@ -30,7 +30,7 @@ import { theme } from '@/dawg/extensions/core/theme';
 
 @Component
 export default class Patterns extends Vue {
-  @Prop(Nullable(Object)) public value!: Pattern | null;
+  @Prop(Object) public value!: Pattern | undefined;
   @Prop({ type: Array, required: true }) public patterns!: Pattern[];
   public contenteditable = false;
 

@@ -4,6 +4,7 @@ import { ui } from '@/base/ui';
 import { createExtension } from '@/dawg/extensions';
 import { commands } from '@/dawg/extensions/core/commands';
 import { project } from '@/dawg/extensions/core/project';
+import * as dawg from '@/dawg';
 
 export const extension = createExtension({
   id: 'dawg.mixer',
@@ -31,7 +32,7 @@ export const extension = createExtension({
       }),
       computed:  {
         play: () => {
-          return project.state.value === 'started';
+          return dawg.controls.state.value === 'started';
         },
       },
     });

@@ -13,8 +13,7 @@ import { DG_EXTENSION, FILTERS } from '@/constants';
 import { commands, Command } from '@/dawg/extensions/core/commands';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, ref, watch, Ref } from '@vue/composition-api';
-import { patterns as patternsExtension } from '@/dawg/extensions/core/patterns';
-import { applicationContext } from '@/dawg/extensions/core/application-context';
+import { controls } from '@/dawg/extensions/core/controls';
 import { addEventListener, findUniqueName, makeLookup, range, chain } from '@/utils';
 import { log } from '@/dawg/extensions/core/log';
 import { emitter } from '@/events';
@@ -293,18 +292,8 @@ const createApi = () => {
   }
 
   const prj = result.project;
-  const state = ref<'stopped' | 'started' | 'paused'>('stopped');
   const openedFile = ref(manager.getOpenedFile());
   const logger = log.getLogger();
-
-  const transport = computed(() => {
-    if (applicationContext.context.value === 'pianoroll') {
-      const pattern = patternsExtension.selectedPattern;
-      return pattern.value ? pattern.value.transport : null;
-    } else {
-      return prj.master.transport;
-    }
-  });
 
   async function openTempProject(p: IProject) {
     const { name: path } = tmp.fileSync({ keep: true });
@@ -738,62 +727,6 @@ const createApi = () => {
     return makeLookup(prj.channels);
   });
 
-  function playPause() {
-    if (!transport.value) {
-      notify.warning('Please select a Pattern.', {
-        detail: 'Please create and select a `Pattern` first or switch the `Playlist` context.',
-      });
-      return;
-    }
-
-    if (transport.value.state === 'started') {
-      pause();
-    } else {
-      startTransport();
-    }
-  }
-
-  function pause() {
-    if (!transport.value) {
-      return;
-    }
-
-    transport.value.stop();
-    state.value = 'paused';
-  }
-
-  function getTime() {
-    if (!transport.value) {
-      return 0;
-    }
-
-    return transport.value.seconds;
-  }
-
-  function startTransport() {
-    if (!transport.value) {
-      return;
-    }
-
-    transport.value.start();
-    state.value = 'started';
-  }
-
-  function stopIfStarted() {
-    if (transport.value && transport.value.state === 'started') {
-      stopTransport();
-    }
-  }
-
-  function stopTransport() {
-    if (!transport.value) {
-      return;
-    }
-
-    transport.value.stop();
-    state.value = 'stopped';
-  }
-
   return {
     patterns: prj.patterns,
     master: prj.master,
@@ -828,13 +761,6 @@ const createApi = () => {
     saveProject,
     removeOpenedFile,
     setOpenedFile,
-    state,
-    playPause,
-    pause,
-    getTime,
-    startTransport,
-    stopIfStarted,
-    stopTransport,
   } as const;
 };
 
@@ -852,11 +778,6 @@ const extension = createExtension({
         instrument.online();
       });
     }));
-
-    // Pause every time the context changes
-    watch(applicationContext.context, () => {
-      api.pause();
-    });
 
     const save: Command = {
       text: 'Save',
@@ -940,11 +861,6 @@ const extension = createExtension({
     });
 
     context.subscriptions.push(...toDispose);
-    context.subscriptions.push(commands.registerCommand({
-      text: 'Play/Pause',
-      shortcut: ['Space'],
-      callback: api.playPause,
-    }));
 
     context.settings.push({
       type: 'string',

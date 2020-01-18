@@ -273,9 +273,6 @@ export default createComponent({
     };
   },
 });
-
-// TODO
-// 3. Remove "curse" thing from drag
 </script>
 
 <style lang="scss" scoped>

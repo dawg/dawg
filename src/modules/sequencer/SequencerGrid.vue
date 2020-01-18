@@ -75,7 +75,7 @@
             @contextmenu.native="remove($event, i)"
             @mousedown.native="select($event, i)"
             @click.native="clickElement(i)"
-            @dblclick="open($event, i)"
+            @dblclick.native="open($event, i)"
           ></component>
         </template>
       </element-wrapper>
@@ -611,7 +611,6 @@ export default class SequencerGrid extends Vue {
   box-shadow: -1px 0 2px #ffa
 
 .loop-background
-  opacity: 0
   background-color: #000
   transition: .2s opacity
   opacity: 0.2

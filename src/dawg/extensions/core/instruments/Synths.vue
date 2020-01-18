@@ -27,7 +27,7 @@ import { project } from '@/dawg/extensions/core/project';
 export default class Synths extends Vue {
   @Prop({ type: Array, required: true }) public instruments!: Array<Instrument<any, any>>;
   @Prop(Nullable(Object)) public selectedScore!: Score | null;
-  @Prop(Nullable(Object)) public selectedPattern!: Pattern | null;
+  @Prop(Object) public selectedPattern!: Pattern | undefined;
 
   get project() {
     return project;
