@@ -68,14 +68,14 @@ export const extension = createExtension({
       <dg-mat-icon
         v-if="error"
         class="flex text-default text-sm"
-        v-tooltip.top.left="'Cloud Backup Error'"
+        title="Cloud Backup Error"
         icon="error_outline"
       ></dg-mat-icon>
 
       <dg-spinner
         v-else-if="syncing"
         class="flex text-default text-sm"
-        v-tooltip.top.left="'Syncing Backup'"
+        title="Syncing Backup"
       ></dg-spinner>
 
       <dg-mat-icon

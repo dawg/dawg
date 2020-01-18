@@ -59,11 +59,13 @@
         :duration="component.duration"
         :offset="component.offset"
         :colored="colored"
+        @mousedown.native="select($event, i)"
+        @contextmenu.native="remove($event, i)"
+        @click.native="clickElement(i)"
+        @dblclick.native="open($event, i)"
         @update:duration="updateDuration(i, $event)"
         @update:offset="updateOffset(i, $event)"
       >
-        <!-- TODO make sure there are no regressions -->
-        <!-- TODO make sure all of the events work -->
         <template v-slot:default="{ width }">
           <component
             :is="component.name"
@@ -72,10 +74,6 @@
             :width="width"
             :height="rowHeight"
             :element="component.element"
-            @contextmenu.native="remove($event, i)"
-            @mousedown.native="select($event, i)"
-            @click.native="clickElement(i)"
-            @dblclick.native="open($event, i)"
           ></component>
         </template>
       </element-wrapper>
@@ -396,6 +394,11 @@ export default class SequencerGrid extends Vue {
       return;
     }
 
+    if (this.selected.some((selected) => selected)) {
+      this.selected = this.elements.map(() => false);
+      return;
+    }
+
     const rect = this.$el.getBoundingClientRect();
 
     const x = e.clientX - rect.left;
@@ -454,6 +457,10 @@ export default class SequencerGrid extends Vue {
       itemsToMove = this.elements.filter((item, ind) => this.selected[ind]);
     } else {
       itemsToMove = [oldItem];
+    }
+
+    if (itemsToMove.some((item) => (item.time + timeDiff) < 0)) {
+      return;
     }
 
     itemsToMove.forEach((item) => {

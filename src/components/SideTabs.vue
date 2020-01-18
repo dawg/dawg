@@ -10,7 +10,7 @@
         v-for="action in actions"
         :key="action.icon.value"
         class="text-xl text-default cursor-pointer"
-        v-tooltip.bottom="action.tooltip.value"
+        :title="action.tooltip.value"
         :icon="action.icon.value"
         @click="action.callback"
       ></dg-mat-icon>

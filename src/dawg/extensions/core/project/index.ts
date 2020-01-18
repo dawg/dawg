@@ -13,7 +13,6 @@ import { DG_EXTENSION, FILTERS } from '@/constants';
 import { commands, Command } from '@/dawg/extensions/core/commands';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, ref, watch, Ref } from '@vue/composition-api';
-import { controls } from '@/dawg/extensions/core/controls';
 import { addEventListener, findUniqueName, makeLookup, range, chain } from '@/utils';
 import { log } from '@/dawg/extensions/core/log';
 import { emitter } from '@/events';
@@ -725,6 +724,10 @@ const createApi = () => {
 
   const channelLookup = computed(() => {
     return makeLookup(prj.channels);
+  });
+
+  watch(prj.bpm, () => {
+    Audio.Context.BPM.value = prj.bpm.value;
   });
 
   return {

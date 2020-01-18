@@ -14,7 +14,7 @@ export const extension = createExtension({
 
     const component = Vue.extend({
       template: `
-        <div v-tooltip.right-end="openedFile.value" class="text-default text-sm">
+        <div :title="openedFile.value" class="text-default text-sm">
           {{ projectName.value }}
         </div>
       `,

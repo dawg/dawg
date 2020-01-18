@@ -3,7 +3,7 @@
     <div
       v-for="item in base.ui.activityBar"
       :key="item.name"
-      v-tooltip.right="item.name"
+      :title="item.name"
       class="pt-3 pb-3 text-center cursor-pointer flex flex-col hover:bg-default-lighten-1"
       @click="clickActivityBar(item)"
     >
@@ -14,7 +14,7 @@
     </div>
 
     <div class="flex-grow"></div>
-    <div class="pt-3 pb-3 text-center cursor-pointer flex flex-col" v-tooltip.right="'Settings'" @click="openSettings">
+    <div class="pt-3 pb-3 text-center cursor-pointer flex flex-col" title="Settings" @click="openSettings">
       <dg-mat-icon
         class="text-2xl text-default"
         icon="settings"

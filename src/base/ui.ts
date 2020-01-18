@@ -4,7 +4,7 @@ import VueCompositionApi from '@vue/composition-api';
 Vue.use(VueCompositionApi);
 
 import { VueConstructor } from 'vue';
-import { Ref, ref, createComponent } from '@vue/composition-api';
+import { Ref, ref, createComponent, watch } from '@vue/composition-api';
 
 export interface TabAction {
   // FIXME make all of these optionally refs

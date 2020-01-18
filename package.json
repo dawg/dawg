@@ -39,7 +39,6 @@
     "tmp": "0.0.33",
     "tone": "^13.8.3",
     "uuid": "^3.3.2",
-    "v-tooltip": "^2.0.2",
     "vue": "^2.6.10",
     "vue-drag-drop": "^1.1.4",
     "vue-property-decorator": "^7.0.0",

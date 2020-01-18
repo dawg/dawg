@@ -1,8 +1,6 @@
 import Vue from 'vue';
 import * as dawg from '@/dawg';
 import path from 'path';
-
-
 import '@/styles/material.css';
 import '@/styles/fontawesome/all.css';
 import '@/main.css';
@@ -12,12 +10,8 @@ import DragNDrop from '@/modules/dragndrop';
 import Draggable from '@/modules/draggable';
 import Knobs from '@/modules/knobs';
 import Split from '@/modules/split';
-// tslint:disable-next-line:no-var-requires
-const VTooltip = require('v-tooltip');
 
 const middleware = () => {
-  Vue.use(VTooltip);
-
   // This imports all .vue files in the components folder
   const components = require.context(
     './components',
@@ -53,6 +47,7 @@ const middleware = () => {
   extensions.keys().forEach((fileNameOrFolderName) => {
     // slice(1) to remove "."
     const parts = fileNameOrFolderName.split(path.sep).slice(1);
+
     let extensionModule: any;
     switch (parts.length) {
       case 0:

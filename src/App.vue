@@ -106,15 +106,8 @@ import PanelHeaders from '@/components/PanelHeaders.vue';
 import ActivityBar from '@/components/ActivityBar.vue';
 import { TOOLBAR_HEIGHT, STATUS_BAR_HEIGHT } from '@/constants';
 import * as base from '@/base';
-import { sortOrdered } from './utils';
+import { sortOrdered } from '@/utils';
 import * as dawg from '@/dawg';
-
-// TO VERIFY
-// 1. Recording
-// 2. Backup
-// 3. MIDI
-// 4. Remove all dawg references in the extensions folder
-// 5. Move all extensions to a single folder and not core/extra
 
 @Component({
   components: {

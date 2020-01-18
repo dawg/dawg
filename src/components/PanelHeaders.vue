@@ -20,7 +20,7 @@
       :key="action.icon.value"
       :icon="action.icon.value"
       v-bind="action.props"
-      v-tooltip.bottom="action.tooltip.value"
+      :title="action.tooltip.value"
       @click="action.callback"
     ></dg-mat-icon>
   </ul>
