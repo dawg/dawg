@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col" :class="base.ui.rootClasses">
+  <div class="flex flex-col" :class="framework.ui.rootClasses">
     <split direction="vertical">
 
       <split direction="horizontal" resizable>
@@ -10,7 +10,7 @@
         <split 
           collapsible 
           :min-size="100"
-          :initial.sync="base.ui.sideBarSize.value"
+          :initial.sync="framework.ui.sideBarSize.value"
         >
           <side-tabs 
             v-if="loaded"
@@ -54,7 +54,7 @@
             direction="vertical"
             class="bg-default border-t border-default-darken-3"
             keep
-            :initial.sync="base.ui.panelsSize.value"
+            :initial.sync="framework.ui.panelsSize.value"
           >
             <split :initial="55" fixed>
               <panel-headers></panel-headers>
@@ -88,7 +88,7 @@
     </split>
     <settings v-model="settings"></settings>
     <component
-      v-for="(global, i) in base.ui.global"
+      v-for="(global, i) in framework.ui.global"
       :key="i"
       :is="global"
     ></component>
@@ -105,7 +105,7 @@ import Panels from '@/components/Panels.vue';
 import PanelHeaders from '@/components/PanelHeaders.vue';
 import ActivityBar from '@/components/ActivityBar.vue';
 import { TOOLBAR_HEIGHT, STATUS_BAR_HEIGHT } from '@/constants';
-import * as base from '@/base';
+import * as framework from '@/framework';
 import { sortOrdered } from '@/utils';
 import * as dawg from '@/dawg';
 
@@ -119,7 +119,7 @@ import * as dawg from '@/dawg';
 export default class App extends Vue {
   public TOOLBAR_HEIGHT = TOOLBAR_HEIGHT;
   public STATUS_BAR_HEIGHT = STATUS_BAR_HEIGHT;
-  public base = base;
+  public framework = framework;
   public settings = false;
 
   // This loaded flag is important
@@ -130,43 +130,43 @@ export default class App extends Vue {
   public loaded = false;
 
   get mainComponent() {
-    if (base.ui.mainSection.length) {
-      return base.ui.mainSection[base.ui.mainSection.length - 1];
+    if (framework.ui.mainSection.length) {
+      return framework.ui.mainSection[framework.ui.mainSection.length - 1];
     }
   }
 
   get toolbarLeft() {
-    return base.ui.toolbar.filter((item) => item.position === 'left').sort(sortOrdered);
+    return framework.ui.toolbar.filter((item) => item.position === 'left').sort(sortOrdered);
   }
 
   get toolbarRight() {
-    return base.ui.toolbar.filter((item) => item.position === 'right').sort(sortOrdered).reverse();
+    return framework.ui.toolbar.filter((item) => item.position === 'right').sort(sortOrdered).reverse();
   }
 
   get lineStyle() {
-    return `border-left: 1px solid ${base.theme['text-default']}`;
+    return `border-left: 1px solid ${framework.theme['text-default']}`;
   }
 
   get statusBarRight() {
-    return base.ui.statusBar.filter((item) => item.position === 'right').sort(sortOrdered).reverse();
+    return framework.ui.statusBar.filter((item) => item.position === 'right').sort(sortOrdered).reverse();
   }
 
   get statusBarLeft() {
-    return base.ui.statusBar.filter((item) => item.position === 'left').sort(sortOrdered);
+    return framework.ui.statusBar.filter((item) => item.position === 'left').sort(sortOrdered);
   }
 
   public async created() {
     // This is called before refresh / close
     // I don't remove this listner because the window is closing anyway
     // I'm not even sure onExit would be called if we removed it in the destroy method
-    window.addEventListener('beforeunload', base.manager.dispose);
+    window.addEventListener('beforeunload', framework.manager.dispose);
 
     // FIXME
     // automation.$on('automate', this.addAutomationClip);
 
     setTimeout(async () => {
       // Log this for debugging purposes
-      (window as any).base = base;
+      (window as any).framework = framework;
       (window as any).dawg = dawg;
       this.loaded = true;
     }, 1250);
@@ -188,11 +188,11 @@ export default class App extends Vue {
   }
 
   public online() {
-    base.notify.info('Connection has been restored');
+    framework.notify.info('Connection has been restored');
   }
 
   public offline() {
-    base.notify.warning('You are disconnected', {
+    framework.notify.warning('You are disconnected', {
       detail: 'Features may not work as expected.',
     });
   }
@@ -211,7 +211,7 @@ export default class App extends Vue {
     // });
 
     // if (!added) {
-    //   base.notify.warning('Unable to create automation clip', {
+    //   framework.notify.warning('Unable to create automation clip', {
     //     detail: 'There are no free tracks. Move elements and try again.',
     //   });
     // }

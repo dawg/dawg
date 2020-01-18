@@ -8,7 +8,7 @@ import parser from '@/midi-parser';
 import fs from '@/fs';
 import { ScheduledSample, Sample } from '@/core';
 import { commands } from '@/dawg/extensions/core/commands';
-import { createExtension } from '@/dawg/extensions';
+import { createExtension } from '@/framework/extensions';
 import { createComponent } from '@vue/composition-api';
 import { vueExtend } from '@/utils';
 import { createFileExplorer, FileExplorerAPI } from '@/dawg/extensions/extra/explorer/common';

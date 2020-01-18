@@ -3,12 +3,11 @@ import Patterns from '@/dawg/extensions/core/patterns/Patterns.vue';
 import { ref, computed, createComponent, watch } from '@vue/composition-api';
 import { makeLookup, vueExtend } from '@/utils';
 import { Pattern } from '@/core';
-import { manager } from '@/base/manager';
-import { ui } from '@/base/ui';
+import * as framework from '@/framework';
 import { project } from '@/dawg/extensions/core/project';
 import * as t from '@/modules/io';
 
-export const patterns = manager.activate({
+export const patterns = framework.manager.activate({
   id: 'dawg.patterns',
   workspace: {
     selectedPatternId: t.string,
@@ -28,8 +27,8 @@ export const patterns = manager.activate({
     watch(pattern, () => {
       selectedPatternId.value = pattern.value ? pattern.value.id : undefined;
 
-      if (pattern.value && ui.openedSideTab.value !== 'Patterns') {
-        ui.openedSideTab.value = 'Patterns';
+      if (pattern.value && framework.ui.openedSideTab.value !== 'Patterns') {
+        framework.ui.openedSideTab.value = 'Patterns';
       }
     });
 
@@ -49,7 +48,7 @@ export const patterns = manager.activate({
       }),
     }));
 
-    ui.activityBar.push({
+    framework.ui.activityBar.push({
       icon: 'queue',
       name: 'Patterns',
       component: wrapper,

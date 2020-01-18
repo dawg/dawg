@@ -70,7 +70,7 @@ import ChannelSelect from '@/components/ChannelSelect.vue';
 import { Note, Instrument, Sequence } from '@/core';
 import { update } from '@/utils';
 import { createComponent, computed, watch, ref } from '@vue/composition-api';
-import * as base from '@/base';
+import * as framework from '@/framework';
 
 export default createComponent({
   name: 'Synth',
@@ -112,7 +112,7 @@ export default createComponent({
     });
 
     function contextmenu(event: MouseEvent) {
-      base.context({
+      framework.context({
         position: event,
         items: [
           {

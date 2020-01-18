@@ -21,6 +21,7 @@ const inspect: MenuCommand = {
 
 const defaultItems =  process.env.NODE_ENV !== 'production' ? [inspect] : [];
 
+// TODO refactor names
 export const context: ContextFunction = (opts) => {
   let items = opts.items;
   if (defaultItems.length !== 0) {

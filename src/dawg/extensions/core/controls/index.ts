@@ -1,8 +1,7 @@
 import Vue from 'vue';
 import VerticalSwitch from '@/dawg/extensions/core/controls/VerticalSwitch.vue';
-import { manager } from '@/base/manager';
+import * as framework from '@/framework';
 import { createComponent, computed, ref, watch } from '@vue/composition-api';
-import * as base from '@/base';
 import { commands } from '@/dawg/extensions/core/commands';
 import * as t from '@/modules/io';
 import { vueExtend } from '@/utils';
@@ -12,7 +11,7 @@ import { patterns as patternsExtension } from '@/dawg/extensions/core/patterns';
 const applicationContextType = t.union([t.literal('playlist'), t.literal('pianoroll')]);
 export type ApplicationContext = t.TypeOf<typeof applicationContextType>;
 
-export const controls = manager.activate({
+export const controls = framework.manager.activate({
   id: 'dawg.controls',
   workspace: {
     context: {
@@ -40,7 +39,7 @@ export const controls = manager.activate({
       },
     });
 
-    base.ui.toolbar.push({
+    framework.ui.toolbar.push({
       position: 'right',
       component,
       order: 1,

@@ -1,5 +1,4 @@
-import { manager } from '@/base/manager';
-import { ui } from '@/base/ui';
+import * as framework from '@/framework';
 import { paletteEvents, PaletteItem } from '@/dawg/extensions/core/palette/common';
 export {
   PaletteItem,
@@ -18,10 +17,10 @@ interface InputOptions<T> {
   placeholder?: string;
 }
 
-export const palette = manager.activate({
+export const palette = framework.manager.activate({
   id: 'dawg.palette',
   activate() {
-    ui.global.push(Palette);
+    framework.ui.global.push(Palette);
 
     return {
       selectFromStrings<T extends string>(items: T[], options: InputOptions<T>) {
@@ -107,6 +106,6 @@ export const palette = manager.activate({
     };
   },
   deactivate() {
-    ui.global.pop();
+    framework.ui.global.pop();
   },
 });

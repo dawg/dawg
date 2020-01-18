@@ -1,5 +1,5 @@
 import * as keyboard from '@/keyboard';
-import { manager } from '@/base/manager';
+import * as framework from '@/framework';
 import { palette } from '@/dawg/extensions/core/palette';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { Key } from '@/keyboard';
@@ -89,7 +89,7 @@ const pushAndReturnDispose = (items: Shortcut[], item: Shortcut) => {
   };
 };
 
-export const commands = manager.activate({
+export const commands = framework.manager.activate({
   id: 'dawg.commands',
   activate(context) {
     const registerCommand = (command: Command) => {

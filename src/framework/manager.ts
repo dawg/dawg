@@ -9,7 +9,7 @@ import {
   FieldOptions,
   ReactiveDefinition,
   Setting,
-} from '@/dawg/extensions';
+} from '@/framework/extensions';
 import fs from '@/fs';
 import path from 'path';
 import { GLOBAL_PATH, WORKSPACE_PATH, PROJECT_PATH } from '@/constants';

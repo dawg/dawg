@@ -9,9 +9,9 @@ import 'firebase/database';
 import 'firebase/auth';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, watch, ref, createComponent } from '@vue/composition-api';
-import { ui } from '@/base/ui';
+import * as framework from '@/framework';
 import { project, ProjectType, IProject } from '@/dawg/extensions/core/project';
-import { createExtension, VueInput } from '@/dawg/extensions';
+import { createExtension, VueInput } from '@/framework/extensions';
 import { vueExtend } from '@/utils';
 
 export const extension = createExtension({
@@ -96,7 +96,7 @@ export const extension = createExtension({
       },
     }));
 
-    ui.statusBar.push({
+    framework.ui.statusBar.push({
       component,
       position: 'right',
       order: 1,

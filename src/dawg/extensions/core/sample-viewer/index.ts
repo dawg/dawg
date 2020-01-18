@@ -1,12 +1,11 @@
 import Vue from 'vue';
 import SampleViewer from '@/dawg/extensions/core/sample-viewer/SampleViewer.vue';
 import { Action } from '@/dawg/extensions/core/sample-viewer/types';
-import { ui } from '@/base/ui';
-import { manager } from '@/base/manager';
+import * as framework from '@/framework';
 import { ref, watch } from '@vue/composition-api';
 import { Sample } from '@/core';
 
-export const sampleViewer = manager.activate({
+export const sampleViewer = framework.manager.activate({
   id: 'dawg.sample-viewer',
   activate() {
     const actions: Action[] = [];
@@ -14,7 +13,7 @@ export const sampleViewer = manager.activate({
 
     watch(openedSample, () => {
       if (openedSample.value) {
-        ui.openedPanel.value = 'Sample';
+        framework.ui.openedPanel.value = 'Sample';
       }
     });
 
@@ -32,7 +31,7 @@ export const sampleViewer = manager.activate({
       }),
     });
 
-    ui.panels.push({
+    framework.ui.panels.push({
       name: 'Sample',
       component,
     });

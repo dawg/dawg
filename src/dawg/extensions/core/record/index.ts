@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { createExtension } from '@/dawg/extensions';
+import { createExtension } from '@/framework/extensions';
 import * as t from '@/modules/io';
 import { commands } from '@/dawg/extensions/core/commands';
 import { palette } from '@/dawg/extensions/core/palette';
@@ -12,11 +12,10 @@ import { ChunkGhost } from '@/core/ghost';
 import { remote } from 'electron';
 import { Sample, ScheduledSample } from '@/core';
 import { ref, watch } from '@vue/composition-api';
-import { manager } from '@/base/manager';
 import { project } from '@/dawg/extensions/core/project';
 import { controls } from '@/dawg/extensions/core/controls';
 import ChunkGhostComponent from '@/dawg/extensions/core/record/ChunkGhost.vue';
-import { ui } from '@/base/ui';
+import * as framework from '@/framework';
 import { blobsToAudioBuffer } from '@/modules/converter';
 
 export const DOCUMENTS_PATH = remote.app.getPath('documents');
@@ -174,7 +173,7 @@ export const extension = createExtension({
       options,
     });
 
-    ui.trackContext.push({
+    framework.ui.trackContext.push({
       text: 'Record',
       callback: (i) => startRecording(i),
     });
@@ -186,4 +185,4 @@ export const extension = createExtension({
 });
 
 
-export const record = manager.activate(extension);
+export const record = framework.manager.activate(extension);

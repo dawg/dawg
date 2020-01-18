@@ -25,7 +25,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Pattern, ScheduledPattern } from '@/core';
 import { Nullable } from '@/utils';
 import { Watch } from '@/modules/update';
-import * as base from '@/base';
+import * as framework from '@/framework';
 import { theme } from '@/dawg/extensions/core/theme';
 
 @Component
@@ -52,7 +52,7 @@ export default class Patterns extends Vue {
   }
 
   public context(event: MouseEvent, i: number) {
-    base.context({
+    framework.context({
       position: event,
       items: [
         {

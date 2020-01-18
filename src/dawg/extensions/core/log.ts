@@ -1,4 +1,4 @@
-import { manager } from '@/base/manager';
+import * as framework from '@/framework';
 
 type Level = 'info' | 'debug' | 'error' | 'trace' | 'warn';
 type LevelLookup = { [L in Level]: number };
@@ -32,7 +32,7 @@ const getLogger = (base?: string): Logger => {
   };
 };
 
-export const log = manager.activate({
+export const log = framework.manager.activate({
   id: 'dawg.log',
   activate() {
     const logger = getLogger();

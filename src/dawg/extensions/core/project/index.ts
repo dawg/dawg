@@ -3,10 +3,10 @@ import uuid from 'uuid';
 import fs from '@/fs';
 import * as Audio from '@/modules/audio';
 import * as t from '@/modules/io';
-import { createExtension } from '@/dawg/extensions';
+import { createExtension } from '@/framework/extensions';
 import { remote } from 'electron';
 import { loadBufferSync } from '@/modules/wav/local';
-import { manager } from '@/base/manager';
+import * as framework from '@/framework';
 import { MemoryLoader } from '@/core/loaders/memory';
 import { notify } from '@/dawg/extensions/core/notify';
 import { DG_EXTENSION, FILTERS } from '@/constants';
@@ -876,4 +876,4 @@ const extension = createExtension({
   },
 });
 
-export const project = manager.activate(extension);
+export const project = framework.manager.activate(extension);

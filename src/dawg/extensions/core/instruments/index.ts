@@ -1,14 +1,12 @@
 import Vue from 'vue';
 import Synths from '@/dawg/extensions/core/instruments/Synths.vue';
-import { manager } from '@/base/manager';
+import * as framework from '@/framework';
 import { ref, Ref, computed, watch } from '@vue/composition-api';
 import { patterns } from '@/dawg/extensions/core/patterns';
 import { Score } from '@/core';
-import { ui } from '@/base/ui';
 import { project } from '@/dawg/extensions/core/project';
-import * as base from '@/base';
 
-export const instruments = manager.activate({
+export const instruments = framework.manager.activate({
   id: 'dawg.instruments',
   activate() {
     const component = Vue.extend({
@@ -30,7 +28,7 @@ export const instruments = manager.activate({
     });
 
     function addInstrument(event: MouseEvent) {
-      base.menu({
+      framework.menu({
         position: event,
         items: [
           {
@@ -46,7 +44,7 @@ export const instruments = manager.activate({
       });
     }
 
-    ui.panels.push({
+    framework.ui.panels.push({
       name: 'Instruments',
       component,
       actions: [{

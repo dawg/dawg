@@ -3,10 +3,10 @@
     class="tabs-panels" 
     ref="panels"
     :selected-tab.sync="openedPanel"
-    :first="base.ui.panels[0] ? base.ui.panels[0].name : undefined"
+    :first="framework.ui.panels[0] ? framework.ui.panels[0].name : undefined"
   >
     <tab 
-      v-for="item in base.ui.panels"
+      v-for="item in framework.ui.panels"
       :key="item.name"
       :name="item.name"
       :selected-tab="openedPanel"
@@ -23,7 +23,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import BaseTabs from '@/components/BaseTabs.vue';
 import Tab from '@/components/Tab.vue';
-import * as base from '@/base';
+import * as framework from '@/framework';
 import { createComponent } from '@vue/composition-api';
 
 export default createComponent({
@@ -34,8 +34,8 @@ export default createComponent({
   },
   setup() {
     return {
-      base,
-      openedPanel: base.ui.openedPanel,
+      framework,
+      openedPanel: framework.ui.openedPanel,
     };
   },
 });

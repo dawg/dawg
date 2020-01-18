@@ -1,11 +1,10 @@
 import Notifications from '@/dawg/extensions/core/notify/Notifications.vue';
-import { manager } from '@/base/manager';
-import * as base from '@/base';
+import * as framework from '@/framework';
 
-export const notify = manager.activate({
+export const notify = framework.manager.activate({
   id: 'dawg.notify',
   activate() {
-    base.ui.global.push(Notifications);
-    return base.notify;
+    framework.ui.global.push(Notifications);
+    return framework.notify;
   },
 });

@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col bg-default-lighten-2" style="height: 100%;">
     <div
-      v-for="item in base.ui.activityBar"
+      v-for="item in framework.ui.activityBar"
       :key="item.name"
       :title="item.name"
       class="pt-3 pb-3 text-center cursor-pointer flex flex-col hover:bg-default-lighten-1"
@@ -24,14 +24,14 @@
 </template>
 
 <script lang="ts">
-import * as base from '@/base';
+import * as framework from '@/framework';
 import { createComponent, ref, watch } from '@vue/composition-api';
 
 export default createComponent({
   name: 'ActivityBar',
   setup(_, context) {
-    function clickActivityBar(tab: base.ActivityBarItem) {
-      base.ui.openedSideTab.value = tab.name;
+    function clickActivityBar(tab: framework.ActivityBarItem) {
+      framework.ui.openedSideTab.value = tab.name;
     }
 
     function openSettings(e: MouseEvent) {
@@ -41,7 +41,7 @@ export default createComponent({
     return {
       openSettings,
       clickActivityBar,
-      base,
+      framework,
       open,
     };
   },

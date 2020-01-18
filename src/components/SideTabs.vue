@@ -19,10 +19,10 @@
       <base-tabs
         ref="tabs"
         :selected-tab.sync="openedSideTab"
-        :first="base.ui.activityBar[0] ? base.ui.activityBar[0].name : undefined"
+        :first="framework.ui.activityBar[0] ? framework.ui.activityBar[0].name : undefined"
       >
         <tab
-          v-for="tab in base.ui.activityBar"
+          v-for="tab in framework.ui.activityBar"
           :key="tab.name"
           :name="tab.name"
           :selected-tab="openedSideTab"
@@ -41,7 +41,7 @@
 import BaseTabs from '@/components/BaseTabs.vue';
 import Tab from '@/components/Tab.vue';
 import { TOOLBAR_HEIGHT } from '@/constants';
-import * as base from '@/base';
+import * as framework from '@/framework';
 import { createComponent, computed } from '@vue/composition-api';
 
 export default createComponent({
@@ -58,8 +58,8 @@ export default createComponent({
     });
 
     const itemLookup = computed(() => {
-      const lookup: { [name: string]: base.ActivityBarItem } = {};
-      base.ui.activityBar.forEach((item) => {
+      const lookup: { [name: string]: framework.ActivityBarItem } = {};
+      framework.ui.activityBar.forEach((item) => {
         lookup[item.name] = item;
       });
 
@@ -67,29 +67,29 @@ export default createComponent({
     });
 
     const actions = computed(() => {
-      if (base.ui.openedSideTab.value === undefined) {
+      if (framework.ui.openedSideTab.value === undefined) {
         return [];
       }
 
-      if (itemLookup.value[base.ui.openedSideTab.value] === undefined) {
+      if (itemLookup.value[framework.ui.openedSideTab.value] === undefined) {
         return [];
       }
 
-      return itemLookup.value[base.ui.openedSideTab.value].actions || [];
+      return itemLookup.value[framework.ui.openedSideTab.value].actions || [];
     });
 
     const header = computed(() => {
-      if (base.ui.openedSideTab.value) {
-        return base.ui.openedSideTab.value.toUpperCase();
+      if (framework.ui.openedSideTab.value) {
+        return framework.ui.openedSideTab.value.toUpperCase();
       }
     });
 
     return {
-      base,
+      framework,
       actions,
       header,
       headerStyle,
-      openedSideTab: base.ui.openedSideTab,
+      openedSideTab: framework.ui.openedSideTab,
     };
   },
 });

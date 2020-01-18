@@ -1,9 +1,9 @@
-import { manager } from '@/base/manager';
+import * as framework from '@/framework';
 import { remote } from 'electron';
 import { commands, Command } from '@/dawg/extensions/core/commands';
 import { menubar } from '@/dawg/extensions/core/menubar';
 
-export const window = manager.activate({
+export const window = framework.manager.activate({
   id: 'dawg.window',
   activate(context) {
     const w = remote.getCurrentWindow();

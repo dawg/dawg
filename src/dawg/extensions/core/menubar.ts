@@ -1,4 +1,4 @@
-import { manager } from '@/base/manager';
+import * as framework from '@/framework';
 import { ipcRenderer } from '@/ipc';
 import { Command } from '@/dawg/extensions/core/commands';
 import { uniqueId } from '@/utils';
@@ -25,7 +25,7 @@ interface SubMenu {
 export type Menu = SubMenu[];
 type MenuNames = 'File' | 'Edit' | 'View' | 'Help';
 
-export const menubar = manager.activate({
+export const menubar = framework.manager.activate({
   id: 'dawg.menubar',
   activate() {
     const menus: { [K in MenuNames]: Menu } = {

@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { createExtension } from '@/dawg/extensions';
+import { createExtension } from '@/framework/extensions';
 import * as dawg from '@/dawg';
 import ExportProgressModal from '@/dawg/extensions/extra/exporter/ExportProgressModal.vue';
 import { ref } from '@vue/composition-api';

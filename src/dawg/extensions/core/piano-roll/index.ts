@@ -4,14 +4,13 @@ import PianoRollSequencer from '@/dawg/extensions/core/piano-roll/PianoRollSeque
 import Note from '@/dawg/extensions/core/piano-roll/Note.vue';
 import { instruments } from '@/dawg/extensions/core/instruments';
 import { patterns } from '@/dawg/extensions/core/patterns';
-import { manager } from '@/base/manager';
+import * as framework from '@/framework';
 import { commands } from '@/dawg/extensions/core/commands';
 import { ref, watch } from '@vue/composition-api';
 import { project } from '@/dawg/extensions/core/project';
 import { controls } from '@/dawg/extensions/core/controls';
-import * as base from '@/base';
 
-export const pianoRoll = manager.activate({
+export const pianoRoll = framework.manager.activate({
   id:  'dawg.piano-roll',
   workspace: {
     pianoRollRowHeight: {
@@ -28,7 +27,7 @@ export const pianoRoll = manager.activate({
       text: 'Open Piano Roll',
       shortcut: ['CmdOrCtrl', 'P'],
       callback: () => {
-        base.ui.openedPanel.value = 'Piano Roll';
+        framework.ui.openedPanel.value = 'Piano Roll';
       },
     }));
 
@@ -69,9 +68,9 @@ export const pianoRoll = manager.activate({
       },
     });
 
-    const actions: base.TabAction[] = [];
+    const actions: framework.TabAction[] = [];
 
-    base.ui.panels.push({
+    framework.ui.panels.push({
       name: 'Piano Roll',
       component,
       actions,
@@ -79,12 +78,12 @@ export const pianoRoll = manager.activate({
 
     watch(instruments.selectedScore, () => {
       if (instruments.selectedScore.value) {
-        base.ui.openedPanel.value = 'Piano Roll';
+        framework.ui.openedPanel.value = 'Piano Roll';
       }
     });
 
     return {
-      addAction(action: base.TabAction) {
+      addAction(action: framework.TabAction) {
         actions.push(action);
       },
       setRecording(r: boolean) {

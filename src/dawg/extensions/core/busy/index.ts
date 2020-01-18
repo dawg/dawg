@@ -1,8 +1,7 @@
 import Vue from 'vue';
 import BusySignal from '@/dawg/extensions/core/busy/BusySignal.vue';
 import { Provider, bus } from '@/dawg/extensions/core/busy/helpers';
-import { manager } from '@/base/manager';
-import { ui } from '@/base/ui';
+import * as framework from '@/framework';
 
 /**
  * The configuration options.
@@ -17,7 +16,7 @@ export interface BusySignalOptions {
 
 export type BusyFunction = (message: string, options?: BusySignalOptions) => Provider;
 
-export const busy = manager.activate({
+export const busy = framework.manager.activate({
   id: 'dawg.busy',
   activate: () => {
     const busyFunction: BusyFunction = (message, opts = {}) => {
@@ -27,7 +26,7 @@ export const busy = manager.activate({
       return provider;
     };
 
-    ui.statusBar.push({
+    framework.ui.statusBar.push({
       component: BusySignal,
       position: 'right',
       order: 2,

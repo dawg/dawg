@@ -6,7 +6,7 @@ import { watch } from '@vue/composition-api';
 import { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 import { busy } from '@/dawg/extensions/core/busy';
 import { notify } from '@/dawg/extensions/core/notify';
-import { createExtension } from '@/dawg/extensions';
+import { createExtension } from '@/framework/extensions';
 
 interface PythonError {
   type: 'error';
