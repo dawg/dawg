@@ -3,6 +3,7 @@ import { ref, Ref } from '@vue/composition-api';
 import path from 'path';
 import fs, { FSWatcher } from '@/fs';
 import { Keys } from '@/utils';
+import * as dawg from '@/dawg';
 
 // Beware, naming is a bit weird. Hopefully types help you understand what things are.
 
@@ -14,7 +15,7 @@ export interface Memento {
   folders: Array<{ rootFolder: string, openedFolders: string[] }>;
 }
 
-export const createFileExplorer = async (extensions: Set<string>) => {
+export const createFileExplorer = (extensions: Set<string>) => {
   let selected: File | Folder | null = null;
   const trees: Ref<Folder[]> = ref([]);
   let watchers: FSWatcher[] = [];
@@ -77,7 +78,6 @@ export const createFileExplorer = async (extensions: Set<string>) => {
   };
 
   const setMemento = (memento: Memento) => {
-    // const rootFolder = createFileExplorerHelper({ dir, parent: null, index: 0, extensions });
     trees.value = [];
     selected = null;
 
@@ -96,13 +96,21 @@ export const createFileExplorer = async (extensions: Set<string>) => {
         setMemento(createMemento());
       }));
 
-      const tree = await createFileExplorerHelper({
+      const result = await createFileExplorerHelper({
         dir: folderInfo.rootFolder,
         parent: null,
         index: 0,
         extensions,
         select,
       });
+
+      if (result.type === 'error') {
+        dawg.notify.error('Unable to open folder: ' + result.message);
+        return;
+      }
+
+      const tree = result.tree;
+
       const openFolders = new Set(folderInfo.openedFolders);
 
       const recurse = (item: Folder | File) => {
@@ -278,13 +286,13 @@ const keydown = (
   }
 };
 
-const createFileExplorerHelper = async ({ dir, parent, index, extensions, select }: {
+const createFileExplorerHelper = ({ dir, parent, index, extensions, select }: {
   dir: string,
   parent: Folder | null,
   index: number,
   extensions: Set<string>,
   select: (item: Folder | File) => void,
-}): Promise<Folder> => {
+}): { type: 'error', message: string } | { type: 'success', tree: Folder } => {
   const tree: Folder = {
     type: 'folder',
     parent,
@@ -299,16 +307,18 @@ const createFileExplorerHelper = async ({ dir, parent, index, extensions, select
   // items = folders and files
   let items: string[];
   try {
-    items = await fs.readdir(dir);
+    items = fs.readdirSync(dir);
   } catch (e) {
-    // UHH TODO should we do this?
-    return tree;
+    return {
+      type: 'error',
+      message: e.message,
+    };
   }
 
   let i = 0;
   for (const item of items) {
     const fullPath = path.join(dir, item);
-    const stat = await fs.stat(fullPath);
+    const stat = fs.statSync(fullPath);
     if (stat.isFile()) {
       const parts = item.split('.');
       const extension = parts[parts.length - 1];
@@ -325,13 +335,21 @@ const createFileExplorerHelper = async ({ dir, parent, index, extensions, select
         i++;
       }
     } else {
-      tree.children.push(await createFileExplorerHelper({ dir: fullPath, parent: tree, index: i, extensions, select }));
+      const result = createFileExplorerHelper({ dir: fullPath, parent: tree, index: i, extensions, select });
+      if (result.type === 'error') {
+        return result;
+      }
+
+      tree.children.push(result.tree);
       i++;
     }
 
   }
 
-  return tree;
+  return {
+    type: 'success',
+    tree,
+  };
 };
 
 type ThenArg<T> = T extends PromiseLike<infer U> ? U : T;

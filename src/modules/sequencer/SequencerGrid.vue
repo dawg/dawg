@@ -22,11 +22,13 @@
         :px-per-beat="pxPerBeat"
         :colored="colored"
         :selected="false"
+        :offset="0"
         :height="rowHeight"
         :snap="snap"
         :resizable="false"
-        :top="ghost.left"
-        :left="ghost.left"
+        :can-offset="false"
+        :top="ghost.top"
+        :time="ghost.time"
       >
         <template v-slot:default="{ width }">
           <component
@@ -45,16 +47,20 @@
       <element-wrapper
         v-for="(component, i) in components"
         :key="i"
-        :left="component.left"
+        :time="component.time"
         :top="component.top"
         :height="rowHeight"
         :px-per-beat="pxPerBeat"
         :resizable="true"
+        :disable-offset="component.disableOffset"
         :snap="snap"
+        :min-snap="minSnap"
         :selected="selected[i]"
         :duration="component.duration"
+        :offset="component.offset"
         :colored="colored"
         @update:duration="updateDuration(i, $event)"
+        @update:offset="updateOffset(i, $event)"
       >
         <!-- TODO make sure there are no regressions -->
         <!-- TODO make sure all of the events work -->
@@ -128,7 +134,8 @@ export default class SequencerGrid extends Vue {
   @Prop({ type: Object, required: true }) public sequence!: Sequence<Schedulable>;
   // @Prop({ type: Array, required: true }) public elements!: Schedulable[];
   @Prop({ type: Array, default: null }) public ghosts!: Ghost[] | null;
-  @Prop({ type: Number, default: 0.25 }) public snap!: number;
+  @Prop({ type: Number, required: true }) public snap!: number;
+  @Prop({ type: Number, required: true }) public minSnap!: number;
 
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;
   @Prop({ type: Number, required: true }) public beatsPerMeasure!: number;
@@ -175,11 +182,13 @@ export default class SequencerGrid extends Vue {
     return this.elements.map((item) => {
       return {
         row: item.row,
-        left: item.time * this.pxPerBeat,
+        time: item.time,
         top: item.row * this.rowHeight,
         name: item.component,
         duration: item.duration,
+        offset: item.offset,
         element: item,
+        disableOffset: item.disableOffset,
       };
     });
   }
@@ -191,7 +200,7 @@ export default class SequencerGrid extends Vue {
 
     return this.ghosts.map((item) => {
       return {
-        left: item.time * this.pxPerBeat,
+        time: item.time,
         top: item.row * this.rowHeight,
         row: item.row,
         name: item.component,
@@ -302,6 +311,35 @@ export default class SequencerGrid extends Vue {
       flex: `0 0 ${this.rowHeight}px`,
       width: `${this.pxPerBeat * this.displayBeats}px`,
     };
+  }
+
+  public updateOffset(i: number, value: number) {
+    const item = this.elements[i];
+    const diff = value - item.offset;
+
+    const updateOffset = (index: number) => {
+      // Ok so we update both the duration of getter and the duraion of the element
+      // This DEfinitely might not be needed
+      this.components[index].offset += diff;
+      this.elements[index].offset += diff;
+    };
+
+    const toUpdate = [i];
+    if (this.selected[i]) {
+      this.selected.forEach((selected, ind) => {
+        if (selected && ind !== i) {
+          toUpdate.push(ind);
+        }
+      });
+    }
+
+    // If the diff is less than zero, make sure we aren't setting the offset of
+    // any of the elments to < 0
+    if (diff < 0 && toUpdate.some((ind) => (this.elements[ind].offset + diff) < 0)) {
+      return;
+    }
+
+    toUpdate.forEach(updateOffset);
   }
 
   public updateDuration(i: number, value: number) {

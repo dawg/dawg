@@ -1,16 +1,17 @@
-import * as events from '@/base/events';
+import * as events from '@/events';
 
 export interface PaletteOptions {
   placeholder?: string;
 }
 
-interface PaletteEvents {
-  show: (items: PaletteItem[], opts?: PaletteOptions) => void;
-  cancel: () => void;
-  select: (text: string) => void;
-  focus: (text: string) => void;
-  showTextField: (opts?: PaletteOptions) => void;
-}
+// tslint:disable-next-line:interface-over-type-literal
+type PaletteEvents = {
+  show: [PaletteItem[], PaletteOptions | undefined];
+  cancel: [];
+  select: [string];
+  focus: [string];
+  showTextField: [PaletteOptions | undefined];
+};
 
 export const paletteEvents = events.emitter<PaletteEvents>();
 

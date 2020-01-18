@@ -21,7 +21,7 @@ export class Note extends Schedulable implements Serializable<INote> {
   public instrument: Instrument<any, any>;
 
   constructor(instrument: Instrument<any, any>, i: INote) {
-    super(i);
+    super(i, { disableOffset: true });
     this.instrument = instrument;
     this.velocity = i.velocity === undefined ? 1 : i.velocity;
   }
@@ -39,6 +39,7 @@ export class Note extends Schedulable implements Serializable<INote> {
       },
       time: this.time,
       duration: 0, // FIXME We shouldn't have to set a duration. This is explained more in the Transport class file.
+      offset: 0,
     });
   }
 
@@ -48,6 +49,7 @@ export class Note extends Schedulable implements Serializable<INote> {
       time: this.time,
       velocity: this.velocity,
       duration: this.duration,
+      offset: this.offset,
     };
   }
 }

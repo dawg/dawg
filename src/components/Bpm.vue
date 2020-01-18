@@ -1,5 +1,5 @@
 <template>
-  <drag-element class="text-default flex items-baseline select-none" curse="ns-resize" @move="move">
+  <drag-element class="text-default flex items-baseline select-none" cursor="ns-resize" @move="move">
     <div class="text-3xl">{{ value }}</div>
     <div class="text-xs ml-1">bpm</div>
   </drag-element>
@@ -18,8 +18,8 @@ export default createComponent({
   },
   setup(props, context) {
     return {
-      move: (e: Event, { changeY }: { changeY: number }) => {
-        context.emit('input', Math.max(0, props.value - changeY));
+      move: (e: MouseEvent) => {
+        context.emit('input', Math.max(0, props.value - e.movementY));
       },
     };
   },

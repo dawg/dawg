@@ -1,6 +1,6 @@
-import { emitter } from '@/base/events';
+import { emitter } from '@/events';
 
-export const events = emitter<{ add: (notification: Notification) => void }>();
+export const events = emitter<{ add: [Notification] }>();
 
 export type NotificationType = 'info' | 'success' | 'warning' | 'error';
 

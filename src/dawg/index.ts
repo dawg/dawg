@@ -20,11 +20,13 @@ export { window } from '@/dawg/extensions/core/window';
 export { IExtensionContext, Extension, createExtension, Subscription } from '@/dawg/extensions';
 export { manager } from '@/base/manager';
 export { Key } from '@/keyboard';
+import * as io from '@/modules/io';
 
 import * as platform from '@/platform';
-import * as events from '@/base/events';
+import * as events from '@/events';
 
 export {
+  io,
   events,
   platform,
 };

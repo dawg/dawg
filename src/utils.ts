@@ -89,6 +89,42 @@ export const Nullable = <V, T extends new() => V>(o: T) => {
   };
 };
 
+interface ClickerOpts<T extends any[]> {
+  onClick: (...args: T) => void;
+  onDblClick: (...args: T) => void;
+  /**
+   * In ms.
+   */
+  timer?: number;
+}
+
+/**
+ * Distinguish between single + double clicks.
+ */
+export const useClicker = <T extends any[] = [MouseEvent]>(opts: ClickerOpts<T>) => {
+  let clicks = 0;
+  const delay = opts.timer || 150;
+  let timer: NodeJS.Timeout | undefined;
+
+  return (...args: T) => {
+    clicks++;
+
+    if (clicks === 1) {
+      timer = setTimeout(() => {
+        opts.onClick(...args);
+        clicks = 0;
+      }, delay);
+    } else {
+      if (timer) {
+        clearTimeout(timer);
+      }
+
+      opts.onDblClick(...args);
+      clicks = 0;
+    }
+  };
+};
+
 
 export const Keys = {
   ENTER: 13,

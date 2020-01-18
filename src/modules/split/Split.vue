@@ -4,7 +4,7 @@
       class="gutter"
       v-if="gutter"
       :style="gutterStyle"
-      :curse="cursor"
+      :cursor="cursor"
       @move="move"
     >
       <slot name="gutter"></slot>

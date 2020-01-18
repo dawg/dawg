@@ -4,19 +4,29 @@ import { StrictEventEmitter } from '@/events';
 import { Beat } from '@/modules/audio/types';
 import * as history from '@/dawg/extensions/core/project/history';
 
-export const SchedulableType = t.type({
-  row: t.number,
-  time: t.number,
-  duration: t.number,
-});
+export const SchedulableType = t.intersection([
+  t.type({
+    row: t.number,
+    time: t.number,
+    duration: t.number,
+  }),
+  t.partial({
+    offset: t.number,
+  }),
+]);
 
 export type ISchedulable = t.TypeOf<typeof SchedulableType>;
+
+interface Opts {
+  disableOffset?: boolean;
+}
 
 export abstract class Schedulable extends StrictEventEmitter<{ remove: [], undoRemove: [] }> {
   /**
    * The component name to mount in the `Sequencer`.
    */
   public readonly abstract component: string;
+  public readonly disableOffset: boolean;
 
   /**
    * Refers to row where the element is placed.
@@ -31,14 +41,30 @@ export abstract class Schedulable extends StrictEventEmitter<{ remove: [], undoR
    * Private duration in beats.
    */
   private beats: number;
+  // tslint:disable-next-line:variable-name
+  private _offset: number;
   private controller?: Audio.TransportEventController;
 
-  constructor(i: ISchedulable) {
+  constructor(i: ISchedulable, opts: Opts = {}) {
     super();
     this.row = i.row;
+    this._offset = i.offset || 0;
+    // this.offset = i.offset;
     this._time = i.time;
     this.beats = i.duration;
     this.duration = i.duration;
+    this.disableOffset = opts.disableOffset || false;
+  }
+
+  get offset() {
+    return this._offset;
+  }
+
+  set offset(offset: number) {
+    this._offset = offset;
+    if (this.controller) {
+      this.controller.setOffset(offset);
+    }
   }
 
   /**

@@ -17,7 +17,7 @@ import { patterns as patternsExtension } from '@/dawg/extensions/core/patterns';
 import { applicationContext } from '@/dawg/extensions/core/application-context';
 import { addEventListener, findUniqueName, makeLookup, range, chain } from '@/utils';
 import { log } from '@/dawg/extensions/core/log';
-import { emitter } from '@/base/events';
+import { emitter } from '@/events';
 import {
   Playlist,
   Pattern,
@@ -100,7 +100,7 @@ export interface InitializationSuccess {
   project: LoadedProject;
 }
 
-const events = emitter<{ save: (encoded: IProject) => void }>();
+const events = emitter<{ save: [IProject] }>();
 
 /**
  * Loads the project from its basic JSON structure into classes. This step is very important as it links a lot of

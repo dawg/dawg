@@ -24,6 +24,7 @@ export class ScheduledSample extends Schedulable implements Serializable<ISchedu
       time: 0,
       duration: sample.beats,
       type: 'sample',
+      offset: 0,
     });
   }
 
@@ -56,6 +57,7 @@ export class ScheduledSample extends Schedulable implements Serializable<ISchedu
       time: this.time,
       type: literal('sample'),
       sampleId: this.sampleId,
+      offset: this.offset,
     };
   }
 
@@ -69,10 +71,11 @@ export class ScheduledSample extends Schedulable implements Serializable<ISchedu
     return transport.schedule({
       time: this.time,
       duration: this.duration,
+      offset: 0,
       onStart: ({ seconds }) => {
         controller = instance.start({
           startTime: seconds,
-          offset: 0,
+          offset: this.offset,
           duration: Context.beatsToSeconds(this.duration),
         });
       },

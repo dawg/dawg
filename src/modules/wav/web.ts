@@ -8,7 +8,7 @@ export function loadFromUrl(url: string) {
   return new Promise<AudioBuffer>((resolve, reject) => {
     request.onreadystatechange = () => {
       if (request.readyState === 4 && request.status === 200) {
-        Audio.context.decodeAudioData(request.response).then((buff) => {
+        Audio.Context.context.decodeAudioData(request.response).then((buff) => {
           resolve(buff);
         });
       }

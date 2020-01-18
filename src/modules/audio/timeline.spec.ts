@@ -6,14 +6,14 @@ describe(Timeline.name, () => {
     const timeline = new Timeline();
     expect(timeline.search(0).type).to.eq('before');
 
-    timeline.add({ time: 1 });
+    timeline.add({ time: 1, offset: 0 });
     expect(timeline.search(0).type).to.eq('before');
     expect(timeline.search(1).type).to.eq('hit');
     expect(timeline.search(2).type).to.eq('after');
 
-    timeline.add({ time: 1 });
-    timeline.add({ time: 1 });
-    timeline.add({ time: 2 });
+    timeline.add({ time: 1, offset: 0 });
+    timeline.add({ time: 1, offset: 0 });
+    timeline.add({ time: 2, offset: 0 });
     expect(timeline.search(0).type).to.eq('before');
 
     const r2 = timeline.search(1);
