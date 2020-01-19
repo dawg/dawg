@@ -22,6 +22,12 @@ const isSplit = (vue: Vue): vue is Split => {
   return (vue.constructor as any as { options: { name: string } }).options.name === Split.name;
 };
 
+class Instance {
+  constructor(opts: {}) {
+    //
+  }
+}
+
 @Component
 export default class Split extends Vue {
   @Prop(String) public direction?: Direction;

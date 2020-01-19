@@ -267,7 +267,7 @@ function loadProject(): InitializationError | InitializationSuccess {
     };
   }
 
-  const result = t.decodeItem(ProjectType, { data: projectJSON });
+  const result = t.decodeItem(ProjectType, projectJSON);
   if (result.type === 'error') {
     return {
       type: 'error',

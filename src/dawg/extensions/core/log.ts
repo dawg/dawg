@@ -38,11 +38,11 @@ export const log = framework.manager.activate({
     const logger = getLogger();
     return {
       getLogger(level?: Level) {
-        if (!manager.activating.length) {
+        if (!framework.manager.activating.length) {
           throw Error('`getLogger` must be called while activating an extension');
         }
 
-        const last = manager.activating[manager.activate.length - 1];
+        const last = framework.manager.activating[framework.manager.activate.length - 1];
         const newLogger =  getLogger(last.id);
         newLogger.level = level || 'info';
         return newLogger;

@@ -37,7 +37,7 @@
 
 <script lang="ts">
 import { createComponent, computed } from '@vue/composition-api';
-import { Setting } from '@/dawg/extensions';
+import { Setting } from '@/framework';
 import { Marked } from 'marked-ts';
 import { unwrap } from '../utils';
 
