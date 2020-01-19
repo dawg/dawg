@@ -1,7 +1,7 @@
 <template>
-  <div class="split" :class="{ resizable: direction, [direction]: true }">
+  <div class="relative" :class="{ flex: direction, 'flex-col': direction === 'vertical' }">
     <drag-element 
-      class="gutter"
+      class="absolute gutter"
       v-if="i.gutter"
       :style="gutterStyle"
       :cursor="cursor"
@@ -26,30 +26,37 @@ interface Opts {
   minSize: Ref<number>;
   maxSize: Ref<number>;
   collapsePixels: Ref<number>;
-  parent: Split | null;
+  parent: Instance | null;
   height: Ref<number>;
   width: Ref<number>;
+  initial: Ref<number>;
   collapsible: Ref<boolean>;
+  fixed: Ref<boolean>;
+  keep: Ref<boolean>;
 }
 
 class Instance {
-  public parent: Split | null;
   public height: Ref<number>;
   public width: Ref<number>;
 
   // We set some of the defaults here so we can view them in vue-devtools
   // If no defaults are set, we do not see them...
   public gutter = false;
+  public level = 0;
 
-  public children!: Split[];
-  public before: Split[] = []; // Splits before gutter (left / top)
-  public after: Split[] = []; // Splits after gutter (right / bottom)
+  public children: Instance[] = [];
+  public before: Instance[] = []; // Splits before gutter (left / top)
+  public after: Instance[] = []; // Splits after gutter (right / bottom)
+  public fixed: Ref<boolean>;
+  public keep: Ref<boolean>;
 
+  private parent: Instance | null;
   private direction?: Direction;
   private minSize: Ref<number>;
   private maxSize: Ref<number>;
   private collapsePixels: Ref<number>;
   private collapsible: Ref<boolean>;
+  private initial: Ref<number>;
 
   constructor(opts: Opts) {
     this.direction = opts.direction;
@@ -60,6 +67,19 @@ class Instance {
     this.maxSize = opts.maxSize;
     this.collapsePixels = opts.collapsePixels;
     this.collapsible = opts.collapsible;
+    this.initial = opts.initial;
+    this.fixed = opts.fixed;
+    this.keep = opts.keep;
+  }
+
+  get isRoot() {
+    return this.parent === null;
+  }
+
+  get parentDirection() {
+    if (this.parent) {
+      return this.parent.direction;
+    }
   }
 
   get size() {
@@ -82,6 +102,15 @@ class Instance {
     return watch(this.width, cb);
   }
 
+  public onDidChangeSize(cb: (size: number) => void) {
+    return watch(this.initial, cb);
+  }
+
+  public setParent(parent: Instance) {
+    this.parent = parent;
+    this.parent.children.push(this);
+  }
+
   /**
    * Resize the splits taking into account which splits should be resized first and which are collapsible.
    *
@@ -90,7 +119,7 @@ class Instance {
    * @param direction The direction to move.
    * @returns The amount of pixels it actually moved.
    */
-  public calculatePositions(splits: Split[], px: number, direction: Direction, dryRun = false) {
+  public calculatePositions(splits: Instance[], px: number, direction: Direction, dryRun = false) {
     // First resize but don't include children that have keep flag
     // Then resize again but include the children with a keep flag
     // Then resize anything that is collapsible
@@ -101,6 +130,8 @@ class Instance {
   }
 
   public init() {
+    console.log('Initializing node at level ' + this.level);
+
     if (!this.direction) { return; }
 
     if (!this.parent && this.collapsible.value) {
@@ -110,21 +141,21 @@ class Instance {
     let remaining = this.direction === 'horizontal' ? this.width.value : this.height.value;
     this.children.forEach((split, i) => {
       if (this.direction === 'horizontal') {
-        split.i.height.value = this.height.value;
+        split.height.value = this.height.value;
       } else {
-        split.i.width.value = this.width.value;
+        split.width.value = this.width.value;
       }
 
-      if (split.initial) {
-        split.i.setSize(split.initial);
-        remaining -= split.initial;
+      if (split.initial.value) {
+        split.setSize(split.initial.value);
+        remaining -= split.initial.value;
       }
     });
 
-    const notInitialized = this.children.filter((child) => !child.initial);
+    const notInitialized = this.children.filter((child) => !child.initial.value);
     const size = remaining / notInitialized.length;
-    notInitialized.forEach((split) => { split.i.setSize(size); });
-    this.children.forEach((split) => { split.i.init(); });
+    notInitialized.forEach((split) => { split.setSize(size); });
+    this.children.forEach((split) => { split.init(); });
   }
 
   public setSize(size: number) {
@@ -186,7 +217,7 @@ class Instance {
   }
 
   private doResize(
-    splits: Split[],
+    splits: Instance[],
     px: number,
     direction: Direction,
     opts?: { keep?: boolean, collapsible?: boolean, dryRun?: boolean },
@@ -196,18 +227,18 @@ class Instance {
     const child = splits[0]; // all children have the same parent
 
     // Just a helper method
-    const set = (s: Split, value: number, attr?: 'height' | 'width') => {
+    const set = (s: Instance, value: number, attr?: 'height' | 'width') => {
       if (!dryRun) {
         if (attr) {
-          s.i[attr].value = value;
+          s[attr].value = value;
         } else {
-          s.i.setSize(value);
-          s.$update('initial', value);
+          s.setSize(value);
+          this.initial.value = value;
         }
       }
     };
 
-    if (child.i.parent && child.i.parent.direction === direction) {
+    if (child.parent && child.parent.direction === direction) {
       for (const split of splits) {
         // We're done if px === 0
         if (px === 0) {
@@ -215,19 +246,19 @@ class Instance {
         }
 
         // Skip he fixed splits.
-        if (split.fixed) {
+        if (split.fixed.value) {
           continue;
         }
 
         // If we aren't considering keep, skip the splits with `keep` flag
-        if (split.keep && !keep) {
+        if (split.keep.value && !keep) {
           continue;
         }
 
         // Trim the new size at the max and min. If collapsed, make sure that newSize stays at 0 until
         // we reach the min size of the split.
-        let newSize = Math.max(split.i.minSize.value, Math.min(split.i.size + px, split.i.maxSize.value));
-        if (split.i.collapsed && px < split.i.minSize.value) {
+        let newSize = Math.max(split.minSize.value, Math.min(split.size + px, split.maxSize.value));
+        if (split.collapsed && px < split.minSize.value) {
           newSize = 0;
         }
 
@@ -241,26 +272,26 @@ class Instance {
         // 5. If it's a dry run OR if we want to move our size exactly. This is probably the most confusing
         // part and could maybe be refactored. This check is important though as we have to consider how much
         // other splits can move.
-        if (split.i.collapsible.value && collapsible && newSize === split.i.size && px < -this.collapsePixels.value) {
-          if (dryRun || -px === split.i.size) {
+        if (split.collapsible.value && collapsible && newSize === split.size && px < -this.collapsePixels.value) {
+          if (dryRun || -px === split.size) {
             newSize = 0;
           }
         }
 
-        const diff = newSize - split.i.size;
-        this.doResize(split.i.childrenReversed, diff, direction, { keep, collapsible, dryRun });
+        const diff = newSize - split.size;
+        this.doResize(split.childrenReversed, diff, direction, { keep, collapsible, dryRun });
         set(split, newSize);
 
         px -= diff;
       }
     } else {
       for (const split of splits) {
-        this.doResize(split.i.childrenReversed, px, direction, { keep, collapsible, dryRun });
+        this.doResize(split.childrenReversed, px, direction, { keep, collapsible, dryRun });
         if (direction === 'horizontal') {
-          const newSize = split.i.width.value + px;
+          const newSize = split.width.value + px;
           set(split, newSize, 'width');
         } else {
-          const newSize = split.i.height.value + px;
+          const newSize = split.height.value + px;
           set(split, newSize, 'height');
         }
       }
@@ -306,13 +337,14 @@ export default class Split extends Vue {
     maxSize: ref(this.maxSize),
     collapsePixels: ref(this.collapsePixels),
     collapsible: ref(this.collapsible),
+    keep: ref(this.keep),
+    fixed: ref(this.fixed),
+    initial: ref(this.initial),
   });
 
   get gutterStyle() {
-    if (!this.i.parent) { return; }
-
     // The margin makes sure the gutter is centered on the line
-    if (this.i.parent.direction === 'horizontal') {
+    if (this.i.parentDirection === 'horizontal') {
       return {
         height: '100%',
         width: `${this.gutterSize}px`,
@@ -328,12 +360,10 @@ export default class Split extends Vue {
   }
 
   get cursor() {
-    if (this.i.parent) {
-      if (this.i.parent.direction === 'horizontal') {
-        return 'ew-resize';
-      } else {
-        return 'ns-resize';
-      }
+    if (this.i.parentDirection === 'horizontal') {
+      return 'ew-resize';
+    } else {
+      return 'ns-resize';
     }
   }
 
@@ -346,25 +376,38 @@ export default class Split extends Vue {
       this.$el.style.width = width + 'px';
     }));
 
+    this.toDispose.push(this.i.onDidChangeSize((size) => {
+      this.$update('initial', size);
+    }));
+
     if (isSplit(this.$parent)) {
-      this.i.parent = this.$parent;
-      this.i.parent = this.i.parent;
+      this.i.setParent(this.$parent.i);
     }
 
-    this.i.children = this.$children.filter(isSplit);
+    const getLevel = (node: Vue): number => {
+      if (isSplit(node)) {
+        return getLevel(node.$parent) + 1;
+      } else {
+        return 0;
+      }
+    };
+
+    this.i.level = getLevel(this);
+    console.log('Mounted node at level ' + this.i.level);
+
     this.i.children.map((child, i) => {
-      child.i.before = this.i.children.slice(0, i).reverse();
+      child.before = this.i.children.slice(0, i).reverse();
       // After includes $children[i].
       // This makes sense if you think about it since the gutter is on the left/top of the element!
-      child.i.after = this.i.children.slice(i);
+      child.after = this.i.children.slice(i);
     });
 
     // There will never be a gutter for the first element
     this.i.children.slice(1).forEach((_, i) => {
-      this.i.children[i + 1].i.gutter = !this.i.children[i].fixed && !this.i.children[i + 1].fixed;
+      this.i.children[i + 1].gutter = !this.i.children[i].fixed.value && !this.i.children[i + 1].fixed.value;
     });
 
-    if (this.i.parent) { return; }
+    if (!this.i.isRoot) { return; }
     this.i.height.value = window.innerHeight;
     this.i.width.value = window.innerWidth;
 
@@ -374,80 +417,35 @@ export default class Split extends Vue {
 
   public destroyed() {
     this.toDispose.forEach((cb) => cb());
-    if (this.i.parent) { return; }
+    if (!this.i.isRoot) { return; }
     window.removeEventListener('resize', this.onResizeEvent);
   }
 
   public onResizeEvent() {
-    this.i.calculatePositions([this], window.innerWidth - this.i.width.value, 'horizontal');
-    this.i.calculatePositions([this], window.innerHeight - this.i.height.value, 'vertical');
+    this.i.calculatePositions([this.i], window.innerWidth - this.i.width.value, 'horizontal');
+    this.i.calculatePositions([this.i], window.innerHeight - this.i.height.value, 'vertical');
   }
 
   public move(e: MouseEvent) {
-    if (!this.i.parent) {
-      return;
-    }
-
-    if (!this.i.parent.direction) {
+    if (this.i.parentDirection === undefined) {
       return;
     }
 
     const { left, top } = this.$el.getBoundingClientRect();
-    const gutterPosition = this.i.parent.direction === 'horizontal' ? left : top;
-    const mousePosition = this.i.parent.direction === 'horizontal' ? e.clientX : e.clientY;
+    const gutterPosition = this.i.parentDirection === 'horizontal' ? left : top;
+    const mousePosition = this.i.parentDirection === 'horizontal' ? e.clientX : e.clientY;
 
     const px = mousePosition - gutterPosition;
     this.i.resize(px);
-  }
-
-  @Watch('initial', { immediate: true })
-  public changeSize() {
-    console.log(!!this.i.parent, this.initial, this.i.size);
-
-    if (!this.i.parent) {
-      return;
-    }
-
-    if (this.initial === this.i.size) {
-      return;
-    }
-
-    if (this.initial === undefined) {
-      return;
-    }
-
-    switch (this.i.parent.direction) {
-      case 'horizontal':
-        console.log('HORIZONTAL');
-        this.i.after[1].i.resize(this.initial - this.i.width.value);
-        break;
-      case 'vertical':
-        console.log('VERTICAL');
-        this.i.resize(this.i.height.value - this.initial);
-        break;
-    }
   }
 }
 </script>
 
 <style lang="scss" scoped>
 .gutter {
-  position: absolute;
   left: 0;
   top: 0;
   width: 100%;
   z-index: 999;
-}
-
-.split {
-  position: relative
-}
-
-.resizable {
-  display: flex
-}
-
-.vertical {
-  flex-direction: column
 }
 </style>
