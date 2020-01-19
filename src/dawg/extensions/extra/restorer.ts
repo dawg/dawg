@@ -18,6 +18,9 @@ export const extension = createExtension({
     },
   },
   activate(context) {
+    framework.ui.sideBarSize.value = context.workspace.sideBarSize.value;
+    framework.ui.panelsSize.value = context.workspace.panelsSize.value;
+
     // watch everything for changes
     watch(framework.ui.openedSideTab, () => {
       if (framework.ui.openedSideTab.value) {
@@ -46,7 +49,5 @@ export const extension = createExtension({
     // initialize the variables
     framework.ui.openedSideTab.value = context.workspace.openedSideTab.value;
     framework.ui.openedPanel.value = context.workspace.openedPanel.value;
-    framework.ui.sideBarSize.value = context.workspace.sideBarSize.value;
-    framework.ui.panelsSize.value = context.workspace.panelsSize.value;
   },
 });
