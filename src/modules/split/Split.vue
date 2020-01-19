@@ -1,5 +1,5 @@
 <template>
-  <div class="relative" :class="{ flex: direction, 'flex-col': direction === 'vertical' }">
+  <div ref="el" class="relative" :class="{ flex: direction, 'flex-col': direction === 'vertical' }">
     <drag-element 
       class="absolute gutter"
       v-if="i.gutter"
@@ -12,51 +12,53 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from 'vue-property-decorator';
-import { watch, Ref, ref } from '@vue/composition-api';
+import { watch, Ref, ref, createComponent, computed, onMounted, onUnmounted } from '@vue/composition-api';
+import { update } from '@/utils';
 
 export type Direction = 'horizontal' | 'vertical';
 
-const isSplit = (vue: Vue): vue is Split => {
-  return (vue.constructor as any as { options: { name: string } }).options.name === Split.name;
+const isSplit = (vue: any): vue is { i: Split } => {
+  return vue.$options.name === 'Split';
 };
 
 interface Opts {
+  name: Ref<string>;
   direction?: Direction;
   minSize: Ref<number>;
   maxSize: Ref<number>;
   collapsePixels: Ref<number>;
-  parent: Instance | null;
+  parent: Split | null;
   height: Ref<number>;
   width: Ref<number>;
-  initial: Ref<number>;
+  initial: Ref<number | undefined>;
   collapsible: Ref<boolean>;
   fixed: Ref<boolean>;
   keep: Ref<boolean>;
 }
 
-class Instance {
-  public height: Ref<number>;
-  public width: Ref<number>;
-
-  // We set some of the defaults here so we can view them in vue-devtools
-  // If no defaults are set, we do not see them...
+class Split {
   public gutter = false;
-  public level = 0;
 
-  public children: Instance[] = [];
-  public before: Instance[] = []; // Splits before gutter (left / top)
-  public after: Instance[] = []; // Splits after gutter (right / bottom)
-  public fixed: Ref<boolean>;
-  public keep: Ref<boolean>;
+  private height: Ref<number>;
+  private width: Ref<number>;
 
-  private parent: Instance | null;
+  private level = 0;
+  private before: Split[] = []; // Splits before gutter (left / top)
+  private after: Split[] = []; // Splits after gutter (right / bottom)
+  private fixed: Ref<boolean>;
+  private keep: Ref<boolean>;
+
+  private children: Split[] = [];
+  private name: Ref<string>;
+  private parent: Split | null;
   private direction?: Direction;
   private minSize: Ref<number>;
   private maxSize: Ref<number>;
   private collapsePixels: Ref<number>;
   private collapsible: Ref<boolean>;
-  private initial: Ref<number>;
+  private initial: Ref<number | undefined>;
+  private sizeForEvent = ref(0);
+  private boundOnResizeEvent: () => void;
 
   constructor(opts: Opts) {
     this.direction = opts.direction;
@@ -70,6 +72,8 @@ class Instance {
     this.initial = opts.initial;
     this.fixed = opts.fixed;
     this.keep = opts.keep;
+    this.name = opts.name;
+    this.boundOnResizeEvent = this.onResizeEvent.bind(this);
   }
 
   get isRoot() {
@@ -103,12 +107,13 @@ class Instance {
   }
 
   public onDidChangeSize(cb: (size: number) => void) {
-    return watch(this.initial, cb);
+    return watch(this.sizeForEvent, cb, { lazy: true });
   }
 
-  public setParent(parent: Instance) {
+  public setParent(parent: Split) {
     this.parent = parent;
     this.parent.children.push(this);
+    this.level = this.parent.level + 1;
   }
 
   /**
@@ -119,7 +124,7 @@ class Instance {
    * @param direction The direction to move.
    * @returns The amount of pixels it actually moved.
    */
-  public calculatePositions(splits: Instance[], px: number, direction: Direction, dryRun = false) {
+  public calculatePositions(splits: Split[], px: number, direction: Direction, dryRun = false) {
     // First resize but don't include children that have keep flag
     // Then resize again but include the children with a keep flag
     // Then resize anything that is collapsible
@@ -129,41 +134,52 @@ class Instance {
     return px - pxRemaining;
   }
 
-  public init() {
-    console.log('Initializing node at level ' + this.level);
+  public init(sizes: { height: number, width: number }) {
+    // tslint:disable-next-line:no-console
+    console.log(`[${this.name.value}] Initializing at level => ${this.level}`);
 
-    if (!this.direction) { return; }
+    this.height.value = sizes.height;
+    this.width.value = sizes.width;
 
-    if (!this.parent && this.collapsible.value) {
-      throw Error('The parent cannot be collapsible');
-    }
-
-    let remaining = this.direction === 'horizontal' ? this.width.value : this.height.value;
-    this.children.forEach((split, i) => {
-      if (this.direction === 'horizontal') {
-        split.height.value = this.height.value;
-      } else {
-        split.width.value = this.width.value;
-      }
-
-      if (split.initial.value) {
-        split.setSize(split.initial.value);
-        remaining -= split.initial.value;
-      }
+    // There will never be a gutter for the first element
+    this.children.slice(1).forEach((_, i) => {
+      this.children[i + 1].gutter = !this.children[i].fixed.value && !this.children[i + 1].fixed.value;
     });
 
-    const notInitialized = this.children.filter((child) => !child.initial.value);
-    const size = remaining / notInitialized.length;
-    notInitialized.forEach((split) => { split.setSize(size); });
-    this.children.forEach((split) => { split.init(); });
-  }
+    this.children.map((child, i) => {
+      child.before = this.children.slice(0, i).reverse();
+      // After includes $children[i].
+      // This makes sense if you think about it since the gutter is on the left/top of the element!
+      child.after = this.children.slice(i);
+    });
 
-  public setSize(size: number) {
-    if (this.parent!.direction === 'horizontal') {
-      this.width.value = size;
-    } else {
-      this.height.value = size;
+    if (this.isRoot) {
+      window.addEventListener('resize', this.boundOnResizeEvent);
     }
+
+    const initialSum = this.children.reduce((sum, curr) => sum + (curr.initial.value || 0), 0);
+    const total = this.direction === 'horizontal' ? this.width.value : this.height.value;
+    const remaining = total - initialSum;
+    const notInitialized = this.children.filter((child) => child.initial.value === undefined);
+    const size = remaining / notInitialized.length;
+
+    this.children.forEach((split) => {
+      const splitSize = split.initial.value !== undefined ? split.initial.value : size;
+
+      // Set the opposite values
+      // e.g. if the direction is "horizontal" set the height
+      if (this.direction === 'horizontal') {
+        split.init({
+          height: this.height.value,
+          width: splitSize,
+        });
+      } else {
+        split.init({
+          height: splitSize,
+          width: this.width.value,
+        });
+      }
+    });
   }
 
   public resize(px: number) {
@@ -216,8 +232,18 @@ class Instance {
     this.calculatePositions(this.after, -px, this.parent.direction);
   }
 
+  public dispose() {
+    if (!this.isRoot) { return; }
+    window.removeEventListener('resize', this.boundOnResizeEvent);
+  }
+
+  private onResizeEvent() {
+    this.calculatePositions([this], window.innerWidth - this.width.value, 'horizontal');
+    this.calculatePositions([this], window.innerHeight - this.height.value, 'vertical');
+  }
+
   private doResize(
-    splits: Instance[],
+    splits: Split[],
     px: number,
     direction: Direction,
     opts?: { keep?: boolean, collapsible?: boolean, dryRun?: boolean },
@@ -227,13 +253,18 @@ class Instance {
     const child = splits[0]; // all children have the same parent
 
     // Just a helper method
-    const set = (s: Instance, value: number, attr?: 'height' | 'width') => {
+    const set = (s: Split, value: number, attr?: 'height' | 'width') => {
       if (!dryRun) {
         if (attr) {
           s[attr].value = value;
         } else {
-          s.setSize(value);
-          this.initial.value = value;
+          if (s.parent!.direction === 'horizontal') {
+            s.width.value = value;
+          } else {
+            s.height.value = value;
+          }
+
+          this.sizeForEvent.value = value;
         }
       }
     };
@@ -312,133 +343,138 @@ class Instance {
   }
 }
 
-@Component
-export default class Split extends Vue {
-  @Prop(String) public direction?: Direction;
-  @Prop(Boolean) public keep!: boolean;
-  @Prop(Boolean) public fixed!: boolean;
-  @Prop(Boolean) public collapsible!: boolean;
-  @Prop({type: Number, default: 10}) public minSize!: number;
-  @Prop({type: Number, default: Infinity}) public maxSize!: number;
-  @Prop(Number) public initial?: number;
-  @Prop({type: Number, default: 6}) public gutterSize!: number;
-  @Prop({type: Number, default: 10}) public collapsePixels!: number;
+export default createComponent({
+  name: 'Split',
+  props: {
+    /**
+     * Irrelevant for leaf nodes.
+     */
+    direction: String as () => Direction,
+    initial: Number,
 
-  public toDispose: Array<() => void> = [];
 
-  public $el!: HTMLElement;
+    /**
+     * Useful for debugging.
+     */
+    name: { type: String, required: true },
 
-  public i = new Instance({
-    height: ref(0),
-    width: ref(0),
-    parent: null,
-    direction: this.direction,
-    minSize: ref(this.minSize),
-    maxSize: ref(this.maxSize),
-    collapsePixels: ref(this.collapsePixels),
-    collapsible: ref(this.collapsible),
-    keep: ref(this.keep),
-    fixed: ref(this.fixed),
-    initial: ref(this.initial),
-  });
+    /**
+     * Irrelevant for root nodes.
+     */
+    keep: { type: Boolean, default: false },
 
-  get gutterStyle() {
-    // The margin makes sure the gutter is centered on the line
-    if (this.i.parentDirection === 'horizontal') {
-      return {
-        height: '100%',
-        width: `${this.gutterSize}px`,
-        marginLeft: `${-this.gutterSize / 2}px`,
-      };
-    } else {
-      return {
-        width: '100%',
-        height: `${this.gutterSize}px`,
-        marginTop: `${-this.gutterSize / 2}px`,
-      };
-    }
-  }
+    /**
+     * Irrelevant for root nodes.
+     */
+    fixed: { type: Boolean, default: false },
+    collapsible: { type: Boolean, default: false },
+    minSize: { type: Number, default: 10 },
+    maxSize: { type: Number, default: Infinity },
+    gutterSize: { type: Number, default: 6 },
+    collapsePixels: { type: Number, default: 10 },
+  },
+  setup(props, context) {
+    const el = ref<HTMLElement>();
 
-  get cursor() {
-    if (this.i.parentDirection === 'horizontal') {
-      return 'ew-resize';
-    } else {
-      return 'ns-resize';
-    }
-  }
+    const i = new Split({
+      height: ref(0),
+      width: ref(0),
+      parent: null,
+      direction: props.direction,
+      minSize: ref(props.minSize),
+      maxSize: ref(props.maxSize),
+      collapsePixels: ref(props.collapsePixels),
+      collapsible: ref(props.collapsible),
+      keep: ref(props.keep),
+      fixed: ref(props.fixed),
+      initial: ref(props.initial),
+      name: ref(props.name),
+    });
 
-  public mounted() {
-    this.toDispose.push(this.i.onDidHeightResize((height) => {
-      this.$el.style.height = height + 'px';
-    }));
-
-    this.toDispose.push(this.i.onDidWidthResize((width) => {
-      this.$el.style.width = width + 'px';
-    }));
-
-    this.toDispose.push(this.i.onDidChangeSize((size) => {
-      this.$update('initial', size);
-    }));
-
-    if (isSplit(this.$parent)) {
-      this.i.setParent(this.$parent.i);
-    }
-
-    const getLevel = (node: Vue): number => {
-      if (isSplit(node)) {
-        return getLevel(node.$parent) + 1;
+    const gutterStyle = computed(() => {
+      // The margin makes sure the gutter is centered on the line
+      if (i.parentDirection === 'horizontal') {
+        return {
+          height: '100%',
+          width: `${props.gutterSize}px`,
+          marginLeft: `${-props.gutterSize / 2}px`,
+        };
       } else {
-        return 0;
+        return {
+          width: '100%',
+          height: `${props.gutterSize}px`,
+          marginTop: `${-props.gutterSize / 2}px`,
+        };
       }
-    };
-
-    this.i.level = getLevel(this);
-    console.log('Mounted node at level ' + this.i.level);
-
-    this.i.children.map((child, i) => {
-      child.before = this.i.children.slice(0, i).reverse();
-      // After includes $children[i].
-      // This makes sense if you think about it since the gutter is on the left/top of the element!
-      child.after = this.i.children.slice(i);
     });
 
-    // There will never be a gutter for the first element
-    this.i.children.slice(1).forEach((_, i) => {
-      this.i.children[i + 1].gutter = !this.i.children[i].fixed.value && !this.i.children[i + 1].fixed.value;
+    const cursor = computed(() => {
+      if (i.parentDirection === 'horizontal') {
+        return 'ew-resize';
+      } else {
+        return 'ns-resize';
+      }
     });
 
-    if (!this.i.isRoot) { return; }
-    this.i.height.value = window.innerHeight;
-    this.i.width.value = window.innerWidth;
-
-    window.addEventListener('resize', this.onResizeEvent);
-    this.i.init();
-  }
-
-  public destroyed() {
-    this.toDispose.forEach((cb) => cb());
-    if (!this.i.isRoot) { return; }
-    window.removeEventListener('resize', this.onResizeEvent);
-  }
-
-  public onResizeEvent() {
-    this.i.calculatePositions([this.i], window.innerWidth - this.i.width.value, 'horizontal');
-    this.i.calculatePositions([this.i], window.innerHeight - this.i.height.value, 'vertical');
-  }
-
-  public move(e: MouseEvent) {
-    if (this.i.parentDirection === undefined) {
-      return;
+    if (isSplit(context.parent)) {
+      i.setParent(context.parent.i);
     }
 
-    const { left, top } = this.$el.getBoundingClientRect();
-    const gutterPosition = this.i.parentDirection === 'horizontal' ? left : top;
-    const mousePosition = this.i.parentDirection === 'horizontal' ? e.clientX : e.clientY;
+    onMounted(() => {
+      i.onDidHeightResize((height) => {
+        if (el.value) {
+          el.value.style.height = height + 'px';
+        }
+      });
 
-    const px = mousePosition - gutterPosition;
-    this.i.resize(px);
-  }
-}
+      i.onDidWidthResize((width) => {
+        if (el.value) {
+          el.value.style.width = width + 'px';
+        }
+      });
+
+      i.onDidChangeSize((size) => {
+        update(props, context, 'initial', size);
+      });
+
+      if (!i.isRoot) { return; }
+
+      i.init({
+        height: window.innerHeight,
+        width: window.innerWidth,
+      });
+    });
+
+    onUnmounted(() => {
+      i.dispose();
+    });
+
+    function move(e: MouseEvent) {
+      if (i.parentDirection === undefined) {
+        return;
+      }
+
+      if (!el.value) {
+        return;
+      }
+
+      const { left, top } = el.value.getBoundingClientRect();
+      const gutterPosition = i.parentDirection === 'horizontal' ? left : top;
+      const mousePosition = i.parentDirection === 'horizontal' ? e.clientX : e.clientY;
+
+      const px = mousePosition - gutterPosition;
+      i.resize(px);
+    }
+
+    return {
+      el,
+      move,
+      cursor,
+      gutterStyle,
+      i,
+    };
+  },
+});
 </script>
 
 <style lang="scss" scoped>

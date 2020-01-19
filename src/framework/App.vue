@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col" :class="framework.ui.rootClasses">
-    <split direction="vertical">
+    <split direction="vertical" name="Root">
 
-      <split direction="horizontal" resizable>
-        <split :initial="65" fixed>
+      <split direction="horizontal" resizable name="Everything">
+        <split :initial="65" fixed name="Activity Bar">
           <activity-bar @open-settings="openSettings"></activity-bar>
         </split>
 
@@ -11,6 +11,7 @@
           collapsible 
           :min-size="100"
           :initial.sync="framework.ui.sideBarSize.value"
+          name="Side Tabs"
         >
           <side-tabs 
             v-if="loaded"
@@ -19,8 +20,8 @@
           <blank v-else></blank>
         </split>
 
-        <split direction="vertical" resizable>
-          <split :initial="TOOLBAR_HEIGHT" fixed>
+        <split direction="vertical" resizable name="Right Stuff">
+          <split :initial="TOOLBAR_HEIGHT" fixed name="Toolbar">
             <div class="bg-default h-full px-5 flex items-center border-b border-default-darken-3">
               <logo class="text-default"></logo>
               <div class="text-default border-l mx-6" style="height: 60%"></div>
@@ -41,7 +42,7 @@
             </div>
           </split>
 
-          <split>
+          <split name="Main Component">
             <component
               v-if="loaded"
               :is="mainComponent"
@@ -55,18 +56,19 @@
             class="bg-default border-t border-default-darken-3"
             keep
             :initial.sync="framework.ui.panelsSize.value"
+            name="Panel"
           >
-            <split :initial="55" fixed>
+            <split :initial="55" fixed name="Panel Headers">
               <panel-headers></panel-headers>
             </split>
-            <split>
+            <split name="Panel Content">
               <panels v-if="loaded"></panels>
               <blank v-else></blank>
             </split>
           </split>
         </split>
       </split>
-      <split :initial="STATUS_BAR_HEIGHT" fixed>
+      <split :initial="STATUS_BAR_HEIGHT" fixed name="Status Bar">
 
         <div class="bg-primary h-full flex items-center position text-default">
           <div
