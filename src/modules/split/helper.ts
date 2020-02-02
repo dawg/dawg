@@ -1,4 +1,5 @@
 import { watch, Ref, ref } from '@vue/composition-api';
+import { StrictEventEmitter } from '@/events';
 
 export type Direction = 'horizontal' | 'vertical';
 
@@ -7,6 +8,11 @@ export const isSplit = (vue: any): vue is { i: Split } => {
 };
 
 type Mode = 'high-priority' | 'low-priority' | 'collapsible';
+type Mouvement = {
+  type: 'smooth',
+  amount: number,
+  execute: (amount: number) => void,
+} | { type: 'jump', amount: number, execute: (amount: number) => void };
 
 interface Opts {
   name: Ref<string>;
@@ -20,11 +26,19 @@ interface Opts {
   keep: Ref<boolean>;
 }
 
-export class Split {
-  public gutter = false;
+// tslint:disable-next-line:interface-over-type-literal
+type SplitEvents = {
+  heightResize: [number];
+  widthResize: [number];
+  resize: [number];
+};
 
-  private height = ref(0);
-  private width = ref(0);
+export class Split extends StrictEventEmitter<SplitEvents> {
+  public readonly direction?: Direction;
+  private gutter = false;
+
+  private height = 0;
+  private width = 0;
 
   private level = 0;
   private before: Split[] = []; // Splits before gutter (left / top)
@@ -34,17 +48,17 @@ export class Split {
 
   private children: Split[] = [];
   private name: Ref<string>;
-  private parent: Split | null = null;
-  private direction?: Direction;
+  // tslint:disable-next-line:variable-name
+  private _parent: Split | null = null;
   private minSize: Ref<number>;
   private maxSize: Ref<number>;
   private collapsePixels: Ref<number>;
   private collapsible: Ref<boolean>;
   private initial: Ref<number | undefined>;
-  private sizeForEvent = ref(0);
   private boundOnResizeEvent: () => void;
 
   constructor(opts: Opts) {
+    super();
     this.direction = opts.direction;
     this.minSize = opts.minSize;
     this.maxSize = opts.maxSize;
@@ -57,59 +71,61 @@ export class Split {
     this.boundOnResizeEvent = this.onResizeEvent.bind(this);
   }
 
-  get isRoot() {
-    return this.parent === null;
+  get parent() {
+    return this._parent;
+  }
+
+  get isGutter() {
+    return this.gutter;
   }
 
   get sizes() {
     return {
-      height: this.height.value,
-      width: this.width.value,
+      height: this.height,
+      width: this.width,
     };
   }
 
-  get parentDirection() {
-    if (this.parent) {
-      return this.parent.direction;
-    }
+  private get isRoot() {
+    return this.parent === null;
   }
 
-  get size() {
+  private get size() {
     if (!this.parent) {
       return -1;
     }
 
     if (this.parent.direction === 'horizontal') {
-      return this.width.value;
+      return this.width;
     } else {
-      return this.height.value;
+      return this.height;
     }
   }
 
-  public onDidHeightResize(cb: (height: number) => void) {
-    return watch(this.height, cb);
-  }
+  // public onDidHeightResize(cb: (height: number) => void) {
+  //   return watch(this.height, cb);
+  // }
 
-  public onDidWidthResize(cb: (width: number) => void) {
-    return watch(this.width, cb);
-  }
+  // public onDidWidthResize(cb: (width: number) => void) {
+  //   return watch(this.width, cb);
+  // }
 
-  public onDidChangeSize(cb: (size: number) => void) {
-    return watch(this.sizeForEvent, cb, { lazy: true });
-  }
+  // public onDidChangeSize(cb: (size: number) => void) {
+  //   return watch(this.sizeForEvent, cb, { lazy: true });
+  // }
 
   public setParent(parent: Split) {
-    this.parent = parent;
-    this.parent.children.push(this);
-    this.level = this.parent.level + 1;
+    this._parent = parent;
+    parent.children.push(this);
+    this.level = parent.level + 1;
   }
 
   public init(sizes: { height: number, width: number }) {
     // tslint:disable-next-line:no-console
     // console.log(`[${this.name.value}] Initializing at level => ${this.level}`);
 
-    this.height.value = sizes.height;
-    this.width.value = sizes.width;
+    this.height = sizes.height;
+    this.width = sizes.width;
 
     // There will never be a gutter for the first element
     // This logic may not be right but we are putting a gutter on any divider that doesn't touch a "fixed" split
@@ -129,7 +145,7 @@ export class Split {
     }
 
     const initialSum = this.children.reduce((sum, curr) => sum + (curr.initial.value || 0), 0);
-    const total = this.direction === 'horizontal' ? this.width.value : this.height.value;
+    const total = this.direction === 'horizontal' ? this.width : this.height;
     const remaining = total - initialSum;
     const notInitialized = this.children.filter((child) => child.initial.value === undefined);
     const size = remaining / notInitialized.length;
@@ -141,13 +157,13 @@ export class Split {
       // e.g. if the direction is "horizontal" set the height
       if (this.direction === 'horizontal') {
         split.init({
-          height: this.height.value,
+          height: this.height,
           width: splitSize,
         });
       } else {
         split.init({
           height: splitSize,
-          width: this.width.value,
+          width: this.width,
         });
       }
     });
@@ -199,31 +215,109 @@ export class Split {
     // "option1" and "option2" two can be bigger than "px" due to the collapsing functionality
     const disposer1 = this.parent.startDryRun();
     const option1 = this.doResize(this.before, { px, direction: this.parent.direction });
-
     const option2 = this.doResize(this.after, { px: -px, direction: this.parent.direction });
     disposer1.dispose();
 
-    // Because "option1" and "option2" can be bigger, we need to do two more dry runs with the new values
-    // e.g. px = -11, option1 = -100 due to collapsing
-    // At this point, we check to make sure that other side can support 100px movement
-    // BTW there is probably a bug with this logic honestly but it works for my use cases
-    // e.g. if one side collapses but the other side can only support part of the movement
-    // In this case, the side wouldn't collapse but the other side would still move the amount it supports
-    const disposer2 = this.parent.startDryRun();
-    const option3 = this.doResize(this.before, { px: -option2, direction: this.parent.direction });
-    const option4 = this.doResize(this.after, { px: -option1, direction: this.parent.direction });
-    disposer2.dispose();
+    console.log(option1, '\n', option2);
 
-    px = min(
-      max(
-        option1,
-        option3,
-      ),
-      max(
-        option2,
-        option4,
-      ),
-    );
+    const mouvements1 = option1.mouvements.map((o) => ({ ...o, amount: Math.abs(o.amount) }));
+    const mouvements2 = option2.mouvements.map((o) => ({ ...o, amount: Math.abs(o.amount) }));
+
+    const breakUp = (mouvements: Mouvement[]) => {
+      return {
+        smooth: mouvements.filter((m) => m.type === 'smooth'),
+        jumps: mouvements.filter((m) => m.type === 'jump'),
+      };
+    };
+
+    const { jumps: jumps1, smooth: smooth1 } = breakUp(mouvements1);
+    const { jumps: jumps2, smooth: smooth2 } = breakUp(mouvements2);
+
+    const sumSmooth = (mouvements: Mouvement[]) => {
+      return Math.abs(mouvements.reduce((sum, m) => m.amount + sum, 0));
+    };
+
+    let sumSmooth1 = sumSmooth(smooth1);
+    let sumSmooth2 = sumSmooth(smooth2);
+
+    let toMove1 = Math.min(sumSmooth1, sumSmooth2);
+    let toMove2 = toMove1;
+    console.log(`\nBefore Smooth: ${sumSmooth1}\nAfter Smooth: ${sumSmooth2}\nMoving: ${toMove1}\n`);
+
+    let i2 = 0;
+    for (const m of mouvements2) {
+      if (m.amount > toMove1) {
+        break;
+      }
+
+      m.execute(m.amount);
+      toMove1 -= m.amount;
+      sumSmooth1 -= m.amount;
+      i2++;
+    }
+
+    let i1 = 0;
+    for (const m of mouvements1) {
+      if (m.amount > toMove2) {
+        break;
+      }
+
+      m.execute(m.amount);
+      toMove2 -= m.amount;
+      sumSmooth2 -= m.amount;
+      i1++;
+    }
+
+    if (sumSmooth1 !== 0) {
+      let moved = 0;
+      // The rest will all be "jump"
+      for (const m of jumps2) {
+        if (m.amount > sumSmooth1) {
+          break;
+        }
+
+        m.execute(m.amount);
+        moved += m.amount;
+        sumSmooth1 -= m.amount;
+        i2++;
+      }
+
+      for (const m of mouvements1.splice(i1)) {
+        if (moved === 0) {
+          return;
+        }
+
+        const toMove = Math.min(m.amount, moved);
+        m.execute(m.amount);
+        moved -= toMove;
+        i1++;
+      }
+    }
+
+    if (sumSmooth2 !== 0) {
+      let moved = 0;
+      // The rest will all be "jump"
+      for (const m of jumps1) {
+        if (m.amount > sumSmooth2) {
+          break;
+        }
+
+        m.execute(m.amount);
+        moved += m.amount;
+        sumSmooth2 -= m.amount;
+      }
+
+      for (const m of mouvements2.splice(i2)) {
+        if (moved === 0) {
+          return;
+        }
+
+        const toMove = Math.min(m.amount, moved);
+        m.execute(m.amount);
+        moved -= toMove;
+        i2++;
+      }
+    }
 
     // console.log(
     //   this.parent.direction,
@@ -251,15 +345,15 @@ export class Split {
     const direction = this.parent.direction;
 
     const doResize = () => {
-      let after;
-      let before;
+      let after: number;
+      let before: number;
 
       if (this.before.length === 0) {
-        before = this.doResizePass(this.before.slice(0, 1), -this.size, direction, 'collapsible');
-        after = this.size - this.doResize(this.after.slice(1), { px: this.size, direction });
+        before = this.doResizePass(this.before.slice(0, 1), -this.size, direction, 'collapsible').remaining;
+        after = this.size - this.doResize(this.after.slice(1), { px: this.size, direction }).amount;
       } else {
-        before = this.size - this.doResize(this.before, { px: this.size, direction });
-        after = this.doResizePass(this.after, -this.size, direction, 'collapsible');
+        before = this.size - this.doResize(this.before, { px: this.size, direction }).amount;
+        after = this.doResizePass(this.after, -this.size, direction, 'collapsible').remaining;
       }
 
       return {
@@ -277,6 +371,10 @@ export class Split {
     }
 
     doResize();
+  }
+
+  public unCollapse() {
+    //
   }
 
   public dispose() {
@@ -297,25 +395,30 @@ export class Split {
   ) {
     // console.log('Considering ' + splits.length + ' splits moving ' + px);
 
+    const mouvements: Mouvement[] = [];
+
     // First resize but don't include children that have keep flag
-    let pxRemaining = this.doResizePass(splits, px, direction, 'high-priority');
-    // console.log('After first pass: ' + pxRemaining);
+    let result = this.doResizePass(splits, px, direction, 'high-priority');
+    mouvements.push(...result.mouvements);
 
     // Then resize again but include the children with a keep flag
-    pxRemaining = this.doResizePass(splits, pxRemaining, direction, 'low-priority');
-    // console.log('After second pass: ' + pxRemaining);
+    result = this.doResizePass(splits, result.remaining, direction, 'low-priority');
+    mouvements.push(...result.mouvements);
 
     // Then resize anything that is collapsible
-    pxRemaining = this.doResizePass(splits, pxRemaining, direction, 'collapsible');
-    // console.log('After third pass: ' + pxRemaining);
+    result = this.doResizePass(splits, result.remaining, direction, 'collapsible');
+    mouvements.push(...result.mouvements);
 
     // Then calculate how many pixels we actually moved.
-    return px - pxRemaining;
+    return {
+      amount: px - result.remaining,
+      mouvements,
+    };
   }
 
   private onResizeEvent() {
-    this.doResize([this], { px: window.innerWidth - this.width.value, direction: 'horizontal' });
-    this.doResize([this], { px: window.innerHeight - this.height.value, direction: 'vertical' });
+    this.doResize([this], { px: window.innerWidth - this.width, direction: 'horizontal' });
+    this.doResize([this], { px: window.innerHeight - this.height, direction: 'vertical' });
   }
 
   private doResizePass(
@@ -323,116 +426,150 @@ export class Split {
     px: number,
     direction: Direction,
     mode: Mode,
-  ) {
-    if (splits.length === 0) { return px; }
+  ): { remaining: number, mouvements: Mouvement[] } {
+    if (splits.length === 0 || px === 0) {
+      return { remaining: px, mouvements: [] };
+    }
     const parent = splits[0].parent; // all children have the same parent
 
     // Just a helper method
     const set = (s: Split, value: number, attr?: 'height' | 'width') => {
       if (attr) {
-        s[attr].value = value;
-      } else {
-        if (s.parent!.direction === 'horizontal') {
-          s.width.value = value;
+        s[attr] = value;
+
+        if (attr === 'height') {
+          s.height = value;
+          s.emit('heightResize', value);
         } else {
-          s.height.value = value;
+          s.width = value;
+          s.emit('widthResize', value);
         }
 
-        this.sizeForEvent.value = value;
+      } else {
+        if (s.parent!.direction === 'horizontal') {
+          s.width = value;
+          s.emit('widthResize', value);
+        } else {
+          s.height = value;
+          s.emit('heightResize', value);
+        }
+
+        // TODO if we are in a dry run then???
+        s.emit('resize', value);
       }
     };
 
-    if (parent && parent.direction === direction) {
-      for (const split of splits) {
-        // We're done if px === 0
-        if (px === 0) {
-          break;
-        }
-
-        // Skip he fixed splits.
-        if (split.fixed.value) {
-          continue;
-        }
-
-        // If we aren't considering high priority, skip the splits with the `keep` flag
-        if (split.keep.value && mode === 'high-priority') {
-          continue;
-        }
-
-        // If we are considering low priority, skip the splits without the `keep` flag
-        if (!split.keep.value && mode === 'low-priority') {
-          continue;
-        }
-
-        // Trim the new size at the max and min. If collapsed, make sure that newSize stays at 0 until
-        // we reach the min size of the split.
-        let newSize = split.size;
-        if (mode === 'high-priority' || mode === 'low-priority') {
-          newSize = Math.max(split.minSize.value, Math.min(split.size + px, split.maxSize.value));
-        }
-
-        if (split.collapsed && px < split.minSize.value) {
-          newSize = 0;
-        }
-
-        // Check if we want to collapse
-        // There is a bit of weird logic going on
-        // Basically if:
-        // 1. The split is actually collapsible
-        // 2. We are considering collapsible stuff
-        // 3. The new size is the current size
-        // 4. We've moved more than the amount of collapse pixels. This acts as a buffer.
-        if (
-          split.collapsible.value &&
-          mode === 'collapsible' &&
-          newSize === split.size &&
-          px < -this.collapsePixels.value
-        ) {
-          newSize = 0;
-        }
-
-        const diff = newSize - split.size;
-        this.doResizePass(split.childrenReversed, diff, direction, mode);
-        set(split, newSize);
-
-        px -= diff;
-      }
-    } else {
+    if (!parent || parent.direction !== direction) {
       for (const split of splits) {
         this.doResizePass(split.childrenReversed, px, direction, mode);
         if (direction === 'horizontal') {
-          const newSize = split.width.value + px;
+          const newSize = split.width + px;
           set(split, newSize, 'width');
         } else {
-          const newSize = split.height.value + px;
+          const newSize = split.height + px;
           set(split, newSize, 'height');
         }
       }
       // This is definitely a bug
       // It won't appear until later though with embedded splits
-      px = 0;
+      return {
+        remaining: 0,
+        mouvements: [],
+      };
     }
 
-    return px;
+    const originalSign = Math.sign(px) as 1 | -1;
+    const changedSignOrZero = (value: number) => {
+      return value === 0 || Math.sign(value) !== originalSign;
+    };
+
+    let getMouvement: (split: Split) => any | undefined; // TODO any
+    if (mode === 'collapsible') {
+      getMouvement = (split) => {
+        // We want to collapse IFF:
+        // 1. The split is actually collapsible
+        // 2. We are considering collapsible stuff
+        // 3. We've moved more than the amount of collapse pixels. This acts as a buffer.
+        if (
+          !split.collapsed &&
+          split.collapsible.value &&
+          px < -this.collapsePixels.value
+        ) {
+          return { type: 'jump', amount: -split.size };
+        }
+      };
+    } else {
+      getMouvement = (split) => {
+        // If we aren't considering high priority, skip the splits with the `keep` flag
+        if (split.keep.value && mode === 'high-priority') {
+          return;
+        }
+
+        // If we are considering low priority, skip the splits without the `keep` flag
+        if (!split.keep.value && mode === 'low-priority') {
+          return;
+        }
+
+        const newSize = Math.max(split.minSize.value, Math.min(split.size + px, split.maxSize.value));
+        if (newSize !== split.size) {
+          return { type: 'smooth', amount: newSize - split.size };
+        }
+      };
+    }
+
+    const mouvements: Mouvement[] = [];
+    for (const split of splits) {
+      // We're done if px === 0
+      if (changedSignOrZero(px)) {
+        break;
+      }
+
+      // Skip he fixed splits.
+      if (split.fixed.value) {
+        continue;
+      }
+
+      const mouvement = getMouvement(split);
+      if (!mouvement) {
+        continue;
+      }
+
+      const diff = mouvement.amount;
+      this.doResizePass(split.childrenReversed, diff, direction, mode);
+      px -= diff;
+
+      mouvements.push({
+        ...mouvement,
+        execute: (amount) => {
+          amount = Math.sign(diff) * Math.abs(amount);
+          set(split, split.size + amount);
+        },
+      });
+    }
+
+    return {
+      remaining: px,
+      mouvements,
+    };
   }
 
   private startDryRun() {
-    const height = this.height.value;
-    const width = this.width.value;
+    const height = this.height;
+    const width = this.width;
 
     const disposers = this.children.map((child) => child.startDryRun());
 
     return {
       dispose: () => {
-        this.height.value = height;
-        this.width.value = width;
+        this.height = height;
+        this.width = width;
         disposers.forEach(({ dispose }) => dispose());
       },
     };
   }
 
   private get collapsed() {
-    return this.size < this.minSize.value;
+    return this.size < this.minSize.value && this.size === 0;
   }
 
   private get childrenReversed() {

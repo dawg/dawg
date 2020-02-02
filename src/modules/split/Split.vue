@@ -2,7 +2,7 @@
   <div ref="el" class="relative" :class="{ flex: direction, 'flex-col': direction === 'vertical' }">
     <drag-element 
       class="absolute gutter"
-      v-if="i.gutter"
+      v-if="i.isGutter"
       :style="gutterStyle"
       :cursor="cursor"
       @move="move"
@@ -61,9 +61,15 @@ export default createComponent({
       name: ref(props.name),
     });
 
+    const parentDirection = computed(() => {
+      if (i.parent) {
+        return i.parent.direction;
+      }
+    });
+
     const gutterStyle = computed(() => {
       // The margin makes sure the gutter is centered on the line
-      if (i.parentDirection === 'horizontal') {
+      if (parentDirection.value === 'horizontal') {
         return {
           height: '100%',
           width: `${props.gutterSize}px`,
@@ -79,7 +85,7 @@ export default createComponent({
     });
 
     const cursor = computed(() => {
-      if (i.parentDirection === 'horizontal') {
+      if (parentDirection.value === 'horizontal') {
         return 'ew-resize';
       } else {
         return 'ns-resize';
@@ -90,24 +96,25 @@ export default createComponent({
       i.setParent(context.parent.i);
     }
 
+    const isRoot = !isSplit(context.parent);
     onMounted(() => {
-      i.onDidHeightResize((height) => {
-        if (el.value) {
-          el.value.style.height = height + 'px';
-        }
-      });
+      // i.onDidHeightResize((height) => {
+      //   if (el.value) {
+      //     el.value.style.height = height + 'px';
+      //   }
+      // });
 
-      i.onDidWidthResize((width) => {
-        if (el.value) {
-          el.value.style.width = width + 'px';
-        }
-      });
+      // i.onDidWidthResize((width) => {
+      //   if (el.value) {
+      //     el.value.style.width = width + 'px';
+      //   }
+      // });
 
-      i.onDidChangeSize((size) => {
-        update(props, context, 'initial', size);
-      });
+      // i.onDidChangeSize((size) => {
+      //   update(props, context, 'initial', size);
+      // });
 
-      if (!i.isRoot) { return; }
+      if (!isRoot) { return; }
 
       i.init({
         height: window.innerHeight,
@@ -116,12 +123,12 @@ export default createComponent({
     });
 
     onUnmounted(() => {
-      if (!i.isRoot) { return; }
+      if (!isRoot) { return; }
       i.dispose();
     });
 
     function move(e: MouseEvent) {
-      if (i.parentDirection === undefined) {
+      if (parentDirection.value === undefined) {
         return;
       }
 
@@ -130,8 +137,8 @@ export default createComponent({
       }
 
       const { left, top } = el.value.getBoundingClientRect();
-      const gutterPosition = i.parentDirection === 'horizontal' ? left : top;
-      const mousePosition = i.parentDirection === 'horizontal' ? e.clientX : e.clientY;
+      const gutterPosition = parentDirection.value === 'horizontal' ? left : top;
+      const mousePosition = parentDirection.value === 'horizontal' ? e.clientX : e.clientY;
 
       const px = mousePosition - gutterPosition;
       i.resize(px);

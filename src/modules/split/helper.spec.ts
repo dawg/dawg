@@ -73,7 +73,7 @@ describe.only('Split', () => {
     expect(ad.sizes).to.deep.eq({ height: 25, width: 40 });
   });
 
-  it('resizing correctly', () => {
+  it.only('resizing correctly', () => {
     // this shouldn't do anything since there is nothing "behind" a
     a.resize(10);
     expect(a.sizes.width).to.deep.eq(40);
@@ -150,6 +150,8 @@ describe.only('Split', () => {
     expect(ab.sizes.height).to.deep.eq(50);
     expect(ac.sizes.height).to.deep.eq(25);
     expect(ad.sizes.height).to.deep.eq(0);
+
+    ad.unCollapse();
   });
 
   root.dispose();
