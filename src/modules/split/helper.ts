@@ -494,14 +494,13 @@ export class Split extends StrictEventEmitter<SplitEvents> {
       }
 
       const diff = mouvement.amount;
-      this.doResizePass(split.childrenReversed, diff, direction, mode);
       px -= diff;
 
       mouvements.push({
         ...mouvement,
         execute: (amount) => {
-          console.log(amount);
           amount = Math.sign(diff) * Math.abs(amount);
+          this.doResizePass(split.childrenReversed, amount, direction, mode);
           const newSize = split.size + amount;
           if (mouvement.type === 'jump') {
             split.collapsed = amount < 0;
