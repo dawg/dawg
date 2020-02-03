@@ -1,29 +1,27 @@
-import { watch, Ref, ref } from '@vue/composition-api';
+import { ref } from '@vue/composition-api';
 import { StrictEventEmitter } from '@/events';
 
-// type LinkedList<T> = { done: true } | { done: false, value: T, next: () => LinkedList<T>, added: boolean };
-//     const getLinkedList = <T>(arr: T[]): LinkedList<T> => {
-//       const iter = arr[Symbol.iterator]() as { next: () => { done: true } | { done: false, value: T  } };
+type LinkedList<T> = { done: true } | { done: false, value: T, next: () => LinkedList<T>, added: boolean };
+const getLinkedList = <T>(arr: T[]): LinkedList<T> => {
+  const iter = arr[Symbol.iterator]() as { next: () => { done: true } | { done: false, value: T  } };
 
-//       const getNext = () => {
-//         const current = iter.next();
-//         if (current.done) {
-//           return current;
-//         }
+  const getNext = () => {
+    const current = iter.next();
+    if (current.done) {
+      return current;
+    }
 
-//         return {
-//           done: false,
-//           value: current.value,
-//           next: getNext,
-//           added: false,
-//         };
-//       };
+    return {
+      done: false,
+      value: current.value,
+      next: getNext,
+      added: false,
+    };
+  };
 
-//       return getNext();
-//     };
+  return getNext();
+};
 
-//     const l1 = getLinkedList(mouvements1);
-//     const l2 = getLinkedList(mouvements2);
 
 export type Direction = 'horizontal' | 'vertical';
 
@@ -39,15 +37,16 @@ type Mouvement = {
 } | { type: 'jump', amount: number, execute: (amount: number) => void };
 
 interface Opts {
-  name: Ref<string>;
+  name: string;
   direction?: Direction;
-  minSize: Ref<number>;
-  maxSize: Ref<number>;
-  collapsePixels: Ref<number>;
-  initial: Ref<number | undefined>;
-  collapsible: Ref<boolean>;
-  fixed: Ref<boolean>;
-  keep: Ref<boolean>;
+  minSize: number;
+  maxSize: number;
+  collapsePixels: number;
+  initial: number | undefined;
+  collapsible: boolean;
+  fixed: boolean;
+  keep: boolean;
+  collapsed: boolean;
 }
 
 // tslint:disable-next-line:interface-over-type-literal
@@ -55,30 +54,35 @@ type SplitEvents = {
   heightResize: [number];
   widthResize: [number];
   resize: [number];
+  collapsed: [boolean];
 };
 
 export class Split extends StrictEventEmitter<SplitEvents> {
   public readonly direction?: Direction;
-  private gutter = false;
+  // must be ref for reactivity
+  private readonly gutter = ref(false);
+  private collapsed: boolean;
 
-  private height = 0;
-  private width = 0;
+  // tslint:disable-next-line:variable-name
+  private _height = 0;
+  // tslint:disable-next-line:variable-name
+  private _width = 0;
 
   private level = 0;
   private before: Split[] = []; // Splits before gutter (left / top)
   private after: Split[] = []; // Splits after gutter (right / bottom)
-  private fixed: Ref<boolean>;
-  private keep: Ref<boolean>;
+  private fixed: boolean;
+  private keep: boolean;
 
   private children: Split[] = [];
-  private name: Ref<string>;
+  private name: string;
   // tslint:disable-next-line:variable-name
   private _parent: Split | null = null;
-  private minSize: Ref<number>;
-  private maxSize: Ref<number>;
-  private collapsePixels: Ref<number>;
-  private collapsible: Ref<boolean>;
-  private initial: Ref<number | undefined>;
+  private minSize: number;
+  private maxSize: number;
+  private collapsePixels: number;
+  private collapsible: boolean;
+  private initial: number | undefined;
   private boundOnResizeEvent: () => void;
 
   constructor(opts: Opts) {
@@ -92,6 +96,7 @@ export class Split extends StrictEventEmitter<SplitEvents> {
     this.fixed = opts.fixed;
     this.keep = opts.keep;
     this.name = opts.name;
+    this.collapsed = opts.collapsed;
     this.boundOnResizeEvent = this.onResizeEvent.bind(this);
   }
 
@@ -100,7 +105,7 @@ export class Split extends StrictEventEmitter<SplitEvents> {
   }
 
   get isGutter() {
-    return this.gutter;
+    return this.gutter.value;
   }
 
   get sizes() {
@@ -126,17 +131,21 @@ export class Split extends StrictEventEmitter<SplitEvents> {
     }
   }
 
-  // public onDidHeightResize(cb: (height: number) => void) {
-  //   return watch(this.height, cb);
-  // }
+  private get height() {
+    return this.collapsed ? 0 : this._height;
+  }
 
-  // public onDidWidthResize(cb: (width: number) => void) {
-  //   return watch(this.width, cb);
-  // }
+  private set height(value: number) {
+    this._height = value;
+  }
 
-  // public onDidChangeSize(cb: (size: number) => void) {
-  //   return watch(this.sizeForEvent, cb, { lazy: true });
-  // }
+  private get width() {
+    return this.collapsed ? 0 : this._width;
+  }
+
+  private set width(value: number) {
+    this._width = value;
+  }
 
   public setParent(parent: Split) {
     this._parent = parent;
@@ -150,11 +159,13 @@ export class Split extends StrictEventEmitter<SplitEvents> {
 
     this.height = sizes.height;
     this.width = sizes.width;
+    this.emit('heightResize', sizes.height);
+    this.emit('widthResize', sizes.width);
 
     // There will never be a gutter for the first element
     // This logic may not be right but we are putting a gutter on any divider that doesn't touch a "fixed" split
     this.children.slice(1).forEach((_, i) => {
-      this.children[i + 1].gutter = !this.children[i].fixed.value && !this.children[i + 1].fixed.value;
+      this.children[i + 1].gutter.value = !this.children[i].fixed && !this.children[i + 1].fixed;
     });
 
     this.children.map((child, i) => {
@@ -168,14 +179,14 @@ export class Split extends StrictEventEmitter<SplitEvents> {
       window.addEventListener('resize', this.boundOnResizeEvent);
     }
 
-    const initialSum = this.children.reduce((sum, curr) => sum + (curr.initial.value || 0), 0);
+    const initialSum = this.children.reduce((sum, curr) => sum + (curr.initial || 0), 0);
     const total = this.direction === 'horizontal' ? this.width : this.height;
     const remaining = total - initialSum;
-    const notInitialized = this.children.filter((child) => child.initial.value === undefined);
-    const size = remaining / notInitialized.length;
+    const notFixed = this.children.filter((child) => child.initial === undefined && child.collapsed === false);
+    const size = remaining / notFixed.length;
 
     this.children.forEach((split) => {
-      const splitSize = split.initial.value !== undefined ? split.initial.value : size;
+      const splitSize = split.initial !== undefined ? split.initial : split.collapsed ? 0 : size;
 
       // Set the opposite values
       // e.g. if the direction is "horizontal" set the height
@@ -213,12 +224,9 @@ export class Split extends StrictEventEmitter<SplitEvents> {
     // OK do first round of dry runs
     // Check how much we can move in each direction using "px"
     // "option1" and "option2" two can be bigger than "px" due to the collapsing functionality
-    const disposer1 = this.parent.startDryRun();
     let option1 = this.doResize(this.before, { px, direction: this.parent.direction });
     let option2 = this.doResize(this.after, { px: -px, direction: this.parent.direction });
-    disposer1.dispose();
 
-    const disposer2 = this.parent.startDryRun();
     if (Math.abs(option1.amount) > Math.abs(px)) {
       option2 = this.doResize(this.after, { px: -option1.amount, direction: this.parent.direction });
     }
@@ -226,10 +234,13 @@ export class Split extends StrictEventEmitter<SplitEvents> {
     if (Math.abs(option2.amount) > Math.abs(px)) {
       option1 = this.doResize(this.before, { px: -option2.amount, direction: this.parent.direction });
     }
-    disposer2.dispose();
 
-    const mouvements1 = option1.mouvements.map((o) => ({ ...o, amount: Math.abs(o.amount) }));
-    const mouvements2 = option2.mouvements.map((o) => ({ ...o, amount: Math.abs(o.amount) }));
+    console.log(px, option1.amount, option2.amount);
+
+    // // tslint:disable-next-line:no-console
+    // console.log(JSON.stringify(option1, null, 2));
+    // // tslint:disable-next-line:no-console
+    // console.log(JSON.stringify(option2, null, 2));
 
     const breakUp = (mouvements: Mouvement[]) => {
       return {
@@ -238,58 +249,37 @@ export class Split extends StrictEventEmitter<SplitEvents> {
       };
     };
 
+    const mouvements1 = option1.mouvements.map((o) => ({ ...o, amount: Math.abs(o.amount) }));
+    const mouvements2 = option2.mouvements.map((o) => ({ ...o, amount: Math.abs(o.amount) }));
     const { jumps: jumps1, smooth: smooth1 } = breakUp(mouvements1);
     const { jumps: jumps2, smooth: smooth2 } = breakUp(mouvements2);
 
-    const sumSmooth = (mouvements: Mouvement[]) => {
-      return Math.abs(mouvements.reduce((sum, m) => m.amount + sum, 0));
-    };
+    const sumSmooth1 = Math.abs(smooth1.reduce((sum, m) => m.amount + sum, 0));
+    const sumSmooth2 = Math.abs(smooth2.reduce((sum, m) => m.amount + sum, 0));
+    const minSmooth = Math.min(sumSmooth1, sumSmooth2);
 
-    let sumSmooth1 = sumSmooth(smooth1);
-    let sumSmooth2 = sumSmooth(smooth2);
-
-    const toMove1 = Math.min(sumSmooth1, sumSmooth2);
-    const toMove2 = toMove1;
-    // tslint:disable-next-line:no-console
-    console.log(`\nBefore Smooth: ${sumSmooth1}\nAfter Smooth: ${sumSmooth2}\nMoving: ${toMove1}\n`);
-
-    const moveSmooth = ({ toMove, total, smooth }: { toMove: number, total: number, smooth: Mouvement[] }) => {
-      let index = 0;
-      for (const m of smooth) {
-        if (toMove === 0) {
-          break;
-        }
-        const amount = Math.min(toMove, m.amount);
-
-        m.execute(amount);
+    const moveSmooth = ({ toMove, smooth }: { toMove: number, smooth: LinkedList<Mouvement> }) => {
+      while (!smooth.done && toMove > 0) {
+        const amount = Math.min(toMove, smooth.value.amount);
+        smooth.value.execute(amount);
         toMove -= amount;
-        total -= amount;
-        index++;
+
+        if (toMove >= smooth.value.amount) {
+          // only go to the next if we've moved the value completely
+          smooth = smooth.next();
+        }
       }
 
-      return {
-        index,
-        total,
-      };
+      return smooth;
     };
 
-    // tslint:disable-next-line:prefer-const
-    let { total: total1, index: i2 } = moveSmooth({ toMove: toMove1, total: sumSmooth1, smooth: smooth2 });
-    sumSmooth1 = total1;
-
-    // tslint:disable-next-line:prefer-const
-    let { total: total2, index: i1 } = moveSmooth({ toMove: toMove2, total: sumSmooth2, smooth: smooth1 });
-    sumSmooth2 = total2;
+    const smoothL1 = moveSmooth({ toMove: minSmooth, smooth: getLinkedList(smooth1) });
+    const smoothL2 = moveSmooth({ toMove: minSmooth, smooth: getLinkedList(smooth2) });
 
     const doRemaining = (
-      { remaining, jumps, smooth, i }: { remaining: number, jumps: Mouvement[], smooth: Mouvement[], i: number },
+      { remaining, jumps, smooth }: { remaining: number, jumps: Mouvement[], smooth: LinkedList<Mouvement> },
     ) => {
-      if (remaining === 0) {
-        return;
-      }
-
       let moved = 0;
-      // The rest will all be "jump"
       for (const m of jumps) {
         if (m.amount > remaining) {
           break;
@@ -300,52 +290,56 @@ export class Split extends StrictEventEmitter<SplitEvents> {
         remaining -= m.amount;
       }
 
-      for (const m of smooth.splice(i)) {
-        if (moved === 0) {
-          return;
-        }
-
-        const toMove = Math.min(m.amount, moved);
-        m.execute(toMove);
+      while (!smooth.done && moved > 0) {
+        const toMove = Math.min(smooth.value.amount, moved);
+        smooth.value.execute(toMove);
         moved -= toMove;
+        smooth = smooth.next();
       }
     };
 
-    doRemaining({ remaining: sumSmooth2, jumps: jumps1, smooth: smooth2, i: i2 });
-    doRemaining({ remaining: sumSmooth1, jumps: jumps2, smooth: smooth1, i: i1 });
+    if (sumSmooth1 < sumSmooth2) {
+      // console.log(sumSmooth1, sumSmooth2);
+      doRemaining({ remaining: sumSmooth2 - sumSmooth1, jumps: jumps1, smooth: smoothL2 });
+    } else if (sumSmooth2 < sumSmooth1) {
+      doRemaining({ remaining: sumSmooth1 - sumSmooth2, jumps: jumps2, smooth: smoothL1 });
+    }
   }
 
   public collapse() {
-    if (!this.collapsible.value) {
+    if (this.collapsed) {
       return;
     }
 
-    if (!this.parent || !this.parent.direction) {
+    if (this.before.length === 0 && this.after.length === 0) {
       return;
     }
 
-    const direction = this.parent.direction;
-
-    let pass: { remaining: number, mouvements: Mouvement[] };
-    let resize: { mouvements: Mouvement[], amount: number };
-
+    const amount = this.size;
     if (this.before.length === 0) {
-      pass = this.doResizePass(this.before.slice(0, 1), -this.size, direction, 'collapsible');
-      resize = this.doResize(this.after.slice(1), { px: this.size, direction });
+      const rightAfter = this.after[0];
+      rightAfter.resize(-amount);
     } else {
-      resize = this.doResize(this.before, { px: this.size, direction });
-      pass = this.doResizePass(this.after, -this.size, direction, 'collapsible');
+      this.resize(amount);
     }
-
-    if (Math.abs(resize.amount) !== this.size || pass.remaining !== 0) {
-      return;
-    }
-
-    [...resize.mouvements, ...pass.mouvements].forEach((m) => m.execute(m.amount));
   }
 
   public unCollapse() {
-    //
+    if (!this.collapsed) {
+      return;
+    }
+
+    if (this.before.length === 0 && this.after.length === 0) {
+      return;
+    }
+
+    const amount = Math.max(this.minSize, this.size);
+    if (this.before.length === 0) {
+      const rightAfter = this.after[0];
+      rightAfter.resize(amount);
+    } else {
+      this.resize(-amount);
+    }
   }
 
   public dispose() {
@@ -404,29 +398,14 @@ export class Split extends StrictEventEmitter<SplitEvents> {
     const parent = splits[0].parent; // all children have the same parent
 
     // Just a helper method
-    const set = (s: Split, value: number, attr?: 'height' | 'width') => {
-      if (attr) {
-        s[attr] = value;
-
-        if (attr === 'height') {
-          s.height = value;
-          s.emit('heightResize', value);
-        } else {
-          s.width = value;
-          s.emit('widthResize', value);
-        }
-
+    const set = (s: Split, value: number, attr: 'height' | 'width') => {
+      s[attr] = value;
+      if (attr === 'height') {
+        s.height = value;
+        s.emit('heightResize', value);
       } else {
-        if (s.parent!.direction === 'horizontal') {
-          s.width = value;
-          s.emit('widthResize', value);
-        } else {
-          s.height = value;
-          s.emit('heightResize', value);
-        }
-
-        // TODO if we are in a dry run then???
-        s.emit('resize', value);
+        s.width = value;
+        s.emit('widthResize', value);
       }
     };
 
@@ -454,7 +433,7 @@ export class Split extends StrictEventEmitter<SplitEvents> {
       return value === 0 || Math.sign(value) !== originalSign;
     };
 
-    let getMouvement: (split: Split) => any | undefined; // TODO any
+    let getMouvement: (split: Split) => { type: 'jump' | 'smooth', amount: number } | undefined;
     if (mode === 'collapsible') {
       getMouvement = (split) => {
         // We want to collapse IFF:
@@ -463,13 +442,13 @@ export class Split extends StrictEventEmitter<SplitEvents> {
         // 3. We've moved more than the amount of collapse pixels. This acts as a buffer.
         if (
           !split.collapsed &&
-          split.collapsible.value &&
-          px < -split.collapsePixels.value
+          split.collapsible &&
+          px < -split.collapsePixels
         ) {
-          return { type: 'jump', amount: -split.size };
+          return { type: 'jump', amount: -split.minSize };
         } else if (
           split.collapsed &&
-          px >= split.minSize.value
+          px >= split.minSize
         ) {
           return { type: 'jump', amount: px };
         }
@@ -481,16 +460,16 @@ export class Split extends StrictEventEmitter<SplitEvents> {
         }
 
         // If we aren't considering high priority, skip the splits with the `keep` flag
-        if (split.keep.value && mode === 'high-priority') {
+        if (split.keep && mode === 'high-priority') {
           return;
         }
 
         // If we are considering low priority, skip the splits without the `keep` flag
-        if (!split.keep.value && mode === 'low-priority') {
+        if (!split.keep && mode === 'low-priority') {
           return;
         }
 
-        const newSize = Math.max(split.minSize.value, Math.min(split.size + px, split.maxSize.value));
+        const newSize = Math.max(split.minSize, Math.min(split.size + px, split.maxSize));
         if (newSize !== split.size) {
           return { type: 'smooth', amount: newSize - split.size };
         }
@@ -505,7 +484,7 @@ export class Split extends StrictEventEmitter<SplitEvents> {
       }
 
       // Skip he fixed splits.
-      if (split.fixed.value) {
+      if (split.fixed) {
         continue;
       }
 
@@ -521,8 +500,25 @@ export class Split extends StrictEventEmitter<SplitEvents> {
       mouvements.push({
         ...mouvement,
         execute: (amount) => {
+          console.log(amount);
           amount = Math.sign(diff) * Math.abs(amount);
-          set(split, split.size + amount);
+          const newSize = split.size + amount;
+          if (mouvement.type === 'jump') {
+            split.collapsed = amount < 0;
+            split.emit('collapsed', split.collapsed);
+          }
+
+          if (split.parent!.direction === 'horizontal') {
+            split.width = newSize;
+            split.emit('widthResize', newSize);
+          } else {
+            split.height = newSize;
+            split.emit('heightResize', newSize);
+          }
+
+          if (mouvement.type !== 'jump') {
+            split.emit('resize', newSize);
+          }
         },
       });
     }
@@ -533,24 +529,9 @@ export class Split extends StrictEventEmitter<SplitEvents> {
     };
   }
 
-  private startDryRun() {
-    const height = this.height;
-    const width = this.width;
-
-    const disposers = this.children.map((child) => child.startDryRun());
-
-    return {
-      dispose: () => {
-        this.height = height;
-        this.width = width;
-        disposers.forEach(({ dispose }) => dispose());
-      },
-    };
-  }
-
-  private get collapsed() {
-    return this.size < this.minSize.value && this.size === 0;
-  }
+  // private get collapsed() {
+  //   return this.size < this.minSize && this.size === 0;
+  // }
 
   private get childrenReversed() {
     return this.children.slice().reverse();

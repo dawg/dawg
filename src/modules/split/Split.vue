@@ -2,7 +2,7 @@
   <div ref="el" class="relative" :class="{ flex: direction, 'flex-col': direction === 'vertical' }">
     <drag-element 
       class="absolute gutter"
-      v-if="i.isGutter"
+      v-if="gutter"
       :style="gutterStyle"
       :cursor="cursor"
       @move="move"
@@ -37,6 +37,11 @@ export default createComponent({
     keep: { type: Boolean, default: false },
 
     /**
+     * Whether the Split is collapsed.
+     */
+    collapsed: { type: Boolean, default: false },
+
+    /**
      * Irrelevant for root nodes.
      */
     fixed: { type: Boolean, default: false },
@@ -51,14 +56,15 @@ export default createComponent({
 
     const i = new Split({
       direction: props.direction,
-      minSize: ref(props.minSize),
-      maxSize: ref(props.maxSize),
-      collapsePixels: ref(props.collapsePixels),
-      collapsible: ref(props.collapsible),
-      keep: ref(props.keep),
-      fixed: ref(props.fixed),
-      initial: ref(props.initial),
-      name: ref(props.name),
+      minSize: props.minSize,
+      maxSize: props.maxSize,
+      collapsePixels: props.collapsePixels,
+      collapsible: props.collapsible,
+      keep: props.keep,
+      fixed: props.fixed,
+      initial: props.initial,
+      name: props.name,
+      collapsed: props.collapsed,
     });
 
     const parentDirection = computed(() => {
@@ -96,26 +102,37 @@ export default createComponent({
       i.setParent(context.parent.i);
     }
 
+    watch(() => props.collapsed, () => {
+      if (props.collapsed) {
+        i.collapse();
+      } else {
+        i.unCollapse();
+      }
+    }, { lazy: true });
+
     const isRoot = !isSplit(context.parent);
+    let disposer: { dispose: () => void } | undefined;
     onMounted(() => {
-      // i.onDidHeightResize((height) => {
-      //   if (el.value) {
-      //     el.value.style.height = height + 'px';
-      //   }
-      // });
-
-      // i.onDidWidthResize((width) => {
-      //   if (el.value) {
-      //     el.value.style.width = width + 'px';
-      //   }
-      // });
-
-      // i.onDidChangeSize((size) => {
-      //   update(props, context, 'initial', size);
-      // });
+      disposer = i.addListeners({
+        heightResize: (height) => {
+          if (el.value) {
+            el.value.style.height = height + 'px';
+          }
+        },
+        widthResize: (width) => {
+          if (el.value) {
+            el.value.style.width = width + 'px';
+          }
+        },
+        resize: (size) => {
+          update(props, context, 'initial', size);
+        },
+        collapsed: (value) => {
+          update(props, context, 'collapsed', value);
+        },
+      });
 
       if (!isRoot) { return; }
-
       i.init({
         height: window.innerHeight,
         width: window.innerWidth,
@@ -123,6 +140,7 @@ export default createComponent({
     });
 
     onUnmounted(() => {
+      if (disposer) { disposer.dispose(); }
       if (!isRoot) { return; }
       i.dispose();
     });
@@ -144,12 +162,17 @@ export default createComponent({
       i.resize(px);
     }
 
+    const gutter = computed(() => {
+      return i.isGutter;
+    });
+
     return {
+      i, // we HAVE to return i here so children can access it
       el,
       move,
       cursor,
       gutterStyle,
-      i,
+      gutter,
     };
   },
 });

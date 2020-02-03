@@ -15,6 +15,7 @@ interface Opts {
   maxSize?: number;
   minSize?: number;
   name?: string;
+  collapsed?: boolean;
 }
 
 const create = (
@@ -27,18 +28,20 @@ const create = (
     collapsible = false,
     minSize = 0,
     maxSize = Infinity,
+    collapsed = false,
   }: Opts = {},
 ) => {
   return new Split({
-    name: ref(name),
+    name,
     direction,
-    minSize: ref(minSize),
-    maxSize: ref(maxSize),
-    collapsePixels: ref(5),
-    initial: ref(initial),
-    collapsible: ref(collapsible),
-    fixed: ref(fixed),
-    keep: ref(keep),
+    minSize,
+    maxSize,
+    collapsePixels: 5,
+    initial,
+    collapsible,
+    fixed,
+    keep,
+    collapsed,
   });
 };
 
@@ -46,7 +49,7 @@ describe.only('Split', () => {
   const root = create({ direction: 'horizontal' });
 
   const a = create({ direction: 'vertical', maxSize: 50 });
-  const b = create();
+  const b = create({ direction: 'vertical' });
   const c = create({ initial: 20, minSize: 10 });
   [a, b, c].forEach((node) => node.setParent(root));
 
@@ -56,19 +59,31 @@ describe.only('Split', () => {
   const ad = create({ collapsible: true, minSize: 15, name: 'ad' });
   [aa, ab, ac, ad].forEach((node) => node.setParent(a));
 
+  const ba = create({ collapsed: true, collapsible: true, minSize: 10, name: 'ba' });
+  const bb = create({ name: 'bb' });
+  const bc = create({ name: 'bc' });
+  [ba, bb, bc].forEach((node) => node.setParent(b));
+
+  let toDispose: Array<{ dispose: () => void }> = [];
+
   beforeEach(() => {
     root.init({ height: 100, width: 100 });
   });
 
   afterEach(() => {
+    toDispose.forEach((d) => d.dispose());
+    toDispose = [];
     root.dispose();
   });
 
-  it('in initializes correctly', async () => {
+  it('initializes correctly', async () => {
     expect(root.sizes).to.deep.eq({ height: 100, width: 100 });
     expect(a.sizes).to.deep.eq({ height: 100, width: 40 });
     expect(b.sizes).to.deep.eq({ height: 100, width: 40 });
     expect(c.sizes).to.deep.eq({ height: 100, width: 20 });
+    expect(ba.sizes).to.deep.eq({ height: 0, width: 40 });
+    expect(bb.sizes).to.deep.eq({ height: 50, width: 40 });
+    expect(bc.sizes).to.deep.eq({ height: 50, width: 40 });
     expect(aa.sizes).to.deep.eq({ height: 25, width: 40 });
     expect(ab.sizes).to.deep.eq({ height: 25, width: 40 });
     expect(ac.sizes).to.deep.eq({ height: 25, width: 40 });
@@ -155,6 +170,42 @@ describe.only('Split', () => {
     expect(ad.sizes.height).to.deep.eq(0);
 
     ad.unCollapse();
+  });
+
+  it('initializes correctly with collapsed initially set to true', () => {
+    expect(ba.sizes.height).to.deep.eq(0);
+    expect(bb.sizes.height).to.deep.eq(50);
+    expect(bc.sizes.height).to.deep.eq(50);
+  });
+
+  it('collapses and un-collapses during resizing and emits the correct events', () => {
+    const collapses: boolean[] = [];
+    const heightChanges: number[] = [];
+    const sizeChanges: number[] = [];
+    toDispose.push(ba.addListeners({
+      collapsed: (value) => {
+        collapses.push(value);
+      },
+      heightResize: (value) => {
+        heightChanges.push(value);
+      },
+      resize: (value) => {
+        sizeChanges.push(value);
+      },
+    }));
+
+    bb.resize(10);
+    expect(ba.sizes.height).to.deep.eq(10);
+    expect(bb.sizes.height).to.deep.eq(40);
+    expect(bc.sizes.height).to.deep.eq(50);
+
+    bb.resize(-6);
+    expect(ba.sizes.height).to.deep.eq(0);
+    expect(bb.sizes.height).to.deep.eq(50);
+
+    expect(collapses).to.deep.eq([false, true]);
+    expect(heightChanges).to.deep.eq([10, 0]);
+    expect(sizeChanges).to.deep.eq([]);
   });
 
   root.dispose();
