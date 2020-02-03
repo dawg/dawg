@@ -1,6 +1,30 @@
 import { watch, Ref, ref } from '@vue/composition-api';
 import { StrictEventEmitter } from '@/events';
 
+// type LinkedList<T> = { done: true } | { done: false, value: T, next: () => LinkedList<T>, added: boolean };
+//     const getLinkedList = <T>(arr: T[]): LinkedList<T> => {
+//       const iter = arr[Symbol.iterator]() as { next: () => { done: true } | { done: false, value: T  } };
+
+//       const getNext = () => {
+//         const current = iter.next();
+//         if (current.done) {
+//           return current;
+//         }
+
+//         return {
+//           done: false,
+//           value: current.value,
+//           next: getNext,
+//           added: false,
+//         };
+//       };
+
+//       return getNext();
+//     };
+
+//     const l1 = getLinkedList(mouvements1);
+//     const l2 = getLinkedList(mouvements2);
+
 export type Direction = 'horizontal' | 'vertical';
 
 export const isSplit = (vue: any): vue is { i: Split } => {
@@ -186,39 +210,23 @@ export class Split extends StrictEventEmitter<SplitEvents> {
 
     if (px === 0) { return; }
 
-    /**
-     * Min that ignores signs and returns a value with the same sign as "px" when called.
-     */
-    const min = (...args: number[]) => {
-      return Math.min(...args.map(Math.abs)) * Math.sign(px);
-    };
-
-    /**
-     * Max ignoring signs.
-     */
-    const max = (...args: number[]) => {
-      let index = 0;
-      args.forEach((value, i) => {
-        if (Math.abs(value) > Math.abs(args[index])) {
-          index = i;
-        }
-      });
-
-      return args[index];
-    };
-
-    // console.log('STATING');
-
-
     // OK do first round of dry runs
     // Check how much we can move in each direction using "px"
     // "option1" and "option2" two can be bigger than "px" due to the collapsing functionality
     const disposer1 = this.parent.startDryRun();
-    const option1 = this.doResize(this.before, { px, direction: this.parent.direction });
-    const option2 = this.doResize(this.after, { px: -px, direction: this.parent.direction });
+    let option1 = this.doResize(this.before, { px, direction: this.parent.direction });
+    let option2 = this.doResize(this.after, { px: -px, direction: this.parent.direction });
     disposer1.dispose();
 
-    console.log(option1, '\n', option2);
+    const disposer2 = this.parent.startDryRun();
+    if (Math.abs(option1.amount) > Math.abs(px)) {
+      option2 = this.doResize(this.after, { px: -option1.amount, direction: this.parent.direction });
+    }
+
+    if (Math.abs(option2.amount) > Math.abs(px)) {
+      option1 = this.doResize(this.before, { px: -option2.amount, direction: this.parent.direction });
+    }
+    disposer2.dispose();
 
     const mouvements1 = option1.mouvements.map((o) => ({ ...o, amount: Math.abs(o.amount) }));
     const mouvements2 = option2.mouvements.map((o) => ({ ...o, amount: Math.abs(o.amount) }));
@@ -240,97 +248,71 @@ export class Split extends StrictEventEmitter<SplitEvents> {
     let sumSmooth1 = sumSmooth(smooth1);
     let sumSmooth2 = sumSmooth(smooth2);
 
-    let toMove1 = Math.min(sumSmooth1, sumSmooth2);
-    let toMove2 = toMove1;
+    const toMove1 = Math.min(sumSmooth1, sumSmooth2);
+    const toMove2 = toMove1;
+    // tslint:disable-next-line:no-console
     console.log(`\nBefore Smooth: ${sumSmooth1}\nAfter Smooth: ${sumSmooth2}\nMoving: ${toMove1}\n`);
 
-    let i2 = 0;
-    for (const m of mouvements2) {
-      if (m.amount > toMove1) {
-        break;
+    const moveSmooth = ({ toMove, total, smooth }: { toMove: number, total: number, smooth: Mouvement[] }) => {
+      let index = 0;
+      for (const m of smooth) {
+        if (toMove === 0) {
+          break;
+        }
+        const amount = Math.min(toMove, m.amount);
+
+        m.execute(amount);
+        toMove -= amount;
+        total -= amount;
+        index++;
       }
 
-      m.execute(m.amount);
-      toMove1 -= m.amount;
-      sumSmooth1 -= m.amount;
-      i2++;
-    }
+      return {
+        index,
+        total,
+      };
+    };
 
-    let i1 = 0;
-    for (const m of mouvements1) {
-      if (m.amount > toMove2) {
-        break;
+    // tslint:disable-next-line:prefer-const
+    let { total: total1, index: i2 } = moveSmooth({ toMove: toMove1, total: sumSmooth1, smooth: smooth2 });
+    sumSmooth1 = total1;
+
+    // tslint:disable-next-line:prefer-const
+    let { total: total2, index: i1 } = moveSmooth({ toMove: toMove2, total: sumSmooth2, smooth: smooth1 });
+    sumSmooth2 = total2;
+
+    const doRemaining = (
+      { remaining, jumps, smooth, i }: { remaining: number, jumps: Mouvement[], smooth: Mouvement[], i: number },
+    ) => {
+      if (remaining === 0) {
+        return;
       }
 
-      m.execute(m.amount);
-      toMove2 -= m.amount;
-      sumSmooth2 -= m.amount;
-      i1++;
-    }
-
-    if (sumSmooth1 !== 0) {
       let moved = 0;
       // The rest will all be "jump"
-      for (const m of jumps2) {
-        if (m.amount > sumSmooth1) {
+      for (const m of jumps) {
+        if (m.amount > remaining) {
           break;
         }
 
         m.execute(m.amount);
         moved += m.amount;
-        sumSmooth1 -= m.amount;
-        i2++;
+        remaining -= m.amount;
       }
 
-      for (const m of mouvements1.splice(i1)) {
+      for (const m of smooth.splice(i)) {
         if (moved === 0) {
           return;
         }
 
         const toMove = Math.min(m.amount, moved);
-        m.execute(m.amount);
+        m.execute(toMove);
         moved -= toMove;
-        i1++;
       }
-    }
+    };
 
-    if (sumSmooth2 !== 0) {
-      let moved = 0;
-      // The rest will all be "jump"
-      for (const m of jumps1) {
-        if (m.amount > sumSmooth2) {
-          break;
-        }
-
-        m.execute(m.amount);
-        moved += m.amount;
-        sumSmooth2 -= m.amount;
-      }
-
-      for (const m of mouvements2.splice(i2)) {
-        if (moved === 0) {
-          return;
-        }
-
-        const toMove = Math.min(m.amount, moved);
-        m.execute(m.amount);
-        moved -= toMove;
-        i2++;
-      }
-    }
-
-    // console.log(
-    //   this.parent.direction,
-    //   px,
-    //   option1,
-    //   option3,
-    //   option2,
-    //   option4,
-    // );
-
-    // The actual pixels moved (they might be different if something collapsed)
-    this.doResize(this.before, { px, direction: this.parent.direction });
-    this.doResize(this.after, { px: -px, direction: this.parent.direction });
+    doRemaining({ remaining: sumSmooth2, jumps: jumps1, smooth: smooth2, i: i2 });
+    doRemaining({ remaining: sumSmooth1, jumps: jumps2, smooth: smooth1, i: i1 });
   }
 
   public collapse() {
@@ -344,33 +326,22 @@ export class Split extends StrictEventEmitter<SplitEvents> {
 
     const direction = this.parent.direction;
 
-    const doResize = () => {
-      let after: number;
-      let before: number;
+    let pass: { remaining: number, mouvements: Mouvement[] };
+    let resize: { mouvements: Mouvement[], amount: number };
 
-      if (this.before.length === 0) {
-        before = this.doResizePass(this.before.slice(0, 1), -this.size, direction, 'collapsible').remaining;
-        after = this.size - this.doResize(this.after.slice(1), { px: this.size, direction }).amount;
-      } else {
-        before = this.size - this.doResize(this.before, { px: this.size, direction }).amount;
-        after = this.doResizePass(this.after, -this.size, direction, 'collapsible').remaining;
-      }
+    if (this.before.length === 0) {
+      pass = this.doResizePass(this.before.slice(0, 1), -this.size, direction, 'collapsible');
+      resize = this.doResize(this.after.slice(1), { px: this.size, direction });
+    } else {
+      resize = this.doResize(this.before, { px: this.size, direction });
+      pass = this.doResizePass(this.after, -this.size, direction, 'collapsible');
+    }
 
-      return {
-        after,
-        before,
-      };
-    };
-
-    const disposer = this.parent.startDryRun();
-    const pxMoved = doResize();
-    disposer.dispose();
-
-    if (pxMoved.after !== 0 || pxMoved.before !== 0) {
+    if (Math.abs(resize.amount) !== this.size || pass.remaining !== 0) {
       return;
     }
 
-    doResize();
+    [...resize.mouvements, ...pass.mouvements].forEach((m) => m.execute(m.amount));
   }
 
   public unCollapse() {
@@ -493,13 +464,22 @@ export class Split extends StrictEventEmitter<SplitEvents> {
         if (
           !split.collapsed &&
           split.collapsible.value &&
-          px < -this.collapsePixels.value
+          px < -split.collapsePixels.value
         ) {
           return { type: 'jump', amount: -split.size };
+        } else if (
+          split.collapsed &&
+          px >= split.minSize.value
+        ) {
+          return { type: 'jump', amount: px };
         }
       };
     } else {
       getMouvement = (split) => {
+        if (split.collapsed) {
+          return;
+        }
+
         // If we aren't considering high priority, skip the splits with the `keep` flag
         if (split.keep.value && mode === 'high-priority') {
           return;

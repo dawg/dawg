@@ -14,11 +14,13 @@ interface Opts {
   collapsible?: boolean;
   maxSize?: number;
   minSize?: number;
+  name?: string;
 }
 
 const create = (
   {
     direction,
+    name = 'Tester',
     fixed = false,
     initial,
     keep = false,
@@ -28,7 +30,7 @@ const create = (
   }: Opts = {},
 ) => {
   return new Split({
-    name: ref('Tester'),
+    name: ref(name),
     direction,
     minSize: ref(minSize),
     maxSize: ref(maxSize),
@@ -48,10 +50,10 @@ describe.only('Split', () => {
   const c = create({ initial: 20, minSize: 10 });
   [a, b, c].forEach((node) => node.setParent(root));
 
-  const aa = create({ fixed: true });
-  const ab = create();
-  const ac = create({ keep: true });
-  const ad = create({ collapsible: true, minSize: 15 });
+  const aa = create({ fixed: true, name: 'aa' });
+  const ab = create({ name: 'ab' });
+  const ac = create({ keep: true, name: 'ac' });
+  const ad = create({ collapsible: true, minSize: 15, name: 'ad' });
   [aa, ab, ac, ad].forEach((node) => node.setParent(a));
 
   beforeEach(() => {
@@ -73,7 +75,7 @@ describe.only('Split', () => {
     expect(ad.sizes).to.deep.eq({ height: 25, width: 40 });
   });
 
-  it.only('resizing correctly', () => {
+  it('resizing correctly', () => {
     // this shouldn't do anything since there is nothing "behind" a
     a.resize(10);
     expect(a.sizes.width).to.deep.eq(40);
@@ -128,8 +130,9 @@ describe.only('Split', () => {
     // it will collapse after moving collapsePixels (ie. 5 in our situation) + 1
 
     // nothing will happen here
-    ac.resize(5);
+    ad.resize(5);
     expect(ad.sizes.height).to.deep.eq(15);
+
 
     // now it will collapse
     ad.resize(6);
