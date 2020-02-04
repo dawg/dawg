@@ -14,7 +14,7 @@
 <script lang="ts">
 import { watch, Ref, ref, createComponent, computed, onMounted, onUnmounted } from '@vue/composition-api';
 import { update } from '@/utils';
-import { Direction, Split, isSplit } from '@/modules/split/helper';
+import { Direction, Section, isSplit } from '@/modules/split/helper';
 
 export default createComponent({
   name: 'Split',
@@ -37,7 +37,7 @@ export default createComponent({
     keep: { type: Boolean, default: false },
 
     /**
-     * Whether the Split is collapsed.
+     * Whether the Section is collapsed.
      */
     collapsed: { type: Boolean, default: false },
 
@@ -47,21 +47,18 @@ export default createComponent({
     fixed: { type: Boolean, default: false },
     collapsible: { type: Boolean, default: false },
     minSize: { type: Number, default: 10 },
-    maxSize: { type: Number, default: Infinity },
     gutterSize: { type: Number, default: 6 },
     collapsePixels: { type: Number, default: 10 },
   },
   setup(props, context) {
     const el = ref<HTMLElement>();
 
-    const i = new Split({
+    const i = new Section({
       direction: props.direction,
       minSize: props.minSize,
-      maxSize: props.maxSize,
       collapsePixels: props.collapsePixels,
       collapsible: props.collapsible,
-      keep: props.keep,
-      fixed: props.fixed,
+      mode: props.keep ? 'low' : props.fixed ? 'fixed' : 'high',
       initial: props.initial,
       name: props.name,
       collapsed: props.collapsed,
@@ -114,13 +111,13 @@ export default createComponent({
     let disposer: { dispose: () => void } | undefined;
     onMounted(() => {
       disposer = i.addListeners({
-        heightResize: (height) => {
+        height: (height) => {
           if (el.value) {
             el.value.style.height = height + 'px';
             el.value.style.minHeight = height + 'px';
           }
         },
-        widthResize: (width) => {
+        width: (width) => {
           if (el.value) {
             el.value.style.width = width + 'px';
             el.value.style.minWidth = width + 'px';
@@ -161,7 +158,7 @@ export default createComponent({
       const mousePosition = parentDirection.value === 'horizontal' ? e.clientX : e.clientY;
 
       const px = mousePosition - gutterPosition;
-      i.resize(px);
+      i.move(px);
     }
 
     const gutter = computed(() => {
