@@ -131,6 +131,18 @@ export class Split extends StrictEventEmitter<SplitEvents> {
     }
   }
 
+  private get trueSize() {
+    if (!this.parent) {
+      return -1;
+    }
+
+    if (this.parent.direction === 'horizontal') {
+      return this._width;
+    } else {
+      return this._height;
+    }
+  }
+
   private get height() {
     return this.collapsed ? 0 : this._height;
   }
@@ -331,7 +343,8 @@ export class Split extends StrictEventEmitter<SplitEvents> {
       return;
     }
 
-    const amount = Math.max(this.minSize, this.size);
+    const amount = Math.max(this.minSize, this.trueSize);
+    console.log(this.name, this.minSize, this.trueSize, amount);
     if (this.before.length === 0) {
       const rightAfter = this.after[0];
       rightAfter.resize(amount);
@@ -513,17 +526,20 @@ export class Split extends StrictEventEmitter<SplitEvents> {
           if (mouvement.type === 'jump') {
             split.collapsed = amount < 0;
             split.emit('collapsed', split.collapsed);
-          }
-
-          if (split.parent!.direction === 'horizontal') {
-            split.width = newSize;
-            split.emit('widthResize', newSize);
+            if (split.parent!.direction === 'horizontal') {
+              split.emit('widthResize', newSize);
+            } else {
+              split.emit('heightResize', newSize);
+            }
           } else {
-            split.height = newSize;
-            split.emit('heightResize', newSize);
-          }
+            if (split.parent!.direction === 'horizontal') {
+              split.width = newSize;
+              split.emit('widthResize', newSize);
+            } else {
+              split.height = newSize;
+              split.emit('heightResize', newSize);
+            }
 
-          if (mouvement.type !== 'jump') {
             split.emit('resize', newSize);
           }
         },
