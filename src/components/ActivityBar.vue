@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col bg-default-lighten-2" style="height: 100%;">
     <div
-      v-for="item in framework.ui.activityBar"
+      v-for="item in items"
       :key="item.name"
       :title="item.name"
       class="pt-3 pb-3 text-center cursor-pointer flex flex-col hover:bg-default-lighten-1"
@@ -25,7 +25,8 @@
 
 <script lang="ts">
 import * as framework from '@/framework';
-import { createComponent, ref, watch } from '@vue/composition-api';
+import { createComponent, ref, watch, computed } from '@vue/composition-api';
+import { sortOrdered } from '@/utils';
 
 export default createComponent({
   name: 'ActivityBar',
@@ -43,6 +44,9 @@ export default createComponent({
       clickActivityBar,
       framework,
       open,
+      items: computed(() => {
+        return framework.ui.activityBar.sort(sortOrdered);
+      }),
     };
   },
 });

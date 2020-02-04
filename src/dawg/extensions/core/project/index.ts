@@ -8,7 +8,6 @@ import { remote } from 'electron';
 import { loadBufferSync } from '@/modules/wav/local';
 import * as framework from '@/framework';
 import { notify } from '@/dawg/extensions/core/notify';
-import { DG_EXTENSION, FILTERS } from '@/constants';
 import { commands, Command } from '@/dawg/extensions/core/commands';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, ref, watch, Ref } from '@vue/composition-api';
@@ -48,6 +47,10 @@ import {
 } from '@/core';
 import Tone from 'tone';
 import * as history from '@/dawg/extensions/core/project/history';
+
+const DG = 'dg';
+const FILTERS = [{ name: 'DAWG Files', extensions: [DG] }];
+const DG_EXTENSION = `.${DG}`;
 
 const ProjectTypeRequired = t.type({
   id: t.string,

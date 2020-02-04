@@ -130,6 +130,7 @@ export const extension = createExtension({
       icon: 'folder',
       name: 'Explorer',
       component,
+      order: 1,
     });
 
     context.subscriptions.push(dawg.commands.registerCommand({

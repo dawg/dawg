@@ -235,8 +235,6 @@ export class Split extends StrictEventEmitter<SplitEvents> {
       option1 = this.doResize(this.before, { px: -option2.amount, direction: this.parent.direction });
     }
 
-    console.log(px, option1.amount, option2.amount);
-
     // // tslint:disable-next-line:no-console
     // console.log(JSON.stringify(option1, null, 2));
     // // tslint:disable-next-line:no-console
@@ -358,7 +356,7 @@ export class Split extends StrictEventEmitter<SplitEvents> {
     splits: Split[],
     { px, direction }: { px: number, direction: Direction },
   ) {
-    // console.log('Considering ' + splits.length + ' splits moving ' + px);
+    // console.log('Do resize -> ' + this.name);
 
     const mouvements: Mouvement[] = [];
 
@@ -382,8 +380,11 @@ export class Split extends StrictEventEmitter<SplitEvents> {
   }
 
   private onResizeEvent() {
-    this.doResize([this], { px: window.innerWidth - this.width, direction: 'horizontal' });
-    this.doResize([this], { px: window.innerHeight - this.height, direction: 'vertical' });
+    const r1 = this.doResize([this], { px: window.innerWidth - this.width, direction: 'horizontal' });
+    const r2 = this.doResize([this], { px: window.innerHeight - this.height, direction: 'vertical' });
+    [...r1.mouvements, ...r2.mouvements].forEach((m) => {
+      m.execute(m.amount);
+    });
   }
 
   private doResizePass(
@@ -410,21 +411,24 @@ export class Split extends StrictEventEmitter<SplitEvents> {
     };
 
     if (!parent || parent.direction !== direction) {
-      for (const split of splits) {
-        this.doResizePass(split.childrenReversed, px, direction, mode);
-        if (direction === 'horizontal') {
-          const newSize = split.width + px;
-          set(split, newSize, 'width');
-        } else {
-          const newSize = split.height + px;
-          set(split, newSize, 'height');
-        }
-      }
       // This is definitely a bug
       // It won't appear until later though with embedded splits
       return {
         remaining: 0,
-        mouvements: [],
+        mouvements: splits.map((split) => {
+          const attr: 'width' | 'height' = direction === 'horizontal' ? 'width' : 'height';
+          return {
+            // type is irrelevant
+            type: 'smooth',
+            amount: px,
+            execute: () => {
+              this.doResize(split.childrenReversed, { px, direction }).mouvements.forEach((m) => {
+                m.execute(m.amount);
+              });
+              set(split, split[attr] + px, attr);
+            },
+          };
+        }),
       };
     }
 
@@ -500,7 +504,11 @@ export class Split extends StrictEventEmitter<SplitEvents> {
         ...mouvement,
         execute: (amount) => {
           amount = Math.sign(diff) * Math.abs(amount);
-          this.doResizePass(split.childrenReversed, amount, direction, mode);
+          if (split.childrenReversed.length) {
+            const r = this.doResize(split.childrenReversed, { px: amount, direction });
+            r.mouvements.forEach((m) => m.execute(m.amount));
+          }
+
           const newSize = split.size + amount;
           if (mouvement.type === 'jump') {
             split.collapsed = amount < 0;

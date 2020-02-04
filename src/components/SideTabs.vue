@@ -40,7 +40,6 @@
 <script lang="ts">
 import BaseTabs from '@/components/BaseTabs.vue';
 import Tab from '@/components/Tab.vue';
-import { TOOLBAR_HEIGHT } from '@/constants';
 import * as framework from '@/framework';
 import { createComponent, computed } from '@vue/composition-api';
 
@@ -50,10 +49,13 @@ export default createComponent({
     BaseTabs,
     Tab,
   },
-  setup() {
+  props: {
+    toolbarHeight: { type: Number, required: true },
+  },
+  setup(props) {
     const headerStyle = computed(() => {
       return {
-        minHeight: `${TOOLBAR_HEIGHT + 1}px`,
+        minHeight: `${props.toolbarHeight}px`,
       };
     });
 

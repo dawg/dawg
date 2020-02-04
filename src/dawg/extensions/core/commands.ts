@@ -66,7 +66,14 @@ const shorcuts: Shortcut[] = [];
 
 const pushAndReturnDispose = (items: Shortcut[], item: Shortcut) => {
   items.push(item);
-  const shortcut = item.shortcut ? item.shortcut.map(((value) => hotKeysLookup[value])).join('+') : undefined;
+  const shortcut = item.shortcut ? item.shortcut.map(((value): string => {
+    const hotKey = hotKeysLookup[value];
+    if (typeof hotKey === 'string') {
+      return hotKey;
+    } else {
+      return hotKey[platform.platform];
+    }
+  })).join('+') : undefined;
   if (shortcut) {
     hotkeys(shortcut, item.callback);
   }

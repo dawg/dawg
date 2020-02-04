@@ -59,6 +59,7 @@ export const patterns = framework.manager.activate({
           project.addPattern();
         },
       }],
+      order: 2,
     });
 
     return {

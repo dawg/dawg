@@ -18,8 +18,7 @@ import ChunkGhostComponent from '@/dawg/extensions/core/record/ChunkGhost.vue';
 import * as framework from '@/framework';
 import { blobsToAudioBuffer } from '@/modules/converter';
 
-export const DOCUMENTS_PATH = remote.app.getPath('documents');
-export const RECORDING_PATH = path.join(DOCUMENTS_PATH, remote.app.getName(), 'recordings');
+export const RECORDING_PATH = path.join(framework.DOCUMENTS_PROJECT_PATH, 'recordings');
 
 function makeFileName() {
   const date = new Date();

@@ -117,11 +117,13 @@ export default createComponent({
         heightResize: (height) => {
           if (el.value) {
             el.value.style.height = height + 'px';
+            el.value.style.minHeight = height + 'px';
           }
         },
         widthResize: (width) => {
           if (el.value) {
             el.value.style.width = width + 'px';
+            el.value.style.minWidth = width + 'px';
           }
         },
         resize: (size) => {

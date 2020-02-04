@@ -12,7 +12,7 @@ import {
 } from '@/framework/extensions';
 import fs from '@/fs';
 import path from 'path';
-import { GLOBAL_PATH, WORKSPACE_PATH, PROJECT_PATH } from '@/constants';
+import { GLOBAL_PATH, WORKSPACE_PATH, PROJECT_PATH } from '@/framework/constants';
 import { reverse, keys } from '@/utils';
 import uuid from 'uuid';
 import { ref } from '@vue/composition-api';
