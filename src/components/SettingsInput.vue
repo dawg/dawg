@@ -47,6 +47,8 @@ export default createComponent({
     setting: { type: Object as () => Setting, required: true },
   },
   setup(props) {
+    console.log(props.setting);
+
     return {
       description: computed(() => {
         return Marked.parse(unwrap(props.setting.description));

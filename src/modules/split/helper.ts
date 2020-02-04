@@ -173,17 +173,15 @@ export class Section {
       };
     }
 
-    const direction = this.direction ? ', ' + this.direction.padEnd(10) : '';
-
     // tslint:disable
     Section.DEBUG && console.log(
-      `[INIT${direction}] ${this.name ? this.name.padEnd(5) : 'None '}| ` +
+      `[INIT${this.direction ? ', ' + this.direction.padEnd(10) : ''}] ${this.name ? this.name.padEnd(5) : 'None '}| ` +
       `height -> ${sizes.height.toString().padEnd(4)}, width -> ${sizes.width.toString().padEnd(4)}`,
     );
     // tslint:enable
 
-    this.set('height', sizes.height);
-    this.set('width', sizes.width);
+    this.set('height', sizes.height, false);
+    this.set('width', sizes.width, false);
 
     // There will never be a gutter for the first element
     // This logic may not be right but we are putting a gutter on any divider that doesn't touch a "fixed" split
@@ -191,15 +189,17 @@ export class Section {
       this.children[i + 1].gutter.value = this.children[i].mode !== 'fixed' && this.children[i + 1].mode !== 'fixed';
     });
 
-    const initialSum = this.children.reduce((sum, curr) => sum + (curr.initial || 0), 0);
+    const initialSum = this.children.reduce((sum, curr) => {
+      return sum + (curr.collapsed ? 0 : curr.initial ? curr.initial : 0);
+    }, 0);
+
     const total = this.direction === 'horizontal' ? this.width : this.height;
     const remaining = total - initialSum;
     const notFixed = this.children.filter((child) => child.initial === undefined && child.collapsed === false);
     const size = remaining / notFixed.length;
 
     this.children.forEach((split) => {
-      const splitSize = split.initial !== undefined ? split.initial : split.collapsed ? 0 : size;
-
+      const splitSize = split.collapsed ? 0 : split.initial !== undefined ? split.initial : size;
 
       // Set the opposite values
       // e.g. if the direction is "horizontal" set the height
@@ -259,7 +259,14 @@ export class Section {
     this.toDispose = [];
   }
 
-  public set(attr: 'height' | 'width', value: number) {
+  /**
+   * Just a helper method which emits the appropriate events.
+   *
+   * @param attr
+   * @param value
+   * @param emit Whether to emit the "resize" event. We set this to false during initialization.
+   */
+  public set(attr: 'height' | 'width', value: number, emit: boolean = true) {
     this[attr] = value;
     this.events.emit(attr, value);
 
@@ -268,6 +275,10 @@ export class Section {
       !this.parent.direction ||
       this.disabled
     ) {
+      return;
+    }
+
+    if (!emit) {
       return;
     }
 

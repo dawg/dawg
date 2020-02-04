@@ -870,7 +870,7 @@ const extension = createExtension({
       type: 'string',
       label: 'Project Name',
       description: 'Give your project a better name to make it more identifiable.',
-      value: name,
+      value: api.name,
     });
 
     return api;

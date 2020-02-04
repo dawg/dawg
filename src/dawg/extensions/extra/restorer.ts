@@ -21,14 +21,10 @@ export const extension = createExtension({
     },
   },
   activate(context) {
-    // framework.ui.sideBarSize.value = context.workspace.sideBarSize.value;
-    // framework.ui.panelsSize.value = context.workspace.panelsSize.value;
-
-    const sync = <T>(from: Ref<T | undefined>, to: Ref<T>) => {
+    const sync = <T>(from: Ref<T>, to: Ref<T>) => {
+      from.value = to.value;
       watch(from, () => {
-        if (from.value !== undefined) {
-          to.value = from.value;
-        }
+        to.value = from.value;
       });
     };
 
@@ -55,11 +51,5 @@ export const extension = createExtension({
         framework.ui.sideBarCollapsed.value = !framework.ui.sideBarCollapsed.value;
       },
     }));
-
-    // initialize the variables
-    framework.ui.openedSideTab.value = context.workspace.openedSideTab.value;
-    framework.ui.openedPanel.value = context.workspace.openedPanel.value;
-    // framework.ui.sideBarCollapsed.value = context.workspace.sideBarCollapsed.value || false;
-    // framework.ui.panelsCollapsed.value = context.workspace.panelsCollapsed.value || false;
   },
 });
