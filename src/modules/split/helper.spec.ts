@@ -3,7 +3,6 @@ import VueCompositionApi from '@vue/composition-api';
 Vue.use(VueCompositionApi);
 
 import { expect } from '@/testing';
-import { ref } from '@vue/composition-api';
 import { Split, Direction } from '@/modules/split/helper';
 
 interface Opts {

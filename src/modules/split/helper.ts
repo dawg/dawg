@@ -1,5 +1,6 @@
-import { ref } from '@vue/composition-api';
+import { ref, watch } from '@vue/composition-api';
 import { StrictEventEmitter } from '@/events';
+import { addEventListener } from '@/utils';
 
 type LinkedList<T> = { done: true } | { done: false, value: T, next: () => LinkedList<T>, added: boolean };
 const getLinkedList = <T>(arr: T[]): LinkedList<T> => {
@@ -56,6 +57,269 @@ type SplitEvents = {
   resize: [number];
   collapsed: [boolean];
 };
+
+type SectionMode = 'low' | 'high' | 'fixed';
+interface SectionOpts {
+  name: string;
+  collapsible?: boolean;
+  minSize?: number;
+  collapsePixels?: number;
+}
+
+export class Section {
+  private disabled = false;
+  private width = ref(0);
+  private height = ref(0);
+  private minSize: number;
+  private direction: Direction | undefined;
+  private parent: null | Section = null;
+  private children: Section[] = [];
+  private toDispose: Array<{ dispose: () => void }> = [];
+  private mode: SectionMode = 'low';
+  private collapsible = false;
+  private collapsed = false;
+  private collapsePixels = 10;
+  private name: string;
+
+  constructor(o: SectionOpts) {
+    this.minSize = o.minSize || 15;
+    this.collapsible = !!o.collapsible;
+    this.name = o.name;
+    this.collapsePixels = o.collapsePixels || 10;
+  }
+
+  public setParent(parent: Section) {
+    this.parent = parent;
+    parent.children.push(this);
+  }
+
+  public siblings() {
+    if (!this.parent) {
+      return {
+        before: [],
+        after: [],
+      };
+    }
+
+    const i = this.parent.children.indexOf(this);
+    const before = this.parent.children.slice(0, i).reverse();
+    const after = this.parent.children.slice(i);
+    if (i === -1) {
+      return {
+        before: [],
+        after: [],
+      };
+    }
+
+    return {
+      before,
+      after,
+    };
+  }
+
+  public move(px: number) {
+    if (!this.parent || !this.parent.direction || px === 0) {
+      return;
+    }
+
+    const i = this.parent.children.indexOf(this);
+    if (i === -1) {
+      return;
+    }
+
+    const attr = this.parent.direction === 'horizontal' ? 'width' : 'height' as const;
+    const { before, after } = this.siblings();
+    let shrinking: Section[];
+    let growing: Section[];
+
+    if (px < 0) {
+      shrinking = before;
+      growing = after;
+    } else {
+      shrinking = after;
+      growing = before;
+    }
+
+    const move = (sections: Section[], toMove: number) => {
+      let totalMoved = 0;
+      totalMoved += this.iterate(sections, attr, toMove, 'high');
+      totalMoved += this.iterate(sections, attr, toMove - totalMoved, 'low');
+      totalMoved += this.iterate(sections, attr, toMove - totalMoved, 'collapse');
+      return totalMoved;
+    };
+
+    px = move(shrinking, px);
+    move(growing, px);
+  }
+
+  public collapse() {
+    this.collapseHelper('collapse');
+  }
+
+  public unCollapse() {
+    this.collapseHelper('un-collapse');
+  }
+
+  public init() {
+    this.children.forEach((c) => c.init());
+
+    this.toDispose.push({
+      dispose: watch(this.height, () => {
+        this.resize({ direction: 'horizontal' });
+      }),
+    });
+
+    this.toDispose.push({
+      dispose: watch(this.width, () => {
+        this.resize({ direction: 'vertical' });
+      }),
+    });
+
+
+    if (this.parent === null) {
+      const setSize = () => {
+        this.width.value = window.innerWidth;
+        this.height.value = window.innerWidth;
+      };
+
+
+      this.toDispose.push(addEventListener('resize', setSize));
+    }
+  }
+
+  public onDidSizeChange(cb: () => void) {
+    if (!this.parent || !this.parent.direction) {
+      return;
+    }
+
+    const actualCb = () => {
+      if (!this.disabled) {
+        cb();
+      }
+    };
+
+    if (this.parent.direction === 'horizontal') {
+      watch(this.height, actualCb);
+    } else {
+      watch(this.width, actualCb);
+    }
+  }
+
+  public onDidHeightChange(cb: () => void) {
+    watch(this.height, cb);
+  }
+
+  public onDidWidthChange(cb: () => void) {
+    watch(this.width, cb);
+  }
+
+  public dispose() {
+    this.toDispose.forEach(({ dispose }) => dispose());
+    this.toDispose = [];
+  }
+
+  private collapseHelper(mode: 'collapse' | 'un-collapse') {
+    if (this.collapsed || !this.parent) {
+      return;
+    }
+
+    const { before, after } = this.siblings();
+    if (before.length === 0 && after.length === 0) {
+      return;
+    }
+
+    const attr = this.parent.direction === 'horizontal' ? 'width' : 'height' as const;
+    const noBeforeMultiple = mode === 'collapse' ? -1 : 1;
+    const hasBeforeMultiple = mode === 'un-collapse' ? -1 : 1;
+
+    this.withDisabled(() => {
+      const amount = Math.max(this[attr].value, this.minSize);
+      if (before.length === 0) {
+        const rightAfter = after[0];
+        rightAfter.move(amount * noBeforeMultiple);
+      } else {
+        this.move(amount * hasBeforeMultiple);
+      }
+    });
+  }
+
+  private withDisabled(cb: () => void) {
+    this.disabled = true;
+    try {
+      cb();
+    } finally {
+      this.disabled = false;
+    }
+  }
+
+  private resize({ direction }: { direction: Direction }) {
+    const attr = direction === 'horizontal' ? 'width' : 'height' as const;
+    const oldSize = this.children.reduce((sum, child) => sum + child[attr].value, 0);
+    let px = this[attr].value - oldSize;
+
+    if (this.direction !== direction) {
+      this.children.forEach((child) => {
+        child[attr].value = this[attr].value + px;
+      });
+      return;
+    }
+
+    px -= this.iterate(this.children, attr, px, 'high');
+    this.iterate(this.children, attr, px, 'low');
+  }
+
+  private iterate(sections: Section[], attr: 'height' | 'width', toMove: number, mode: 'low' | 'high' | 'collapse') {
+    let moved = 0;
+    for (const section of sections) {
+      if ((mode === 'high' || mode === 'low') && mode !== section.mode || section.collapsed) {
+        continue;
+      }
+
+      if (toMove === 0) {
+        break;
+      }
+
+      let newSize = section[attr].value;
+
+      if (mode === 'high' || mode === 'low') {
+        newSize = Math.max(section.minSize, section[attr].value + toMove);
+        if (newSize === section[attr].value) {
+          continue;
+        }
+      } else {
+        if (
+          section.collapsible &&
+          !section.collapsed &&
+          toMove < -section.collapsePixels
+        ) {
+          section.collapsed = true;
+          newSize = 0;
+        } else if (
+          section.collapsible &&
+          section.collapsed &&
+          toMove >= section.minSize
+        ) {
+          section.collapsed = false;
+          newSize = section.minSize;
+        } else {
+          continue;
+        }
+      }
+
+      console.log(
+        `[${mode.padEnd(8)}, ${attr}] ${name} ` +
+        `from ${section[attr].value.toString().padEnd(3)} -> ${newSize.toString().padEnd(3)}`,
+      );
+
+      const diff = newSize - section[attr].value;
+      section[attr].value = newSize;
+      toMove -= diff;
+      moved += diff;
+    }
+
+    return moved;
+  }
+}
 
 export class Split extends StrictEventEmitter<SplitEvents> {
   public readonly direction?: Direction;
