@@ -18,7 +18,7 @@
 <script lang="ts">
 import { Component, Prop, Inject, Vue } from 'vue-property-decorator';
 import { Instrument } from '@/core';
-import * as base from '@/base';
+import * as framework from '@/framework';
 import { ref, computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({
@@ -68,8 +68,8 @@ export default createComponent({
 
     const keyOverlay = computed(() => {
       return {
-        backgroundColor: base.theme.primary + percentage.value,
-        borderBottom: `1px solid ${base.theme.primary + 10}`,
+        backgroundColor: framework.theme.primary + percentage.value,
+        borderBottom: `1px solid ${framework.theme.primary + 10}`,
       };
     });
 

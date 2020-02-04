@@ -1,21 +1,20 @@
-import { createExtension } from '@/dawg/extensions';
+import { createExtension } from '@/framework/extensions';
 import { Classes } from '@/dawg/extensions/core/theme/types';
 import { defaults } from '@/dawg/extensions/core/theme/defaults';
 import tinycolor from 'tinycolor2';
 import { palette } from '@/dawg/extensions/core/palette';
 import { commands } from '@/dawg/extensions/core/commands';
-import { manager } from '@/base/manager';
+import * as framework from '@/framework';
 import * as t from '@/modules/io';
-import * as base from '@/base';
 import { keys } from '@/utils';
 
 export interface ThemeAugmentation {
-  $theme: base.Theme;
+  $theme: framework.Theme;
 }
 
 const PERCENTAGES = [2, 4, 8, 12, 20, 32];
 
-function createVariables(newTheme: base.Theme) {
+function createVariables(newTheme: framework.Theme) {
   const variables: Classes = {};
   Object.entries(newTheme).forEach(([name, color]) => {
     variables[name] = color;
@@ -62,15 +61,15 @@ let oldTheme: ThemeNames;
 const insertTheme = (name: ThemeNames) => {
   // make a `dispose` call
   if (oldTheme) {
-    base.ui.rootClasses.splice(base.ui.rootClasses.indexOf(oldTheme));
+    framework.ui.rootClasses.splice(framework.ui.rootClasses.indexOf(oldTheme));
   }
 
-  base.ui.rootClasses.push(name);
+  framework.ui.rootClasses.push(name);
   oldTheme = name;
 
   const themeObject = defaults[name];
   keys(themeObject).forEach((key) => {
-    theme[key] = base.theme[key] = themeObject[key];
+    theme[key] = framework.theme[key] = themeObject[key];
   });
 };
 
@@ -136,13 +135,13 @@ const extension = createExtension({
       lighten: (hex: string, amount: 1 | 2 | 3 | 4 | 5) => {
         return tinycolor(hex).lighten(PERCENTAGES[amount - 1]).toHexString();
       },
-      ...base.theme,
+      ...framework.theme,
     };
   },
 });
 
 
-export const theme = manager.activate(extension);
+export const theme = framework.manager.activate(extension);
 
 // Insert the theme right away
 // FIXME maybe add ready hook??

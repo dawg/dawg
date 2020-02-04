@@ -1,4 +1,4 @@
-import { createExtension } from '@/dawg/extensions';
+import { createExtension } from '@/framework/extensions';
 import TimeDisplay from '@/dawg/extensions/extra/time/TimeDisplay.vue';
 import * as dawg from '@/dawg';
 import { createComponent, ref, watch } from '@vue/composition-api';
@@ -19,14 +19,14 @@ export const extension = createExtension({
         const seconds = ref(0);
 
         const update = () => {
-          if (dawg.project.state.value === 'started') {
+          if (dawg.controls.state.value === 'started') {
             requestAnimationFrame(update);
           }
-          seconds.value = dawg.project.getTime();
+          seconds.value = dawg.controls.getTime();
         };
 
-        watch(dawg.project.state, () => {
-          if (dawg.project.state.value === 'started') {
+        watch(dawg.controls.state, () => {
+          if (dawg.controls.state.value === 'started') {
             update();
           }
         });

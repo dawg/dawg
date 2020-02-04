@@ -20,14 +20,14 @@ import { Nullable } from '@/utils';
 import { Score, Instrument, Pattern } from '@/core';
 import { Watch } from '@/modules/update';
 import { notify } from '@/dawg/extensions/core/notify';
-import * as base from '@/base';
+import * as framework from '@/framework';
 import { project } from '@/dawg/extensions/core/project';
 
 @Component({ components: { Synth } })
 export default class Synths extends Vue {
   @Prop({ type: Array, required: true }) public instruments!: Array<Instrument<any, any>>;
   @Prop(Nullable(Object)) public selectedScore!: Score | null;
-  @Prop(Nullable(Object)) public selectedPattern!: Pattern | null;
+  @Prop(Object) public selectedPattern!: Pattern | undefined;
 
   get project() {
     return project;

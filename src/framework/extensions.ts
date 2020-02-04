@@ -23,8 +23,6 @@ const ttt = {
   default: [],
 };
 
-type TT = InferPropType<typeof ttt>;
-
 declare type RequiredKeys<T> = {
   [K in keyof T]: T[K] extends { default: any; } ? K : never;
 }[keyof T];

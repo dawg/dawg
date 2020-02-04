@@ -10,8 +10,15 @@ type NumberComparer<T> = (value: T, message?: string) => Assertion<T>;
 
 type CloseTo<T> = (expected: T & number, delta: number, message?: string) => Assertion<T>;
 
+interface Deep<T> {
+  equal: Equal<T>;
+  equals: Equal<T>;
+  eq: Equal<T>;
+}
+
 interface Assertion<T> {
   to: Assertion<T>;
+  deep: Deep<T>;
   be: Assertion<T>;
   closeTo: CloseTo<T>;
   not: Assertion<T>;

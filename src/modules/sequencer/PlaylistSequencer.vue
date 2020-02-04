@@ -27,8 +27,7 @@ import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import Sequencer from '@/modules/sequencer/Sequencer.vue';
 import { Track } from '@/core';
 import { theme } from '@/dawg/extensions/core/theme';
-import * as base from '@/base';
-import { ui } from '@/base/ui';
+import * as framework from '@/framework';
 
 @Component({
   components: { Sequencer },
@@ -40,9 +39,9 @@ export default class PlaylistSequencer extends Vue {
   public prototype = null;
 
   public trackOptions(event: MouseEvent, i: number) {
-    base.context({
+    framework.context({
       position: event,
-      items: ui.trackContext.map((item) => {
+      items: framework.ui.trackContext.map((item) => {
         return {
           ...item,
           callback: () => {

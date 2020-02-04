@@ -1,5 +1,5 @@
 import * as keyboard from '@/keyboard';
-import { manager } from '@/base/manager';
+import * as framework from '@/framework';
 import { palette } from '@/dawg/extensions/core/palette';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { Key } from '@/keyboard';
@@ -66,7 +66,14 @@ const shorcuts: Shortcut[] = [];
 
 const pushAndReturnDispose = (items: Shortcut[], item: Shortcut) => {
   items.push(item);
-  const shortcut = item.shortcut ? item.shortcut.map(((value) => hotKeysLookup[value])).join('+') : undefined;
+  const shortcut = item.shortcut ? item.shortcut.map(((value): string => {
+    const hotKey = hotKeysLookup[value];
+    if (typeof hotKey === 'string') {
+      return hotKey;
+    } else {
+      return hotKey[platform.platform];
+    }
+  })).join('+') : undefined;
   if (shortcut) {
     hotkeys(shortcut, item.callback);
   }
@@ -89,7 +96,7 @@ const pushAndReturnDispose = (items: Shortcut[], item: Shortcut) => {
   };
 };
 
-export const commands = manager.activate({
+export const commands = framework.manager.activate({
   id: 'dawg.commands',
   activate(context) {
     const registerCommand = (command: Command) => {

@@ -177,7 +177,7 @@ export default createComponent({
           disposer = extensionData.value.preview(data);
         }
       }
-    });
+    }, { lazy: true });
 
     async function loadData() {
       if (data) {

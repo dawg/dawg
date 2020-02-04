@@ -75,7 +75,7 @@ import { range, scale, clamp } from '@/utils';
 import { AnyEffect } from '@/core/filters/effect';
 import { Channel as C } from '@/core/channel';
 import { EffectMap, EffectName } from '@/core';
-import * as base from '@/base';
+import * as framework from '@/framework';
 import { ref, computed, watch, createComponent } from '@vue/composition-api';
 
 function sentenceCase(text: string) {
@@ -120,7 +120,7 @@ export default createComponent({
         text: sentenceCase(option), callback: () => addEffect(option, i),
       }));
 
-      base.menu({
+      framework.menu({
         position: event,
         items,
       });
@@ -136,7 +136,7 @@ export default createComponent({
     }
 
     function contextmenu(event: MouseEvent, effect: AnyEffect) {
-      base.context({
+      framework.context({
         position: event,
         items: [{
           text: 'Delete',
@@ -197,6 +197,7 @@ export default createComponent({
       effects,
       left,
       right,
+      select,
     };
   },
 });

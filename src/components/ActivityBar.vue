@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col bg-default-lighten-2" style="height: 100%;">
     <div
-      v-for="item in base.ui.activityBar"
+      v-for="item in items"
       :key="item.name"
-      v-tooltip.right="item.name"
+      :title="item.name"
       class="pt-3 pb-3 text-center cursor-pointer flex flex-col hover:bg-default-lighten-1"
       @click="clickActivityBar(item)"
     >
@@ -14,7 +14,7 @@
     </div>
 
     <div class="flex-grow"></div>
-    <div class="pt-3 pb-3 text-center cursor-pointer flex flex-col" v-tooltip.right="'Settings'" @click="openSettings">
+    <div class="pt-3 pb-3 text-center cursor-pointer flex flex-col" title="Settings" @click="openSettings">
       <dg-mat-icon
         class="text-2xl text-default"
         icon="settings"
@@ -24,14 +24,15 @@
 </template>
 
 <script lang="ts">
-import * as base from '@/base';
-import { createComponent, ref, watch } from '@vue/composition-api';
+import * as framework from '@/framework';
+import { createComponent, ref, watch, computed } from '@vue/composition-api';
+import { sortOrdered } from '@/utils';
 
 export default createComponent({
   name: 'ActivityBar',
   setup(_, context) {
-    function clickActivityBar(tab: base.ActivityBarItem) {
-      base.ui.openedSideTab.value = tab.name;
+    function clickActivityBar(tab: framework.ActivityBarItem) {
+      framework.ui.openedSideTab.value = tab.name;
     }
 
     function openSettings(e: MouseEvent) {
@@ -41,8 +42,11 @@ export default createComponent({
     return {
       openSettings,
       clickActivityBar,
-      base,
+      framework,
       open,
+      items: computed(() => {
+        return framework.ui.activityBar.sort(sortOrdered);
+      }),
     };
   },
 });

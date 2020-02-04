@@ -43,7 +43,7 @@
 <script lang="ts">
 import { Vue, Component, Prop} from 'vue-property-decorator';
 import { reverse } from '@/utils';
-import * as base from '@/base';
+import * as framework from '@/framework';
 import { Marked } from 'marked-ts';
 
 const directions = {
@@ -58,7 +58,7 @@ const ICON_LOOKUP = {
   error: 'ban',
 };
 
-interface Notification extends base.notify.Notification {
+interface Notification extends framework.notify.Notification {
   icon: string;
 }
 
@@ -92,7 +92,7 @@ export default class Notifications extends Vue {
   }
 
   public mounted() {
-    base.notify.subscribe((notification) => {
+    framework.notify.subscribe((notification) => {
       this.addItem({
         ...notification,
         icon: ICON_LOOKUP[notification.type],

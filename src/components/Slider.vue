@@ -45,8 +45,9 @@
 <script lang="ts">
 import { DragElement } from '@/modules/draggable';
 import { scale } from '@/utils';
-import * as base from '@/base';
+import * as framework from '@/framework';
 import { computed, createComponent, ref } from '@vue/composition-api';
+import * as dawg from '@/dawg';
 
 export default createComponent({
   name: 'Slider',
@@ -109,14 +110,14 @@ export default createComponent({
     }
 
     function update() {
-      base.status.value = {
+      dawg.status.set({
         text: 'Volume',
         value: getFormatted(),
-      };
+      });
     }
 
     function afterMove() {
-      base.status.value = null;
+      dawg.status.set(null);
     }
 
     function getPosition(level: number) {
@@ -124,7 +125,7 @@ export default createComponent({
     }
 
     function contextmenu(event: MouseEvent) {
-      base.context({
+      framework.context({
         position: event,
         items: [
           {

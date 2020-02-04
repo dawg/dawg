@@ -9,6 +9,7 @@ export const extension: dawg.Extension = {
       name: 'Automation Clips',
       component: AutomationClips,
       iconProps: { style: 'transform: rotate(-90deg)' },
+      order: 4,
     });
   },
 };

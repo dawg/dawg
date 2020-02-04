@@ -27,36 +27,44 @@ import { Component, Vue, Prop } from 'vue-property-decorator';
 import { Extensions, Folder, File } from '@/dawg/extensions/extra/explorer/types';
 import Tree from '@/dawg/extensions/extra/explorer/Tree.vue';
 import * as dawg from '@/dawg';
+import { createComponent } from '@vue/composition-api';
 
-@Component({
+export default createComponent({
   components: { Tree },
-})
-export default class FileEplorer extends Vue {
-  /**
-   * The extensions. The keys represent the case-insensitive extensions (without the `.`) and the
-   * values represent the drag identifier.
-   */
-  @Prop({ type: Object, required: true }) public extensions!: Extensions;
+  name: 'FileExplorer',
+  props: {
+    /**
+     * The extensions. The keys represent the case-insensitive extensions (without the `.`) and the
+     * values represent the drag identifier.
+     */
+    extensions: { type: Object as () => Extensions, required: true },
 
-  /**
-   * The trees.
-   */
-  @Prop({ type: Array, required: true }) public trees!: Folder[];
+    /**
+     * The trees.
+     */
+    trees: { type: Array as () => Folder[], required: true },
+  },
+  setup(props, context) {
+    function openExplorer() {
+      context.emit('open-explorer');
+    }
 
-  public openExplorer() {
-    this.$emit('open-explorer');
-  }
+    function contextMenu(folder: string, event: MouseEvent) {
+      dawg.context({
+        position: event,
+        items: [
+          {
+            text: 'Remove Folder From Workspace',
+            callback: () => context.emit('remove', folder),
+          },
+        ],
+      });
+    }
 
-  public context(folder: string, event: MouseEvent) {
-    dawg.context({
-      position: event,
-      items: [
-        {
-          text: 'Remove Folder From Workspace',
-          callback: () => this.$emit('remove', folder),
-        },
-      ],
-    });
-  }
-}
+    return {
+      openExplorer,
+      context: contextMenu,
+    };
+  },
+});
 </script>

@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { createExtension } from '..';
+import { createExtension } from '../../../framework/extensions';
 import * as dawg from '@/dawg';
 import path from 'path';
 import { computed } from '@vue/composition-api';
@@ -14,7 +14,7 @@ export const extension = createExtension({
 
     const component = Vue.extend({
       template: `
-        <div v-tooltip.right-end="openedFile.value" class="text-default text-sm">
+        <div :title="openedFile.value" class="text-default text-sm">
           {{ projectName.value }}
         </div>
       `,

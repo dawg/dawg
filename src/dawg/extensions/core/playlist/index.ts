@@ -1,17 +1,18 @@
 import Vue from 'vue';
 import * as t from '@/modules/io';
-import { manager } from '@/base/manager';
 import { project } from '@/dawg/extensions/core/project';
 // FIXME(2) Remove this import
 import { record } from '@/dawg/extensions/core/record';
-import { ScheduledPattern, ScheduledSample } from '@/core';
+import { ScheduledPattern, ScheduledSample, PlaylistElements } from '@/core';
 import { ref } from '@vue/composition-api';
-import { ui } from '@/base/ui';
+import * as framework from '@/framework';
 import { Ghost } from '@/core/ghost';
-import { applicationContext } from '@/dawg/extensions/core/application-context';
+import { controls } from '@/dawg/extensions/core/controls';
 import { log } from '@/dawg/extensions/core/log';
+import { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
+import { patterns } from '@/dawg/extensions/core/patterns';
 
-export const playlist = manager.activate({
+export const playlist = framework.manager.activate({
   id: 'dawg.playlist',
   workspace: {
     playlistRowHeight: {
@@ -46,9 +47,10 @@ export const playlist = manager.activate({
         :beats-per-measure="project.beatsPerMeasure"
         :row-height.sync="playlistRowHeight.value"
         :px-per-beat.sync="playlistBeatWidth.value"
-        @new-prototype="checkPrototype"
         :is-recording="recording.value"
         :ghosts="ghosts"
+        @new-prototype="checkPrototype"
+        @open="open"
       ></playlist-sequencer>
       `,
       data: () => ({
@@ -65,7 +67,7 @@ export const playlist = manager.activate({
       }),
       computed: {
         playlistPlay() {
-          return project.state.value === 'started' && applicationContext.context.value === 'playlist';
+          return controls.state.value === 'started' && controls.context.value === 'playlist';
         },
       },
       methods: {
@@ -85,10 +87,20 @@ export const playlist = manager.activate({
           logger.debug('Adding a sample!');
           project.addSample(sample);
         },
+        open(element: PlaylistElements) {
+          switch (element.component) {
+            case 'sample-element':
+              sampleViewer.openedSample.value = element.sample;
+              break;
+            case 'pattern-element':
+              patterns.selectedPattern.value = element.pattern;
+              break;
+          }
+        },
       },
     });
 
-    ui.mainSection.push(component);
+    framework.ui.mainSection.push(component);
 
     return {
       masterStart,

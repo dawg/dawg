@@ -1,66 +1,54 @@
 import Vue from 'vue';
 import Patterns from '@/dawg/extensions/core/patterns/Patterns.vue';
-import { ref, computed, createComponent } from '@vue/composition-api';
+import { ref, computed, createComponent, watch } from '@vue/composition-api';
 import { makeLookup, vueExtend } from '@/utils';
 import { Pattern } from '@/core';
-import { manager } from '@/base/manager';
-import { ui } from '@/base/ui';
+import * as framework from '@/framework';
 import { project } from '@/dawg/extensions/core/project';
+import * as t from '@/modules/io';
 
-export const patterns = manager.activate({
+export const patterns = framework.manager.activate({
   id: 'dawg.patterns',
-  activate() {
-    const selectedPatternId = ref<null | string>(null);
+  workspace: {
+    selectedPatternId: t.string,
+  },
+  activate(context) {
+    const selectedPatternId = context.workspace.selectedPatternId;
+    const pattern = ref<Pattern>();
 
     const patternLookup = computed(() => {
       return makeLookup(project.patterns);
     });
 
-    const selectedPattern = computed(() => {
-      if (selectedPatternId.value === null) { return null; }
-      const p = patternLookup.value[selectedPatternId.value];
-      if (!p) {
-        return null;
+    if (selectedPatternId.value) {
+      pattern.value = patternLookup.value[selectedPatternId.value];
+    }
+
+    watch(pattern, () => {
+      selectedPatternId.value = pattern.value ? pattern.value.id : undefined;
+
+      if (pattern.value && framework.ui.openedSideTab.value !== 'Patterns') {
+        framework.ui.openedSideTab.value = 'Patterns';
       }
-
-      return p;
-    });
-
-    const setPattern = (pattern: Pattern | null) => {
-      if (pattern) {
-        selectedPatternId.value = pattern.id;
-      } else {
-        selectedPatternId.value = null;
-      }
-    };
-
-    Vue.extend({
-      props: [],
-    });
-
-    Vue.extend({
-      props: {},
     });
 
     const wrapper = vueExtend(createComponent({
       components: { Patterns },
       template: `
       <patterns
-        :value="selectedPattern"
+        v-model="pattern"
         :patterns="patterns"
-        @input="setPattern"
         @remove="remove"
       ></patterns>
       `,
       setup: () => ({
-        selectedPattern,
-        setPattern,
+        pattern,
         patterns: project.patterns,
         remove: (i: number) => project.removePattern(i),
       }),
     }));
 
-    ui.activityBar.push({
+    framework.ui.activityBar.push({
       icon: 'queue',
       name: 'Patterns',
       component: wrapper,
@@ -71,10 +59,11 @@ export const patterns = manager.activate({
           project.addPattern();
         },
       }],
+      order: 2,
     });
 
     return {
-      selectedPattern,
+      selectedPattern: pattern,
     };
   },
 });

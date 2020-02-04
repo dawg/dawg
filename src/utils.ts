@@ -375,3 +375,7 @@ interface Ordered {
 export const sortOrdered = (a: Ordered, b: Ordered) => {
   return (a.order || 0) - (b.order || 0);
 };
+
+export const isDefined = <T>(t: T | undefined): t is T => {
+  return t !== undefined;
+};

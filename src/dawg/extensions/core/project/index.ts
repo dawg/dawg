@@ -3,18 +3,14 @@ import uuid from 'uuid';
 import fs from '@/fs';
 import * as Audio from '@/modules/audio';
 import * as t from '@/modules/io';
-import { createExtension } from '@/dawg/extensions';
+import { createExtension } from '@/framework/extensions';
 import { remote } from 'electron';
 import { loadBufferSync } from '@/modules/wav/local';
-import { manager } from '@/base/manager';
-import { MemoryLoader } from '@/core/loaders/memory';
+import * as framework from '@/framework';
 import { notify } from '@/dawg/extensions/core/notify';
-import { DG_EXTENSION, FILTERS } from '@/constants';
 import { commands, Command } from '@/dawg/extensions/core/commands';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, ref, watch, Ref } from '@vue/composition-api';
-import { patterns as patternsExtension } from '@/dawg/extensions/core/patterns';
-import { applicationContext } from '@/dawg/extensions/core/application-context';
 import { addEventListener, findUniqueName, makeLookup, range, chain } from '@/utils';
 import { log } from '@/dawg/extensions/core/log';
 import { emitter } from '@/events';
@@ -51,6 +47,10 @@ import {
 } from '@/core';
 import Tone from 'tone';
 import * as history from '@/dawg/extensions/core/project/history';
+
+const DG = 'dg';
+const FILTERS = [{ name: 'DAWG Files', extensions: [DG] }];
+const DG_EXTENSION = `.${DG}`;
 
 const ProjectTypeRequired = t.type({
   id: t.string,
@@ -261,7 +261,7 @@ function emptyProject(): LoadedProject {
 
 
 function loadProject(): InitializationError | InitializationSuccess {
-  const projectJSON = manager.getProjectJSON();
+  const projectJSON = framework.manager.getProjectJSON();
 
   if (!projectJSON) {
     return {
@@ -270,8 +270,7 @@ function loadProject(): InitializationError | InitializationSuccess {
     };
   }
 
-  const loader = new MemoryLoader(ProjectType, { data: projectJSON });
-  const result = loader.load();
+  const result = t.decodeItem(ProjectType, projectJSON);
   if (result.type === 'error') {
     return {
       type: 'error',
@@ -293,25 +292,15 @@ const createApi = () => {
   }
 
   const prj = result.project;
-  const state = ref<'stopped' | 'started' | 'paused'>('stopped');
-  const openedFile = ref(manager.getOpenedFile());
+  const openedFile = ref(framework.manager.getOpenedFile());
   const logger = log.getLogger();
-
-  const transport = computed(() => {
-    if (applicationContext.context.value === 'pianoroll') {
-      const pattern = patternsExtension.selectedPattern;
-      return pattern.value ? pattern.value.transport : null;
-    } else {
-      return prj.master.transport;
-    }
-  });
 
   async function openTempProject(p: IProject) {
     const { name: path } = tmp.fileSync({ keep: true });
     await fs.writeFile(path, JSON.stringify(p, null, 4));
 
     logger.info(`Writing ${path} as backup`);
-    manager.setOpenedFile(path, { isTemp: true });
+    framework.manager.setOpenedFile(path, { isTemp: true });
 
     const window = remote.getCurrentWindow();
     window.reload();
@@ -329,7 +318,7 @@ const createApi = () => {
   async function saveProject(opts: { forceDialog?: boolean }) {
     const p = await prj;
 
-    let projectPath = manager.getOpenedFile();
+    let projectPath = framework.manager.getOpenedFile();
     if (!projectPath || opts.forceDialog) {
       projectPath = remote.dialog.showSaveDialog(remote.getCurrentWindow(), {}) || null;
 
@@ -347,7 +336,7 @@ const createApi = () => {
       // The cache is what is written to the filesystem
       // and the general is the file that is currently opened
       logger.info(`Setting opened project as ${projectPath}`);
-      manager.setOpenedFile(projectPath);
+      framework.manager.setOpenedFile(projectPath);
     }
 
     const encoded = serialize();
@@ -356,11 +345,11 @@ const createApi = () => {
   }
 
   async function removeOpenedFile() {
-    await manager.setOpenedFile();
+    await framework.manager.setOpenedFile();
   }
 
   async function setOpenedFile(path: string) {
-    await manager.setOpenedFile(path);
+    await framework.manager.setOpenedFile(path);
   }
 
   function serialize(): IProject {
@@ -738,61 +727,9 @@ const createApi = () => {
     return makeLookup(prj.channels);
   });
 
-  function playPause() {
-    if (!transport.value) {
-      notify.warning('Please select a Pattern.', {
-        detail: 'Please create and select a `Pattern` first or switch the `Playlist` context.',
-      });
-      return;
-    }
-
-    if (transport.value.state === 'started') {
-      pause();
-    } else {
-      startTransport();
-    }
-  }
-
-  function pause() {
-    if (!transport.value) {
-      return;
-    }
-
-    transport.value.stop();
-    state.value = 'paused';
-  }
-
-  function getTime() {
-    if (!transport.value) {
-      return 0;
-    }
-
-    return transport.value.seconds;
-  }
-
-  function startTransport() {
-    if (!transport.value) {
-      return;
-    }
-
-    transport.value.start();
-    state.value = 'started';
-  }
-
-  function stopIfStarted() {
-    if (transport.value && transport.value.state === 'started') {
-      stopTransport();
-    }
-  }
-
-  function stopTransport() {
-    if (!transport.value) {
-      return;
-    }
-
-    transport.value.stop();
-    state.value = 'stopped';
-  }
+  watch(prj.bpm, () => {
+    Audio.Context.BPM.value = prj.bpm.value;
+  });
 
   return {
     patterns: prj.patterns,
@@ -828,13 +765,6 @@ const createApi = () => {
     saveProject,
     removeOpenedFile,
     setOpenedFile,
-    state,
-    playPause,
-    pause,
-    getTime,
-    startTransport,
-    stopIfStarted,
-    stopTransport,
   } as const;
 };
 
@@ -843,8 +773,8 @@ const extension = createExtension({
   activate(context) {
     const api = createApi();
 
-    context.subscriptions.push(manager.onDidSetOpenedFile(() => {
-      api.openedFile.value = manager.getOpenedFile();
+    context.subscriptions.push(framework.manager.onDidSetOpenedFile(() => {
+      api.openedFile.value = framework.manager.getOpenedFile();
     }));
 
     context.subscriptions.push(addEventListener('online', () => {
@@ -852,11 +782,6 @@ const extension = createExtension({
         instrument.online();
       });
     }));
-
-    // Pause every time the context changes
-    watch(applicationContext.context, () => {
-      api.pause();
-    });
 
     const save: Command = {
       text: 'Save',
@@ -940,21 +865,16 @@ const extension = createExtension({
     });
 
     context.subscriptions.push(...toDispose);
-    context.subscriptions.push(commands.registerCommand({
-      text: 'Play/Pause',
-      shortcut: ['Space'],
-      callback: api.playPause,
-    }));
 
     context.settings.push({
       type: 'string',
       label: 'Project Name',
       description: 'Give your project a better name to make it more identifiable.',
-      value: name,
+      value: api.name,
     });
 
     return api;
   },
 });
 
-export const project = manager.activate(extension);
+export const project = framework.manager.activate(extension);

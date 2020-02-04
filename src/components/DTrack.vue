@@ -12,7 +12,7 @@
 
 <script lang="ts">
 import { Track as T } from '@/core/track';
-import * as base from '@/base';
+import * as framework from '@/framework';
 import { watch, ref, computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({
@@ -28,7 +28,7 @@ export default createComponent({
 
     return {
       active,
-      color: computed(() => base.theme.error),
+      color: computed(() => framework.theme.error),
     };
   },
 });

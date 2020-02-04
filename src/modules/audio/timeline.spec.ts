@@ -1,8 +1,8 @@
-import { expect } from '@/modules/audio/test';
+import { expect } from '@/testing';
 import { Timeline } from '@/modules/audio/timeline';
 
 describe(Timeline.name, () => {
-  it.only('search works correctly', async () => {
+  it('search works correctly', async () => {
     const timeline = new Timeline();
     expect(timeline.search(0).type).to.eq('before');
 

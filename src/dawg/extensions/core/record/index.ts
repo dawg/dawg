@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { createExtension } from '@/dawg/extensions';
+import { createExtension } from '@/framework/extensions';
 import * as t from '@/modules/io';
 import { commands } from '@/dawg/extensions/core/commands';
 import { palette } from '@/dawg/extensions/core/palette';
@@ -12,15 +12,13 @@ import { ChunkGhost } from '@/core/ghost';
 import { remote } from 'electron';
 import { Sample, ScheduledSample } from '@/core';
 import { ref, watch } from '@vue/composition-api';
-import { manager } from '@/base/manager';
 import { project } from '@/dawg/extensions/core/project';
-import { applicationContext } from '@/dawg/extensions/core/application-context';
+import { controls } from '@/dawg/extensions/core/controls';
 import ChunkGhostComponent from '@/dawg/extensions/core/record/ChunkGhost.vue';
-import { ui } from '@/base/ui';
+import * as framework from '@/framework';
 import { blobsToAudioBuffer } from '@/modules/converter';
 
-export const DOCUMENTS_PATH = remote.app.getPath('documents');
-export const RECORDING_PATH = path.join(DOCUMENTS_PATH, remote.app.getName(), 'recordings');
+export const RECORDING_PATH = path.join(framework.DOCUMENTS_PROJECT_PATH, 'recordings');
 
 function makeFileName() {
   const date = new Date();
@@ -46,7 +44,7 @@ export const extension = createExtension({
 
     let mediaRecorder: MediaRecorder | null = null;
 
-    watch(project.state, () => {
+    watch(controls.state, () => {
       if (mediaRecorder) {
         stopRecording();
       }
@@ -55,8 +53,8 @@ export const extension = createExtension({
     const microphoneIn = context.global.microphoneIn;
 
     const startRecording = async (trackId: number) => {
-      project.stopIfStarted();
-      applicationContext.context.value = 'playlist';
+      controls.stopIfStarted();
+      controls.context.value = 'playlist';
       const time = project.master.transport.beat;
 
       if (microphoneIn === undefined) {
@@ -92,7 +90,7 @@ export const extension = createExtension({
       mediaRecorder.ondataavailable = async (event: BlobEvent) => {
         if (!recording.value) {
           recording.value = true;
-          project.startTransport();
+          controls.startTransport();
         }
 
         audioBlobs.push(event.data);
@@ -174,7 +172,7 @@ export const extension = createExtension({
       options,
     });
 
-    ui.trackContext.push({
+    framework.ui.trackContext.push({
       text: 'Record',
       callback: (i) => startRecording(i),
     });
@@ -186,4 +184,4 @@ export const extension = createExtension({
 });
 
 
-export const record = manager.activate(extension);
+export const record = framework.manager.activate(extension);

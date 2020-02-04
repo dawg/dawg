@@ -27,6 +27,7 @@ export {
   nullType as null,
   Any,
 } from 'io-ts';
+import fs from '@/fs';
 
 export interface DecodeSuccess<T> {
   type: 'success';
@@ -52,4 +53,69 @@ export const decodeItem = <T>(type: t.Type<T>, item: unknown): Error | DecodeSuc
     type: 'success',
     decoded: i.value,
   };
+};
+
+export interface EncodeSuccess {
+  type: 'success';
+}
+
+export const write = <T>(type: t.Type<T>, opts: { data: T, path: string }): Error | EncodeSuccess => {
+  const encoded = type.encode(opts.data);
+
+  let serialized: string;
+  try {
+    serialized = JSON.stringify(encoded);
+  } catch (e) {
+    return {
+      type: 'error',
+      message: e.message,
+    };
+  }
+
+  try {
+    fs.writeFileSync(opts.path, serialized);
+  } catch (e) {
+    return {
+      type: 'error',
+      message: e.message,
+    };
+  }
+
+  return {
+    type: 'success',
+  };
+};
+
+export const read = <T>(type: t.Type<T>, opts: { path: string }): DecodeSuccess<T> | Error => {
+  if (!fs.existsSync(opts.path)) {
+    return {
+      type: 'error',
+      message: `${opts.path} does not exist.`,
+    };
+  }
+
+  // tslint:disable-next-line:no-console
+  console.info(`Loading from ${opts.path}`);
+
+  let contents: string;
+  try {
+    contents = fs.readFileSync(opts.path).toString();
+  } catch (e) {
+    return {
+      type: 'error',
+      message: e.message,
+    };
+  }
+
+  let json: any;
+  try {
+    json = JSON.parse(contents);
+  } catch (e) {
+    return {
+      type: 'error',
+      message: e.message,
+    };
+  }
+
+  return decodeItem(type, json);
 };

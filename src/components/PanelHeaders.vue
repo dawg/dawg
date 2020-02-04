@@ -20,22 +20,22 @@
       :key="action.icon.value"
       :icon="action.icon.value"
       v-bind="action.props"
-      v-tooltip.bottom="action.tooltip.value"
+      :title="action.tooltip.value"
       @click="action.callback"
     ></dg-mat-icon>
   </ul>
 </template>
 
 <script lang="ts">
-import * as base from '@/base';
+import * as framework from '@/framework';
 import { computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'PanelHeaders',
   setup() {
     const itemLookup = computed(() => {
-      const lookup: { [name: string]: base.PanelItem } = {};
-      base.ui.panels.forEach((item) => {
+      const lookup: { [name: string]: framework.PanelItem } = {};
+      framework.ui.panels.forEach((item) => {
         lookup[item.name] = item;
       });
 
@@ -43,11 +43,11 @@ export default createComponent({
     });
 
     const actions = computed(() => {
-      if (base.ui.openedPanel.value === undefined) {
+      if (framework.ui.openedPanel.value === undefined) {
         return [];
       }
 
-      const panel = itemLookup.value[base.ui.openedPanel.value];
+      const panel = itemLookup.value[framework.ui.openedPanel.value];
       if (!panel) {
         return [];
       }
@@ -56,17 +56,17 @@ export default createComponent({
     });
 
     const tabs = computed(() => {
-      return base.ui.panels;
+      return framework.ui.panels;
     });
 
-    function addUnderline(tab: base.PanelItem) {
-      if (tab.name === base.ui.openedPanel.value) {
+    function addUnderline(tab: framework.PanelItem) {
+      if (tab.name === framework.ui.openedPanel.value) {
         return 'border-b';
       }
     }
 
     function selectPanel(name: string) {
-      base.ui.openedPanel.value = name;
+      framework.ui.openedPanel.value = name;
     }
 
     return {

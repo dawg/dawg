@@ -1,12 +1,7 @@
 <template>
-  <v-popover
-    class="relative"
-    trigger="hover"
-    placement="top"
-    :style="sizeStyle"
-  >
-    <!-- The icon and the spinner -->
-    <div>
+  <div class="relative" :style="sizeStyle">
+
+    <div :title="title" class="relative">
       <dg-fa-icon
         class="absolute text-default icon"
         icon="circle"
@@ -22,45 +17,13 @@
       ></dg-spinner>
     </div>
 
-    <!-- The tooltip itself -->
-    <div slot="popover">
-      <div v-if="!providers.length">
-        Idle
-      </div>
-
-      <div v-else>
-        <div
-          v-for="(provider, i) in providers"
-          :key="i"
-        >
-          <div>
-            {{ provider.message }}
-          </div>
-          
-          <v-progress-linear
-            :color="$theme['text-default']"
-            class="linear"
-            :height="4"
-            v-model="provider.progress"
-            :indeterminate="provider.progress === null"
-          ></v-progress-linear>
-          
-          <!-- This is just a little spacer -->
-          <div
-            :style="spacerStyle"
-            v-if="i !== providers.length - 1"
-          ></div>
-        </div>
-      </div>
-    </div>
-
-  </v-popover>
+  </div>
 </template>
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Provider, bus } from '@/dawg/extensions/core/busy/helpers';
-import * as base from '@/base';
+import * as framework from '@/framework';
 
 @Component
 export default class BusySignal extends Vue {
@@ -70,11 +33,6 @@ export default class BusySignal extends Vue {
   public providers: Provider[] = [];
   public disposers: Array<{ dispose: () => void }> = [];
 
-
-  get inProgress() {
-    return !!this.providers.length;
-  }
-
   get sizeStyle() {
     return {
       height: `${this.size}px`,
@@ -82,18 +40,26 @@ export default class BusySignal extends Vue {
     };
   }
 
+  get title() {
+    if (this.providers.length === 0) {
+      return 'Idle';
+    }
+
+    const max = 20;
+
+    return this.providers.map((provider) => {
+      const progress = provider.progress || 0;
+      const blocks = Math.round((progress / 100) * max);
+      const lines = max - blocks;
+      return `${provider.message}\n${'▆'.repeat(blocks)}${'▁'.repeat(lines)} ${progress}%`;
+    }).join('\n\n');
+  }
+
   get progresStyle() {
     return {
       ...this.sizeStyle,
       top: 0,
       left: 0,
-    };
-  }
-
-  get spacerStyle() {
-    return {
-      borderColor: base.theme['text-default'] + 50,
-      margin: '10px 0',
     };
   }
 

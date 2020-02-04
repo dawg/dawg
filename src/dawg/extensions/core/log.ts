@@ -1,4 +1,4 @@
-import { manager } from '@/base/manager';
+import * as framework from '@/framework';
 
 type Level = 'info' | 'debug' | 'error' | 'trace' | 'warn';
 type LevelLookup = { [L in Level]: number };
@@ -32,17 +32,17 @@ const getLogger = (base?: string): Logger => {
   };
 };
 
-export const log = manager.activate({
+export const log = framework.manager.activate({
   id: 'dawg.log',
   activate() {
     const logger = getLogger();
     return {
       getLogger(level?: Level) {
-        if (!manager.activating.length) {
+        if (!framework.manager.activating.length) {
           throw Error('`getLogger` must be called while activating an extension');
         }
 
-        const last = manager.activating[manager.activate.length - 1];
+        const last = framework.manager.activating[framework.manager.activate.length - 1];
         const newLogger =  getLogger(last.id);
         newLogger.level = level || 'info';
         return newLogger;

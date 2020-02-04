@@ -84,7 +84,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import { Schedulable } from '@/core';
-import { update } from '@/utils';
+import { update, Keys } from '@/utils';
 import SequencerGrid from '@/modules/sequencer/SequencerGrid.vue';
 import Timeline from '@/modules/sequencer/Timeline.vue';
 import * as Audio from '@/modules/audio';
@@ -273,9 +273,6 @@ export default createComponent({
     };
   },
 });
-
-// TODO
-// 3. Remove "curse" thing from drag
 </script>
 
 <style lang="scss" scoped>

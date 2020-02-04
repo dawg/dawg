@@ -1,9 +1,10 @@
 import Vue from 'vue';
 import Mixer from '@/dawg/extensions/extra/mixer/Mixer.vue';
-import { ui } from '@/base/ui';
-import { createExtension } from '@/dawg/extensions';
+import * as framework from '@/framework';
+import { createExtension } from '@/framework/extensions';
 import { commands } from '@/dawg/extensions/core/commands';
 import { project } from '@/dawg/extensions/core/project';
+import * as dawg from '@/dawg';
 
 export const extension = createExtension({
   id: 'dawg.mixer',
@@ -12,7 +13,7 @@ export const extension = createExtension({
       text: 'Open Mixer',
       shortcut: ['CmdOrCtrl', 'M'],
       callback: () => {
-        ui.openedPanel.value = 'Mixer';
+        framework.ui.openedPanel.value = 'Mixer';
       },
     }));
 
@@ -31,12 +32,12 @@ export const extension = createExtension({
       }),
       computed:  {
         play: () => {
-          return project.state.value === 'started';
+          return dawg.controls.state.value === 'started';
         },
       },
     });
 
-    ui.panels.push({
+    framework.ui.panels.push({
       name: 'Mixer',
       component,
     });

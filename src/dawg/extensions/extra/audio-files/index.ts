@@ -11,6 +11,7 @@ export const extension: dawg.Extension = {
       // We have to do this because of the composition API
       // FIXME
       component: AudioFiles as VueConstructor<Vue>,
+      order: 3,
     });
   },
 };

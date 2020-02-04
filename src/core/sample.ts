@@ -12,6 +12,22 @@ export const SampleType = t.type({
 
 export type ISample = t.TypeOf<typeof SampleType>;
 
+interface BuildingBlockOptions<T extends t.Mixed, V extends any[]>  {
+  type: T;
+  create: (...args: V) => void;
+}
+
+const createBuildingBlock = <T extends t.Mixed, V extends any[]>(opts: BuildingBlockOptions<T, V>) => {
+  //
+};
+
+export const createSample = createBuildingBlock({
+  type: SampleType,
+  create: () => {
+    //
+  },
+});
+
 export class Sample implements Serializable<ISample> {
   public static create(samplePath: string, buffer: AudioBuffer) {
     return new Sample(buffer, {

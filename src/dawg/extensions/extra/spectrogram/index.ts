@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { createExtension } from '@/dawg/extensions';
+import { createExtension } from '@/framework/extensions';
 import * as dawg from '@/dawg';
 
 export const extension = createExtension({
