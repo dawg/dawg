@@ -74,7 +74,6 @@ export class Section {
   }
 
   get isGutter() {
-    // TODO
     return this.gutter.value;
   }
 

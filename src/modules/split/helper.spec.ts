@@ -57,14 +57,15 @@ describe.only('Split', () => {
   });
 
   it('resizing correctly', () => {
+    // a can't resize, nothing is "behind" it
     a.move(10);
-    expect(a.sizes.width).to.deep.eq(30);
+    expect(a.sizes.width).to.deep.eq(40);
     expect(b.sizes.width).to.deep.eq(40);
     expect(c.sizes.width).to.deep.eq(20);
 
     // this will resize by 10
     b.move(10);
-    expect(a.sizes.width).to.deep.eq(40);
+    expect(a.sizes.width).to.deep.eq(50);
     expect(b.sizes.width).to.deep.eq(30);
     expect(c.sizes.width).to.deep.eq(20);
   });
@@ -89,9 +90,9 @@ describe.only('Split', () => {
   });
 
   it('resizes correctly with fixed flag', () => {
-    aa.move(10);
+    ab.move(10);
     expect(aa.sizes.height).to.deep.eq(25);
-    expect(ab.sizes.height).to.deep.eq(15);
+    expect(ab.sizes.height).to.deep.eq(25);
   });
 
   it('resizes correctly with keep', () => {
@@ -128,7 +129,13 @@ describe.only('Split', () => {
   });
 
   it('correctly collapses when told to do so', () => {
-    // TODO add events
+    const sizeChanges: number[] = [];
+    toDispose.push(ba.addListeners({
+      resize: (value) => {
+        sizeChanges.push(value);
+      },
+    }));
+
     ad.collapse();
     expect(aa.sizes.height).to.deep.eq(25);
     expect(ab.sizes.height).to.deep.eq(50);
@@ -136,7 +143,12 @@ describe.only('Split', () => {
     expect(ad.sizes.height).to.deep.eq(0);
 
     ad.unCollapse(15);
-    // TODO check end sizes
+    expect(aa.sizes.height).to.deep.eq(25);
+    expect(ab.sizes.height).to.deep.eq(35);
+    expect(ac.sizes.height).to.deep.eq(25);
+    expect(ad.sizes.height).to.deep.eq(15);
+
+    expect(sizeChanges).to.deep.eq([]);
   });
 
   it('initializes correctly with collapsed initially set to true', () => {
@@ -176,10 +188,10 @@ describe.only('Split', () => {
 
     expect(collapses).to.deep.eq([false, true]);
     expect(heightChanges).to.deep.eq([15, 0]);
-    expect(sizeChanges).to.deep.eq([]);
+    expect(sizeChanges).to.deep.eq([15, 0]);
   });
 
-  it.only('resizes correctly', () => {
+  it('resizes correctly', () => {
     root.set('height', 80);
     expect(root.sizes.height).to.eq(80);
     expect(a.sizes.height).to.eq(80);
