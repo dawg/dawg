@@ -46,16 +46,6 @@ export class StrictEventEmitter<E extends Events> {
     this.emitter.once(event, listener as GenericListener);
   }
 
-  // public prependListener<T extends keyof E & string>(event: T, listener: (...args: E[T]) => void) {
-  //   this.emitter.prependListener(event, listener as GenericListener);
-  // }
-
-  // public prependOnceListener<T extends keyof E & string>(
-  //   event: T, listener: (...args: E[T]) => void,
-  // ) {
-  //   this.emitter.prependOnceListener(event, listener as GenericListener);
-  // }
-
   public removeListener<T extends keyof E & string>(event: T, listener: (...args: E[T]) => void) {
     this.emitter.removeListener(event, listener as GenericListener);
   }
@@ -68,29 +58,9 @@ export class StrictEventEmitter<E extends Events> {
     this.emitter.removeAllListeners(event);
   }
 
-  // public setMaxListeners(n: number) {
-  //   this.emitter.setMaxListeners(n);
-  // }
-
-  // public getMaxListeners(): number {
-  //   return this.emitter.getMaxListeners();
-  // }
-
-  // public listeners<T extends keyof E & string>(event: T) {
-  //   return this.emitter.listeners(event) as Array<(...args: E[T]) => void>;
-  // }
-
-  // public rawListeners<T extends keyof E & string>(event: T) {
-  //   return this.emitter.rawListeners(event) as Array<(...args: E[T]) => void>;
-  // }
-
   public emit<T extends keyof E & string>(event: T, ...args: E[T]) {
     this.emitter.emit(event, ...args);
   }
-
-  // public eventNames() {
-  //   return this.emitter.eventNames() as Array<keyof E & string>;
-  // }
 
   public dispose() {
     this.removeAllListeners();

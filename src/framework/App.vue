@@ -8,6 +8,7 @@
         </split>
 
         <split 
+          keep
           collapsible 
           :min-size="100"
           :initial.sync="sideBarSize"

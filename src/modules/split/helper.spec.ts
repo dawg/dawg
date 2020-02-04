@@ -135,7 +135,8 @@ describe.only('Split', () => {
     expect(ac.sizes.height).to.deep.eq(25);
     expect(ad.sizes.height).to.deep.eq(0);
 
-    ad.unCollapse();
+    ad.unCollapse(15);
+    // TODO check end sizes
   });
 
   it('initializes correctly with collapsed initially set to true', () => {
@@ -148,16 +149,16 @@ describe.only('Split', () => {
     const collapses: boolean[] = [];
     const heightChanges: number[] = [];
     const sizeChanges: number[] = [];
-    toDispose.push(ba.onDidHeightChange((value) => {
-      heightChanges.push(value);
-    }));
-
-    toDispose.push(ba.onDidSizeChange((value) => {
-      sizeChanges.push(value);
-    }));
-
-    toDispose.push(ba.onDidToggleCollapse((value) => {
-      collapses.push(value);
+    toDispose.push(ba.addListeners({
+      height: (value) => {
+        heightChanges.push(value);
+      },
+      resize: (value) => {
+        sizeChanges.push(value);
+      },
+      collapsed: (value) => {
+        collapses.push(value);
+      },
     }));
 
     expect(ba.isCollapsed).to.eq(true);
@@ -179,13 +180,13 @@ describe.only('Split', () => {
   });
 
   it.only('resizes correctly', () => {
-    root.set('height', 50);
-    expect(root.sizes.height).to.eq(50);
-    expect(a.sizes.height).to.eq(50);
-    expect(aa.sizes.height).to.eq(50);
-    expect(ab.sizes.height).to.eq(50);
-    expect(ac.sizes.height).to.eq(50);
-    expect(ad.sizes.height).to.eq(50);
+    root.set('height', 80);
+    expect(root.sizes.height).to.eq(80);
+    expect(a.sizes.height).to.eq(80);
+    expect(aa.sizes.height).to.eq(25);
+    expect(ab.sizes.height).to.eq(15);
+    expect(ac.sizes.height).to.eq(25);
+    expect(ad.sizes.height).to.eq(15);
   });
 
   root.dispose();

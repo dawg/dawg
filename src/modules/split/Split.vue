@@ -103,7 +103,7 @@ export default createComponent({
       if (props.collapsed) {
         i.collapse();
       } else {
-        i.unCollapse();
+        i.unCollapse(props.initial || 0);
       }
     }, { lazy: true });
 

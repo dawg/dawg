@@ -1,54 +1,12 @@
-import { ref, watch, Ref } from '@vue/composition-api';
+import { ref } from '@vue/composition-api';
 import { StrictEventEmitter } from '@/events';
 import { addEventListener } from '@/utils';
-
-type LinkedList<T> = { done: true } | { done: false, value: T, next: () => LinkedList<T>, added: boolean };
-const getLinkedList = <T>(arr: T[]): LinkedList<T> => {
-  const iter = arr[Symbol.iterator]() as { next: () => { done: true } | { done: false, value: T  } };
-
-  const getNext = () => {
-    const current = iter.next();
-    if (current.done) {
-      return current;
-    }
-
-    return {
-      done: false,
-      value: current.value,
-      next: getNext,
-      added: false,
-    };
-  };
-
-  return getNext();
-};
-
 
 export type Direction = 'horizontal' | 'vertical';
 
 export const isSplit = (vue: any): vue is { i: Section } => {
   return vue.$options.name === 'Split';
 };
-
-type Mode = 'high-priority' | 'low-priority' | 'collapsible';
-type Mouvement = {
-  type: 'smooth',
-  amount: number,
-  execute: (amount: number) => void,
-} | { type: 'jump', amount: number, execute: (amount: number) => void };
-
-interface Opts {
-  name: string;
-  direction?: Direction;
-  minSize: number;
-  maxSize: number;
-  collapsePixels: number;
-  initial: number | undefined;
-  collapsible: boolean;
-  fixed: boolean;
-  keep: boolean;
-  collapsed: boolean;
-}
 
 // tslint:disable-next-line:interface-over-type-literal
 type SplitEvents = {
@@ -71,8 +29,10 @@ export interface SectionOpts {
 }
 
 export class Section {
+  public static DEBUG = false;
   public parent: null | Section = null;
   public direction: Direction | undefined;
+  public readonly name?: string;
 
   private gutter = ref(false);
   private disabled = false;
@@ -85,7 +45,6 @@ export class Section {
   private collapsible: boolean;
   private collapsed: boolean;
   private collapsePixels: number;
-  private name?: string;
   private initial: number | undefined;
   private events = new StrictEventEmitter<SplitEvents>();
 
@@ -171,25 +130,35 @@ export class Section {
       growing = before;
     }
 
-    const move = (sections: Section[], toMove: number) => {
+    const move = (sections: Section[], toMoveInner: number) => {
       let totalMoved = 0;
-      totalMoved += this.iterate(sections, attr, toMove, 'high');
-      totalMoved += this.iterate(sections, attr, toMove - totalMoved, 'low');
-      totalMoved += this.iterate(sections, attr, toMove - totalMoved, 'collapse');
-      totalMoved += this.iterate(sections, attr, toMove - totalMoved, 'fixed');
+      totalMoved += this.iterate(sections, attr, toMoveInner, 'high');
+      totalMoved += this.iterate(sections, attr, toMoveInner - totalMoved, 'low');
+      totalMoved += this.iterate(sections, attr, toMoveInner - totalMoved, 'collapse');
       return totalMoved;
     };
 
-    px = move(shrinking, -Math.abs(px));
-    move(growing, Math.abs(px));
+    // When growing, if something un-collapses, then we need to run everything again
+    const shrunk = move(shrinking, -Math.abs(px));
+    let toMove = -shrunk;
+    while (true) {
+      const change = move(growing, toMove);
+      toMove -= change;
+      if (change === 0 || toMove <= 0) {
+        break;
+      }
+    }
+
+    // A bit of a hack but this works for now
+    move(shrinking, toMove);
   }
 
   public collapse() {
-    this.collapseHelper('collapse');
+    this.collapseHelper({ mode: 'collapse' });
   }
 
-  public unCollapse() {
-    this.collapseHelper('un-collapse');
+  public unCollapse(size: number) {
+    this.collapseHelper({ mode: 'un-collapse', size });
   }
 
   public init(sizes?: { height: number, width: number }) {
@@ -206,11 +175,12 @@ export class Section {
 
     const direction = this.direction ? ', ' + this.direction.padEnd(10) : '';
 
-    // tslint:disable-next-line:no-console
-    console.log(
+    // tslint:disable
+    Section.DEBUG && console.log(
       `[INIT${direction}] ${this.name ? this.name.padEnd(5) : 'None '}| ` +
       `height -> ${sizes.height.toString().padEnd(4)}, width -> ${sizes.width.toString().padEnd(4)}`,
     );
+    // tslint:enable
 
     this.set('height', sizes.height);
     this.set('width', sizes.width);
@@ -230,6 +200,7 @@ export class Section {
     this.children.forEach((split) => {
       const splitSize = split.initial !== undefined ? split.initial : split.collapsed ? 0 : size;
 
+
       // Set the opposite values
       // e.g. if the direction is "horizontal" set the height
       if (this.direction === 'horizontal') {
@@ -245,19 +216,15 @@ export class Section {
       }
     });
 
-    this.toDispose.push(this.onDidHeightChange(() => {
-      this.resize({ direction: 'vertical' });
+    this.toDispose.push(this.addListeners({
+      height: () => this.resize({ direction: 'vertical' }),
+      width: () => this.resize({ direction: 'horizontal' }),
     }));
-
-    this.toDispose.push(this.onDidWidthChange(() => {
-      this.resize({ direction: 'horizontal' });
-    }));
-
 
     if (this.parent === null) {
       this.toDispose.push(addEventListener('resize', () => {
-        this.width = window.innerWidth;
-        this.height = window.innerWidth;
+        this.set('width', window.innerWidth);
+        this.set('height', window.innerHeight);
       }));
     }
   }
@@ -266,16 +233,16 @@ export class Section {
     const attr = direction === 'horizontal' ? 'width' : 'height' as const;
     const oldSize = this.children.reduce((sum, child) => sum + child[attr], 0);
     let px = this[attr] - oldSize;
-    console.log(attr, px, this[attr], oldSize);
 
     if (this.direction !== direction) {
       this.children.forEach((child) => {
         const newSize = this[attr];
-        // tslint:disable-next-line:no-console
-        console.log(
+        // tslint:disable
+        Section.DEBUG && console.log(
           `[PROP, ${attr}] ${child.name} ` +
           `from ${child[attr].toString().padEnd(3)} -> ${newSize.toString().padEnd(3)}`,
         );
+        // tslint:enable
 
         child.set(attr, newSize);
       });
@@ -292,22 +259,6 @@ export class Section {
     this.toDispose = [];
   }
 
-  public onDidSizeChange(cb: (value: number) => void) {
-    return this.events.addListener('resize', cb);
-  }
-
-  public onDidHeightChange(cb: (value: number) => void) {
-    return this.events.addListener('height', cb);
-  }
-
-  public onDidWidthChange(cb: (value: number) => void) {
-    return this.events.addListener('width', cb);
-  }
-
-  public onDidToggleCollapse(cb: (value: boolean) => void) {
-    return this.events.addListener('collapsed', cb);
-  }
-
   public set(attr: 'height' | 'width', value: number) {
     this[attr] = value;
     this.events.emit(attr, value);
@@ -320,9 +271,9 @@ export class Section {
       return;
     }
 
-    if (attr === 'height' && this.parent.direction === 'horizontal') {
+    if (attr === 'height' && this.parent.direction === 'vertical') {
       this.events.emit('resize', value);
-    } else if (attr === 'width' && this.parent.direction === 'vertical') {
+    } else if (attr === 'width' && this.parent.direction === 'horizontal') {
       this.events.emit('resize', value);
     }
   }
@@ -332,7 +283,9 @@ export class Section {
     this.events.emit('collapsed', value);
   }
 
-  private collapseHelper(mode: 'collapse' | 'un-collapse') {
+  private collapseHelper(opts: { mode: 'collapse' } | { mode: 'un-collapse', size: number }) {
+    const mode = opts.mode;
+
     if (
       (mode === 'collapse' && this.collapsed) ||
       (mode === 'un-collapse' && !this.collapsed) ||
@@ -351,12 +304,13 @@ export class Section {
     const hasBeforeMultiple = mode === 'un-collapse' ? -1 : 1;
 
     this.withDisabled(() => {
-      const amount = Math.max(this[attr], this.minSize);
-      if (before.length === 0) {
-        const rightAfter = after[0];
-        rightAfter.move(amount * noBeforeMultiple);
-      } else {
+      const amount = Math.max(this[attr], this.minSize, opts.mode === 'un-collapse' ? opts.size : 0);
+      // after.length will never be 0
+      if (after.length === 1) {
         this.move(amount * hasBeforeMultiple);
+      } else {
+        const rightAfter = after[1];
+        rightAfter.move(amount * noBeforeMultiple);
       }
     });
   }
@@ -378,7 +332,6 @@ export class Section {
   ) {
     let moved = 0;
     for (const section of sections) {
-      // console.log(section.name, mode)
       if (
         (mode === 'high' || mode === 'low' || mode === 'fixed') &&
         (mode !== section.mode || section.collapsed)) {
@@ -416,11 +369,12 @@ export class Section {
         }
       }
 
-      // tslint:disable-next-line:no-console
-      console.log(
+      // tslint:disable
+      Section.DEBUG && console.log(
         `[${mode.padEnd(6)}][${attr}] ${section.name} ` +
         `from ${section[attr].toString().padEnd(3)} -> ${newSize.toString().padEnd(3)}`,
       );
+      // tslint:enable
 
       const diff = newSize - section[attr];
       section.set(attr, newSize);
