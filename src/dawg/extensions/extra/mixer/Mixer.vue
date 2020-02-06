@@ -22,7 +22,7 @@
 <script lang="ts">
 import { Component, Prop, Vue } from 'vue-property-decorator';
 import Channel from '@/components/Channel.vue';
-import { Watch } from '@/modules/update';
+import { Watch } from '@/update';
 import { range } from '@/utils';
 import { AnyEffect, Channel as C } from '@/core';
 

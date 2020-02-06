@@ -1,5 +1,5 @@
 import { ipcMain as ipcM, ipcRenderer as ipcR, Event, WebContents } from 'electron';
-import { Key } from './keyboard';
+import { Key } from './styles/keyboard';
 
 // This is duplication but we can't import utils here
 export const keys = <O>(o: O): Array<keyof O & string> => {
@@ -29,20 +29,15 @@ type EventFunction<
 
 interface IpcMainGeneric<T extends EventInformation, V extends EventInformation> extends ElectronIpcMain {
   on<K extends keyof T>(channel: K, listener: EventFunction<T, K, V>): this;
-  // once<K extends keyof T>(channel: K, listener: EventFunction<T, K>): this;
-  // removeAllListeners<K extends keyof T>(channel: K): this;
-  // removeListener<K extends keyof T>(channel: K, listener: EventFunction<T, K>): this;
+  once<K extends keyof T>(channel: K, listener: EventFunction<T, K>): this;
+  removeAllListeners<K extends keyof T>(channel: K): this;
+  removeListener<K extends keyof T>(channel: K, listener: EventFunction<T, K>): this;
 }
 
 interface IpcRendererGeneric<T extends EventInformation, V extends EventInformation> extends ElectronIpcRenderer {
   on<K extends keyof T>(channel: K, listener: EventFunction<T, K, V>): this;
-  // once<K extends keyof T>(channel: K, listener: EventFunction<T, K>): this;
-  // removeAllListeners<K extends keyof T>(channel: K): this;
-  // removeListener<K extends keyof T>(channel: K, listener: EventFunction<T, K>): this;
+  removeListener<K extends keyof T>(channel: K, listener: EventFunction<T, K>): this;
   send<K extends keyof V>(channel: K, ...args: V[K]): void;
-  // sendSync<K extends keyof T>(channel: K, ...args: T[K]): any;
-  // sendTo<K extends keyof T>(webContentsId: number, channel: K, ...args: T[K]): void;
-  // sendToHost<K extends keyof T>(channel: K, ...args: T[K]): void;
 }
 
 export interface ElectronMenuItem {

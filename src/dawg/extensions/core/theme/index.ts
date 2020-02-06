@@ -5,7 +5,7 @@ import tinycolor from 'tinycolor2';
 import { palette } from '@/dawg/extensions/core/palette';
 import { commands } from '@/dawg/extensions/core/commands';
 import * as framework from '@/framework';
-import * as t from '@/modules/io';
+import * as t from '@/io';
 import { keys } from '@/utils';
 
 export interface ThemeAugmentation {

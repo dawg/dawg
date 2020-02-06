@@ -3,13 +3,13 @@ import * as dawg from '@/dawg';
 import path from 'path';
 import '@/styles/material.css';
 import '@/styles/fontawesome/all.css';
-import '@/main.css';
-import Update from '@/modules/update';
-import sequencer from '@/modules/sequencer';
-import DragNDrop from '@/modules/dragndrop';
-import Draggable from '@/modules/draggable';
-import Knobs from '@/modules/knobs';
-import Split from '@/modules/split';
+import '@/styles/main.css';
+import Update from '@/update';
+import sequencer from '@/sequencer';
+import DragNDrop from '@/dragndrop';
+import Draggable from '@/draggable';
+import Knobs from '@/knobs';
+import Split from '@/split';
 
 const middleware = () => {
   // This imports all .vue files in the components folder

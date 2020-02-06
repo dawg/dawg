@@ -1,9 +1,9 @@
 import FileExplorer from '@/dawg/extensions/extra/explorer/FileExplorer.vue';
 import * as dawg from '@/dawg';
-import * as t from '@/modules/io';
+import * as t from '@/io';
 import { remote } from 'electron';
 import { Extensions, Folder } from '@/dawg/extensions/extra/explorer/types';
-import { loadBuffer } from '@/modules/wav/local';
+import { loadBuffer } from '@/wav';
 import parser from '@/midi-parser';
 import fs from '@/fs';
 import { ScheduledSample, Sample } from '@/core';

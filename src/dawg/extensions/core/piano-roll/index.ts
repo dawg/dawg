@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import * as t from '@/modules/io';
+import * as t from '@/io';
 import PianoRollSequencer from '@/dawg/extensions/core/piano-roll/PianoRollSequencer.vue';
 import Note from '@/dawg/extensions/core/piano-roll/Note.vue';
 import { instruments } from '@/dawg/extensions/core/instruments';

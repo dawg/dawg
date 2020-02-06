@@ -1,11 +1,11 @@
 import tmp from 'tmp';
 import uuid from 'uuid';
 import fs from '@/fs';
-import * as Audio from '@/modules/audio';
-import * as t from '@/modules/io';
+import * as Audio from '@/audio';
+import * as t from '@/io';
 import { createExtension } from '@/framework/extensions';
 import { remote } from 'electron';
-import { loadBufferSync } from '@/modules/wav/local';
+import { loadBufferSync } from '@/wav';
 import * as framework from '@/framework';
 import { notify } from '@/dawg/extensions/core/notify';
 import { commands, Command } from '@/dawg/extensions/core/commands';

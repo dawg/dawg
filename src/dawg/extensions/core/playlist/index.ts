@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import * as t from '@/modules/io';
+import * as t from '@/io';
 import { project } from '@/dawg/extensions/core/project';
 // FIXME(2) Remove this import
 import { record } from '@/dawg/extensions/core/record';

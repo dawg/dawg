@@ -13,7 +13,6 @@
     "build:mac": "vue-cli-service electron:build --mac -p never",
     "build:win": "vue-cli-service electron:build --win --x64 --ia32 -p never",
     "electron:icons": "electron-icon-builder --input=./public/icon.png --output=build --flatten",
-    "postinstall": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps"
   },
   "dependencies": {

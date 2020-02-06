@@ -5,7 +5,7 @@ import { makeLookup, vueExtend } from '@/utils';
 import { Pattern } from '@/core';
 import * as framework from '@/framework';
 import { project } from '@/dawg/extensions/core/project';
-import * as t from '@/modules/io';
+import * as t from '@/io';
 
 export const patterns = framework.manager.activate({
   id: 'dawg.patterns',

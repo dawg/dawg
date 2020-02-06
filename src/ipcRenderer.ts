@@ -1,4 +1,4 @@
-import * as keyboard from '@/keyboard';
+import * as keyboard from '@/styles/keyboard';
 import { defaultIpcRenderer, ElectronMenuOptions, ElectronMenuPosition, ElectronMenuItem } from '@/ipc';
 import { uniqueId } from '@/utils';
 

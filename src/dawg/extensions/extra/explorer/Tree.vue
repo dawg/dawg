@@ -47,7 +47,7 @@ import path from 'path';
 import { Keys } from '@/utils';
 import { Component, Prop } from 'vue-property-decorator';
 import { Folder, File, Extensions, Extension, ExtensionData } from '@/dawg/extensions/extra/explorer/types';
-import { Watch } from '@/modules/update';
+import { Watch } from '@/update';
 import { createComponent, computed, Ref, ref, watch } from '@vue/composition-api';
 
 export default createComponent({

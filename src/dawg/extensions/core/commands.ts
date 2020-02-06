@@ -1,8 +1,8 @@
-import * as keyboard from '@/keyboard';
+import * as keyboard from '@/styles/keyboard';
 import * as framework from '@/framework';
 import { palette } from '@/dawg/extensions/core/palette';
 import { menubar } from '@/dawg/extensions/core/menubar';
-import { Key } from '@/keyboard';
+import { Key } from '@/styles/keyboard';
 import hotkeys from 'hotkeys-js';
 import * as platform from '@/platform';
 

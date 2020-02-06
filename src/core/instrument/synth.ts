@@ -1,6 +1,6 @@
 import Tone from 'tone';
-import * as t from '@/modules/io';
-import * as Audio from '@/modules/audio';
+import * as t from '@/io';
+import * as Audio from '@/audio';
 import { Instrument, InstrumentType } from '@/core/instrument/instrument';
 import { Serializable } from '@/core/serializable';
 import { literal } from '@/utils';

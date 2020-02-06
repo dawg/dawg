@@ -3,9 +3,9 @@ import { createExtension } from '@/framework/extensions';
 import * as dawg from '@/dawg';
 import ExportProgressModal from '@/dawg/extensions/extra/exporter/ExportProgressModal.vue';
 import { ref } from '@vue/composition-api';
-import * as Audio from '@/modules/audio';
+import * as Audio from '@/audio';
 import { remote } from 'electron';
-import { blobsToAudioBuffer, audioBufferToWav } from '@/modules/converter';
+import { blobsToAudioBuffer, audioBufferToWav } from '@/converter';
 import fs from '@/fs';
 import Tone from 'tone';
 

@@ -1,7 +1,7 @@
-import * as t from '@/modules/io';
-import * as Audio from '@/modules/audio';
+import * as t from '@/io';
+import * as Audio from '@/audio';
 import { StrictEventEmitter } from '@/events';
-import { Beat } from '@/modules/audio/types';
+import { Beat } from '@/audio/types';
 import * as history from '@/dawg/extensions/core/project/history';
 
 export const SchedulableType = t.intersection([

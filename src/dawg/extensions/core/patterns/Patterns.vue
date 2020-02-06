@@ -24,7 +24,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Pattern, ScheduledPattern } from '@/core';
 import { Nullable } from '@/utils';
-import { Watch } from '@/modules/update';
+import { Watch } from '@/update';
 import * as framework from '@/framework';
 import { theme } from '@/dawg/extensions/core/theme';
 

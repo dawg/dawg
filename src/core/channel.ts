@@ -1,7 +1,7 @@
-import * as t from '@/modules/io';
+import * as t from '@/io';
 import uuid from 'uuid';
 import Tone from 'tone';
-import * as Audio from '@/modules/audio';
+import * as Audio from '@/audio';
 import { Serializable } from '@/core/serializable';
 import { EffectType, AnyEffect, Effect } from '@/core/filters/effect';
 

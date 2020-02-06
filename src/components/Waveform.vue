@@ -14,7 +14,7 @@
 import { Nullable } from '@/utils';
 import * as framework from '@/framework';
 import { createComponent, computed } from '@vue/composition-api';
-import * as Audio from '@/modules/audio';
+import * as Audio from '@/audio';
 
 export default createComponent({
   name: 'Waveform',

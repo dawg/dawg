@@ -1,5 +1,5 @@
-import * as t from '@/modules/io';
-import * as Audio from '@/modules/audio';
+import * as t from '@/io';
+import * as Audio from '@/audio';
 import Tone from 'tone';
 import { Schedulable, SchedulableType } from '@/core/scheduled/schedulable';
 import { Serializable } from '@/core/serializable';

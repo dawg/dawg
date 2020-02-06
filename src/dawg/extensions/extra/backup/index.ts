@@ -1,5 +1,5 @@
 import * as dawg from '@/dawg';
-import * as t from '@/modules/io';
+import * as t from '@/io';
 import { User } from 'firebase';
 import backend, { ProjectInfo } from '@/dawg/extensions/extra/backup/backend';
 import { PathReporter } from 'io-ts/lib/PathReporter';

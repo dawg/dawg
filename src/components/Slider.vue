@@ -43,7 +43,7 @@
 </template>
 
 <script lang="ts">
-import { DragElement } from '@/modules/draggable';
+import { DragElement } from '@/draggable';
 import { scale } from '@/utils';
 import * as framework from '@/framework';
 import { computed, createComponent, ref } from '@vue/composition-api';

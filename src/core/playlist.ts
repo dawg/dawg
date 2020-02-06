@@ -1,5 +1,5 @@
-import * as t from '@/modules/io';
-import * as Audio from '@/modules/audio';
+import * as t from '@/io';
+import * as Audio from '@/audio';
 import { ScheduledPattern, ScheduledPatternType } from '@/core/scheduled/pattern';
 import { ScheduledSample, ScheduledSampleType } from '@/core/scheduled/sample';
 import { ScheduledAutomation, ScheduledAutomationType } from '@/core/scheduled/automation';

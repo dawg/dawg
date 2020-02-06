@@ -18,7 +18,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import Synth from '@/components/Synth.vue';
 import { Nullable } from '@/utils';
 import { Score, Instrument, Pattern } from '@/core';
-import { Watch } from '@/modules/update';
+import { Watch } from '@/update';
 import { notify } from '@/dawg/extensions/core/notify';
 import * as framework from '@/framework';
 import { project } from '@/dawg/extensions/core/project';

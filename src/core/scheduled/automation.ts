@@ -1,6 +1,6 @@
-import * as t from '@/modules/io';
+import * as t from '@/io';
 import { AutomationClip } from '@/core/automation';
-import * as Audio from '@/modules/audio';
+import * as Audio from '@/audio';
 import { Schedulable, SchedulableType } from '@/core/scheduled/schedulable';
 import { Serializable } from '@/core/serializable';
 import { literal } from '@/utils';

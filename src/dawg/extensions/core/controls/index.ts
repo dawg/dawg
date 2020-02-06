@@ -3,7 +3,7 @@ import VerticalSwitch from '@/dawg/extensions/core/controls/VerticalSwitch.vue';
 import * as framework from '@/framework';
 import { createComponent, computed, ref, watch } from '@vue/composition-api';
 import { commands } from '@/dawg/extensions/core/commands';
-import * as t from '@/modules/io';
+import * as t from '@/io';
 import { vueExtend } from '@/utils';
 import * as dawg from '@/dawg';
 import { patterns as patternsExtension } from '@/dawg/extensions/core/patterns';

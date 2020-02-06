@@ -1,7 +1,7 @@
 // 1. Make sure to import 'vue' before declaring augmented types
 import Vue from 'vue'
-import { UpdateAugmentation } from '@/modules/update';
-import { KnobAugmentation } from '@/modules/knobs';
+import { UpdateAugmentation } from '@/update';
+import { KnobAugmentation } from '@/knobs';
 import { Automatable } from '@/core';
 
 // 2. Specify a file with the types you want to augment

@@ -1,10 +1,10 @@
 import Vue from 'vue';
 import { createExtension } from '@/framework/extensions';
-import * as t from '@/modules/io';
+import * as t from '@/io';
 import { commands } from '@/dawg/extensions/core/commands';
 import { palette } from '@/dawg/extensions/core/palette';
 import { notify } from '@/dawg/extensions/core/notify';
-import * as Audio from '@/modules/audio';
+import * as Audio from '@/audio';
 import audioBufferToWav from 'audiobuffer-to-wav';
 import path from 'path';
 import fs from '@/fs';
@@ -16,7 +16,7 @@ import { project } from '@/dawg/extensions/core/project';
 import { controls } from '@/dawg/extensions/core/controls';
 import ChunkGhostComponent from '@/dawg/extensions/core/record/ChunkGhost.vue';
 import * as framework from '@/framework';
-import { blobsToAudioBuffer } from '@/modules/converter';
+import { blobsToAudioBuffer } from '@/converter';
 
 export const RECORDING_PATH = path.join(framework.DOCUMENTS_PROJECT_PATH, 'recordings');
 

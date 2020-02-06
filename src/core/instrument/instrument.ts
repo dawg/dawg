@@ -1,7 +1,7 @@
 import Tone from 'tone';
-import * as Audio from '@/modules/audio';
+import * as Audio from '@/audio';
 import uuid from 'uuid';
-import * as t from '@/modules/io';
+import * as t from '@/io';
 import { disposeHelp } from '@/utils';
 
 export const InstrumentType = t.intersection([

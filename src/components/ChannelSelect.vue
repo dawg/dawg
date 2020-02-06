@@ -15,7 +15,7 @@
 </template>
 
 <script lang="ts">
-import { DragElement } from '@/modules/draggable';
+import { DragElement } from '@/draggable';
 import { ref, computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({
