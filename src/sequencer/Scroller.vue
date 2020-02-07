@@ -6,7 +6,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { clamp } from '@/utils';
+import { clamp } from '@/lib/std';
 import { Nullable } from '@/lib/vutils';
 
 /**

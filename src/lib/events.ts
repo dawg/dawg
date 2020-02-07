@@ -71,6 +71,75 @@ export function emitter<E extends Events>() {
   return new StrictEventEmitter<E>();
 }
 
+type WindowEvents = keyof WindowEventMap;
+
+type WindowEventListener<K extends WindowEvents> = (ev: WindowEventMap[K]) => any;
+
+type WindowEventListeners = {
+  [P in keyof WindowEventMap]?: WindowEventListener<P> | 'remove';
+};
+
+/**
+ * Add 0 or more event listeners and return an object with a dispose method to remove the listeners.
+ *
+ * @param events The events.
+ * @param options The options.
+ */
+export const addEventListeners = (
+  events: WindowEventListeners,
+  options?: boolean | AddEventListenerOptions,
+) => {
+  const types = Object.keys(events) as WindowEvents[];
+
+  const remove = () => {
+    for (const type of types) {
+      const ev = events[type];
+      if (ev === 'remove') {
+        continue;
+      }
+
+      window.removeEventListener(type, ev as any);
+    }
+  };
+
+  for (const type of types) {
+    const ev = events[type];
+    if (ev === 'remove') {
+      // @ts-ignore
+      // There is a weird error with union types
+      // Going to just ignore this
+      events[type] = remove;
+    }
+    window.addEventListener(type, ev as any, options);
+  }
+
+
+  return {
+    dispose: remove,
+  };
+};
+
+/**
+ * Add an event listener (like normal) but return an object with a dispose method to remove the same listener.
+ *
+ * @param type The event.
+ * @param ev The listener.
+ * @param options The options.
+ */
+export const addEventListener = <K extends WindowEvents>(
+  type: K,
+  ev: WindowEventListener<K>,
+  options?: boolean | AddEventListenerOptions,
+) => {
+  window.addEventListener(type, ev, options);
+
+  return {
+    dispose: () => {
+      window.removeEventListener(type, ev);
+    },
+  };
+};
+
 export {
   EventEmitter,
 };

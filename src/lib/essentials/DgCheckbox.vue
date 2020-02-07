@@ -26,7 +26,7 @@
 
 <script lang="ts">
 import { createComponent, computed, watch } from '@vue/composition-api';
-import { Keys } from '@/utils';
+import { Keys } from '@/lib/std';
 
 export default createComponent({
   props: {
@@ -54,7 +54,7 @@ export default createComponent({
         }
       }),
       keydown: (e: KeyboardEvent) => {
-        if (e.which === Keys.SPACE) {
+        if (e.which === Keys.Space) {
           context.emit('input', !props.value);
         }
       },

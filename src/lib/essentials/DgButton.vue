@@ -10,7 +10,7 @@
 
 <script lang="ts">
 import { createComponent, computed } from '@vue/composition-api';
-import { literal } from '@/utils';
+import { literal } from '@/lib/std';
 
 // :class="`bg-${type} hover:bg-${type}-lighten-2 text-${type}`"
 export default createComponent({

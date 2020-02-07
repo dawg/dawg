@@ -26,7 +26,7 @@
 <script lang="ts">
 import * as framework from '@/lib/framework';
 import { createComponent, ref, watch, computed } from '@vue/composition-api';
-import { sortOrdered } from '@/utils';
+import { sortOrdered } from '@/lib/std';
 
 export default createComponent({
   name: 'ActivityBar',

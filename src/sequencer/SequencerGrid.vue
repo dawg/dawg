@@ -114,7 +114,9 @@
 
 <script lang="ts">
 import { Component, Prop, Mixins, Inject, Vue } from 'vue-property-decorator';
-import { range, Keys, reverse, addEventListeners } from '@/utils';
+import { Keys } from '@/lib/std';
+import { range, reverse } from '@/lib/std';
+import { addEventListeners } from '@/lib/events';
 import { Nullable } from '@/lib/vutils';
 import BeatLines from '@/sequencer/BeatLines';
 import Progression from '@/sequencer/Progression.vue';
@@ -568,9 +570,9 @@ export default class SequencerGrid extends Vue {
   }
 
   public keydown(e: KeyboardEvent) {
-    if (e.keyCode === Keys.SHIFT) {
+    if (e.keyCode === Keys.Shift) {
       this.holdingShift = true;
-    } else if (e.keyCode === Keys.DELETE || e.keyCode === Keys.BACKSPACE) {
+    } else if (e.keyCode === Keys.Delete || e.keyCode === Keys.Backspace) {
       // Slice and reverse sItemince we will be deleting from the array as we go
       let i = this.elements.length - 1;
       for (const item of reverse(this.elements)) {
@@ -583,7 +585,7 @@ export default class SequencerGrid extends Vue {
   }
 
   public keyup(e: KeyboardEvent) {
-    if (e.keyCode === Keys.SHIFT) { this.holdingShift = false; }
+    if (e.keyCode === Keys.Shift) { this.holdingShift = false; }
   }
 
   public handleDrop(prototype: Schedulable, event: MouseEvent) {

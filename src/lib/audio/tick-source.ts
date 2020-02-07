@@ -1,7 +1,7 @@
 import Tone from 'tone';
 import { ContextTime, Ticks } from '@/lib/audio/types';
 import { Context } from '@/lib/audio/context';
-import { literal } from '@/utils';
+import { literal } from '@/lib/std';
 
 export class TickSource {
   public readonly frequency = new Tone.TickSignal();

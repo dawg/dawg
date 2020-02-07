@@ -19,10 +19,9 @@ export { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 export { window } from '@/dawg/extensions/core/window';
 export { IExtensionContext, Extension, createExtension, Subscription } from '@/lib/framework/extensions';
 export { manager } from '@/lib/framework/manager';
-export { Key } from '@/styles/keyboard';
 import * as io from '@/lib/io';
 
-import * as platform from '@/platform';
+import * as platform from '@/lib/framework/platform';
 import * as events from '@/lib/events';
 
 export {

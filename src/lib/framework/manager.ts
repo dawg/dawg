@@ -13,7 +13,7 @@ import {
 import fs from '@/lib/fs';
 import path from 'path';
 import { GLOBAL_PATH, WORKSPACE_PATH, PROJECT_PATH } from '@/lib/framework/constants';
-import { reverse, keys } from '@/utils';
+import { reverse, keys } from '@/lib/std';
 import uuid from 'uuid';
 import { ref } from '@vue/composition-api';
 import { emitter } from '@/lib/events';

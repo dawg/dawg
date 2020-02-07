@@ -2,7 +2,7 @@ import Vue from 'vue';
 import Patterns from '@/dawg/extensions/core/patterns/Patterns.vue';
 import { ref, computed, createComponent, watch } from '@vue/composition-api';
 import { vueExtend } from '@/lib/vutils';
-import { makeLookup } from '@/utils';
+import { makeLookup } from '@/lib/std';
 import { Pattern } from '@/core';
 import * as framework from '@/lib/framework';
 import { project } from '@/dawg/extensions/core/project';

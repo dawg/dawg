@@ -108,12 +108,12 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue } from 'vue-property-decorator';
 import Panels from '@/lib/framework/Panels.vue';
+import SideTabs from '@/lib/framework/SideTabs.vue';
 import PanelHeaders from '@/lib/framework/PanelHeaders.vue';
 import ActivityBar from '@/lib/framework/ActivityBar.vue';
 import * as framework from '@/lib/framework';
-import { sortOrdered } from '@/utils';
+import { sortOrdered } from '@/lib/std';
 import { createComponent, computed, ref, onMounted, onUnmounted } from '@vue/composition-api';
 
 export default createComponent({
@@ -121,6 +121,7 @@ export default createComponent({
     Panels,
     PanelHeaders,
     ActivityBar,
+    SideTabs,
   },
   name: 'App',
   setup() {

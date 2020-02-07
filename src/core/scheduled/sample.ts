@@ -3,7 +3,7 @@ import * as Audio from '@/lib/audio';
 import { SchedulableType, Schedulable } from '@/core/scheduled/schedulable';
 import { Serializable } from '@/core/serializable';
 import { Sample } from '@/core/sample';
-import { literal } from '@/utils';
+import { literal } from '@/lib/std';
 import { Context } from '@/lib/audio/context';
 
 export const ScheduledSampleType = t.intersection([

@@ -11,9 +11,10 @@ import { notify } from '@/dawg/extensions/core/notify';
 import { commands, Command } from '@/dawg/extensions/core/commands';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, ref, watch, Ref } from '@vue/composition-api';
-import { addEventListener, findUniqueName, makeLookup, range, chain } from '@/utils';
+import { makeLookup, range, chain } from '@/lib/std';
+import { findUniqueName } from '@/utils';
 import { log } from '@/dawg/extensions/core/log';
-import { emitter } from '@/lib/events';
+import { addEventListener, emitter } from '@/lib/events';
 import {
   Playlist,
   Pattern,

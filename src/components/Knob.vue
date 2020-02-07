@@ -61,7 +61,7 @@
 <script lang="ts">
 import { Component, Prop, Mixins, Watch, Vue } from 'vue-property-decorator';
 import * as dawg from '@/dawg';
-import { mapRange } from '@/utils';
+import { mapRange } from '@/lib/std';
 
 // Credit to the styling goes to this codepen: https://codepen.io/mavrK/pen/erQPvP
 // They actually have some nice dials we may want to use

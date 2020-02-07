@@ -3,7 +3,7 @@ import * as t from '@/lib/io';
 import * as Audio from '@/lib/audio';
 import { Instrument, InstrumentType } from '@/core/instrument/instrument';
 import { Serializable } from '@/core/serializable';
-import { literal } from '@/utils';
+import { literal } from '@/lib/std';
 
 export const SynthType = t.intersection([
   t.type({

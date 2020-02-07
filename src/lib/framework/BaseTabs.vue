@@ -7,7 +7,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
-import { makeLookup } from '@/utils';
+import { makeLookup } from '@/lib/std';
 import { update } from '@/lib/vutils';
 import { watch, createComponent } from '@vue/composition-api';
 

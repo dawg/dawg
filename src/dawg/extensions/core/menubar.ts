@@ -1,6 +1,6 @@
 import * as framework from '@/lib/framework';
 import { Command } from '@/dawg/extensions/core/commands';
-import { uniqueId } from '@/utils';
+import { uniqueId } from '@/lib/std';
 import { menuBarCallbacks, ipcSender } from '@/ipcRenderer';
 
 interface SubMenu {

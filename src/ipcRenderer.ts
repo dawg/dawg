@@ -1,4 +1,3 @@
-import * as keyboard from '@/styles/keyboard';
 import {
   ElectronMenuOptions,
   ElectronMenuPosition,
@@ -7,11 +6,11 @@ import {
   RendererEvents,
 } from '@/ipc-interface';
 import { defaultIpcRenderer } from '@/lib/ipc';
-import { uniqueId } from '@/utils';
+import { uniqueId, Key } from '@/lib/std';
 
 export interface Command<T extends any[]> {
   text: string;
-  shortcut?: keyboard.Key[];
+  shortcut?: Key[];
   callback: (...args: T) => void;
 }
 

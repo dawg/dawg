@@ -84,7 +84,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import { Schedulable } from '@/core';
-import { Keys } from '@/utils';
+import { Keys } from '@/lib/std';
 import { update } from '@/lib/vutils';
 import SequencerGrid from '@/sequencer/SequencerGrid.vue';
 import Timeline from '@/sequencer/Timeline.vue';

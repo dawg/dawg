@@ -44,7 +44,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import path from 'path';
-import { Keys } from '@/utils';
+import { Keys } from '@/lib/std';
 import { Component, Prop } from 'vue-property-decorator';
 import { Folder, File, Extensions, Extension, ExtensionData } from '@/dawg/extensions/extra/explorer/types';
 import { Watch } from '@/update';

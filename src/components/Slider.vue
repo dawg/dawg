@@ -43,7 +43,7 @@
 </template>
 
 <script lang="ts">
-import { scale } from '@/utils';
+import { scale } from '@/lib/std';
 import * as framework from '@/lib/framework';
 import { computed, createComponent, ref } from '@vue/composition-api';
 import * as dawg from '@/dawg';

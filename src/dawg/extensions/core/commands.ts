@@ -1,10 +1,9 @@
-import * as keyboard from '@/styles/keyboard';
 import * as framework from '@/lib/framework';
 import { palette } from '@/dawg/extensions/core/palette';
 import { menubar } from '@/dawg/extensions/core/menubar';
-import { Key } from '@/styles/keyboard';
+import { Key } from '@/lib/std';
 import hotkeys from 'hotkeys-js';
-import * as platform from '@/platform';
+import * as platform from '@/lib/framework/platform';
 
 export type HotKey = string | { [p in platform.Platform]: string };
 const hotKeysLookup: { [K in Key]: HotKey } = {
@@ -47,13 +46,20 @@ const hotKeysLookup: { [K in Key]: HotKey } = {
   Y: 'y',
   Z: 'z',
   Space: 'space',
-  Del: 'delete',
+  Delete: 'delete',
   Tab: 'tab',
   Esc: 'esc',
+  Backspace: 'backspace',
+  Cmd: 'command',
+  Return: 'enter',
+  Left: 'left',
+  Up: 'up',
+  Right: 'right',
+  Down: 'down',
 };
 
 export interface Shortcut {
-  shortcut?: keyboard.Key[];
+  shortcut?: Key[];
   callback: () => void;
 }
 

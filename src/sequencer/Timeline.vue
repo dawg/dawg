@@ -55,8 +55,7 @@
 <script lang="ts">
 import { Vue, Component, Prop, Watch, Mixins, Inject } from 'vue-property-decorator';
 import { ResponsiveMixin, Directions, Nullable } from '@/lib/vutils';
-import { Button } from '@/utils';
-import { range } from '@/utils';
+import { range, Mouse } from '@/lib/std';
 import Progression from '@/sequencer/Progression.vue';
 import * as dawg from '@/dawg';
 
@@ -178,10 +177,10 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   public mousedown(e: MouseEvent, location?: Location) {
     e.preventDefault();
     switch (e.button) {
-      case Button.LEFT:
+      case Mouse.LEFT:
         this.seek(e);
         return this.startCursorDrag();
-      case Button.RIGHT:
+      case Mouse.RIGHT:
         return this.doLoop(e, location);
     }
   }

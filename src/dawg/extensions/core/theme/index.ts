@@ -6,7 +6,7 @@ import { palette } from '@/dawg/extensions/core/palette';
 import { commands } from '@/dawg/extensions/core/commands';
 import * as framework from '@/lib/framework';
 import * as t from '@/lib/io';
-import { keys } from '@/utils';
+import { keys } from '@/lib/std';
 
 export interface ThemeAugmentation {
   $theme: framework.Theme;
