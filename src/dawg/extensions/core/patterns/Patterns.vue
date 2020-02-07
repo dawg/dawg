@@ -23,7 +23,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Pattern, ScheduledPattern } from '@/core';
-import { Nullable } from '@/utils';
+import { Nullable } from '@/lib/vutils';
 import { Watch } from '@/update';
 import * as framework from '@/framework';
 import { theme } from '@/dawg/extensions/core/theme';

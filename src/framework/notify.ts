@@ -1,4 +1,4 @@
-import { emitter } from '@/events';
+import { emitter } from '@/lib/events';
 
 export const events = emitter<{ add: [Notification] }>();
 

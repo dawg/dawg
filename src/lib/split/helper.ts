@@ -1,5 +1,5 @@
 import { ref } from '@vue/composition-api';
-import { StrictEventEmitter } from '@/events';
+import { StrictEventEmitter } from '@/lib/events';
 import { addEventListener } from '@/utils';
 
 export type Direction = 'horizontal' | 'vertical';

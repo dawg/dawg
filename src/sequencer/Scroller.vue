@@ -6,7 +6,8 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { Nullable, clamp } from '@/utils';
+import { clamp } from '@/utils';
+import { Nullable } from '@/lib/vutils';
 
 /**
  * This class enables scrolling using the wheel and manages "steady" zoom logic.

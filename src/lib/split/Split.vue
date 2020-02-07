@@ -13,8 +13,8 @@
 
 <script lang="ts">
 import { watch, Ref, ref, createComponent, computed, onMounted, onUnmounted } from '@vue/composition-api';
-import { update } from '@/utils';
-import { Direction, Section, isSplit } from '@/split/helper';
+import { update } from '@/lib/vutils';
+import { Direction, Section, isSplit } from '@/lib/split/helper';
 
 export default createComponent({
   name: 'Split',

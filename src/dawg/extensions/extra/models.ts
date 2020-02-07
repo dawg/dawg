@@ -1,5 +1,5 @@
-import fs from '@/fs';
-import * as t from '@/io';
+import fs from '@/lib/fs';
+import * as t from '@/lib/io';
 import { PythonShell, Options } from 'python-shell';
 import path from 'path';
 import { watch } from '@vue/composition-api';

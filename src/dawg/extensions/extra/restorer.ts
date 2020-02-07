@@ -1,4 +1,4 @@
-import * as t from '@/io';
+import * as t from '@/lib/io';
 import * as dawg from '@/dawg';
 import * as framework from '@/framework';
 import { watch, Ref } from '@vue/composition-api';

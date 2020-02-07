@@ -1,4 +1,4 @@
-import { Ticks } from '@/audio/types';
+import { Ticks } from '@/lib/audio/types';
 
 /**
  *  @class A Timeline class for scheduling and maintaining state

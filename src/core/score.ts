@@ -1,9 +1,9 @@
-import * as t from '@/io';
+import * as t from '@/lib/io';
 import uuid from 'uuid';
 import { Instrument } from '@/core/instrument/instrument';
 import { Serializable } from '@/core/serializable';
 import { Note, NoteType } from '@/core/scheduled/note';
-import { Transport } from '@/audio';
+import { Transport } from '@/lib/audio';
 import { Sequence } from '@/core/scheduled/sequence';
 
 const ScoreTypeRequired = t.type({

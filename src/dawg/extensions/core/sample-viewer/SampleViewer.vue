@@ -25,7 +25,7 @@
 
 <script lang="ts">
 import { Sample } from '@/core';
-import { Nullable } from '@/utils';
+import { Nullable } from '@/lib/vutils';
 import { Action } from '@/dawg/extensions/core/sample-viewer/types';
 import { createComponent, computed } from '@vue/composition-api';
 

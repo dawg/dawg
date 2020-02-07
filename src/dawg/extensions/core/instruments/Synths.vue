@@ -16,7 +16,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import Synth from '@/components/Synth.vue';
-import { Nullable } from '@/utils';
+import { Nullable } from '@/lib/vutils';
 import { Score, Instrument, Pattern } from '@/core';
 import { Watch } from '@/update';
 import { notify } from '@/dawg/extensions/core/notify';

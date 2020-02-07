@@ -27,7 +27,7 @@ export {
   nullType as null,
   Any,
 } from 'io-ts';
-import fs from '@/fs';
+import fs from '@/lib/fs';
 
 export interface DecodeSuccess<T> {
   type: 'success';

@@ -20,10 +20,10 @@ export { window } from '@/dawg/extensions/core/window';
 export { IExtensionContext, Extension, createExtension, Subscription } from '@/framework/extensions';
 export { manager } from '@/framework/manager';
 export { Key } from '@/styles/keyboard';
-import * as io from '@/io';
+import * as io from '@/lib/io';
 
 import * as platform from '@/platform';
-import * as events from '@/events';
+import * as events from '@/lib/events';
 
 export {
   io,

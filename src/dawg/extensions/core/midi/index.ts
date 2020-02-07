@@ -5,7 +5,7 @@ import { instruments } from '@/dawg/extensions/core/instruments';
 import { keyLookup } from '@/utils';
 import { patterns } from '@/dawg/extensions/core/patterns';
 import { Note } from '@/core';
-import * as Audio from '@/audio';
+import * as Audio from '@/lib/audio';
 import { theme } from '@/dawg/extensions/core/theme';
 import { pianoRoll } from '@/dawg/extensions/core/piano-roll';
 import { ref, computed, watch } from '@vue/composition-api';

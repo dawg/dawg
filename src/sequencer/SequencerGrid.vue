@@ -114,7 +114,8 @@
 
 <script lang="ts">
 import { Component, Prop, Mixins, Inject, Vue } from 'vue-property-decorator';
-import { range, Nullable, Keys, reverse, addEventListeners } from '@/utils';
+import { range, Keys, reverse, addEventListeners } from '@/utils';
+import { Nullable } from '@/lib/vutils';
 import BeatLines from '@/sequencer/BeatLines';
 import Progression from '@/sequencer/Progression.vue';
 import ElementWrapper from '@/sequencer/ElementWrapper.vue';

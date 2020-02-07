@@ -1,11 +1,12 @@
 import Vue from 'vue';
 import Patterns from '@/dawg/extensions/core/patterns/Patterns.vue';
 import { ref, computed, createComponent, watch } from '@vue/composition-api';
-import { makeLookup, vueExtend } from '@/utils';
+import { vueExtend } from '@/lib/vutils';
+import { makeLookup } from '@/utils';
 import { Pattern } from '@/core';
 import * as framework from '@/framework';
 import { project } from '@/dawg/extensions/core/project';
-import * as t from '@/io';
+import * as t from '@/lib/io';
 
 export const patterns = framework.manager.activate({
   id: 'dawg.patterns',

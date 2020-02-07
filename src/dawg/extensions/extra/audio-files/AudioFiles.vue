@@ -19,7 +19,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 import { ScheduledSample, Sample } from '@/core';
 import * as dawg from '@/dawg';
 import { createComponent, computed } from '@vue/composition-api';
-import { useClicker } from '@/utils';
+import { useClicker } from '@/lib/vutils';
 
 export default createComponent({
   name: 'AudioFiles',

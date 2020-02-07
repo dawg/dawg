@@ -2,8 +2,8 @@ import Vue from 'vue';
 import VueCompositionApi from '@vue/composition-api';
 Vue.use(VueCompositionApi);
 
-import { expect } from '@/testing';
-import { Section, SectionOpts } from '@/split/helper';
+import { expect } from '@/lib/testing';
+import { Section, SectionOpts } from '@/lib/split/helper';
 
 
 

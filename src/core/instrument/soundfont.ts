@@ -1,7 +1,7 @@
 import soundfonts from 'soundfont-player';
 import Tone from 'tone';
-import * as t from '@/io';
-import * as Audio from '@/audio';
+import * as t from '@/lib/io';
+import * as Audio from '@/lib/audio';
 import { Instrument, InstrumentType } from '@/core/instrument/instrument';
 import { Serializable } from '@/core/serializable';
 import { literal } from '@/utils';

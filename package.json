@@ -20,7 +20,6 @@
     "@types/tmp": "0.0.34",
     "@types/webmidi": "^2.0.3",
     "@vue/composition-api": "^0.3.4",
-    "audiobuffer-to-wav": "^1.0.0",
     "cli-truncate": "^2.0.0",
     "firebase": "^5.8.6",
     "hotkeys-js": "^3.7.3",

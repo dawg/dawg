@@ -1,6 +1,6 @@
 import StrictEventEmitter from 'strict-event-emitter-types';
 import { EventEmitter } from 'events';
-import * as events from '@/events';
+import * as events from '@/lib/events';
 
 interface Events {
   start: (provider: Provider) => void;

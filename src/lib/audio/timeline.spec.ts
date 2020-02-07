@@ -1,5 +1,5 @@
-import { expect } from '@/testing';
-import { Timeline } from '@/audio/timeline';
+import { expect } from '@/lib/testing';
+import { Timeline } from '@/lib/audio/timeline';
 
 describe(Timeline.name, () => {
   it('search works correctly', async () => {

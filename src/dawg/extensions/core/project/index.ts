@@ -1,11 +1,11 @@
 import tmp from 'tmp';
 import uuid from 'uuid';
-import fs from '@/fs';
-import * as Audio from '@/audio';
-import * as t from '@/io';
+import fs from '@/lib/fs';
+import * as Audio from '@/lib/audio';
+import * as t from '@/lib/io';
 import { createExtension } from '@/framework/extensions';
 import { remote } from 'electron';
-import { loadBufferSync } from '@/wav';
+import { loadBufferSync } from '@/lib/wav';
 import * as framework from '@/framework';
 import { notify } from '@/dawg/extensions/core/notify';
 import { commands, Command } from '@/dawg/extensions/core/commands';
@@ -13,7 +13,7 @@ import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, ref, watch, Ref } from '@vue/composition-api';
 import { addEventListener, findUniqueName, makeLookup, range, chain } from '@/utils';
 import { log } from '@/dawg/extensions/core/log';
-import { emitter } from '@/events';
+import { emitter } from '@/lib/events';
 import {
   Playlist,
   Pattern,

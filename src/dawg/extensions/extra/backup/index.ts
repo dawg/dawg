@@ -1,5 +1,5 @@
 import * as dawg from '@/dawg';
-import * as t from '@/io';
+import * as t from '@/lib/io';
 import { User } from 'firebase';
 import backend, { ProjectInfo } from '@/dawg/extensions/extra/backup/backend';
 import { PathReporter } from 'io-ts/lib/PathReporter';
@@ -12,7 +12,7 @@ import { computed, watch, ref, createComponent } from '@vue/composition-api';
 import * as framework from '@/framework';
 import { project, ProjectType, IProject } from '@/dawg/extensions/core/project';
 import { createExtension, VueInput } from '@/framework/extensions';
-import { vueExtend } from '@/utils';
+import { vueExtend } from '@/lib/vutils';
 
 export const extension = createExtension({
   id: 'dawg.backup',

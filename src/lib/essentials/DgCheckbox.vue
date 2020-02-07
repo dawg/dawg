@@ -26,7 +26,7 @@
 
 <script lang="ts">
 import { createComponent, computed, watch } from '@vue/composition-api';
-import { Keys } from '../utils';
+import { Keys } from '@/utils';
 
 export default createComponent({
   props: {

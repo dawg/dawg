@@ -1,7 +1,7 @@
 import { Folder, File } from '@/dawg/extensions/extra/explorer/types';
 import { ref, Ref } from '@vue/composition-api';
 import path from 'path';
-import fs, { FSWatcher } from '@/fs';
+import fs, { FSWatcher } from '@/lib/fs';
 import { Keys } from '@/utils';
 import * as dawg from '@/dawg';
 

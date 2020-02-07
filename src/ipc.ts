@@ -29,14 +29,14 @@ type EventFunction<
 
 interface IpcMainGeneric<T extends EventInformation, V extends EventInformation> extends ElectronIpcMain {
   on<K extends keyof T>(channel: K, listener: EventFunction<T, K, V>): this;
-  once<K extends keyof T>(channel: K, listener: EventFunction<T, K>): this;
+  once<K extends keyof T>(channel: K, listener: EventFunction<T, K, V>): this;
   removeAllListeners<K extends keyof T>(channel: K): this;
-  removeListener<K extends keyof T>(channel: K, listener: EventFunction<T, K>): this;
+  removeListener<K extends keyof T>(channel: K, listener: EventFunction<T, K, V>): this;
 }
 
 interface IpcRendererGeneric<T extends EventInformation, V extends EventInformation> extends ElectronIpcRenderer {
   on<K extends keyof T>(channel: K, listener: EventFunction<T, K, V>): this;
-  removeListener<K extends keyof T>(channel: K, listener: EventFunction<T, K>): this;
+  removeListener<K extends keyof T>(channel: K, listener: EventFunction<T, K, V>): this;
   send<K extends keyof V>(channel: K, ...args: V[K]): void;
 }
 

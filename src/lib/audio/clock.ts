@@ -1,8 +1,8 @@
 import Tone from 'tone';
-import { Context } from '@/audio/context';
-import { ContextTime, Ticks } from '@/audio/types';
-import { TickSource } from '@/audio/tick-source';
-import { StrictEventEmitter } from '@/events';
+import { Context } from '@/lib/audio/context';
+import { ContextTime, Ticks } from '@/lib/audio/types';
+import { TickSource } from '@/lib/audio/tick-source';
+import { StrictEventEmitter } from '@/lib/events';
 
 interface ClockOptions {
   callback: (seconds: ContextTime, ticks: Ticks) => void;

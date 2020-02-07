@@ -1,6 +1,6 @@
 import { createComponent, computed, ref } from '@vue/composition-api';
 import * as framework from '@/framework';
-import { vueExtend } from '@/utils';
+import { vueExtend } from '@/lib/vutils';
 
 export type Status = string | { text: string, value: string } | null;
 

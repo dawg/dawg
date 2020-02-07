@@ -1,10 +1,10 @@
-import * as t from '@/io';
-import * as Audio from '@/audio';
+import * as t from '@/lib/io';
+import * as Audio from '@/lib/audio';
 import { SchedulableType, Schedulable } from '@/core/scheduled/schedulable';
 import { Serializable } from '@/core/serializable';
 import { Sample } from '@/core/sample';
 import { literal } from '@/utils';
-import { Context } from '@/audio/context';
+import { Context } from '@/lib/audio/context';
 
 export const ScheduledSampleType = t.intersection([
   t.type({

@@ -1,4 +1,4 @@
-import * as t from '@/io';
+import * as t from '@/lib/io';
 import {
   Extension,
   createExtensionContext,
@@ -10,15 +10,15 @@ import {
   ReactiveDefinition,
   Setting,
 } from '@/framework/extensions';
-import fs from '@/fs';
+import fs from '@/lib/fs';
 import path from 'path';
 import { GLOBAL_PATH, WORKSPACE_PATH, PROJECT_PATH } from '@/framework/constants';
 import { reverse, keys } from '@/utils';
 import uuid from 'uuid';
 import { ref } from '@vue/composition-api';
 import { PathReporter } from 'io-ts/lib/PathReporter';
-import { emitter } from '@/events';
-import { decodeItem } from '@/io';
+import { emitter } from '@/lib/events';
+import { decodeItem } from '@/lib/io';
 
 const events = emitter<{ setOpenedFile: [] }>();
 

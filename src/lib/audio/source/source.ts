@@ -1,4 +1,4 @@
-import { Time } from '@/audio/types';
+import { Time } from '@/lib/audio/types';
 import Tone from 'tone';
 
 /**

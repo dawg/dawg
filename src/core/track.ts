@@ -1,4 +1,4 @@
-import * as t from '@/io';
+import * as t from '@/lib/io';
 
 export const TrackType = t.type({
   mute: t.boolean,

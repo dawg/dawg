@@ -33,7 +33,7 @@
 
 <script lang="ts">
 import { createComponent, computed, ref } from '@vue/composition-api';
-import { update } from '@/utils';
+import { update } from '@/lib/vutils';
 import tinycolor from 'tinycolor2';
 
 export default createComponent({

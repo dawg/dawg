@@ -1,6 +1,6 @@
 import { Schedulable } from '@/core/scheduled/schedulable';
-import { Transport } from '@/audio/transport';
-import { StrictEventEmitter } from '@/events';
+import { Transport } from '@/lib/audio/transport';
+import { StrictEventEmitter } from '@/lib/events';
 import * as history from '@/dawg/extensions/core/project/history';
 
 

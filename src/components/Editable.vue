@@ -11,7 +11,8 @@
 </template>
 
 <script lang="ts">
-import { Keys, update } from '@/utils';
+import { Keys } from '@/utils';
+import { update } from '@/lib/vutils';
 import { onMounted, ref, createComponent, watch } from '@vue/composition-api';
 
 export default createComponent({

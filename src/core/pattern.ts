@@ -1,6 +1,6 @@
-import * as t from '@/io';
+import * as t from '@/lib/io';
 import uuid from 'uuid';
-import * as Audio from '@/audio';
+import * as Audio from '@/lib/audio';
 import { Serializable } from '@/core/serializable';
 import { Score, ScoreType } from '@/core/score';
 

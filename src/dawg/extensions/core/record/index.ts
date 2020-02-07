@@ -1,13 +1,13 @@
 import Vue from 'vue';
 import { createExtension } from '@/framework/extensions';
-import * as t from '@/io';
+import * as t from '@/lib/io';
 import { commands } from '@/dawg/extensions/core/commands';
 import { palette } from '@/dawg/extensions/core/palette';
 import { notify } from '@/dawg/extensions/core/notify';
-import * as Audio from '@/audio';
-import audioBufferToWav from 'audiobuffer-to-wav';
+import * as Audio from '@/lib/audio';
+import { audioBufferToWav } from '@/lib/wav';
 import path from 'path';
-import fs from '@/fs';
+import fs from '@/lib/fs';
 import { ChunkGhost } from '@/core/ghost';
 import { Sample, ScheduledSample } from '@/core';
 import { ref, watch } from '@vue/composition-api';
@@ -15,7 +15,7 @@ import { project } from '@/dawg/extensions/core/project';
 import { controls } from '@/dawg/extensions/core/controls';
 import ChunkGhostComponent from '@/dawg/extensions/core/record/ChunkGhost.vue';
 import * as framework from '@/framework';
-import { blobsToAudioBuffer } from '@/converter';
+import { blobsToAudioBuffer } from '@/lib/wav';
 
 export const RECORDING_PATH = path.join(framework.DOCUMENTS_PROJECT_PATH, 'recordings');
 
@@ -99,9 +99,7 @@ export const extension = createExtension({
       mediaRecorder.onstop = async () => {
         const buffer = await blobsToAudioBuffer(Audio.Context.context, audioBlobs);
         const wavData: ArrayBuffer = audioBufferToWav(buffer, {
-          sampleRate: buffer.sampleRate,
-          float: true,
-          bitDepth: 32,
+          float32: true,
         });
 
         await fs.mkdirRecursive(RECORDING_PATH);

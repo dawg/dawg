@@ -1,6 +1,6 @@
 import Tone from 'tone';
-import { ContextTime, Seconds } from '@/audio/types';
-import { Context } from '@/audio/context';
+import { ContextTime, Seconds } from '@/lib/audio/types';
+import { Context } from '@/lib/audio/context';
 
 export class Player extends Tone.AudioNode {
   public volume: Tone.Signal;

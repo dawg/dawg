@@ -32,7 +32,7 @@
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import Sequencer from '@/sequencer/Sequencer.vue';
 import { allKeys, keyLookup } from '@/utils';
-import { INotes } from '@/midi-parser';
+import { INotes } from '@/lib/midi-parser';
 import { Note, Instrument, Playlist, Pattern, Score, Sequence } from '@/core';
 import { Watch } from '@/update';
 

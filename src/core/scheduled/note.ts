@@ -1,5 +1,5 @@
-import * as t from '@/io';
-import * as Audio from '@/audio';
+import * as t from '@/lib/io';
+import * as Audio from '@/lib/audio';
 import Tone from 'tone';
 import { Schedulable, SchedulableType } from '@/core/scheduled/schedulable';
 import { Serializable } from '@/core/serializable';

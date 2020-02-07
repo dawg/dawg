@@ -1,8 +1,8 @@
 import Tone from 'tone';
-import { TransportTime, Ticks, Beat } from '@/audio/types';
-import { Transport } from '@/audio/transport';
-import { Signal } from '@/audio';
-import * as Audio from '@/audio';
+import { TransportTime, Ticks, Beat } from '@/lib/audio/types';
+import { Transport } from '@/lib/audio/transport';
+import { Signal } from '@/lib/audio';
+import * as Audio from '@/lib/audio';
 
 interface IAutomationEvent {
   time: Audio.Beat;

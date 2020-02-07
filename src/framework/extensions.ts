@@ -1,4 +1,4 @@
-import * as t from '@/io';
+import * as t from '@/lib/io';
 import { Ref } from '@vue/composition-api';
 import { VueConstructor } from 'vue';
 

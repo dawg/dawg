@@ -84,10 +84,11 @@
 <script lang="ts">
 import Vue from 'vue';
 import { Schedulable } from '@/core';
-import { update, Keys } from '@/utils';
+import { Keys } from '@/utils';
+import { update } from '@/lib/vutils';
 import SequencerGrid from '@/sequencer/SequencerGrid.vue';
 import Timeline from '@/sequencer/Timeline.vue';
-import * as Audio from '@/audio';
+import * as Audio from '@/lib/audio';
 import { createComponent, reactive, computed, watch, onMounted, ref } from '@vue/composition-api';
 
 export default createComponent({

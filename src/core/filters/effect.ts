@@ -1,6 +1,6 @@
 import Tone from 'tone';
 import uuid from 'uuid';
-import * as t from '@/io';
+import * as t from '@/lib/io';
 import { EffectOptions, EffectName, EffectTones, EffectMap } from '@/core/filters/effects';
 import { EffectDefaults } from '@/core/filters/defaults';
 import { Serializable } from '@/core/serializable';

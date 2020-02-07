@@ -1,6 +1,6 @@
 import Tone from 'tone';
-import { ContextTime, Ticks } from '@/audio/types';
-import { Context } from '@/audio/context';
+import { ContextTime, Ticks } from '@/lib/audio/types';
+import { Context } from '@/lib/audio/context';
 import { literal } from '@/utils';
 
 export class TickSource {
