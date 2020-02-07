@@ -24,14 +24,11 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
-import Sequencer from '@/sequencer/Sequencer.vue';
 import { Track } from '@/core';
 import { theme } from '@/dawg/extensions/core/theme';
 import * as framework from '@/lib/framework';
 
-@Component({
-  components: { Sequencer },
-})
+@Component
 export default class PlaylistSequencer extends Vue {
   @Prop({ type: Number, required: true }) public rowHeight!: number;
   @Prop({ type: Array, required: true }) public tracks!: Track[];

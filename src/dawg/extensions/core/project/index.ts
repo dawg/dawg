@@ -8,7 +8,7 @@ import { remote } from 'electron';
 import { loadBufferSync } from '@/lib/wav';
 import * as framework from '@/lib/framework';
 import { notify } from '@/dawg/extensions/core/notify';
-import { commands, Command } from '@/dawg/extensions/core/commands';
+import { commands } from '@/dawg/extensions/core/commands';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, ref, watch, Ref } from '@vue/composition-api';
 import { makeLookup, range, chain } from '@/lib/std';
@@ -784,7 +784,7 @@ const extension = createExtension({
       });
     }));
 
-    const save: Command = {
+    const save: framework.Command = {
       text: 'Save',
       shortcut: ['CmdOrCtrl', 'S'],
       callback: async () => {
@@ -794,7 +794,7 @@ const extension = createExtension({
       },
     };
 
-    const saveAs: Command = {
+    const saveAs: framework.Command = {
       text: 'Save',
       shortcut: ['CmdOrCtrl', 'Shift', 'S'],
       callback: async () => {
@@ -804,7 +804,7 @@ const extension = createExtension({
       },
     };
 
-    const open: Command = {
+    const open: framework.Command = {
       text: 'Open',
       shortcut: ['CmdOrCtrl', 'O'],
       callback: async () => {
@@ -826,7 +826,7 @@ const extension = createExtension({
       },
     };
 
-    const newProject: Command = {
+    const newProject: framework.Command = {
       shortcut: ['CmdOrCtrl', 'N'],
       text: 'New Project',
       callback: async () => {
@@ -837,7 +837,7 @@ const extension = createExtension({
       },
     };
 
-    const undo: Command = {
+    const undo: framework.Command = {
       shortcut: ['CmdOrCtrl', 'Z'],
       text: 'Undo',
       callback: () => {
@@ -845,7 +845,7 @@ const extension = createExtension({
       },
     };
 
-    const redo: Command = {
+    const redo: framework.Command = {
       shortcut: ['CmdOrCtrl', 'Shift', 'Z'],
       text: 'Redo',
       callback: () => {

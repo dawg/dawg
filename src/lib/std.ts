@@ -45,6 +45,16 @@ export const keys = <O>(o: O): Array<keyof O & string> => {
   return Object.keys(o) as Array<keyof O & string>;
 };
 
+export const fromEntries = <K extends string, T>(
+  entries: Iterable<readonly [K, T]>,
+): { [k in K]: T } => {
+  const o: Partial<{ [k in K]: T }> = {};
+  for (const entry of entries) {
+    o[entry[0]] = entry[1];
+  }
+  return o as { [k in K]: T };
+};
+
 export const mapObject = <V, T, O extends { [k: string]: V }>(o: O, f: (v: V) => T) => {
   const transformed: { [k: string]: T } = {};
   for (const key of keys(o)) {

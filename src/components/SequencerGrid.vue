@@ -118,15 +118,13 @@ import { Keys } from '@/lib/std';
 import { range, reverse } from '@/lib/std';
 import { addEventListeners } from '@/lib/events';
 import { Nullable } from '@/lib/vutils';
-import BeatLines from '@/sequencer/BeatLines';
-import Progression from '@/sequencer/Progression.vue';
-import ElementWrapper from '@/sequencer/ElementWrapper.vue';
-import { Watch } from '@/update';
+import BeatLines from '@/components/BeatLines';
+import { Watch } from '@/lib/update';
 import { Schedulable, Sequence } from '@/core';
 import { Ghost } from '@/core/ghost';
 
 @Component({
-  components: { Progression, BeatLines, ElementWrapper },
+  components: { BeatLines },
 })
 export default class SequencerGrid extends Vue {
   // name is used for debugging

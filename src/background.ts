@@ -1,15 +1,12 @@
-'use strict';
-
 import { app, protocol, BrowserWindow } from 'electron';
-import menu from './context';
+import menu from './lib/electron/context';
 import path from 'path';
 import {
   createProtocol,
   installVueDevtools,
 } from 'vue-cli-plugin-electron-builder/lib';
-
-import './electron/ipc';
-import { isDevelopment } from './electron/environment';
+import './lib/electron/ipc';
+import { isDevelopment } from './lib/electron/environment';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.

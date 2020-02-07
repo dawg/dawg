@@ -1,14 +1,7 @@
 import * as framework from '@/lib/framework';
-import { Command } from '@/dawg/extensions/core/commands';
-import { uniqueId } from '@/lib/std';
-import { menuBarCallbacks, ipcSender } from '@/ipcRenderer';
+import { keys, fromEntries } from '@/lib/std';
 
-interface SubMenu {
-  name: string;
-  items: Array<Command | null>;
-}
-
-// FIXME Make this structure...
+// TODO Make this structure...
 // [
 //   this.menuItems.new,
 //   null,
@@ -21,54 +14,28 @@ interface SubMenu {
 //   this.menuItems.saveAs,
 // ],
 
-export type Menu = SubMenu[];
 type MenuNames = 'File' | 'Edit' | 'View' | 'Help';
 
 export const menubar = framework.manager.activate({
   id: 'dawg.menubar',
   activate() {
-    const menus: { [K in MenuNames]: Menu } = {
+    const menus: { [K in MenuNames]: framework.Menu } = {
       File: [],
       Edit: [],
       View: [],
       Help: [],
     };
 
-    Object.keys(menus).forEach((menu, i) => {
-      ipcSender.send('defineMenu', { menu, order: i });
-    });
-
-    const transform = (menu: string, item: Command) => {
-      let accelerator: string | undefined;
-      if (item.shortcut) {
-        accelerator = item.shortcut.join('+');
-      }
-
-      const uniqueEvent = uniqueId();
-      menuBarCallbacks[uniqueEvent] = item.callback;
-
-      return {
-        menu,
-        label: item.text,
-        uniqueEvent,
-        accelerator,
-      };
-    };
+    const lookup = fromEntries(keys(menus).map((menu, i) => {
+      return [menu, framework.defineMenu({ menu, order: i })];
+    }));
 
     return {
       getMenu(menu: MenuNames) {
         return {
           alreadyDefined: false,
-          addItem: (item: Command) => {
-            const electronItem = transform(menu, item);
-            ipcSender.send('addToMenuBar', electronItem);
-
-            return {
-              dispose() {
-                ipcSender.send('removeFromMenuBar', electronItem);
-                delete menuBarCallbacks[electronItem.uniqueEvent];
-              },
-            };
+          addItem: (item: framework.Command) => {
+            return lookup[menu].addToMenu(item);
           },
         };
       },

@@ -1,5 +1,5 @@
 import electron from 'electron';
-import { isDevelopment } from './electron/environment';
+import { isDevelopment } from './environment';
 
 interface Options {
   showInspectElement?: boolean;

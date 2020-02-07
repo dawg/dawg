@@ -1,7 +1,6 @@
 // 1. Make sure to import 'vue' before declaring augmented types
 import Vue from 'vue'
-import { UpdateAugmentation } from '@/update';
-import { Automatable } from '@/core';
+import { UpdateAugmentation } from '@/lib/update';
 
 // 2. Specify a file with the types you want to augment
 //    Vue has the constructor type in types/vue.d.ts

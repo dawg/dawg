@@ -1,6 +1,6 @@
 import electron, { Menu, MenuItemConstructorOptions } from 'electron';
 import { ElectronMenuBarItem, MainEvents, RendererEvents } from '../ipc-interface';
-import { defaultIpcMain } from '../lib/ipc';
+import { defaultIpcMain } from '../ipc';
 
 defaultIpcMain<MainEvents, RendererEvents>({
   showMenu: (event, payload) => {

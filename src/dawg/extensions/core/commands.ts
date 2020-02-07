@@ -3,20 +3,19 @@ import { palette } from '@/dawg/extensions/core/palette';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { Key } from '@/lib/std';
 import hotkeys from 'hotkeys-js';
-import * as platform from '@/lib/framework/platform';
 
-export type HotKey = string | { [p in platform.Platform]: string };
+export type HotKey = string | { [p in framework.Platform]: string };
 const hotKeysLookup: { [K in Key]: HotKey } = {
   Shift: 'shift',
   CmdOrCtrl: {
-    [platform.Platform.Windows]: 'ctrl',
-    [platform.Platform.Mac]: 'command',
-    [platform.Platform.Linux]: 'ctrl',
+    [framework.Platform.Windows]: 'ctrl',
+    [framework.Platform.Mac]: 'command',
+    [framework.Platform.Linux]: 'ctrl',
   },
   AltOrOption: {
-    [platform.Platform.Windows]: 'alt',
-    [platform.Platform.Mac]: 'option',
-    [platform.Platform.Linux]: 'alt',
+    [framework.Platform.Windows]: 'alt',
+    [framework.Platform.Mac]: 'option',
+    [framework.Platform.Linux]: 'alt',
   },
   Ctrl: 'ctrl',
   A: 'a',
@@ -58,26 +57,17 @@ const hotKeysLookup: { [K in Key]: HotKey } = {
   Down: 'down',
 };
 
-export interface Shortcut {
-  shortcut?: Key[];
-  callback: () => void;
-}
+const cmmds: framework.Command[] = [];
+const shorcuts: framework.Shortcut[] = [];
 
-export interface Command extends Shortcut {
-  text: string;
-}
-
-const cmmds: Command[] = [];
-const shorcuts: Shortcut[] = [];
-
-const pushAndReturnDispose = (items: Shortcut[], item: Shortcut) => {
+const pushAndReturnDispose = (items: framework.Shortcut[], item: framework.Shortcut) => {
   items.push(item);
   const shortcut = item.shortcut ? item.shortcut.map(((value): string => {
     const hotKey = hotKeysLookup[value];
     if (typeof hotKey === 'string') {
       return hotKey;
     } else {
-      return hotKey[platform.platform];
+      return hotKey[framework.platform];
     }
   })).join('+') : undefined;
   if (shortcut) {
@@ -105,11 +95,11 @@ const pushAndReturnDispose = (items: Shortcut[], item: Shortcut) => {
 export const commands = framework.manager.activate({
   id: 'dawg.commands',
   activate(context) {
-    const registerCommand = (command: Command) => {
+    const registerCommand = (command: framework.Command) => {
       return pushAndReturnDispose(cmmds, command);
     };
 
-    const registerShortcut = (shortcut: Shortcut) => {
+    const registerShortcut = (shortcut: framework.Shortcut) => {
       return pushAndReturnDispose(shorcuts, shortcut);
     };
 
@@ -119,8 +109,8 @@ export const commands = framework.manager.activate({
       },
     });
 
-    const openCommandPalette: Command = {
-      text: 'Command Palette',
+    const openCommandPalette: framework.Command = {
+      text: 'framework.Command Palette',
       shortcut: ['CmdOrCtrl', 'Shift', 'P'],
       callback: () => {
         const paletteItems = cmmds.map((item) => ({

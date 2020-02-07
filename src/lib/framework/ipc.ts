@@ -4,7 +4,7 @@ import {
   ElectronMenuItem,
   MainEvents,
   RendererEvents,
-} from '@/ipc-interface';
+} from '@/lib/ipc-interface';
 import { defaultIpcRenderer } from '@/lib/ipc';
 import { uniqueId, Key } from '@/lib/std';
 

@@ -1,6 +1,6 @@
 import { remote } from 'electron';
-import { ElectronMenuPosition } from '@/ipc-interface';
-import { MenuCommand, MenuOptions, transformMenuOptionsAndSaveCallback, ipcSender } from '@/ipcRenderer';
+import { ElectronMenuPosition } from '@/lib/ipc-interface';
+import { MenuCommand, MenuOptions, transformMenuOptionsAndSaveCallback, ipcSender } from '@/lib/framework/ipc';
 
 type ContextFunction = (opts: MenuOptions) => void;
 

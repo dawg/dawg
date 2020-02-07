@@ -30,15 +30,12 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
-import Sequencer from '@/sequencer/Sequencer.vue';
 import { allKeys, keyLookup } from '@/utils';
 import { INotes } from '@/lib/midi-parser';
 import { Note, Instrument, Playlist, Pattern, Score, Sequence } from '@/core';
-import { Watch } from '@/update';
+import { Watch } from '@/lib/update';
 
-@Component({
-  components: { Sequencer },
-})
+@Component
 export default class PianoRollSequencer extends Vue {
   @Prop({ type: Number, required: true }) public beatsPerMeasure!: number;
   @Prop({ type: Object, required: true }) public score!: Score;

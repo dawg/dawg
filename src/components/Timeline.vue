@@ -56,14 +56,11 @@
 import { Vue, Component, Prop, Watch, Mixins, Inject } from 'vue-property-decorator';
 import { ResponsiveMixin, Directions, Nullable } from '@/lib/vutils';
 import { range, Mouse } from '@/lib/std';
-import Progression from '@/sequencer/Progression.vue';
 import * as dawg from '@/dawg';
 
 type Location = 'start' | 'end' | 'center';
 
-@Component({
-  components: { Progression },
-})
+@Component
 export default class Timeline extends Mixins(ResponsiveMixin) {
   @Prop({ type: Number, required: true }) public stepsPerBeat!: number;
   @Prop({ type: Number, required: true }) public beatsPerMeasure!: number;

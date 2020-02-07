@@ -4,8 +4,7 @@ import path from 'path';
 import '@/styles/material.css';
 import '@/styles/fontawesome/all.css';
 import '@/styles/main.css';
-import Update from '@/update';
-import sequencer from '@/sequencer';
+import Update from '@/lib/update';
 import DragNDrop from '@/lib/dragndrop';
 import Split from '@/lib/split';
 import Essentials from '@/lib/essentials';
@@ -78,7 +77,6 @@ const middleware = () => {
   Vue.use(Split);
   Vue.use(Update);
   Vue.use(DragNDrop);
-  Vue.use(sequencer);
   Vue.use(Essentials);
 };
 

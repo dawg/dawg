@@ -1,9 +1,5 @@
 import { ipcMain as ipcM, ipcRenderer as ipcR, Event, WebContents } from 'electron';
-
-// This is duplication but we can't import utils here
-export const keys = <O>(o: O): Array<keyof O & string> => {
-  return Object.keys(o) as Array<keyof O & string>;
-};
+import { keys } from './std';
 
 type ElectronIpcMain = typeof ipcM;
 type ElectronIpcRenderer = typeof ipcR;
