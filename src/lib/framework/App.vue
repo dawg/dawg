@@ -109,12 +109,13 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import Panels from '@/components/Panels.vue';
-import PanelHeaders from '@/components/PanelHeaders.vue';
-import ActivityBar from '@/components/ActivityBar.vue';
-import * as framework from '@/framework';
+import Panels from '@/lib/framework/Panels.vue';
+import PanelHeaders from '@/lib/framework/PanelHeaders.vue';
+import ActivityBar from '@/lib/framework/ActivityBar.vue';
+import * as framework from '@/lib/framework';
 import { sortOrdered } from '@/utils';
 import { createComponent, computed, ref, onMounted, onUnmounted } from '@vue/composition-api';
+
 export default createComponent({
   components: {
     Panels,

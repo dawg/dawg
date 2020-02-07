@@ -1,8 +1,7 @@
-import * as framework from '@/framework';
-import { ipcRenderer } from '@/ipc';
+import * as framework from '@/lib/framework';
 import { Command } from '@/dawg/extensions/core/commands';
 import { uniqueId } from '@/utils';
-import { menuBarCallbacks } from '@/ipcRenderer';
+import { menuBarCallbacks, ipcSender } from '@/ipcRenderer';
 
 interface SubMenu {
   name: string;
@@ -36,7 +35,7 @@ export const menubar = framework.manager.activate({
     };
 
     Object.keys(menus).forEach((menu, i) => {
-      ipcRenderer.send('defineMenu', { menu, order: i });
+      ipcSender.send('defineMenu', { menu, order: i });
     });
 
     const transform = (menu: string, item: Command) => {
@@ -62,11 +61,11 @@ export const menubar = framework.manager.activate({
           alreadyDefined: false,
           addItem: (item: Command) => {
             const electronItem = transform(menu, item);
-            ipcRenderer.send('addToMenuBar', electronItem);
+            ipcSender.send('addToMenuBar', electronItem);
 
             return {
               dispose() {
-                ipcRenderer.send('removeFromMenuBar', electronItem);
+                ipcSender.send('removeFromMenuBar', electronItem);
                 delete menuBarCallbacks[electronItem.uniqueEvent];
               },
             };

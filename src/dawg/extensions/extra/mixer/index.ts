@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import Mixer from '@/dawg/extensions/extra/mixer/Mixer.vue';
-import * as framework from '@/framework';
-import { createExtension } from '@/framework/extensions';
+import * as framework from '@/lib/framework';
+import { createExtension } from '@/lib/framework/extensions';
 import { commands } from '@/dawg/extensions/core/commands';
 import { project } from '@/dawg/extensions/core/project';
 import * as dawg from '@/dawg';

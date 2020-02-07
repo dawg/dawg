@@ -75,7 +75,7 @@ import { range, scale, clamp } from '@/utils';
 import { AnyEffect } from '@/core/filters/effect';
 import { Channel as C } from '@/core/channel';
 import { EffectMap, EffectName } from '@/core';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { ref, computed, watch, createComponent } from '@vue/composition-api';
 
 function sentenceCase(text: string) {

@@ -1,4 +1,4 @@
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 
 type Level = 'info' | 'debug' | 'error' | 'trace' | 'warn';
 type LevelLookup = { [L in Level]: number };

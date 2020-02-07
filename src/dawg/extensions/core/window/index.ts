@@ -1,4 +1,4 @@
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { remote } from 'electron';
 import { commands, Command } from '@/dawg/extensions/core/commands';
 import { menubar } from '@/dawg/extensions/core/menubar';

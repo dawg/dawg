@@ -20,7 +20,7 @@ import { Nullable } from '@/lib/vutils';
 import { Score, Instrument, Pattern } from '@/core';
 import { Watch } from '@/update';
 import { notify } from '@/dawg/extensions/core/notify';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { project } from '@/dawg/extensions/core/project';
 
 @Component({ components: { Synth } })

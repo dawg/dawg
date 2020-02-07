@@ -1,4 +1,4 @@
-import { createExtension } from '@/framework/extensions';
+import { createExtension } from '@/lib/framework/extensions';
 import { createComponent, ref, watch } from '@vue/composition-api';
 import * as dawg from '@/dawg';
 import { vueExtend } from '@/lib/vutils';

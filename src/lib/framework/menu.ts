@@ -1,6 +1,6 @@
 import { remote } from 'electron';
-import { ElectronMenuPosition, ipcRenderer } from '@/ipc';
-import { MenuCommand, MenuOptions, transformMenuOptionsAndSaveCallback } from '@/ipcRenderer';
+import { ElectronMenuPosition } from '@/ipc-interface';
+import { MenuCommand, MenuOptions, transformMenuOptionsAndSaveCallback, ipcSender } from '@/ipcRenderer';
 
 type ContextFunction = (opts: MenuOptions) => void;
 
@@ -27,12 +27,12 @@ export const context: ContextFunction = (opts) => {
     items = [...opts.items, null, ...defaultItems];
   }
 
-  ipcRenderer.send('showMenu', transformMenuOptionsAndSaveCallback({
+  ipcSender.send('showMenu', transformMenuOptionsAndSaveCallback({
     ...opts,
     items,
   }));
 };
 
 export const menu: ContextFunction = (opts) => {
-  ipcRenderer.send('showMenu', transformMenuOptionsAndSaveCallback(opts));
+  ipcSender.send('showMenu', transformMenuOptionsAndSaveCallback(opts));
 };

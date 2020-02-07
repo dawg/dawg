@@ -1,12 +1,11 @@
-import StrictEventEmitter from 'strict-event-emitter-types';
-import { EventEmitter } from 'events';
 import * as events from '@/lib/events';
 
-interface Events {
-  start: (provider: Provider) => void;
-}
+// tslint:disable-next-line:interface-over-type-literal
+type Events = {
+  start: [Provider];
+};
 
-export const bus: StrictEventEmitter<EventEmitter, Events> = new EventEmitter();
+export const bus = new events.StrictEventEmitter<Events>();
 
 export class Provider {
   public progress: number | null = null;

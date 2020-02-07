@@ -12,7 +12,7 @@
 
 <script lang="ts">
 import { Track as T } from '@/core/track';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { watch, ref, computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({

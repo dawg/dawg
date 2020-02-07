@@ -27,7 +27,7 @@ import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import Sequencer from '@/sequencer/Sequencer.vue';
 import { Track } from '@/core';
 import { theme } from '@/dawg/extensions/core/theme';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 
 @Component({
   components: { Sequencer },

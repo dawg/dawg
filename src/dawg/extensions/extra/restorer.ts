@@ -1,8 +1,8 @@
 import * as t from '@/lib/io';
 import * as dawg from '@/dawg';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { watch, Ref } from '@vue/composition-api';
-import { createExtension } from '@/framework/extensions';
+import { createExtension } from '@/lib/framework/extensions';
 
 export const extension = createExtension({
   id: 'dawg.restorer',

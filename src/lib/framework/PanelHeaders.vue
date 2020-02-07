@@ -27,7 +27,7 @@
 </template>
 
 <script lang="ts">
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({

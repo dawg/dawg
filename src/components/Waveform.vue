@@ -12,7 +12,7 @@
 
 <script lang="ts">
 import { Nullable } from '@/lib/vutils';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { createComponent, computed } from '@vue/composition-api';
 import * as Audio from '@/lib/audio';
 

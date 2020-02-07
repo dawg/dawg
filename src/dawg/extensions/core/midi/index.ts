@@ -1,5 +1,5 @@
 import webmidi, { WebMidiEventConnected, WebMidiEventDisconnected, InputEventNoteon, InputEventNoteoff } from 'webmidi';
-import { Extension } from '@/framework/extensions';
+import { Extension } from '@/lib/framework/extensions';
 import { notify } from '@/dawg/extensions/core/notify';
 import { instruments } from '@/dawg/extensions/core/instruments';
 import { keyLookup } from '@/utils';

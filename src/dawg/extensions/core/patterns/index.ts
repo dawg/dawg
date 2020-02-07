@@ -4,7 +4,7 @@ import { ref, computed, createComponent, watch } from '@vue/composition-api';
 import { vueExtend } from '@/lib/vutils';
 import { makeLookup } from '@/utils';
 import { Pattern } from '@/core';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { project } from '@/dawg/extensions/core/project';
 import * as t from '@/lib/io';
 

@@ -20,10 +20,9 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
-import BaseTabs from '@/components/BaseTabs.vue';
-import Tab from '@/components/Tab.vue';
-import * as framework from '@/framework';
+import BaseTabs from '@/lib/framework/BaseTabs.vue';
+import Tab from '@/lib/framework/Tab.vue';
+import * as framework from '@/lib/framework';
 import { createComponent } from '@vue/composition-api';
 
 export default createComponent({

@@ -1,7 +1,8 @@
 import electron, { Menu, MenuItemConstructorOptions } from 'electron';
-import { defaultIpcMain, ElectronMenuBarItem } from '../ipc';
+import { ElectronMenuBarItem, MainEvents, RendererEvents } from '../ipc-interface';
+import { defaultIpcMain } from '../lib/ipc';
 
-defaultIpcMain({
+defaultIpcMain<MainEvents, RendererEvents>({
   showMenu: (event, payload) => {
     const options = payload.items.map((item): electron.MenuItemConstructorOptions => {
       if (item === null) {

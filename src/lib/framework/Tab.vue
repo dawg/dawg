@@ -11,7 +11,6 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
 import { update } from '@/lib/vutils';
 import { createComponent, onMounted, computed } from '@vue/composition-api';
 

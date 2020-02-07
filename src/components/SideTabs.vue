@@ -40,7 +40,7 @@
 <script lang="ts">
 import BaseTabs from '@/components/BaseTabs.vue';
 import Tab from '@/components/Tab.vue';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { createComponent, computed } from '@vue/composition-api';
 
 export default createComponent({

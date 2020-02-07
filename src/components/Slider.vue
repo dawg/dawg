@@ -44,7 +44,7 @@
 
 <script lang="ts">
 import { scale } from '@/utils';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { computed, createComponent, ref } from '@vue/composition-api';
 import * as dawg from '@/dawg';
 

@@ -1,5 +1,5 @@
 import * as keyboard from '@/styles/keyboard';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { palette } from '@/dawg/extensions/core/palette';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { Key } from '@/styles/keyboard';

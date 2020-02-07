@@ -4,7 +4,7 @@ import PianoRollSequencer from '@/dawg/extensions/core/piano-roll/PianoRollSeque
 import Note from '@/dawg/extensions/core/piano-roll/Note.vue';
 import { instruments } from '@/dawg/extensions/core/instruments';
 import { patterns } from '@/dawg/extensions/core/patterns';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { commands } from '@/dawg/extensions/core/commands';
 import { ref, watch } from '@vue/composition-api';
 import { project } from '@/dawg/extensions/core/project';

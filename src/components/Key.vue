@@ -18,7 +18,7 @@
 <script lang="ts">
 import { Component, Prop, Inject, Vue } from 'vue-property-decorator';
 import { Instrument } from '@/core';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { ref, computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({

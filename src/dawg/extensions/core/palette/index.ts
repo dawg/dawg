@@ -1,4 +1,4 @@
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { paletteEvents, PaletteItem } from '@/dawg/extensions/core/palette/common';
 export {
   PaletteItem,

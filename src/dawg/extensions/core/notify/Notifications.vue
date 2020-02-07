@@ -43,7 +43,7 @@
 <script lang="ts">
 import { Vue, Component, Prop} from 'vue-property-decorator';
 import { reverse } from '@/utils';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { Marked } from 'marked-ts';
 
 const directions = {

@@ -8,7 +8,7 @@
 import Vue from 'vue';
 import { Component, Prop } from 'vue-property-decorator';
 import { makeLookup } from '@/utils';
-import { update, Nullable } from '@/lib/vutils';
+import { update } from '@/lib/vutils';
 import { watch, createComponent } from '@vue/composition-api';
 
 export default createComponent({

@@ -70,7 +70,7 @@ import ChannelSelect from '@/components/ChannelSelect.vue';
 import { Note, Instrument, Sequence } from '@/core';
 import { update } from '@/lib/vutils';
 import { createComponent, computed, watch, ref } from '@vue/composition-api';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 
 export default createComponent({
   name: 'Synth',

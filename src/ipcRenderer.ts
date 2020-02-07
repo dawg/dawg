@@ -1,5 +1,12 @@
 import * as keyboard from '@/styles/keyboard';
-import { defaultIpcRenderer, ElectronMenuOptions, ElectronMenuPosition, ElectronMenuItem } from '@/ipc';
+import {
+  ElectronMenuOptions,
+  ElectronMenuPosition,
+  ElectronMenuItem,
+  MainEvents,
+  RendererEvents,
+} from '@/ipc-interface';
+import { defaultIpcRenderer } from '@/lib/ipc';
 import { uniqueId } from '@/utils';
 
 export interface Command<T extends any[]> {
@@ -45,7 +52,7 @@ const callbacks: {
 
 export const menuBarCallbacks: { [k: string]: () => void | undefined } = {};
 
-defaultIpcRenderer({
+export const ipcSender = defaultIpcRenderer<RendererEvents, MainEvents>({
   closeMenu: (_, payload) => {
     // Ok so the only reason we are doing this is to clean up after ourselves.
     // There is not reason we have to do it immediately so we delay by 5 seconds.

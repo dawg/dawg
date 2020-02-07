@@ -29,6 +29,10 @@ export {
 } from 'io-ts';
 import fs from '@/lib/fs';
 
+export {
+  PathReporter,
+};
+
 export interface DecodeSuccess<T> {
   type: 'success';
   decoded: T;

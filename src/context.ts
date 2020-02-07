@@ -1,6 +1,5 @@
 import electron from 'electron';
 import { isDevelopment } from './electron/environment';
-import cliTruncate from 'cli-truncate';
 
 interface Options {
   showInspectElement?: boolean;
@@ -135,13 +134,13 @@ const create = (win: any, options: Options) => {
     // FIXME: https://github.com/electron/electron/issues/5869
     menuTemplate = removeUnusedMenuItems(menuTemplate);
 
-    for (const menuItem of menuTemplate) {
-      // Replace placeholders in menu item labels
-      if (typeof menuItem.label === 'string' && menuItem.label.includes('{selection}')) {
-        const selectionString = typeof props.selectionText === 'string' ? props.selectionText.trim() : '';
-        menuItem.label = menuItem.label.replace('{selection}', cliTruncate(selectionString, 25));
-      }
-    }
+    // for (const menuItem of menuTemplate) {
+    //   // Replace placeholders in menu item labels
+    //   if (typeof menuItem.label === 'string' && menuItem.label.includes('{selection}')) {
+    //     const selectionString = typeof props.selectionText === 'string' ? props.selectionText.trim() : '';
+    //     menuItem.label = menuItem.label.replace('{selection}', cliTruncate(selectionString, 25));
+    //   }
+    // }
 
     if (menuTemplate.length > 0) {
       const menu = (electron.remote ? electron.remote.Menu : electron.Menu).buildFromTemplate(menuTemplate);

@@ -9,14 +9,13 @@ import {
   FieldOptions,
   ReactiveDefinition,
   Setting,
-} from '@/framework/extensions';
+} from '@/lib/framework/extensions';
 import fs from '@/lib/fs';
 import path from 'path';
-import { GLOBAL_PATH, WORKSPACE_PATH, PROJECT_PATH } from '@/framework/constants';
+import { GLOBAL_PATH, WORKSPACE_PATH, PROJECT_PATH } from '@/lib/framework/constants';
 import { reverse, keys } from '@/utils';
 import uuid from 'uuid';
 import { ref } from '@vue/composition-api';
-import { PathReporter } from 'io-ts/lib/PathReporter';
 import { emitter } from '@/lib/events';
 import { decodeItem } from '@/lib/io';
 
@@ -325,11 +324,11 @@ export const manager = {
       let decoded: typeof result['_A'];
       if (result.isLeft()) {
         notificationQueue.push(
-          ...PathReporter.report(result),
+          ...t.PathReporter.report(result),
         );
 
         // tslint:disable-next-line:no-console
-        console.error(PathReporter.report(result).join('\n'));
+        console.error(t.PathReporter.report(result).join('\n'));
         decoded = {};
       } else {
         decoded = result.value;

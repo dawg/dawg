@@ -1,10 +1,10 @@
-import { createExtension } from '@/framework/extensions';
+import { createExtension } from '@/lib/framework/extensions';
 import { Classes } from '@/dawg/extensions/core/theme/types';
 import { defaults } from '@/dawg/extensions/core/theme/defaults';
 import tinycolor from 'tinycolor2';
 import { palette } from '@/dawg/extensions/core/palette';
 import { commands } from '@/dawg/extensions/core/commands';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import * as t from '@/lib/io';
 import { keys } from '@/utils';
 

@@ -1,6 +1,6 @@
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { shell, remote } from 'electron';
-import { createExtension } from '@/framework/extensions';
+import { createExtension } from '@/lib/framework/extensions';
 
 export const extension = createExtension({
   id: 'dawg.help-inks',

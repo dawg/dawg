@@ -2,11 +2,10 @@ import fs from '@/lib/fs';
 import * as t from '@/lib/io';
 import { PythonShell, Options } from 'python-shell';
 import path from 'path';
-import { watch } from '@vue/composition-api';
 import { sampleViewer } from '@/dawg/extensions/core/sample-viewer';
 import { busy } from '@/dawg/extensions/core/busy';
 import { notify } from '@/dawg/extensions/core/notify';
-import { createExtension } from '@/framework/extensions';
+import { createExtension } from '@/lib/framework/extensions';
 
 interface PythonError {
   type: 'error';
@@ -58,7 +57,7 @@ export async function runModel(opts: PythonOptions) {
         args: [opts.samplePath],
     };
 
-    PythonShell.run(opts.scriptPath, options, (err?: Error) => {
+    PythonShell.run(opts.scriptPath, options, (err) => {
       if (err) {
         return opts.cb({
           type: 'error',

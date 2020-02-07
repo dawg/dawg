@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import { createExtension } from '@/framework/extensions';
+import { createExtension } from '@/lib/framework/extensions';
 import * as t from '@/lib/io';
 import { commands } from '@/dawg/extensions/core/commands';
 import { palette } from '@/dawg/extensions/core/palette';
@@ -14,7 +14,7 @@ import { ref, watch } from '@vue/composition-api';
 import { project } from '@/dawg/extensions/core/project';
 import { controls } from '@/dawg/extensions/core/controls';
 import ChunkGhostComponent from '@/dawg/extensions/core/record/ChunkGhost.vue';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { blobsToAudioBuffer } from '@/lib/wav';
 
 export const RECORDING_PATH = path.join(framework.DOCUMENTS_PROJECT_PATH, 'recordings');
