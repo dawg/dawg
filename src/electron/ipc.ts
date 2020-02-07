@@ -1,5 +1,4 @@
-import electron from 'electron';
-import { Menu, MenuItemConstructorOptions, app } from 'electron';
+import electron, { Menu, MenuItemConstructorOptions } from 'electron';
 import { defaultIpcMain, ElectronMenuBarItem } from '../ipc';
 
 defaultIpcMain({

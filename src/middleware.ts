@@ -7,8 +7,6 @@ import '@/styles/main.css';
 import Update from '@/update';
 import sequencer from '@/sequencer';
 import DragNDrop from '@/dragndrop';
-import Draggable from '@/draggable';
-import Knobs from '@/knobs';
 import Split from '@/split';
 
 const middleware = () => {
@@ -78,9 +76,7 @@ const middleware = () => {
   Vue.use(Split);
   Vue.use(Update);
   Vue.use(DragNDrop);
-  Vue.use(Knobs);
   Vue.use(sequencer);
-  Vue.use(Draggable);
 };
 
 export default middleware;

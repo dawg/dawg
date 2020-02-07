@@ -100,11 +100,11 @@ export default createComponent({
     }
 
     function automateVolume() {
-      context.root.$automate(props.instrument, 'volume');
+      // context.root.$automate(props.instrument, 'volume');
     }
 
     function automatePan() {
-      context.root.$automate(props.instrument, 'pan');
+      // context.root.$automate(props.instrument, 'pan');
     }
 
     watch(active, () => {

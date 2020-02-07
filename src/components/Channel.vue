@@ -165,11 +165,11 @@ export default createComponent({
     }
 
     function automatePan() {
-      context.root.$automate(props.channel, 'panner');
+      // context.root.$automate(props.channel, 'panner');
     }
 
     function automateVolume() {
-      context.root.$automate(props.channel, 'volume');
+      // context.root.$automate(props.channel, 'volume');
     }
 
     function panInput(v: number) {

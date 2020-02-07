@@ -43,7 +43,6 @@
 </template>
 
 <script lang="ts">
-import { DragElement } from '@/draggable';
 import { scale } from '@/utils';
 import * as framework from '@/framework';
 import { computed, createComponent, ref } from '@vue/composition-api';
@@ -51,7 +50,6 @@ import * as dawg from '@/dawg';
 
 export default createComponent({
   name: 'Slider',
-  components: { DragElement },
   props: {
     height: { type: Number, default: 150 },
     width: { type: Number, default: 6 },

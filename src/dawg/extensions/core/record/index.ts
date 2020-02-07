@@ -9,7 +9,6 @@ import audioBufferToWav from 'audiobuffer-to-wav';
 import path from 'path';
 import fs from '@/fs';
 import { ChunkGhost } from '@/core/ghost';
-import { remote } from 'electron';
 import { Sample, ScheduledSample } from '@/core';
 import { ref, watch } from '@vue/composition-api';
 import { project } from '@/dawg/extensions/core/project';

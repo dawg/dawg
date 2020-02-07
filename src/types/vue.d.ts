@@ -1,7 +1,6 @@
 // 1. Make sure to import 'vue' before declaring augmented types
 import Vue from 'vue'
 import { UpdateAugmentation } from '@/update';
-import { KnobAugmentation } from '@/knobs';
 import { Automatable } from '@/core';
 
 // 2. Specify a file with the types you want to augment
@@ -9,6 +8,6 @@ import { Automatable } from '@/core';
 declare module 'vue/types/vue' {
   // 3. Declare augmentation for Vue
   // I'm not sure that this is the best way to do things...
-  interface Vue extends  UpdateAugmentation, KnobAugmentation<Automatable> {
+  interface Vue extends  UpdateAugmentation {
   }
 }
