@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import BusySignal from '@/dawg/extensions/core/busy/BusySignal.vue';
 import { Provider, bus } from '@/dawg/extensions/core/busy/helpers';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 
 /**
  * The configuration options.

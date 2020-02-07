@@ -1,12 +1,12 @@
 import Vue from 'vue';
-import { createExtension } from '@/framework/extensions';
+import { createExtension } from '@/lib/framework/extensions';
 import * as dawg from '@/dawg';
 import ExportProgressModal from '@/dawg/extensions/extra/exporter/ExportProgressModal.vue';
 import { ref } from '@vue/composition-api';
-import * as Audio from '@/audio';
+import * as Audio from '@/lib/audio';
 import { remote } from 'electron';
-import { blobsToAudioBuffer, audioBufferToWav } from '@/converter';
-import fs from '@/fs';
+import { blobsToAudioBuffer, audioBufferToWav } from '@/lib/wav';
+import fs from '@/lib/fs';
 import Tone from 'tone';
 
 export const extension = createExtension({

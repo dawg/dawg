@@ -15,12 +15,10 @@
 </template>
 
 <script lang="ts">
-import { DragElement } from '@/draggable';
 import { ref, computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'ChannelSelect',
-  components: { DragElement },
   props: {
     value: Number as () => number | undefined,
   },

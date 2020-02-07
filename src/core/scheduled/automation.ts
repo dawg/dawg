@@ -1,9 +1,9 @@
-import * as t from '@/io';
+import * as t from '@/lib/io';
 import { AutomationClip } from '@/core/automation';
-import * as Audio from '@/audio';
+import * as Audio from '@/lib/audio';
 import { Schedulable, SchedulableType } from '@/core/scheduled/schedulable';
 import { Serializable } from '@/core/serializable';
-import { literal } from '@/utils';
+import { literal } from '@/lib/std';
 
 export const ScheduledAutomationType = t.intersection([
   t.type({

@@ -1,7 +1,7 @@
-import * as t from '@/io';
+import * as t from '@/lib/io';
 import { PointType, IPoint, Point } from '@/core/automation/point';
 import uuid from 'uuid';
-import * as Audio from '@/audio';
+import * as Audio from '@/lib/audio';
 import { Serializable } from '@/core/serializable';
 import { Channel } from '@/core/channel';
 import { Instrument } from '@/core/instrument/instrument';

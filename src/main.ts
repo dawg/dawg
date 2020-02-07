@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import middleware from '@/middleware';
-import App from '@/framework/App.vue';
+import App from '@/lib/framework/App.vue';
 
 middleware();
 

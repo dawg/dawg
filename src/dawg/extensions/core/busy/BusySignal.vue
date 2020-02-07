@@ -23,7 +23,7 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Provider, bus } from '@/dawg/extensions/core/busy/helpers';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 
 @Component
 export default class BusySignal extends Vue {

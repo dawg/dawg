@@ -1,8 +1,8 @@
 import { Folder, File } from '@/dawg/extensions/extra/explorer/types';
 import { ref, Ref } from '@vue/composition-api';
 import path from 'path';
-import fs, { FSWatcher } from '@/fs';
-import { Keys } from '@/utils';
+import fs, { FSWatcher } from '@/lib/fs';
+import { Keys } from '@/lib/std';
 import * as dawg from '@/dawg';
 
 // Beware, naming is a bit weird. Hopefully types help you understand what things are.
@@ -186,7 +186,7 @@ const keydown = (
     return;
   }
 
-  if (event.keyCode === Keys.DOWN) {
+  if (event.keyCode === Keys.Down) {
     if (item.type === 'folder' && item.isExpanded.value) {
       const firstChild = item.children[0];
       if (firstChild) {
@@ -222,7 +222,7 @@ const keydown = (
     }
   }
 
-  if (event.keyCode === Keys.UP) {
+  if (event.keyCode === Keys.Up) {
     if (item.index === 0) {
       if (item.parent === null) {
         return;
@@ -267,13 +267,13 @@ const keydown = (
     return;
   }
 
-  if (event.keyCode === Keys.RIGHT) {
+  if (event.keyCode === Keys.Right) {
     if (!item.isExpanded.value) {
       item.isExpanded.value = true;
     }
   }
 
-  if (event.keyCode === Keys.LEFT) {
+  if (event.keyCode === Keys.Left) {
     if (item.isExpanded.value) {
       item.isExpanded.value = false;
     } else {

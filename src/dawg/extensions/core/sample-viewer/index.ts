@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import SampleViewer from '@/dawg/extensions/core/sample-viewer/SampleViewer.vue';
 import { Action } from '@/dawg/extensions/core/sample-viewer/types';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { ref, watch } from '@vue/composition-api';
 import { Sample } from '@/core';
 

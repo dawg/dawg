@@ -8,7 +8,7 @@
 
 <script lang="ts">
 import tinycolor from 'tinycolor2';
-import * as Audio from '@/audio';
+import * as Audio from '@/lib/audio';
 import { computed, onUnmounted, createComponent, ref } from '@vue/composition-api';
 
 export default createComponent({

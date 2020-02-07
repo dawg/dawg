@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import Synths from '@/dawg/extensions/core/instruments/Synths.vue';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { ref, Ref, computed, watch } from '@vue/composition-api';
 import { patterns } from '@/dawg/extensions/core/patterns';
 import { Score } from '@/core';

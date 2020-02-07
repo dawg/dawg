@@ -1,8 +1,8 @@
-import { createExtension } from '@/framework/extensions';
+import { createExtension } from '@/lib/framework/extensions';
 import TimeDisplay from '@/dawg/extensions/extra/time/TimeDisplay.vue';
 import * as dawg from '@/dawg';
 import { createComponent, ref, watch } from '@vue/composition-api';
-import { vueExtend } from '@/utils';
+import { vueExtend } from '@/lib/vutils';
 
 export const extension = createExtension({
   id: 'dawg.time',

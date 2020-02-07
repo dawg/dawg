@@ -18,7 +18,7 @@
 <script lang="ts">
 import { Mixins, Prop, Component, Inject, Vue } from 'vue-property-decorator';
 import { allKeys } from '@/utils';
-import { Watch } from '@/update';
+import { Watch } from '@/lib/update';
 import { Note } from '@/core';
 import { computed, createComponent } from '@vue/composition-api';
 

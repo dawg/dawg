@@ -1,18 +1,17 @@
 import * as dawg from '@/dawg';
-import * as t from '@/io';
+import * as t from '@/lib/io';
 import { User } from 'firebase';
 import backend, { ProjectInfo } from '@/dawg/extensions/extra/backup/backend';
-import { PathReporter } from 'io-ts/lib/PathReporter';
 import auth from '@/dawg/extensions/extra/backup/auth';
 import firebase from 'firebase/app';
 import 'firebase/database';
 import 'firebase/auth';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, watch, ref, createComponent } from '@vue/composition-api';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { project, ProjectType, IProject } from '@/dawg/extensions/core/project';
-import { createExtension, VueInput } from '@/framework/extensions';
-import { vueExtend } from '@/utils';
+import { createExtension, VueInput } from '@/lib/framework/extensions';
+import { vueExtend } from '@/lib/vutils';
 
 export const extension = createExtension({
   id: 'dawg.backup',
@@ -150,7 +149,7 @@ export const extension = createExtension({
 
         const decoded = ProjectType.decode(res.project);
         if (decoded.isLeft()) {
-          const errors = PathReporter.report(decoded);
+          const errors = t.PathReporter.report(decoded);
           dawg.notify.error('Unable to parse project from backup', {
             detail: errors.join('\n'),
           });

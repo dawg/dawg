@@ -1,4 +1,4 @@
-import * as events from '@/events';
+import * as events from '@/lib/events';
 
 export interface PaletteOptions {
   placeholder?: string;

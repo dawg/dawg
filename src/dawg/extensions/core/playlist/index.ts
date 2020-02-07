@@ -1,11 +1,11 @@
 import Vue from 'vue';
-import * as t from '@/io';
+import * as t from '@/lib/io';
 import { project } from '@/dawg/extensions/core/project';
 // FIXME(2) Remove this import
 import { record } from '@/dawg/extensions/core/record';
 import { ScheduledPattern, ScheduledSample, PlaylistElements } from '@/core';
 import { ref } from '@vue/composition-api';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { Ghost } from '@/core/ghost';
 import { controls } from '@/dawg/extensions/core/controls';
 import { log } from '@/dawg/extensions/core/log';

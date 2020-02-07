@@ -1,16 +1,16 @@
 import FileExplorer from '@/dawg/extensions/extra/explorer/FileExplorer.vue';
 import * as dawg from '@/dawg';
-import * as t from '@/io';
+import * as t from '@/lib/io';
 import { remote } from 'electron';
 import { Extensions, Folder } from '@/dawg/extensions/extra/explorer/types';
-import { loadBuffer } from '@/wav';
-import parser from '@/midi-parser';
-import fs from '@/fs';
+import { loadBuffer } from '@/lib/wav';
+import parser from '@/lib/midi-parser';
+import fs from '@/lib/fs';
 import { ScheduledSample, Sample } from '@/core';
 import { commands } from '@/dawg/extensions/core/commands';
-import { createExtension } from '@/framework/extensions';
+import { createExtension } from '@/lib/framework/extensions';
 import { createComponent } from '@vue/composition-api';
-import { vueExtend } from '@/utils';
+import { vueExtend } from '@/lib/vutils';
 import { createFileExplorer, FileExplorerAPI } from '@/dawg/extensions/extra/explorer/common';
 
 const loadMidi = async (path: string) => {

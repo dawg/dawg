@@ -1,0 +1,5 @@
+# Lib
+The idea about this folder is that everything in `lib` could be their own package. They are very different and serve different purposes, but they don't merit being included in the core code. I've tried to create a monorepo but they are sooo hard sometimes to use.
+
+## Restrictions
+Things in `lib` should ONLY access other things in `lib` and external libraries :)

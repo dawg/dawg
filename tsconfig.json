@@ -33,11 +33,7 @@
   },
   "include": [
     "src/**/*.ts",
-    "src/**/*.tsx",
-    "src/**/*.vue",
-    "tests/**/*.ts",
-    "tests/**/*.tsx", 
-    "src/index.stories.js"
+    "src/**/*.vue"
   ],
   "exclude": [
     "node_modules"

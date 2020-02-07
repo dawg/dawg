@@ -11,7 +11,8 @@
 </template>
 
 <script lang="ts">
-import { Keys, update } from '@/utils';
+import { Keys } from '@/lib/std';
+import { update } from '@/lib/vutils';
 import { onMounted, ref, createComponent, watch } from '@vue/composition-api';
 
 export default createComponent({
@@ -70,7 +71,7 @@ export default createComponent({
     }
 
     function keydown(e: KeyboardEvent) {
-      if (e.keyCode !== Keys.ENTER) { return; }
+      if (e.keyCode !== Keys.Return) { return; }
       if (el.value) {
         el.value.blur();
       }

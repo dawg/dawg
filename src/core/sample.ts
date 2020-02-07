@@ -1,9 +1,9 @@
 import path from 'path';
-import * as t from '@/io';
+import * as t from '@/lib/io';
 import uuid from 'uuid';
-import * as Audio from '@/audio';
+import * as Audio from '@/lib/audio';
 import { Serializable } from '@/core/serializable';
-import { Context } from '@/audio/context';
+import { Context } from '@/lib/audio/context';
 
 export const SampleType = t.type({
   id: t.string,

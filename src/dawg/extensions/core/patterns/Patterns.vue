@@ -23,9 +23,9 @@
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Pattern, ScheduledPattern } from '@/core';
-import { Nullable } from '@/utils';
-import { Watch } from '@/update';
-import * as framework from '@/framework';
+import { Nullable } from '@/lib/vutils';
+import { Watch } from '@/lib/update';
+import * as framework from '@/lib/framework';
 import { theme } from '@/dawg/extensions/core/theme';
 
 @Component

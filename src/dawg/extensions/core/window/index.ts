@@ -1,6 +1,6 @@
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { remote } from 'electron';
-import { commands, Command } from '@/dawg/extensions/core/commands';
+import { commands } from '@/dawg/extensions/core/commands';
 import { menubar } from '@/dawg/extensions/core/menubar';
 
 export const window = framework.manager.activate({
@@ -22,7 +22,7 @@ export const window = framework.manager.activate({
       callback: close,
     }));
 
-    const reloadCommand: Command = {
+    const reloadCommand: framework.Command = {
       text: 'Reload',
       shortcut: ['CmdOrCtrl', 'R'],
       callback: reload,

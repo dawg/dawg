@@ -1,19 +1,20 @@
 import tmp from 'tmp';
 import uuid from 'uuid';
-import fs from '@/fs';
-import * as Audio from '@/audio';
-import * as t from '@/io';
-import { createExtension } from '@/framework/extensions';
+import fs from '@/lib/fs';
+import * as Audio from '@/lib/audio';
+import * as t from '@/lib/io';
+import { createExtension } from '@/lib/framework/extensions';
 import { remote } from 'electron';
-import { loadBufferSync } from '@/wav';
-import * as framework from '@/framework';
+import { loadBufferSync } from '@/lib/wav';
+import * as framework from '@/lib/framework';
 import { notify } from '@/dawg/extensions/core/notify';
-import { commands, Command } from '@/dawg/extensions/core/commands';
+import { commands } from '@/dawg/extensions/core/commands';
 import { menubar } from '@/dawg/extensions/core/menubar';
 import { computed, ref, watch, Ref } from '@vue/composition-api';
-import { addEventListener, findUniqueName, makeLookup, range, chain } from '@/utils';
+import { makeLookup, range, chain } from '@/lib/std';
+import { findUniqueName } from '@/utils';
 import { log } from '@/dawg/extensions/core/log';
-import { emitter } from '@/events';
+import { addEventListener, emitter } from '@/lib/events';
 import {
   Playlist,
   Pattern,
@@ -783,7 +784,7 @@ const extension = createExtension({
       });
     }));
 
-    const save: Command = {
+    const save: framework.Command = {
       text: 'Save',
       shortcut: ['CmdOrCtrl', 'S'],
       callback: async () => {
@@ -793,7 +794,7 @@ const extension = createExtension({
       },
     };
 
-    const saveAs: Command = {
+    const saveAs: framework.Command = {
       text: 'Save',
       shortcut: ['CmdOrCtrl', 'Shift', 'S'],
       callback: async () => {
@@ -803,7 +804,7 @@ const extension = createExtension({
       },
     };
 
-    const open: Command = {
+    const open: framework.Command = {
       text: 'Open',
       shortcut: ['CmdOrCtrl', 'O'],
       callback: async () => {
@@ -825,7 +826,7 @@ const extension = createExtension({
       },
     };
 
-    const newProject: Command = {
+    const newProject: framework.Command = {
       shortcut: ['CmdOrCtrl', 'N'],
       text: 'New Project',
       callback: async () => {
@@ -836,7 +837,7 @@ const extension = createExtension({
       },
     };
 
-    const undo: Command = {
+    const undo: framework.Command = {
       shortcut: ['CmdOrCtrl', 'Z'],
       text: 'Undo',
       callback: () => {
@@ -844,7 +845,7 @@ const extension = createExtension({
       },
     };
 
-    const redo: Command = {
+    const redo: framework.Command = {
       shortcut: ['CmdOrCtrl', 'Shift', 'Z'],
       text: 'Redo',
       callback: () => {

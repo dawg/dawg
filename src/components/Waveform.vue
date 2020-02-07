@@ -11,10 +11,10 @@
 </template>
 
 <script lang="ts">
-import { Nullable } from '@/utils';
-import * as framework from '@/framework';
+import { Nullable } from '@/lib/vutils';
+import * as framework from '@/lib/framework';
 import { createComponent, computed } from '@vue/composition-api';
-import * as Audio from '@/audio';
+import * as Audio from '@/lib/audio';
 
 export default createComponent({
   name: 'Waveform',

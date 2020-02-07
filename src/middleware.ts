@@ -4,12 +4,11 @@ import path from 'path';
 import '@/styles/material.css';
 import '@/styles/fontawesome/all.css';
 import '@/styles/main.css';
-import Update from '@/update';
-import sequencer from '@/sequencer';
-import DragNDrop from '@/dragndrop';
-import Draggable from '@/draggable';
-import Knobs from '@/knobs';
-import Split from '@/split';
+import Update from '@/lib/update';
+import DragNDrop from '@/lib/dragndrop';
+import Split from '@/lib/split';
+import Essentials from '@/lib/essentials';
+
 
 const middleware = () => {
   // This imports all .vue files in the components folder
@@ -17,7 +16,7 @@ const middleware = () => {
     './components',
     // Whether or not to look in subfolders
     false,
-    /\w+\.vue$/,
+    /\w+\.vue/,
   );
 
   components.keys().forEach((fileName) => {
@@ -41,7 +40,7 @@ const middleware = () => {
     './dawg/extensions/extra',
     // Whether or not to look in subfolders
     true,
-    /^.+\.ts$/,
+    /^.+\.ts/,
   );
 
   extensions.keys().forEach((fileNameOrFolderName) => {
@@ -78,9 +77,7 @@ const middleware = () => {
   Vue.use(Split);
   Vue.use(Update);
   Vue.use(DragNDrop);
-  Vue.use(Knobs);
-  Vue.use(sequencer);
-  Vue.use(Draggable);
+  Vue.use(Essentials);
 };
 
 export default middleware;

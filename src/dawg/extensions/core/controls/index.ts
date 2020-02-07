@@ -1,10 +1,10 @@
 import Vue from 'vue';
 import VerticalSwitch from '@/dawg/extensions/core/controls/VerticalSwitch.vue';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { createComponent, computed, ref, watch } from '@vue/composition-api';
 import { commands } from '@/dawg/extensions/core/commands';
-import * as t from '@/io';
-import { vueExtend } from '@/utils';
+import * as t from '@/lib/io';
+import { vueExtend } from '@/lib/vutils';
 import * as dawg from '@/dawg';
 import { patterns as patternsExtension } from '@/dawg/extensions/core/patterns';
 

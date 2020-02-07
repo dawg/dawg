@@ -71,11 +71,11 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { range, scale, clamp } from '@/utils';
+import { range, scale, clamp } from '@/lib/std';
 import { AnyEffect } from '@/core/filters/effect';
 import { Channel as C } from '@/core/channel';
 import { EffectMap, EffectName } from '@/core';
-import * as framework from '@/framework';
+import * as framework from '@/lib/framework';
 import { ref, computed, watch, createComponent } from '@vue/composition-api';
 
 function sentenceCase(text: string) {
@@ -165,11 +165,11 @@ export default createComponent({
     }
 
     function automatePan() {
-      context.root.$automate(props.channel, 'panner');
+      // context.root.$automate(props.channel, 'panner');
     }
 
     function automateVolume() {
-      context.root.$automate(props.channel, 'volume');
+      // context.root.$automate(props.channel, 'volume');
     }
 
     function panInput(v: number) {
