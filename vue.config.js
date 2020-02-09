@@ -24,7 +24,7 @@ const config = {
   }
 }
 
-if(process.env.TRAVIS) {
+if(process.env.GITHUB_ACTION) {
   config.pluginOptions.karma.karmaConfig.browsers = ['Chrome_travis_ci'];
 }
 
