@@ -31,7 +31,9 @@ export default class BeatLines extends Vue {
   }
 
   public fill(step: number) {
-    return step % this.beatsPerMeasure ? this.stepColor : this.beatColor;
+    // See https://github.com/apache/cordova-android/issues/645
+    // for why we prepend '%23'
+    return '%23' + (step % this.beatsPerMeasure ? this.stepColor : this.beatColor).slice(1);
   }
 
   get stepPx() {
@@ -49,7 +51,7 @@ export default class BeatLines extends Vue {
 
     for ( let step = 1; step < this.measureSteps; step++ ) {
       const rectX = this.stepPx + this.stepPx * ( step - 1 ) - .5;
-      const fill = step % this.beatsPerMeasure ? this.stepColor : this.beatColor;
+      const fill = this.fill(step);
       steps.push(`<rect height='1px' width='1px' y='0' x='${rectX}' fill='${fill}'/>`);
     }
 

@@ -13,7 +13,9 @@ import { isDevelopment } from './lib/electron/environment';
 let win: BrowserWindow | null;
 
 // Standard scheme must be registered before the app is ready
-protocol.registerStandardSchemes(['app'], { secure: true });
+protocol.registerSchemesAsPrivileged([{
+  scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true },
+}]);
 function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
@@ -23,6 +25,9 @@ function createWindow() {
     minWidth: 800,
     // @ts-ignore
     icon: path.join(__static as string, 'icon.png'),
+    webPreferences: {
+      nodeIntegration: true,
+    },
   });
 
   // Make the menu initially not visible

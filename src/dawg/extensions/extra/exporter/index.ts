@@ -37,7 +37,7 @@ export const extension = createExtension({
     a.style.display = 'none';
     const command = {
       text: 'Export',
-      callback: () => {
+      callback: async () => {
         const record = (filePath: string) => {
           open.value = true;
           progress.value = 0;
@@ -96,15 +96,15 @@ export const extension = createExtension({
           dawg.project.master.transport.start();
         };
 
-        const path = remote.dialog.showSaveDialog(remote.getCurrentWindow(), {
+        const path = await remote.dialog.showSaveDialog(remote.getCurrentWindow(), {
           filters: [{ name: 'WAV', extensions: ['wav'] }],
         });
 
-        if (!path) {
+        if (!path.filePath) {
           return;
         }
 
-        record(path);
+        record(path.filePath);
       },
     };
 

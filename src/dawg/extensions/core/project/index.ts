@@ -321,7 +321,9 @@ const createApi = () => {
 
     let projectPath = framework.manager.getOpenedFile();
     if (!projectPath || opts.forceDialog) {
-      projectPath = remote.dialog.showSaveDialog(remote.getCurrentWindow(), {}) || null;
+      const saveDialogReturn = await remote.dialog.showSaveDialog(remote.getCurrentWindow(), {});
+      projectPath = saveDialogReturn.bookmark || null;
+
 
       // If the user cancels the dialog
       if (!projectPath) {
@@ -809,16 +811,17 @@ const extension = createExtension({
       shortcut: ['CmdOrCtrl', 'O'],
       callback: async () => {
         // files can be undefined. There is an issue with the .d.ts files.
-        const files = remote.dialog.showOpenDialog(
+        const files = await remote.dialog.showOpenDialog(
           remote.getCurrentWindow(),
           { filters: FILTERS, properties: ['openFile'] },
         );
 
-        if (!files) {
+
+        if (files.filePaths.length === 0) {
           return;
         }
 
-        const filePath = files[0];
+        const filePath = files.filePaths[0];
         await api.setOpenedFile(filePath);
 
         const window = remote.getCurrentWindow();
