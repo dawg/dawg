@@ -147,16 +147,15 @@ export const extension = createExtension({
           return;
         }
 
-        const decoded = ProjectType.decode(res.project);
-        if (decoded.isLeft()) {
-          const errors = t.PathReporter.report(decoded);
+        const result = dawg.io.decodeItem(ProjectType, res.project);
+        if (result.type === 'error') {
           dawg.notify.error('Unable to parse project from backup', {
-            detail: errors.join('\n'),
+            detail: result.message,
           });
           return;
         }
 
-        dawg.project.openTempProject(decoded.value);
+        dawg.project.openTempProject(result.decoded);
       });
     }
 

@@ -320,18 +320,17 @@ export const manager = {
       }
 
       const type = getPartialFromDefinition(extensionProps);
-      const result = type.decode(o);
-      let decoded: typeof result['_A'];
-      if (result.isLeft()) {
-        notificationQueue.push(
-          ...t.PathReporter.report(result),
-        );
+
+      const result = t.decodeItem(type, o);
+      let decoded: t.TypeOf<typeof type>;
+      if (result.type === 'error') {
+        notificationQueue.push(result.message);
 
         // tslint:disable-next-line:no-console
-        console.error(t.PathReporter.report(result).join('\n'));
+        console.error(result.message);
         decoded = {};
       } else {
-        decoded = result.value;
+        decoded = result.decoded;
       }
 
       const reactive = {} as ReactiveDefinition<P>;

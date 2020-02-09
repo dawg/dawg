@@ -28,10 +28,7 @@ export {
   Any,
 } from 'io-ts';
 import fs from '@/lib/fs';
-
-export {
-  PathReporter,
-};
+import { isLeft } from 'fp-ts/lib/Either';
 
 export interface DecodeSuccess<T> {
   type: 'success';
@@ -45,7 +42,7 @@ export interface Error {
 
 export const decodeItem = <T>(type: t.Type<T>, item: unknown): Error | DecodeSuccess<T> => {
   const i = type.decode(item);
-  if (i.isLeft()) {
+  if (isLeft(i)) {
     const errors = PathReporter.report(i);
     return {
       type: 'error',
@@ -55,7 +52,7 @@ export const decodeItem = <T>(type: t.Type<T>, item: unknown): Error | DecodeSuc
 
   return {
     type: 'success',
-    decoded: i.value,
+    decoded: i.right,
   };
 };
 
