@@ -1,5 +1,7 @@
 name: Release
 
+# https://github.com/actions/create-release/issues/14
+
 on: [push]
 
 jobs:
@@ -82,5 +84,6 @@ jobs:
       - name: Upload Release Asset
         uses: AButler/upload-release-assets@v2.0
         with:
+          release-tag: Test
           files: 'dist_electron/*'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
