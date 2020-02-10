@@ -1,4 +1,4 @@
-name: Testing PR
+name: Testing
 
 on: [pull_request]
 
@@ -25,11 +25,7 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: ${{ matrix.node-version }}
-    # - run: export DISPLAY=:99.0
-    # - run: sh -e /etc/init.d/xvfb start
-    # - run: sleep 3 # give xvfb some time to start
     - run: npm ci
-    # - run: npm run build --if-present
     - run: npm run test:unit
       env:
         CI: true
