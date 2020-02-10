@@ -14,7 +14,7 @@ const config = {
       karmaConfig: {
         browsers: ['Chrome'],
         customLaunchers: {
-          Chrome_travis_ci: {
+          HeadlessChrome: {
             base: 'Chrome',
             flags: ['--no-sandbox']
           }
@@ -25,7 +25,8 @@ const config = {
 }
 
 if(process.env.GITHUB_ACTION) {
-  config.pluginOptions.karma.karmaConfig.browsers = ['Chrome_travis_ci'];
+  console.log('[vue.config.js] In GitHub Actions. Setting browser to HeadlessChrome')
+  config.pluginOptions.karma.karmaConfig.browsers = ['HeadlessChrome'];
 }
 
 module.exports = config;
