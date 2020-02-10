@@ -1,23 +1,31 @@
 name: Release
 
+# Inspiration
 # https://github.com/actions/create-release/issues/14
 
-on: [push]
+# FIXME Make file names consistent??
+# - "dist_electron/Vusic 0.1.1.AppImage"
+# - "dist_electron/vusic_0.1.1_amd64.deb"
+# - "dist_electron/vusic_0.1.1.rpm"
+# - "dist_electron/Vusic-0.1.1.dmg"
+# - "dist_electron\\Vusic Setup 0.1.1.exe"
+
+on:
+  push:
+    # This enforces the tag naming standard
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
 jobs:
   release:
     name: Create GitHub Release
-    # TODO add back
-    # if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
 
     steps:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          # TODO remove
-          tag_name: Test
-          draft: true
+          tag_name: ${{ github.ref }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Output Release URL File
@@ -30,8 +38,6 @@ jobs:
 
   build:
     name: Build
-    # TODO add back
-    # if: startsWith(github.ref, 'refs/tags/')
     needs: [release]
     runs-on: ${{ matrix.os }}
 
@@ -84,6 +90,6 @@ jobs:
       - name: Upload Release Asset
         uses: AButler/upload-release-assets@v2.0
         with:
-          release-tag: Test
+          release-tag: ${{ github.ref }}
           files: 'dist_electron/*'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
