@@ -11,7 +11,7 @@ const create = ( o?: SectionOpts) => {
   return new Section(o);
 };
 
-describe.only('Split', () => {
+describe('Split', () => {
   const root = create({ name: 'Root', direction: 'horizontal' });
 
   const a = create({ name: 'a', direction: 'vertical' });

@@ -1,0 +1,97 @@
+name: Release
+
+# Inspiration
+# https://github.com/actions/create-release/issues/14
+
+# FIXME Make file names consistent??
+# - "dist_electron/Vusic 0.1.1.AppImage"
+# - "dist_electron/vusic_0.1.1_amd64.deb"
+# - "dist_electron/vusic_0.1.1.rpm"
+# - "dist_electron/Vusic-0.1.1.dmg"
+# - "dist_electron\\Vusic Setup 0.1.1.exe"
+
+on:
+  push:
+    branches: [master]
+    # This enforces the tag naming standard
+    tags:
+      - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+jobs:
+  release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ github.ref }}
+          tag_name: ${{ github.ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Output Release URL File
+        run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
+      - name: Save Release URL File for publish
+        uses: actions/upload-artifact@v1
+        with:
+          name: release_url
+          path: release_url.txt
+
+  build:
+    name: Build
+    needs: [release]
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+        matrix:
+          os: [macos-latest, windows-latest, ubuntu-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Load Release URL File from release job
+        uses: actions/download-artifact@v1
+        with:
+          name: release_url
+
+      - name: Cache Node Modules
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: 10.x
+      - run: npm ci
+      - run: npm run install-app-deps
+
+      # https://github.com/electron-userland/electron-builder/issues/4176
+      - name: Temporarily fix electron-builder (Windows, Linux)
+        if: matrix.os != 'macos-latest'
+        run: |
+          sed -i 's/\^\[\\w/\^\[.\\w/g' node_modules/builder-util/out/util.js
+        shell: bash
+
+      - name: Temporarily fix electron-builder (MacOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          sed -i '' 's/\^\[\\w/\^\[.\\w/g' node_modules/builder-util/out/util.js
+        shell: bash
+
+      - run: npm run build
+        env:
+          CI: true
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Release Asset
+        uses: AButler/upload-release-assets@v2.0
+        with:
+          release-tag: ${{ github.ref }}
+          files: 'dist_electron/*'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
