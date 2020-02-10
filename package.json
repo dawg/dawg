@@ -23,7 +23,7 @@
     "@vue/composition-api": "^0.3.4",
     "babel-plugin-macros": "^2.8.0",
     "core-js": "^3.6.4",
-    "firebase": "^5.8.6",
+    "firebase": "^7.8.1",
     "fp-ts": "2.4.4",
     "hotkeys-js": "^3.7.3",
     "io-ts": "^2.0.6",
