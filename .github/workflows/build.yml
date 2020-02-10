@@ -12,6 +12,8 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
+          # TODO remove
+          tag_name: Test
           draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
