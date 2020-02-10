@@ -27,7 +27,7 @@ jobs:
         uses: actions/setup-node@v1
         # if: startsWith(github.ref, 'refs/tags/')
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 10.x
       - run: npm ci
       - run: npm run build
         env:
