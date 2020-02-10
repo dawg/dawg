@@ -16,7 +16,7 @@ const config = {
         customLaunchers: {
           HeadlessChrome: {
             base: 'Chrome',
-            flags: ['--no-sandbox']
+            flags: ['--no-sandbox', '--disable-gpu', '--headless']
           }
         },
       }
