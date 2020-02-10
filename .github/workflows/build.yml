@@ -12,6 +12,7 @@ name: Release
 
 on:
   push:
+    branches: [master]
     # This enforces the tag naming standard
     tags:
       - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
@@ -25,6 +26,7 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
+          name: Release ${{ github.ref }}
           tag_name: ${{ github.ref }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
