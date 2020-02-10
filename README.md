@@ -1,8 +1,9 @@
 # Vusic
-[![Build Status](https://travis-ci.org/dawg/vusic.svg?branch=master)](https://travis-ci.org/dawg/vusic)
-> A DAW for the 21st century!
+![Build Status](https://img.shields.io/github/workflow/status/dawg/vusic/Release?style=for-the-badge&logo=GitHub)
+![Version](https://img.shields.io/github/package-json/v/dawg/vusic?style=for-the-badge)
 
 ![Vusic](https://i.ibb.co/qRRVRwh/image.png)
+> A DAW for the 21st century! 
 
 
 ## Roadmap
