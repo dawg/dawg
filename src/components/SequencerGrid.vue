@@ -7,9 +7,7 @@
     @drop="handleDrop"
   >
     <div class="absolute" :style="selectStyle"></div>
-    <svg v-bind="sliceSvgAttrs">
-      <line v-bind="sliceLineAttrs"></line>
-    </svg>
+    <div :style="sliceStyle"></div>
     <beat-lines
       class="absolute h-full pointer-events-none"
       :px-per-beat="pxPerBeat"
@@ -125,6 +123,32 @@ import BeatLines from '@/components/BeatLines';
 import { Watch } from '@/lib/update';
 import { Schedulable, Sequence } from '@/core';
 import { Ghost } from '@/core/ghost';
+
+// For more information see the following link:
+// https://stackoverflow.com/questions/4270485/drawing-lines-on-html-page
+function lineStyle({ x1, y1, x2, y2 }: { x1: number, y1: number, x2: number, y2: number }) {
+    const a = x1 - x2;
+    const b = y1 - y2;
+    const c = Math.sqrt(a * a + b * b);
+
+    const sx = (x1 + x2) / 2;
+    const sy = (y1 + y2) / 2;
+
+    const x = sx - c / 2;
+    const y = sy;
+
+    const alpha = Math.PI - Math.atan2(-b, a);
+    return {
+      border: '1px solid black',
+      width: length + 'px',
+      height: 0,
+      transform: 'rotate(' + c + 'rad)',
+      position: 'absolute',
+      top: y + 'px',
+      left: x + 'px',
+    };
+}
+
 
 @Component({
   components: { BeatLines },
@@ -253,21 +277,7 @@ export default class SequencerGrid extends Vue {
     );
   }
 
-  get sliceSvgAttrs() {
-    if (!this.sliceStartEvent || ! this.sliceEndEvent) {
-      return {
-        width: 0,
-        height: 0,
-      };
-    }
-
-    return {
-      width: `${this.fullWidth}px`,
-      height: `${this.fullHeight}px`,
-    };
-  }
-
-  get sliceLineAttrs() {
+  get sliceStyle() {
     if (!this.sliceStartEvent || ! this.sliceEndEvent) {
       return;
     }
@@ -280,16 +290,7 @@ export default class SequencerGrid extends Vue {
     const y2 = this.sliceEndEvent.clientX - boundingRect.top;
 
 
-    return {
-      x1,
-      y1,
-      x2,
-      y2,
-      class: 'stroke-current fg-primary-darken-2',
-      style: 'stroke-width: 2',
-    };
-
-    return '<line x1="0" y1="0" x2="200" y2="200" style="" />';
+    return lineStyle({ x1, y1, x2, y2 });
   }
 
   get selectStyle() {
