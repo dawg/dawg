@@ -11,7 +11,8 @@
     "build:linux": "vue-cli-service electron:build --linux --x64 -p never",
     "build:mac": "vue-cli-service electron:build --mac -p never",
     "build:win": "vue-cli-service electron:build --win --x64 --ia32 -p never",
-    "electron:icons": "electron-icon-builder --input=./public/icon.png --output=build --flatten",
+    "//": "I think the build directory might be special but I'm insure",
+    "gen-icons": "electron-icon-builder --input=./public/logo_circle_background.png --output=build --flatten",
     "install-app-deps": "electron-builder install-app-deps",
     "postuninstall": "electron-builder install-app-deps"
   },
