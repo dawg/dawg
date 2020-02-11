@@ -98,7 +98,7 @@ export const extension = createExtension({
       const toAdd = await dialog.showOpenDialog({ properties: ['openDirectory'] });
 
       // We should only ever get undefined or an array of length 1
-      if (toAdd.filePaths.length === 0) {
+      if (!toAdd.filePaths || toAdd.filePaths.length === 0) {
         return;
       }
 

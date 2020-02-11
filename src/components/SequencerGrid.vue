@@ -7,6 +7,9 @@
     @drop="handleDrop"
   >
     <div class="absolute" :style="selectStyle"></div>
+    <svg v-bind="sliceSvgAttrs">
+      <line v-bind="sliceLineAttrs"></line>
+    </svg>
     <beat-lines
       class="absolute h-full pointer-events-none"
       :px-per-beat="pxPerBeat"
@@ -131,10 +134,10 @@ export default class SequencerGrid extends Vue {
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, required: true }) public rowHeight!: number;
   @Prop({ type: Object, required: true }) public sequence!: Sequence<Schedulable>;
-  // @Prop({ type: Array, required: true }) public elements!: Schedulable[];
   @Prop({ type: Array, default: null }) public ghosts!: Ghost[] | null;
   @Prop({ type: Number, required: true }) public snap!: number;
   @Prop({ type: Number, required: true }) public minSnap!: number;
+  @Prop({ type: String, required: true }) public tool!: 'slicer' | 'pointer';
 
   @Prop({ type: Number, required: true }) public pxPerBeat!: number;
   @Prop({ type: Number, required: true }) public beatsPerMeasure!: number;
@@ -165,8 +168,10 @@ export default class SequencerGrid extends Vue {
 
   public rows!: HTMLElement;
   public selectStartEvent: MouseEvent | null = null;
-  public dragStartEvent: MouseEvent | null = null;
   public selectCurrentEvent: MouseEvent | null = null;
+  public sliceStartEvent: MouseEvent | null = null;
+  public sliceEndEvent: MouseEvent | null = null;
+  public dragStartEvent: MouseEvent | null = null;
   public holdingShift = false;
   public minDisplayMeasures = 4;
   public itemLoopEnd: number | null = null;
@@ -208,10 +213,18 @@ export default class SequencerGrid extends Vue {
     });
   }
 
+  get fullWidth() {
+    return this.displayBeats * this.pxPerBeat;
+  }
+
+  get fullHeight() {
+    return this.numRows * this.rowHeight;
+  }
+
   get sequencerStyle() {
     return {
-      width: `${this.displayBeats * this.pxPerBeat}px`,
-      height: `${this.numRows * this.rowHeight}px`,
+      width: `${this.fullWidth}px`,
+      height: `${this.fullHeight}px`,
     };
   }
 
@@ -238,6 +251,45 @@ export default class SequencerGrid extends Vue {
       256, // 256 is completly random
       (this.itemLoopEnd || 0) + this.beatsPerMeasure * 2,
     );
+  }
+
+  get sliceSvgAttrs() {
+    if (!this.sliceStartEvent || ! this.sliceEndEvent) {
+      return {
+        width: 0,
+        height: 0,
+      };
+    }
+
+    return {
+      width: `${this.fullWidth}px`,
+      height: `${this.fullHeight}px`,
+    };
+  }
+
+  get sliceLineAttrs() {
+    if (!this.sliceStartEvent || ! this.sliceEndEvent) {
+      return;
+    }
+
+    const boundingRect = this.rows.getBoundingClientRect();
+
+    const x1 = this.sliceStartEvent.clientX - boundingRect.left;
+    const y1 = this.sliceStartEvent.clientY - boundingRect.top;
+    const x2 = this.sliceEndEvent.clientX - boundingRect.left;
+    const y2 = this.sliceEndEvent.clientX - boundingRect.top;
+
+
+    return {
+      x1,
+      y1,
+      x2,
+      y2,
+      class: 'stroke-current fg-primary-darken-2',
+      style: 'stroke-width: 2',
+    };
+
+    return '<line x1="0" y1="0" x2="200" y2="200" style="" />';
   }
 
   get selectStyle() {
@@ -375,19 +427,30 @@ export default class SequencerGrid extends Vue {
 
   public selectStart(e: MouseEvent) {
     this.selectStartEvent = e;
-    window.addEventListener('mousemove', this.selectMove);
-    window.addEventListener('mouseup', this.selectEnd);
-  }
 
-  public selectMove(e: MouseEvent) {
-    this.selectCurrentEvent = e;
-  }
-
-  public selectEnd() {
-    this.selectStartEvent = null;
-    this.selectCurrentEvent = null;
-    window.removeEventListener('mousemove', this.selectMove);
-    window.removeEventListener('mouseup', this.selectEnd);
+    if (this.tool === 'pointer') {
+      const disposer = addEventListeners({
+        mousemove: (event: MouseEvent) => {
+          this.selectCurrentEvent = e;
+        },
+        mouseup: () => {
+          this.selectStartEvent = null;
+          this.selectCurrentEvent = null;
+          disposer.dispose();
+        },
+      });
+    } else if (this.tool === 'slicer') {
+      const disposer = addEventListeners({
+        mousemove: (event: MouseEvent) => {
+          this.sliceEndEvent = e;
+        },
+        mouseup: () => {
+          this.sliceStartEvent = null;
+          this.sliceEndEvent = null;
+          disposer.dispose();
+        },
+      });
+    }
   }
 
   public add(e: MouseEvent) {

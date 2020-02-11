@@ -322,7 +322,7 @@ const createApi = () => {
     let projectPath = framework.manager.getOpenedFile();
     if (!projectPath || opts.forceDialog) {
       const saveDialogReturn = await remote.dialog.showSaveDialog(remote.getCurrentWindow(), {});
-      projectPath = saveDialogReturn.bookmark || null;
+      projectPath = saveDialogReturn.filePath || null;
 
 
       // If the user cancels the dialog
@@ -817,7 +817,7 @@ const extension = createExtension({
         );
 
 
-        if (files.filePaths.length === 0) {
+        if (!files.filePaths || files.filePaths.length === 0) {
           return;
         }
 
