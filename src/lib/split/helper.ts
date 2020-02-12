@@ -250,7 +250,7 @@ export class Section {
 
     px -= this.iterate(this.children, attr, px, 'high');
     px -= this.iterate(this.children, attr, px, 'low');
-    this.iterate(this.children, attr, px, 'fixed');
+    // this.iterate(this.children, attr, px, 'fixed');
   }
 
   public dispose() {

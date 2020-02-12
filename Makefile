@@ -5,7 +5,7 @@ test:
 	npm run test:unit
 
 watch:
-	npx vue-cli-service test:unit --watch
+	npm run test:unit:watch
 
 build:
 	npm run build

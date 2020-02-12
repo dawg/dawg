@@ -107,7 +107,7 @@
       :class="rowClass(row - 1)"
       @click="add($event)"
       @contextmenu="$event.preventDefault()"
-      @mousedown="selectStart"
+      @mousedown="mouseDownOnSurroundings"
     ></div>
 
   </drop>
@@ -126,7 +126,9 @@ import { Ghost } from '@/core/ghost';
 
 // For more information see the following link:
 // https://stackoverflow.com/questions/4270485/drawing-lines-on-html-page
-function lineStyle({ x1, y1, x2, y2 }: { x1: number, y1: number, x2: number, y2: number }) {
+function lineStyle(
+  { x1, y1, x2, y2 }: { x1: number, y1: number, x2: number, y2: number },
+) {
     const a = x1 - x2;
     const b = y1 - y2;
     const c = Math.sqrt(a * a + b * b);
@@ -139,10 +141,10 @@ function lineStyle({ x1, y1, x2, y2 }: { x1: number, y1: number, x2: number, y2:
 
     const alpha = Math.PI - Math.atan2(-b, a);
     return {
-      border: '1px solid black',
-      width: length + 'px',
+      border: '1px solid white',
+      width: c + 'px',
       height: 0,
-      transform: 'rotate(' + c + 'rad)',
+      transform: 'rotate(' + alpha + 'rad)',
       position: 'absolute',
       top: y + 'px',
       left: x + 'px',
@@ -278,7 +280,7 @@ export default class SequencerGrid extends Vue {
   }
 
   get sliceStyle() {
-    if (!this.sliceStartEvent || ! this.sliceEndEvent) {
+    if (!this.sliceStartEvent || !this.sliceEndEvent) {
       return;
     }
 
@@ -287,10 +289,15 @@ export default class SequencerGrid extends Vue {
     const x1 = this.sliceStartEvent.clientX - boundingRect.left;
     const y1 = this.sliceStartEvent.clientY - boundingRect.top;
     const x2 = this.sliceEndEvent.clientX - boundingRect.left;
-    const y2 = this.sliceEndEvent.clientX - boundingRect.top;
+    const y2 = this.sliceEndEvent.clientY - boundingRect.top;
+
+    console.log(x1, y1, x2, y2);
 
 
-    return lineStyle({ x1, y1, x2, y2 });
+    return {
+      zIndex: 3,
+      ...lineStyle({ x1, y1, x2, y2 }),
+    };
   }
 
   get selectStyle() {
@@ -299,6 +306,7 @@ export default class SequencerGrid extends Vue {
       this.selected = this.selected.map((_) => false);
       return;
     }
+
 
     const boundingRect = this.rows.getBoundingClientRect();
 
@@ -426,13 +434,12 @@ export default class SequencerGrid extends Vue {
     this.checkLoopEnd();
   }
 
-  public selectStart(e: MouseEvent) {
-    this.selectStartEvent = e;
-
+  public mouseDownOnSurroundings(e: MouseEvent) {
     if (this.tool === 'pointer') {
+      this.selectStartEvent = e;
       const disposer = addEventListeners({
         mousemove: (event: MouseEvent) => {
-          this.selectCurrentEvent = e;
+          this.selectCurrentEvent = event;
         },
         mouseup: () => {
           this.selectStartEvent = null;
@@ -441,9 +448,10 @@ export default class SequencerGrid extends Vue {
         },
       });
     } else if (this.tool === 'slicer') {
+      this.sliceStartEvent = e;
       const disposer = addEventListeners({
         mousemove: (event: MouseEvent) => {
-          this.sliceEndEvent = e;
+          this.sliceEndEvent = event;
         },
         mouseup: () => {
           this.sliceStartEvent = null;

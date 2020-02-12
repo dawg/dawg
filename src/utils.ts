@@ -59,3 +59,32 @@ export const disposeHelp = (o: { dispose: () => void }) => {
     console.info(`dispose failed for ${o} =>`, e.message);
   }
 };
+
+
+interface SnapOpts {
+  event: { clientX: number, altKey: boolean };
+  minSnap: number;
+  snap: number;
+  pxPerBeat: number;
+  pxFromLeft: number;
+  reference: { getBoundingClientRect: () => { left: number }, scrollLeft: number };
+}
+
+export const calculateSnap = (
+  opts: SnapOpts,
+) => {
+  const snap = opts.event.altKey ? opts.minSnap : opts.snap;
+  const remainder = (opts.pxFromLeft / opts.pxPerBeat) % opts.snap;
+  const pxRemainder = remainder  * opts.pxPerBeat;
+
+  // The amount of pixels that the element is from the edge of the of grid
+  const pxFromEdge = opts.pxFromLeft - opts.reference.scrollLeft;
+
+  // The amount of pixels that the mouse is from the edge of the of grid
+  const pxMouse = opts.event.clientX - opts.reference.getBoundingClientRect().left;
+
+  const diff = pxMouse - pxFromEdge - pxRemainder;
+  let newValue =  diff / opts.pxPerBeat;
+  newValue = (Math.round(newValue / snap) * snap) + remainder;
+  return Math.round(newValue / opts.minSnap) * opts.minSnap;
+};

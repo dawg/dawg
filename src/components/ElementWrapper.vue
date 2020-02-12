@@ -35,6 +35,7 @@
 import { createComponent, computed, ref } from '@vue/composition-api';
 import { update } from '@/lib/vutils';
 import tinycolor from 'tinycolor2';
+import { calculateSnap } from '@/utils';
 
 export default createComponent({
   name: 'ElementWrapper',
@@ -96,20 +97,29 @@ export default createComponent({
     const moveHelper = (e: MouseEvent, opts: { canZero: boolean, prop: 'duration' | 'offset' }) => {
       if (!context.parent) { return; }
 
-      const snap = e.altKey ? props.minSnap : props.snap;
-      const remainder = props[opts.prop] % props.snap;
-      const pxRemainder = remainder  * props.pxPerBeat;
+      const newValue = calculateSnap({
+        event: e,
+        minSnap: props.minSnap,
+        snap: props.snap,
+        pxPerBeat: props.pxPerBeat,
+        pxFromLeft: leftNoIncludeOffset.value,
+        reference: context.parent.$el,
+      });
 
-      // The amount of pixels that the element is from the edge of the of grid
-      const pxFromEdge = leftNoIncludeOffset.value - context.parent.$el.scrollLeft;
+      // const snap = e.altKey ? props.minSnap : props.snap;
+      // const remainder = props[opts.prop] % props.snap;
+      // const pxRemainder = remainder  * props.pxPerBeat;
 
-      // The amount of pixels that the mouse is from the edge of the of grid
-      const pxMouse = e.clientX - context.parent.$el.getBoundingClientRect().left;
+      // // The amount of pixels that the element is from the edge of the of grid
+      // const pxFromEdge = leftNoIncludeOffset.value - context.parent.$el.scrollLeft;
 
-      const diff = pxMouse - pxFromEdge - pxRemainder;
-      let newValue =  diff / props.pxPerBeat;
-      newValue = (Math.round(newValue / snap) * snap) + remainder;
-      newValue = Math.round(newValue / props.minSnap) * props.minSnap;
+      // // The amount of pixels that the mouse is from the edge of the of grid
+      // const pxMouse = e.clientX - context.parent.$el.getBoundingClientRect().left;
+
+      // const diff = pxMouse - pxFromEdge - pxRemainder;
+      // let newValue =  diff / props.pxPerBeat;
+      // newValue = (Math.round(newValue / snap) * snap) + remainder;
+      // newValue = Math.round(newValue / props.minSnap) * props.minSnap;
 
       if (props[opts.prop] === newValue) { return; }
 

@@ -7,14 +7,14 @@
           :class="selectedTool === 'pointer' ? 'text-default-darken-2' : 'text-default-darken-5'"
           icon="hand-pointer"
           @click="selectTool('pointer')"
-          title="Measured in steps"
+          title="Pointer Tool"
         ></dg-fa-icon>
         <dg-fa-icon
-          class="cursor-pointer ml-2 text-default-darken-5 text-sm"
+          class="cursor-pointer ml-2 text-sm"
           :class="selectedTool === 'slicer' ? 'text-default-darken-2' : 'text-default-darken-5'"
           icon="hand-scissors"
           @click="selectTool('slicer')"
-          title="Measured in steps"
+          title="Slicer Tool"
         ></dg-fa-icon>
         <div class="flex-grow"></div>
         <div 
