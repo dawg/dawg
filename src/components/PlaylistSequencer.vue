@@ -24,8 +24,8 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
-import { Track } from '@/core';
-import { theme } from '@/extensions/core/theme';
+import { Track } from '@/models';
+import { theme } from '@/core/theme';
 import * as framework from '@/lib/framework';
 
 @Component

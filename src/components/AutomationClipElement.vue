@@ -34,7 +34,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
-import { Point, ScheduledAutomation } from '@/core';
+import { Point, ScheduledAutomation } from '@/models';
 import { scale } from '@/lib/std';
 import * as dawg from '@/dawg';
 

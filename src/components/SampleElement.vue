@@ -15,7 +15,7 @@
 import { Vue, Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 import Waveform from '@/components/Waveform.vue';
 import { Nullable } from '@/lib/vutils';
-import { ScheduledSample } from '@/core';
+import { ScheduledSample } from '@/models';
 import { createComponent, computed } from '@vue/composition-api';
 
 export default createComponent({

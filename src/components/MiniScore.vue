@@ -17,7 +17,7 @@
 </template>
 
 <script lang="ts">
-import { Note } from '@/core';
+import { Note } from '@/models';
 import { update } from '@/lib/vutils';
 import { computed, watch, createComponent } from '@vue/composition-api';
 

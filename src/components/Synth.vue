@@ -67,7 +67,7 @@
 import DotButton from '@/components/DotButton.vue';
 import MiniScore from '@/components/MiniScore.vue';
 import ChannelSelect from '@/components/ChannelSelect.vue';
-import { Note, Instrument, Sequence } from '@/core';
+import { Note, Instrument, Sequence } from '@/models';
 import { update } from '@/lib/vutils';
 import { createComponent, computed, watch, ref } from '@vue/composition-api';
 import * as framework from '@/lib/framework';

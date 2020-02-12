@@ -121,8 +121,8 @@ import { addEventListeners } from '@/lib/events';
 import { Nullable } from '@/lib/vutils';
 import BeatLines from '@/components/BeatLines';
 import { Watch } from '@/lib/update';
-import { Schedulable, Sequence } from '@/core';
-import { Ghost } from '@/core/ghost';
+import { Schedulable, Sequence } from '@/models';
+import { Ghost } from '@/models/ghost';
 
 // For more information see the following link:
 // https://stackoverflow.com/questions/4270485/drawing-lines-on-html-page
