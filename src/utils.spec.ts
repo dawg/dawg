@@ -1,6 +1,9 @@
 import { expect } from '@/lib/testing';
 import { calculateSnap } from '@/utils';
 
+// TODO make dawg a ts file
+// move extensions folder to src/
+
 describe.only('calculateSnap', () => {
   it('works', () => {
     // TODO more!

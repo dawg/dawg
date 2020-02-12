@@ -2,7 +2,7 @@ import * as t from '@/lib/io';
 import * as Audio from '@/lib/audio';
 import { StrictEventEmitter } from '@/lib/events';
 import { Beat } from '@/lib/audio/types';
-import * as history from '@/dawg/extensions/core/project/history';
+import * as history from '@/extensions/core/project/history';
 
 export const SchedulableType = t.intersection([
   t.type({

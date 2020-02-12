@@ -1,7 +1,7 @@
 import { Schedulable } from '@/core/scheduled/schedulable';
 import { Transport } from '@/lib/audio/transport';
 import { StrictEventEmitter } from '@/lib/events';
-import * as history from '@/dawg/extensions/core/project/history';
+import * as history from '@/extensions/core/project/history';
 
 
 const watchElement = <T extends Schedulable>(elements: T[], element: T, onRemove: (event: T) => void) => {
