@@ -105,8 +105,7 @@
       :total-beats="displayBeats"
       :style="actualRowStyle(row - 1)"
       :class="rowClass(row - 1)"
-      @click="add($event)"
-      @contextmenu="$event.preventDefault()"
+      @click="add"
       @mousedown="mouseDownOnSurroundings"
     ></div>
 
@@ -116,13 +115,14 @@
 <script lang="ts">
 import { Component, Prop, Mixins, Inject, Vue } from 'vue-property-decorator';
 import { Keys } from '@/lib/std';
-import { range, reverse } from '@/lib/std';
+import { range, reverse, XYPosition } from '@/lib/std';
 import { addEventListeners } from '@/lib/events';
 import { Nullable } from '@/lib/vutils';
 import BeatLines from '@/components/BeatLines';
 import { Watch } from '@/lib/update';
 import { Schedulable, Sequence } from '@/models';
 import { Ghost } from '@/models/ghost';
+import { calculateSnap, calculateSimpleSnap, getIntersection } from '@/utils';
 
 // For more information see the following link:
 // https://stackoverflow.com/questions/4270485/drawing-lines-on-html-page
@@ -195,8 +195,7 @@ export default class SequencerGrid extends Vue {
   public rows!: HTMLElement;
   public selectStartEvent: MouseEvent | null = null;
   public selectCurrentEvent: MouseEvent | null = null;
-  public sliceStartEvent: MouseEvent | null = null;
-  public sliceEndEvent: MouseEvent | null = null;
+  public sliceStyle: { [k: string]: string | number } | null = null;
   public dragStartEvent: MouseEvent | null = null;
   public holdingShift = false;
   public minDisplayMeasures = 4;
@@ -277,27 +276,6 @@ export default class SequencerGrid extends Vue {
       256, // 256 is completly random
       (this.itemLoopEnd || 0) + this.beatsPerMeasure * 2,
     );
-  }
-
-  get sliceStyle() {
-    if (!this.sliceStartEvent || !this.sliceEndEvent) {
-      return;
-    }
-
-    const boundingRect = this.rows.getBoundingClientRect();
-
-    const x1 = this.sliceStartEvent.clientX - boundingRect.left;
-    const y1 = this.sliceStartEvent.clientY - boundingRect.top;
-    const x2 = this.sliceEndEvent.clientX - boundingRect.left;
-    const y2 = this.sliceEndEvent.clientY - boundingRect.top;
-
-    console.log(x1, y1, x2, y2);
-
-
-    return {
-      zIndex: 3,
-      ...lineStyle({ x1, y1, x2, y2 }),
-    };
   }
 
   get selectStyle() {
@@ -448,14 +426,42 @@ export default class SequencerGrid extends Vue {
         },
       });
     } else if (this.tool === 'slicer') {
-      this.sliceStartEvent = e;
+      const rect = this.rows.getBoundingClientRect();
+
+      const calculatePos = (event: MouseEvent) => {
+        return {
+            x: calculateSimpleSnap({
+            value: event.clientX - rect.left,
+            altKey: event.altKey,
+            minSnap: this.minSnap,
+            snap: this.snap,
+            pxPerBeat: this.pxPerBeat,
+          }),
+          y: event.clientY - rect.top,
+        };
+      };
+
+      const { x: x1, y: y1 } = calculatePos(e);
       const disposer = addEventListeners({
         mousemove: (event: MouseEvent) => {
-          this.sliceEndEvent = event;
+          const { x: x2, y: y2 } = calculatePos(event);
+
+          this.sequence.forEach((element) => {
+            const row = element.row;
+            const time = element.time;
+
+            // tslint:disable-next-line:no-console
+            console.log(getIntersection({ x1, y1, x2, y2 }, { x1: 0, y1: row, x2: Infinity, y2: row }));
+            getIntersection({ x1, y1, x2, y2 }, { x1: 0, y1: row + 1, x2: Infinity, y2: row + 1 });
+          });
+
+          this.sliceStyle =  {
+            zIndex: 3,
+            ...lineStyle({ x1, y1, x2, y2 }),
+          };
         },
-        mouseup: () => {
-          this.sliceStartEvent = null;
-          this.sliceEndEvent = null;
+        mouseup: (event) => {
+          this.sliceStyle = null;
           disposer.dispose();
         },
       });

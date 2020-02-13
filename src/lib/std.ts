@@ -75,6 +75,11 @@ export function* chain<T>(...arrays: T[][]) {
   }
 }
 
+export interface XYPosition {
+  x: number;
+  y: number;
+}
+
 export const makeLookup = <T extends { id: string }>(array: Iterable<T>) => {
   const lookup: { [k: string]: T } = {};
   for (const item of array) {

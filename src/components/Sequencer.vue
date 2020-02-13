@@ -287,7 +287,6 @@ export default createComponent({
       listeners: context.listeners,
       selectedTool,
       selectTool: (tool: 'slicer' | 'pointer') => {
-        console.log(tool);
         selectedTool.value = tool;
       },
     };
