@@ -120,9 +120,11 @@ import { addEventListeners } from '@/lib/events';
 import { Nullable } from '@/lib/vutils';
 import BeatLines from '@/components/BeatLines';
 import { Watch } from '@/lib/update';
-import { Schedulable, Sequence } from '@/models';
+import { Sequence } from '@/models';
+import * as Audio from '@/lib/audio';
 import { Ghost } from '@/models/ghost';
 import { calculateSnap, calculateSimpleSnap, getIntersection, slice } from '@/utils';
+import { UnscheduledPrototype, SchedulableTemp } from '../models/schedulable';
 
 // For more information see the following link:
 // https://stackoverflow.com/questions/4270485/drawing-lines-on-html-page
@@ -159,7 +161,7 @@ export default class SequencerGrid extends Vue {
   // name is used for debugging
   @Prop({ type: String, required: true }) public name!: string;
   @Prop({ type: Number, required: true }) public rowHeight!: number;
-  @Prop({ type: Object, required: true }) public sequence!: Sequence<Schedulable>;
+  @Prop({ type: Object, required: true }) public sequence!: Sequence<SchedulableTemp<any, any>>;
   @Prop({ type: Array, default: null }) public ghosts!: Ghost[] | null;
   @Prop({ type: Number, required: true }) public snap!: number;
   @Prop({ type: Number, required: true }) public minSnap!: number;
@@ -180,13 +182,15 @@ export default class SequencerGrid extends Vue {
   // The loop end determined by the items.
   @Prop({ type: Number, required: true }) public sequencerLoopEnd!: number;
 
+  @Prop({ type: Object, required: true }) public transport!: Audio.Transport;
+
   // These values should only be set if there is a loop on the timeline
   @Prop(Nullable(Number)) public setLoopEnd!: number | null;
   @Prop(Nullable(Number)) public setLoopStart!: number | null;
   @Prop({ type: Number, required: true }) public progress!: number;
 
   // FIXME edge case -> what happens if the element is deleted?
-  @Prop(Nullable(Object)) public prototype!: Schedulable | null;
+  @Prop(Nullable(Object)) public prototype!: SchedulableTemp<any, any> | null;
 
   @Prop({ type: Number, required: true }) public displayLoopEnd!: number;
 
@@ -212,12 +216,12 @@ export default class SequencerGrid extends Vue {
       return {
         row: item.row,
         time: item.time,
-        top: item.row * this.rowHeight,
+        top: item.row.value * this.rowHeight,
         name: item.component,
         duration: item.duration,
         offset: item.offset,
         element: item,
-        disableOffset: item.disableOffset,
+        disableOffset: item.offset,
       };
     });
   }
@@ -309,9 +313,9 @@ export default class SequencerGrid extends Vue {
     this.elements.forEach((item, i) => {
       // Check if there is any overlap between the rectangles
       // https://www.geeksforgeeks.org/find-two-rectangles-overlap/
-      if (minRow > item.row + 1 || item.row > maxRow) {
+      if (minRow > item.row.value + 1 || item.row.value > maxRow) {
         this.selected[i] = false;
-      } else if (minBeat > item.time + item.duration || item.time > maxBeat) {
+      } else if (minBeat > item.time.value + item.duration.value || item.time.value > maxBeat) {
         this.selected[i] = false;
       } else {
         this.selected[i] = true;
@@ -353,13 +357,13 @@ export default class SequencerGrid extends Vue {
 
   public updateOffset(i: number, value: number) {
     const item = this.elements[i];
-    const diff = value - item.offset;
+    const diff = value - item.offset.value;
 
     const updateOffset = (index: number) => {
       // Ok so we update both the duration of getter and the duraion of the element
       // This DEfinitely might not be needed
-      this.components[index].offset += diff;
-      this.elements[index].offset += diff;
+      this.components[index].offset.value += diff;
+      this.elements[index].offset.value += diff;
     };
 
     const toUpdate = [i];
@@ -373,7 +377,7 @@ export default class SequencerGrid extends Vue {
 
     // If the diff is less than zero, make sure we aren't setting the offset of
     // any of the elments to < 0
-    if (diff < 0 && toUpdate.some((ind) => (this.elements[ind].offset + diff) < 0)) {
+    if (diff < 0 && toUpdate.some((ind) => (this.elements[ind].offset.value + diff) < 0)) {
       return;
     }
 
@@ -382,13 +386,13 @@ export default class SequencerGrid extends Vue {
 
   public updateDuration(i: number, value: number) {
     const item = this.elements[i];
-    const diff = value - item.duration;
+    const diff = value - item.duration.value;
 
     const updateDuration = (index: number) => {
       // Ok so we update both the duration of getter and the duraion of the element
       // This DEfinitely might not be needed
-      this.components[index].duration += diff;
-      this.elements[index].duration += diff;
+      this.components[index].duration.value += diff;
+      this.elements[index].duration.value += diff;
     };
 
     const toUpdate = [i];
@@ -402,7 +406,7 @@ export default class SequencerGrid extends Vue {
 
     // If the diff is less than zero, make sure we aren't settings the length of
     // any of the elments to <= 0
-    if (diff < 0 && toUpdate.some((ind) => this.elements[ind].duration + diff <= 0)) {
+    if (diff < 0 && toUpdate.some((ind) => this.elements[ind].duration.value + diff <= 0)) {
       return;
     }
 
@@ -453,12 +457,12 @@ export default class SequencerGrid extends Vue {
         mouseup: (event) => {
           const { x: x2, y: y2 } = calculatePos(event);
 
-          const toAdd: Schedulable[] = [];
+          const toAdd: Array<SchedulableTemp<any, any>> = [];
           this.sequence.forEach((element) => {
             const result = slice({
-              row: element.row,
-              time: element.time,
-              duration: element.duration,
+              row: element.row.value,
+              time: element.time.value,
+              duration: element.duration.value,
               pxPerBeat: this.pxPerBeat,
               rowHeight: this.rowHeight,
               x1,
@@ -495,11 +499,7 @@ export default class SequencerGrid extends Vue {
     }
   }
 
-  public add(e: MouseEvent) {
-    if (!this.prototype) {
-      return;
-    }
-
+  public addHelper(e: MouseEvent, el: SchedulableTemp<any, any>) {
     if (this.selected.some((selected) => selected)) {
       this.selected = this.elements.map(() => false);
       return;
@@ -514,12 +514,19 @@ export default class SequencerGrid extends Vue {
     const y = e.clientY - rect.top;
     const row = Math.floor(y / this.rowHeight);
 
-    const item = this.prototype.copy();
-    item.row = row;
-    item.time = time;
+    el.row.value = row;
+    el.time.value = time;
 
     this.selected.push(false);
-    this.sequence.add(item);
+    this.sequence.add(el);
+  }
+
+  public add(e: MouseEvent) {
+    if (!this.prototype) {
+      return;
+    }
+
+    this.addHelper(e, this.prototype.copy());
   }
 
   public move(e: MouseEvent, i: number) {
@@ -542,36 +549,36 @@ export default class SequencerGrid extends Vue {
 
     // CHeck if we are going to move squares
     const diff = endBeat - startBeat;
-    const time = oldItem.time + diff;
+    const time = oldItem.time.value + diff;
     if (time < 0) { return; }
 
     const y = e.clientY - rect.top;
     const row = Math.floor(y / this.rowHeight);
     if (row < 0) { return; }
 
-    if (row === oldItem.row && time === oldItem.time) { return; }
+    if (row === oldItem.row.value && time === oldItem.time.value) { return; }
     // OK, so we've moved squares
     // Lets update our dragStartEvent or else
     // things will start to go haywyre :////
     this.dragStartEvent = e;
 
-    const timeDiff = time - oldItem.time;
-    const rowDiff = row - oldItem.row;
+    const timeDiff = time - oldItem.time.value;
+    const rowDiff = row - oldItem.row.value;
 
-    let itemsToMove: Schedulable[];
+    let itemsToMove: Array<SchedulableTemp<any, any>>;
     if (this.selected[i]) {
       itemsToMove = this.elements.filter((item, ind) => this.selected[ind]);
     } else {
       itemsToMove = [oldItem];
     }
 
-    if (itemsToMove.some((item) => (item.time + timeDiff) < 0)) {
+    if (itemsToMove.some((item) => (item.time.value + timeDiff) < 0)) {
       return;
     }
 
     itemsToMove.forEach((item) => {
-      item.time = item.time + timeDiff;
-      item.row = item.row + rowDiff;
+      item.time.value = item.time.value + timeDiff;
+      item.row.value = item.row.value + rowDiff;
     });
 
     this.checkLoopEnd();
@@ -591,7 +598,7 @@ export default class SequencerGrid extends Vue {
   public checkLoopEnd() {
     // Set the minimum to 1 measure!
     const maxTime = Math.max(
-      ...this.elements.map((item) => item.time + item.duration),
+      ...this.elements.map((item) => item.time.value + item.duration.value),
       this.beatsPerMeasure,
     );
 
@@ -618,7 +625,7 @@ export default class SequencerGrid extends Vue {
       this.elements.forEach((_, ind) => this.selected[ind] = false);
     }
 
-    const createItem = (oldItem: Schedulable) => {
+    const createItem = (oldItem: SchedulableTemp<any, any>) => {
       const newItem = oldItem.copy();
 
       // We set selected to true because `newNew` will have a heigher z-index
@@ -630,7 +637,7 @@ export default class SequencerGrid extends Vue {
 
     let targetIndex = i;
     if (this.holdingShift) {
-      let selected: Schedulable[];
+      let selected: Array<SchedulableTemp<any, any>>;
 
       // If selected, copy all selected. If not, just copy the item that was clicked.
       if (this.selected[i]) {
@@ -691,11 +698,12 @@ export default class SequencerGrid extends Vue {
     if (e.keyCode === Keys.Shift) { this.holdingShift = false; }
   }
 
-  public handleDrop(prototype: Schedulable, event: MouseEvent) {
-    this.$update('prototype', prototype);
-    this.$nextTick(() => this.add(event));
+  public handleDrop(prototype: UnscheduledPrototype, e: MouseEvent) {
+    const element = prototype(this.transport);
+    this.addHelper(e, element);
+
+    this.$update('prototype', element);
     this.$emit('new-prototype', prototype);
-    // prototype is not updated automatically
   }
 
   @Watch<SequencerGrid>('elements', { immediate: true })

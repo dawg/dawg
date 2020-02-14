@@ -2,9 +2,9 @@ import * as t from '@/lib/io';
 import uuid from 'uuid';
 import { Instrument } from '@/models/instrument/instrument';
 import { Serializable } from '@/models/serializable';
-import { Note, NoteType } from '@/models/scheduled/note';
+import { createNotePrototype, ScheduledNoteType, ScheduledNote } from '@/models/schedulable';
 import { Transport } from '@/lib/audio';
-import { Sequence } from '@/models/scheduled/sequence';
+import { Sequence } from '@/models/sequence';
 
 const ScoreTypeRequired = t.type({
   instrumentId: t.string,
@@ -12,7 +12,7 @@ const ScoreTypeRequired = t.type({
 });
 
 const ScoreTypePartial = t.partial({
-  notes: t.array(NoteType),
+  notes: t.array(ScheduledNoteType),
 });
 
 export const ScoreType = t.intersection([ScoreTypeRequired, ScoreTypePartial]);
@@ -29,13 +29,13 @@ export class Score implements Serializable<IScore> {
   }
   public id: string;
   public instrumentId: string;
-  public notes: Sequence<Note>;
+  public notes: Sequence<ScheduledNote>;
 
   constructor(transport: Transport, public instrument: Instrument<any, any>, i: IScore) {
     this.id = i.id;
     this.instrumentId = i.instrumentId;
     const notes = (i.notes || []).map((iNote) => {
-      return new Note(this.instrument, iNote);
+      return createNotePrototype(iNote, this.instrument)(transport);
     });
 
     this.notes = new Sequence(transport, notes);

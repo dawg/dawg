@@ -6,6 +6,7 @@ import { Serializable } from '@/models/serializable';
 import { Channel } from '@/models/channel';
 import { Instrument } from '@/models/instrument/instrument';
 import { Beats } from '@/models/types';
+import { BuildingBlock } from '@/models/block';
 
 export const AutomationType = t.type({
   context: t.union([t.literal('channel'), t.literal('instrument')]),
@@ -21,7 +22,7 @@ export type IAutomation = t.TypeOf<typeof AutomationType>;
 export type ClipContext = IAutomation['context'];
 export type Automatable = Channel | Instrument<any, any>;
 
-export class AutomationClip implements Serializable<IAutomation> {
+export class AutomationClip extends BuildingBlock implements Serializable<IAutomation> {
   public static create(length: number, signal: Audio.Signal, context: ClipContext, id: string, attr: string) {
     const ac = new AutomationClip(signal, {
       id: uuid.v4(),
@@ -55,6 +56,7 @@ export class AutomationClip implements Serializable<IAutomation> {
   private signal: Audio.Signal;
 
   constructor(signal: Audio.Signal, i: IAutomation) {
+    super();
     this.context = i.context;
     this.contextId = i.contextId;
     this.attr = i.attr;

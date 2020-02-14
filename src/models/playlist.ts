@@ -1,10 +1,10 @@
 import * as t from '@/lib/io';
 import * as Audio from '@/lib/audio';
-import { ScheduledPattern, ScheduledPatternType } from '@/models/scheduled/pattern';
-import { ScheduledSample, ScheduledSampleType } from '@/models/scheduled/sample';
-import { ScheduledAutomation, ScheduledAutomationType } from '@/models/scheduled/automation';
+import { ScheduledPattern, ScheduledPatternType } from '@/models/schedulable';
+import { ScheduledSample, ScheduledSampleType } from '@/models/schedulable';
+import { ScheduledAutomation, ScheduledAutomationType } from '@/models/schedulable';
 import { Serializable } from '@/models/serializable';
-import { Sequence } from '@/models/scheduled/sequence';
+import { Sequence } from '@/models/sequence';
 
 export const PlaylistType = t.partial({
   elements: t.array(t.union([
@@ -34,9 +34,6 @@ export class Playlist implements Serializable<IPlaylist> {
 
   constructor(elements: PlaylistElements[]) {
     this.elements = new Sequence(this.transport, elements);
-    this.elements.forEach((element) => {
-      element.schedule(this.transport);
-    });
   }
 
   public serialize() {

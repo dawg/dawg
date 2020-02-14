@@ -4,6 +4,7 @@ import uuid from 'uuid';
 import * as Audio from '@/lib/audio';
 import { Serializable } from '@/models/serializable';
 import { Context } from '@/lib/audio/context';
+import { BuildingBlock } from '@/models/block';
 
 export const SampleType = t.type({
   id: t.string,
@@ -13,7 +14,7 @@ export const SampleType = t.type({
 
 export type ISample = t.TypeOf<typeof SampleType>;
 
-export class Sample implements Serializable<ISample> {
+export class Sample extends BuildingBlock implements Serializable<ISample> {
   public static create(samplePath: string, buffer: AudioBuffer) {
     return new Sample(buffer, {
       id: uuid.v4(),
@@ -28,6 +29,7 @@ export class Sample implements Serializable<ISample> {
   public readonly name: string;
 
   constructor(public buffer: AudioBuffer | null, i: ISample) {
+    super();
     this.id = i.id;
     this.path = i.path;
     this.name = i.name;

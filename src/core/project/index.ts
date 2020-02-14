@@ -43,10 +43,13 @@ import {
   AutomationType,
   AnyEffect,
   PlaylistElements,
-  Node,
-  Note,
+  createNotePrototype,
+  createAutomationPrototype,
+  createPatternPrototype,
+  createSamplePrototype,
+  ScheduledNote,
 } from '@/models';
-import Tone from 'tone';
+import Tone, { Transport } from 'tone';
 import * as history from '@/core/project/history';
 
 const DG = 'dg';
@@ -199,29 +202,30 @@ function load(i: IProject): LoadedProject {
   const patternLookup = makeLookup(patterns);
   const sampleLookup = makeLookup(samples);
 
+  const mTransport = new Audio.Transport(); // master transport
   const elements = (i.master.elements || []).map((iElement) => {
     switch (iElement.type) {
       case 'automation':
-        if (!(iElement.automationId in clipLookup)) {
-          throw Error(`An Automation clip from the Playlist was not found (${iElement.automationId}).`);
+        if (!(iElement.id in clipLookup)) {
+          throw Error(`An Automation clip from the Playlist was not found (${iElement.id}).`);
         }
 
-        const clip = clipLookup[iElement.automationId];
-        return new ScheduledAutomation(clip, iElement);
+        const clip = clipLookup[iElement.id];
+        return createAutomationPrototype(iElement, clip)(mTransport);
       case 'pattern':
-        if (!(iElement.patternId in patternLookup)) {
-          throw Error(`A Pattern from the Playlist was not found (${iElement.patternId}).`);
+        if (!(iElement.id in patternLookup)) {
+          throw Error(`A Pattern from the Playlist was not found (${iElement.id}).`);
         }
 
-        const pattern = patternLookup[iElement.patternId];
-        return new ScheduledPattern(pattern, iElement);
+        const pattern = patternLookup[iElement.id];
+        return createPatternPrototype(iElement, pattern)(mTransport);
       case 'sample':
-        if (!(iElement.sampleId in sampleLookup)) {
-          throw Error(`A Sample from the Playlist was not found (${iElement.sampleId}).`);
+        if (!(iElement.id in sampleLookup)) {
+          throw Error(`A Sample from the Playlist was not found (${iElement.id}).`);
         }
 
-        const sample = sampleLookup[iElement.sampleId];
-        return new ScheduledSample(sample, iElement);
+        const sample = sampleLookup[iElement.id];
+        return createSamplePrototype(iElement, sample)(mTransport);
     }
   });
 
@@ -406,27 +410,14 @@ const createApi = () => {
 
     const sample = prj.samples[i];
 
-    let elements: ScheduledSample[] = [];
+    let undoer: { undo: () => void };
     history.execute({
       execute: () => {
-        const isSampleElement = (element: PlaylistElements): element is ScheduledSample => {
-          return element.component === 'sample-element';
-        };
-
-        // This isn' the best solution but it works
-        // There must be a better pattern / object oriented way
-        elements = prj.master.elements.filter(isSampleElement).filter((element) => {
-          return element.sample === sample;
-        });
-
-        elements.forEach((element) => {
-          element.dispose();
-        });
-
+        undoer = sample.notifyOfDeletion();
         prj.samples.splice(i, 1);
       },
       undo: () => {
-        elements.forEach((element) => prj.master.elements.add(element));
+        undoer.undo();
         prj.samples.splice(i, 0, sample);
       },
     });
@@ -439,23 +430,15 @@ const createApi = () => {
 
     const pattern = prj.patterns[i];
 
-    let elements: ScheduledPattern[] = [];
+    let undoer: { undo: () => void };
     history.execute({
       execute: () => {
-        const isPatternElement = (element: PlaylistElements): element is ScheduledPattern => {
-          return element.component === 'pattern-element';
-        };
-
-        elements = prj.master.elements.filter(isPatternElement).filter((element) => {
-          return element.pattern === pattern;
-        });
-
-        elements.forEach((element) => element.dispose());
         pattern.dispose();
+        undoer = pattern.notifyOfDeletion();
         prj.patterns.splice(i, 1);
       },
       undo: () => {
-        elements.forEach((element) => prj.master.elements.add(element));
+        undoer.undo();
         prj.patterns.splice(i, 0, pattern);
       },
     });
@@ -471,10 +454,10 @@ const createApi = () => {
     const available: boolean[] = Array(prj.tracks.length).fill(true);
     prj.master.elements.forEach((element) => {
       if (
-        start > element.time && start < element.time + element.duration ||
-        end > element.time && end < element.time + element.duration
+        start > element.time.value && start < element.time.value + element.duration.value ||
+        end > element.time.value && end < element.time.value + element.duration.value
       ) {
-        available[element.row] = false;
+        available[element.row.value] = false;
       }
     });
 
@@ -499,10 +482,11 @@ const createApi = () => {
 
     const length = payload.end - payload.start;
     const clip = AutomationClip.create(length, signal, context, automatable.id, key);
-    const placed = ScheduledAutomation.create(clip, payload.start, row);
+    const placed = createAutomationPrototype(
+      { time: payload.start, row, duration: clip.duration }, clip,
+    )(prj.master.transport);
     prj.automationClips.push(clip);
     prj.master.elements.add(placed);
-    placed.schedule(prj.master.transport);
     return true;
   }
 
@@ -548,7 +532,7 @@ const createApi = () => {
     }
 
     const destination = (effects[i + 1] || {}).effect || payload.channel.destination;
-    const inputs: Node[] = [];
+    const inputs: Array<Instrument<any, any> | AnyEffect> = [];
     if (i === 0) {
       inputs.push(...instruments);
     } else {
@@ -594,7 +578,7 @@ const createApi = () => {
       destination = effects[toInsert].effect;
     }
 
-    const inputs: Node[] = [];
+    const inputs: Array<Instrument<any, any> | AnyEffect> = [];
     if (toInsert === 0) {
       inputs.push(...instruments);
     } else {
@@ -623,12 +607,12 @@ const createApi = () => {
     const deleted: Array<{
       pattern: Pattern,
       remaining: Score[],
-      removed: Array<{ score: Score, notes: Note[] }>,
+      removed: Array<{ score: Score, notes: ScheduledNote[] }>,
     }> = [];
 
     prj.patterns.forEach((pattern) => {
       const remaining: Score[] = [];
-      const removed: Array<{ score: Score, notes: Note[] }> = [];
+      const removed: Array<{ score: Score, notes: ScheduledNote[] }> = [];
 
       pattern.scores.forEach((score) => {
         if (score.instrument === instrument) {
@@ -700,21 +684,14 @@ const createApi = () => {
   function removeAutomation(i: number) {
     const clip = prj.automationClips[i];
 
-    const isAutomationElement = (element: PlaylistElements): element is ScheduledAutomation => {
-      return element.component === 'automation-clip-element';
-    };
-
-    // This isn' the best solution but it works
-    // There must be a better pattern / object oriented way
-    const elements = prj.master.elements.filter(isAutomationElement).filter((element) => element.clip === clip);
-
+    let undoer: { undo: () => void };
     history.execute({
       execute: () => {
-        elements.forEach((element) => element.dispose());
+        undoer = clip.notifyOfDeletion();
         prj.automationClips.splice(i, 1);
       },
       undo: () => {
-        elements.forEach((element) => prj.master.elements.add(element));
+        undoer.undo();
         prj.automationClips.splice(i, 0, clip);
       },
     });

@@ -1,28 +1,16 @@
 import * as t from '@/lib/io';
+import Tone from 'tone';
 import * as Audio from '@/lib/audio';
-import { StrictEventEmitter } from '@/lib/events';
 import { Beat } from '@/lib/audio/types';
 import * as history from '@/core/project/history';
 import { computed, Ref } from '@vue/composition-api';
 import { Context } from '@/lib/audio/context';
 import { Sample } from '@/models/sample';
-import { literal } from '@/lib/std';
 import { Pattern } from '@/models/pattern';
 import { AutomationClip } from '@/models/automation';
-
-
-export const SchedulableType = t.intersection([
-  t.type({
-    row: t.number,
-    time: t.number,
-    duration: t.number,
-  }),
-  t.partial({
-    offset: t.number,
-  }),
-]);
-
-
+import { Instrument } from '@/models/instrument/instrument';
+import { allKeys } from '@/utils';
+import { BuildingBlock } from '@/models/block';
 
 export const createType = <T extends string>(type: T): SerializationType<T> => t.intersection([
   t.type({
@@ -50,11 +38,10 @@ type SerializationType<T extends string> = t.IntersectionC<[
   }>
 ]>;
 
-export type ISchedulable = t.TypeOf<typeof SchedulableType>;
-
 interface ISchedulableCreate<T, M extends string> {
   component: string;
   type: M;
+  // TODO make a intersection type based on this!!
   offsettable?: boolean;
   add: (
     transport: Audio.Transport, params: SchedulableTemp<T, M>, idk: T,
@@ -71,27 +58,41 @@ const wrap = <T, K extends keyof T>(o: T, k: K, onSet?: (value: T[K]) => void) =
   });
 };
 
-interface IID {
-  id: string;
-}
-
-type SchedulableTemp<T, M extends string> = Readonly<{
+export type SchedulableTemp<T, M extends string> = Readonly<{
   component: string;
+  offsettable: boolean;
   copy: () => SchedulableTemp<T, M>;
   duration: Ref<number>;
   time: Ref<number>;
-  offset: Ref<number | undefined>;
+  offset: Ref<number>;
   row: Ref<number>;
   slice: (timeToSlice: number) => SchedulableTemp<T, M> | undefined;
-  dispose: () => void;
+  // dispose: () => void;
   remove: () => void;
   removeNoHistory: () => void;
   serialize: () => t.TypeOf<SerializationType<M>>;
 }>;
 
-const createSchedulable = <T extends IID, M extends string>(o: ISchedulableCreate<T, M>) => {
-  const create = (opts: ISchedulable, idk: T, transport: Audio.Transport) => {
+interface Basics {
+  duration: number;
+  time: number;
+  row: number;
+  offset?: number;
+}
+
+const createSchedulable = <T extends BuildingBlock, M extends string>(o: ISchedulableCreate<T, M>) => {
+  const create = (
+    opts: Basics, idk: T, transport: Audio.Transport,
+  ) => {
     const info = {  ...opts };
+
+    idk.onDidDelete(() => {
+      removeNoHistory();
+    });
+
+    idk.onUndidDelete(() => {
+      controller = o.add(transport, params, idk);
+    });
 
     const duration = wrap(info, 'duration', (value) => {
       if (controller) { controller.setDuration(value); }
@@ -101,8 +102,12 @@ const createSchedulable = <T extends IID, M extends string>(o: ISchedulableCreat
       if (controller) { controller.setStartTime(value); }
     });
 
-    const offset = wrap(info, 'offset', (value) => {
-      if (controller) { controller.setStartTime(value || 0); }
+    const offset = computed({
+      get: () => info.offset ?? 0,
+      set: (value) => {
+        info.offset = value;
+        if (controller) { controller.setStartTime(value); }
+      },
     });
 
     const row = wrap(info, 'row');
@@ -139,6 +144,7 @@ const createSchedulable = <T extends IID, M extends string>(o: ISchedulableCreat
 
     const params: SchedulableTemp<T, M> = {
       component: o.component,
+      offsettable: o.offsettable ?? false,
       duration,
       time,
       offset,
@@ -166,7 +172,7 @@ const createSchedulable = <T extends IID, M extends string>(o: ISchedulableCreat
       },
       remove,
       removeNoHistory,
-      dispose,
+      // dispose,
       serialize: () => {
         return {
           row: row.value,
@@ -179,18 +185,20 @@ const createSchedulable = <T extends IID, M extends string>(o: ISchedulableCreat
       },
     } as const;
 
-    const controller = o.add(transport, params, idk);
+    let controller = o.add(transport, params, idk);
 
     return params;
   };
 
   return {
-    create: (opts: ISchedulable, idk: T) => (transport: Audio.Transport) => create(opts, idk, transport),
+    create: (opts: Basics, idk: T) => (transport: Audio.Transport) => create(opts, idk, transport),
     type: createType(o.type),
   };
 };
 
-const { create: createSamplePrototype } = createSchedulable({
+export type UnscheduledPrototype = (transport: Audio.Transport) => SchedulableTemp<any, any>;
+
+export const { create: createSamplePrototype, type: ScheduledSampleType } = createSchedulable({
   component: 'sample-element',
   type: 'sample',
   offsettable: true,
@@ -230,10 +238,9 @@ const { create: createSamplePrototype } = createSchedulable({
   },
 });
 
-const samplePrototype = createSamplePrototype({ row: 0, time: 0, duration: 1 }, new Sample('' as any, '' as any));
+export type ScheduledSample = SchedulableTemp<Sample, 'sample'>;
 
-
-const createPatternPrototype = createSchedulable({
+export const { create: createPatternPrototype, type: ScheduledPatternType } = createSchedulable({
   component: 'pattern-element',
   type: 'pattern',
   offsettable: true,
@@ -242,7 +249,9 @@ const createPatternPrototype = createSchedulable({
   },
 });
 
-const createAutomationPrototype = createSchedulable({
+export type ScheduledPattern = SchedulableTemp<Pattern, 'pattern'>;
+
+export const { create: createAutomationPrototype, type: ScheduledAutomationType } = createSchedulable({
   component: 'automation-clip-element',
   type: 'automation',
   offsettable: true,
@@ -251,148 +260,25 @@ const createAutomationPrototype = createSchedulable({
   },
 });
 
-interface Opts {
-  disableOffset?: boolean;
-}
+export type ScheduledAutomation = SchedulableTemp<AutomationClip, 'automation'>;
 
-export abstract class Schedulable extends StrictEventEmitter<{ remove: [], undoRemove: [] }> {
-  /**
-   * The component name to mount in the `Sequencer`.
-   */
-  public readonly abstract component: string;
-  public readonly disableOffset: boolean;
-
-  /**
-   * Refers to row where the element is placed.
-   * For notes, these are numbered 0 -> 87 and start from the higher frequencies.
-   */
-  public row: number;
-
-  protected readonly abstract sliceMode: 'duplicate' | 'offset';
-
-  // tslint:disable-next-line:variable-name
-  private _time: number;
-
-  /**
-   * Private duration in beats.
-   */
-  private beats: number;
-  // tslint:disable-next-line:variable-name
-  private _offset: number;
-  private controller?: Audio.TransportEventController;
-
-  constructor(i: ISchedulable, opts: Opts = {}) {
-    super();
-    this.row = i.row;
-    this._offset = i.offset || 0;
-    // this.offset = i.offset;
-    this._time = i.time;
-    this.beats = i.duration;
-    this.duration = i.duration;
-    this.disableOffset = opts.disableOffset || false;
-  }
-
-  get offset() {
-    return this._offset;
-  }
-
-  set offset(offset: number) {
-    this._offset = offset;
-    if (this.controller) {
-      this.controller.setOffset(offset);
-    }
-  }
-
-  /**
-   * Duration in beats.
-   */
-  get duration() {
-    return this.beats;
-  }
-
-  set duration(value: number) {
-    this.beats = value;
-    if (this.controller) {
-      this.controller.setDuration(value);
-    }
-  }
-
-  /**
-   * Time in beats.
-   */
-  get time() {
-    return this._time;
-  }
-
-  set time(time: Beat) {
-    this._time = time;
-    if (this.controller) {
-      this.controller.setStartTime(time);
-    }
-  }
-
-  get endBeat() {
-    return this.time + this.duration;
-  }
-
-  public schedule(transport: Audio.Transport) {
-    this.controller = this.add(transport);
-  }
-
-  public slice(time: Beat) {
-    if (time <= this.time || time >= this.time + this.duration) {
-      return;
-    }
-
-    const newDuration = time - this.time;
-    const otherElementDuration = this.duration - newDuration;
-
-    const newElement = this.copy();
-    newElement.duration = otherElementDuration;
-    this.duration = newDuration;
-
-    if (this.sliceMode === 'duplicate') {
-      newElement.time += newDuration;
-    } else if (this.sliceMode === 'offset') {
-      newElement.offset = newDuration;
-    }
-
-    return newElement;
-  }
-
-  public removeNoHistory() {
-    if (this.controller) {
-      this.controller.remove();
-      this.emit('remove');
-    }
-  }
-
-  public remove() {
-    history.execute({
-      execute: () => {
-        this.removeNoHistory();
+export const { create: createNotePrototype, type: ScheduledNoteType } = createSchedulable({
+  component: 'note',
+  type: 'note',
+  offsettable: false,
+  add: (transport, params, instrument: Instrument<any, any>) => {
+    return transport.schedule({
+      onStart: ({ seconds }) => {
+        const value = allKeys[params.row.value].value;
+        const duration = new Tone.Ticks(params.duration.value * Audio.Context.PPQ).toSeconds();
+        // TODO velocity
+        instrument.triggerAttackRelease(value, duration, seconds, 1);
       },
-      undo: () => {
-        if (this.controller) {
-          this.controller.undoRemove();
-          this.emit('undoRemove');
-        }
-      },
-
+      time: params.time.value,
+      duration: 0, // FIXME We shouldn't have to set a duration. This is explained more in the Transport class file.
+      offset: 0,
     });
-  }
+  },
+});
 
-  public dispose() {
-    this.removeNoHistory();
-    super.dispose();
-  }
-
-  public abstract copy(): Schedulable;
-
-  /**
-   * Add yourself to the transport. Return null if it's not possible.
-   *
-   * @param transport The target transport.
-   */
-  protected abstract add(transport: Audio.Transport): Audio.TransportEventController | undefined;
-}
+export type ScheduledNote = SchedulableTemp<Instrument<any, any>, 'note'>;

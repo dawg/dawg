@@ -3,6 +3,7 @@ import * as Audio from '@/lib/audio';
 import uuid from 'uuid';
 import * as t from '@/lib/io';
 import { disposeHelp } from '@/utils';
+import { BuildingBlock } from '@/models/block';
 
 export const InstrumentType = t.intersection([
   t.type({
@@ -19,7 +20,7 @@ export const InstrumentType = t.intersection([
 
 export type IInstrument = t.TypeOf<typeof InstrumentType>;
 
-export abstract class Instrument<T, V extends string> {
+export abstract class Instrument<T, V extends string> extends BuildingBlock {
   public name: string;
   public id: string;
 
@@ -51,6 +52,7 @@ export abstract class Instrument<T, V extends string> {
   public volume = new Audio.Signal(this.gainNode.gain, 0, 1);
 
   constructor(source: Audio.Source<T> | null, destination: Tone.AudioNode, i: IInstrument) {
+    super();
     this.source = source;
     if (source) {
       source.connect(this.gainNode);

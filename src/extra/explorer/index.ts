@@ -6,7 +6,7 @@ import { Extensions, Folder } from '@/extra/explorer/types';
 import { loadBuffer } from '@/lib/wav';
 import parser from '@/lib/midi-parser';
 import fs from '@/lib/fs';
-import { ScheduledSample, Sample } from '@/models';
+import { ScheduledSample, Sample, createSamplePrototype } from '@/models';
 import { commands } from '@/core/commands';
 import { createExtension } from '@/lib/framework/extensions';
 import { createComponent } from '@vue/composition-api';
@@ -34,7 +34,7 @@ const extensions: Extensions = {
       return sample;
     },
     createTransferData: (sample: Sample) => {
-      return ScheduledSample.create(sample);
+      return createSamplePrototype({ row: 0, duration: sample.beats, time: 0  }, sample);
     },
     preview: (sample: Sample) => {
       const result = sample.preview();
