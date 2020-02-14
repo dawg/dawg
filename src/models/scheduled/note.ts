@@ -5,6 +5,7 @@ import { Schedulable, SchedulableType } from '@/models/scheduled/schedulable';
 import { Serializable } from '@/models/serializable';
 import { Instrument } from '@/models/instrument/instrument';
 import { allKeys } from '@/utils';
+import { literal } from '@/lib/std';
 
 export const NoteType = t.intersection([
   t.partial({
@@ -19,6 +20,7 @@ export class Note extends Schedulable implements Serializable<INote> {
   public velocity: number;
   public readonly component = 'note';
   public instrument: Instrument<any, any>;
+  protected sliceMode = literal('duplicate');
 
   constructor(instrument: Instrument<any, any>, i: INote) {
     super(i, { disableOffset: true });

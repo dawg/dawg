@@ -31,6 +31,7 @@ export class ScheduledSample extends Schedulable implements Serializable<ISchedu
   public sampleId: string;
   public readonly component = 'sample-element';
   public sample: Sample;
+  protected sliceMode = literal('offset');
 
   constructor(sample: Sample, i: IScheduledSample) {
     super(i);

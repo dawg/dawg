@@ -29,6 +29,7 @@ export class ScheduledAutomation extends Schedulable implements Serializable<ISc
 
   public readonly component = 'automation-clip-element';
   public automationId: string;
+  protected sliceMode = literal('offset');
 
   constructor(public clip: AutomationClip, i: IScheduledAutomation) {
     super(i);

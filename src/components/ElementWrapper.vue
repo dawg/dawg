@@ -106,21 +106,6 @@ export default createComponent({
         reference: context.parent.$el,
       });
 
-      // const snap = e.altKey ? props.minSnap : props.snap;
-      // const remainder = props[opts.prop] % props.snap;
-      // const pxRemainder = remainder  * props.pxPerBeat;
-
-      // // The amount of pixels that the element is from the edge of the of grid
-      // const pxFromEdge = leftNoIncludeOffset.value - context.parent.$el.scrollLeft;
-
-      // // The amount of pixels that the mouse is from the edge of the of grid
-      // const pxMouse = e.clientX - context.parent.$el.getBoundingClientRect().left;
-
-      // const diff = pxMouse - pxFromEdge - pxRemainder;
-      // let newValue =  diff / props.pxPerBeat;
-      // newValue = (Math.round(newValue / snap) * snap) + remainder;
-      // newValue = Math.round(newValue / props.minSnap) * props.minSnap;
-
       if (props[opts.prop] === newValue) { return; }
 
       if (opts.canZero) {

@@ -122,7 +122,7 @@ import BeatLines from '@/components/BeatLines';
 import { Watch } from '@/lib/update';
 import { Schedulable, Sequence } from '@/models';
 import { Ghost } from '@/models/ghost';
-import { calculateSnap, calculateSimpleSnap, getIntersection } from '@/utils';
+import { calculateSnap, calculateSimpleSnap, getIntersection, slice } from '@/utils';
 
 // For more information see the following link:
 // https://stackoverflow.com/questions/4270485/drawing-lines-on-html-page
@@ -445,22 +445,49 @@ export default class SequencerGrid extends Vue {
       const disposer = addEventListeners({
         mousemove: (event: MouseEvent) => {
           const { x: x2, y: y2 } = calculatePos(event);
-
-          this.sequence.forEach((element) => {
-            const row = element.row;
-            const time = element.time;
-
-            // tslint:disable-next-line:no-console
-            console.log(getIntersection({ x1, y1, x2, y2 }, { x1: 0, y1: row, x2: Infinity, y2: row }));
-            getIntersection({ x1, y1, x2, y2 }, { x1: 0, y1: row + 1, x2: Infinity, y2: row + 1 });
-          });
-
           this.sliceStyle =  {
             zIndex: 3,
             ...lineStyle({ x1, y1, x2, y2 }),
           };
         },
         mouseup: (event) => {
+          const { x: x2, y: y2 } = calculatePos(event);
+
+          const toAdd: Schedulable[] = [];
+          this.sequence.forEach((element) => {
+            const result = slice({
+              row: element.row,
+              time: element.time,
+              duration: element.duration,
+              pxPerBeat: this.pxPerBeat,
+              rowHeight: this.rowHeight,
+              x1,
+              y1,
+              x2,
+              y2,
+            });
+
+            if (result.result !== 'slice') {
+              return;
+            }
+
+            const time = calculateSimpleSnap({
+              value: result.time * this.pxPerBeat,
+              altKey: event.altKey,
+              minSnap: this.minSnap,
+              snap: this.snap,
+              pxPerBeat: this.pxPerBeat,
+            }) / this.pxPerBeat;
+
+            const newEl = element.slice(time);
+
+            if (newEl) {
+              toAdd.push(newEl);
+            }
+          });
+
+          this.sequence.add(...toAdd);
+          this.selected.push(...toAdd.map(() => false));
           this.sliceStyle = null;
           disposer.dispose();
         },

@@ -1,5 +1,5 @@
 import { expect } from '@/lib/testing';
-import { calculateSnap, ScrollerOpts, calculateScroll, getIntersection } from '@/utils';
+import { calculateSnap, ScrollerOpts, calculateScroll, getIntersection, slice, Line } from '@/utils';
 
 const calculate = (p: { snap?: number, current?: number, new?: number, elOffset?: number, scrollOffset?: number }) => {
   return expect(calculateSnap({
@@ -65,12 +65,11 @@ describe('computeScroll', () => {
   });
 });
 
-describe.only('getIntersection', () => {
+describe('getIntersection', () => {
   it('correctly gets easy intersection', () => {
     expect(getIntersection({ x1: 0, y1: 0, x2: 1, y2: 1 }, { x1: 0, y1: 1, x2: 1, y2: 0 })).to.deep.eq({
       x: 0.5,
       y: 0.5,
-      intersected: true,
     });
   });
 
@@ -78,13 +77,70 @@ describe.only('getIntersection', () => {
     expect(getIntersection({ x1: 1, y1: 0, x2: 1, y2: 1 }, { x1: 0, y1: 1, x2: 1, y2: 0 })).to.deep.eq({
       x: 1,
       y: 0,
-      intersected: true,
     });
 
     expect(getIntersection({ x1: 0, y1: 1, x2: 1, y2: 1 }, { x1: 0, y1: 1, x2: 1, y2: 0 })).to.deep.eq({
       x: -0,
       y: 1,
-      intersected: true,
     });
+  });
+});
+
+describe.only('slice', () => {
+  const s = (l: Line) => {
+    return expect(slice({
+      row: 1,
+      time: 1,
+      duration: 2,
+      ...l,
+    })).to.deep;
+  };
+
+  // Ok I tried to draw them to help but beware they aren't super exact
+  /**
+   *  --------------------
+   * |   ---/--------
+   * |  |  /         |
+   * |   -/----------
+   * |   /
+   */
+  it('works correctly with a basic line', () => {
+    s({ x1: 1, y1: 3, x2: 2, y2: 0 }).eq({ result: 'slice', time: 1.5 });
+  });
+
+  /**
+   *  --------------------
+   * |   ---|--------
+   * |  |   |         |
+   * |   ---|--------
+   * |
+   */
+  it('works correctly with a vertical line', () => {
+    s({ x1: 2, y1: 3, x2: 2, y2: 0 }).eq({ result: 'slice', time: 2 });
+  });
+
+  /**
+   *  --------------------
+   * |   ------------
+   * |  |            |
+   * |   ---|--------
+   * |      |
+   */
+  it('doesn\'t slice when there isn\'t enough intersection', () => {
+    s({ x1: 2, y1: 4, x2: 2, y2: 1.5 }).eq({ result: 'slice', time: 2 });
+    s({ x1: 2, y1: 4, x2: 2, y2: 1.51 }).eq({ result: 'not-enough-overlap', overlap: 0.49 });
+  });
+
+  it('doesn\'t slice when the line is horizontal', () => {
+    s({ x1: 0, y1: 2, x2: 6, y2: 2 }).eq({ result: 'not-enough-overlap', overlap: 0 });
+  });
+
+  it('detects lines that don\'t overlap at all', () => {
+    s({ x1: 0, y1: 3, x2: 6, y2: 3 }).eq({ result: 'no-intersection' });
+    s({ x1: 0, y1: 0.5, x2: 6, y2: 0 }).eq({ result: 'no-intersection' });
+  });
+
+  it('detects out-of-bounds slices', () => {
+    s({ x1: 3, y1: 0, x2: 6, y2: 3 }).eq({ result: 'slice-out-of-bounds', time: 4.5 });
   });
 });

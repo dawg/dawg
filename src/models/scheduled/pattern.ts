@@ -29,6 +29,7 @@ export class ScheduledPattern extends Schedulable implements Serializable<ISched
 
   public readonly component = 'pattern-element';
   public patternId: string;
+  protected sliceMode = literal('offset');
 
   constructor(public pattern: Pattern, i: IScheduledPattern) {
     super(i);

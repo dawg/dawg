@@ -34,6 +34,8 @@ export abstract class Schedulable extends StrictEventEmitter<{ remove: [], undoR
    */
   public row: number;
 
+  protected readonly abstract sliceMode: 'duplicate' | 'offset';
+
   // tslint:disable-next-line:variable-name
   private _time: number;
 
@@ -101,6 +103,27 @@ export abstract class Schedulable extends StrictEventEmitter<{ remove: [], undoR
 
   public schedule(transport: Audio.Transport) {
     this.controller = this.add(transport);
+  }
+
+  public slice(time: Beat) {
+    if (time <= this.time || time >= this.time + this.duration) {
+      return;
+    }
+
+    const newDuration = time - this.time;
+    const otherElementDuration = this.duration - newDuration;
+
+    const newElement = this.copy();
+    newElement.duration = otherElementDuration;
+    this.duration = newDuration;
+
+    if (this.sliceMode === 'duplicate') {
+      newElement.time += newDuration;
+    } else if (this.sliceMode === 'offset') {
+      newElement.offset = newDuration;
+    }
+
+    return newElement;
   }
 
   public removeNoHistory() {

@@ -159,9 +159,16 @@ const yInt = (x1: number, y1: number, x2: number, y2: number) => {
   return y1 - slope(x1, y1, x2, y2) * x1 ;
 };
 
+export interface Line {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
 export const getIntersection = (
-  l1: { x1: number, y1: number, x2: number, y2: number },
-  l2: { x1: number, y1: number, x2: number, y2: number },
+  l1: Line,
+  l2: Line,
 ) => {
   const { x1: x11, y1: y11, x2: x12, y2: y12 } = l1;
   const { x1: x21, y1: y21, x2: x22, y2: y22 } = l2;
@@ -191,20 +198,82 @@ export const getIntersection = (
   // console.log(slope1, yint1);
   // console.log(slope2, yint2);
 
-  const det = (x12 - x11) * (y22 - y21) - (x22 - x21) * (y12 - y11);
-  let intersected: boolean;
-  if (det === 0) {
-    intersected = false;
-  } else {
-    const lambda = ((y22 - y21) * (x22 - x11) + (x21 - x22) * (y22 - y11)) / det;
-    const gamma = ((y11 - y12) * (x22 - x11) + (x21 - x11) * (y22 - y11)) / det;
-    intersected = (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
+  return point;
+};
+
+type SliceResult =
+  { result: 'no-intersection' } |
+  { result: 'not-enough-overlap', overlap: number } |
+  { result: 'slice-out-of-bounds', time: number } |
+  { result: 'unknown' } |
+  { result: 'slice', time: number };
+
+export const slice = (
+  o: { row: number, time: number, duration: number, pxPerBeat?: number, rowHeight?: number } & Line,
+): SliceResult => {
+  const pxPerBeat = o.pxPerBeat ?? 1;
+  const rowHeight = o.rowHeight ?? 1;
+  const time = o.time * pxPerBeat;
+  const duration = o.duration * pxPerBeat;
+  const row = o.row * rowHeight;
+  const rowPlOne = row + rowHeight;
+  const { maxY, minY } = o.y1 > o.y2 ? { maxY: o.y1, minY: o.y2 } : { maxY: o.y2, minY: o.y1 };
+  const { maxX, minX } = o.x1 > o.x2 ? { maxX: o.x1, minX: o.x2 } : { maxX: o.x2, minX: o.x1 };
+
+  const elX1 = time;
+  const elX2 = time + duration;
+  if (
+    minY > rowPlOne ||
+    maxY < row ||
+    minX > elX2 ||
+    maxX < elX1
+  ) {
+    return {
+      result: 'no-intersection',
+    };
+  }
+
+  // In the following example, overlapY would be about 50% (0.50)
+  // The maximum value would be 100% (1.00)
+  // --------------
+  //
+  //   /
+  // -/-------------
+  // /
+  const overlapY = Math.min(maxY, rowPlOne) - Math.max(minY, row);
+  if (overlapY < 0.5) {
+    return {
+      result: 'not-enough-overlap',
+      overlap: overlapY,
+    };
+  }
+
+  const i1 = getIntersection(o, { x1: elX1, y1: row, x2: elX2, y2: row });
+  const i2 = getIntersection(o, { x1: elX1, y1: rowPlOne, x2: elX2, y2: rowPlOne });
+
+  if (!i1 || !i2) {
+    // We should never have to return this
+    // If we do, we should debug
+    return {
+      result: 'unknown',
+    };
+  }
+
+  const sliceTime = (i1.x + i2.x) / 2;
+  if (sliceTime < elX1 || sliceTime > elX2) {
+    return {
+      result: 'slice-out-of-bounds',
+      time: sliceTime,
+    };
   }
 
   // tslint:disable-next-line:no-console
-  console.log(intersected, point);
+  console.log(i1.x, i2.x, {
+    result: 'slice',
+    sliceTime: sliceTime / pxPerBeat,
+  });
   return {
-    intersected,
-    ...point,
+    result: 'slice',
+    time: sliceTime / pxPerBeat,
   };
 };
