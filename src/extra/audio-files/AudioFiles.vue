@@ -16,7 +16,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { ScheduledSample, Sample } from '@/models';
+import { ScheduledSample, Sample, createSamplePrototype } from '@/models';
 import * as dawg from '@/dawg';
 import { createComponent, computed } from '@vue/composition-api';
 import { useClicker } from '@/lib/vutils';
@@ -30,7 +30,7 @@ export default createComponent({
     const items = computed(() => {
       return dawg.project.samples.map((sample) => {
         return {
-          prototype: ScheduledSample.create(sample),
+          prototype: createSamplePrototype({ row: 0, time: 0, duration: sample.beats }, sample),
           sample,
         };
       });

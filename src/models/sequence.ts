@@ -5,7 +5,7 @@ import * as history from '@/core/project/history';
 
 
 const watchElement = <T extends SchedulableTemp<any, any>>(elements: T[], element: T, onRemove: (event: T) => void) => {
-  const disposer = element.on('remove', () => {
+  const disposer = element.onDidRemove(() => {
     const i = elements.indexOf(element);
     if (i >= 0) {
       onRemove(element);
@@ -42,6 +42,10 @@ export class Sequence<T extends SchedulableTemp<any, any>> extends StrictEventEm
 
   public slice() {
     return this.elements.slice();
+  }
+
+  public [Symbol.iterator]() {
+    return this.elements[Symbol.iterator];
   }
 
   private onRemove(element: T) {

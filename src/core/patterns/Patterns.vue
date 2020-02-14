@@ -22,7 +22,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { Pattern, ScheduledPattern } from '@/models';
+import { Pattern, ScheduledPattern, createPatternPrototype } from '@/models';
 import { Nullable } from '@/lib/vutils';
 import { Watch } from '@/lib/update';
 import * as framework from '@/lib/framework';
@@ -37,7 +37,7 @@ export default class Patterns extends Vue {
   get items() {
     return this.patterns.map((pattern) => {
       return {
-        prototype: ScheduledPattern.create(pattern),
+        prototype: createPatternPrototype({ row: 0, duration: pattern.duration, time: 0 }, pattern),
         pattern,
       };
     });

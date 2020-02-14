@@ -193,3 +193,7 @@ export const Mouse = {
   MIDDLE: 1,
   RIGHT: 2,
 };
+
+export interface Disposer {
+  dispose: () => void;
+}

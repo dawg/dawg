@@ -111,6 +111,9 @@ const events = emitter<{ save: [IProject] }>();
  * important audio things that were lost during JSON serialization (e.g. everything needs to be rescheduled).
  */
 function load(i: IProject): LoadedProject {
+  // tslint:disable-next-line:no-console
+  console.log('Initiate loading of the project!');
+
   Audio.Context.BPM.value = i.bpm;
 
   const channels =  (i.channels || []).map((iChannel) => {
@@ -202,8 +205,14 @@ function load(i: IProject): LoadedProject {
   const patternLookup = makeLookup(patterns);
   const sampleLookup = makeLookup(samples);
 
+  // tslint:disable-next-line:no-console
+  console.log(i);
+  if (!i.master.elements) {
+    i.master.elements = [];
+  }
+
   const mTransport = new Audio.Transport(); // master transport
-  const elements = (i.master.elements || []).map((iElement) => {
+  const elements = i.master.elements.map((iElement) => {
     switch (iElement.type) {
       case 'automation':
         if (!(iElement.id in clipLookup)) {
@@ -221,7 +230,7 @@ function load(i: IProject): LoadedProject {
         return createPatternPrototype(iElement, pattern)(mTransport);
       case 'sample':
         if (!(iElement.id in sampleLookup)) {
-          throw Error(`A Sample from the Playlist was not found (${iElement.id}).`);
+          throw Error(`A sample from the Playlist was not found (${iElement.id}).`);
         }
 
         const sample = sampleLookup[iElement.id];
@@ -229,7 +238,7 @@ function load(i: IProject): LoadedProject {
     }
   });
 
-  const master = new Playlist(elements);
+  const master = new Playlist(mTransport, elements);
 
   return {
     bpm: ref(i.bpm),
@@ -254,7 +263,7 @@ function emptyProject(): LoadedProject {
     stepsPerBeat: 4,
     beatsPerMeasure: 4,
     name: ref(''),
-    master: new Playlist([]),
+    master: new Playlist(new Audio.Transport(), []),
     patterns: [Pattern.create('Pattern 0')],
     instruments: [Synth.create('Synth 0')],
     channels: range(10).map((index) => Channel.create(index)),

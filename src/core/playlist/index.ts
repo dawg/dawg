@@ -74,13 +74,14 @@ export const playlist = framework.manager.activate({
         /**
          * Whenever we add a sample, if it hasn't been imported before, add it the the list of project samples.
          */
-        checkPrototype(prototype: ScheduledPattern | ScheduledSample) {
-          if (prototype.component !== 'sample-element') {
+        checkPrototype(prototype: PlaylistElements) {
+          console.log(prototype);
+          if (prototype.type !== 'sample') {
             return;
           }
 
-          const sample = prototype.sample;
-          if (project.samples.indexOf(prototype.sample) >= 0) {
+          const sample = prototype.element;
+          if (project.samples.indexOf(prototype.element) >= 0) {
             return;
           }
 
@@ -88,12 +89,12 @@ export const playlist = framework.manager.activate({
           project.addSample(sample);
         },
         open(element: PlaylistElements) {
-          switch (element.component) {
-            case 'sample-element':
-              sampleViewer.openedSample.value = element.sample;
+          switch (element.type) {
+            case 'sample':
+              sampleViewer.openedSample.value = element.element;
               break;
-            case 'pattern-element':
-              patterns.selectedPattern.value = element.pattern;
+            case 'pattern':
+              patterns.selectedPattern.value = element.element;
               break;
           }
         },

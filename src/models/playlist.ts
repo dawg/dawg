@@ -27,13 +27,8 @@ export class Playlist implements Serializable<IPlaylist> {
    */
   public elements: Sequence<PlaylistElements>;
 
-  /**
-   * The master transport.
-   */
-  public transport = new Audio.Transport();
-
-  constructor(elements: PlaylistElements[]) {
-    this.elements = new Sequence(this.transport, elements);
+  constructor(public transport: Audio.Transport, elements: PlaylistElements[]) {
+    this.elements = new Sequence(elements);
   }
 
   public serialize() {

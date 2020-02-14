@@ -19,7 +19,7 @@
 import { Mixins, Prop, Component, Inject, Vue } from 'vue-property-decorator';
 import { allKeys } from '@/utils';
 import { Watch } from '@/lib/update';
-import { Note } from '@/models';
+import { ScheduledNote } from '@/models';
 import { computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({
@@ -27,12 +27,12 @@ export default createComponent({
   props: {
     pxPerBeat: { type: Number, required: true },
     width: { type: Number, required: true },
-    element: { type: Object as () => Note, required: true },
+    element: { type: Object as () => ScheduledNote, required: true },
     height: { type: Number, required: true },
   },
   setup(props) {
     const noteName = computed(() => {
-      return allKeys[props.element.row].value;
+      return allKeys[props.element.row.value].value;
     });
 
     const textStyle = computed(() => {
@@ -48,7 +48,7 @@ export default createComponent({
     });
 
     const text = computed(() => {
-      return props.width > threshold.value ? allKeys[props.element.row].value : undefined;
+      return props.width > threshold.value ? allKeys[props.element.row.value].value : undefined;
     });
 
     return {

@@ -3,7 +3,7 @@ import Tone from 'tone';
 import * as Audio from '@/lib/audio';
 import { Beat } from '@/lib/audio/types';
 import * as history from '@/core/project/history';
-import { computed, Ref } from '@vue/composition-api';
+import { computed, Ref, ref, watch } from '@vue/composition-api';
 import { Context } from '@/lib/audio/context';
 import { Sample } from '@/models/sample';
 import { Pattern } from '@/models/pattern';
@@ -11,6 +11,8 @@ import { AutomationClip } from '@/models/automation';
 import { Instrument } from '@/models/instrument/instrument';
 import { allKeys } from '@/utils';
 import { BuildingBlock } from '@/models/block';
+import { Disposer } from '@/lib/std';
+import { emitter } from '@/lib/events';
 
 export const createType = <T extends string>(type: T): SerializationType<T> => t.intersection([
   t.type({
@@ -48,29 +50,32 @@ interface ISchedulableCreate<T, M extends string> {
   ) => Audio.TransportEventController | undefined;
 }
 
-const wrap = <T, K extends keyof T>(o: T, k: K, onSet?: (value: T[K]) => void) => {
-  return computed({
-    get: () => o[k],
-    set: (value: T[K]) => {
-      if (onSet) { onSet(value); }
-      o[k] = value;
-    },
+const wrap = <T, K extends keyof T>(o: T, k: K, onSet: (value: T[K]) => void) => {
+  const reference = ref(o[k]) as Ref<T[K]>;
+  watch(reference, (value) => {
+    onSet(value);
   });
+  return reference;
 };
 
 export type SchedulableTemp<T, M extends string> = Readonly<{
   component: string;
+  element: T;
+  type: M;
   offsettable: boolean;
   copy: () => SchedulableTemp<T, M>;
   duration: Ref<number>;
   time: Ref<number>;
   offset: Ref<number>;
   row: Ref<number>;
+  endBeat: Readonly<Ref<number>>;
   slice: (timeToSlice: number) => SchedulableTemp<T, M> | undefined;
   // dispose: () => void;
   remove: () => void;
   removeNoHistory: () => void;
   serialize: () => t.TypeOf<SerializationType<M>>;
+  onDidRemove: (cb: () => void) => Disposer;
+  onUndidRemove: (cb: () => void) => Disposer;
 }>;
 
 interface Basics {
@@ -110,15 +115,18 @@ const createSchedulable = <T extends BuildingBlock, M extends string>(o: ISchedu
       },
     });
 
-    const row = wrap(info, 'row');
+    const row = ref(info.row);
 
-    const copy = () => create(info, idk, transport);
+    const copy = () => {
+      // tslint:disable-next-line:no-console
+      console.log(`Copying ${o.type} element!`);
+      return create(info, idk, transport);
+    };
 
     const removeNoHistory = () => {
       if (controller) {
         controller.remove();
-        // TODO
-        // this.emit('remove');
+        events.emit('remove');
       }
     };
 
@@ -130,21 +138,20 @@ const createSchedulable = <T extends BuildingBlock, M extends string>(o: ISchedu
         undo: () => {
           if (controller) {
             controller.undoRemove();
-            // TODO
-            // this.emit('undoRemove');
+            events.emit('undoRemove');
           }
         },
 
       });
     };
 
-    const dispose = () => {
-      removeNoHistory();
-    };
+    const events = emitter<{ remove: [], undoRemove: [] }>();
 
     const params: SchedulableTemp<T, M> = {
       component: o.component,
+      type: o.type,
       offsettable: o.offsettable ?? false,
+      element: idk,
       duration,
       time,
       offset,
@@ -172,6 +179,9 @@ const createSchedulable = <T extends BuildingBlock, M extends string>(o: ISchedu
       },
       remove,
       removeNoHistory,
+      endBeat: computed(() => {
+        return time.value + duration.value;
+      }),
       // dispose,
       serialize: () => {
         return {
@@ -183,8 +193,16 @@ const createSchedulable = <T extends BuildingBlock, M extends string>(o: ISchedu
           id: idk.id,
         };
       },
+      onDidRemove: (cb: () => void) => {
+        return events.on('remove', cb);
+      },
+      onUndidRemove: (cb: () => void) => {
+        return events.on('undoRemove', cb);
+      },
     } as const;
 
+    // tslint:disable-next-line:no-console
+    console.log('Creating scheduled element!');
     let controller = o.add(transport, params, idk);
 
     return params;
@@ -196,7 +214,8 @@ const createSchedulable = <T extends BuildingBlock, M extends string>(o: ISchedu
   };
 };
 
-export type UnscheduledPrototype = (transport: Audio.Transport) => SchedulableTemp<any, any>;
+export type UnscheduledPrototype<T = any, K extends string = any> =
+  (transport: Audio.Transport) => SchedulableTemp<T, K>;
 
 export const { create: createSamplePrototype, type: ScheduledSampleType } = createSchedulable({
   component: 'sample-element',

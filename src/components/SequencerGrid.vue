@@ -46,19 +46,19 @@
     
     <div class="elements">
       <element-wrapper
-        v-for="(component, i) in components"
+        v-for="(el, i) in elements"
         :key="i"
-        :time="component.time"
-        :top="component.top"
-        :height="rowHeight"
+        :time="el.time.value"
+        :row="el.row.value"
+        :rowHeight="rowHeight"
         :px-per-beat="pxPerBeat"
         :resizable="true"
-        :disable-offset="component.disableOffset"
+        :disable-offset="!el.offsettable"
         :snap="snap"
         :min-snap="minSnap"
         :selected="selected[i]"
-        :duration="component.duration"
-        :offset="component.offset"
+        :duration="el.duration.value"
+        :offset="el.offset.value"
         :colored="colored"
         @mousedown.native="select($event, i)"
         @contextmenu.native="remove($event, i)"
@@ -69,12 +69,12 @@
       >
         <template v-slot:default="{ width }">
           <component
-            :is="component.name"
-            :row="component.row"
+            :is="el.component"
+            :row="el.row.value"
             :px-per-beat="pxPerBeat"
             :width="width"
             :height="rowHeight"
-            :element="component.element"
+            :element="el"
           ></component>
         </template>
       </element-wrapper>
@@ -211,21 +211,6 @@ export default class SequencerGrid extends Vue {
     return this.sequence.elements;
   }
 
-  get components() {
-    return this.elements.map((item) => {
-      return {
-        row: item.row,
-        time: item.time,
-        top: item.row.value * this.rowHeight,
-        name: item.component,
-        duration: item.duration,
-        offset: item.offset,
-        element: item,
-        disableOffset: item.offset,
-      };
-    });
-  }
-
   get ghostsComponents() {
     if (this.ghosts === null) {
       return [];
@@ -359,13 +344,6 @@ export default class SequencerGrid extends Vue {
     const item = this.elements[i];
     const diff = value - item.offset.value;
 
-    const updateOffset = (index: number) => {
-      // Ok so we update both the duration of getter and the duraion of the element
-      // This DEfinitely might not be needed
-      this.components[index].offset.value += diff;
-      this.elements[index].offset.value += diff;
-    };
-
     const toUpdate = [i];
     if (this.selected[i]) {
       this.selected.forEach((selected, ind) => {
@@ -381,19 +359,14 @@ export default class SequencerGrid extends Vue {
       return;
     }
 
-    toUpdate.forEach(updateOffset);
+    toUpdate.forEach((index) => {
+      this.elements[index].offset.value += diff;
+    });
   }
 
   public updateDuration(i: number, value: number) {
     const item = this.elements[i];
     const diff = value - item.duration.value;
-
-    const updateDuration = (index: number) => {
-      // Ok so we update both the duration of getter and the duraion of the element
-      // This DEfinitely might not be needed
-      this.components[index].duration.value += diff;
-      this.elements[index].duration.value += diff;
-    };
 
     const toUpdate = [i];
     if (this.selected[i]) {
@@ -410,7 +383,9 @@ export default class SequencerGrid extends Vue {
       return;
     }
 
-    toUpdate.forEach(updateDuration);
+    toUpdate.forEach((index) => {
+      this.elements[index].duration.value += diff;
+    });
 
     // Make sure to check the loop end when the duration of an element has been changed!!
     this.checkLoopEnd();
@@ -703,7 +678,7 @@ export default class SequencerGrid extends Vue {
     this.addHelper(e, element);
 
     this.$update('prototype', element);
-    this.$emit('new-prototype', prototype);
+    this.$emit('new-prototype', element);
   }
 
   @Watch<SequencerGrid>('elements', { immediate: true })

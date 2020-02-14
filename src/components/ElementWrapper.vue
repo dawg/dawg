@@ -43,7 +43,6 @@ export default createComponent({
     snap: { type: Number, required: true },
     minSnap: { type: Number, required: true },
     pxPerBeat: { type: Number, required: true },
-    height: { type: Number, required: true },
     /**
      * Duration in beats.
      */
@@ -52,7 +51,8 @@ export default createComponent({
     disableOffset: { type: Boolean, required: true },
     dragAreaWidth: { type: Number, default: 8 },
     time: { type: Number, required: true },
-    top: { type: Number, required: true },
+    row: { type: Number, required: true },
+    rowHeight: { type: Number, required: true },
     selected: { type: Boolean, required: true },
     colored: { type: Boolean, required: true },
     resizable: { type: Boolean, required: true },
@@ -70,7 +70,7 @@ export default createComponent({
         position: 'absolute',
         top: 0,
         [side]: 0,
-        height: `${props.height}px`,
+        height: `${props.rowHeight}px`,
       };
 
       return s;
@@ -82,12 +82,16 @@ export default createComponent({
 
     const componentStyle = computed(() => {
       return {
-        height: `${props.height}px`,
+        height: `${props.rowHeight}px`,
       };
     });
 
     const left = computed(() => {
       return (props.time + props.offset) * props.pxPerBeat;
+    });
+
+    const top = computed(() => {
+      return (props.row) * props.rowHeight;
     });
 
     const leftNoIncludeOffset = computed(() => {
@@ -131,11 +135,11 @@ export default createComponent({
       style,
       wrapperStyle: computed(() => ({
         left: `${left.value}px`,
-        top: `${props.top}px`,
+        top: `${top.value}px`,
       })),
       elementWrapperStyle: computed(() => ({
         width: `${width.value}px`,
-        height: `${props.height}px`,
+        height: `${props.rowHeight}px`,
         backgroundColor: props.selected ? '#ff999950!important' : props.colored ? lightColor.value : '',
       })),
       width,

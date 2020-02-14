@@ -15,7 +15,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop } from 'vue-property-decorator';
-import { ScheduledAutomation } from '@/models';
+import { ScheduledAutomation, createAutomationPrototype } from '@/models';
 import * as dawg from '@/dawg';
 
 @Component
@@ -23,7 +23,7 @@ export default class AutomationClips extends Vue {
   get items() {
     return dawg.project.automationClips.map((clip, i) => {
       return {
-        prototype: ScheduledAutomation.create(clip, 0, 0),
+        prototype: createAutomationPrototype({ time: 0, row: 0, duration: clip.duration }, clip),
         name: clip.name,
       };
     });

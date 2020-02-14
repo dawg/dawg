@@ -9,7 +9,7 @@ import { audioBufferToWav } from '@/lib/wav';
 import path from 'path';
 import fs from '@/lib/fs';
 import { ChunkGhost } from '@/models/ghost';
-import { Sample, ScheduledSample } from '@/models';
+import { Sample, ScheduledSample, createSamplePrototype } from '@/models';
 import { ref, watch } from '@vue/composition-api';
 import { project } from '@/core/project';
 import { controls } from '@/core/controls';
@@ -116,16 +116,13 @@ export const extension = createExtension({
         const master = project.master;
         const sample = Sample.create(dst, buffer);
         project.samples.push(sample);
-        const scheduled = new ScheduledSample(sample, {
-          type: 'sample',
-          sampleId: sample.id,
+        const scheduled = createSamplePrototype({
           duration: sample.beats,
           row: trackId,
           time,
           offset: 0,
-        });
+        }, sample)(master.transport);
 
-        scheduled.schedule(master.transport);
         master.elements.add(scheduled);
 
         recording.value = false;

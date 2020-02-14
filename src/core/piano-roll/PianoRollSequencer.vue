@@ -32,8 +32,9 @@
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import { allKeys, keyLookup } from '@/utils';
 import { INotes } from '@/lib/midi-parser';
-import { Note, Instrument, Playlist, Pattern, Score, Sequence } from '@/models';
+import { ScheduledNote, Instrument, Playlist, Pattern, Score, Sequence, createNotePrototype } from '@/models';
 import { Watch } from '@/lib/update';
+import { UnscheduledPrototype } from '../../models/schedulable';
 
 @Component
 export default class PianoRollSequencer extends Vue {
@@ -42,13 +43,13 @@ export default class PianoRollSequencer extends Vue {
   @Prop({ type: Object, required: true }) public pattern!: Pattern;
   @Prop({ type: Number, required: true }) public rowHeight!: number;
 
-  public lastNote: null | Note = null;
+  public lastNote: null | ScheduledNote = null;
   public eventDisposer?: { dispose: () => void };
 
   // This is the prototype
   // row and time are overwritten so they can be set to 0 here
   public allKeys = allKeys;
-  public note: Note | null = null;
+  public note: UnscheduledPrototype | null = null;
 
   get instrument() {
     return this.score.instrument;
@@ -68,7 +69,7 @@ export default class PianoRollSequencer extends Vue {
       return 0;
     }
 
-    return this.lastNote.endBeat;
+    return this.lastNote.endBeat.value;
   }
 
   public rowClass(i: number) {
@@ -80,22 +81,23 @@ export default class PianoRollSequencer extends Vue {
     notes.forEach((iNote) => {
       // Transform the interfaces into actual note classes
       const row = keyLookup[iNote.name].id;
-      const note = new Note(this.instrument, {
+      const note = createNotePrototype({
         row,
         duration: iNote.duration,
         time: iNote.start,
-        velocity: iNote.velocity,
-      });
+        // TODO
+        // velocity: iNote.velocity,
+      }, this.instrument)(this.transport);
 
       this.score.notes.add(note);
     });
   }
 
   public checkAll() {
-    let max: null | Note = null;
+    let max: null | ScheduledNote = null;
     this.pattern.scores.forEach((score) => {
       score.notes.forEach((note) => {
-        if (!max || note.time + note.duration > max.time + max.duration) {
+        if (!max || note.time.value + note.duration.value > max.time.value + max.duration.value) {
           max = note;
         }
       });
@@ -111,7 +113,7 @@ export default class PianoRollSequencer extends Vue {
 
   @Watch<PianoRollSequencer>('instrument', { immediate: true })
   public setPrototype() {
-    this.note = new Note(this.instrument, { row: 0, time: 0, duration: 1 });
+    this.note = createNotePrototype({ row: 0, time: 0, duration: 1 }, this.instrument);
   }
 
   @Watch<PianoRollSequencer>('score', { immediate: true })
@@ -121,7 +123,7 @@ export default class PianoRollSequencer extends Vue {
     }
 
     const addedDisposer = this.score.notes.on('added', (el) => {
-      if (el.endBeat > this.playlistLoopEnd) {
+      if (el.endBeat.value > this.playlistLoopEnd) {
         this.lastNote = el;
       }
     });

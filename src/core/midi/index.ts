@@ -4,7 +4,7 @@ import { notify } from '@/core/notify';
 import { instruments } from '@/core/instruments';
 import { keyLookup } from '@/utils';
 import { patterns } from '@/core/patterns';
-import { Note } from '@/models';
+import { ScheduledNote, createNotePrototype } from '@/models';
 import * as Audio from '@/lib/audio';
 import { theme } from '@/core/theme';
 import { pianoRoll } from '@/core/piano-roll';
@@ -59,18 +59,15 @@ export const extension: Extension = {
       const noteDuration = e.timestamp - noteOn.timestamp;
 
       if (selectedScore.value) {
-        const note = new Note(selectedScore.value.instrument, {
+        const note = createNotePrototype({
           row: keyLookup[e.note.name + e.note.octave].id,
           duration: noteDuration / 1000 / 60 * project.bpm.value,
           time: noteStartTime,
-          velocity: noteOn.rawVelocity,
-        });
+          // TODO
+          // velocity: noteOn.rawVelocity,
+        }, selectedScore.value.instrument)(transport);
 
         selectedScore.value.notes.add(note);
-
-        if (patterns.selectedPattern.value) {
-          note.schedule(transport);
-        }
       }
     };
 

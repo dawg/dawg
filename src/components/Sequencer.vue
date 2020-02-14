@@ -86,6 +86,7 @@
         :row-height="rowHeight"
         :progress="data.progress"
         :name="name"
+        :transport="transport"
         :tool="selectedTool"
         :snap="snap.raw"
         :min-snap="minSnap"

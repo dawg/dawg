@@ -38,7 +38,7 @@ export class Score implements Serializable<IScore> {
       return createNotePrototype(iNote, this.instrument)(transport);
     });
 
-    this.notes = new Sequence(transport, notes);
+    this.notes = new Sequence(notes);
   }
 
   public serialize() {
@@ -50,6 +50,6 @@ export class Score implements Serializable<IScore> {
   }
 
   public dispose() {
-    this.notes.forEach((note) => note.dispose());
+    this.notes.forEach((note) => note.removeNoHistory());
   }
 }

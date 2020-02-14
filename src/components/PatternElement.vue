@@ -11,7 +11,7 @@
 <script lang="ts">
 import { Vue, Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 import MiniScore from '@/components/MiniScore.vue';
-import { Note, ScheduledPattern } from '@/models';
+import { ScheduledNote, ScheduledPattern } from '@/models';
 
 @Component({
   components: { MiniScore },
@@ -23,8 +23,8 @@ export default class PatternElement extends Vue {
   public totalDuration = 0;
 
   get notes() {
-    const notes: Note[] = [];
-    return notes.concat(...this.element.pattern.scores.map((score) => score.notes.slice()));
+    const notes: ScheduledNote[] = [];
+    return notes.concat(...this.element.element.scores.map((score) => score.notes.slice()));
   }
 
   get scoreStyle() {
