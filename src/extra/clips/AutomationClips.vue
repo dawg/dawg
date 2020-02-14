@@ -24,7 +24,7 @@ export default class AutomationClips extends Vue {
     return dawg.project.automationClips.map((clip, i) => {
       return {
         prototype: ScheduledAutomation.create(clip, 0, 0),
-        name: `Automation ${i}`,
+        name: clip.name,
       };
     });
   }

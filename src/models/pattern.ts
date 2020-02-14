@@ -5,8 +5,8 @@ import { Serializable } from '@/models/serializable';
 import { Score, ScoreType } from '@/models/score';
 
 const PatternTypeRequired = t.type({
-  name: t.string,
   id: t.string,
+  name: t.string,
 });
 
 const PatternTypePartial = t.partial({

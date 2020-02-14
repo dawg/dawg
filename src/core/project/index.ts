@@ -797,7 +797,7 @@ const extension = createExtension({
     };
 
     const saveAs: framework.Command = {
-      text: 'Save',
+      text: 'Save As',
       shortcut: ['CmdOrCtrl', 'Shift', 'S'],
       callback: async () => {
         await api.saveProject({

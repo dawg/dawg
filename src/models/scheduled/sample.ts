@@ -39,16 +39,8 @@ export class ScheduledSample extends Schedulable implements Serializable<ISchedu
     this.sampleId = i.sampleId;
   }
 
-  get sampleDuration() {
-    return this.sample.beats;
-  }
-
   public copy() {
     return new ScheduledSample(this.sample, this.serialize());
-  }
-
-  public init(sample: Sample) {
-    this.sample = sample;
   }
 
   public serialize() {

@@ -12,6 +12,7 @@ export const AutomationType = t.type({
   contextId: t.string,
   attr: t.string,
   id: t.string,
+  name: t.string,
   points: t.array(PointType),
 });
 
@@ -37,6 +38,7 @@ export class AutomationClip implements Serializable<IAutomation> {
         },
       ],
       attr,
+      name: 'Automation',
     });
 
     return ac;
@@ -47,6 +49,7 @@ export class AutomationClip implements Serializable<IAutomation> {
   public contextId: string;
   public attr: string;
   public id: string;
+  public readonly name: string;
 
   public control: Audio.Controller;
   private signal: Audio.Signal;
@@ -56,6 +59,7 @@ export class AutomationClip implements Serializable<IAutomation> {
     this.contextId = i.contextId;
     this.attr = i.attr;
     this.id = i.id;
+    this.name = i.name;
 
     this.signal = signal;
     this.control = new Audio.Controller(signal);
@@ -109,6 +113,7 @@ export class AutomationClip implements Serializable<IAutomation> {
       contextId: this.contextId,
       attr: this.attr,
       id: this.id,
+      name: this.name,
       points: this.points.map((point) => point.serialize()),
     };
   }

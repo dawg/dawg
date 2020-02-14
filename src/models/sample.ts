@@ -8,41 +8,29 @@ import { Context } from '@/lib/audio/context';
 export const SampleType = t.type({
   id: t.string,
   path: t.string,
+  name: t.string,
 });
 
 export type ISample = t.TypeOf<typeof SampleType>;
-
-interface BuildingBlockOptions<T extends t.Mixed, V extends any[]>  {
-  type: T;
-  create: (...args: V) => void;
-}
-
-const createBuildingBlock = <T extends t.Mixed, V extends any[]>(opts: BuildingBlockOptions<T, V>) => {
-  //
-};
-
-export const createSample = createBuildingBlock({
-  type: SampleType,
-  create: () => {
-    //
-  },
-});
 
 export class Sample implements Serializable<ISample> {
   public static create(samplePath: string, buffer: AudioBuffer) {
     return new Sample(buffer, {
       id: uuid.v4(),
       path: samplePath,
+      name: path.basename(samplePath),
     });
   }
 
   public id: string;
   public path: string;
   public player: Audio.Player | null = null;
+  public readonly name: string;
 
   constructor(public buffer: AudioBuffer | null, i: ISample) {
     this.id = i.id;
     this.path = i.path;
+    this.name = i.name;
     if (buffer) {
       this.player = new Audio.Player(buffer).toMaster();
     }
@@ -55,10 +43,6 @@ export class Sample implements Serializable<ISample> {
     } else {
       return 0;
     }
-  }
-
-  get name() {
-    return path.basename(this.path);
   }
 
   public preview(opts?: { onended: () => void }): { started: true, dispose: () => void } | { started: false } {
@@ -85,6 +69,7 @@ export class Sample implements Serializable<ISample> {
     return {
       id: this.id,
       path: this.path,
+      name: this.name,
     };
   }
 }
