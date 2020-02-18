@@ -15,7 +15,6 @@
       :prototype.sync="note"
       :row-class="rowClass"
       :set-loop-end="setLoopEnd"
-      :colored="false"
       name="Piano Roll"
     >
       <template slot="side">
@@ -32,9 +31,8 @@
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import { allKeys, keyLookup } from '@/utils';
 import { INotes } from '@/lib/midi-parser';
-import { ScheduledNote, Instrument, Playlist, Pattern, Score, Sequence, createNotePrototype } from '@/models';
+import { ScheduledNote, Instrument, Playlist, Pattern, Score, Sequence, createNotePrototype, SchedulableTemp } from '@/models';
 import { Watch } from '@/lib/update';
-import { UnscheduledPrototype } from '../../models/schedulable';
 
 @Component
 export default class PianoRollSequencer extends Vue {
@@ -49,7 +47,7 @@ export default class PianoRollSequencer extends Vue {
   // This is the prototype
   // row and time are overwritten so they can be set to 0 here
   public allKeys = allKeys;
-  public note: UnscheduledPrototype | null = null;
+  public note: (() => SchedulableTemp<any, any>) | null = null;
 
   get instrument() {
     return this.score.instrument;
@@ -113,7 +111,8 @@ export default class PianoRollSequencer extends Vue {
 
   @Watch<PianoRollSequencer>('instrument', { immediate: true })
   public setPrototype() {
-    this.note = createNotePrototype({ row: 0, time: 0, duration: 1 }, this.instrument);
+    const create = createNotePrototype({ row: 0, time: 0, duration: 1 }, this.instrument);
+    this.note = () => create(this.transport);
   }
 
   @Watch<PianoRollSequencer>('score', { immediate: true })

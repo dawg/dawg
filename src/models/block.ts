@@ -2,6 +2,7 @@ import { emitter } from '@/lib/events';
 
 export abstract class BuildingBlock {
   public abstract id: string;
+  public abstract readonly name: string;
   private events = emitter<{ delete: [], undoDelete: [] }>();
 
   public notifyOfDeletion() {

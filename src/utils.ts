@@ -96,12 +96,47 @@ export const calculateSnap = (
   return Math.round(newValue / opts.minSnap) * opts.minSnap;
 };
 
+
+export interface PlacementSnapOpts {
+  event: { clientX: number, clientY: number, altKey?: boolean };
+  minSnap: number;
+  snap: number;
+  pxPerBeat: number;
+  vert?: boolean;
+  /**
+   * Reference information. Usually just pass in the element.
+   */
+  reference: { getBoundingClientRect: () => { left: number, top: number }, scrollLeft?: number, scrollTop?: number };
+}
+
+export const calculatePlacementSnap = (
+  opts: PlacementSnapOpts,
+) => {
+  const rect = opts.reference.getBoundingClientRect();
+
+  // The amount of pixels that the mouse is from the edge of the of grid
+  const pxMouseFromLeft =
+    (opts.vert ? opts.event.clientY : opts.event.clientX) -
+    (opts.vert ? rect.top : rect.left) +
+    ((opts.vert ? opts.reference.scrollTop : opts.reference.scrollLeft) ?? 0);
+
+  return calculateSimpleSnap({
+    value: pxMouseFromLeft,
+    altKey: opts.event.altKey,
+    minSnap: opts.minSnap,
+    snap: opts.snap,
+    pxPerBeat: opts.pxPerBeat,
+    round: Math.floor,
+  }) / opts.pxPerBeat;
+};
+
 export interface SimpleSnapOpts {
   value: number;
   altKey?: boolean;
   minSnap: number;
   snap: number;
   pxPerBeat: number;
+  round?: (arg: number) => number;
 }
 
 export const calculateSimpleSnap = (
@@ -109,10 +144,12 @@ export const calculateSimpleSnap = (
 ) => {
   const snap = opts.altKey ? opts.minSnap : opts.snap;
 
+  const round = opts.round ?? Math.round;
+
   // The amount of pixels that the mouse is from the edge of the of grid
   let newValue =  opts.value / opts.pxPerBeat;
-  newValue = (Math.round(newValue / snap) * snap);
-  return (Math.round(newValue / opts.minSnap) * opts.minSnap) * opts.pxPerBeat;
+  newValue = (round(newValue / snap) * snap);
+  return (round(newValue / opts.minSnap) * opts.minSnap) * opts.pxPerBeat;
 };
 
 export interface ScrollerOpts {

@@ -3,7 +3,7 @@
     class="pattern-element"
     :style="scoreStyle"
     :notes="notes"
-    :offset="element.offset"
+    :offset="element.offset.value"
     :total-duration.sync="totalDuration"
   ></mini-score>
 </template>

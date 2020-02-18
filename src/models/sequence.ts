@@ -19,6 +19,8 @@ export class Sequence<T extends SchedulableTemp<any, any>> extends StrictEventEm
   public map = this.elements.map.bind(this.elements);
   public filter = this.elements.filter.bind(this.elements);
   public forEach = this.elements.forEach.bind(this.elements);
+  public some = this.elements.some.bind(this.elements);
+  public every = this.elements.every.bind(this.elements);
 
   constructor(public elements: T[]) {
     super();

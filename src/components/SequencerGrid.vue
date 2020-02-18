@@ -21,7 +21,7 @@
         v-for="(ghost, i) in ghostsComponents"
         :key="i"
         :px-per-beat="pxPerBeat"
-        :colored="colored"
+        :colored="true"
         :selected="false"
         :offset="0"
         :height="rowHeight"
@@ -59,7 +59,8 @@
         :selected="selected[i]"
         :duration="el.duration.value"
         :offset="el.offset.value"
-        :colored="colored"
+        :show-border="el.showBorder"
+        :text="el.name ? el.name.value : undefined"
         @mousedown.native="select($event, i)"
         @contextmenu.native="remove($event, i)"
         @click.native="clickElement(i)"
@@ -123,8 +124,8 @@ import { Watch } from '@/lib/update';
 import { Sequence } from '@/models';
 import * as Audio from '@/lib/audio';
 import { Ghost } from '@/models/ghost';
-import { calculateSnap, calculateSimpleSnap, getIntersection, slice } from '@/utils';
-import { UnscheduledPrototype, SchedulableTemp } from '../models/schedulable';
+import { calculateSnap, calculateSimpleSnap, getIntersection, slice, calculatePlacementSnap } from '@/utils';
+import { UnscheduledPrototype, SchedulableTemp } from '@/models/schedulable';
 
 // For more information see the following link:
 // https://stackoverflow.com/questions/4270485/drawing-lines-on-html-page
@@ -190,11 +191,9 @@ export default class SequencerGrid extends Vue {
   @Prop({ type: Number, required: true }) public progress!: number;
 
   // FIXME edge case -> what happens if the element is deleted?
-  @Prop(Nullable(Object)) public prototype!: SchedulableTemp<any, any> | null;
+  @Prop(Nullable(Function)) public prototype!: (() => SchedulableTemp<any, any>) | null;
 
   @Prop({ type: Number, required: true }) public displayLoopEnd!: number;
-
-  @Prop({ type: Boolean, required: true }) public colored!: boolean;
 
   public rows!: HTMLElement;
   public selectStartEvent: MouseEvent | null = null;
@@ -481,13 +480,21 @@ export default class SequencerGrid extends Vue {
     }
 
     const rect = this.$el.getBoundingClientRect();
+    const time = calculatePlacementSnap({
+      event: e,
+      minSnap: this.minSnap,
+      snap: this.snap,
+      pxPerBeat: this.pxPerBeat,
+      reference: this.$el,
+    });
 
-    const x = e.clientX - rect.left;
-    let time = x / this.pxPerBeat;
-    time = Math.floor(time / this.snap) * this.snap;
-
-    const y = e.clientY - rect.top;
-    const row = Math.floor(y / this.rowHeight);
+    const row = calculatePlacementSnap({
+      event: e,
+      minSnap: 1,
+      snap: 1,
+      pxPerBeat: this.rowHeight,
+      reference: this.$el,
+    });
 
     el.row.value = row;
     el.time.value = time;
@@ -501,7 +508,7 @@ export default class SequencerGrid extends Vue {
       return;
     }
 
-    this.addHelper(e, this.prototype.copy());
+    this.addHelper(e, this.prototype());
   }
 
   public move(e: MouseEvent, i: number) {
@@ -591,7 +598,7 @@ export default class SequencerGrid extends Vue {
   }
 
   public clickElement(i: number) {
-    this.$update('prototype', this.elements[i]);
+    this.$update('prototype', this.elements[i].copy);
   }
 
   public select(e: MouseEvent, i: number) {
@@ -677,7 +684,7 @@ export default class SequencerGrid extends Vue {
     const element = prototype(this.transport);
     this.addHelper(e, element);
 
-    this.$update('prototype', element);
+    this.$update('prototype', element.copy);
     this.$emit('new-prototype', element);
   }
 

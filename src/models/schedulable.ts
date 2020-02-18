@@ -42,6 +42,7 @@ type SerializationType<T extends string> = t.IntersectionC<[
 
 interface ISchedulableCreate<T, M extends string> {
   component: string;
+  showBorder: boolean;
   type: M;
   // TODO make a intersection type based on this!!
   offsettable?: boolean;
@@ -58,6 +59,7 @@ const wrap = <T, K extends keyof T>(o: T, k: K, onSet: (value: T[K]) => void) =>
   return reference;
 };
 
+
 export type SchedulableTemp<T, M extends string> = Readonly<{
   component: string;
   element: T;
@@ -69,6 +71,8 @@ export type SchedulableTemp<T, M extends string> = Readonly<{
   offset: Ref<number>;
   row: Ref<number>;
   endBeat: Readonly<Ref<number>>;
+  showBorder: boolean;
+  name?: Readonly<Ref<string>>;
   slice: (timeToSlice: number) => SchedulableTemp<T, M> | undefined;
   // dispose: () => void;
   remove: () => void;
@@ -85,10 +89,13 @@ interface Basics {
   offset?: number;
 }
 
-const createSchedulable = <T extends BuildingBlock, M extends string>(o: ISchedulableCreate<T, M>) => {
+const createSchedulable = <
+  T extends BuildingBlock,
+  M extends string,
+>(o: ISchedulableCreate<T, M>) => {
   const create = (
     opts: Basics, idk: T, transport: Audio.Transport,
-  ) => {
+  ): SchedulableTemp<T, M> => {
     const info = {  ...opts };
 
     idk.onDidDelete(() => {
@@ -145,9 +152,11 @@ const createSchedulable = <T extends BuildingBlock, M extends string>(o: ISchedu
       });
     };
 
+
     const events = emitter<{ remove: [], undoRemove: [] }>();
 
     const params: SchedulableTemp<T, M> = {
+      name: computed(() => idk.name),
       component: o.component,
       type: o.type,
       offsettable: o.offsettable ?? false,
@@ -199,6 +208,7 @@ const createSchedulable = <T extends BuildingBlock, M extends string>(o: ISchedu
       onUndidRemove: (cb: () => void) => {
         return events.on('undoRemove', cb);
       },
+      showBorder: o.showBorder,
     } as const;
 
     // tslint:disable-next-line:no-console
@@ -220,6 +230,7 @@ export type UnscheduledPrototype<T = any, K extends string = any> =
 export const { create: createSamplePrototype, type: ScheduledSampleType } = createSchedulable({
   component: 'sample-element',
   type: 'sample',
+  showBorder: true,
   offsettable: true,
   add: (transport, params, sample: Sample) => {
     if (!sample.player) {
@@ -263,6 +274,7 @@ export const { create: createPatternPrototype, type: ScheduledPatternType } = cr
   component: 'pattern-element',
   type: 'pattern',
   offsettable: true,
+  showBorder: true,
   add: (transport, params, pattern: Pattern) => {
     return transport.embed(pattern.transport, params.time.value, params.duration.value);
   },
@@ -274,6 +286,7 @@ export const { create: createAutomationPrototype, type: ScheduledAutomationType 
   component: 'automation-clip-element',
   type: 'automation',
   offsettable: true,
+  showBorder: true,
   add: (transport, params, clip: AutomationClip) => {
     return clip.control.sync(transport, params.time.value, params.duration.value);
   },
@@ -285,6 +298,7 @@ export const { create: createNotePrototype, type: ScheduledNoteType } = createSc
   component: 'note',
   type: 'note',
   offsettable: false,
+  showBorder: false,
   add: (transport, params, instrument: Instrument<any, any>) => {
     return transport.schedule({
       onStart: ({ seconds }) => {

@@ -8,11 +8,10 @@
     :side-width="130"
     name="Playlist"
     :prototype.sync="prototype"
-    :colored="true"
   >
     <template slot="side">
       <d-track
-        v-for="(track, i) in tracks" 
+        v-for="(track, i) in tracks"
         :key="i" 
         :style="{ height: `${rowHeight}px`, marginTop: i === 1 ? '-1px' : '' }"
         :track="track"

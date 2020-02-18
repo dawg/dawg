@@ -1,11 +1,15 @@
 <template>
   <div class="absolute z-10" :style="wrapperStyle">
     <div
-      v-if="colored"
+      v-if="showBorder"
       class="relative inline-block overflow-hidden flex flex-col"
       :style="elementWrapperStyle"
     >
-      <div class="w-full" style="height: 8px" :style="{ backgroundColor: color }"></div>
+      <div class="w-full" :style="borderStyle"></div>
+      <div class="w-full text-default" :style="textBorderStyle">
+        {{ text }}
+      </div>
+      <div class="w-full" :style="spacerStyle"></div>
       <slot v-bind:width="width" v-bind:offset="offset"></slot>
     </div>
     <div
@@ -54,9 +58,10 @@ export default createComponent({
     row: { type: Number, required: true },
     rowHeight: { type: Number, required: true },
     selected: { type: Boolean, required: true },
-    colored: { type: Boolean, required: true },
+    showBorder: { type: Boolean, required: false },
+    text: { type: String, required: false },
     resizable: { type: Boolean, required: true },
-    color: { type: String, default: '#ccc' },
+    color: { type: String, default: '#1976d29e' },
   },
   setup(props, context) {
     const lightColor = computed(() => {
@@ -140,9 +145,28 @@ export default createComponent({
       elementWrapperStyle: computed(() => ({
         width: `${width.value}px`,
         height: `${props.rowHeight}px`,
-        backgroundColor: props.selected ? '#ff999950!important' : props.colored ? lightColor.value : '',
+        backgroundColor: props.selected ? '#ff999950!important' : props.showBorder ? lightColor.value : '',
       })),
       width,
+      borderStyle: computed(() => {
+        return {
+          backgroundColor: props.color,
+          height: `10px`,
+          opacity: '0.60',
+          position: 'absolute',
+        };
+      }),
+      textBorderStyle: computed(() => {
+        return {
+          lineHeight: `10px`,
+          fontSize: '9px',
+          padding: '0 3px',
+          position: 'absolute',
+        };
+      }),
+      spacerStyle: computed(() => ({
+        flex: `0 0 10px`,
+      })),
     };
   },
 });
