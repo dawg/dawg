@@ -96,40 +96,6 @@ export const calculateSnap = (
   return Math.round(newValue / opts.minSnap) * opts.minSnap;
 };
 
-
-export interface PlacementSnapOpts {
-  event: { clientX: number, clientY: number, altKey?: boolean };
-  minSnap: number;
-  snap: number;
-  pxPerBeat: number;
-  vert?: boolean;
-  /**
-   * Reference information. Usually just pass in the element.
-   */
-  reference: { getBoundingClientRect: () => { left: number, top: number }, scrollLeft?: number, scrollTop?: number };
-}
-
-export const calculatePlacementSnap = (
-  opts: PlacementSnapOpts,
-) => {
-  const rect = opts.reference.getBoundingClientRect();
-
-  // The amount of pixels that the mouse is from the edge of the of grid
-  const pxMouseFromLeft =
-    (opts.vert ? opts.event.clientY : opts.event.clientX) -
-    (opts.vert ? rect.top : rect.left) +
-    ((opts.vert ? opts.reference.scrollTop : opts.reference.scrollLeft) ?? 0);
-
-  return calculateSimpleSnap({
-    value: pxMouseFromLeft,
-    altKey: opts.event.altKey,
-    minSnap: opts.minSnap,
-    snap: opts.snap,
-    pxPerBeat: opts.pxPerBeat,
-    round: Math.floor,
-  }) / opts.pxPerBeat;
-};
-
 export interface SimpleSnapOpts {
   value: number;
   altKey?: boolean;

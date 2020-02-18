@@ -127,34 +127,6 @@ import { Ghost } from '@/models/ghost';
 import { calculateSnap, calculateSimpleSnap, getIntersection, slice, calculatePlacementSnap } from '@/utils';
 import { UnscheduledPrototype, SchedulableTemp } from '@/models/schedulable';
 
-// For more information see the following link:
-// https://stackoverflow.com/questions/4270485/drawing-lines-on-html-page
-function lineStyle(
-  { x1, y1, x2, y2 }: { x1: number, y1: number, x2: number, y2: number },
-) {
-    const a = x1 - x2;
-    const b = y1 - y2;
-    const c = Math.sqrt(a * a + b * b);
-
-    const sx = (x1 + x2) / 2;
-    const sy = (y1 + y2) / 2;
-
-    const x = sx - c / 2;
-    const y = sy;
-
-    const alpha = Math.PI - Math.atan2(-b, a);
-    return {
-      border: '1px solid white',
-      width: c + 'px',
-      height: 0,
-      transform: 'rotate(' + alpha + 'rad)',
-      position: 'absolute',
-      top: y + 'px',
-      left: x + 'px',
-    };
-}
-
-
 @Component({
   components: { BeatLines },
 })
@@ -340,230 +312,23 @@ export default class SequencerGrid extends Vue {
   }
 
   public updateOffset(i: number, value: number) {
-    const item = this.elements[i];
-    const diff = value - item.offset.value;
-
-    const toUpdate = [i];
-    if (this.selected[i]) {
-      this.selected.forEach((selected, ind) => {
-        if (selected && ind !== i) {
-          toUpdate.push(ind);
-        }
-      });
-    }
-
-    // If the diff is less than zero, make sure we aren't setting the offset of
-    // any of the elments to < 0
-    if (diff < 0 && toUpdate.some((ind) => (this.elements[ind].offset.value + diff) < 0)) {
-      return;
-    }
-
-    toUpdate.forEach((index) => {
-      this.elements[index].offset.value += diff;
-    });
+    //
   }
 
   public updateDuration(i: number, value: number) {
-    const item = this.elements[i];
-    const diff = value - item.duration.value;
-
-    const toUpdate = [i];
-    if (this.selected[i]) {
-      this.selected.forEach((selected, ind) => {
-        if (selected && ind !== i) {
-          toUpdate.push(ind);
-        }
-      });
-    }
-
-    // If the diff is less than zero, make sure we aren't settings the length of
-    // any of the elments to <= 0
-    if (diff < 0 && toUpdate.some((ind) => this.elements[ind].duration.value + diff <= 0)) {
-      return;
-    }
-
-    toUpdate.forEach((index) => {
-      this.elements[index].duration.value += diff;
-    });
-
-    // Make sure to check the loop end when the duration of an element has been changed!!
-    this.checkLoopEnd();
+    //
   }
 
   public mouseDownOnSurroundings(e: MouseEvent) {
-    if (this.tool === 'pointer') {
-      this.selectStartEvent = e;
-      const disposer = addEventListeners({
-        mousemove: (event: MouseEvent) => {
-          this.selectCurrentEvent = event;
-        },
-        mouseup: () => {
-          this.selectStartEvent = null;
-          this.selectCurrentEvent = null;
-          disposer.dispose();
-        },
-      });
-    } else if (this.tool === 'slicer') {
-      const rect = this.rows.getBoundingClientRect();
-
-      const calculatePos = (event: MouseEvent) => {
-        return {
-            x: calculateSimpleSnap({
-            value: event.clientX - rect.left,
-            altKey: event.altKey,
-            minSnap: this.minSnap,
-            snap: this.snap,
-            pxPerBeat: this.pxPerBeat,
-          }),
-          y: event.clientY - rect.top,
-        };
-      };
-
-      const { x: x1, y: y1 } = calculatePos(e);
-      const disposer = addEventListeners({
-        mousemove: (event: MouseEvent) => {
-          const { x: x2, y: y2 } = calculatePos(event);
-          this.sliceStyle =  {
-            zIndex: 3,
-            ...lineStyle({ x1, y1, x2, y2 }),
-          };
-        },
-        mouseup: (event) => {
-          const { x: x2, y: y2 } = calculatePos(event);
-
-          const toAdd: Array<SchedulableTemp<any, any>> = [];
-          this.sequence.forEach((element) => {
-            const result = slice({
-              row: element.row.value,
-              time: element.time.value,
-              duration: element.duration.value,
-              pxPerBeat: this.pxPerBeat,
-              rowHeight: this.rowHeight,
-              x1,
-              y1,
-              x2,
-              y2,
-            });
-
-            if (result.result !== 'slice') {
-              return;
-            }
-
-            const time = calculateSimpleSnap({
-              value: result.time * this.pxPerBeat,
-              altKey: event.altKey,
-              minSnap: this.minSnap,
-              snap: this.snap,
-              pxPerBeat: this.pxPerBeat,
-            }) / this.pxPerBeat;
-
-            const newEl = element.slice(time);
-
-            if (newEl) {
-              toAdd.push(newEl);
-            }
-          });
-
-          this.sequence.add(...toAdd);
-          this.selected.push(...toAdd.map(() => false));
-          this.sliceStyle = null;
-          disposer.dispose();
-        },
-      });
-    }
-  }
-
-  public addHelper(e: MouseEvent, el: SchedulableTemp<any, any>) {
-    if (this.selected.some((selected) => selected)) {
-      this.selected = this.elements.map(() => false);
-      return;
-    }
-
-    const rect = this.$el.getBoundingClientRect();
-    const time = calculatePlacementSnap({
-      event: e,
-      minSnap: this.minSnap,
-      snap: this.snap,
-      pxPerBeat: this.pxPerBeat,
-      reference: this.$el,
-    });
-
-    const row = calculatePlacementSnap({
-      event: e,
-      minSnap: 1,
-      snap: 1,
-      pxPerBeat: this.rowHeight,
-      reference: this.$el,
-    });
-
-    el.row.value = row;
-    el.time.value = time;
-
-    this.selected.push(false);
-    this.sequence.add(el);
+    //
   }
 
   public add(e: MouseEvent) {
-    if (!this.prototype) {
-      return;
-    }
-
-    this.addHelper(e, this.prototype());
+    //
   }
 
   public move(e: MouseEvent, i: number) {
-    if (!this.dragStartEvent) {
-      return;
-    }
-
-    // Get the preVIOUS element first
-    // and ALSO grab the current position
-    const oldItem = this.elements[i];
-    const rect = this.rows.getBoundingClientRect();
-
-    // Get the start BEAT
-    let startBeat = (this.dragStartEvent.clientX - rect.left) / this.pxPerBeat;
-    startBeat = Math.floor(startBeat / this.snap) * this.snap;
-
-    // Get the end BEAT
-    let endBeat = (e.clientX - rect.left) / this.pxPerBeat;
-    endBeat = Math.floor(endBeat / this.snap) * this.snap;
-
-    // CHeck if we are going to move squares
-    const diff = endBeat - startBeat;
-    const time = oldItem.time.value + diff;
-    if (time < 0) { return; }
-
-    const y = e.clientY - rect.top;
-    const row = Math.floor(y / this.rowHeight);
-    if (row < 0) { return; }
-
-    if (row === oldItem.row.value && time === oldItem.time.value) { return; }
-    // OK, so we've moved squares
-    // Lets update our dragStartEvent or else
-    // things will start to go haywyre :////
-    this.dragStartEvent = e;
-
-    const timeDiff = time - oldItem.time.value;
-    const rowDiff = row - oldItem.row.value;
-
-    let itemsToMove: Array<SchedulableTemp<any, any>>;
-    if (this.selected[i]) {
-      itemsToMove = this.elements.filter((item, ind) => this.selected[ind]);
-    } else {
-      itemsToMove = [oldItem];
-    }
-
-    if (itemsToMove.some((item) => (item.time.value + timeDiff) < 0)) {
-      return;
-    }
-
-    itemsToMove.forEach((item) => {
-      item.time.value = item.time.value + timeDiff;
-      item.row.value = item.row.value + rowDiff;
-    });
-
-    this.checkLoopEnd();
+    //
   }
 
   public remove(e: MouseEvent, i: number) {
@@ -573,23 +338,11 @@ export default class SequencerGrid extends Vue {
 
   public removeAtIndex(i: number) {
     const item = this.elements[i];
-    item.remove(); // this removes it from the list
-    this.$delete(this.selected, i);
+    //
   }
 
   public checkLoopEnd() {
-    // Set the minimum to 1 measure!
-    const maxTime = Math.max(
-      ...this.elements.map((item) => item.time.value + item.duration.value),
-      this.beatsPerMeasure,
-    );
-
-    const itemLoopEnd = Math.ceil(maxTime / this.beatsPerMeasure) * this.beatsPerMeasure;
-
-    if (itemLoopEnd !== this.itemLoopEnd) {
-      this.$update('sequencerLoopEnd', itemLoopEnd);
-      this.itemLoopEnd = itemLoopEnd;
-    }
+    //
   }
 
   public open(e: MouseEvent, i: number) {
@@ -602,82 +355,7 @@ export default class SequencerGrid extends Vue {
   }
 
   public select(e: MouseEvent, i: number) {
-    const item = this.elements[i];
-    if (!this.selected[i]) {
-      this.elements.forEach((_, ind) => this.selected[ind] = false);
-    }
-
-    const createItem = (oldItem: SchedulableTemp<any, any>) => {
-      const newItem = oldItem.copy();
-
-      // We set selected to true because `newNew` will have a heigher z-index
-      // Thus, it will be displayed on top (which we want)
-      // Try copying selected files and you will notice the selected notes stay on top
-      this.selected.push(true);
-      this.sequence.add(newItem);
-    };
-
-    let targetIndex = i;
-    if (this.holdingShift) {
-      let selected: Array<SchedulableTemp<any, any>>;
-
-      // If selected, copy all selected. If not, just copy the item that was clicked.
-      if (this.selected[i]) {
-        // selected is all all selected except the element you pressed on
-        selected = this.elements.filter((el, ind) => {
-          if (this.selected[ind]) {
-            // See in `createItem` that we are setting all new elements to selected
-            // And accordingly we are setting selected to false here
-            this.selected[ind] = false;
-            return el !== item;
-          } else {
-            return false;
-          }
-        });
-        // A copy of `item` will be created at this index
-        // See the next line
-        targetIndex = this.elements.length;
-        createItem(item);
-      } else {
-        selected = [item];
-      }
-
-      selected.forEach(createItem);
-    }
-
-    this.dragStartEvent = e;
-
-    document.documentElement.style.cursor = 'move';
-    const disposer = addEventListeners({
-      mousemove: (event) => this.move(event, targetIndex),
-      mouseup: () => {
-        document.documentElement.style.cursor = 'auto';
-        disposer.dispose();
-      },
-    });
-  }
-
-  public afterMove() {
-    this.dragStartEvent = null;
-  }
-
-  public keydown(e: KeyboardEvent) {
-    if (e.keyCode === Keys.Shift) {
-      this.holdingShift = true;
-    } else if (e.keyCode === Keys.Delete || e.keyCode === Keys.Backspace) {
-      // Slice and reverse sItemince we will be deleting from the array as we go
-      let i = this.elements.length - 1;
-      for (const item of reverse(this.elements)) {
-        if (this.selected[i]) {
-          this.removeAtIndex(i);
-        }
-        i--;
-      }
-    }
-  }
-
-  public keyup(e: KeyboardEvent) {
-    if (e.keyCode === Keys.Shift) { this.holdingShift = false; }
+    //
   }
 
   public handleDrop(prototype: UnscheduledPrototype, e: MouseEvent) {
