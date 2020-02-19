@@ -86,7 +86,7 @@ describe('getIntersection', () => {
   });
 });
 
-describe.only('slice', () => {
+describe('slice', () => {
   const s = (l: Line) => {
     return expect(slice({
       row: 1,

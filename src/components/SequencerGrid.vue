@@ -124,7 +124,7 @@ import { Watch } from '@/lib/update';
 import { Sequence } from '@/models';
 import * as Audio from '@/lib/audio';
 import { Ghost } from '@/models/ghost';
-import { calculateSnap, calculateSimpleSnap, getIntersection, slice, calculatePlacementSnap } from '@/utils';
+import { calculateSnap, calculateSimpleSnap, getIntersection, slice } from '@/utils';
 import { UnscheduledPrototype, SchedulableTemp } from '@/models/schedulable';
 
 @Component({
@@ -293,13 +293,13 @@ export default class SequencerGrid extends Vue {
   public mounted() {
     this.rows = (this.$refs.rows as Vue).$el as HTMLElement;
     this.checkLoopEnd();
-    window.addEventListener('keydown', this.keydown);
-    window.addEventListener('keyup', this.keyup);
+    // window.addEventListener('keydown', this.keydown);
+    // window.addEventListener('keyup', this.keyup);
   }
 
   public destroyed() {
-    window.removeEventListener('keydown', this.keydown);
-    window.removeEventListener('keyup', this.keyup);
+    // window.removeEventListener('keydown', this.keydown);
+    // window.removeEventListener('keyup', this.keyup);
   }
 
   public actualRowStyle(i: number) {
@@ -360,7 +360,7 @@ export default class SequencerGrid extends Vue {
 
   public handleDrop(prototype: UnscheduledPrototype, e: MouseEvent) {
     const element = prototype(this.transport);
-    this.addHelper(e, element);
+    // this.addHelper(e, element);
 
     this.$update('prototype', element.copy);
     this.$emit('new-prototype', element);

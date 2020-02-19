@@ -14,7 +14,6 @@ export const SynthType = t.intersection([
       t.literal('square'),
       t.literal('sawtooth'),
       t.literal('triangle'),
-      // TOOD(jacob)
     ]),
   }),
   InstrumentType,

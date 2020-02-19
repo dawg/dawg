@@ -114,7 +114,7 @@ function load(i: IProject): LoadedProject {
   // tslint:disable-next-line:no-console
   console.log('Initiate loading of the project!');
 
-  Audio.Context.BPM.value = i.bpm;
+  Audio.Context.BPM = i.bpm;
 
   const channels =  (i.channels || []).map((iChannel) => {
     return new Channel(iChannel);
@@ -717,7 +717,7 @@ const createApi = () => {
   });
 
   watch(prj.bpm, () => {
-    Audio.Context.BPM.value = prj.bpm.value;
+    Audio.Context.BPM = prj.bpm.value;
   });
 
   return {

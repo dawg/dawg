@@ -1,5 +1,4 @@
 import { SchedulableTemp } from '@/models/schedulable';
-import { Transport } from '@/lib/audio/transport';
 import { StrictEventEmitter } from '@/lib/events';
 import * as history from '@/core/project/history';
 

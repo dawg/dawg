@@ -75,7 +75,6 @@ export const playlist = framework.manager.activate({
          * Whenever we add a sample, if it hasn't been imported before, add it the the list of project samples.
          */
         checkPrototype(prototype: PlaylistElements) {
-          console.log(prototype);
           if (prototype.type !== 'sample') {
             return;
           }

@@ -1,4 +1,4 @@
-import { Ref, onMounted, onUnmounted, watch, ref } from '@vue/composition-api';
+import { Ref, watch, ref } from '@vue/composition-api';
 import { SchedulableTemp, Sequence } from '@/models';
 import { addEventListeners } from '@/lib/events';
 import { Keys, Disposer, reverse } from '@/lib/std';
@@ -63,7 +63,7 @@ export const doSnap = (
   // });
 };
 
-interface GridOpts<T extends Element> {
+export interface GridOpts<T extends Element> {
   sequence: Ref<Sequence<T>>;
   pxPerBeat: Ref<number>;
   pxPerRow: Ref<number>;
@@ -84,6 +84,22 @@ export const createGrid = <T extends Element>(
   let selected: boolean[] = [];
   let holdingShift = false;
   const itemLoopEnd = ref(0);
+
+  const checkLoopEnd = () => {
+    // Set the minimum to 1 measure!
+    const maxTime = Math.max(
+      ...sequence.value.map((item) => item.time.value + item.duration.value),
+      beatsPerMeasure.value,
+    );
+
+    const newLoopEnd = Math.ceil(maxTime / beatsPerMeasure.value) * beatsPerMeasure.value;
+
+    if (newLoopEnd !== itemLoopEnd.value) {
+      // TODO
+      // this.$update('sequencerLoopEnd', itemLoopEnd);
+      itemLoopEnd.value = newLoopEnd;
+    }
+  };
 
   watch(sequence, () => {
     if (selected.length !== sequence.value.elements.length) {
@@ -203,22 +219,6 @@ export const createGrid = <T extends Element>(
     });
   };
 
-  const checkLoopEnd = () => {
-    // Set the minimum to 1 measure!
-    const maxTime = Math.max(
-      ...sequence.value.map((item) => item.time.value + item.duration.value),
-      beatsPerMeasure.value,
-    );
-
-    const newLoopEnd = Math.ceil(maxTime / beatsPerMeasure.value) * beatsPerMeasure.value;
-
-    if (newLoopEnd !== itemLoopEnd.value) {
-      // TODO
-      // this.$update('sequencerLoopEnd', itemLoopEnd);
-      itemLoopEnd.value = newLoopEnd;
-    }
-  };
-
   let dragStartEvent: MouseEvent | null = null;
   const select = (e: MouseEvent, i: number) => {
     const item = sequence.value.elements[i];
@@ -277,7 +277,7 @@ export const createGrid = <T extends Element>(
   };
 
   let toDispose: Disposer[] = [];
-  onMounted(() => {
+  const onMounted = () => {
     toDispose.push(addEventListeners({
       keydown: (e) => {
         if (e.keyCode === Keys.Shift) {
@@ -299,7 +299,7 @@ export const createGrid = <T extends Element>(
         }
       },
     }));
-  });
+  };
 
   const removeAtIndex = (i: number) => {
     const el = sequence.value.elements[0];
@@ -312,10 +312,10 @@ export const createGrid = <T extends Element>(
     removeAtIndex(i);
   };
 
-  onUnmounted(() => {
+  const onUnmounted = () => {
     toDispose.forEach((disposer) => disposer.dispose());
     toDispose = [];
-  });
+  };
 
   const selectStartEvent = ref<MouseEvent>(null);
   const selectCurrentEvent = ref<MouseEvent>(null);
@@ -324,6 +324,18 @@ export const createGrid = <T extends Element>(
     selectStartEvent,
     selectCurrentEvent,
     mousedown: (e: MouseEvent) => {
+      const disposer1 = addEventListeners({
+        mousemove: () => {
+          disposer1.dispose();
+        },
+        mouseup: () => {
+          disposer1.dispose();
+
+          // TODO
+          addElement(e, opts.createElement.value());
+        },
+      });
+
       if (opts.tool.value === 'pointer') {
         selectStartEvent.value = e;
         const disposer = addEventListeners({
@@ -404,9 +416,6 @@ export const createGrid = <T extends Element>(
           },
         });
       }
-
-      // TODO
-      addElement(e, opts.createElement.value());
     },
     move,
     updateOffset(el: T, value: number) {
@@ -421,5 +430,7 @@ export const createGrid = <T extends Element>(
     remove,
     select,
     itemLoopEnd,
+    onMounted,
+    onUnmounted,
   };
 };

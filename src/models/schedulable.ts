@@ -4,7 +4,7 @@ import * as Audio from '@/lib/audio';
 import { Beat } from '@/lib/audio/types';
 import * as history from '@/core/project/history';
 import { computed, Ref, ref, watch } from '@vue/composition-api';
-import { Context } from '@/lib/audio/context';
+import { Context } from '@/lib/audio';
 import { Sample } from '@/models/sample';
 import { Pattern } from '@/models/pattern';
 import { AutomationClip } from '@/models/automation';
@@ -55,7 +55,7 @@ const wrap = <T, K extends keyof T>(o: T, k: K, onSet: (value: T[K]) => void) =>
   const reference = ref(o[k]) as Ref<T[K]>;
   watch(reference, (value) => {
     onSet(value);
-  });
+  }, { lazy: true });
   return reference;
 };
 

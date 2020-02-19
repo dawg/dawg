@@ -44,10 +44,10 @@ export class Context {
   public static context = context;
   public static PPQ = 192;
   public static lookAhead = 0.1;
-  public static BPM = ref(120);
+  public static BPM = 120;
 
   public static ticksToSeconds(ticks: Ticks) {
-    return (ticks / Context.PPQ) / Context.BPM.value * 60;
+    return (ticks / Context.PPQ) / Context.BPM * 60;
   }
 
   /**
@@ -66,7 +66,7 @@ export class Context {
   }
 
   public static beatsToSeconds(beat: Beat) {
-    return beat / Context.BPM.value * 60;
+    return beat / Context.BPM * 60;
   }
 
   public static onDidTick(f: () => void) {

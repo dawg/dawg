@@ -41,7 +41,7 @@ export class Sample extends BuildingBlock implements Serializable<ISample> {
   get beats() {
     if (this.buffer) {
       const minutes = this.buffer.length / this.buffer.sampleRate / 60;
-      return Context.round(minutes * Context.BPM.value);
+      return Context.round(minutes * Context.BPM);
     } else {
       return 0;
     }
