@@ -1,4 +1,4 @@
-import { Ref, watch, ref } from '@vue/composition-api';
+import { Ref, watch, ref, computed } from '@vue/composition-api';
 import { SchedulableTemp, Sequence } from '@/models';
 import { addEventListeners } from '@/lib/events';
 import { Keys, Disposer, reverse } from '@/lib/std';
@@ -39,28 +39,23 @@ export interface PlacementSnapOpts {
   snap: number;
   pxPerBeat: number;
   offset: number;
+  scroll: number;
+  altKey: boolean;
 }
 
 export const doSnap = (
   opts: PlacementSnapOpts,
 ) => {
-  return 0;
-  // const rect = opts.reference.getBoundingClientRect();
+  // The amount of pixels that the mouse is from the edge of the of grid
+  const pxMouseFromLeft = opts.position - opts.offset + opts.scroll;
 
-  // // The amount of pixels that the mouse is from the edge of the of grid
-  // const pxMouseFromLeft =
-  //   (opts.vert ? opts.event.clientY : opts.event.clientX) -
-  //   (opts.vert ? rect.top : rect.left) +
-  //   ((opts.vert ? opts.reference.scrollTop : opts.reference.scrollLeft) ?? 0);
-
-  // return calculateSimpleSnap({
-  //   value: pxMouseFromLeft,
-  //   altKey: opts.event.altKey,
-  //   minSnap: opts.minSnap,
-  //   snap: opts.snap,
-  //   pxPerBeat: opts.pxPerBeat,
-  //   round: Math.floor,
-  // });
+  return calculateSimpleSnap({
+    value: pxMouseFromLeft / opts.pxPerBeat,
+    altKey: opts.altKey,
+    minSnap: opts.minSnap,
+    snap: opts.snap,
+    round: Math.floor,
+  });
 };
 
 export interface GridOpts<T extends Element> {
@@ -72,7 +67,8 @@ export interface GridOpts<T extends Element> {
   scrollLeft: Ref<number>;
   scrollTop: Ref<number>;
   beatsPerMeasure: Ref<number>;
-  createElement: Ref<() => Element>;
+  createElement: Ref<() => T>;
+  getPosition: () => { left: number, top: number };
   tool: Ref<'pointer' | 'slicer'>;
   getBoundingClientRect: () => { left: number, top: number };
 }
@@ -81,7 +77,7 @@ export const createGrid = <T extends Element>(
   opts: GridOpts<T>,
 ) => {
   const { sequence, pxPerBeat, pxPerRow, snap, minSnap, scrollLeft, scrollTop, createElement, beatsPerMeasure } = opts;
-  let selected: boolean[] = [];
+  const selected: boolean[] = [];
   let holdingShift = false;
   const itemLoopEnd = ref(0);
 
@@ -96,46 +92,51 @@ export const createGrid = <T extends Element>(
 
     if (newLoopEnd !== itemLoopEnd.value) {
       // TODO
-      // this.$update('sequencerLoopEnd', itemLoopEnd);
+      // $update('sequencerLoopEnd', itemLoopEnd);
       itemLoopEnd.value = newLoopEnd;
     }
   };
 
   watch(sequence, () => {
     if (selected.length !== sequence.value.elements.length) {
-      selected = sequence.value.map((_) => false);
+      sequence.value.forEach((_, i) => selected[i] = false);
     }
 
     checkLoopEnd();
   });
 
-  const addElement = (e: MouseEvent, el: Element) => {
+  const addElement = (e: MouseEvent, el: T) => {
     if (selected.some((value) => value)) {
       selected.forEach((_, i) => selected[i] = false);
       return;
     }
 
-    // const time = doSnap({
-    //   position: e.clientX,
-    //   minSnap: minSnap.value,
-    //   snap: snap.value,
-    //   pxPerBeat: pxPerBeat.value,
-    //   reference: '',
-    // });
+    const rect = opts.getPosition();
+    const time = doSnap({
+      position: e.clientX,
+      minSnap: minSnap.value,
+      snap: snap.value,
+      pxPerBeat: pxPerBeat.value,
+      offset: rect.left,
+      scroll: scrollLeft.value,
+      altKey: e.altKey,
+    });
 
-    // const row = doSnap({
-    //   event: e,
-    //   minSnap: 1,
-    //   snap: 1,
-    //   pxPerBeat: pxPerRow.value,
-    //   reference: this.$el,
-    // });
+    const row = doSnap({
+      position: e.clientY,
+      minSnap: minSnap.value,
+      snap: snap.value,
+      pxPerBeat: pxPerRow.value,
+      offset: rect.top,
+      scroll: scrollTop.value,
+      altKey: e.altKey,
+    });
 
-    // el.row.value = row;
-    // el.time.value = time;
+    el.row.value = row;
+    el.time.value = time;
 
-    // selected[el.element.id] = false;
-    // opts.sequence.add(el);
+    opts.sequence.value.add(el);
+    selected.push(false);
   };
 
   const move = (el: T, e: MouseEvent) => {
@@ -317,12 +318,66 @@ export const createGrid = <T extends Element>(
     toDispose = [];
   };
 
-  const selectStartEvent = ref<MouseEvent>(null);
-  const selectCurrentEvent = ref<MouseEvent>(null);
+  const selectStart = ref<MouseEvent>(null);
+  const selectCurrent = ref<MouseEvent>(null);
   const sliceStyle = ref<{ [k: string]: string | number }>(null);
+
+  const selectStyle = computed(() => {
+    if (!selectStart.value) { return; }
+    if (!selectCurrent.value) {
+      selected.forEach((_, i) => selected[i] = false);
+      return;
+    }
+
+
+    const boundingRect = opts.getBoundingClientRect();
+
+    const left = Math.min(
+      selectStart.value.clientX - boundingRect.left,
+      selectCurrent.value.clientX - boundingRect.left,
+    );
+
+    const top = Math.min(
+      selectStart.value.clientY - boundingRect.top,
+      selectCurrent.value.clientY - boundingRect.top,
+    );
+
+    const width = Math.abs(selectCurrent.value.clientX - selectStart.value.clientX);
+    const height = Math.abs(selectCurrent.value.clientY - selectStart.value.clientY);
+
+    // these are exact numbers BTW, not integers
+    const minBeat = left / pxPerBeat.value;
+    const minRow = top / pxPerRow.value;
+    const maxBeat = (left + width) / pxPerBeat.value;
+    const maxRow = (top + height) / pxPerRow.value;
+
+    sequence.value.forEach((item, i) => {
+      // Check if there is any overlap between the rectangles
+      // https://www.geeksforgeeks.org/find-two-rectangles-overlap/
+      if (minRow > item.row.value + 1 || item.row.value > maxRow) {
+        selected[i] = false;
+      } else if (minBeat > item.time.value + item.duration.value || item.time.value > maxBeat) {
+        selected[i] = false;
+      } else {
+        selected[i] = true;
+      }
+    });
+
+    return {
+      borderRadius: '5px',
+      border: 'solid 1px red',
+      backgroundColor: 'rgba(255, 51, 51, 0.3)',
+      left: `${left}px`,
+      top: `${top}px`,
+      height: `${height}px`,
+      width: `${width}px`,
+      zIndex: 3,
+    };
+  });
+
   return {
-    selectStartEvent,
-    selectCurrentEvent,
+    selectStyle,
+    selected,
     mousedown: (e: MouseEvent) => {
       const disposer1 = addEventListeners({
         mousemove: () => {
@@ -330,21 +385,19 @@ export const createGrid = <T extends Element>(
         },
         mouseup: () => {
           disposer1.dispose();
-
-          // TODO
           addElement(e, opts.createElement.value());
         },
       });
 
       if (opts.tool.value === 'pointer') {
-        selectStartEvent.value = e;
+        selectStart.value = e;
         const disposer = addEventListeners({
           mousemove: (event: MouseEvent) => {
-            selectCurrentEvent.value = event;
+            selectCurrent.value = event;
           },
           mouseup: () => {
-            selectStartEvent.value = null;
-            selectCurrentEvent.value = null;
+            selectStart.value = null;
+            selectCurrent.value = null;
             disposer.dispose();
           },
         });
@@ -358,7 +411,6 @@ export const createGrid = <T extends Element>(
               altKey: event.altKey,
               minSnap: minSnap.value,
               snap: snap.value,
-              pxPerBeat: pxPerBeat.value,
             }),
             y: event.clientY - rect.top,
           };
@@ -399,7 +451,6 @@ export const createGrid = <T extends Element>(
                 altKey: event.altKey,
                 minSnap: minSnap.value,
                 snap: snap.value,
-                pxPerBeat: pxPerBeat.value,
               }) / pxPerBeat.value;
 
               const newEl = element.slice(time);

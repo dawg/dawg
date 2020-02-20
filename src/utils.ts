@@ -101,7 +101,6 @@ export interface SimpleSnapOpts {
   altKey?: boolean;
   minSnap: number;
   snap: number;
-  pxPerBeat: number;
   round?: (arg: number) => number;
 }
 
@@ -109,13 +108,8 @@ export const calculateSimpleSnap = (
   opts: SimpleSnapOpts,
 ) => {
   const snap = opts.altKey ? opts.minSnap : opts.snap;
-
   const round = opts.round ?? Math.round;
-
-  // The amount of pixels that the mouse is from the edge of the of grid
-  let newValue =  opts.value / opts.pxPerBeat;
-  newValue = (round(newValue / snap) * snap);
-  return (round(newValue / opts.minSnap) * opts.minSnap) * opts.pxPerBeat;
+  return round(opts.value / snap) * snap;
 };
 
 export interface ScrollerOpts {
