@@ -126,7 +126,7 @@ const createSchedulable = <
 
     const copy = () => {
       // tslint:disable-next-line:no-console
-      console.log(`Copying ${o.type} element!`);
+      // console.log(`Copying ${o.type} element!`);
       return create(info, idk, transport);
     };
 
@@ -211,8 +211,6 @@ const createSchedulable = <
       showBorder: o.showBorder,
     } as const;
 
-    // tslint:disable-next-line:no-console
-    console.log('Creating scheduled element!');
     let controller = o.add(transport, params, idk);
 
     return params;

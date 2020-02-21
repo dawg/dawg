@@ -61,7 +61,7 @@ export const doSnap = (
 };
 
 export interface GridOpts<T extends Element> {
-  sequence: Ref<Sequence<T>>;
+  sequence: Readonly<Ref<Readonly<Sequence<T>>>>;
   pxPerBeat: Ref<number>;
   pxPerRow: Ref<number>;
   snap: Ref<number>;
@@ -69,16 +69,17 @@ export interface GridOpts<T extends Element> {
   scrollLeft: Ref<number>;
   scrollTop: Ref<number>;
   beatsPerMeasure: Ref<number>;
-  createElement: Ref<() => T>;
+  createElement: Ref<Readonly<undefined | (() => T)>>;
   getPosition: () => { left: number, top: number };
   tool: Ref<'pointer' | 'slicer'>;
-  getBoundingClientRect: () => { left: number, top: number };
 }
 
 export const createGrid = <T extends Element>(
   opts: GridOpts<T>,
 ) => {
   const { sequence, pxPerBeat, pxPerRow, snap, minSnap, scrollLeft, scrollTop, createElement, beatsPerMeasure } = opts;
+
+  // FIXME(Vue3) With Vue 3, we can move to a set I think
   const selected: boolean[] = [];
   let holdingShift = false;
   const itemLoopEnd = ref(0);
@@ -93,7 +94,7 @@ export const createGrid = <T extends Element>(
       mouseup: () => {
         generalDisposer.dispose();
         disposers.delete(generalDisposer);
-        addElement(e, opts.createElement.value());
+        addElement(e, createElement.value());
       },
     });
 
@@ -115,7 +116,7 @@ export const createGrid = <T extends Element>(
 
       disposers.add(disposer);
     } else if (opts.tool.value === 'slicer') {
-      const rect = opts.getBoundingClientRect();
+      const rect = opts.getPosition();
 
       const calculatePos = (event: MouseEvent) => {
         return {
@@ -186,9 +187,9 @@ export const createGrid = <T extends Element>(
     }
   };
 
-  disposers.add(addEventListener('mousedown', (e) => {
-    mousedown(e);
-  }));
+  // disposers.add(addEventListener('mousedown', (e) => {
+  //   mousedown(e);
+  // }));
 
   const checkLoopEnd = () => {
     // Set the minimum to 1 measure!
@@ -206,7 +207,7 @@ export const createGrid = <T extends Element>(
     }
   };
 
-  watch(sequence, () => {
+  watch(() => sequence.value.elements, () => {
     if (selected.length !== sequence.value.elements.length) {
       sequence.value.forEach((_, i) => selected[i] = false);
     }
@@ -214,7 +215,11 @@ export const createGrid = <T extends Element>(
     checkLoopEnd();
   });
 
-  const addElement = (e: MouseEvent, el: T) => {
+  const addElement = (e: MouseEvent, el: T | undefined) => {
+    if (!el) {
+      return;
+    }
+
     if (selected.some((value) => value)) {
       selected.forEach((_, i) => selected[i] = false);
       return;
@@ -250,10 +255,7 @@ export const createGrid = <T extends Element>(
 
   const move = (i: number, e: MouseEvent) => {
     const el = sequence.value.elements[i];
-
-    // Get the preVIOUS element first
-    // and ALSO grab the current position
-    const rect = opts.getBoundingClientRect();
+    const rect = opts.getPosition();
 
     const time = doSnap({
       position: e.clientX,
@@ -436,19 +438,9 @@ export const createGrid = <T extends Element>(
       return;
     }
 
-
-    const boundingRect = opts.getBoundingClientRect();
-
-    const left = Math.min(
-      selectStart.value.clientX - boundingRect.left,
-      selectCurrent.value.clientX - boundingRect.left,
-    );
-
-    const top = Math.min(
-      selectStart.value.clientY - boundingRect.top,
-      selectCurrent.value.clientY - boundingRect.top,
-    );
-
+    const rect = opts.getPosition();
+    const left = Math.min(selectStart.value.clientX - rect.left, selectCurrent.value.clientX - rect.left);
+    const top = Math.min(selectStart.value.clientY - rect.top, selectCurrent.value.clientY - rect.top);
     const width = Math.abs(selectCurrent.value.clientX - selectStart.value.clientX);
     const height = Math.abs(selectCurrent.value.clientY - selectStart.value.clientY);
 
@@ -502,5 +494,9 @@ export const createGrid = <T extends Element>(
     onMounted,
     onUnmounted,
     dispose,
+    add: (e: MouseEvent) => {
+      addElement(e, opts.createElement.value ? opts.createElement.value() : undefined);
+    },
+    mousedown,
   };
 };

@@ -55,13 +55,13 @@ const scroll = (o: Partial<ScrollerOpts>) => {
 
 describe('computeScroll', () => {
   it('correctly scrolls when initially at 0', () => {
-    scroll({ mouvement: 2 }).to.deep.eq({ scroll: 0, increment: 8 });
+    scroll({ mouvement: 2 }).to.deep.eq({ scroll: -4, increment: 8 });
     scroll({ mouvement: -2 }).to.deep.eq({ scroll: 4, increment: 12 });
   });
 
   it('correctly scrolls when not at 0', () => {
-    scroll({ mouvement: 2, scrollOffset: 10 }).to.deep.eq({ scroll: 6, increment: 8 });
-    scroll({ mouvement: -2, scrollOffset: 10 }).to.deep.eq({ scroll: 14, increment: 12 });
+    scroll({ mouvement: 2, scrollOffset: 10 }).to.deep.eq({ scroll: -4, increment: 8 });
+    scroll({ mouvement: -2, scrollOffset: 10 }).to.deep.eq({ scroll: 4, increment: 12 });
   });
 });
 

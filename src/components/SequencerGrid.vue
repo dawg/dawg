@@ -18,7 +18,7 @@
 
     <div class="ghost-elements">
       <element-wrapper
-        v-for="(ghost, i) in ghostsComponents"
+        v-for="(ghost, i) in (ghosts || [])"
         :key="i"
         :px-per-beat="pxPerBeat"
         :colored="true"
@@ -28,17 +28,16 @@
         :snap="snap"
         :resizable="false"
         :can-offset="false"
-        :top="ghost.top"
         :time="ghost.time"
       >
         <template v-slot:default="{ width }">
           <component
-            :is="ghost.name"
+            :is="ghost.component"
             :row="ghost.row"
             :px-per-beat="pxPerBeat"
             :width="width"
             :height="rowHeight"
-            :ghost="ghost.ghost"
+            :ghost="ghost"
           ></component>
         </template>
       </element-wrapper>
@@ -105,9 +104,8 @@
       :row="row - 1"
       :total-beats="displayBeats"
       :style="actualRowStyle(row - 1)"
-      :class="rowClass(row - 1)"
-      @click="add"
-      @mousedown="mouseDownOnSurroundings"
+      :class="rowClass ? rowClass(row - 1) : ''"
+      @mousedown="mousedown"
     ></div>
 
   </drop>
@@ -118,7 +116,7 @@ import { Component, Prop, Mixins, Inject, Vue } from 'vue-property-decorator';
 import { Keys } from '@/lib/std';
 import { range, reverse, XYPosition } from '@/lib/std';
 import { addEventListeners } from '@/lib/events';
-import { Nullable } from '@/lib/vutils';
+import { Nullable, update } from '@/lib/vutils';
 import BeatLines from '@/components/BeatLines';
 import { Watch } from '@/lib/update';
 import { Sequence } from '@/models';
@@ -126,263 +124,176 @@ import * as Audio from '@/lib/audio';
 import { Ghost } from '@/models/ghost';
 import { calculateSnap, calculateSimpleSnap, getIntersection, slice } from '@/utils';
 import { UnscheduledPrototype, SchedulableTemp } from '@/models/schedulable';
+import { createComponent, ref, computed, watch } from '@vue/composition-api';
+import { createGrid } from './grid';
 
-@Component({
-  components: { BeatLines },
-})
-export default class SequencerGrid extends Vue {
-  // name is used for debugging
-  @Prop({ type: String, required: true }) public name!: string;
-  @Prop({ type: Number, required: true }) public rowHeight!: number;
-  @Prop({ type: Object, required: true }) public sequence!: Sequence<SchedulableTemp<any, any>>;
-  @Prop({ type: Array, default: null }) public ghosts!: Ghost[] | null;
-  @Prop({ type: Number, required: true }) public snap!: number;
-  @Prop({ type: Number, required: true }) public minSnap!: number;
-  @Prop({ type: String, required: true }) public tool!: 'slicer' | 'pointer';
+export default createComponent({
+  props: {
+    name: { type: String as () => string, required: true },
+    rowHeight: { type: Number, required: true },
+    sequence: { type: Object as () => Sequence<SchedulableTemp<any, any>>, required: true },
+    ghosts: { type: Array as () => Ghost[] | null, default: null },
+    snap: { type: Number, required: true },
+    minSnap: { type: Number, required: true },
+    tool: { type: String as () => 'slicer' | 'pointer', required: true },
+    pxPerBeat: { type: Number, required: true },
+    beatsPerMeasure: { type: Number, required: true },
+    stepsPerBeat: { type: Number, required: true },
+    numRows: { type: Number, required: true },
+    rowStyle: { type: Function as any as () => ((row: number) => object) },
+    rowClass: { type: Function as any as () => ((row: number) => string) },
 
-  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
-  @Prop({ type: Number, required: true }) public beatsPerMeasure!: number;
-  @Prop({ type: Number, required: true }) public stepsPerBeat!: number;
+    // These are for the progression.
+    loopEnd: { type: Number, required: true },
+    loopStart: { type: Number, required: true },
 
-  @Prop({ type: Number, required: true }) public numRows!: number;
-  @Prop({ type: Function, default: () => ({}) }) public rowStyle!: (row: number) => object;
-  @Prop({ type: Function, default: () => undefined }) public rowClass!: (row: number) => string;
+    // The loop end determined by the items.
+    sequencerLoopEnd: { type: Number, required: true },
 
-  // These are for the progression.
-  @Prop({ type: Number, required: true }) public loopEnd!: number;
-  @Prop({ type: Number, required: true }) public loopStart!: number;
+    transport: { type: Object as () => Audio.Transport, required: true },
+    progress: { type: Number, required: true },
+    displayLoopEnd: { type: Number, required: true },
 
-  // The loop end determined by the items.
-  @Prop({ type: Number, required: true }) public sequencerLoopEnd!: number;
+    // scroll stuff
+    scrollLeft: { type: Number, required: true },
+    scrollTop: { type: Number, required: true },
 
-  @Prop({ type: Object, required: true }) public transport!: Audio.Transport;
+    // These values should only be set if there is a loop on the timeline
+    setLoopEnd: { type: Nullable(Number) as any | null },
+    setLoopStart: { type: Nullable(Number) as any | null },
 
-  // These values should only be set if there is a loop on the timeline
-  @Prop(Nullable(Number)) public setLoopEnd!: number | null;
-  @Prop(Nullable(Number)) public setLoopStart!: number | null;
-  @Prop({ type: Number, required: true }) public progress!: number;
+    // FIXME edge case -> what happens if the element is deleted?
+    prototype: { type: Function as any as () => (() => SchedulableTemp<any, any>) },
+  },
+  setup(props, context) {
+    const rows = ref<HTMLElement>(null);
+    const selectStartEvent: MouseEvent | null = null;
+    const selectCurrentEvent: MouseEvent | null = null;
+    const dragStartEvent: MouseEvent | null = null;
+    const holdingShift = false;
+    const minDisplayMeasures = 4;
+    const itemLoopEnd: number | null = null;
+    // selected[i] indicates whether elements[i] is selected
+    const selected: boolean[] = [];
 
-  // FIXME edge case -> what happens if the element is deleted?
-  @Prop(Nullable(Function)) public prototype!: (() => SchedulableTemp<any, any>) | null;
+    const grid = createGrid({
+      sequence: computed(() => props.sequence),
+      pxPerBeat: computed(() => props.pxPerBeat),
+      pxPerRow: computed(() => props.rowHeight),
+      snap: computed(() => props.snap),
+      minSnap: computed(() => props.minSnap),
+      scrollLeft: computed(() => props.scrollLeft),
+      scrollTop: computed(() => props.scrollTop),
+      beatsPerMeasure: computed(() => props.beatsPerMeasure),
+      createElement: computed(() => props.prototype),
+      tool: computed(() => props.tool),
+      getPosition: () => {
+        return rows.value?.getBoundingClientRect() ?? { left: 0, top: 0 };
+      },
+    });
 
-  @Prop({ type: Number, required: true }) public displayLoopEnd!: number;
+    const elements = computed(() => {
+      return props.sequence.elements;
+    });
 
-  public rows!: HTMLElement;
-  public selectStartEvent: MouseEvent | null = null;
-  public selectCurrentEvent: MouseEvent | null = null;
-  public sliceStyle: { [k: string]: string | number } | null = null;
-  public dragStartEvent: MouseEvent | null = null;
-  public holdingShift = false;
-  public minDisplayMeasures = 4;
-  public itemLoopEnd: number | null = null;
-  // selected[i] indicates whether elements[i] is selected
-  public selected: boolean[] = [];
+    const fullWidth = computed(() => {
+      return displayBeats.value * props.pxPerBeat;
+    });
 
-  get elements() {
-    return this.sequence.elements;
-  }
+    const fullHeight = computed(() => {
+      return props.numRows * props.rowHeight;
+    });
 
-  get ghostsComponents() {
-    if (this.ghosts === null) {
-      return [];
-    }
-
-    return this.ghosts.map((item) => {
+    const sequencerStyle = computed(() => {
       return {
-        time: item.time,
-        top: item.row * this.rowHeight,
-        row: item.row,
-        name: item.component,
-        ghost: item,
+        width: `${fullWidth.value}px`,
+        height: `${fullHeight.value}px`,
       };
     });
-  }
 
-  get fullWidth() {
-    return this.displayBeats * this.pxPerBeat;
-  }
-
-  get fullHeight() {
-    return this.numRows * this.rowHeight;
-  }
-
-  get sequencerStyle() {
-    return {
-      width: `${this.fullWidth}px`,
-      height: `${this.fullHeight}px`,
-    };
-  }
-
-  get leftStyle() {
-    if (this.setLoopStart) {
-      return {
-        width: `${this.setLoopStart * this.pxPerBeat}px`,
-      };
-    }
-  }
-
-  get rightStyle() {
-    if (this.setLoopEnd) {
-      const left = this.setLoopEnd * this.pxPerBeat;
-      return {
-        left: `${left}px`,
-        width: `${this.displayBeats * this.pxPerBeat - left}px`,
-      };
-    }
-  }
-
-  get displayBeats() {
-    return Math.max(
-      256, // 256 is completly random
-      (this.itemLoopEnd || 0) + this.beatsPerMeasure * 2,
-    );
-  }
-
-  get selectStyle() {
-    if (!this.selectStartEvent) { return; }
-    if (!this.selectCurrentEvent) {
-      this.selected = this.selected.map((_) => false);
-      return;
-    }
-
-
-    const boundingRect = this.rows.getBoundingClientRect();
-
-    const left = Math.min(
-      this.selectStartEvent.clientX - boundingRect.left,
-      this.selectCurrentEvent.clientX - boundingRect.left,
-    );
-    const top = Math.min(
-      this.selectStartEvent.clientY - boundingRect.top,
-      this.selectCurrentEvent.clientY - boundingRect.top,
-    );
-
-    const width = Math.abs(this.selectCurrentEvent.clientX - this.selectStartEvent.clientX);
-    const height = Math.abs(this.selectCurrentEvent.clientY - this.selectStartEvent.clientY);
-
-    // these are exact numbers BTW, not integers
-    const minBeat = left / this.pxPerBeat;
-    const minRow = top / this.rowHeight;
-    const maxBeat = (left + width) / this.pxPerBeat;
-    const maxRow = (top + height) / this.rowHeight;
-
-    this.elements.forEach((item, i) => {
-      // Check if there is any overlap between the rectangles
-      // https://www.geeksforgeeks.org/find-two-rectangles-overlap/
-      if (minRow > item.row.value + 1 || item.row.value > maxRow) {
-        this.selected[i] = false;
-      } else if (minBeat > item.time.value + item.duration.value || item.time.value > maxBeat) {
-        this.selected[i] = false;
-      } else {
-        this.selected[i] = true;
+    const leftStyle = computed(() => {
+      if (props.setLoopStart) {
+        return {
+          width: `${props.setLoopStart * props.pxPerBeat}px`,
+        };
       }
     });
 
-    return {
-      borderRadius: '5px',
-      border: 'solid 1px red',
-      backgroundColor: 'rgba(255, 51, 51, 0.3)',
-      left: `${left}px`,
-      top: `${top}px`,
-      height: `${height}px`,
-      width: `${width}px`,
-      zIndex: 3,
-    };
-  }
+    const rightStyle = computed(() => {
+      if (props.setLoopEnd) {
+        const left = props.setLoopEnd * props.pxPerBeat;
+        return {
+          left: `${left}px`,
+          width: `${displayBeats.value * props.pxPerBeat - left}px`,
+        };
+      }
+    });
 
-  public mounted() {
-    this.rows = (this.$refs.rows as Vue).$el as HTMLElement;
-    this.checkLoopEnd();
-    // window.addEventListener('keydown', this.keydown);
-    // window.addEventListener('keyup', this.keyup);
-  }
+    const displayBeats = computed(() => {
+      return Math.max(
+        256, // 256 is completly random
+        // TODO itemLoopEnd
+        (itemLoopEnd || 0) + props.beatsPerMeasure * 2,
+      );
+    });
 
-  public destroyed() {
-    // window.removeEventListener('keydown', this.keydown);
-    // window.removeEventListener('keyup', this.keyup);
-  }
-
-  public actualRowStyle(i: number) {
-    const style = this.rowStyle(i);
-    return {
-      ...style,
-      flex: `0 0 ${this.rowHeight}px`,
-      width: `${this.pxPerBeat * this.displayBeats}px`,
-    };
-  }
-
-  public updateOffset(i: number, value: number) {
-    //
-  }
-
-  public updateDuration(i: number, value: number) {
-    //
-  }
-
-  public mouseDownOnSurroundings(e: MouseEvent) {
-    //
-  }
-
-  public add(e: MouseEvent) {
-    //
-  }
-
-  public move(e: MouseEvent, i: number) {
-    //
-  }
-
-  public remove(e: MouseEvent, i: number) {
-    e.preventDefault();
-    this.removeAtIndex(i);
-  }
-
-  public removeAtIndex(i: number) {
-    const item = this.elements[i];
-    //
-  }
-
-  public checkLoopEnd() {
-    //
-  }
-
-  public open(e: MouseEvent, i: number) {
-    const item = this.elements[i];
-    this.$emit('open', item);
-  }
-
-  public clickElement(i: number) {
-    this.$update('prototype', this.elements[i].copy);
-  }
-
-  public select(e: MouseEvent, i: number) {
-    //
-  }
-
-  public handleDrop(prototype: UnscheduledPrototype, e: MouseEvent) {
-    const element = prototype(this.transport);
-    // this.addHelper(e, element);
-
-    this.$update('prototype', element.copy);
-    this.$emit('new-prototype', element);
-  }
-
-  @Watch<SequencerGrid>('elements', { immediate: true })
-  public resetSelectedIfNecessary() {
-    // Whenever the parent changes the items
-    // we should reset the selected!
-    // Also, since we are watching `value`, we modify `selected` first so that
-    // this method doesn't trigger before `selected` is also changed.
-    if (this.selected.length !== this.elements.length) {
-      this.selected = this.elements.map((_) => false);
+    function actualRowStyle(i: number) {
+      const style = props.rowStyle ? props.rowStyle(i) : {};
+      return {
+        ...style,
+        flex: `0 0 ${props.rowHeight}px`,
+        width: `${props.pxPerBeat * displayBeats.value}px`,
+      };
     }
-    this.checkLoopEnd();
-  }
 
-  @Watch<SequencerGrid>('displayBeats', { immediate: true })
-  public updateDisplayLoopEnd() {
-    this.$update('displayLoopEnd', this.displayBeats);
-  }
-}
+    function open(e: MouseEvent, i: number) {
+      const item = elements.value[i];
+      context.emit('open', item);
+    }
+
+    function clickElement(i: number) {
+      update(props, context, 'prototype', elements.value[i].copy);
+    }
+
+    function select(e: MouseEvent, i: number) {
+      //
+    }
+
+    async function handleDrop(prototype: UnscheduledPrototype, e: MouseEvent) {
+      const element = prototype(props.transport);
+      update(props, context, 'prototype', element.copy);
+      await Vue.nextTick();
+      grid.add(e);
+      context.emit('new-prototype', element);
+    }
+
+    watch(displayBeats, () => {
+      update(props, context, 'displayLoopEnd', displayBeats.value);
+    });
+
+    return {
+      rows,
+      sequencerStyle,
+      handleDrop,
+      selectStyle: grid.selectStyle,
+      sliceStyle: grid.sliceStyle,
+      elements,
+      select: grid.select,
+      remove: grid.remove,
+      clickElement,
+      open,
+      updateDuration: grid.updateDuration,
+      updateOffset: grid.updateOffset,
+      selected,
+      mousedown: grid.mousedown,
+      leftStyle,
+      rightStyle,
+      displayBeats,
+      add: grid.add,
+      actualRowStyle,
+    };
+  },
+});
 </script>
 
 <style scoped lang="sass">

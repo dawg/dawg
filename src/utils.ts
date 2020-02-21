@@ -264,11 +264,6 @@ export const slice = (
     };
   }
 
-  // tslint:disable-next-line:no-console
-  console.log(i1.x, i2.x, {
-    result: 'slice',
-    sliceTime: sliceTime / pxPerBeat,
-  });
   return {
     result: 'slice',
     time: sliceTime / pxPerBeat,

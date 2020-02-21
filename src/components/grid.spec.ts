@@ -5,7 +5,6 @@ import { createGrid, GridOpts } from '@/components/grid';
 import { SchedulableTemp, createNotePrototype, Instrument, Sequence, Synth } from '@/models';
 import { expect } from '@/lib/testing';
 import * as Audio from '@/lib/audio';
-import { type } from 'io-ts';
 
 type Element = SchedulableTemp<Instrument<any, any>, 'note'>;
 
@@ -34,24 +33,25 @@ const create = <T extends SchedulableTemp<any, any>>(
     beatsPerMeasure: opts.beatsPerMeasure ?? ref(4),
     createElement: ref(createElement),
     tool: opts.tool ?? ref(0),
-    getBoundingClientRect: opts.getBoundingClientRect ?? (() => ({ left: 0, top: 0 })),
     getPosition: opts.getPosition ?? (() => ({ left: 0, top: 0 })),
   };
 
   const grid = createGrid(o);
 
-  cb({
+  const result = cb({
     grid,
     sequence,
   });
 
   grid.dispose();
+
+  return result;
 };
 
 type Events = 'md' | 'mm' | 'mu';
 interface Mouvement { x?: number; y?: number; }
 
-const events = (grid: Grid) => {
+const events = () => {
   let x = 0;
   let y = 0;
 
@@ -83,7 +83,7 @@ const events = (grid: Grid) => {
   };
 };
 
-describe.only('grid', () => {
+describe('grid', () => {
   it('creates correctly', () => {
     create(({ grid }) => {
       expect(grid.itemLoopEnd.value).to.eq(4);
@@ -92,8 +92,7 @@ describe.only('grid', () => {
 
   it('adds elements correctly', () => {
     create(({ grid, sequence }) => {
-      window.dispatchEvent(new MouseEvent('mousedown', { clientX: 20, clientY: 10 }));
-      window.dispatchEvent(new MouseEvent('mouseup', { clientX: 20, clientY: 10 }));
+      events().emit('md', { x: 1, y: 1 }).emit('mu');
       expect(sequence.value.elements.length).to.eq(2);
       expect(grid.selected.length).to.eq(2);
       expect(sequence.value.elements[1].row.value).to.eq(1);
@@ -103,16 +102,14 @@ describe.only('grid', () => {
 
   it('doesn\'t add elements if the user moves their mouse', () => {
     create(({ grid, sequence }) => {
-      window.dispatchEvent(new MouseEvent('mousedown', { clientX: 20, clientY: 10 }));
-      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 21, clientY: 10 }));
-      window.dispatchEvent(new MouseEvent('mouseup', { clientX: 20, clientY: 10 }));
+      events().emit('md', { x: 1, y: 1 }).emit('mm', { x: 0.1 }).emit('mu');
       expect(sequence.value.elements.length).to.eq(1);
     });
   });
 
   it('correctly selects elements', () => {
     create(({ grid }) => {
-      const emitter = events(grid).emit('md', { x: 0.5, y: 1 })
+      const emitter = events().emit('md', { x: 0.5, y: 1 })
         .emit('mm', { x: 2.5, y: 2 });
       expect(grid.selectStyle.value?.left).to.eq('10px');
       expect(grid.selectStyle.value?.top).to.eq('10px');
@@ -125,7 +122,7 @@ describe.only('grid', () => {
 
   it('correctly slices element', () => {
     create(({ grid, sequence }) => {
-      const emitter = events(grid).emit('md', { x: 2.5, y: 0 })
+      const emitter = events().emit('md', { x: 2.5, y: 0 })
         .emit('mm', { y: 3 });
       expect(grid.sliceStyle.value?.left).to.eq(`${2.5 * 20 - 3 * 10 / 2}px`);
       expect(grid.sliceStyle.value?.top).to.eq(`${3 * 10 / 2}px`);
@@ -139,14 +136,30 @@ describe.only('grid', () => {
     }, { tool: ref('slicer') });
   });
 
-  it.only('can move elements', () => {
+  it('can move elements', () => {
     create(({ grid, sequence }) => {
       const el = sequence.value.elements[0];
       expect(el.time.value).to.eq(2);
-      const emitter = events(grid);
+      const emitter = events();
       grid.select(emitter.build('md', { x: 2.5, y: 2.5 }), 0);
       emitter.emit('mm', { x: 1 });
       expect(el.time.value).to.eq(4);
-    }, { getBoundingClientRect: () => ({ left: 10, top: 0 }), scrollLeft: ref(20), scrollTop: ref(0) });
+    }, { getPosition: () => ({ left: 10, top: 0 }), scrollLeft: ref(20), scrollTop: ref(0) });
+  });
+
+  it('correctly sets loop end', async () => {
+    await create(async ({ grid, sequence }) => {
+      events().emit('md', { x: 5, y: 0.5 }).emit('mu');
+      await Vue.nextTick();
+      expect(sequence.value.elements.length).to.eq(2);
+      expect(grid.itemLoopEnd.value).to.eq(8);
+    });
+  });
+
+  it('can remove elements', () => {
+    create(({ grid, sequence }) => {
+      grid.remove(sequence.value.elements[0]);
+      expect(sequence.value.elements.length).to.eq(0);
+    });
   });
 });

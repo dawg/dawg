@@ -37,7 +37,7 @@
         :increment="pxPerStep"
         direction="horizontal"
         @update:increment="setPxPerBeat"
-        @scroll="scroll"
+        @scroll="onScrollX"
       >
         <timeline 
           v-model="data.progress" 
@@ -57,6 +57,7 @@
     <div
       class="flex scroller overflow-y-scroll"
       ref="scrollY"
+      @scroll="onScrollY"
     >
       <!-- Use a wrapper div to add width attribute -->
       <scroller 
@@ -66,6 +67,7 @@
         :scroller="scrollY"
         :increment="rowHeight"
         @update:increment="setRowHeight"
+        @scroll="onScrollY"
       >
         <slot 
           name="side"
@@ -73,7 +75,7 @@
       </scroller>
       <sequencer-grid
         class="sequencer scroller overflow-x-scroll" 
-        @scroll.native="scroll"
+        @scroll.native="onScrollX"
         ref="scrollXVue"
         :sequencer-loop-end.sync="data.sequencerLoopEnd"
         :loop-start="loopStart"
@@ -88,6 +90,8 @@
         :name="name"
         :transport="transport"
         :tool="selectedTool"
+        :scroll-left="data.scrollLeft"
+        :scroll-top="data.scrollTop"
         :snap="snap.raw"
         :min-snap="minSnap"
         :display-loop-end.sync="data.displayLoopEnd"
@@ -136,6 +140,7 @@ export default createComponent({
   setup(props, context) {
     const data = reactive({
       scrollLeft: 0,
+      scrollTop: 0,
       progress: 0,
       sequencerLoopEnd: 0,
       displayLoopEnd: 0,
@@ -231,10 +236,17 @@ export default createComponent({
       data.progress = props.transport.getProgress();
     }
 
-    function scroll() {
+    function onScrollX() {
       // This only handles horizontal scrolls!
       if (scrollX.value) {
         data.scrollLeft = scrollX.value.scrollLeft;
+      }
+    }
+
+    function onScrollY() {
+      // This only handles horizontal scrolls!
+      if (scrollY.value) {
+        data.scrollTop = scrollY.value.scrollTop;
       }
     }
 
@@ -271,6 +283,7 @@ export default createComponent({
       scrollXVue,
       scrollX,
       scrollY,
+      onScrollY,
       setPxPerBeat,
       minSnap,
       snap,
@@ -281,7 +294,7 @@ export default createComponent({
       style,
       cycleSnap,
       seek,
-      scroll,
+      onScrollX,
       setRowHeight,
       pxPerStep,
       listeners: context.listeners,
