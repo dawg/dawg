@@ -1,6 +1,6 @@
 import { Ref, watch, ref, computed } from '@vue/composition-api';
 import { SchedulableTemp, Sequence } from '@/models';
-import { addEventListeners } from '@/lib/events';
+import { addEventListeners, addEventListener } from '@/lib/events';
 import { Keys, Disposer, reverse } from '@/lib/std';
 import { calculateSimpleSnap, slice } from '@/utils';
 
@@ -30,6 +30,8 @@ function lineStyle(
     left: x + 'px',
   };
 }
+
+type Line = ReturnType<typeof lineStyle>;
 
 type Element = SchedulableTemp<any, any>;
 
@@ -80,6 +82,113 @@ export const createGrid = <T extends Element>(
   const selected: boolean[] = [];
   let holdingShift = false;
   const itemLoopEnd = ref(0);
+  const disposers = new Set<Disposer>();
+
+  const mousedown = (e: MouseEvent) => {
+    const generalDisposer = addEventListeners({
+      mousemove: () => {
+        disposers.delete(generalDisposer);
+        generalDisposer.dispose();
+      },
+      mouseup: () => {
+        generalDisposer.dispose();
+        disposers.delete(generalDisposer);
+        addElement(e, opts.createElement.value());
+      },
+    });
+
+    disposers.add(generalDisposer);
+
+    if (opts.tool.value === 'pointer') {
+      selectStart.value = e;
+      const disposer = addEventListeners({
+        mousemove: (event: MouseEvent) => {
+          selectCurrent.value = event;
+        },
+        mouseup: () => {
+          selectStart.value = null;
+          selectCurrent.value = null;
+          disposers.delete(disposer);
+          disposer.dispose();
+        },
+      });
+
+      disposers.add(disposer);
+    } else if (opts.tool.value === 'slicer') {
+      const rect = opts.getBoundingClientRect();
+
+      const calculatePos = (event: MouseEvent) => {
+        return {
+            x: calculateSimpleSnap({
+            value: event.clientX - rect.left,
+            altKey: event.altKey,
+            minSnap: minSnap.value,
+            snap: snap.value,
+          }),
+          y: event.clientY - rect.top,
+        };
+      };
+
+      const { x: x1, y: y1 } = calculatePos(e);
+      const disposer = addEventListeners({
+        mousemove: (event: MouseEvent) => {
+          const { x: x2, y: y2 } = calculatePos(event);
+          sliceStyle.value =  {
+            zIndex: 3,
+            ...lineStyle({ x1, y1, x2, y2 }),
+          };
+        },
+        mouseup: (event) => {
+          const { x: x2, y: y2 } = calculatePos(event);
+
+          const toAdd: T[] = [];
+          sequence.value.forEach((element) => {
+            const result = slice({
+              row: element.row.value,
+              time: element.time.value,
+              duration: element.duration.value,
+              pxPerBeat: pxPerBeat.value,
+              rowHeight: pxPerRow.value,
+              x1,
+              y1,
+              x2,
+              y2,
+            });
+
+            if (result.result !== 'slice') {
+              return;
+            }
+
+            const time = calculateSimpleSnap({
+              value: result.time * pxPerBeat.value,
+              altKey: event.altKey,
+              minSnap: minSnap.value,
+              snap: snap.value,
+            }) / pxPerBeat.value;
+
+            const newEl = element.slice(time);
+
+            if (newEl) {
+              toAdd.push(newEl as T);
+            }
+          });
+
+          sequence.value.add(...toAdd);
+          selected.push(...toAdd.map(() => false));
+          sliceStyle.value = null;
+
+          disposers.delete(disposer);
+          disposer.dispose();
+        },
+      });
+
+      disposers.add(disposer);
+    }
+  };
+
+  disposers.add(addEventListener('mousedown', (e) => {
+    mousedown(e);
+  }));
 
   const checkLoopEnd = () => {
     // Set the minimum to 1 measure!
@@ -139,52 +248,44 @@ export const createGrid = <T extends Element>(
     selected.push(false);
   };
 
-  const move = (el: T, e: MouseEvent) => {
-    if (!dragStartEvent) {
-      return;
-    }
-
-    const i = sequence.value.indexOf(el);
+  const move = (i: number, e: MouseEvent) => {
+    const el = sequence.value.elements[i];
 
     // Get the preVIOUS element first
     // and ALSO grab the current position
-    const oldItem = sequence.value.elements[i];
     const rect = opts.getBoundingClientRect();
 
-    // Get the start BEAT
-    let startBeat = (dragStartEvent.clientX - rect.left) / pxPerBeat.value;
-    startBeat = Math.floor(startBeat / snap.value) * snap.value;
+    const time = doSnap({
+      position: e.clientX,
+      offset: rect.left,
+      scroll: scrollLeft.value,
+      altKey: e.altKey,
+      snap: snap.value,
+      minSnap: minSnap.value,
+      pxPerBeat: pxPerBeat.value,
+    });
 
-    // Get the end BEAT
-    let endBeat = (e.clientX - rect.left) / pxPerBeat.value;
-    endBeat = Math.floor(endBeat / snap.value) * snap.value;
+    const row = doSnap({
+      position: e.clientY,
+      offset: rect.top,
+      scroll: scrollTop.value,
+      altKey: false, // irrelevant
+      snap: 1,
+      minSnap: 1,
+      pxPerBeat: pxPerRow.value,
+    });
 
-    // CHeck if we are going to move squares
-    const diff = endBeat - startBeat;
-    const time = oldItem.time.value + diff;
-    if (time < 0) { return; }
-
-    const y = e.clientY - rect.top;
-    const row = Math.floor(y / pxPerRow.value);
-    if (row < 0) { return; }
-
-    if (row === oldItem.row.value && time === oldItem.time.value) { return; }
-    // OK, so we've moved squares
-    // Lets update our dragStartEvent or else
-    // things will start to go haywyre :////
-    dragStartEvent = e;
-
-    const timeDiff = time - oldItem.time.value;
-    const rowDiff = row - oldItem.row.value;
+    const timeDiff = time - el.time.value;
+    const rowDiff = row - el.row.value;
 
     let itemsToMove: Array<SchedulableTemp<any, any>>;
     if (selected[i]) {
-      itemsToMove = sequence.value.filter((item, ind) => selected[ind]);
+      itemsToMove = sequence.value.filter((_, ind) => selected[ind]);
     } else {
-      itemsToMove = [oldItem];
+      itemsToMove = [el];
     }
 
-    if (itemsToMove.some((item) => (item.time.value + timeDiff) < 0)) {
+    if (itemsToMove.some((item) => item.time.value + timeDiff < 0 || item.row.value + rowDiff < 0)) {
       return;
     }
 
@@ -220,7 +321,6 @@ export const createGrid = <T extends Element>(
     });
   };
 
-  let dragStartEvent: MouseEvent | null = null;
   const select = (e: MouseEvent, i: number) => {
     const item = sequence.value.elements[i];
     if (!selected[i]) {
@@ -265,21 +365,21 @@ export const createGrid = <T extends Element>(
       selectedElements.forEach(createItem);
     }
 
-    dragStartEvent = e;
-
     document.documentElement.style.cursor = 'move';
     const disposer = addEventListeners({
-      mousemove: (event) => move(item, event),
+      mousemove: (event) => move(i, event),
       mouseup: () => {
         document.documentElement.style.cursor = 'auto';
         disposer.dispose();
+        disposers.delete(disposer);
       },
     });
+
+    disposers.add(disposer);
   };
 
-  let toDispose: Disposer[] = [];
   const onMounted = () => {
-    toDispose.push(addEventListeners({
+    disposers.add(addEventListeners({
       keydown: (e) => {
         if (e.keyCode === Keys.Shift) {
           holdingShift = true;
@@ -313,14 +413,21 @@ export const createGrid = <T extends Element>(
     removeAtIndex(i);
   };
 
+  const dispose = () => {
+    disposers.forEach((disposer) => {
+      disposer.dispose();
+    });
+
+    disposers.clear();
+  };
+
   const onUnmounted = () => {
-    toDispose.forEach((disposer) => disposer.dispose());
-    toDispose = [];
+    dispose();
   };
 
   const selectStart = ref<MouseEvent>(null);
   const selectCurrent = ref<MouseEvent>(null);
-  const sliceStyle = ref<{ [k: string]: string | number }>(null);
+  const sliceStyle = ref<Line & { zIndex: number }>(null);
 
   const selectStyle = computed(() => {
     if (!selectStart.value) { return; }
@@ -377,97 +484,8 @@ export const createGrid = <T extends Element>(
 
   return {
     selectStyle,
+    sliceStyle,
     selected,
-    mousedown: (e: MouseEvent) => {
-      const disposer1 = addEventListeners({
-        mousemove: () => {
-          disposer1.dispose();
-        },
-        mouseup: () => {
-          disposer1.dispose();
-          addElement(e, opts.createElement.value());
-        },
-      });
-
-      if (opts.tool.value === 'pointer') {
-        selectStart.value = e;
-        const disposer = addEventListeners({
-          mousemove: (event: MouseEvent) => {
-            selectCurrent.value = event;
-          },
-          mouseup: () => {
-            selectStart.value = null;
-            selectCurrent.value = null;
-            disposer.dispose();
-          },
-        });
-      } else if (opts.tool.value === 'slicer') {
-        const rect = opts.getBoundingClientRect();
-
-        const calculatePos = (event: MouseEvent) => {
-          return {
-              x: calculateSimpleSnap({
-              value: event.clientX - rect.left,
-              altKey: event.altKey,
-              minSnap: minSnap.value,
-              snap: snap.value,
-            }),
-            y: event.clientY - rect.top,
-          };
-        };
-
-        const { x: x1, y: y1 } = calculatePos(e);
-        const disposer = addEventListeners({
-          mousemove: (event: MouseEvent) => {
-            const { x: x2, y: y2 } = calculatePos(event);
-            sliceStyle.value =  {
-              zIndex: 3,
-              ...lineStyle({ x1, y1, x2, y2 }),
-            };
-          },
-          mouseup: (event) => {
-            const { x: x2, y: y2 } = calculatePos(event);
-
-            const toAdd: T[] = [];
-            sequence.value.forEach((element) => {
-              const result = slice({
-                row: element.row.value,
-                time: element.time.value,
-                duration: element.duration.value,
-                pxPerBeat: pxPerBeat.value,
-                rowHeight: pxPerRow.value,
-                x1,
-                y1,
-                x2,
-                y2,
-              });
-
-              if (result.result !== 'slice') {
-                return;
-              }
-
-              const time = calculateSimpleSnap({
-                value: result.time * pxPerBeat.value,
-                altKey: event.altKey,
-                minSnap: minSnap.value,
-                snap: snap.value,
-              }) / pxPerBeat.value;
-
-              const newEl = element.slice(time);
-
-              if (newEl) {
-                toAdd.push(newEl as T);
-              }
-            });
-
-            sequence.value.add(...toAdd);
-            selected.push(...toAdd.map(() => false));
-            sliceStyle.value = null;
-            disposer.dispose();
-          },
-        });
-      }
-    },
     move,
     updateOffset(el: T, value: number) {
       updateAttr(el, value, 'offset');
@@ -483,5 +501,6 @@ export const createGrid = <T extends Element>(
     itemLoopEnd,
     onMounted,
     onUnmounted,
+    dispose,
   };
 };

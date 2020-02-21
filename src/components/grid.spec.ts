@@ -5,11 +5,16 @@ import { createGrid, GridOpts } from '@/components/grid';
 import { SchedulableTemp, createNotePrototype, Instrument, Sequence, Synth } from '@/models';
 import { expect } from '@/lib/testing';
 import * as Audio from '@/lib/audio';
+import { type } from 'io-ts';
 
 type Element = SchedulableTemp<Instrument<any, any>, 'note'>;
 
+type Grid = ReturnType<typeof createGrid>;
+
 const transport = new Audio.Transport();
-const create = <T extends SchedulableTemp<any, any>>(opts: Partial<GridOpts<T>> = {}) => {
+const create = <T extends SchedulableTemp<any, any>>(
+  cb: (o: { grid: Grid, sequence: Ref<Sequence<Element>> }) => void, opts: Partial<GridOpts<T>> = {},
+) => {
   const createElement = () => {
     return createNotePrototype(
       { time: 2, duration: 1, row: 2 },
@@ -33,47 +38,115 @@ const create = <T extends SchedulableTemp<any, any>>(opts: Partial<GridOpts<T>> 
     getPosition: opts.getPosition ?? (() => ({ left: 0, top: 0 })),
   };
 
-  return {
-    grid: createGrid(o),
+  const grid = createGrid(o);
+
+  cb({
+    grid,
     sequence,
+  });
+
+  grid.dispose();
+};
+
+type Events = 'md' | 'mm' | 'mu';
+interface Mouvement { x?: number; y?: number; }
+
+const events = (grid: Grid) => {
+  let x = 0;
+  let y = 0;
+
+  const lookup = {
+    md: 'mousedown',
+    mm: 'mousemove',
+    mu: 'mouseup',
+  };
+
+  const build = (name: Events, mouvement: Mouvement = {}) => {
+    x += (mouvement.x ?? 0) * 20;
+    y += (mouvement.y ?? 0) * 10;
+
+    return new MouseEvent(lookup[name], { clientX: x, clientY: y });
+  };
+
+  const emit = (name: Events, mouvement: Mouvement = {}) => {
+    window.dispatchEvent(build(name, mouvement));
+
+    return {
+      build,
+      emit,
+    };
+  };
+
+  return {
+    build,
+    emit,
   };
 };
 
-// const create = () => ({});
-
 describe.only('grid', () => {
   it('creates correctly', () => {
-    const { grid } = create();
-    expect(grid.itemLoopEnd.value).to.eq(4);
+    create(({ grid }) => {
+      expect(grid.itemLoopEnd.value).to.eq(4);
+    });
   });
 
   it('adds elements correctly', () => {
-    const { grid, sequence } = create();
-    grid.mousedown(new MouseEvent('mousedown', { clientX: 20, clientY: 10 }));
-    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 20, clientY: 10 }));
-    expect(sequence.value.elements.length).to.eq(2);
-    expect(grid.selected.length).to.eq(2);
-    expect(sequence.value.elements[1].row.value).to.eq(1);
-    expect(sequence.value.elements[1].time.value).to.eq(1);
+    create(({ grid, sequence }) => {
+      window.dispatchEvent(new MouseEvent('mousedown', { clientX: 20, clientY: 10 }));
+      window.dispatchEvent(new MouseEvent('mouseup', { clientX: 20, clientY: 10 }));
+      expect(sequence.value.elements.length).to.eq(2);
+      expect(grid.selected.length).to.eq(2);
+      expect(sequence.value.elements[1].row.value).to.eq(1);
+      expect(sequence.value.elements[1].time.value).to.eq(1);
+    });
   });
 
   it('doesn\'t add elements if the user moves their mouse', () => {
-    const { grid, sequence } = create();
-    grid.mousedown(new MouseEvent('mousedown', { clientX: 20, clientY: 10 }));
-    window.dispatchEvent(new MouseEvent('mousemove', { clientX: 21, clientY: 10 }));
-    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 20, clientY: 10 }));
-    expect(sequence.value.elements.length).to.eq(1);
+    create(({ grid, sequence }) => {
+      window.dispatchEvent(new MouseEvent('mousedown', { clientX: 20, clientY: 10 }));
+      window.dispatchEvent(new MouseEvent('mousemove', { clientX: 21, clientY: 10 }));
+      window.dispatchEvent(new MouseEvent('mouseup', { clientX: 20, clientY: 10 }));
+      expect(sequence.value.elements.length).to.eq(1);
+    });
   });
 
-  it.only('correctly selects elements', () => {
-    const { grid, sequence } = create({ tool: ref('pointer') });
-    grid.mousedown(new MouseEvent('mousedown', { clientX: 10, clientY: 10 }));
-    window.dispatchEvent(new MouseEvent('mousemove', { clientX: 60, clientY: 30 }));
-    expect(grid.selectStyle.value?.left).to.eq('10px');
-    expect(grid.selectStyle.value?.top).to.eq('10px');
-    expect(grid.selectStyle.value?.width).to.eq('50px');
-    expect(grid.selectStyle.value?.height).to.eq('20px');
-    expect(grid.selected[0]).to.eq(true);
-    window.dispatchEvent(new MouseEvent('mouseup', { clientX: 60, clientY: 30 }));
+  it('correctly selects elements', () => {
+    create(({ grid }) => {
+      const emitter = events(grid).emit('md', { x: 0.5, y: 1 })
+        .emit('mm', { x: 2.5, y: 2 });
+      expect(grid.selectStyle.value?.left).to.eq('10px');
+      expect(grid.selectStyle.value?.top).to.eq('10px');
+      expect(grid.selectStyle.value?.width).to.eq('50px');
+      expect(grid.selectStyle.value?.height).to.eq('20px');
+      expect(grid.selected[0]).to.eq(true);
+      emitter.emit('mu');
+    }, { tool: ref('pointer') });
+  });
+
+  it('correctly slices element', () => {
+    create(({ grid, sequence }) => {
+      const emitter = events(grid).emit('md', { x: 2.5, y: 0 })
+        .emit('mm', { y: 3 });
+      expect(grid.sliceStyle.value?.left).to.eq(`${2.5 * 20 - 3 * 10 / 2}px`);
+      expect(grid.sliceStyle.value?.top).to.eq(`${3 * 10 / 2}px`);
+      expect(grid.sliceStyle.value?.width).to.eq(`${3 * 10}px`);
+      emitter.emit('mu');
+      expect(sequence.value.elements.length).to.eq(2);
+      expect(sequence.value.elements[0].time.value).to.eq(2);
+      expect(sequence.value.elements[0].duration.value).to.eq(0.5);
+      expect(sequence.value.elements[1].time.value).to.eq(2.5);
+      expect(sequence.value.elements[1].duration.value).to.eq(0.5);
+    }, { tool: ref('slicer') });
+  });
+
+  it.only('can move elements', () => {
+    create(({ grid, sequence }) => {
+      const el = sequence.value.elements[0];
+      expect(el.time.value).to.eq(2);
+      const emitter = events(grid);
+      grid.select(emitter.build('md', { x: 2.5, y: 2.5 }), 0);
+      emitter.emit('mm', { x: 1 });
+      expect(el.time.value).to.eq(4);
+    }, { getBoundingClientRect: () => ({ left: 10, top: 0 }), scrollLeft: ref(20), scrollTop: ref(0) });
   });
 });
