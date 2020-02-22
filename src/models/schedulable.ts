@@ -127,7 +127,11 @@ const createSchedulable = <
     const copy = () => {
       // tslint:disable-next-line:no-console
       // console.log(`Copying ${o.type} element!`);
-      return create(info, idk, transport);
+      return create(
+        { duration: duration.value, time: time.value, row: row.value, offset: offset.value },
+        idk,
+        transport,
+      );
     };
 
     const removeNoHistory = () => {

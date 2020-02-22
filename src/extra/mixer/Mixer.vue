@@ -1,6 +1,6 @@
 <template>
   <div class="whitespace-no-wrap flex bg-default-lighten-4 h-full">
-    <div style="w-full h-full overflow-y-scroll">
+    <div class="w-full h-full overflow-y-scroll">
       <channel
         v-for="(channel, i) in channels"
         :key="i"

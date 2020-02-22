@@ -86,7 +86,7 @@ const events = () => {
 describe('grid', () => {
   it('creates correctly', () => {
     create(({ grid }) => {
-      expect(grid.itemLoopEnd.value).to.eq(4);
+      expect(grid.sequencerLoopEnd.value).to.eq(4);
     });
   });
 
@@ -152,13 +152,13 @@ describe('grid', () => {
       events().emit('md', { x: 5, y: 0.5 }).emit('mu');
       await Vue.nextTick();
       expect(sequence.value.elements.length).to.eq(2);
-      expect(grid.itemLoopEnd.value).to.eq(8);
+      expect(grid.sequencerLoopEnd.value).to.eq(8);
     });
   });
 
   it('can remove elements', () => {
     create(({ grid, sequence }) => {
-      grid.remove(sequence.value.elements[0]);
+      grid.remove(0, new MouseEvent(''));
       expect(sequence.value.elements.length).to.eq(0);
     });
   });

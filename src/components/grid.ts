@@ -82,7 +82,7 @@ export const createGrid = <T extends Element>(
   // FIXME(Vue3) With Vue 3, we can move to a set I think
   const selected: boolean[] = [];
   let holdingShift = false;
-  const itemLoopEnd = ref(0);
+  const sequencerLoopEnd = ref(0);
   const disposers = new Set<Disposer>();
 
   const mousedown = (e: MouseEvent) => {
@@ -94,7 +94,7 @@ export const createGrid = <T extends Element>(
       mouseup: () => {
         generalDisposer.dispose();
         disposers.delete(generalDisposer);
-        addElement(e, createElement.value());
+        addElement(e, (createElement as any).value());
       },
     });
 
@@ -200,12 +200,17 @@ export const createGrid = <T extends Element>(
 
     const newLoopEnd = Math.ceil(maxTime / beatsPerMeasure.value) * beatsPerMeasure.value;
 
-    if (newLoopEnd !== itemLoopEnd.value) {
-      // TODO
-      // $update('sequencerLoopEnd', itemLoopEnd);
-      itemLoopEnd.value = newLoopEnd;
+    if (newLoopEnd !== sequencerLoopEnd.value) {
+      sequencerLoopEnd.value = newLoopEnd;
     }
   };
+
+  const displayBeats = computed(() => {
+    return Math.max(
+      256, // 256 is completly random
+      (sequencerLoopEnd.value || 0) + beatsPerMeasure.value * 2,
+    );
+  });
 
   watch(() => sequence.value.elements, () => {
     if (selected.length !== sequence.value.elements.length) {
@@ -238,12 +243,12 @@ export const createGrid = <T extends Element>(
 
     const row = doSnap({
       position: e.clientY,
-      minSnap: minSnap.value,
-      snap: snap.value,
+      minSnap: 1,
+      snap: 1,
       pxPerBeat: pxPerRow.value,
       offset: rect.top,
       scroll: scrollTop.value,
-      altKey: e.altKey,
+      altKey: false, // irrelevant
     });
 
     el.row.value = row;
@@ -253,7 +258,12 @@ export const createGrid = <T extends Element>(
     selected.push(false);
   };
 
+  let initialMoveBeat: undefined | number;
   const move = (i: number, e: MouseEvent) => {
+    if (initialMoveBeat === undefined) {
+      return;
+    }
+
     const el = sequence.value.elements[i];
     const rect = opts.getPosition();
 
@@ -277,7 +287,7 @@ export const createGrid = <T extends Element>(
       pxPerBeat: pxPerRow.value,
     });
 
-    const timeDiff = time - el.time.value;
+    const timeDiff = time - initialMoveBeat;
     const rowDiff = row - el.row.value;
 
     let itemsToMove: Array<SchedulableTemp<any, any>>;
@@ -291,6 +301,8 @@ export const createGrid = <T extends Element>(
       return;
     }
 
+    initialMoveBeat = time;
+
     itemsToMove.forEach((item) => {
       item.time.value = item.time.value + timeDiff;
       item.row.value = item.row.value + rowDiff;
@@ -299,8 +311,8 @@ export const createGrid = <T extends Element>(
     checkLoopEnd();
   };
 
-  const updateAttr = (el: T, value: number, attr: 'offset' | 'duration') => {
-    const i = sequence.value.indexOf(el);
+  const updateAttr = (i: number, value: number, attr: 'offset' | 'duration') => {
+    const el = sequence.value.elements[i];
     const diff = value - el[attr].value;
 
     const toUpdate = [el];
@@ -329,49 +341,58 @@ export const createGrid = <T extends Element>(
       sequence.value.forEach((_, ind) => selected[ind] = false);
     }
 
-    const createItem = (oldItem: T) => {
+    const createItem = (oldItem: T, isSelected: boolean) => {
       const newItem = oldItem.copy();
 
-      // We set selected to true because `newNew` will have a heigher z-index
+      // We set selected to true because `newNew` will have a higher z-index
       // Thus, it will be displayed on top (which we want)
       // Try copying selected files and you will notice the selected notes stay on top
-      selected.push(true);
+      selected.push(isSelected);
       sequence.value.add(newItem as T);
     };
 
     if (holdingShift) {
-      let selectedElements: T[];
-
       // If selected, copy all selected. If not, just copy the item that was clicked.
       if (selected[i]) {
         // selected is all all selected except the element you pressed on
-        selectedElements = sequence.value.filter((el, ind) => {
-          if (selected[ind]) {
-            // See in `createItem` that we are setting all new elements to selected
-            // And accordingly we are setting selected to false here
-            selected[ind] = false;
-            return el !== item;
-          } else {
-            return false;
+        sequence.value.forEach((el, ind) => {
+          if (!selected[ind]) {
+            return;
           }
-        });
-        // A copy of `item` will be created at this index
-        // See the next line
-        // TODO
-        // targetIndex = sequence.value.elements.length;
-        createItem(item);
-      } else {
-        selectedElements = [item];
-      }
 
-      selectedElements.forEach(createItem);
+          if (el === item) {
+            // A copy of `item` will be created at this index which becomes the target for moving
+            i = sequence.value.elements.length;
+          }
+
+          // Set old item selected -> false and new item selected -> true since
+          // the new items will be placed over the old elements
+          selected[ind] = false;
+          createItem(el, true);
+        });
+      } else {
+        i = sequence.value.elements.length;
+        createItem(item, false);
+      }
     }
 
     document.documentElement.style.cursor = 'move';
+    const rect = opts.getPosition();
+    initialMoveBeat = doSnap({
+      position: e.clientX,
+      offset: rect.left,
+      scroll: scrollLeft.value,
+      altKey: e.altKey,
+      snap: snap.value,
+      minSnap: minSnap.value,
+      pxPerBeat: pxPerBeat.value,
+    });
+
     const disposer = addEventListeners({
       mousemove: (event) => move(i, event),
       mouseup: () => {
         document.documentElement.style.cursor = 'auto';
+        initialMoveBeat = undefined;
         disposer.dispose();
         disposers.delete(disposer);
       },
@@ -405,13 +426,13 @@ export const createGrid = <T extends Element>(
   };
 
   const removeAtIndex = (i: number) => {
-    const el = sequence.value.elements[0];
+    const el = sequence.value.elements[i];
     el.remove();
     selected.splice(i, 1);
   };
 
-  const remove = (el: T) => {
-    const i = sequence.value.indexOf(el);
+  const remove = (i: number, e: MouseEvent) => {
+    e.preventDefault();
     removeAtIndex(i);
   };
 
@@ -479,23 +500,24 @@ export const createGrid = <T extends Element>(
     sliceStyle,
     selected,
     move,
-    updateOffset(el: T, value: number) {
-      updateAttr(el, value, 'offset');
+    updateOffset(i: number, value: number) {
+      updateAttr(i, value, 'offset');
     },
-    updateDuration(el: T, value: number) {
-      updateAttr(el, value, 'duration');
+    updateDuration(i: number, value: number) {
+      updateAttr(i, value, 'duration');
 
       // Make sure to check the loop end when the duration of an element has been changed!!
       checkLoopEnd();
     },
     remove,
     select,
-    itemLoopEnd,
+    sequencerLoopEnd,
+    displayBeats,
     onMounted,
     onUnmounted,
     dispose,
     add: (e: MouseEvent) => {
-      addElement(e, opts.createElement.value ? opts.createElement.value() : undefined);
+      addElement(e, opts.createElement.value ? (opts.createElement as any).value() : undefined);
     },
     mousedown,
   };

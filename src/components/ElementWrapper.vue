@@ -6,7 +6,7 @@
       :style="elementWrapperStyle"
     >
       <div class="w-full" :style="borderStyle"></div>
-      <div class="w-full text-default" :style="textBorderStyle">
+      <div class="w-full text-default select-none" :style="textBorderStyle">
         {{ text }}
       </div>
       <div class="w-full" :style="spacerStyle"></div>

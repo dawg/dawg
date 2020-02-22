@@ -60,8 +60,8 @@
         :offset="el.offset.value"
         :show-border="el.showBorder"
         :text="el.name ? el.name.value : undefined"
-        @mousedown.native="select($event, i)"
-        @contextmenu.native="remove($event, i)"
+        @mousedown.native="mousedownElement($event, i)"
+        @contextmenu.native="remove(i, $event)"
         @click.native="clickElement(i)"
         @dblclick.native="open($event, i)"
         @update:duration="updateDuration(i, $event)"
@@ -105,29 +105,27 @@
       :total-beats="displayBeats"
       :style="actualRowStyle(row - 1)"
       :class="rowClass ? rowClass(row - 1) : ''"
-      @mousedown="mousedown"
+      @mousedown="mousedownSurroundings"
     ></div>
 
   </drop>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Mixins, Inject, Vue } from 'vue-property-decorator';
-import { Keys } from '@/lib/std';
-import { range, reverse, XYPosition } from '@/lib/std';
+import Vue from 'vue';
+import { range, reverse } from '@/lib/std';
 import { addEventListeners } from '@/lib/events';
-import { Nullable, update } from '@/lib/vutils';
+import { update } from '@/lib/vutils';
 import BeatLines from '@/components/BeatLines';
-import { Watch } from '@/lib/update';
 import { Sequence } from '@/models';
 import * as Audio from '@/lib/audio';
 import { Ghost } from '@/models/ghost';
-import { calculateSnap, calculateSimpleSnap, getIntersection, slice } from '@/utils';
 import { UnscheduledPrototype, SchedulableTemp } from '@/models/schedulable';
-import { createComponent, ref, computed, watch } from '@vue/composition-api';
+import { createComponent, ref, computed, watch, onUnmounted, onMounted } from '@vue/composition-api';
 import { createGrid } from './grid';
 
 export default createComponent({
+  components: { BeatLines },
   props: {
     name: { type: String as () => string, required: true },
     rowHeight: { type: Number, required: true },
@@ -159,22 +157,14 @@ export default createComponent({
     scrollTop: { type: Number, required: true },
 
     // These values should only be set if there is a loop on the timeline
-    setLoopEnd: { type: Nullable(Number) as any | null },
-    setLoopStart: { type: Nullable(Number) as any | null },
+    setLoopEnd: Number,
+    setLoopStart: Number,
 
     // FIXME edge case -> what happens if the element is deleted?
     prototype: { type: Function as any as () => (() => SchedulableTemp<any, any>) },
   },
   setup(props, context) {
-    const rows = ref<HTMLElement>(null);
-    const selectStartEvent: MouseEvent | null = null;
-    const selectCurrentEvent: MouseEvent | null = null;
-    const dragStartEvent: MouseEvent | null = null;
-    const holdingShift = false;
-    const minDisplayMeasures = 4;
-    const itemLoopEnd: number | null = null;
-    // selected[i] indicates whether elements[i] is selected
-    const selected: boolean[] = [];
+    const rows = ref<Vue>(null);
 
     const grid = createGrid({
       sequence: computed(() => props.sequence),
@@ -188,8 +178,17 @@ export default createComponent({
       createElement: computed(() => props.prototype),
       tool: computed(() => props.tool),
       getPosition: () => {
-        return rows.value?.getBoundingClientRect() ?? { left: 0, top: 0 };
+        return rows.value?.$el.getBoundingClientRect() ?? { left: 0, top: 0 };
       },
+    });
+
+    onMounted(grid.onMounted);
+    onUnmounted(grid.onUnmounted);
+
+    const { displayBeats, selected, sequencerLoopEnd } = grid;
+
+    watch(sequencerLoopEnd, () => {
+      update(props, context, 'sequencerLoopEnd', sequencerLoopEnd.value);
     });
 
     const elements = computed(() => {
@@ -229,14 +228,6 @@ export default createComponent({
       }
     });
 
-    const displayBeats = computed(() => {
-      return Math.max(
-        256, // 256 is completly random
-        // TODO itemLoopEnd
-        (itemLoopEnd || 0) + props.beatsPerMeasure * 2,
-      );
-    });
-
     function actualRowStyle(i: number) {
       const style = props.rowStyle ? props.rowStyle(i) : {};
       return {
@@ -253,10 +244,6 @@ export default createComponent({
 
     function clickElement(i: number) {
       update(props, context, 'prototype', elements.value[i].copy);
-    }
-
-    function select(e: MouseEvent, i: number) {
-      //
     }
 
     async function handleDrop(prototype: UnscheduledPrototype, e: MouseEvent) {
@@ -278,14 +265,14 @@ export default createComponent({
       selectStyle: grid.selectStyle,
       sliceStyle: grid.sliceStyle,
       elements,
-      select: grid.select,
+      mousedownElement: grid.select,
       remove: grid.remove,
       clickElement,
       open,
       updateDuration: grid.updateDuration,
       updateOffset: grid.updateOffset,
       selected,
-      mousedown: grid.mousedown,
+      mousedownSurroundings: grid.mousedown,
       leftStyle,
       rightStyle,
       displayBeats,
