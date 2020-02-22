@@ -175,17 +175,13 @@ const createSchedulable = <
           return;
         }
 
-        const newDuration = timeToSlice - time.value;
-        const otherElementDuration = duration.value - newDuration;
-
         const newElement = copy();
-        newElement.duration.value = otherElementDuration;
-        duration.value = newDuration;
+        duration.value = timeToSlice - time.value;
 
         if (o.offsettable) {
-          newElement.offset.value = newDuration;
+          newElement.offset.value = duration.value;
         } else {
-          newElement.time.value += newDuration;
+          newElement.time.value += duration.value;
         }
 
         return newElement;

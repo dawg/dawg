@@ -64,7 +64,7 @@ export default createComponent({
       dawg.sampleViewer.openedSample.value = sample;
     }
 
-    const onClick = useClicker<[Sample]>({
+    const onClick = useClicker({
       onClick: start,
       onDblClick: open,
     });

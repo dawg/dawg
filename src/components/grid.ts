@@ -119,20 +119,26 @@ export const createGrid = <T extends Element>(
       const rect = opts.getPosition();
 
       const calculatePos = (event: MouseEvent) => {
+        // console.log(event.clientX, rect.left, calculateSimpleSnap({
+        //   value: event.clientX - rect.left,
+        //   altKey: event.altKey,
+        //   minSnap: minSnap.value,
+        //   snap: snap.value,
+        // }));
         return {
-            x: calculateSimpleSnap({
-            value: event.clientX - rect.left,
+          x: calculateSimpleSnap({
+            value: (event.clientX - rect.left) / pxPerBeat.value,
             altKey: event.altKey,
             minSnap: minSnap.value,
             snap: snap.value,
-          }),
+          }) * pxPerBeat.value,
           y: event.clientY - rect.top,
         };
       };
 
       const { x: x1, y: y1 } = calculatePos(e);
       const disposer = addEventListeners({
-        mousemove: (event: MouseEvent) => {
+        mousemove: (event) => {
           const { x: x2, y: y2 } = calculatePos(event);
           sliceStyle.value =  {
             zIndex: 3,
@@ -161,11 +167,11 @@ export const createGrid = <T extends Element>(
             }
 
             const time = calculateSimpleSnap({
-              value: result.time * pxPerBeat.value,
+              value: result.time,
               altKey: event.altKey,
               minSnap: minSnap.value,
               snap: snap.value,
-            }) / pxPerBeat.value;
+            });
 
             const newEl = element.slice(time);
 
@@ -187,10 +193,6 @@ export const createGrid = <T extends Element>(
     }
   };
 
-  // disposers.add(addEventListener('mousedown', (e) => {
-  //   mousedown(e);
-  // }));
-
   const checkLoopEnd = () => {
     // Set the minimum to 1 measure!
     const maxTime = Math.max(
@@ -207,8 +209,8 @@ export const createGrid = <T extends Element>(
 
   const displayBeats = computed(() => {
     return Math.max(
-      256, // 256 is completly random
-      (sequencerLoopEnd.value || 0) + beatsPerMeasure.value * 2,
+      256, // 256 is completely random
+      sequencerLoopEnd.value + beatsPerMeasure.value * 2,
     );
   });
 
@@ -297,18 +299,20 @@ export const createGrid = <T extends Element>(
       itemsToMove = [el];
     }
 
-    if (itemsToMove.some((item) => item.time.value + timeDiff < 0 || item.row.value + rowDiff < 0)) {
-      return;
+    if (itemsToMove.every((item) => item.time.value + timeDiff >= 0)) {
+      initialMoveBeat = time;
+      itemsToMove.forEach((item) => {
+        item.time.value = item.time.value + timeDiff;
+      });
+
+      checkLoopEnd();
     }
 
-    initialMoveBeat = time;
-
-    itemsToMove.forEach((item) => {
-      item.time.value = item.time.value + timeDiff;
-      item.row.value = item.row.value + rowDiff;
-    });
-
-    checkLoopEnd();
+    if (itemsToMove.every((item) => item.row.value + rowDiff >= 0)) {
+      itemsToMove.forEach((item) => {
+        item.row.value = item.row.value + rowDiff;
+      });
+    }
   };
 
   const updateAttr = (i: number, value: number, attr: 'offset' | 'duration') => {
@@ -444,10 +448,6 @@ export const createGrid = <T extends Element>(
     disposers.clear();
   };
 
-  const onUnmounted = () => {
-    dispose();
-  };
-
   const selectStart = ref<MouseEvent>(null);
   const selectCurrent = ref<MouseEvent>(null);
   const sliceStyle = ref<Line & { zIndex: number }>(null);
@@ -514,7 +514,7 @@ export const createGrid = <T extends Element>(
     sequencerLoopEnd,
     displayBeats,
     onMounted,
-    onUnmounted,
+    onUnmounted: dispose,
     dispose,
     add: (e: MouseEvent) => {
       addElement(e, opts.createElement.value ? (opts.createElement as any).value() : undefined);
