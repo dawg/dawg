@@ -63,7 +63,6 @@ export type SchedulablePrototype<T, M extends string> = Readonly<{
   copy: () => SchedulableTemp<T, M>;
 }>;
 
-// TODO name
 export type SchedulableTemp<T, M extends string> = Readonly<{
   component: string;
   element: T;

@@ -6,6 +6,7 @@
     :row-height="rowHeight"
     :row-class="rowClass"
     :side-width="130"
+    :side-border="true"
     name="Playlist"
     :prototype.sync="prototype"
   >

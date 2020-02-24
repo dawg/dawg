@@ -39,12 +39,14 @@ export const patterns = framework.manager.activate({
       <patterns
         v-model="pattern"
         :patterns="patterns"
+        :beats-per-measure="project.beatsPerMeasure"
         @remove="remove"
       ></patterns>
       `,
       setup: () => ({
         pattern,
         patterns: project.patterns,
+        project,
         remove: (i: number) => project.removePattern(i),
       }),
     }));

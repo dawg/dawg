@@ -9,6 +9,7 @@ import { commands } from '@/core/commands';
 import { ref, watch } from '@vue/composition-api';
 import { project } from '@/core/project';
 import { controls } from '@/core/controls';
+import { SequencerTool } from '@/components/grid';
 
 export const pianoRoll = framework.manager.activate({
   id:  'dawg.piano-roll',
@@ -21,8 +22,12 @@ export const pianoRoll = framework.manager.activate({
       type: t.number,
       default: 80,
     },
+    tool: t.union([t.literal('slicer'), t.literal('pointer')]),
   },
   activate(context) {
+    // Do not remove, for type checking
+    const tool: SequencerTool | undefined = context.workspace.tool.value;
+
     context.subscriptions.push(commands.registerCommand({
       text: 'Open Piano Roll',
       shortcut: ['CmdOrCtrl', 'P'],
@@ -51,6 +56,7 @@ export const pianoRoll = framework.manager.activate({
         :row-height.sync="pianoRollRowHeight.value"
         :px-per-beat.sync="pianoRollBeatWidth.value"
         :is-recording="recording.value"
+        :tool.sync="tool.value"
       ></piano-roll-sequencer>
       `,
       data: () => ({
@@ -60,6 +66,7 @@ export const pianoRoll = framework.manager.activate({
         recording,
         pianoRollBeatWidth,
         pianoRollRowHeight,
+        tool: context.workspace.tool,
       }),
       computed: {
         pianoRollPlay() {
@@ -89,6 +96,7 @@ export const pianoRoll = framework.manager.activate({
       setRecording(r: boolean) {
         recording.value = r;
       },
+      tool,
     };
   },
 });

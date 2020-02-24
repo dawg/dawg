@@ -1,31 +1,35 @@
 <template>
   <div class="flex flex-col">
     <div class="flex" style="flex: 0 0 25px">
-      <div class="bg-default h-full flex items-center border-r border-default-darken-1" :style="style">
+      <div 
+        class="bg-default h-full flex items-center border-default-darken-1" 
+        :style="style"
+        :class="{ 'border-r': sideBorder }"
+      >
         <dg-fa-icon
-          class="cursor-pointer ml-2 text-sm"
-          :class="selectedTool === 'pointer' ? 'text-default-darken-2' : 'text-default-darken-5'"
+          class="cursor-pointer ml-1 text-xs"
+          :class="tool === 'pointer' ? 'text-default-darken-2' : 'text-default-darken-5'"
           icon="hand-pointer"
           @click="selectTool('pointer')"
           title="Pointer Tool"
         ></dg-fa-icon>
         <dg-fa-icon
-          class="cursor-pointer ml-2 text-sm"
-          :class="selectedTool === 'slicer' ? 'text-default-darken-2' : 'text-default-darken-5'"
+          class="cursor-pointer ml-2 text-xs"
+          :class="tool === 'slicer' ? 'text-default-darken-2' : 'text-default-darken-5'"
           icon="hand-scissors"
           @click="selectTool('slicer')"
           title="Slicer Tool"
         ></dg-fa-icon>
         <div class="flex-grow"></div>
         <div 
-          class="cursor-pointer pr-2 text-sm text-default-darken-3 tracking-tight"
+          class="cursor-pointer pr-1 text-sm text-default-darken-3 tracking-tight"
           @click="cycleSnap"
           title="Measured in steps"
         >
           {{ snap.display }}
         </div>
         <dg-fa-icon
-          class="cursor-pointer mr-2 text-default-darken-3 text-sm"
+          class="cursor-pointer mr-2 text-default-darken-3 text-xs"
           icon="magnet"
           @click="cycleSnap"
           title="Measured in steps"
@@ -62,7 +66,8 @@
       <!-- Use a wrapper div to add width attribute -->
       <scroller 
         :style="style" 
-        class="side-wrapper border-r border-default-darken-1"
+        class="side-wrapper border-default-darken-1"
+        :class="{ 'border-r': sideBorder }"
         direction="vertical"
         :scroller="scrollY"
         :increment="rowHeight"
@@ -90,7 +95,7 @@
         :progress="data.progress"
         :name="name"
         :transport="transport"
-        :tool="selectedTool"
+        :tool="tool"
         :scroll-left="data.scrollLeft"
         :scroll-top="data.scrollTop"
         :snap="snap.raw"
@@ -105,9 +110,10 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { Keys } from '@/lib/std';
+import { Keys, literal } from '@/lib/std';
 import { update } from '@/lib/vutils';
 import * as Audio from '@/lib/audio';
+import { SequencerTool } from '@/components/grid';
 import { createComponent, reactive, computed, watch, onMounted, ref, Ref } from '@vue/composition-api';
 
 export default createComponent({
@@ -119,6 +125,7 @@ export default createComponent({
     pxPerBeat: { type: Number, required: true },
     name: { type: String, required: true },
     sideWidth: { type: Number, default: 80 },
+    sideBorder: { type: Boolean, default: false },
     play: { type: Boolean, default: false },
     transport: { type: Object as () => Audio.Transport, required: true },
     isRecording: { type: Boolean, default: false },
@@ -137,6 +144,11 @@ export default createComponent({
      * This will be synced with the start of the loop.
      */
     start: { type: Number, required: false },
+
+    /**
+     * The currently selected tool!
+     */
+    tool: { type: String as () => SequencerTool, default: literal('pointer') },
   },
   setup(props, context) {
     const data = reactive({
@@ -152,7 +164,6 @@ export default createComponent({
       selectedSnap: 0,
     });
 
-    const selectedTool = ref<'pointer' | 'slicer'>('pointer');
     const scrollXVue = ref<Vue>();
     const scrollY = ref<Element>(null);
 
@@ -306,9 +317,8 @@ export default createComponent({
       setRowHeight,
       pxPerStep,
       listeners: context.listeners,
-      selectedTool,
-      selectTool: (tool: 'slicer' | 'pointer') => {
-        selectedTool.value = tool;
+      selectTool: (tool: SequencerTool) => {
+        update(props, context, 'tool', tool);
       },
       getPosition,
     };

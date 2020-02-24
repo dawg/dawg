@@ -61,6 +61,8 @@ export const doSnap = (
   });
 };
 
+export type SequencerTool = 'pointer' | 'slicer';
+
 export interface GridOpts<T extends Element> {
   sequence: Readonly<Ref<Readonly<Sequence<T>>>>;
   pxPerBeat: Ref<number>;
@@ -72,7 +74,7 @@ export interface GridOpts<T extends Element> {
   beatsPerMeasure: Ref<number>;
   createElement: Ref<undefined | SchedulablePrototype<any, any>>;
   getPosition: () => { left: number, top: number };
-  tool: Ref<'pointer' | 'slicer'>;
+  tool: Ref<SequencerTool>;
 }
 
 export const createGrid = <T extends Element>(
@@ -519,6 +521,7 @@ export const createGrid = <T extends Element>(
     dispose,
     add: (e: MouseEvent) => {
       // TODO as any
+      // TODO test backup
       addElement(e, opts.createElement.value ? opts.createElement.value.copy() as any : undefined);
     },
     mousedown,

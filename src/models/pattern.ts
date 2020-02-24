@@ -30,20 +30,6 @@ export class Pattern extends BuildingBlock implements Serializable<IPattern> {
     this.id = i.id;
     this.name = i.name;
     this.scores = scores;
-
-    // TODO is this the best place
-    // this.scores.forEach((score) => {
-    //   score.notes.forEach((note) => {
-    //     note.schedule(this.transport);
-    //   });
-    // });
-  }
-
-  get duration() {
-    // FIXME 4 is is hardcoded
-    return this.scores.reduce((max, score) => {
-      return Math.max(max, ...score.notes.map(({ time, duration }) => time.value + duration.value));
-    }, 4);
   }
 
   public dispose() {

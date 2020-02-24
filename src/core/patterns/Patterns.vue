@@ -1,22 +1,14 @@
 <template>
   <div class="patterns">
-    <drag
-      group="arranger"
-      v-for="(item, i) in items"
-      :key="i"
-      :class="classes(item.pattern)"
-      class="text-default hover:bg-default-lighten-2 cursor-pointer border py-3 px-4"
-      :transfer-data="item.prototype"
-      @click.native="click(item.pattern)"
-      @contextmenu.native="context($event, i)"
-    >
-      <editable
-        v-model="item.pattern.name"
-        :contenteditable.sync="contenteditable"
-        disableDblClick
-        class="label"
-      ></editable>
-    </drag>
+    <pattern-list-element
+      v-for="(pattern, i) in patterns"
+      :key="pattern.id"
+      :pattern="pattern"
+      :selected="pattern === value"
+      :beats-per-measure="beatsPerMeasure"
+      @click.native="click(pattern)"
+      @remove="remove(i)"
+    ></pattern-list-element>
   </div>
 </template>
 
@@ -27,59 +19,40 @@ import { Nullable } from '@/lib/vutils';
 import { Watch } from '@/lib/update';
 import * as framework from '@/lib/framework';
 import { theme } from '@/core/theme';
+import { createComponent, ref, computed, watch } from '@vue/composition-api';
+import PatternListElement from '@/core/patterns/PatternListElement.vue';
 
-@Component
-export default class Patterns extends Vue {
-  @Prop(Object) public value!: Pattern | undefined;
-  @Prop({ type: Array, required: true }) public patterns!: Pattern[];
-  public contenteditable = false;
+export default createComponent({
+  components: { PatternListElement },
+  props: {
+    value: Object as () => Pattern | undefined,
+    patterns: { type: Array as () => Pattern[], required: true },
+    beatsPerMeasure: { type: Number, required: true },
+  },
+  setup(props, context) {
+    const contenteditable = ref(false);
 
-  get items() {
-    return this.patterns.map((pattern) => {
-      return {
-        prototype: createPatternPrototype({ row: 0, duration: pattern.duration, time: 0 }, pattern),
-        pattern,
-      };
-    });
-  }
-
-  public click(p: Pattern) {
-    if (this.value && this.value.id === p.id) {
-      this.$emit('input', null);
-    } else {
-      this.$emit('input', p);
+    function click(p: Pattern) {
+      if (props.value && props.value.id === p.id) {
+        context.emit('input', null);
+      } else {
+        context.emit('input', p);
+      }
     }
-  }
 
-  public context(event: MouseEvent, i: number) {
-    framework.context({
-      position: event,
-      items: [
-        {
-          text: 'Delete',
-          callback: () => this.$emit('remove', i),
-        },
-        {
-          text: 'Rename',
-          callback: () => this.contenteditable = true,
-        },
-      ],
+    watch(() => props.patterns, () => {
+      if (props.value) { return; }
+      if (props.patterns.length === 0) { return; }
+      context.emit('input', props.patterns[0]);
     });
-  }
 
-  public classes(pattern: Pattern) {
-    if (pattern === this.value) {
-      return 'border-default-lighten-5';
-    } else {
-      return 'border-default';
-    }
-  }
-
-  @Watch<Patterns>('patterns')
-  public selectFirstPatternIfNoPatternIsSelected() {
-    if (this.value) { return; }
-    if (this.patterns.length === 0) { return; }
-    this.$emit('input', this.patterns[0]);
-  }
-}
+    return {
+      contenteditable,
+      click,
+      remove: (i: number) => {
+        context.emit('remove', i);
+      },
+    };
+  },
+});
 </script>

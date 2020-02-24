@@ -122,7 +122,7 @@ import * as Audio from '@/lib/audio';
 import { Ghost } from '@/models/ghost';
 import { UnscheduledPrototype, SchedulableTemp, SchedulablePrototype } from '@/models/schedulable';
 import { createComponent, ref, computed, watch, onUnmounted, onMounted } from '@vue/composition-api';
-import { createGrid } from './grid';
+import { createGrid, SequencerTool } from './grid';
 
 export default createComponent({
   components: { BeatLines },
@@ -133,7 +133,7 @@ export default createComponent({
     ghosts: { type: Array as () => Ghost[] | null, default: null },
     snap: { type: Number, required: true },
     minSnap: { type: Number, required: true },
-    tool: { type: String as () => 'slicer' | 'pointer', required: true },
+    tool: { type: String as () => SequencerTool, required: true },
     pxPerBeat: { type: Number, required: true },
     beatsPerMeasure: { type: Number, required: true },
     stepsPerBeat: { type: Number, required: true },

@@ -13,6 +13,7 @@
       :transport="transport"
       :num-rows="allKeys.length"
       :prototype.sync="note"
+      :side-width="90"
       :row-class="rowClass"
       :set-loop-end="setLoopEnd"
       name="Piano Roll"

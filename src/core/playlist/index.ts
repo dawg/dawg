@@ -3,7 +3,7 @@ import * as t from '@/lib/io';
 import { project } from '@/core/project';
 // FIXME(2) Remove this import
 import { record } from '@/core/record';
-import { ScheduledPattern, ScheduledSample, PlaylistElements } from '@/models';
+import { PlaylistElements } from '@/models';
 import { ref } from '@vue/composition-api';
 import * as framework from '@/lib/framework';
 import { Ghost } from '@/models/ghost';
@@ -11,6 +11,7 @@ import { controls } from '@/core/controls';
 import { log } from '@/core/log';
 import { sampleViewer } from '@/core/sample-viewer';
 import { patterns } from '@/core/patterns';
+import { SequencerTool } from '@/components/grid';
 
 export const playlist = framework.manager.activate({
   id: 'dawg.playlist',
@@ -23,8 +24,12 @@ export const playlist = framework.manager.activate({
       type: t.number,
       default: 80,
     },
+    tool: t.union([t.literal('slicer'), t.literal('pointer')]),
   },
   activate(context) {
+    // Do not remove, for type checking
+    const tool: SequencerTool | undefined = context.workspace.tool.value;
+
     const masterStart = ref(0);
     const masterEnd = ref(0);
     const ghosts: Ghost[] = [];
@@ -51,6 +56,7 @@ export const playlist = framework.manager.activate({
         :ghosts="ghosts"
         @new-prototype="checkPrototype"
         @open="open"
+        :tool.sync="tool.value"
       ></playlist-sequencer>
       `,
       data: () => ({
@@ -64,6 +70,7 @@ export const playlist = framework.manager.activate({
         project,
         playlistRowHeight,
         playlistBeatWidth,
+        tool: context.workspace.tool,
       }),
       computed: {
         playlistPlay() {
