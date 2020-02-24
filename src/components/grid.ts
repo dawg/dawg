@@ -3,6 +3,7 @@ import { SchedulableTemp, Sequence } from '@/models';
 import { addEventListeners, addEventListener } from '@/lib/events';
 import { Keys, Disposer, reverse } from '@/lib/std';
 import { calculateSimpleSnap, slice } from '@/utils';
+import { SchedulablePrototype } from '@/models/schedulable';
 
 // For more information see the following link:
 // https://stackoverflow.com/questions/4270485/drawing-lines-on-html-page
@@ -69,7 +70,7 @@ export interface GridOpts<T extends Element> {
   scrollLeft: Ref<number>;
   scrollTop: Ref<number>;
   beatsPerMeasure: Ref<number>;
-  createElement: Ref<Readonly<undefined | (() => T)>>;
+  createElement: Ref<undefined | SchedulablePrototype<any, any>>;
   getPosition: () => { left: number, top: number };
   tool: Ref<'pointer' | 'slicer'>;
 }
@@ -94,7 +95,7 @@ export const createGrid = <T extends Element>(
       mouseup: () => {
         generalDisposer.dispose();
         disposers.delete(generalDisposer);
-        addElement(e, (createElement as any).value());
+        addElement(e, createElement.value?.copy() as any);
       },
     });
 
@@ -517,7 +518,8 @@ export const createGrid = <T extends Element>(
     onUnmounted: dispose,
     dispose,
     add: (e: MouseEvent) => {
-      addElement(e, opts.createElement.value ? (opts.createElement as any).value() : undefined);
+      // TODO as any
+      addElement(e, opts.createElement.value ? opts.createElement.value.copy() as any : undefined);
     },
     mousedown,
   };

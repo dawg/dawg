@@ -120,7 +120,7 @@ import BeatLines from '@/components/BeatLines';
 import { Sequence } from '@/models';
 import * as Audio from '@/lib/audio';
 import { Ghost } from '@/models/ghost';
-import { UnscheduledPrototype, SchedulableTemp } from '@/models/schedulable';
+import { UnscheduledPrototype, SchedulableTemp, SchedulablePrototype } from '@/models/schedulable';
 import { createComponent, ref, computed, watch, onUnmounted, onMounted } from '@vue/composition-api';
 import { createGrid } from './grid';
 
@@ -163,7 +163,7 @@ export default createComponent({
     getPosition: { type: Function as any as () => (() => { left: number, top: number }), required: true },
 
     // FIXME edge case -> what happens if the element is deleted?
-    prototype: { type: Function as any as () => (() => SchedulableTemp<any, any>) },
+    prototype: { type: Object as () => SchedulablePrototype<any, any> },
   },
   setup(props, context) {
     const rows = ref<Vue>(null);
@@ -243,15 +243,16 @@ export default createComponent({
     }
 
     function clickElement(i: number) {
-      update(props, context, 'prototype', elements.value[i].copy);
+      update(props, context, 'prototype', elements.value[i]);
     }
 
     async function handleDrop(prototype: UnscheduledPrototype, e: MouseEvent) {
       const element = prototype(props.transport);
-      update(props, context, 'prototype', element.copy);
+      update(props, context, 'prototype', element);
       await Vue.nextTick();
       grid.add(e);
-      context.emit('new-prototype', element);
+      // TODO
+      // context.emit('new-prototype', element);
     }
 
     watch(displayBeats, () => {

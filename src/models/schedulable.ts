@@ -59,13 +59,16 @@ const wrap = <T, K extends keyof T>(o: T, k: K, onSet: (value: T[K]) => void) =>
   return reference;
 };
 
+export type SchedulablePrototype<T, M extends string> = Readonly<{
+  copy: () => SchedulableTemp<T, M>;
+}>;
 
+// TODO name
 export type SchedulableTemp<T, M extends string> = Readonly<{
   component: string;
   element: T;
   type: M;
   offsettable: boolean;
-  copy: () => SchedulableTemp<T, M>;
   duration: Ref<number>;
   time: Ref<number>;
   offset: Ref<number>;
@@ -80,7 +83,7 @@ export type SchedulableTemp<T, M extends string> = Readonly<{
   serialize: () => t.TypeOf<SerializationType<M>>;
   onDidRemove: (cb: () => void) => Disposer;
   onUndidRemove: (cb: () => void) => Disposer;
-}>;
+}> & SchedulablePrototype<T, M>;
 
 interface Basics {
   duration: number;
@@ -217,7 +220,9 @@ const createSchedulable = <
   };
 
   return {
-    create: (opts: Basics, idk: T) => (transport: Audio.Transport) => create(opts, idk, transport),
+    create: (opts: Basics, idk: T) => (transport: Audio.Transport) => ({
+      copy: () => create(opts, idk, transport),
+    }),
     type: createType(o.type),
   };
 };
@@ -303,7 +308,6 @@ export const { create: createNotePrototype, type: ScheduledNoteType } = createSc
         const value = allKeys[params.row.value].value;
         const duration = new Tone.Ticks(params.duration.value * Audio.Context.PPQ).toSeconds();
         // TODO velocity
-        console.log(value, duration, seconds);
         instrument.triggerAttackRelease(value, duration, seconds, 1);
       },
       time: params.time.value,

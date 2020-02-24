@@ -21,7 +21,7 @@ const create = <T extends SchedulableTemp<any, any>>(
     )(transport);
   };
 
-  const sequence = ref(new Sequence([createElement()])) as Ref<Sequence<Element>>;
+  const sequence = ref(new Sequence([createElement().copy()])) as Ref<Sequence<Element>>;
   const o = {
     sequence,
     pxPerBeat: opts.pxPerBeat ?? ref(20),
@@ -31,7 +31,7 @@ const create = <T extends SchedulableTemp<any, any>>(
     scrollLeft: opts.scrollLeft ?? ref(0),
     scrollTop: opts.scrollTop ?? ref(0),
     beatsPerMeasure: opts.beatsPerMeasure ?? ref(4),
-    createElement: ref(createElement),
+    createElement: ref(createElement()),
     tool: opts.tool ?? ref(0),
     getPosition: opts.getPosition ?? (() => ({ left: 0, top: 0 })),
   };
