@@ -160,6 +160,8 @@ export default createComponent({
     setLoopEnd: Number,
     setLoopStart: Number,
 
+    getPosition: { type: Function as any as () => (() => { left: number, top: number }), required: true },
+
     // FIXME edge case -> what happens if the element is deleted?
     prototype: { type: Function as any as () => (() => SchedulableTemp<any, any>) },
   },
@@ -177,9 +179,7 @@ export default createComponent({
       beatsPerMeasure: computed(() => props.beatsPerMeasure),
       createElement: computed(() => props.prototype),
       tool: computed(() => props.tool),
-      getPosition: () => {
-        return rows.value?.$el.getBoundingClientRect() ?? { left: 0, top: 0 };
-      },
+      getPosition: props.getPosition,
     });
 
     onMounted(grid.onMounted);

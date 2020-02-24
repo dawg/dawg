@@ -110,7 +110,7 @@ export const commands = framework.manager.activate({
     });
 
     const openCommandPalette: framework.Command = {
-      text: 'framework.Command Palette',
+      text: 'Command Palette',
       shortcut: ['CmdOrCtrl', 'Shift', 'P'],
       callback: () => {
         const paletteItems = cmmds.map((item) => ({

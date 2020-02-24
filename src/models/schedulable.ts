@@ -244,7 +244,7 @@ export const { create: createSamplePrototype, type: ScheduledSampleType } = crea
       onStart: ({ seconds }) => {
         controller = instance.start({
           startTime: seconds,
-          offset: params.offset.value || 0,
+          offset: Context.beatsToSeconds(params.offset.value),
           duration: Context.beatsToSeconds(params.duration.value),
         });
       },
@@ -303,6 +303,7 @@ export const { create: createNotePrototype, type: ScheduledNoteType } = createSc
         const value = allKeys[params.row.value].value;
         const duration = new Tone.Ticks(params.duration.value * Audio.Context.PPQ).toSeconds();
         // TODO velocity
+        console.log(value, duration, seconds);
         instrument.triggerAttackRelease(value, duration, seconds, 1);
       },
       time: params.time.value,

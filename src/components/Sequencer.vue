@@ -85,6 +85,7 @@
         :steps-per-beat="stepsPerBeat"
         :beats-per-measure="beatsPerMeasure"
         :px-per-beat="pxPerBeat"
+        :get-position="getPosition"
         :row-height="rowHeight"
         :progress="data.progress"
         :name="name"
@@ -162,6 +163,13 @@ export default createComponent({
         return null;
       }
     });
+
+    const getPosition = () => {
+      return {
+        left: scrollX.value?.getBoundingClientRect().left ?? 0,
+        top: scrollY.value?.getBoundingClientRect().top ?? 0,
+      };
+    };
 
     const minSnap = computed(() => {
       return 1 / props.stepsPerBeat / 24;
@@ -302,6 +310,7 @@ export default createComponent({
       selectTool: (tool: 'slicer' | 'pointer') => {
         selectedTool.value = tool;
       },
+      getPosition,
     };
   },
 });
