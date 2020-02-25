@@ -220,21 +220,21 @@ function load(i: IProject): LoadedProject {
         }
 
         const clip = clipLookup[iElement.id];
-        return createAutomationPrototype(iElement, clip)(mTransport).copy();
+        return createAutomationPrototype(iElement, clip, {})(mTransport).copy();
       case 'pattern':
         if (!(iElement.id in patternLookup)) {
           throw Error(`A Pattern from the Playlist was not found (${iElement.id}).`);
         }
 
         const pattern = patternLookup[iElement.id];
-        return createPatternPrototype(iElement, pattern)(mTransport).copy();
+        return createPatternPrototype(iElement, pattern, {})(mTransport).copy();
       case 'sample':
         if (!(iElement.id in sampleLookup)) {
           throw Error(`A sample from the Playlist was not found (${iElement.id}).`);
         }
 
         const sample = sampleLookup[iElement.id];
-        return createSamplePrototype(iElement, sample)(mTransport).copy();
+        return createSamplePrototype(iElement, sample, {})(mTransport).copy();
     }
   });
 
@@ -492,7 +492,9 @@ const createApi = () => {
     const length = payload.end - payload.start;
     const clip = AutomationClip.create(length, signal, context, automatable.id, key);
     const placed = createAutomationPrototype(
-      { time: payload.start, row, duration: clip.duration }, clip,
+      { time: payload.start, row, duration: clip.duration },
+      clip,
+      {},
     )(prj.master.transport).copy();
     prj.automationClips.push(clip);
     prj.master.elements.add(placed);

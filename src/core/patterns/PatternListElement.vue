@@ -60,7 +60,7 @@ export default createComponent({
       }, 0.001);
       duration = Math.ceil(duration / props.beatsPerMeasure) * props.beatsPerMeasure;
 
-      return createPatternPrototype({ row: 0, duration, time: 0 }, props.pattern);
+      return createPatternPrototype({ row: 0, duration, time: 0 }, props.pattern, {});
     });
 
     return {

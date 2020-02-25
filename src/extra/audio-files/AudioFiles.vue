@@ -30,7 +30,7 @@ export default createComponent({
     const items = computed(() => {
       return dawg.project.samples.map((sample) => {
         return {
-          prototype: createSamplePrototype({ row: 0, time: 0, duration: sample.beats }, sample),
+          prototype: createSamplePrototype({ row: 0, time: 0, duration: sample.beats }, sample, {}),
           sample,
         };
       });

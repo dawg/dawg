@@ -1,7 +1,7 @@
 import * as framework from '@/lib/framework';
 import { keys, fromEntries } from '@/lib/std';
 
-// TODO Make this structure...
+// FIXME Make this structure...
 // [
 //   this.menuItems.new,
 //   null,

@@ -9,7 +9,7 @@ export {
   ScheduledAutomation,
   ScheduledPattern,
   ScheduledNote,
-  SchedulableTemp,
+  ScheduledElement,
   ScheduledAutomationType,
   ScheduledPatternType,
   ScheduledSampleType,

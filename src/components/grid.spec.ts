@@ -2,22 +2,23 @@ import Vue from 'vue';
 import VueCompositionApi, { ref, Ref } from '@vue/composition-api';
 Vue.use(VueCompositionApi);
 import { createGrid, GridOpts } from '@/components/grid';
-import { SchedulableTemp, createNotePrototype, Instrument, Sequence, Synth } from '@/models';
+import { ScheduledElement, createNotePrototype, Instrument, Sequence, Synth } from '@/models';
 import { expect } from '@/lib/testing';
 import * as Audio from '@/lib/audio';
 
-type Element = SchedulableTemp<Instrument<any, any>, 'note'>;
+type Element = ScheduledElement<Instrument<any, any>, 'note', any>;
 
 type Grid = ReturnType<typeof createGrid>;
 
 const transport = new Audio.Transport();
-const create = <T extends SchedulableTemp<any, any>>(
+const create = <T extends ScheduledElement<any, any, any>>(
   cb: (o: { grid: Grid, sequence: Ref<Sequence<Element>> }) => void, opts: Partial<GridOpts<T>> = {},
 ) => {
   const createElement = () => {
     return createNotePrototype(
       { time: 2, duration: 1, row: 2 },
       new Synth(Audio.ToneMaster, { instrument: 'synth', type: 'fatsawtooth', name: '' }),
+      { velocity: 1 },
     )(transport);
   };
 

@@ -23,7 +23,7 @@ export default class AutomationClips extends Vue {
   get items() {
     return dawg.project.automationClips.map((clip, i) => {
       return {
-        prototype: createAutomationPrototype({ time: 0, row: 0, duration: clip.duration }, clip),
+        prototype: createAutomationPrototype({ time: 0, row: 0, duration: clip.duration }, clip, {}),
         name: clip.name,
       };
     });

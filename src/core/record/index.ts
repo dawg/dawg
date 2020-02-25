@@ -121,7 +121,7 @@ export const extension = createExtension({
           row: trackId,
           time,
           offset: 0,
-        }, sample)(master.transport).copy();
+        }, sample, {})(master.transport).copy();
 
         master.elements.add(scheduled);
 

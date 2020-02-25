@@ -1,5 +1,5 @@
 import { Ref, watch, ref, computed } from '@vue/composition-api';
-import { SchedulableTemp, Sequence } from '@/models';
+import { ScheduledElement, Sequence } from '@/models';
 import { addEventListeners, addEventListener } from '@/lib/events';
 import { Keys, Disposer, reverse } from '@/lib/std';
 import { calculateSimpleSnap, slice } from '@/utils';
@@ -34,7 +34,7 @@ function lineStyle(
 
 type Line = ReturnType<typeof lineStyle>;
 
-type Element = SchedulableTemp<any, any>;
+type Element = ScheduledElement<any, any, any>;
 
 export interface PlacementSnapOpts {
   position: number;
@@ -72,7 +72,7 @@ export interface GridOpts<T extends Element> {
   scrollLeft: Ref<number>;
   scrollTop: Ref<number>;
   beatsPerMeasure: Ref<number>;
-  createElement: Ref<undefined | SchedulablePrototype<any, any>>;
+  createElement: Ref<undefined | SchedulablePrototype<any, any, any>>;
   getPosition: () => { left: number, top: number };
   tool: Ref<SequencerTool>;
 }
@@ -97,7 +97,7 @@ export const createGrid = <T extends Element>(
       mouseup: () => {
         generalDisposer.dispose();
         disposers.delete(generalDisposer);
-        addElement(e, createElement.value?.copy() as any);
+        addElement(e, createElement.value?.copy() as T);
       },
     });
 
@@ -122,12 +122,6 @@ export const createGrid = <T extends Element>(
       const rect = opts.getPosition();
 
       const calculatePos = (event: MouseEvent) => {
-        // console.log(event.clientX, rect.left, calculateSimpleSnap({
-        //   value: event.clientX - rect.left,
-        //   altKey: event.altKey,
-        //   minSnap: minSnap.value,
-        //   snap: snap.value,
-        // }));
         return {
           x: calculateSimpleSnap({
             value: (event.clientX - rect.left) / pxPerBeat.value,
@@ -261,6 +255,8 @@ export const createGrid = <T extends Element>(
 
     opts.sequence.value.add(el);
     selected.push(false);
+
+    return el;
   };
 
   let initialMoveBeat: undefined | number;
@@ -295,7 +291,7 @@ export const createGrid = <T extends Element>(
     const timeDiff = time - initialMoveBeat;
     const rowDiff = row - el.row.value;
 
-    let itemsToMove: Array<SchedulableTemp<any, any>>;
+    let itemsToMove: T[];
     if (selected[i]) {
       itemsToMove = sequence.value.filter((_, ind) => selected[ind]);
     } else {
@@ -520,9 +516,8 @@ export const createGrid = <T extends Element>(
     onUnmounted: dispose,
     dispose,
     add: (e: MouseEvent) => {
-      // TODO as any
       // TODO test backup
-      addElement(e, opts.createElement.value ? opts.createElement.value.copy() as any : undefined);
+      return addElement(e, opts.createElement.value ? opts.createElement.value.copy() as T : undefined);
     },
     mousedown,
   };

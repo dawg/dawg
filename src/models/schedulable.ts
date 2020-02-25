@@ -14,7 +14,9 @@ import { BuildingBlock } from '@/models/block';
 import { Disposer } from '@/lib/std';
 import { emitter } from '@/lib/events';
 
-export const createType = <T extends string>(type: T): SerializationType<T> => t.intersection([
+export const createType = <T extends string, M extends t.Mixed>(
+  type: T, options: M,
+): SerializationType<T, M> => t.intersection([
   t.type({
     row: t.number,
     time: t.number,
@@ -25,9 +27,10 @@ export const createType = <T extends string>(type: T): SerializationType<T> => t
   t.partial({
     offset: t.number,
   }),
+  options,
 ]);
 
-type SerializationType<T extends string> = t.IntersectionC<[
+type SerializationType<T extends string, M extends t.Mixed> = t.IntersectionC<[
   t.TypeC<{
     row: t.NumberC;
     time: t.NumberC;
@@ -37,52 +40,56 @@ type SerializationType<T extends string> = t.IntersectionC<[
   }>,
   t.PartialC<{
     offset: t.NumberC;
-  }>
+  }>,
+  M,
 ]>;
 
-interface ISchedulableCreate<T, M extends string> {
+interface SchedulableOpts<Element, Type extends string, Options extends t.Mixed> {
   component: string;
   showBorder: boolean;
-  type: M;
-  // TODO make a intersection type based on this!!
+  type: Type;
   offsettable?: boolean;
+  options: Options;
   add: (
-    transport: Audio.Transport, params: SchedulableTemp<T, M>, idk: T,
+    transport: Audio.Transport,
+    params: ScheduledElement<Element, Type, Options>,
+    element: Element,
   ) => Audio.TransportEventController | undefined;
 }
 
-const wrap = <T, K extends keyof T>(o: T, k: K, onSet: (value: T[K]) => void) => {
-  const reference = ref(o[k]) as Ref<T[K]>;
+const wrap = (initial: number, onSet: (value: number) => void) => {
+  const reference = ref<number>(initial);
   watch(reference, (value) => {
     onSet(value);
   }, { lazy: true });
   return reference;
 };
 
-export type SchedulablePrototype<T, M extends string> = Readonly<{
-  copy: () => SchedulableTemp<T, M>;
+export type SchedulablePrototype<Element, Type extends string, Options extends t.Mixed> = Readonly<{
+  copy: () => ScheduledElement<Element, Type, Options>;
 }>;
 
-export type SchedulableTemp<T, M extends string> = Readonly<{
+export type ScheduledElement<Element, Type extends string, Options extends t.Mixed> = Readonly<{
   component: string;
-  element: T;
-  type: M;
+  element: Element;
+  type: Type;
   offsettable: boolean;
   duration: Ref<number>;
   time: Ref<number>;
   offset: Ref<number>;
+  options: t.TypeOf<Options>;
   row: Ref<number>;
   endBeat: Readonly<Ref<number>>;
   showBorder: boolean;
   name?: Readonly<Ref<string>>;
-  slice: (timeToSlice: number) => SchedulableTemp<T, M> | undefined;
+  slice: (timeToSlice: number) => ScheduledElement<Element, Type, Options> | undefined;
   // dispose: () => void;
   remove: () => void;
   removeNoHistory: () => void;
-  serialize: () => t.TypeOf<SerializationType<M>>;
+  serialize: () => t.TypeOf<SerializationType<Type, Options>>;
   onDidRemove: (cb: () => void) => Disposer;
   onUndidRemove: (cb: () => void) => Disposer;
-}> & SchedulablePrototype<T, M>;
+}> & SchedulablePrototype<Element, Type, Options>;
 
 interface Basics {
   duration: number;
@@ -94,10 +101,14 @@ interface Basics {
 const createSchedulable = <
   T extends BuildingBlock,
   M extends string,
->(o: ISchedulableCreate<T, M>) => {
+  Options extends t.Mixed,
+>(o: SchedulableOpts<T, M, Options>) => {
   const create = (
-    opts: Basics, idk: T, transport: Audio.Transport,
-  ): SchedulableTemp<T, M> => {
+    opts: Basics,
+    idk: T,
+    transport: Audio.Transport,
+    options: t.TypeOf<Options>,
+  ): ScheduledElement<T, M, Options> => {
     const info = {  ...opts };
 
     idk.onDidDelete(() => {
@@ -108,21 +119,27 @@ const createSchedulable = <
       controller = o.add(transport, params, idk);
     });
 
-    const duration = wrap(info, 'duration', (value) => {
+    const duration = wrap(info.duration, (value) => {
       if (controller) { controller.setDuration(value); }
     });
 
-    const time = wrap(info, 'time', (value) => {
+    const time = wrap(info.time, (value) => {
       if (controller) { controller.setStartTime(value); }
     });
 
-    const offset = computed({
-      get: () => info.offset ?? 0,
-      set: (value) => {
-        info.offset = value;
-        if (controller) { controller.setStartTime(value); }
-      },
+    const offset = wrap(info.offset ?? 0, (value) => {
+      if (controller) { controller.setOffset(value); }
     });
+
+    // const offset = ref(info.offset ?? 0);
+
+    // const offset = computed({
+    //   get: () => info.offset ?? 0,
+    //   set: (value) => {
+    //     info.offset = value;
+    //     if (controller) { controller.setStartTime(value); }
+    //   },
+    // });
 
     const row = ref(info.row);
 
@@ -133,6 +150,7 @@ const createSchedulable = <
         { duration: duration.value, time: time.value, row: row.value, offset: offset.value },
         idk,
         transport,
+        options,
       );
     };
 
@@ -161,7 +179,7 @@ const createSchedulable = <
 
     const events = emitter<{ remove: [], undoRemove: [] }>();
 
-    const params: SchedulableTemp<T, M> = {
+    const params: ScheduledElement<T, M, Options> = {
       name: computed(() => idk.name),
       component: o.component,
       type: o.type,
@@ -172,6 +190,7 @@ const createSchedulable = <
       offset,
       row,
       copy,
+      options,
       slice: (timeToSlice: Beat) => {
         if (timeToSlice <= time.value || timeToSlice >= time.value + duration.value) {
           return;
@@ -193,7 +212,6 @@ const createSchedulable = <
       endBeat: computed(() => {
         return time.value + duration.value;
       }),
-      // dispose,
       serialize: () => {
         return {
           row: row.value,
@@ -219,21 +237,23 @@ const createSchedulable = <
   };
 
   return {
-    create: (opts: Basics, idk: T) => (transport: Audio.Transport) => ({
-      copy: () => create(opts, idk, transport),
+    create: (opts: Basics, element: T, options: t.TypeOf<Options>) => (transport: Audio.Transport) => ({
+      copy: () => create(opts, element, transport, options),
     }),
-    type: createType(o.type),
+    type: createType(o.type, o.options),
   };
 };
 
-export type UnscheduledPrototype<T = any, K extends string = any> =
-  (transport: Audio.Transport) => SchedulableTemp<T, K>;
+export type UnscheduledPrototype<T = any, K extends string = any, Options extends t.Mixed = any> = (
+  transport: Audio.Transport,
+) => ScheduledElement<T, K, Options>;
 
 export const { create: createSamplePrototype, type: ScheduledSampleType } = createSchedulable({
   component: 'sample-element',
   type: 'sample',
   showBorder: true,
   offsettable: true,
+  options: t.type({}),
   add: (transport, params, sample: Sample) => {
     if (!sample.player) {
       return;
@@ -270,44 +290,46 @@ export const { create: createSamplePrototype, type: ScheduledSampleType } = crea
   },
 });
 
-export type ScheduledSample = SchedulableTemp<Sample, 'sample'>;
+export type ScheduledSample = ReturnType<ReturnType<ReturnType<typeof createSamplePrototype>>['copy']>;
 
 export const { create: createPatternPrototype, type: ScheduledPatternType } = createSchedulable({
   component: 'pattern-element',
   type: 'pattern',
   offsettable: true,
   showBorder: true,
+  options: t.type({}),
   add: (transport, params, pattern: Pattern) => {
     return transport.embed(pattern.transport, params.time.value, params.duration.value);
   },
 });
 
-export type ScheduledPattern = SchedulableTemp<Pattern, 'pattern'>;
+export type ScheduledPattern = ReturnType<ReturnType<ReturnType<typeof createPatternPrototype>>['copy']>;
 
 export const { create: createAutomationPrototype, type: ScheduledAutomationType } = createSchedulable({
   component: 'automation-clip-element',
   type: 'automation',
   offsettable: true,
   showBorder: true,
+  options: t.type({}),
   add: (transport, params, clip: AutomationClip) => {
     return clip.control.sync(transport, params.time.value, params.duration.value);
   },
 });
 
-export type ScheduledAutomation = SchedulableTemp<AutomationClip, 'automation'>;
+export type ScheduledAutomation = ReturnType<ReturnType<ReturnType<typeof createAutomationPrototype>>['copy']>;
 
 export const { create: createNotePrototype, type: ScheduledNoteType } = createSchedulable({
   component: 'note',
   type: 'note',
   offsettable: false,
   showBorder: false,
+  options: t.type({ velocity: t.number }),
   add: (transport, params, instrument: Instrument<any, any>) => {
     return transport.schedule({
       onStart: ({ seconds }) => {
         const value = allKeys[params.row.value].value;
         const duration = new Tone.Ticks(params.duration.value * Audio.Context.PPQ).toSeconds();
-        // TODO velocity
-        instrument.triggerAttackRelease(value, duration, seconds, 1);
+        instrument.triggerAttackRelease(value, duration, seconds, params.options.velocity);
       },
       time: params.time.value,
       duration: 0, // FIXME We shouldn't have to set a duration. This is explained more in the Transport class file.
@@ -316,4 +338,4 @@ export const { create: createNotePrototype, type: ScheduledNoteType } = createSc
   },
 });
 
-export type ScheduledNote = SchedulableTemp<Instrument<any, any>, 'note'>;
+export type ScheduledNote = ReturnType<ReturnType<ReturnType<typeof createNotePrototype>>['copy']>;

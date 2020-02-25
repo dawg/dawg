@@ -1,9 +1,11 @@
-import { SchedulableTemp } from '@/models/schedulable';
+import { ScheduledElement } from '@/models/schedulable';
 import { StrictEventEmitter } from '@/lib/events';
 import * as history from '@/core/project/history';
 
 
-const watchElement = <T extends SchedulableTemp<any, any>>(elements: T[], element: T, onRemove: (event: T) => void) => {
+const watchElement = <T extends ScheduledElement<any, any, any>>(
+  elements: T[], element: T, onRemove: (event: T) => void,
+) => {
   const disposer = element.onDidRemove(() => {
     const i = elements.indexOf(element);
     if (i >= 0) {
@@ -14,7 +16,9 @@ const watchElement = <T extends SchedulableTemp<any, any>>(elements: T[], elemen
   });
 };
 
-export class Sequence<T extends SchedulableTemp<any, any>> extends StrictEventEmitter<{ added: [T], removed: [T] }> {
+export class Sequence<
+  T extends ScheduledElement<any, any, any>
+> extends StrictEventEmitter<{ added: [T], removed: [T] }> {
   public map = this.elements.map.bind(this.elements);
   public filter = this.elements.filter.bind(this.elements);
   public forEach = this.elements.forEach.bind(this.elements);

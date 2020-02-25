@@ -35,7 +35,7 @@ export class Score implements Serializable<IScore> {
     this.id = i.id;
     this.instrumentId = i.instrumentId;
     const notes = (i.notes || []).map((iNote) => {
-      return createNotePrototype(iNote, this.instrument)(transport).copy();
+      return createNotePrototype(iNote, this.instrument, { velocity: iNote.velocity })(transport).copy();
     });
 
     this.notes = new Sequence(notes);

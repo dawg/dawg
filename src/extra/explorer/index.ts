@@ -34,7 +34,7 @@ const extensions: Extensions = {
       return sample;
     },
     createTransferData: (sample: Sample) => {
-      return createSamplePrototype({ row: 0, duration: sample.beats, time: 0  }, sample);
+      return createSamplePrototype({ row: 0, duration: sample.beats, time: 0  }, sample, {});
     },
     preview: (sample: Sample) => {
       const result = sample.preview();

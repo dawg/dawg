@@ -45,7 +45,7 @@
     
     <div class="elements">
       <element-wrapper
-        v-for="(el, i) in elements"
+        v-for="(el, i) in sequence.elements"
         :key="i"
         :time="el.time.value"
         :row="el.row.value"
@@ -120,7 +120,7 @@ import BeatLines from '@/components/BeatLines';
 import { Sequence } from '@/models';
 import * as Audio from '@/lib/audio';
 import { Ghost } from '@/models/ghost';
-import { UnscheduledPrototype, SchedulableTemp, SchedulablePrototype } from '@/models/schedulable';
+import { UnscheduledPrototype, ScheduledElement, SchedulablePrototype } from '@/models/schedulable';
 import { createComponent, ref, computed, watch, onUnmounted, onMounted } from '@vue/composition-api';
 import { createGrid, SequencerTool } from './grid';
 
@@ -129,7 +129,7 @@ export default createComponent({
   props: {
     name: { type: String as () => string, required: true },
     rowHeight: { type: Number, required: true },
-    sequence: { type: Object as () => Sequence<SchedulableTemp<any, any>>, required: true },
+    sequence: { type: Object as () => Sequence<ScheduledElement<any, any, any>>, required: true },
     ghosts: { type: Array as () => Ghost[] | null, default: null },
     snap: { type: Number, required: true },
     minSnap: { type: Number, required: true },
@@ -163,7 +163,7 @@ export default createComponent({
     getPosition: { type: Function as any as () => (() => { left: number, top: number }), required: true },
 
     // FIXME edge case -> what happens if the element is deleted?
-    prototype: { type: Object as () => SchedulablePrototype<any, any> },
+    prototype: { type: Object as () => SchedulablePrototype<any, any, any> },
   },
   setup(props, context) {
     const rows = ref<Vue>(null);
@@ -189,10 +189,6 @@ export default createComponent({
 
     watch(sequencerLoopEnd, () => {
       update(props, context, 'sequencerLoopEnd', sequencerLoopEnd.value);
-    });
-
-    const elements = computed(() => {
-      return props.sequence.elements;
     });
 
     const fullWidth = computed(() => {
@@ -238,21 +234,22 @@ export default createComponent({
     }
 
     function open(e: MouseEvent, i: number) {
-      const item = elements.value[i];
+      const item = props.sequence.elements[i];
       context.emit('open', item);
     }
 
     function clickElement(i: number) {
-      update(props, context, 'prototype', elements.value[i]);
+      update(props, context, 'prototype', props.sequence.elements[i]);
     }
 
     async function handleDrop(prototype: UnscheduledPrototype, e: MouseEvent) {
       const element = prototype(props.transport);
       update(props, context, 'prototype', element);
       await Vue.nextTick();
-      grid.add(e);
-      // TODO
-      // context.emit('new-prototype', element);
+      const newEl = grid.add(e);
+      if (newEl) {
+        context.emit('new-prototype', newEl);
+      }
     }
 
     watch(displayBeats, () => {
@@ -265,7 +262,6 @@ export default createComponent({
       handleDrop,
       selectStyle: grid.selectStyle,
       sliceStyle: grid.sliceStyle,
-      elements,
       mousedownElement: grid.select,
       remove: grid.remove,
       clickElement,
