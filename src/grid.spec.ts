@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import VueCompositionApi, { ref, Ref } from '@vue/composition-api';
 Vue.use(VueCompositionApi);
-import { createGrid, GridOpts } from '@/components/grid';
+import { createGrid, GridOpts } from '@/grid';
 import { ScheduledElement, createNotePrototype, Instrument, Sequence, Synth } from '@/models';
 import { expect } from '@/lib/testing';
 import * as Audio from '@/lib/audio';

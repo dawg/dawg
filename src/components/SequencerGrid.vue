@@ -122,7 +122,7 @@ import * as Audio from '@/lib/audio';
 import { Ghost } from '@/models/ghost';
 import { UnscheduledPrototype, ScheduledElement, SchedulablePrototype } from '@/models/schedulable';
 import { createComponent, ref, computed, watch, onUnmounted, onMounted } from '@vue/composition-api';
-import { createGrid, SequencerTool } from './grid';
+import { createGrid, SequencerTool } from '@/grid';
 
 export default createComponent({
   components: { BeatLines },

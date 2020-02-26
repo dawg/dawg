@@ -9,7 +9,7 @@ import { commands } from '@/core/commands';
 import { ref, watch } from '@vue/composition-api';
 import { project } from '@/core/project';
 import { controls } from '@/core/controls';
-import { SequencerTool } from '@/components/grid';
+import { SequencerTool } from '@/grid';
 
 export const pianoRoll = framework.manager.activate({
   id:  'dawg.piano-roll',

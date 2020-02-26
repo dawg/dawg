@@ -11,7 +11,7 @@ import { controls } from '@/core/controls';
 import { log } from '@/core/log';
 import { sampleViewer } from '@/core/sample-viewer';
 import { patterns } from '@/core/patterns';
-import { SequencerTool } from '@/components/grid';
+import { SequencerTool } from '@/grid';
 
 export const playlist = framework.manager.activate({
   id: 'dawg.playlist',

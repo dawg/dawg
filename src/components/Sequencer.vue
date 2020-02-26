@@ -113,7 +113,7 @@ import Vue from 'vue';
 import { Keys, literal } from '@/lib/std';
 import { update } from '@/lib/vutils';
 import * as Audio from '@/lib/audio';
-import { SequencerTool } from '@/components/grid';
+import { SequencerTool } from '@/grid';
 import { createComponent, reactive, computed, watch, onMounted, ref, Ref } from '@vue/composition-api';
 
 export default createComponent({
