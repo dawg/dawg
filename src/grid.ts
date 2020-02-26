@@ -301,7 +301,7 @@ export const createGrid = <T extends Element>(
     if (itemsToMove.every((item) => item.time.value + timeDiff >= 0)) {
       initialMoveBeat = time;
       itemsToMove.forEach((item) => {
-        item.time.value = item.time.value + timeDiff;
+        item.time.value += timeDiff;
       });
 
       checkLoopEnd();

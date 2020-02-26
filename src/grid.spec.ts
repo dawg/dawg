@@ -52,7 +52,7 @@ const create = <T extends ScheduledElement<any, any, any>>(
 type Events = 'md' | 'mm' | 'mu';
 interface Mouvement { x?: number; y?: number; }
 
-const events = () => {
+const events = (grid: Grid) => {
   let x = 0;
   let y = 0;
 
@@ -70,7 +70,13 @@ const events = () => {
   };
 
   const emit = (name: Events, mouvement: Mouvement = {}) => {
-    window.dispatchEvent(build(name, mouvement));
+    const e = build(name, mouvement);
+
+    if (name === 'md') {
+      grid.mousedown(e);
+    } else {
+      window.dispatchEvent(e);
+    }
 
     return {
       build,
@@ -93,7 +99,7 @@ describe('grid', () => {
 
   it('adds elements correctly', () => {
     create(({ grid, sequence }) => {
-      events().emit('md', { x: 1, y: 1 }).emit('mu');
+      events(grid).emit('md', { x: 1, y: 1 }).emit('mu');
       expect(sequence.value.elements.length).to.eq(2);
       expect(grid.selected.length).to.eq(2);
       expect(sequence.value.elements[1].row.value).to.eq(1);
@@ -103,14 +109,14 @@ describe('grid', () => {
 
   it('doesn\'t add elements if the user moves their mouse', () => {
     create(({ grid, sequence }) => {
-      events().emit('md', { x: 1, y: 1 }).emit('mm', { x: 0.1 }).emit('mu');
+      events(grid).emit('md', { x: 1, y: 1 }).emit('mm', { x: 0.1 }).emit('mu');
       expect(sequence.value.elements.length).to.eq(1);
     });
   });
 
   it('correctly selects elements', () => {
     create(({ grid }) => {
-      const emitter = events().emit('md', { x: 0.5, y: 1 })
+      const emitter = events(grid).emit('md', { x: 0.5, y: 1 })
         .emit('mm', { x: 2.5, y: 2 });
       expect(grid.selectStyle.value?.left).to.eq('10px');
       expect(grid.selectStyle.value?.top).to.eq('10px');
@@ -123,7 +129,7 @@ describe('grid', () => {
 
   it('correctly slices element', () => {
     create(({ grid, sequence }) => {
-      const emitter = events().emit('md', { x: 2.5, y: 0 })
+      const emitter = events(grid).emit('md', { x: 2.5, y: 0 })
         .emit('mm', { y: 3 });
       expect(grid.sliceStyle.value?.left).to.eq(`${2.5 * 20 - 3 * 10 / 2}px`);
       expect(grid.sliceStyle.value?.top).to.eq(`${3 * 10 / 2}px`);
@@ -141,16 +147,16 @@ describe('grid', () => {
     create(({ grid, sequence }) => {
       const el = sequence.value.elements[0];
       expect(el.time.value).to.eq(2);
-      const emitter = events();
+      const emitter = events(grid);
       grid.select(emitter.build('md', { x: 2.5, y: 2.5 }), 0);
       emitter.emit('mm', { x: 1 });
-      expect(el.time.value).to.eq(4);
+      expect(el.time.value).to.eq(3);
     }, { getPosition: () => ({ left: 10, top: 0 }), scrollLeft: ref(20), scrollTop: ref(0) });
   });
 
   it('correctly sets loop end', async () => {
     await create(async ({ grid, sequence }) => {
-      events().emit('md', { x: 5, y: 0.5 }).emit('mu');
+      events(grid).emit('md', { x: 5, y: 0.5 }).emit('mu');
       await Vue.nextTick();
       expect(sequence.value.elements.length).to.eq(2);
       expect(grid.sequencerLoopEnd.value).to.eq(8);

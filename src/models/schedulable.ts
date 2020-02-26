@@ -196,6 +196,7 @@ const createSchedulable = <
           return;
         }
 
+        const oldDuration = duration.value;
         const newElement = copy();
         duration.value = timeToSlice - time.value;
 
@@ -203,6 +204,7 @@ const createSchedulable = <
           newElement.offset.value = duration.value;
         } else {
           newElement.time.value += duration.value;
+          newElement.duration.value = oldDuration - duration.value;
         }
 
         return newElement;
