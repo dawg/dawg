@@ -6,7 +6,7 @@
 > A DAW for the 21st century! 
 
 ## About
-`Vusic` was initially developed as part of the `ENGG 4000` (`Senior Design Project`) course at [UNB](http://unb.ca/) that began in Fall of 2018 but is now just a side project. It uses Vue, TypeScript and Electron and strives (although currently fails) to offer the same functionality of DAWs such as FL Studio and Ableton.
+`Vusic` is Digital Audio Workstation (DAW) built using web technologies and distributed as a native application using [Electron](https://www.electronjs.org/) 🎹 It was initially developed as part of the 2018-2019 `ENGG 4000` (`Senior Design Project`) course at [UNB](http://unb.ca/)  but is now being developed as a side project. `Vusic` strives (although currently fails) to offer the same functionality of DAWs such as `FL Studio` and `Ableton`.
 
 ## Quick Links
 [↳ Homepage](https://dawg.dev)  
