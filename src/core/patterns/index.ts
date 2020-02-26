@@ -1,7 +1,6 @@
 import Vue from 'vue';
 import Patterns from '@/core/patterns/Patterns.vue';
 import { ref, computed, createComponent, watch } from '@vue/composition-api';
-import { vueExtend } from '@/lib/vutils';
 import { makeLookup } from '@/lib/std';
 import { Pattern } from '@/models';
 import * as framework from '@/lib/framework';
@@ -33,7 +32,8 @@ export const patterns = framework.manager.activate({
       }
     });
 
-    const wrapper = vueExtend(createComponent({
+    const wrapper = Vue.extend(createComponent({
+      props: {},
       components: { Patterns },
       template: `
       <patterns

@@ -1,4 +1,5 @@
 import * as dawg from '@/dawg';
+import Vue from 'vue';
 import * as t from '@/lib/io';
 import { User } from 'firebase';
 import backend, { ProjectInfo } from '@/extra/backup/backend';
@@ -10,8 +11,8 @@ import { menubar } from '@/core/menubar';
 import { computed, watch, ref, createComponent } from '@vue/composition-api';
 import * as framework from '@/lib/framework';
 import { project, ProjectType, IProject } from '@/core/project';
-import { createExtension, VueInput } from '@/lib/framework/extensions';
-import { vueExtend } from '@/lib/vutils';
+import { createExtension } from '@/lib/framework/extensions';
+import { copy } from '@/lib/std';
 
 export const extension = createExtension({
   id: 'dawg.backup',
@@ -31,10 +32,9 @@ export const extension = createExtension({
       messagingSenderId: '540203128797',
     });
 
-    const user = ref<User | null>(null);
+    const user = ref<User>();
     const projects = ref<ProjectInfo[]>([]);
-    // const item = dawg.ui.createStatusBarItem();
-    const error = ref(false);
+    const error = ref<string>();
     const syncing = ref(false);
 
     const icon = computed(() => {
@@ -49,11 +49,11 @@ export const extension = createExtension({
       }
     });
 
-    const tooltip = computed(() => {
+    const tooltip = computed((): string => {
       if (!backup.value) {
         return 'Cloud Backup Disabled';
       } else if (error.value) {
-        return 'Cloud Error';
+        return error.value;
       } else if (syncing.value) {
         return 'Backup In Progress';
       } else {
@@ -62,7 +62,8 @@ export const extension = createExtension({
     });
 
     // flex centers the icons which is why we add it
-    const component = vueExtend(createComponent({
+    const component = Vue.extend(createComponent({
+      props: {},
       template: `
       <dg-mat-icon
         v-if="error"
@@ -73,15 +74,15 @@ export const extension = createExtension({
 
       <dg-spinner
         v-else-if="syncing"
-        class="flex text-default text-sm"
+        class="flex text-default w-4 h-4"
         title="Syncing Backup"
       ></dg-spinner>
 
       <dg-mat-icon
         v-else
-        class="flex text-default
-        text-sm"
+        class="flex text-default text-sm"
         :icon="icon"
+        :title="tooltip"
       ></dg-mat-icon>
       `,
       setup() {
@@ -113,11 +114,7 @@ export const extension = createExtension({
       }
     }
 
-    function resetProjects() {
-      projects.value = [];
-    }
-
-    function openBackup() {
+    function backupAction(mode: 'open' | 'delete') {
       handleUnauthenticated(async (u) => {
         await loadProjects(u);
         const projectLookup: { [name: string]: ProjectInfo } = {};
@@ -128,7 +125,14 @@ export const extension = createExtension({
         dawg.palette.selectFromObject(projectLookup, {
           placeholder: 'Available Projects',
           onDidInput: (projectInfo) => {
-            openProject(projectInfo);
+            switch (mode) {
+              case 'delete':
+                deleteProject(projectInfo);
+                break;
+              case 'open':
+                openProject(projectInfo);
+                break;
+            }
           },
         });
       });
@@ -143,7 +147,7 @@ export const extension = createExtension({
         }
 
         if (res.type === 'error') {
-          dawg.notify.error('Unable to get project', { detail: res.message });
+          dawg.notify.error('Unable to get project', { detail: res.message, duration: Infinity });
           return;
         }
 
@@ -151,6 +155,7 @@ export const extension = createExtension({
         if (result.type === 'error') {
           dawg.notify.error('Unable to parse project from backup', {
             detail: result.message,
+            duration: Infinity,
           });
           return;
         }
@@ -160,7 +165,7 @@ export const extension = createExtension({
     }
 
     function handleUnauthenticated(authenticated: (user: User) => void) {
-      if (user.value === null) {
+      if (!user.value) {
         dawg.notify.info('Please login first', { detail: 'Use the settings icon in the Activity Bar.' });
         return;
       }
@@ -186,14 +191,11 @@ export const extension = createExtension({
     }
 
     async function updateProject(encoded: IProject) {
-      if (backup.value) {
+      if (!backup.value) {
         return;
       }
 
-      syncing.value = true;
-
       if (!user.value) {
-        dawg.notify.info('Please sign in to backup a project.');
         return;
       }
 
@@ -202,30 +204,32 @@ export const extension = createExtension({
         return;
       }
 
-      const backupStatus = await backend.updateProject(user.value, encoded.id, encoded);
+      syncing.value = true;
+
+      // Copy because we can't upload undefined values to firebase
+      // Copying will remove these key/value pairs
+      const copyOfProject = copy(encoded);
+      const backupStatus = await backend.updateProject(user.value, encoded.id, copyOfProject);
 
       switch (backupStatus.type) {
         case 'error':
-          dawg.notify.error('Unable to backup', { detail: backupStatus.message });
-          error.value = true;
+          dawg.notify.error('Unable to backup', { detail: backupStatus.message, duration: Infinity });
+          error.value = 'Unable to backup';
           break;
         case 'success':
           // Make sure to set it back to false if there was an error previously
-          error.value = false;
+          error.value = undefined;
           break;
       }
 
-      syncing.value = false;
+      // Just so the upload is always perceivable to the user!
+      setTimeout(() => syncing.value = false, 1000);
     }
 
     const backup = context.workspace.backup;
 
-    watch(backup, async () => {
-      if (backup.value) {
-        updateProject(await dawg.project.serialize());
-      } else {
-        backup.value = false;
-      }
+    watch([backup, user], async () => {
+      updateProject(await dawg.project.serialize());
     });
 
 
@@ -237,7 +241,7 @@ export const extension = createExtension({
         },
         unauthenticated: () => {
           projects.value = [];
-          user.value = null;
+          user.value = undefined;
         },
       });
     } catch (e) {
@@ -246,9 +250,7 @@ export const extension = createExtension({
 
     const open = {
       text: 'Open From Backup',
-      callback: () => {
-        openBackup();
-      },
+      callback: () => backupAction('open'),
     };
 
     const file = menubar.getMenu('File');
@@ -257,32 +259,13 @@ export const extension = createExtension({
 
     context.subscriptions.push(dawg.commands.registerCommand({
       text: 'Delete Backup',
-      callback: () => {
-        // FIXME duplicate code
-        handleUnauthenticated(async (u) => {
-          await loadProjects(u);
-          const projectLookup: { [name: string]: ProjectInfo } = {};
-          projects.value.forEach((p) => {
-            projectLookup[p.name] = p;
-          });
-
-          dawg.palette.selectFromObject(projectLookup, {
-            placeholder: 'Available Projects',
-            onDidInput: (projectInfo) => {
-              deleteProject(projectInfo);
-            },
-          });
-        });
-      },
+      callback: () => backupAction('delete'),
     }));
 
-    context.subscriptions.push(dawg.project.onDidSave((encoded) => {
-      if (backup.value) {
-        updateProject(encoded);
-      }
-    }));
+    context.subscriptions.push(dawg.project.onDidSave(updateProject));
 
-    const googleButton = vueExtend(createComponent({
+    const googleButton = Vue.extend(createComponent({
+      props: {},
       template: `
       <div>
         <google-button @click="signInOrSignOut">
@@ -339,54 +322,57 @@ export const extension = createExtension({
       }
     });
 
-    const button: VueInput = {
+    context.settings.push({
       label: 'Google Login',
-      description: '',
+      description: computed(() => {
+        if (name.value) {
+          return `Currently logged in as \`${name.value}\``;
+        } else {
+          return `Login with google.`;
+        }
+      }),
       type: 'component',
       component: googleButton,
-    };
+    });
 
-    watch(() => { button.description = `Login with google. Currently logged in as \`${name.value}\``; });
-    context.settings.push(button);
+    const projectName = project.name;
+    const either = computed(() => !projectName.value || !user.value);
+    const both = computed(() => !projectName.value && !user.value);
 
-    const toggle = {
-      label: 'Cloud Backup',
-      description: ref(''),
-      type: 'boolean',
-      value: backup,
-      disabled: ref(true),
-      checkedValue: 'Syncing',
-      uncheckedValue: 'Not Syncing',
-    } as const;
+    const description = computed(() => {
+      let value = 'Whether to sync this project to the cloud.';
 
-    watch([project.name, user], () => {
-      const both = !project.name.value && !user.value;
-      const either = !project.name.value || !user.value;
-
-      toggle.disabled.value = either;
-      toggle.description.value = 'Whether to sync this project to the cloud.';
-
-      if (either) {
-        toggle.description.value += ' Before you can enable this, please ';
+      if (either.value) {
+        value += ' Before you can enable this, please ';
       }
 
       if (!project.name.value) {
-        toggle.description.value += 'give your project a name';
+        value += 'give your project a name';
       }
 
-      if (both) {
-        toggle.description.value += ' and ';
+      if (both.value) {
+        value += ' and ';
       }
 
       if (!user.value) {
-        toggle.description.value += 'login using your Google Account';
+        value += 'login using your Google Account';
       }
 
-      if (either) {
-        toggle.description.value += '.';
+      if (either.value) {
+        value += '.';
       }
+
+      return value;
     });
 
-    context.settings.push(toggle);
+    context.settings.push({
+      label: 'Cloud Backup',
+      description,
+      type: 'boolean',
+      value: backup,
+      disabled: either,
+      checkedValue: 'Syncing',
+      uncheckedValue: 'Not Syncing',
+    });
   },
 });

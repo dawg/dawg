@@ -1,12 +1,13 @@
 import { createExtension } from '@/lib/framework/extensions';
-import { createComponent, ref, watch } from '@vue/composition-api';
+import { createComponent } from '@vue/composition-api';
 import * as dawg from '@/dawg';
-import { vueExtend } from '@/lib/vutils';
+import Vue from 'vue';
 
 export const extension = createExtension({
   id: 'dawg.bpm',
   activate() {
-    const component = vueExtend(createComponent({
+    const component = Vue.extend(createComponent({
+      props: {},
       template: `<bpm v-model="bpm"></bpm>`,
       setup() {
         return {

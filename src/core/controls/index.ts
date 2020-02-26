@@ -4,7 +4,6 @@ import * as framework from '@/lib/framework';
 import { createComponent, computed, ref, watch } from '@vue/composition-api';
 import { commands } from '@/core/commands';
 import * as t from '@/lib/io';
-import { vueExtend } from '@/lib/vutils';
 import * as dawg from '@/dawg';
 import { patterns as patternsExtension } from '@/core/patterns';
 
@@ -57,7 +56,8 @@ export const controls = framework.manager.activate({
       },
     }));
 
-    const stop = vueExtend(createComponent({
+    const stop = Vue.extend(createComponent({
+      props: {},
       template: `
       <dg-mat-icon class="text-default cursor-pointer" icon="stop"></dg-mat-icon>
       `,
@@ -69,7 +69,8 @@ export const controls = framework.manager.activate({
       order: 2,
     });
 
-    const playPauseComponent = vueExtend(createComponent({
+    const playPauseComponent = Vue.extend(createComponent({
+      props: {},
       template: `
       <dg-mat-icon class="text-default cursor-pointer" :icon="icon" @click="toggle"></dg-mat-icon>
       `,

@@ -1,6 +1,6 @@
 import { createComponent, computed, ref } from '@vue/composition-api';
 import * as framework from '@/lib/framework';
-import { vueExtend } from '@/lib/vutils';
+import Vue from 'vue';
 
 export type Status = string | { text: string, value: string } | null;
 
@@ -9,7 +9,8 @@ export const status = framework.manager.activate({
   activate() {
     const statusValue = ref<Status>(null);
 
-    const component = vueExtend(createComponent({
+    const component = Vue.extend(createComponent({
+      props: {},
       name: 'Status',
       template: `
       <span v-if="value === null">{{ statusValue }}</span>

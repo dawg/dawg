@@ -2,12 +2,13 @@ import { createExtension } from '@/lib/framework/extensions';
 import TimeDisplay from '@/extra/time/TimeDisplay.vue';
 import * as dawg from '@/dawg';
 import { createComponent, ref, watch } from '@vue/composition-api';
-import { vueExtend } from '@/lib/vutils';
+import Vue from 'vue';
 
 export const extension = createExtension({
   id: 'dawg.time',
   activate() {
-    const component = vueExtend(createComponent({
+    const component = Vue.extend(createComponent({
+      props: {},
       components: { TimeDisplay },
       template: `
       <time-display

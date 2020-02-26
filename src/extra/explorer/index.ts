@@ -2,16 +2,16 @@ import FileExplorer from '@/extra/explorer/FileExplorer.vue';
 import * as dawg from '@/dawg';
 import * as t from '@/lib/io';
 import { remote } from 'electron';
-import { Extensions, Folder } from '@/extra/explorer/types';
+import { Extensions } from '@/extra/explorer/types';
 import { loadBuffer } from '@/lib/wav';
 import parser from '@/lib/midi-parser';
 import fs from '@/lib/fs';
-import { ScheduledSample, Sample, createSamplePrototype } from '@/models';
+import { Sample, createSamplePrototype } from '@/models';
 import { commands } from '@/core/commands';
 import { createExtension } from '@/lib/framework/extensions';
 import { createComponent } from '@vue/composition-api';
-import { vueExtend } from '@/lib/vutils';
 import { createFileExplorer, FileExplorerAPI } from '@/extra/explorer/common';
+import Vue from 'vue';
 
 const loadMidi = async (path: string) => {
   const buffer = await fs.readFile(path);
@@ -106,7 +106,8 @@ export const extension = createExtension({
       nonNullApi.addFolder(rootFolder);
     };
 
-    const component = vueExtend(createComponent({
+    const component = Vue.extend(createComponent({
+      props: {},
       components: { FileExplorer },
       template: `
       <file-explorer
