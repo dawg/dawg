@@ -79,7 +79,7 @@
         <div class="bg-primary h-full flex items-center position text-default">
           <div
             v-for="(item, i) in statusBarLeft"
-            class="ml-6"
+            :class="{ 'ml-6': i !== 0, 'ml-3': i === 0 }"
             :key="`status-bar-left-${i}`" 
           ><component :is="item.component"></component></div>
 

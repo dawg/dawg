@@ -7,6 +7,7 @@
     @drop="handleDrop"
   >
     <div class="absolute" :style="selectStyle"></div>
+    <div :style="sliceStyle"></div>
     <beat-lines
       class="absolute h-full pointer-events-none"
       :px-per-beat="pxPerBeat"
@@ -17,27 +18,26 @@
 
     <div class="ghost-elements">
       <element-wrapper
-        v-for="(ghost, i) in ghostsComponents"
+        v-for="(ghost, i) in (ghosts || [])"
         :key="i"
         :px-per-beat="pxPerBeat"
-        :colored="colored"
+        :colored="true"
         :selected="false"
         :offset="0"
         :height="rowHeight"
         :snap="snap"
         :resizable="false"
         :can-offset="false"
-        :top="ghost.top"
         :time="ghost.time"
       >
         <template v-slot:default="{ width }">
           <component
-            :is="ghost.name"
+            :is="ghost.component"
             :row="ghost.row"
             :px-per-beat="pxPerBeat"
             :width="width"
             :height="rowHeight"
-            :ghost="ghost.ghost"
+            :ghost="ghost"
           ></component>
         </template>
       </element-wrapper>
@@ -45,22 +45,23 @@
     
     <div class="elements">
       <element-wrapper
-        v-for="(component, i) in components"
+        v-for="(el, i) in sequence.elements"
         :key="i"
-        :time="component.time"
-        :top="component.top"
-        :height="rowHeight"
+        :time="el.time.value"
+        :row="el.row.value"
+        :rowHeight="rowHeight"
         :px-per-beat="pxPerBeat"
         :resizable="true"
-        :disable-offset="component.disableOffset"
+        :disable-offset="!el.offsettable"
         :snap="snap"
         :min-snap="minSnap"
         :selected="selected[i]"
-        :duration="component.duration"
-        :offset="component.offset"
-        :colored="colored"
-        @mousedown.native="select($event, i)"
-        @contextmenu.native="remove($event, i)"
+        :duration="el.duration.value"
+        :offset="el.offset.value"
+        :show-border="el.showBorder"
+        :text="el.name ? el.name.value : undefined"
+        @mousedown.native="mousedownElement($event, i)"
+        @contextmenu.native="remove(i, $event)"
         @click.native="clickElement(i)"
         @dblclick.native="open($event, i)"
         @update:duration="updateDuration(i, $event)"
@@ -68,12 +69,12 @@
       >
         <template v-slot:default="{ width }">
           <component
-            :is="component.name"
-            :row="component.row"
+            :is="el.component"
+            :row="el.row.value"
             :px-per-beat="pxPerBeat"
             :width="width"
             :height="rowHeight"
-            :element="component.element"
+            :element="el"
           ></component>
         </template>
       </element-wrapper>
@@ -103,513 +104,180 @@
       :row="row - 1"
       :total-beats="displayBeats"
       :style="actualRowStyle(row - 1)"
-      :class="rowClass(row - 1)"
-      @click="add($event)"
-      @contextmenu="$event.preventDefault()"
-      @mousedown="selectStart"
+      :class="rowClass ? rowClass(row - 1) : ''"
+      @mousedown="mousedownSurroundings"
     ></div>
 
   </drop>
 </template>
 
 <script lang="ts">
-import { Component, Prop, Mixins, Inject, Vue } from 'vue-property-decorator';
-import { Keys } from '@/lib/std';
+import Vue from 'vue';
 import { range, reverse } from '@/lib/std';
 import { addEventListeners } from '@/lib/events';
-import { Nullable } from '@/lib/vutils';
+import { update } from '@/lib/vutils';
 import BeatLines from '@/components/BeatLines';
-import { Watch } from '@/lib/update';
-import { Schedulable, Sequence } from '@/core';
-import { Ghost } from '@/core/ghost';
+import { Sequence } from '@/models';
+import * as Audio from '@/lib/audio';
+import { Ghost } from '@/models/ghost';
+import { UnscheduledPrototype, ScheduledElement, SchedulablePrototype } from '@/models/schedulable';
+import { createComponent, ref, computed, watch, onUnmounted, onMounted } from '@vue/composition-api';
+import { createGrid, SequencerTool } from '@/grid';
 
-@Component({
+export default createComponent({
   components: { BeatLines },
-})
-export default class SequencerGrid extends Vue {
-  // name is used for debugging
-  @Prop({ type: String, required: true }) public name!: string;
-  @Prop({ type: Number, required: true }) public rowHeight!: number;
-  @Prop({ type: Object, required: true }) public sequence!: Sequence<Schedulable>;
-  // @Prop({ type: Array, required: true }) public elements!: Schedulable[];
-  @Prop({ type: Array, default: null }) public ghosts!: Ghost[] | null;
-  @Prop({ type: Number, required: true }) public snap!: number;
-  @Prop({ type: Number, required: true }) public minSnap!: number;
+  props: {
+    name: { type: String as () => string, required: true },
+    rowHeight: { type: Number, required: true },
+    sequence: { type: Object as () => Sequence<ScheduledElement<any, any, any>>, required: true },
+    ghosts: { type: Array as () => Ghost[] | null, default: null },
+    snap: { type: Number, required: true },
+    minSnap: { type: Number, required: true },
+    tool: { type: String as () => SequencerTool, required: true },
+    pxPerBeat: { type: Number, required: true },
+    beatsPerMeasure: { type: Number, required: true },
+    stepsPerBeat: { type: Number, required: true },
+    numRows: { type: Number, required: true },
+    rowStyle: { type: Function as any as () => ((row: number) => object) },
+    rowClass: { type: Function as any as () => ((row: number) => string) },
 
-  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
-  @Prop({ type: Number, required: true }) public beatsPerMeasure!: number;
-  @Prop({ type: Number, required: true }) public stepsPerBeat!: number;
+    // These are for the progression.
+    loopEnd: { type: Number, required: true },
+    loopStart: { type: Number, required: true },
 
-  @Prop({ type: Number, required: true }) public numRows!: number;
-  @Prop({ type: Function, default: () => ({}) }) public rowStyle!: (row: number) => object;
-  @Prop({ type: Function, default: () => undefined }) public rowClass!: (row: number) => string;
+    // The loop end determined by the items.
+    sequencerLoopEnd: { type: Number, required: true },
 
-  // These are for the progression.
-  @Prop({ type: Number, required: true }) public loopEnd!: number;
-  @Prop({ type: Number, required: true }) public loopStart!: number;
+    transport: { type: Object as () => Audio.Transport, required: true },
+    progress: { type: Number, required: true },
+    displayLoopEnd: { type: Number, required: true },
 
-  // The loop end determined by the items.
-  @Prop({ type: Number, required: true }) public sequencerLoopEnd!: number;
+    // scroll stuff
+    scrollLeft: { type: Number, required: true },
+    scrollTop: { type: Number, required: true },
 
-  // These values should only be set if there is a loop on the timeline
-  @Prop(Nullable(Number)) public setLoopEnd!: number | null;
-  @Prop(Nullable(Number)) public setLoopStart!: number | null;
-  @Prop({ type: Number, required: true }) public progress!: number;
+    // These values should only be set if there is a loop on the timeline
+    setLoopEnd: Number,
+    setLoopStart: Number,
 
-  // FIXME edge case -> what happens if the element is deleted?
-  @Prop(Nullable(Object)) public prototype!: Schedulable | null;
+    getPosition: { type: Function as any as () => (() => { left: number, top: number }), required: true },
 
-  @Prop({ type: Number, required: true }) public displayLoopEnd!: number;
+    // FIXME edge case -> what happens if the element is deleted?
+    prototype: { type: Object as () => SchedulablePrototype<any, any, any> },
+  },
+  setup(props, context) {
+    const rows = ref<Vue>(null);
 
-  @Prop({ type: Boolean, required: true }) public colored!: boolean;
+    const grid = createGrid({
+      sequence: computed(() => props.sequence),
+      pxPerBeat: computed(() => props.pxPerBeat),
+      pxPerRow: computed(() => props.rowHeight),
+      snap: computed(() => props.snap),
+      minSnap: computed(() => props.minSnap),
+      scrollLeft: computed(() => props.scrollLeft),
+      scrollTop: computed(() => props.scrollTop),
+      beatsPerMeasure: computed(() => props.beatsPerMeasure),
+      createElement: computed(() => props.prototype),
+      tool: computed(() => props.tool),
+      getPosition: props.getPosition,
+    });
 
-  public rows!: HTMLElement;
-  public selectStartEvent: MouseEvent | null = null;
-  public dragStartEvent: MouseEvent | null = null;
-  public selectCurrentEvent: MouseEvent | null = null;
-  public holdingShift = false;
-  public minDisplayMeasures = 4;
-  public itemLoopEnd: number | null = null;
-  // selected[i] indicates whether elements[i] is selected
-  public selected: boolean[] = [];
+    onMounted(grid.onMounted);
+    onUnmounted(grid.onUnmounted);
 
-  get elements() {
-    return this.sequence.elements;
-  }
+    const { displayBeats, selected, sequencerLoopEnd } = grid;
 
-  get components() {
-    return this.elements.map((item) => {
+    watch(sequencerLoopEnd, () => {
+      update(props, context, 'sequencerLoopEnd', sequencerLoopEnd.value);
+    });
+
+    const fullWidth = computed(() => {
+      return displayBeats.value * props.pxPerBeat;
+    });
+
+    const fullHeight = computed(() => {
+      return props.numRows * props.rowHeight;
+    });
+
+    const sequencerStyle = computed(() => {
       return {
-        row: item.row,
-        time: item.time,
-        top: item.row * this.rowHeight,
-        name: item.component,
-        duration: item.duration,
-        offset: item.offset,
-        element: item,
-        disableOffset: item.disableOffset,
+        width: `${fullWidth.value}px`,
+        height: `${fullHeight.value}px`,
       };
     });
-  }
 
-  get ghostsComponents() {
-    if (this.ghosts === null) {
-      return [];
-    }
-
-    return this.ghosts.map((item) => {
-      return {
-        time: item.time,
-        top: item.row * this.rowHeight,
-        row: item.row,
-        name: item.component,
-        ghost: item,
-      };
-    });
-  }
-
-  get sequencerStyle() {
-    return {
-      width: `${this.displayBeats * this.pxPerBeat}px`,
-      height: `${this.numRows * this.rowHeight}px`,
-    };
-  }
-
-  get leftStyle() {
-    if (this.setLoopStart) {
-      return {
-        width: `${this.setLoopStart * this.pxPerBeat}px`,
-      };
-    }
-  }
-
-  get rightStyle() {
-    if (this.setLoopEnd) {
-      const left = this.setLoopEnd * this.pxPerBeat;
-      return {
-        left: `${left}px`,
-        width: `${this.displayBeats * this.pxPerBeat - left}px`,
-      };
-    }
-  }
-
-  get displayBeats() {
-    return Math.max(
-      256, // 256 is completly random
-      (this.itemLoopEnd || 0) + this.beatsPerMeasure * 2,
-    );
-  }
-
-  get selectStyle() {
-    if (!this.selectStartEvent) { return; }
-    if (!this.selectCurrentEvent) {
-      this.selected = this.selected.map((_) => false);
-      return;
-    }
-
-    const boundingRect = this.rows.getBoundingClientRect();
-
-    const left = Math.min(
-      this.selectStartEvent.clientX - boundingRect.left,
-      this.selectCurrentEvent.clientX - boundingRect.left,
-    );
-    const top = Math.min(
-      this.selectStartEvent.clientY - boundingRect.top,
-      this.selectCurrentEvent.clientY - boundingRect.top,
-    );
-
-    const width = Math.abs(this.selectCurrentEvent.clientX - this.selectStartEvent.clientX);
-    const height = Math.abs(this.selectCurrentEvent.clientY - this.selectStartEvent.clientY);
-
-    // these are exact numbers BTW, not integers
-    const minBeat = left / this.pxPerBeat;
-    const minRow = top / this.rowHeight;
-    const maxBeat = (left + width) / this.pxPerBeat;
-    const maxRow = (top + height) / this.rowHeight;
-
-    this.elements.forEach((item, i) => {
-      // Check if there is any overlap between the rectangles
-      // https://www.geeksforgeeks.org/find-two-rectangles-overlap/
-      if (minRow > item.row + 1 || item.row > maxRow) {
-        this.selected[i] = false;
-      } else if (minBeat > item.time + item.duration || item.time > maxBeat) {
-        this.selected[i] = false;
-      } else {
-        this.selected[i] = true;
+    const leftStyle = computed(() => {
+      if (props.setLoopStart) {
+        return {
+          width: `${props.setLoopStart * props.pxPerBeat}px`,
+        };
       }
     });
 
-    return {
-      borderRadius: '5px',
-      border: 'solid 1px red',
-      backgroundColor: 'rgba(255, 51, 51, 0.3)',
-      left: `${left}px`,
-      top: `${top}px`,
-      height: `${height}px`,
-      width: `${width}px`,
-      zIndex: 3,
-    };
-  }
-
-  public mounted() {
-    this.rows = (this.$refs.rows as Vue).$el as HTMLElement;
-    this.checkLoopEnd();
-    window.addEventListener('keydown', this.keydown);
-    window.addEventListener('keyup', this.keyup);
-  }
-
-  public destroyed() {
-    window.removeEventListener('keydown', this.keydown);
-    window.removeEventListener('keyup', this.keyup);
-  }
-
-  public actualRowStyle(i: number) {
-    const style = this.rowStyle(i);
-    return {
-      ...style,
-      flex: `0 0 ${this.rowHeight}px`,
-      width: `${this.pxPerBeat * this.displayBeats}px`,
-    };
-  }
-
-  public updateOffset(i: number, value: number) {
-    const item = this.elements[i];
-    const diff = value - item.offset;
-
-    const updateOffset = (index: number) => {
-      // Ok so we update both the duration of getter and the duraion of the element
-      // This DEfinitely might not be needed
-      this.components[index].offset += diff;
-      this.elements[index].offset += diff;
-    };
-
-    const toUpdate = [i];
-    if (this.selected[i]) {
-      this.selected.forEach((selected, ind) => {
-        if (selected && ind !== i) {
-          toUpdate.push(ind);
-        }
-      });
-    }
-
-    // If the diff is less than zero, make sure we aren't setting the offset of
-    // any of the elments to < 0
-    if (diff < 0 && toUpdate.some((ind) => (this.elements[ind].offset + diff) < 0)) {
-      return;
-    }
-
-    toUpdate.forEach(updateOffset);
-  }
-
-  public updateDuration(i: number, value: number) {
-    const item = this.elements[i];
-    const diff = value - item.duration;
-
-    const updateDuration = (index: number) => {
-      // Ok so we update both the duration of getter and the duraion of the element
-      // This DEfinitely might not be needed
-      this.components[index].duration += diff;
-      this.elements[index].duration += diff;
-    };
-
-    const toUpdate = [i];
-    if (this.selected[i]) {
-      this.selected.forEach((selected, ind) => {
-        if (selected && ind !== i) {
-          toUpdate.push(ind);
-        }
-      });
-    }
-
-    // If the diff is less than zero, make sure we aren't settings the length of
-    // any of the elments to <= 0
-    if (diff < 0 && toUpdate.some((ind) => this.elements[ind].duration + diff <= 0)) {
-      return;
-    }
-
-    toUpdate.forEach(updateDuration);
-
-    // Make sure to check the loop end when the duration of an element has been changed!!
-    this.checkLoopEnd();
-  }
-
-  public selectStart(e: MouseEvent) {
-    this.selectStartEvent = e;
-    window.addEventListener('mousemove', this.selectMove);
-    window.addEventListener('mouseup', this.selectEnd);
-  }
-
-  public selectMove(e: MouseEvent) {
-    this.selectCurrentEvent = e;
-  }
-
-  public selectEnd() {
-    this.selectStartEvent = null;
-    this.selectCurrentEvent = null;
-    window.removeEventListener('mousemove', this.selectMove);
-    window.removeEventListener('mouseup', this.selectEnd);
-  }
-
-  public add(e: MouseEvent) {
-    if (!this.prototype) {
-      return;
-    }
-
-    if (this.selected.some((selected) => selected)) {
-      this.selected = this.elements.map(() => false);
-      return;
-    }
-
-    const rect = this.$el.getBoundingClientRect();
-
-    const x = e.clientX - rect.left;
-    let time = x / this.pxPerBeat;
-    time = Math.floor(time / this.snap) * this.snap;
-
-    const y = e.clientY - rect.top;
-    const row = Math.floor(y / this.rowHeight);
-
-    const item = this.prototype.copy();
-    item.row = row;
-    item.time = time;
-
-    this.selected.push(false);
-    this.sequence.add(item);
-  }
-
-  public move(e: MouseEvent, i: number) {
-    if (!this.dragStartEvent) {
-      return;
-    }
-
-    // Get the preVIOUS element first
-    // and ALSO grab the current position
-    const oldItem = this.elements[i];
-    const rect = this.rows.getBoundingClientRect();
-
-    // Get the start BEAT
-    let startBeat = (this.dragStartEvent.clientX - rect.left) / this.pxPerBeat;
-    startBeat = Math.floor(startBeat / this.snap) * this.snap;
-
-    // Get the end BEAT
-    let endBeat = (e.clientX - rect.left) / this.pxPerBeat;
-    endBeat = Math.floor(endBeat / this.snap) * this.snap;
-
-    // CHeck if we are going to move squares
-    const diff = endBeat - startBeat;
-    const time = oldItem.time + diff;
-    if (time < 0) { return; }
-
-    const y = e.clientY - rect.top;
-    const row = Math.floor(y / this.rowHeight);
-    if (row < 0) { return; }
-
-    if (row === oldItem.row && time === oldItem.time) { return; }
-    // OK, so we've moved squares
-    // Lets update our dragStartEvent or else
-    // things will start to go haywyre :////
-    this.dragStartEvent = e;
-
-    const timeDiff = time - oldItem.time;
-    const rowDiff = row - oldItem.row;
-
-    let itemsToMove: Schedulable[];
-    if (this.selected[i]) {
-      itemsToMove = this.elements.filter((item, ind) => this.selected[ind]);
-    } else {
-      itemsToMove = [oldItem];
-    }
-
-    if (itemsToMove.some((item) => (item.time + timeDiff) < 0)) {
-      return;
-    }
-
-    itemsToMove.forEach((item) => {
-      item.time = item.time + timeDiff;
-      item.row = item.row + rowDiff;
+    const rightStyle = computed(() => {
+      if (props.setLoopEnd) {
+        const left = props.setLoopEnd * props.pxPerBeat;
+        return {
+          left: `${left}px`,
+          width: `${displayBeats.value * props.pxPerBeat - left}px`,
+        };
+      }
     });
 
-    this.checkLoopEnd();
-  }
-
-  public remove(e: MouseEvent, i: number) {
-    e.preventDefault();
-    this.removeAtIndex(i);
-  }
-
-  public removeAtIndex(i: number) {
-    const item = this.elements[i];
-    item.remove(); // this removes it from the list
-    this.$delete(this.selected, i);
-  }
-
-  public checkLoopEnd() {
-    // Set the minimum to 1 measure!
-    const maxTime = Math.max(
-      ...this.elements.map((item) => item.time + item.duration),
-      this.beatsPerMeasure,
-    );
-
-    const itemLoopEnd = Math.ceil(maxTime / this.beatsPerMeasure) * this.beatsPerMeasure;
-
-    if (itemLoopEnd !== this.itemLoopEnd) {
-      this.$update('sequencerLoopEnd', itemLoopEnd);
-      this.itemLoopEnd = itemLoopEnd;
-    }
-  }
-
-  public open(e: MouseEvent, i: number) {
-    const item = this.elements[i];
-    this.$emit('open', item);
-  }
-
-  public clickElement(i: number) {
-    this.$update('prototype', this.elements[i]);
-  }
-
-  public select(e: MouseEvent, i: number) {
-    const item = this.elements[i];
-    if (!this.selected[i]) {
-      this.elements.forEach((_, ind) => this.selected[ind] = false);
+    function actualRowStyle(i: number) {
+      const style = props.rowStyle ? props.rowStyle(i) : {};
+      return {
+        ...style,
+        flex: `0 0 ${props.rowHeight}px`,
+        width: `${props.pxPerBeat * displayBeats.value}px`,
+      };
     }
 
-    const createItem = (oldItem: Schedulable) => {
-      const newItem = oldItem.copy();
+    function open(e: MouseEvent, i: number) {
+      const item = props.sequence.elements[i];
+      context.emit('open', item);
+    }
 
-      // We set selected to true because `newNew` will have a heigher z-index
-      // Thus, it will be displayed on top (which we want)
-      // Try copying selected files and you will notice the selected notes stay on top
-      this.selected.push(true);
-      this.sequence.add(newItem);
-    };
+    function clickElement(i: number) {
+      update(props, context, 'prototype', props.sequence.elements[i]);
+    }
 
-    let targetIndex = i;
-    if (this.holdingShift) {
-      let selected: Schedulable[];
-
-      // If selected, copy all selected. If not, just copy the item that was clicked.
-      if (this.selected[i]) {
-        // selected is all all selected except the element you pressed on
-        selected = this.elements.filter((el, ind) => {
-          if (this.selected[ind]) {
-            // See in `createItem` that we are setting all new elements to selected
-            // And accordingly we are setting selected to false here
-            this.selected[ind] = false;
-            return el !== item;
-          } else {
-            return false;
-          }
-        });
-        // A copy of `item` will be created at this index
-        // See the next line
-        targetIndex = this.elements.length;
-        createItem(item);
-      } else {
-        selected = [item];
+    async function handleDrop(prototype: UnscheduledPrototype, e: MouseEvent) {
+      const element = prototype(props.transport);
+      update(props, context, 'prototype', element);
+      await Vue.nextTick();
+      const newEl = grid.add(e);
+      if (newEl) {
+        context.emit('new-prototype', newEl);
       }
-
-      selected.forEach(createItem);
     }
 
-    this.dragStartEvent = e;
-
-    document.documentElement.style.cursor = 'move';
-    const disposer = addEventListeners({
-      mousemove: (event) => this.move(event, targetIndex),
-      mouseup: () => {
-        document.documentElement.style.cursor = 'auto';
-        disposer.dispose();
-      },
+    watch(displayBeats, () => {
+      update(props, context, 'displayLoopEnd', displayBeats.value);
     });
-  }
 
-  public afterMove() {
-    this.dragStartEvent = null;
-  }
-
-  public keydown(e: KeyboardEvent) {
-    if (e.keyCode === Keys.Shift) {
-      this.holdingShift = true;
-    } else if (e.keyCode === Keys.Delete || e.keyCode === Keys.Backspace) {
-      // Slice and reverse sItemince we will be deleting from the array as we go
-      let i = this.elements.length - 1;
-      for (const item of reverse(this.elements)) {
-        if (this.selected[i]) {
-          this.removeAtIndex(i);
-        }
-        i--;
-      }
-    }
-  }
-
-  public keyup(e: KeyboardEvent) {
-    if (e.keyCode === Keys.Shift) { this.holdingShift = false; }
-  }
-
-  public handleDrop(prototype: Schedulable, event: MouseEvent) {
-    this.$update('prototype', prototype);
-    this.$nextTick(() => this.add(event));
-    this.$emit('new-prototype', prototype);
-    // prototype is not updated automatically
-  }
-
-  @Watch<SequencerGrid>('elements', { immediate: true })
-  public resetSelectedIfNecessary() {
-    // Whenever the parent changes the items
-    // we should reset the selected!
-    // Also, since we are watching `value`, we modify `selected` first so that
-    // this method doesn't trigger before `selected` is also changed.
-    if (this.selected.length !== this.elements.length) {
-      this.selected = this.elements.map((_) => false);
-    }
-    this.checkLoopEnd();
-  }
-
-  @Watch<SequencerGrid>('displayBeats', { immediate: true })
-  public updateDisplayLoopEnd() {
-    this.$update('displayLoopEnd', this.displayBeats);
-  }
-}
+    return {
+      rows,
+      sequencerStyle,
+      handleDrop,
+      selectStyle: grid.selectStyle,
+      sliceStyle: grid.sliceStyle,
+      mousedownElement: grid.select,
+      remove: grid.remove,
+      clickElement,
+      open,
+      updateDuration: grid.updateDuration,
+      updateOffset: grid.updateOffset,
+      selected,
+      mousedownSurroundings: grid.mousedown,
+      leftStyle,
+      rightStyle,
+      displayBeats,
+      add: grid.add,
+      actualRowStyle,
+    };
+  },
+});
 </script>
 
 <style scoped lang="sass">

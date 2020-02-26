@@ -36,6 +36,13 @@ colorNames.forEach((name) => {
   });
 });
 
+borderColor.transparent = {
+  default: 'rgba(255, 255, 255, 0)',
+};
+[10, 20, 30, 40, 50, 60, 70, 80, 90].forEach((opacity) => {
+  borderColor.transparent[opacity] = `rgba(255, 255, 255, ${opacity / 100})`;
+})
+
 module.exports = {
   theme: {
     extend: { backgroundColor, textColor, borderColor, },

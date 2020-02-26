@@ -32,9 +32,9 @@
 </template>
 
 <script lang="ts">
-import { EffectName } from '@/core/filters/effects';
-import { EffectConstrainsType, EffectConstrains } from '@/core/filters/bounds';
-import { Effect as E } from '@/core/filters/effect';
+import { EffectName } from '@/models/filters/effects';
+import { EffectConstrainsType, EffectConstrains } from '@/models/filters/bounds';
+import { Effect as E } from '@/models/filters/effect';
 import { computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({

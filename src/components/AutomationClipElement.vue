@@ -34,7 +34,7 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
-import { Point, ScheduledAutomation } from '@/core';
+import { Point, ScheduledAutomation } from '@/models';
 import { scale } from '@/lib/std';
 import * as dawg from '@/dawg';
 
@@ -49,7 +49,7 @@ export default class AutomationClipElement extends Vue {
   @Prop({ type: Object, required: true }) public element!: ScheduledAutomation;
 
   get clip() {
-    return this.element.clip;
+    return this.element.element;
   }
 
   get points() {
@@ -137,7 +137,7 @@ export default class AutomationClipElement extends Vue {
 
     this.clip.setTime(i, time);
     // FIXME(2) this needs a better home
-    this.element.duration = Math.max(this.element.duration, time);
+    this.element.duration.value = Math.max(this.element.duration.value, time);
 
     value = Math.max(0, Math.min(1, value));
     value = 1 - scale(value, [0, 1], this.fromRange);

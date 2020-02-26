@@ -37,7 +37,7 @@ const middleware = () => {
   });
 
   const extensions = require.context(
-    './dawg/extensions/extra',
+    './/extra',
     // Whether or not to look in subfolders
     true,
     /^.+\.ts/,

@@ -1,6 +1,7 @@
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { CreateElement } from 'vue';
 import * as dawg from '@/dawg';
+import { range } from '@/lib/std';
 
 @Component
 export default class BeatLines extends Vue {
@@ -11,15 +12,15 @@ export default class BeatLines extends Vue {
   public $el!: HTMLElement;
 
   get measureColor() {
-    return dawg.theme.default;
+    return dawg.theme.darken(dawg.theme.default, 5);
   }
 
   get stepColor() {
-    return dawg.theme.darken(dawg.theme.default, 3);
+    return dawg.theme.darken(dawg.theme.default, 2);
   }
 
   get beatColor() {
-    return dawg.theme.darken(dawg.theme.default, 5);
+    return dawg.theme.darken(dawg.theme.default, 4);
   }
 
   get viewBox() {
@@ -28,12 +29,6 @@ export default class BeatLines extends Vue {
 
   public getX(step: number) {
     return this.stepPx + this.stepPx * ( step - 1 ) - .5;
-  }
-
-  public fill(step: number) {
-    // See https://github.com/apache/cordova-android/issues/645
-    // for why we prepend '%23'
-    return '%23' + (step % this.beatsPerMeasure ? this.stepColor : this.beatColor).slice(1);
   }
 
   get stepPx() {
@@ -45,26 +40,22 @@ export default class BeatLines extends Vue {
   }
 
   get svg() {
-    const steps = [
-      // `<rect x='0' y='0' height='1px' width='1.5px' fill='${ this.measureColor }'/>`
-    ];
+    const steps = range(1, this.measureSteps).map((step) => {
+      const fill = step % this.beatsPerMeasure ? this.stepColor : this.beatColor;
+      const rectX = this.stepPx + this.stepPx * (step - 1) - .5;
+      return `<rect fill="${fill}" height="1px" width="1px" y="0" x="${rectX}"/>`;
+    });
 
-    for ( let step = 1; step < this.measureSteps; step++ ) {
-      const rectX = this.stepPx + this.stepPx * ( step - 1 ) - .5;
-      const fill = this.fill(step);
-      steps.push(`<rect height='1px' width='1px' y='0' x='${rectX}' fill='${fill}'/>`);
-    }
-
-    const x = this.stepPx + this.stepPx * ( this.measureSteps - 1 ) - .5;
-    steps.push(`<rect y='0' height='1px' width='1.5px' fill='${this.measureColor}' x='${x}'/>`);
+    const x = this.stepPx + this.stepPx * (this.measureSteps - 1) - 1.5;
+    steps.push(`<rect fill="${this.measureColor}" height="1px" width="3px" y="0" x="${x}"/>`);
     return `
-    <svg
-      preserveAspectRatio='none'
-      xmlns='http://www.w3.org/2000/svg'
-      viewBox='0 0 ${this.viewBox} 1'
-    >
-      ${steps.join('\n  ')}
-    </svg>
+<svg
+  preserveAspectRatio="none"
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 ${this.viewBox} 1"
+>
+  ${steps.join('\n  ')}
+</svg>
     `;
   }
 
@@ -74,7 +65,10 @@ export default class BeatLines extends Vue {
       style: {
         backgroundRepeat: 'repeat',
         backgroundAttachment: 'local',
-        backgroundImage: `url("data:image/svg+xml,${encodeURI(this.svg)}")`,
+        // See https://github.com/apache/cordova-android/issues/645
+        // for why we prepend '%23' instead of #
+        // Annoyingly encodeURI does not yet do this so we have to do it manually
+        backgroundImage: `url("data:image/svg+xml, ${encodeURI(this.svg).replace(/#/g, '%23')}")`,
         backgroundSize: `${this.viewBox}px 1px`,
       },
     });

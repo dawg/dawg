@@ -4,7 +4,7 @@
 
 import ResizeObserver from 'resize-observer-polyfill';
 import throttle from 'lodash.throttle';
-import { createComponent, ref, Ref } from '@vue/composition-api';
+import { ref, Ref } from '@vue/composition-api';
 import Vue from 'vue';
 import Component from 'vue-class-component';
 
@@ -12,12 +12,6 @@ export const update = <Props, K extends keyof Props, V extends Props[K]>(
   _: Props, context: { emit: (event: string, value: V) => void }, key: K, value: V,
 ) => {
   context.emit(`update:${key}`, value);
-};
-
-// This is a temporary workaround. Right now, TypeScript throws an error when you pass in the return type of
-// createComponent to the Vue.extend function
-export const vueExtend = (proxy: ReturnType<typeof createComponent>) => {
-  return Vue.extend(proxy as any);
 };
 
 // FIXME become a hook I'm almost ready

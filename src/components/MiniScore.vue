@@ -17,7 +17,7 @@
 </template>
 
 <script lang="ts">
-import { Note } from '@/core';
+import { ScheduledNote } from '@/models';
 import { update } from '@/lib/vutils';
 import { computed, watch, createComponent } from '@vue/composition-api';
 
@@ -28,7 +28,7 @@ import { computed, watch, createComponent } from '@vue/composition-api';
 export default createComponent({
   name: 'MiniScore',
   props: {
-    notes: { type: Array as () => Note[], required: true },
+    notes: { type: Array as () => ScheduledNote[], required: true },
     // The height and width are only used to set the aspect ratio.
     // Use css to actually define the height and width
     height: { type: Number, default: 32 },
@@ -42,7 +42,7 @@ export default createComponent({
     });
 
     const rows = computed(() => {
-      return props.notes.map(({ row }) => row);
+      return props.notes.map(({ row }) => row.value);
     });
 
     const minRow = computed(() => {
@@ -60,7 +60,7 @@ export default createComponent({
     });
 
     const endTimes = computed(() => {
-      return props.notes.map(({ time, duration }) => time + duration);
+      return props.notes.map(({ time, duration }) => time.value + duration.value);
     });
 
     const totalDuration = computed(() => {
@@ -81,9 +81,9 @@ export default createComponent({
 
     const rects = computed(() => {
       return props.notes.map(({ row, time, duration }) => {
-        const actualRow = row - minRow.value;
-        const x = (time - props.offset) * columnWidth.value;
-        const width = duration * columnWidth.value;
+        const actualRow = row.value - minRow.value;
+        const x = (time.value - props.offset) * columnWidth.value;
+        const width = duration.value * columnWidth.value;
         if (x + width > 0 && x < props.width) {
           return {
             x: `${x}px`,

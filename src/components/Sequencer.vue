@@ -1,16 +1,35 @@
 <template>
   <div class="flex flex-col">
     <div class="flex" style="flex: 0 0 25px">
-      <div class="bg-default h-full flex justify-end items-center border-r border-default-darken-1" :style="style">
+      <div 
+        class="bg-default h-full flex items-center border-default-darken-1" 
+        :style="style"
+        :class="{ 'border-r': sideBorder }"
+      >
+        <dg-fa-icon
+          class="cursor-pointer ml-1 text-xs"
+          :class="tool === 'pointer' ? 'text-default-darken-2' : 'text-default-darken-5'"
+          icon="hand-pointer"
+          @click="selectTool('pointer')"
+          title="Pointer Tool"
+        ></dg-fa-icon>
+        <dg-fa-icon
+          class="cursor-pointer ml-2 text-xs"
+          :class="tool === 'slicer' ? 'text-default-darken-2' : 'text-default-darken-5'"
+          icon="hand-scissors"
+          @click="selectTool('slicer')"
+          title="Slicer Tool"
+        ></dg-fa-icon>
+        <div class="flex-grow"></div>
         <div 
-          class="cursor-pointer pr-2 text-sm text-default-darken-3 tracking-tight"
+          class="cursor-pointer pr-1 text-sm text-default-darken-3 tracking-tight"
           @click="cycleSnap"
           title="Measured in steps"
         >
           {{ snap.display }}
         </div>
         <dg-fa-icon
-          class="cursor-pointer mr-2 text-default-darken-3 text-sm"
+          class="cursor-pointer mr-2 text-default-darken-3 text-xs"
           icon="magnet"
           @click="cycleSnap"
           title="Measured in steps"
@@ -22,7 +41,7 @@
         :increment="pxPerStep"
         direction="horizontal"
         @update:increment="setPxPerBeat"
-        @scroll="scroll"
+        @scroll="onScrollX"
       >
         <timeline 
           v-model="data.progress" 
@@ -42,15 +61,18 @@
     <div
       class="flex scroller overflow-y-scroll"
       ref="scrollY"
+      @scroll="onScrollY"
     >
       <!-- Use a wrapper div to add width attribute -->
       <scroller 
         :style="style" 
-        class="side-wrapper border-r border-default-darken-1"
+        class="side-wrapper border-default-darken-1"
+        :class="{ 'border-r': sideBorder }"
         direction="vertical"
         :scroller="scrollY"
         :increment="rowHeight"
         @update:increment="setRowHeight"
+        @scroll="onScrollY"
       >
         <slot 
           name="side"
@@ -58,7 +80,7 @@
       </scroller>
       <sequencer-grid
         class="sequencer scroller overflow-x-scroll" 
-        @scroll.native="scroll"
+        @scroll.native="onScrollX"
         ref="scrollXVue"
         :sequencer-loop-end.sync="data.sequencerLoopEnd"
         :loop-start="loopStart"
@@ -68,9 +90,14 @@
         :steps-per-beat="stepsPerBeat"
         :beats-per-measure="beatsPerMeasure"
         :px-per-beat="pxPerBeat"
+        :get-position="getPosition"
         :row-height="rowHeight"
         :progress="data.progress"
         :name="name"
+        :transport="transport"
+        :tool="tool"
+        :scroll-left="data.scrollLeft"
+        :scroll-top="data.scrollTop"
         :snap="snap.raw"
         :min-snap="minSnap"
         :display-loop-end.sync="data.displayLoopEnd"
@@ -83,11 +110,11 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { Schedulable } from '@/core';
-import { Keys } from '@/lib/std';
+import { Keys, literal } from '@/lib/std';
 import { update } from '@/lib/vutils';
 import * as Audio from '@/lib/audio';
-import { createComponent, reactive, computed, watch, onMounted, ref } from '@vue/composition-api';
+import { SequencerTool } from '@/grid';
+import { createComponent, reactive, computed, watch, onMounted, ref, Ref } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Sequencer',
@@ -98,6 +125,7 @@ export default createComponent({
     pxPerBeat: { type: Number, required: true },
     name: { type: String, required: true },
     sideWidth: { type: Number, default: 80 },
+    sideBorder: { type: Boolean, default: false },
     play: { type: Boolean, default: false },
     transport: { type: Object as () => Audio.Transport, required: true },
     isRecording: { type: Boolean, default: false },
@@ -116,10 +144,16 @@ export default createComponent({
      * This will be synced with the start of the loop.
      */
     start: { type: Number, required: false },
+
+    /**
+     * The currently selected tool!
+     */
+    tool: { type: String as () => SequencerTool, default: literal('pointer') },
   },
   setup(props, context) {
     const data = reactive({
       scrollLeft: 0,
+      scrollTop: 0,
       progress: 0,
       sequencerLoopEnd: 0,
       displayLoopEnd: 0,
@@ -140,6 +174,13 @@ export default createComponent({
         return null;
       }
     });
+
+    const getPosition = () => {
+      return {
+        left: scrollX.value?.getBoundingClientRect().left ?? 0,
+        top: scrollY.value?.getBoundingClientRect().top ?? 0,
+      };
+    };
 
     const minSnap = computed(() => {
       return 1 / props.stepsPerBeat / 24;
@@ -214,10 +255,17 @@ export default createComponent({
       data.progress = props.transport.getProgress();
     }
 
-    function scroll() {
+    function onScrollX() {
       // This only handles horizontal scrolls!
       if (scrollX.value) {
         data.scrollLeft = scrollX.value.scrollLeft;
+      }
+    }
+
+    function onScrollY() {
+      // This only handles horizontal scrolls!
+      if (scrollY.value) {
+        data.scrollTop = scrollY.value.scrollTop;
       }
     }
 
@@ -254,6 +302,7 @@ export default createComponent({
       scrollXVue,
       scrollX,
       scrollY,
+      onScrollY,
       setPxPerBeat,
       minSnap,
       snap,
@@ -264,10 +313,14 @@ export default createComponent({
       style,
       cycleSnap,
       seek,
-      scroll,
+      onScrollX,
       setRowHeight,
       pxPerStep,
       listeners: context.listeners,
+      selectTool: (tool: SequencerTool) => {
+        update(props, context, 'tool', tool);
+      },
+      getPosition,
     };
   },
 });

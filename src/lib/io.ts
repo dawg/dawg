@@ -22,8 +22,11 @@ export {
   StringC,
   Props,
   NumberC,
+  PartialC,
+  LiteralC,
   BooleanC,
   ArrayC,
+  IntersectionC,
   nullType as null,
   Any,
 } from 'io-ts';

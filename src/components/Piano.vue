@@ -22,7 +22,7 @@
 <script lang="ts">
 import { allKeys } from '@/utils';
 import Key from '@/components/Key.vue';
-import { Instrument } from '@/core';
+import { Instrument } from '@/models';
 import { createComponent } from '@vue/composition-api';
 
 export default createComponent({

@@ -1,11 +1,15 @@
 <template>
   <div class="absolute z-10" :style="wrapperStyle">
     <div
-      v-if="colored"
+      v-if="showBorder"
       class="relative inline-block overflow-hidden flex flex-col"
       :style="elementWrapperStyle"
     >
-      <div class="w-full" style="height: 8px" :style="{ backgroundColor: color }"></div>
+      <div class="w-full" :style="borderStyle"></div>
+      <div class="w-full text-default select-none" :style="textBorderStyle">
+        {{ text }}
+      </div>
+      <div class="w-full" :style="spacerStyle"></div>
       <slot v-bind:width="width" v-bind:offset="offset"></slot>
     </div>
     <div
@@ -35,6 +39,7 @@
 import { createComponent, computed, ref } from '@vue/composition-api';
 import { update } from '@/lib/vutils';
 import tinycolor from 'tinycolor2';
+import { calculateSnap } from '@/utils';
 
 export default createComponent({
   name: 'ElementWrapper',
@@ -42,7 +47,6 @@ export default createComponent({
     snap: { type: Number, required: true },
     minSnap: { type: Number, required: true },
     pxPerBeat: { type: Number, required: true },
-    height: { type: Number, required: true },
     /**
      * Duration in beats.
      */
@@ -51,11 +55,13 @@ export default createComponent({
     disableOffset: { type: Boolean, required: true },
     dragAreaWidth: { type: Number, default: 8 },
     time: { type: Number, required: true },
-    top: { type: Number, required: true },
+    row: { type: Number, required: true },
+    rowHeight: { type: Number, required: true },
     selected: { type: Boolean, required: true },
-    colored: { type: Boolean, required: true },
+    showBorder: { type: Boolean, required: false },
+    text: { type: String, required: false },
     resizable: { type: Boolean, required: true },
-    color: { type: String, default: '#ccc' },
+    color: { type: String, default: '#1976d29e' },
   },
   setup(props, context) {
     const lightColor = computed(() => {
@@ -69,7 +75,7 @@ export default createComponent({
         position: 'absolute',
         top: 0,
         [side]: 0,
-        height: `${props.height}px`,
+        height: `${props.rowHeight}px`,
       };
 
       return s;
@@ -81,12 +87,16 @@ export default createComponent({
 
     const componentStyle = computed(() => {
       return {
-        height: `${props.height}px`,
+        height: `${props.rowHeight}px`,
       };
     });
 
     const left = computed(() => {
       return (props.time + props.offset) * props.pxPerBeat;
+    });
+
+    const top = computed(() => {
+      return (props.row) * props.rowHeight;
     });
 
     const leftNoIncludeOffset = computed(() => {
@@ -96,20 +106,14 @@ export default createComponent({
     const moveHelper = (e: MouseEvent, opts: { canZero: boolean, prop: 'duration' | 'offset' }) => {
       if (!context.parent) { return; }
 
-      const snap = e.altKey ? props.minSnap : props.snap;
-      const remainder = props[opts.prop] % props.snap;
-      const pxRemainder = remainder  * props.pxPerBeat;
-
-      // The amount of pixels that the element is from the edge of the of grid
-      const pxFromEdge = leftNoIncludeOffset.value - context.parent.$el.scrollLeft;
-
-      // The amount of pixels that the mouse is from the edge of the of grid
-      const pxMouse = e.clientX - context.parent.$el.getBoundingClientRect().left;
-
-      const diff = pxMouse - pxFromEdge - pxRemainder;
-      let newValue =  diff / props.pxPerBeat;
-      newValue = (Math.round(newValue / snap) * snap) + remainder;
-      newValue = Math.round(newValue / props.minSnap) * props.minSnap;
+      const newValue = calculateSnap({
+        event: e,
+        minSnap: props.minSnap,
+        snap: props.snap,
+        pxPerBeat: props.pxPerBeat,
+        pxFromLeft: leftNoIncludeOffset.value,
+        reference: context.parent.$el,
+      });
 
       if (props[opts.prop] === newValue) { return; }
 
@@ -136,14 +140,33 @@ export default createComponent({
       style,
       wrapperStyle: computed(() => ({
         left: `${left.value}px`,
-        top: `${props.top}px`,
+        top: `${top.value}px`,
       })),
       elementWrapperStyle: computed(() => ({
         width: `${width.value}px`,
-        height: `${props.height}px`,
-        backgroundColor: props.selected ? '#ff999950!important' : props.colored ? lightColor.value : '',
+        height: `${props.rowHeight}px`,
+        backgroundColor: props.selected ? '#ff999950!important' : props.showBorder ? lightColor.value : '',
       })),
       width,
+      borderStyle: computed(() => {
+        return {
+          backgroundColor: props.color,
+          height: `10px`,
+          opacity: '0.60',
+          position: 'absolute',
+        };
+      }),
+      textBorderStyle: computed(() => {
+        return {
+          lineHeight: `10px`,
+          fontSize: '9px',
+          padding: '0 3px',
+          position: 'absolute',
+        };
+      }),
+      spacerStyle: computed(() => ({
+        flex: `0 0 10px`,
+      })),
     };
   },
 });

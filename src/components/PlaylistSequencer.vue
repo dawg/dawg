@@ -6,13 +6,13 @@
     :row-height="rowHeight"
     :row-class="rowClass"
     :side-width="130"
+    :side-border="true"
     name="Playlist"
     :prototype.sync="prototype"
-    :colored="true"
   >
     <template slot="side">
       <d-track
-        v-for="(track, i) in tracks" 
+        v-for="(track, i) in tracks"
         :key="i" 
         :style="{ height: `${rowHeight}px`, marginTop: i === 1 ? '-1px' : '' }"
         :track="track"
@@ -24,8 +24,8 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
-import { Track } from '@/core';
-import { theme } from '@/dawg/extensions/core/theme';
+import { Track } from '@/models';
+import { theme } from '@/core/theme';
 import * as framework from '@/lib/framework';
 
 @Component

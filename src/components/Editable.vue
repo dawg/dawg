@@ -2,6 +2,7 @@
   <div
     ref="el"
     class="select-none cursor-default"
+    :class="{ 'border rounded-sm px-1 border-transparent hover:border-transparent-10': !disableDblClick }"
     :contenteditable="editable"
     @blur="blur"
     @dblclick="dblclick" 

@@ -17,7 +17,7 @@
 
 <script lang="ts">
 import { Component, Prop, Inject, Vue } from 'vue-property-decorator';
-import { Instrument } from '@/core';
+import { Instrument } from '@/models';
 import * as framework from '@/lib/framework';
 import { ref, computed, createComponent } from '@vue/composition-api';
 
@@ -78,13 +78,13 @@ export default createComponent({
         return {
           transform: `translate(0, -${(height.value * props.heightProportion) / 2}px)`,
           height: `${height.value * props.heightProportion}px`,
-          width: `${props.width * props.widthProportion}px`,
+          width: `${props.widthProportion * 100}%`,
         };
       }
       return {
         borderBottom: props.borderBottom ? 'solid 1px rgba(0, 0, 0, 0.06)' : '',
         height: `${height.value}px`,
-        width: `${props.width}px`,
+        width: `100%`,
       };
     });
 

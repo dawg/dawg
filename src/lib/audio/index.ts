@@ -11,3 +11,4 @@ export { Context } from '@/lib/audio/context';
 
 // FIXME Fix this
 export const Master = (Tone.Master as any).output as AudioNode;
+export const ToneMaster = Tone.Master;
