@@ -118,7 +118,7 @@ export const extension = createExtension({
     context.subscriptions.push(sampleViewer.addAction({
       text: 'Separate',
       callback: createCallback(
-        'vusic/separation/scripts/separate.py',
+        'dawg/separation/scripts/separate.py',
         (samplePath) => `Extracting vocals from ${path.basename(samplePath)}`,
       ),
     }));
@@ -127,7 +127,7 @@ export const extension = createExtension({
     sampleViewer.addAction({
       text: 'Transcribe',
       callback: createCallback(
-        'vusic/transcription/scripts/infer.py',
+        'dawg/transcription/scripts/infer.py',
         (samplePath) => `Converting ${path.basename(samplePath)} to MIDI`,
       ),
     });

@@ -4,11 +4,11 @@ name: Release
 # https://github.com/actions/create-release/issues/14
 
 # FIXME Make file names consistent??
-# - "dist_electron/Vusic 0.1.1.AppImage"
+# - "dist_electron/DAWG 0.1.1.AppImage"
 # - "dist_electron/vusic_0.1.1_amd64.deb"
 # - "dist_electron/vusic_0.1.1.rpm"
-# - "dist_electron/Vusic-0.1.1.dmg"
-# - "dist_electron\\Vusic Setup 0.1.1.exe"
+# - "dist_electron/DAWG-0.1.1.dmg"
+# - "dist_electron\\DAWG Setup 0.1.1.exe"
 
 on:
   push:

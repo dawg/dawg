@@ -21,7 +21,7 @@ import { decodeItem } from '@/lib/io';
 
 const events = emitter<{ setOpenedFile: [] }>();
 
-// FIXME IF TWO instances of Vusic are opened at the same time
+// FIXME IF TWO instances of DAWG are opened at the same time
 // there will be an issue when writing to the fs because the
 // data is loaded on startup and written back at the end. Thus,
 // stuff can easily be overwritten
