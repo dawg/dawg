@@ -19,12 +19,16 @@ jobs:
   release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-
     steps:
+      # Removing "refs/tags/v"
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
           name: Release ${{ github.ref }}
+          body_path: changelogs/${{ steps.get_version.outputs.VERSION }}-CHANGELOG.txt
           tag_name: ${{ github.ref }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
