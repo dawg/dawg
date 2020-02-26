@@ -85,10 +85,10 @@ export const extension: Extension = {
       // And then we would only show this notification when the item in the cache is connected
       // Without this, we just get random MIDI devices that connect
       // this.$notify.success('MIDI Input Detected', {
-      //   detail: `${event.port.name} is now connected to Vusic.`,
+      //   detail: `${event.port.name} is now connected to DAWG.`,
       // });
       // notify.success('MIDI Input Detected', {
-      //   detail: `${event.port.name} is now connected to Vusic.`,
+      //   detail: `${event.port.name} is now connected to DAWG.`,
       // });
 
       input.addListener('noteon', 'all', onDidNoteOn);

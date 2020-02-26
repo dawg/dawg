@@ -15,13 +15,13 @@ export const extension = createExtension({
       {
         text: 'Report an Issue',
         callback: () => {
-          shell.openExternal('https://github.com/dawg/vusic/issues');
+          shell.openExternal('https://github.com/dawg/dawg/issues');
         },
       },
       {
         text: 'Trello Board',
         callback: () => {
-          shell.openExternal('https://trello.com/b/ZOLQJGSv/vusic-feature-requests');
+          shell.openExternal('https://trello.com/b/ZOLQJGSv/dawg-feature-requests');
         },
       },
       // FIXME add back null
