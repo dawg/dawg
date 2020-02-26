@@ -28,7 +28,7 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           name: Release ${{ github.ref }}
-          body_path: changelogs/${{ steps.get_version.outputs.VERSION }}-CHANGELOG.txt
+          body_path: changelogs/${{ steps.get_version.outputs.VERSION }}-CHANGELOG.md
           tag_name: ${{ github.ref }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
