@@ -144,8 +144,6 @@ const createSchedulable = <
     const row = ref(info.row);
 
     const copy = () => {
-      // tslint:disable-next-line:no-console
-      // console.log(`Copying ${o.type} element!`);
       return create(
         { duration: duration.value, time: time.value, row: row.value, offset: offset.value },
         idk,

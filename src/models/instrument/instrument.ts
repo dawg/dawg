@@ -2,7 +2,6 @@ import Tone from 'tone';
 import * as Audio from '@/lib/audio';
 import uuid from 'uuid';
 import * as t from '@/lib/io';
-import { disposeHelp } from '@/utils';
 import { BuildingBlock } from '@/models/block';
 
 export const InstrumentType = t.intersection([
@@ -116,9 +115,6 @@ export abstract class Instrument<T, V extends string> extends BuildingBlock {
 
   public dispose() {
     this.disconnect();
-    // disposeHelp(this.source);
-    disposeHelp(this.volume);
-    disposeHelp(this.pan);
   }
 
   /**

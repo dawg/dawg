@@ -3,7 +3,9 @@ import { Time, ContextTime } from '@/lib/audio/types';
 import { Source } from '@/lib/audio/source/source';
 import { context } from '@/lib/audio/context';
 import * as soundfonts from 'soundfont-player';
+import { getLogger } from '@/lib/log';
 
+const logger = getLogger('soundfont');
 
 // tslint:disable-next-line:no-empty-interface
 export interface SoundfontOptions {
@@ -19,8 +21,7 @@ export class Soundfont implements Source<SoundfontOptions> {
     try {
       return new Soundfont(soundfonts.instrument(context, name));
     } catch (e) {
-      // tslint:disable-next-line:no-console
-      console.warn(e.message);
+      logger.warn(e.message);
       return null;
     }
   }

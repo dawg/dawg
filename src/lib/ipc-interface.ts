@@ -1,19 +1,30 @@
-export interface ElectronMenuItem {
+import { MenuItemConstructorOptions } from 'electron';
+
+export interface MenuBarSections {
+  Application: '0_commands';
+  File: '0_newOpen' | '1_save' | '2_exportImport';
+  Edit: '0_undoRedo' | '1_cutCopyPaste';
+  View: '0_view';
+  Help: '0_links' | '1_tools';
+}
+
+// Can be used in either the menu bar or the context menu
+export type MenuItem = {
+  type: 'callback';
   label: string;
   accelerator?: string;
   uniqueEvent: string;
-}
+} | {
+  type: 'role'
+  label: string;
+  accelerator?: string;
+  role: MenuItemConstructorOptions['role'];
+};
 
-export interface ElectronMenuBarAction extends ElectronMenuItem {
-  menu: string;
-}
-
-export interface ElectronMenuBarDivider {
-  menu: string;
-  label: null;
-}
-
-export type ElectronMenuBarItem = ElectronMenuBarAction | ElectronMenuBarDivider;
+export type MenuBarItem<K extends keyof MenuBarSections> = MenuItem & {
+  menu: K;
+  section: MenuBarSections[K];
+};
 
 export interface ElectronMenuPosition {
   x: number;
@@ -21,7 +32,7 @@ export interface ElectronMenuPosition {
 }
 
 export interface ElectronMenuOptions {
-  items: Array<ElectronMenuItem | null>;
+  items: Array<MenuItem | null>;
   left?: boolean;
 }
 
@@ -29,9 +40,8 @@ export interface ElectronMenuOptions {
 // Honestly, I don't know why.
 // tslint:disable-next-line:interface-over-type-literal
 export type MainEvents = {
-  addToMenuBar: [ElectronMenuBarItem | ElectronMenuBarItem[]];
-  removeFromMenuBar: [ElectronMenuBarItem | ElectronMenuBarItem[]];
-  defineMenu: [{ menu: string, order: number }];
+  addToMenuBar: [MenuBarItem<keyof MenuBarSections>];
+  removeFromMenuBar: [MenuBarItem<keyof MenuBarSections>];
   showMenu: [ElectronMenuOptions];
 };
 

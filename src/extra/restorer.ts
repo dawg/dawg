@@ -37,6 +37,7 @@ export const extension = createExtension({
     sync(framework.ui.panelsCollapsed, context.workspace.panelsCollapsed);
 
     context.subscriptions.push(dawg.commands.registerCommand({
+      type: 'callback',
       text: 'Toggle Panels',
       shortcut: ['CmdOrCtrl', 'J'],
       callback: () => {
@@ -45,6 +46,7 @@ export const extension = createExtension({
     }));
 
     context.subscriptions.push(dawg.commands.registerCommand({
+      type: 'callback',
       text: 'Toggle Side Tabs',
       shortcut: ['CmdOrCtrl', 'B'],
       callback: () => {

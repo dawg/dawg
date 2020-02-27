@@ -1,6 +1,6 @@
 import { Ref, watch, ref, computed } from '@vue/composition-api';
 import { ScheduledElement, Sequence } from '@/models';
-import { addEventListeners, addEventListener } from '@/lib/events';
+import { addEventListeners } from '@/lib/events';
 import { Keys, Disposer, reverse } from '@/lib/std';
 import { calculateSimpleSnap, slice } from '@/utils';
 import { SchedulablePrototype } from '@/models/schedulable';

@@ -41,6 +41,7 @@ export default createComponent({
 
       if (props.value) {
         dispose = dawg.commands.registerShortcut({
+          type: 'callback',
           shortcut: ['Esc'],
           callback: () => {
             context.emit('input', false);

@@ -1,7 +1,7 @@
 import {
   ElectronMenuOptions,
   ElectronMenuPosition,
-  ElectronMenuItem,
+  MenuItem,
   MainEvents,
   RendererEvents,
 } from '@/lib/ipc-interface';
@@ -25,7 +25,7 @@ export interface MenuOptions {
 export const transformMenuOptionsAndSaveCallback = (opts: MenuOptions): ElectronMenuOptions => {
   return {
     ...opts,
-    items: opts.items.map((item): ElectronMenuItem | null => {
+    items: opts.items.map((item): MenuItem | null => {
       if (!item) {
         return item;
       }
@@ -37,6 +37,7 @@ export const transformMenuOptionsAndSaveCallback = (opts: MenuOptions): Electron
       };
 
       return {
+        type: 'callback',
         label: item.text,
         uniqueEvent,
         accelerator: item.shortcut ? item.shortcut.join('+') : '',
@@ -63,7 +64,9 @@ export const ipcSender = defaultIpcRenderer<RendererEvents, MainEvents>({
           return;
         }
 
-        delete callbacks[item.uniqueEvent];
+        if (item.type === 'callback') {
+          delete callbacks[item.uniqueEvent];
+        }
       });
     }, 5000);
   },

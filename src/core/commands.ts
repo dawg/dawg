@@ -1,6 +1,5 @@
 import * as framework from '@/lib/framework';
 import { palette } from '@/core/palette';
-import { menubar } from '@/core/menubar';
 import { Key } from '@/lib/std';
 import hotkeys from 'hotkeys-js';
 
@@ -71,7 +70,9 @@ const pushAndReturnDispose = (items: framework.Shortcut[], item: framework.Short
     }
   })).join('+') : undefined;
   if (shortcut) {
-    hotkeys(shortcut, item.callback);
+    if (item.type === 'callback') {
+      hotkeys(shortcut, item.callback);
+    }
   }
 
 
@@ -86,7 +87,9 @@ const pushAndReturnDispose = (items: framework.Shortcut[], item: framework.Short
       items.splice(i, 1);
 
       if (shortcut) {
-        hotkeys.unbind(shortcut, item.callback);
+        if (item.type === 'callback') {
+          hotkeys.unbind(shortcut, item.callback);
+        }
       }
     },
   };
@@ -109,7 +112,10 @@ export const commands = framework.manager.activate({
       },
     });
 
-    const openCommandPalette: framework.Command = {
+    const openCommandPalette = framework.defineMenuBarItem({
+      type: 'callback',
+      menu: 'View',
+      section: '0_view',
       text: 'Command Palette',
       shortcut: ['CmdOrCtrl', 'Shift', 'P'],
       callback: () => {
@@ -120,15 +126,16 @@ export const commands = framework.manager.activate({
 
         palette.selectFromItems(paletteItems, {
           onDidInput: (item) => {
-            item.callback();
+            if (item.type === 'callback') {
+              item.callback();
+            }
           },
         });
       },
-    };
+    });
 
     registerCommand(openCommandPalette);
-    const view = menubar.getMenu('View');
-    context.subscriptions.push(view.addItem(openCommandPalette));
+    context.subscriptions.push(framework.addToMenu(openCommandPalette));
 
     return {
       registerCommand,

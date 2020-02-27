@@ -1,43 +1,42 @@
-import { menubar } from '@/core/menubar';
 import { shell, remote } from 'electron';
-import { createExtension } from '@/lib/framework/extensions';
+import * as dawg from '@/dawg';
 
-export const extension = createExtension({
+export const extension = dawg.createExtension({
   id: 'dawg.help-inks',
   activate(context) {
-    const commands = [
-      {
-        text: 'Guide',
-        callback: () => {
-          shell.openExternal('https://dawg.github.io/guide');
-        },
+    const guide = dawg.menubar.defineMenuBarItem({
+      type: 'callback',
+      menu: 'Help',
+      section: '0_links',
+      text: 'Guide',
+      callback: () => {
+        shell.openExternal('https://dawg.github.io/guide');
       },
-      {
-        text: 'Report an Issue',
-        callback: () => {
-          shell.openExternal('https://github.com/dawg/dawg/issues');
-        },
-      },
-      {
-        text: 'Trello Board',
-        callback: () => {
-          shell.openExternal('https://trello.com/b/ZOLQJGSv/dawg-feature-requests');
-        },
-      },
-      // FIXME add back null
-      // null,
-      {
-        text: 'Open Developer Tools',
-        callback: () => {
-          const window = remote.getCurrentWindow();
-          window.webContents.openDevTools();
-        },
-      },
-    ];
+    });
 
-    const help = menubar.getMenu('Help');
-    commands.forEach((command) => {
-      context.subscriptions.push(help.addItem(command));
+    const reportIssue = dawg.menubar.defineMenuBarItem({
+      type: 'callback',
+      menu: 'Help',
+      section: '0_links',
+      text: 'Report an Issue',
+      callback: () => {
+        shell.openExternal('https://github.com/dawg/dawg/issues');
+      },
+    });
+
+    const devTools = dawg.menubar.defineMenuBarItem({
+      type: 'callback',
+      menu: 'Help',
+      section: '1_tools',
+      text: 'Open Developer Tools',
+      callback: () => {
+        const window = remote.getCurrentWindow();
+        window.webContents.openDevTools();
+      },
+    });
+
+    [guide, reportIssue, devTools].forEach((command) => {
+      context.subscriptions.push(dawg.menubar.addToMenu(command));
     });
   },
 });

@@ -1,6 +1,6 @@
 <template>
   <div 
-    class="track border-t border-default-lighten-2 flex items-center text-default bg-default py-2 px-3"
+    class="track border-t border-default-lighten-2 flex items-center text-default bg-default py-2 pl-3 pr-1"
   >
     <dot-button
       v-model="active"

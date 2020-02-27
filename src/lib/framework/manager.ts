@@ -18,6 +18,9 @@ import uuid from 'uuid';
 import { ref } from '@vue/composition-api';
 import { emitter } from '@/lib/events';
 import { decodeItem } from '@/lib/io';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('manager');
 
 const events = emitter<{ setOpenedFile: [] }>();
 
@@ -103,8 +106,7 @@ const getDataFromExtensions = (key: 'workspace' | 'global'): { [k: string]: Exte
       const encoded = type.encode(toEncode);
       data[extension.id] = encoded;
     } catch (e) {
-      // tslint:disable-next-line:no-console
-      console.warn('' + e);
+      logger.warn('' + e);
       // If there is an error, don't write anything to the fs
       // This will basically invalidate the cache (for that particular extension)
     }
@@ -116,13 +118,11 @@ const getDataFromExtensions = (key: 'workspace' | 'global'): { [k: string]: Exte
 const loadWorkspace = (projectId: string, file: string) => {
   const json = makeAndRead(file);
   if (!json[projectId]) {
-    // tslint:disable-next-line:no-console
-    console.info(`${projectId} does not exist in the project cache`);
+    logger.debug(`${projectId} does not exist in the project cache`);
     return {};
   }
 
   return json[projectId];
-  // const decoded = io.deserialize(projectStuff, Specific);
 };
 
 class Manager {
@@ -130,7 +130,10 @@ class Manager {
     const result = t.read(PastProjectsType, { path: PROJECT_PATH });
 
     if (result.type === 'error') {
-      notificationQueue.push(`Unable to load previously opened project information. Opening blank project instead.`);
+      logger.error(
+        `Unable to load previously opened project information. ` +
+        `Opening blank project instead. Error message:` + result.message,
+      );
     } else {
       pastProject = result.decoded;
     }
@@ -141,8 +144,7 @@ class Manager {
       try {
         projectContents = fs.readFileSync(toOpen).toString();
       } catch (e) {
-        // tslint:disable-next-line:no-console
-        console.error(`Unable to load project from ${toOpen}: ${e.message}`);
+        logger.error(`Unable to load project from ${toOpen}: ${e.message}`);
       }
     }
 
@@ -160,8 +162,7 @@ class Manager {
         parsedProject = JSON.parse(projectContents);
       }
     } catch (e) {
-      // tslint:disable-next-line:no-console
-      console.error(`Unable to parse project ${toOpen}: ${e.message}`);
+      logger.error(`Unable to parse project ${toOpen}: ${e.message}`);
     }
 
     let info: ProjectInfo | null = null;
@@ -174,8 +175,7 @@ class Manager {
           id: r.decoded.id,
         };
       } else {
-        // tslint:disable-next-line:no-console
-        console.error(`Unable to parse ID from project: ${toOpen}: ${r.message}`);
+        logger.error(`Unable to parse ID from project: ${toOpen}: ${r.message}`);
       }
     }
 
@@ -189,15 +189,13 @@ class Manager {
     try {
       global = makeAndRead(GLOBAL_PATH);
     } catch (e) {
-      // tslint:disable-next-line:no-console
-      console.error(`Unable to load workspace at ${GLOBAL_PATH}: ${e.message}`);
+      logger.error(`Unable to load workspace at ${GLOBAL_PATH}: ${e.message}`);
     }
 
     try {
       workspace = loadWorkspace(info.id, WORKSPACE_PATH);
     } catch (e) {
-      // tslint:disable-next-line:no-console
-      console.error(`Unable to load workspace at ${WORKSPACE_PATH}: ${e.message}`);
+      logger.error(`Unable to load workspace at ${WORKSPACE_PATH}: ${e.message}`);
     }
 
     return new Manager(info, parsedProject, global, workspace);
@@ -216,10 +214,6 @@ export type ProjectInfo =
   { id: string, path: null };
 
 const projectManager = Manager.fromFileSystem();
-
-// FIXME Add interface with message, description, showUser
-// Also, write to file
-const notificationQueue: string[] = [];
 
 export const manager = {
   getOpenedFile() {
@@ -273,10 +267,7 @@ export const manager = {
         try {
           await e.extension.deactivate(e.context);
         } catch (error) {
-          // tslint:disable-next-line:no-console
-          notificationQueue.push(`Unable to deactivate ${e.extension.id}: ${error}`);
-          // tslint:disable-next-line:no-console
-          console.error(`Unable to deactivate ${e.extension.id}: ${error}`);
+          logger.error(`Unable to deactivate ${e.extension.id}: ${error}`);
         }
       }
 
@@ -284,10 +275,7 @@ export const manager = {
         try {
           subscription.dispose();
         } catch (error) {
-          // tslint:disable-next-line:no-console
-          notificationQueue.push(`Unable to deactivate subscription for ${e.extension.id}: ${error}`);
-          // tslint:disable-next-line:no-console
-          console.error(`Unable to deactivate subscription for ${e.extension.id}: ${error}`);
+          logger.error(`Unable to deactivate subscription for ${e.extension.id}: ${error}`);
         }
       });
     }
@@ -303,8 +291,7 @@ export const manager = {
   activate<W extends ExtensionProps, G extends ExtensionProps, V>(
     extension: Extension<W, G, V>,
   ): V {
-    // tslint:disable-next-line:no-console
-    console.info('Activating ' + extension.id);
+    logger.debug('Activating ' + extension.id);
     resolved[extension.id] = false;
     manager.activating.push(extension);
 
@@ -324,10 +311,7 @@ export const manager = {
       const result = t.decodeItem(type, o);
       let decoded: t.TypeOf<typeof type>;
       if (result.type === 'error') {
-        notificationQueue.push(result.message);
-
-        // tslint:disable-next-line:no-console
-        console.error(result.message);
+        logger.error(result.message);
         decoded = {};
       } else {
         decoded = result.decoded;
@@ -396,7 +380,6 @@ export const manager = {
 
     return extensions[extension.id] as ReturnType<T['activate']>;
   },
-  notificationQueue,
   activating: [] as Array<Extension<any, any, any>>,
   settings,
 };

@@ -115,6 +115,9 @@ import ActivityBar from '@/lib/framework/ActivityBar.vue';
 import * as framework from '@/lib/framework';
 import { sortOrdered } from '@/lib/std';
 import { createComponent, computed, ref, onMounted, onUnmounted } from '@vue/composition-api';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('App');
 
 export default createComponent({
   components: {
@@ -167,11 +170,13 @@ export default createComponent({
     // I don't remove this listner because the window is closing anyway
     // I'm not even sure onExit would be called if we removed it in the destroy method
     window.addEventListener('beforeunload', framework.manager.dispose);
+
     // FIXME
     // automation.$on('automate', this.addAutomationClip);
     setTimeout(async () => {
       // Log this for debugging purposes
       (window as any).framework = framework;
+      logger.info('Startup sequence complete...');
       loaded.value = true;
     }, 1250);
     onMounted(() => {

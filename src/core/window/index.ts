@@ -1,7 +1,6 @@
 import * as framework from '@/lib/framework';
 import { remote } from 'electron';
 import { commands } from '@/core/commands';
-import { menubar } from '@/core/menubar';
 
 export const window = framework.manager.activate({
   id: 'dawg.window',
@@ -17,20 +16,23 @@ export const window = framework.manager.activate({
     };
 
     context.subscriptions.push(commands.registerCommand({
+      type: 'callback',
       text: 'Close Application',
       shortcut: ['CmdOrCtrl', 'W'],
       callback: close,
     }));
 
-    const reloadCommand: framework.Command = {
+    const reloadCommand = framework.defineMenuBarItem({
+      type: 'callback',
+      menu: 'Application',
+      section: '0_commands',
       text: 'Reload',
       shortcut: ['CmdOrCtrl', 'R'],
       callback: reload,
-    };
+    });
 
-    const view = menubar.getMenu('View');
     context.subscriptions.push(commands.registerCommand(reloadCommand));
-    context.subscriptions.push(view.addItem(reloadCommand));
+    context.subscriptions.push(framework.addToMenu(reloadCommand));
 
     return {
       reload,

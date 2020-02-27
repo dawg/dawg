@@ -10,6 +10,7 @@ export const extension = createExtension({
   id: 'dawg.mixer',
   activate(context) {
     context.subscriptions.push(commands.registerCommand({
+      type: 'callback',
       text: 'Open Mixer',
       shortcut: ['CmdOrCtrl', 'M'],
       callback: () => {

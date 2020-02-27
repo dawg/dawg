@@ -1,6 +1,7 @@
 import { ref } from '@vue/composition-api';
 import { StrictEventEmitter } from '@/lib/events';
 import { addEventListener } from '@/lib/events';
+import { getLogger } from '@/lib/log';
 
 export type Direction = 'horizontal' | 'vertical';
 
@@ -27,6 +28,8 @@ export interface SectionOpts {
   mode?: SectionMode;
   collapsed?: boolean;
 }
+
+const logger = getLogger('split');
 
 export class Section {
   public static DEBUG = false;
@@ -172,12 +175,11 @@ export class Section {
       };
     }
 
-    // tslint:disable
-    Section.DEBUG && console.log(
+    // tslint:disable-next-line:no-unused-expression
+    Section.DEBUG && logger.debug(
       `[INIT${this.direction ? ', ' + this.direction.padEnd(10) : ''}] ${this.name ? this.name.padEnd(5) : 'None '}| ` +
       `height -> ${sizes.height.toString().padEnd(4)}, width -> ${sizes.width.toString().padEnd(4)}`,
     );
-    // tslint:enable
 
     this.set('height', sizes.height, false);
     this.set('width', sizes.width, false);
@@ -236,12 +238,11 @@ export class Section {
     if (this.direction !== direction) {
       this.children.forEach((child) => {
         const newSize = this[attr];
-        // tslint:disable
-        Section.DEBUG && console.log(
+        // tslint:disable-next-line:no-unused-expression
+        Section.DEBUG && logger.debug(
           `[PROP, ${attr}] ${child.name} ` +
           `from ${child[attr].toString().padEnd(3)} -> ${newSize.toString().padEnd(3)}`,
         );
-        // tslint:enable
 
         child.set(attr, newSize);
       });
@@ -379,12 +380,11 @@ export class Section {
         }
       }
 
-      // tslint:disable
-      Section.DEBUG && console.log(
+      // tslint:disable-next-line:no-unused-expression
+      Section.DEBUG && logger.debug(
         `[${mode.padEnd(6)}][${attr}] ${section.name} ` +
         `from ${section[attr].toString().padEnd(3)} -> ${newSize.toString().padEnd(3)}`,
       );
-      // tslint:enable
 
       const diff = newSize - section[attr];
       section.set(attr, newSize);
