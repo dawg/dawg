@@ -248,7 +248,6 @@ export const extension = createExtension({
     }
 
     const open = dawg.menubar.defineMenuBarItem({
-      type: 'callback',
       menu: 'File',
       section: '0_newOpen',
       text: 'Open From Backup',
@@ -259,7 +258,6 @@ export const extension = createExtension({
     context.subscriptions.push(dawg.menubar.addToMenu(open));
 
     context.subscriptions.push(dawg.commands.registerCommand({
-      type: 'callback',
       text: 'Delete Backup',
       callback: () => backupAction('delete'),
     }));

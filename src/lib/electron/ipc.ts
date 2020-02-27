@@ -32,10 +32,11 @@ defaultIpcMain<MainEvents, RendererEvents>({
       };
 
       return {
+        ...opts,
         label: item.label,
         accelerator: item.accelerator,
+        // This does not work on MacOS. See comment below!
         registerAccelerator: false,
-        ...opts,
       };
     });
 
@@ -144,10 +145,12 @@ const renderMenu = () => {
           label: item.label,
           accelerator: item.accelerator,
           role: item.type === 'role' ? item.role : undefined,
-          click: item.type === 'callback' ? item.callback : undefined,
-          // The renderer process will be handling this
-          // registerAccelerator does not work on MacOS BTW
-          // See https://github.com/electron/electron/issues/18295
+          click: () => {
+            if (item.type === 'callback') {
+              item.callback();
+            }
+          },
+
           registerAccelerator: false,
         });
       });
@@ -158,12 +161,6 @@ const renderMenu = () => {
       submenu,
     };
   });
-
-  // The first menu item is associated with the application
-  // Just look at the menu and you will see what I mean
-  // if (process.platform === 'darwin') {
-  //   template.unshift({ label: '' });
-  // }
 
   // Set the application menu every time.
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));

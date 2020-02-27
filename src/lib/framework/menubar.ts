@@ -2,25 +2,17 @@ import { Key } from '@/lib/std';
 import { uniqueId } from '@/lib/std';
 import { menuBarCallbacks, ipcSender } from '@/lib/framework/ipc';
 import { MenuBarSections, MenuBarItem } from '@/lib/ipc-interface';
-import { MenuItemConstructorOptions } from 'electron';
 
-export interface CallbackShortcut {
-  type: 'callback';
-  shortcut?: Key[];
+export interface Shortcut {
+  shortcut: Key[];
   callback: () => void;
 }
 
-export interface RoleShortcut {
-  type: 'role';
+export interface Command  {
   shortcut?: Key[];
-  role: MenuItemConstructorOptions['role'];
-}
-
-export type Shortcut = CallbackShortcut | RoleShortcut;
-
-export type Command = Shortcut & {
+  callback: () => void;
   text: string;
-};
+}
 
 export type MenuBarItemOptions<K extends keyof MenuBarSections> = Command & {
   menu: K;
@@ -35,12 +27,6 @@ export const addToMenu = <K extends keyof MenuBarSections>(item: MenuBarItemOpti
   let accelerator: string | undefined;
   if (item.shortcut) {
     accelerator = item.shortcut.join('+');
-  }
-
-  if (item.type === 'role') {
-    return {
-      dispose: () => ({}),
-    };
   }
 
   const uniqueEvent = uniqueId();

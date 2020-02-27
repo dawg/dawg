@@ -18,7 +18,7 @@
           ></div>
           <div class="flex-grow"></div>
           <dg-button
-            v-if="notifications.length > 1 && i === 0"
+            v-if="moreThanOne && i === firstShowIndex"
             type="text"
             :class="`fg-${item.type}-darken-3`"
             @click="destroyAll"
@@ -50,7 +50,7 @@
 import { reverse, Disposer } from '@/lib/std';
 import * as framework from '@/lib/framework';
 import { Marked } from 'marked-ts';
-import { createComponent, onMounted, onUnmounted } from '@vue/composition-api';
+import { createComponent, onMounted, onUnmounted, computed } from '@vue/composition-api';
 
 const ICON_LOOKUP = {
   info: 'info-circle',
@@ -118,7 +118,7 @@ export default createComponent({
           setTimeout(() => {
             const i = notifications.indexOf(item);
             destroy(i);
-          }, 5000); // 5 seconds is a lot but it's OK, we're just being safe
+          }, 240); // This 240 must much the animation time below
         }, duration);
       }
 
@@ -141,11 +141,35 @@ export default createComponent({
       }
     }
 
+    const moreThanOne = computed(() => {
+      let count = 0;
+      for (const notif of notifications) {
+        if (notif.show) { count++; }
+        if (count >= 2) {
+          return true;
+        }
+      }
+
+      return false;
+    });
+
+    const firstShowIndex = computed(() => {
+      for (const [i, notif] of notifications.entries()) {
+        if (notif.show) {
+          return i;
+        }
+      }
+
+      return -1;
+    });
+
     return {
       notifications,
       destroyAll,
       parse,
       destroy,
+      moreThanOne,
+      firstShowIndex,
     };
   },
 });

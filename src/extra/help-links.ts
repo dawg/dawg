@@ -5,7 +5,6 @@ export const extension = dawg.createExtension({
   id: 'dawg.help-inks',
   activate(context) {
     const guide = dawg.menubar.defineMenuBarItem({
-      type: 'callback',
       menu: 'Help',
       section: '0_links',
       text: 'Guide',
@@ -15,7 +14,6 @@ export const extension = dawg.createExtension({
     });
 
     const reportIssue = dawg.menubar.defineMenuBarItem({
-      type: 'callback',
       menu: 'Help',
       section: '0_links',
       text: 'Report an Issue',
@@ -25,7 +23,6 @@ export const extension = dawg.createExtension({
     });
 
     const devTools = dawg.menubar.defineMenuBarItem({
-      type: 'callback',
       menu: 'Help',
       section: '1_tools',
       text: 'Open Developer Tools',

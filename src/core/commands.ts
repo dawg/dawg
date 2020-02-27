@@ -3,6 +3,15 @@ import { palette } from '@/core/palette';
 import { Key } from '@/lib/std';
 import hotkeys from 'hotkeys-js';
 
+type Shortcut = framework.Shortcut;
+
+// See comment below addressing this flag
+// Basically, set this flag to false when adding a command to the menubar too
+// Defaults to true
+interface Command extends framework.Command {
+  registerAccelerator?: boolean;
+}
+
 export type HotKey = string | { [p in framework.Platform]: string };
 const hotKeysLookup: { [K in Key]: HotKey } = {
   Shift: 'shift',
@@ -56,11 +65,23 @@ const hotKeysLookup: { [K in Key]: HotKey } = {
   Down: 'down',
 };
 
-const cmmds: framework.Command[] = [];
-const shorcuts: framework.Shortcut[] = [];
+const cmmds: Command[] = [];
+const shorcuts: Shortcut[] = [];
 
-const pushAndReturnDispose = (items: framework.Shortcut[], item: framework.Shortcut) => {
+// Why do we need the registerAccelerator flag?
+// Because it's currently IMPOSSIBLE to distinguish between a native click and an accelerator in MacOS
+// Specifically, we can't differentiate a click on a menu item and an accelerator
+// That means we have to support it in the renderer side
+// Any command registered in the menubar and here must set registerAccelerator -> false
+// More information in the following link:
+// See https://github.com/electron/electron/issues/18295
+// If this is ever fixed, then we can remove this flag here and always set registerAccelerator -> false
+// in the background process ie. in the MenuItemConstructorOptions objects
+const pushAndReturnDispose = <T extends Shortcut | Command>(
+  items: T[], item: T, { registerAccelerator }: { registerAccelerator: boolean },
+) => {
   items.push(item);
+
   const shortcut = item.shortcut ? item.shortcut.map(((value): string => {
     const hotKey = hotKeysLookup[value];
     if (typeof hotKey === 'string') {
@@ -69,10 +90,13 @@ const pushAndReturnDispose = (items: framework.Shortcut[], item: framework.Short
       return hotKey[framework.platform];
     }
   })).join('+') : undefined;
-  if (shortcut) {
-    if (item.type === 'callback') {
-      hotkeys(shortcut, item.callback);
-    }
+
+  if (registerAccelerator && shortcut) {
+    hotkeys(shortcut, () => {
+      // tslint:disable-next-line:no-console
+      console.log('HELLO');
+      item.callback();
+    });
   }
 
 
@@ -86,10 +110,8 @@ const pushAndReturnDispose = (items: framework.Shortcut[], item: framework.Short
       // Remove command from the list
       items.splice(i, 1);
 
-      if (shortcut) {
-        if (item.type === 'callback') {
-          hotkeys.unbind(shortcut, item.callback);
-        }
+      if (registerAccelerator && shortcut) {
+        hotkeys.unbind(shortcut, item.callback);
       }
     },
   };
@@ -98,12 +120,14 @@ const pushAndReturnDispose = (items: framework.Shortcut[], item: framework.Short
 export const commands = framework.manager.activate({
   id: 'dawg.commands',
   activate(context) {
-    const registerCommand = (command: framework.Command) => {
-      return pushAndReturnDispose(cmmds, command);
+    const registerCommand = (command: Command) => {
+      return pushAndReturnDispose(
+        cmmds, command, { registerAccelerator: command.registerAccelerator ?? false },
+      );
     };
 
-    const registerShortcut = (shortcut: framework.Shortcut) => {
-      return pushAndReturnDispose(shorcuts, shortcut);
+    const registerShortcut = (shortcut: Shortcut) => {
+      return pushAndReturnDispose(shorcuts, shortcut, { registerAccelerator: true });
     };
 
     context.subscriptions.push({
@@ -113,7 +137,6 @@ export const commands = framework.manager.activate({
     });
 
     const openCommandPalette = framework.defineMenuBarItem({
-      type: 'callback',
       menu: 'View',
       section: '0_view',
       text: 'Command Palette',
@@ -126,15 +149,13 @@ export const commands = framework.manager.activate({
 
         palette.selectFromItems(paletteItems, {
           onDidInput: (item) => {
-            if (item.type === 'callback') {
-              item.callback();
-            }
+            item.callback();
           },
         });
       },
     });
 
-    registerCommand(openCommandPalette);
+    context.subscriptions.push(registerCommand({ ...openCommandPalette, registerAccelerator: false }));
     context.subscriptions.push(framework.addToMenu(openCommandPalette));
 
     return {

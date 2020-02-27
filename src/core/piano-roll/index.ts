@@ -29,7 +29,6 @@ export const pianoRoll = framework.manager.activate({
     const tool: SequencerTool | undefined = context.workspace.tool.value;
 
     context.subscriptions.push(commands.registerCommand({
-      type: 'callback',
       text: 'Open Piano Roll',
       shortcut: ['CmdOrCtrl', 'P'],
       callback: () => {

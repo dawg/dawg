@@ -12,7 +12,6 @@ import { commands } from '@/core/commands';
 import { computed, ref, watch, Ref } from '@vue/composition-api';
 import { makeLookup, range, chain } from '@/lib/std';
 import { findUniqueName } from '@/utils';
-import { log } from '@/core/log';
 import { addEventListener, emitter } from '@/lib/events';
 import {
   Playlist,
@@ -47,7 +46,7 @@ import Tone from 'tone';
 import * as history from '@/core/project/history';
 import { getLogger } from '@/lib/log';
 
-const logger = getLogger('project');
+const logger = getLogger('project', { level: 'debug' });
 
 const DG = 'dg';
 const FILTERS = [{ name: 'DAWG Files', extensions: [DG] }];
@@ -323,9 +322,8 @@ const createApi = () => {
   }
 
   async function saveProject(opts: { forceDialog?: boolean }) {
-    const p = await prj;
-
     let projectPath = framework.manager.getOpenedFile();
+
     if (!projectPath || opts.forceDialog) {
       const saveDialogReturn = await remote.dialog.showSaveDialog(remote.getCurrentWindow(), {});
       projectPath = saveDialogReturn.filePath || null;
@@ -768,12 +766,12 @@ const extension = createExtension({
     }));
 
     const save = framework.defineMenuBarItem({
-      type: 'callback',
       menu: 'File',
       section: '1_save',
       text: 'Save',
       shortcut: ['CmdOrCtrl', 'S'],
       callback: async () => {
+        logger.debug('"Save" initiated!');
         await api.saveProject({
           forceDialog: false,
         });
@@ -781,12 +779,12 @@ const extension = createExtension({
     });
 
     const saveAs = framework.defineMenuBarItem({
-      type: 'callback',
       menu: 'File',
       section: '1_save',
       text: 'Save As',
       shortcut: ['CmdOrCtrl', 'Shift', 'S'],
       callback: async () => {
+        logger.debug('"Save As" initiated!');
         await api.saveProject({
           forceDialog: true,
         });
@@ -794,7 +792,6 @@ const extension = createExtension({
     });
 
     const open = framework.defineMenuBarItem({
-      type: 'callback',
       menu: 'File',
       section: '0_newOpen',
       text: 'Open',
@@ -820,7 +817,6 @@ const extension = createExtension({
     });
 
     const newProject = framework.defineMenuBarItem({
-      type: 'callback',
       menu: 'File',
       section: '0_newOpen',
       shortcut: ['CmdOrCtrl', 'N'],
@@ -834,7 +830,6 @@ const extension = createExtension({
     });
 
     const undo = framework.defineMenuBarItem({
-      type: 'callback',
       menu: 'Edit',
       section: '0_undoRedo',
       shortcut: ['CmdOrCtrl', 'Z'],
@@ -845,7 +840,6 @@ const extension = createExtension({
     });
 
     const redo = framework.defineMenuBarItem({
-      type: 'callback',
       menu: 'Edit',
       section: '0_undoRedo',
       shortcut: ['CmdOrCtrl', 'Shift', 'Z'],
@@ -856,12 +850,12 @@ const extension = createExtension({
     });
 
     [save, saveAs, open, newProject].map((command) => {
-      context.subscriptions.push(commands.registerCommand(command));
+      context.subscriptions.push(commands.registerCommand({ ...command, registerAccelerator: false }));
       context.subscriptions.push(framework.addToMenu(command));
     });
 
     ([undo, redo]).map((command) => {
-      context.subscriptions.push(commands.registerCommand(command));
+      context.subscriptions.push(commands.registerCommand({ ...command, registerAccelerator: false }));
       context.subscriptions.push(framework.addToMenu(command));
     });
 

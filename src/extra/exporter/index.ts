@@ -36,7 +36,6 @@ export const extension = createExtension({
     document.body.appendChild(a);
     a.style.display = 'none';
     const command = dawg.menubar.defineMenuBarItem({
-      type: 'callback',
       menu: 'File',
       section: '2_exportImport',
       text: 'Export',

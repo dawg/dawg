@@ -7,6 +7,9 @@ import {
 } from '@/lib/ipc-interface';
 import { defaultIpcRenderer } from '@/lib/ipc';
 import { uniqueId, Key } from '@/lib/std';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('ipc', { level: 'debug' });
 
 export interface Command<T extends any[]> {
   text: string;
@@ -72,10 +75,12 @@ export const ipcSender = defaultIpcRenderer<RendererEvents, MainEvents>({
   },
   menuBarCallback: (_, uniqueEvent) => {
     const callback = menuBarCallbacks[uniqueEvent];
+    logger.debug('MenuBar callback initiated: ' + uniqueEvent);
     callback();
   },
   menuCallback: (_, uniqueEvent) => {
     const { callback, position } = callbacks[uniqueEvent];
+    logger.debug('Menu callback initiated: ' + uniqueEvent);
     callback(position);
   },
 });
