@@ -1,29 +1,28 @@
 <template>
-  <div class="notifications right-0 top-0">
+  <div class="fixed z-50 right-0 top-0">
     <div
       v-for="(item, i) in notifications"
-      class="notification"
+      class="notification flex rounded-sm overflow-hidden text-xs my-2 mx-2"
       :class="{ [`fg-${item.type}-darken-3`]: true, remove: !item.show }"
       :key="item.id"
     >
-      <div class="left icon" :class="`bg-${item.type}`">
-        <dg-fa-icon :icon="item.icon"></dg-fa-icon>
+      <div class="left pt-2 flex flex-col items-center" :class="`bg-${item.type}`">
+        <dg-fa-icon :icon="item.icon" style="color: rgba(255, 255, 255, 0.85)"></dg-fa-icon>
       </div>
-      <div :class="`bg-${item.type}-lighten-4`" class="notification-body right">
-        <div style="display: flex">
+      <div :class="`bg-${item.type}-lighten-4`" class="w-full p-2 right">
+        <div class="flex h-6">
           <div
             v-if="item.title"
-            class="notification-title"
+            class="font-bold"
             v-html="item.title"
           ></div>
           <div class="flex-grow"></div>
           <dg-button
             v-if="notifications.length > 1 && i === 0"
             type="text"
-            class="close-all"
             :class="`fg-${item.type}-darken-3`"
             @click="destroyAll"
-            style="margin-top: -2px"
+            style="margin-top: -6px; background-color: transparent!important"
           >
             Close All
           </dg-button>
@@ -31,9 +30,17 @@
         </div>
         <div
           v-if="item.text"
-          class="notification-content"
+          class="notification-content border-warning border-t py-2 overflow-y-scroll"
           v-html="parse(item.text)"
         ></div>
+        <!-- The type error is wrong! We use a v-if -->
+        <dg-button
+          v-if="item.action"
+          :level="item.type"
+          @click="item.action.callback"
+        >
+          {{ item.action.label }}
+        </dg-button>
       </div>
     </div>
   </div>
@@ -61,6 +68,7 @@ interface Notification {
   text?: string;
   title: string;
   show: boolean;
+  action?: framework.notify.NotificationAction;
 }
 
 export default createComponent({
@@ -101,6 +109,7 @@ export default createComponent({
         icon: ICON_LOOKUP[type],
         type,
         show: true,
+        action: params.action,
       };
 
       if (duration !== Infinity && duration >= 0) {
@@ -162,24 +171,7 @@ $max-height: 500px;
   100% {  opacity: 0; max-height: 0;           transform: scale(.8); }
 }
 
-.notifications {
-  display: block;
-  position: fixed;
-  z-index: 5000;
-}
-
 .notification {
-  display: block;
-  overflow: hidden;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  box-sizing: border-box;
-  text-align: left;
-  font-size: 12px;
-  margin: 2px 10px;
-  border-radius: 3px;
-  overflow: hidden;
   width: $width;
   animation: notification-show .25s cubic-bezier(0.175, 0.885, 0.32, 1.27499);
 
@@ -190,40 +182,15 @@ $max-height: 500px;
   }
 }
 
-.notification-title {
-  padding: 5px;
-  font-weight: bold;
-}
-
-.icon {
-  padding: 5px;
-  padding-top: 10px;
-  color: rgba(255,255,255,0.85);
-}
-
-.notification-body {
-  width: 100%;
-  padding: 5px;
-}
-
 .notification-content {
-  border-top: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 5px;
   max-height: 150px;
-  overflow-y: scroll;
 }
 
-.close-all {
-  background-color: transparent!important;
-  margin: 4px;
-}
-
-$width: 26px;
 .left {
-  width: $width;
+  width: $icon-size;
 }
 
 .right {
-  width: calc(100% - #{$width});
+  width: calc(100% - #{$icon-size});
 }
 </style>

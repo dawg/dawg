@@ -97,6 +97,7 @@ export const controls = framework.manager.activate({
       if (!transport.value) {
         dawg.notify.warning('Please select a Pattern.', {
           detail: 'Please create and select a `Pattern` first or switch the `Playlist` context.',
+          action: { label: 'Open Playlist Tab', callback: () => patternsExtension.openPatternsTab() },
         });
         return;
       }
