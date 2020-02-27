@@ -516,7 +516,6 @@ export const createGrid = <T extends Element>(
     onUnmounted: dispose,
     dispose,
     add: (e: MouseEvent) => {
-      // TODO test backup
       return addElement(e, opts.createElement.value ? opts.createElement.value.copy() as T : undefined);
     },
     mousedown,

@@ -48,10 +48,6 @@ function createWindow() {
   win.on('closed', () => {
     win = null;
   });
-
-  win.on('page-title-updated', (e) => {
-    e.preventDefault();
-  });
 }
 
 menu({ showInspectElement: true });

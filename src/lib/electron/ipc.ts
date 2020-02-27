@@ -55,11 +55,6 @@ defaultIpcMain<MainEvents, RendererEvents>({
           event.sender.send('menuBarCallback', item.uniqueEvent);
         },
         accelerator: item.accelerator,
-        // The renderer process will be handling this
-        // registerAccelerator does not work on MacOS BTW
-        // See https://github.com/electron/electron/issues/18295
-        // TODO
-        // registerAccelerator: false,
       });
     } else {
       untypedMenu[item.menu][item.section].push({

@@ -32,8 +32,6 @@ const getLogger = (base?: string): Logger => {
   };
 };
 
-// TODO
-
 export const log = framework.manager.activate({
   id: 'dawg.log',
   activate() {
