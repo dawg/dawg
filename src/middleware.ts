@@ -8,7 +8,9 @@ import Update from '@/lib/update';
 import DragNDrop from '@/lib/dragndrop';
 import Split from '@/lib/split';
 import Essentials from '@/lib/essentials';
+import { getLogger } from '@/lib/log';
 
+const logger = getLogger('middleware');
 
 const middleware = () => {
   // This imports all .vue files in the components folder
@@ -66,8 +68,7 @@ const middleware = () => {
     }
 
     if (!extensionModule.extension) {
-      // tslint:disable-next-line:no-console
-      console.error(`${fileNameOrFolderName} does not export "extension"`);
+      logger.error(`${fileNameOrFolderName} does not export "extension"`);
       return;
     }
 

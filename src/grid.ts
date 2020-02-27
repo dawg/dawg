@@ -1,6 +1,6 @@
 import { Ref, watch, ref, computed } from '@vue/composition-api';
 import { ScheduledElement, Sequence } from '@/models';
-import { addEventListeners, addEventListener } from '@/lib/events';
+import { addEventListeners } from '@/lib/events';
 import { Keys, Disposer, reverse } from '@/lib/std';
 import { calculateSimpleSnap, slice } from '@/utils';
 import { SchedulablePrototype } from '@/models/schedulable';
@@ -516,7 +516,6 @@ export const createGrid = <T extends Element>(
     onUnmounted: dispose,
     dispose,
     add: (e: MouseEvent) => {
-      // TODO test backup
       return addElement(e, opts.createElement.value ? opts.createElement.value.copy() as T : undefined);
     },
     mousedown,

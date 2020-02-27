@@ -102,6 +102,7 @@ const extension = createExtension({
     insertThemes();
 
     const disposable = commands.registerCommand({
+      type: 'callback',
       text: 'Change Theme',
       callback: () => {
         const currentThemeName = context.workspace.theme.value;

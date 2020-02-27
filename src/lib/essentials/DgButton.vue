@@ -1,6 +1,6 @@
 <template>
   <button 
-    class="font-bold py-1 px-3 rounded text-primary outline-none focus:outline-none"
+    class="py-1 px-3 rounded text-primary outline-none focus:outline-none"
     :class="classes"
     v-on="$listeners"
   >
@@ -17,6 +17,7 @@ export default createComponent({
   name: 'DgButton',
   props: {
     type: { type: String as () => 'text' | 'outline' | 'default', default: literal('default') },
+    level: { type: String, default: 'primary' },
   },
   setup(props) {
     return {
@@ -24,19 +25,19 @@ export default createComponent({
         if (props.type === 'outline') {
           return [
             'border ',
-            'border-primary-darken-4',
-            'focus:border-primary-darken-2',
-            'active:border-primary',
+            `border-${props.level}-darken-4`,
+            `focus:border-${props.level}-darken-2`,
+            `active:border-${props.level}`,
             'bg-default-lighten-1',
             'hover:bg-default-lighten-2',
           ];
         } else if (props.type === 'default') {
           return [
-            'bg-primary',
-            'text-primary',
-            'hover:bg-primary-lighten-1',
-            'focus:bg-primary-lighten-1',
-            'active:bg-primary-lighten-2',
+            `bg-${props.level}`,
+            `text-${props.level}`,
+            `hover:bg-${props.level}-lighten-1`,
+            `focus:bg-${props.level}-lighten-1`,
+            `active:bg-${props.level}-lighten-2`,
           ];
         } else if (props.type === 'text') {
           return [

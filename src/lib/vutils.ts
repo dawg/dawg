@@ -7,6 +7,9 @@ import throttle from 'lodash.throttle';
 import { ref, Ref } from '@vue/composition-api';
 import Vue from 'vue';
 import Component from 'vue-class-component';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('vutils');
 
 export const update = <Props, K extends keyof Props, V extends Props[K]>(
   _: Props, context: { emit: (event: string, value: V) => void }, key: K, value: V,
@@ -60,8 +63,7 @@ export class ResponsiveMixin extends Vue {
       if (this.$el instanceof Element) {
         observer.observe(this.$el);
       } else {
-        // tslint:disable-next-line:no-console
-        console.warn('Not adding resize watcher');
+        logger.warn('Not adding resize watcher');
       }
     });
   }
@@ -91,11 +93,9 @@ export const Nullable = <V, T extends new() => V>(o: T) => {
       const valid = typeof prop === o.name.toLowerCase() || prop === null;
       if (!valid) {
         if (prop === undefined) {
-          // tslint:disable-next-line:no-console
-          console.warn('prop cannot be undefined');
+          logger.warn('prop cannot be undefined');
         } else {
-          // tslint:disable-next-line:no-console
-          console.warn(`prop should not be of type ${typeof prop}`);
+          logger.warn(`prop should not be of type ${typeof prop}`);
         }
       }
       return valid;

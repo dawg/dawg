@@ -35,7 +35,10 @@ export const extension = createExtension({
     const a = document.createElement('a');
     document.body.appendChild(a);
     a.style.display = 'none';
-    const command = {
+    const command = dawg.menubar.defineMenuBarItem({
+      type: 'callback',
+      menu: 'File',
+      section: '2_exportImport',
       text: 'Export',
       callback: async () => {
         const record = (filePath: string) => {
@@ -106,11 +109,9 @@ export const extension = createExtension({
 
         record(path.filePath);
       },
-    };
+    });
 
     context.subscriptions.push(dawg.commands.registerCommand(command));
-
-    const file = dawg.menubar.getMenu('File');
-    context.subscriptions.push(file.addItem(command));
+    context.subscriptions.push(dawg.menubar.addToMenu(command));
   },
 });

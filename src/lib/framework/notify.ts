@@ -8,6 +8,12 @@ export interface NotificationConfig {
   detail?: string;
   duration?: number;
   dismissible?: boolean;
+  action?: NotificationAction;
+}
+
+export interface NotificationAction {
+  label: string;
+  callback: () => void;
 }
 
 export interface Notification {

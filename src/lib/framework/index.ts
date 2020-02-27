@@ -7,7 +7,6 @@ export * from '@/lib/framework/constants';
 export * from '@/lib/framework/platform';
 export * from '@/lib/framework/menubar';
 
-
 import * as notify from '@/lib/framework/notify';
 export {
   notify,

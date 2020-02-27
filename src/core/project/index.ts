@@ -9,7 +9,6 @@ import { loadBufferSync } from '@/lib/wav';
 import * as framework from '@/lib/framework';
 import { notify } from '@/core/notify';
 import { commands } from '@/core/commands';
-import { menubar } from '@/core/menubar';
 import { computed, ref, watch, Ref } from '@vue/composition-api';
 import { makeLookup, range, chain } from '@/lib/std';
 import { findUniqueName } from '@/utils';
@@ -19,14 +18,11 @@ import {
   Playlist,
   Pattern,
   Channel,
-  ScheduledSample,
   Sample,
   Soundfont,
   Synth,
   Track,
   AutomationClip,
-  ScheduledAutomation,
-  ScheduledPattern,
   Score,
   Effect,
   Automatable,
@@ -42,15 +38,16 @@ import {
   EffectName,
   AutomationType,
   AnyEffect,
-  PlaylistElements,
-  createNotePrototype,
   createAutomationPrototype,
   createPatternPrototype,
   createSamplePrototype,
   ScheduledNote,
 } from '@/models';
-import Tone, { Transport } from 'tone';
+import Tone from 'tone';
 import * as history from '@/core/project/history';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('project');
 
 const DG = 'dg';
 const FILTERS = [{ name: 'DAWG Files', extensions: [DG] }];
@@ -111,8 +108,7 @@ const events = emitter<{ save: [IProject] }>();
  * important audio things that were lost during JSON serialization (e.g. everything needs to be rescheduled).
  */
 function load(i: IProject): LoadedProject {
-  // tslint:disable-next-line:no-console
-  console.log('Initiate loading of the project!');
+  logger.info('Initiate loading of the project!');
 
   Audio.Context.BPM = i.bpm;
 
@@ -205,8 +201,6 @@ function load(i: IProject): LoadedProject {
   const patternLookup = makeLookup(patterns);
   const sampleLookup = makeLookup(samples);
 
-  // tslint:disable-next-line:no-console
-  console.log(i);
   if (!i.master.elements) {
     i.master.elements = [];
   }
@@ -307,7 +301,6 @@ const createApi = () => {
 
   const prj = result.project;
   const openedFile = ref(framework.manager.getOpenedFile());
-  const logger = log.getLogger();
 
   async function openTempProject(p: IProject) {
     const { name: path } = tmp.fileSync({ keep: true });
@@ -774,7 +767,10 @@ const extension = createExtension({
       });
     }));
 
-    const save: framework.Command = {
+    const save = framework.defineMenuBarItem({
+      type: 'callback',
+      menu: 'File',
+      section: '1_save',
       text: 'Save',
       shortcut: ['CmdOrCtrl', 'S'],
       callback: async () => {
@@ -782,9 +778,12 @@ const extension = createExtension({
           forceDialog: false,
         });
       },
-    };
+    });
 
-    const saveAs: framework.Command = {
+    const saveAs = framework.defineMenuBarItem({
+      type: 'callback',
+      menu: 'File',
+      section: '1_save',
       text: 'Save As',
       shortcut: ['CmdOrCtrl', 'Shift', 'S'],
       callback: async () => {
@@ -792,9 +791,12 @@ const extension = createExtension({
           forceDialog: true,
         });
       },
-    };
+    });
 
-    const open: framework.Command = {
+    const open = framework.defineMenuBarItem({
+      type: 'callback',
+      menu: 'File',
+      section: '0_newOpen',
       text: 'Open',
       shortcut: ['CmdOrCtrl', 'O'],
       callback: async () => {
@@ -815,9 +817,12 @@ const extension = createExtension({
         const window = remote.getCurrentWindow();
         window.reload();
       },
-    };
+    });
 
-    const newProject: framework.Command = {
+    const newProject = framework.defineMenuBarItem({
+      type: 'callback',
+      menu: 'File',
+      section: '0_newOpen',
       shortcut: ['CmdOrCtrl', 'N'],
       text: 'New Project',
       callback: async () => {
@@ -826,37 +831,39 @@ const extension = createExtension({
         const window = remote.getCurrentWindow();
         window.reload();
       },
-    };
+    });
 
-    const undo: framework.Command = {
+    const undo = framework.defineMenuBarItem({
+      type: 'callback',
+      menu: 'Edit',
+      section: '0_undoRedo',
       shortcut: ['CmdOrCtrl', 'Z'],
       text: 'Undo',
       callback: () => {
         history.undo();
       },
-    };
+    });
 
-    const redo: framework.Command = {
+    const redo = framework.defineMenuBarItem({
+      type: 'callback',
+      menu: 'Edit',
+      section: '0_undoRedo',
       shortcut: ['CmdOrCtrl', 'Shift', 'Z'],
       text: 'Redo',
       callback: () => {
         history.redo();
       },
-    };
-
-    const file = menubar.getMenu('File');
-    const toDispose = [save, saveAs, open, newProject].map((command) => {
-      context.subscriptions.push(commands.registerCommand(command));
-      return file.addItem(command);
     });
 
-    const edit = menubar.getMenu('Edit');
+    [save, saveAs, open, newProject].map((command) => {
+      context.subscriptions.push(commands.registerCommand(command));
+      context.subscriptions.push(framework.addToMenu(command));
+    });
+
     ([undo, redo]).map((command) => {
       context.subscriptions.push(commands.registerCommand(command));
-      context.subscriptions.push(edit.addItem(command));
+      context.subscriptions.push(framework.addToMenu(command));
     });
-
-    context.subscriptions.push(...toDispose);
 
     context.settings.push({
       type: 'string',

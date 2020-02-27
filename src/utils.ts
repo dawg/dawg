@@ -50,17 +50,6 @@ export const findUniqueName = (objects: Array<{ name: string }>, prefix: string)
   return name;
 };
 
-export const disposeHelp = (o: { dispose: () => void }) => {
-  // Tone.js
-  try {
-    o.dispose();
-  } catch (e) {
-    // tslint:disable-next-line:no-console
-    console.info(`dispose failed for ${o} =>`, e.message);
-  }
-};
-
-
 // This is a slightly weird API but it the best API for the job
 export interface SnapOpts {
   event: { clientX: number, altKey?: boolean };
@@ -191,9 +180,6 @@ export const getIntersection = (
     const intx = (yint1 - yint2) / (slope2 - slope1);
     point = { x: intx, y: slope1 * intx + yint1 };
   }
-
-  // console.log(slope1, yint1);
-  // console.log(slope2, yint2);
 
   return point;
 };

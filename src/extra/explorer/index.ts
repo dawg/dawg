@@ -85,6 +85,7 @@ export const extension = createExtension({
     });
 
     context.subscriptions.push(commands.registerCommand({
+      type: 'callback',
       text: 'Open File Explorer',
       shortcut: ['CmdOrCtrl', 'E'],
       callback: () => {
@@ -135,6 +136,7 @@ export const extension = createExtension({
     });
 
     context.subscriptions.push(dawg.commands.registerCommand({
+      type: 'callback',
       text: 'Add Folder to Workspace',
       callback: openFolder,
     }));

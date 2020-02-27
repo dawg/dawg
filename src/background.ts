@@ -19,6 +19,7 @@ protocol.registerSchemesAsPrivileged([{
 function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
+    title: 'DAWG',
     width: 800,
     height: 600,
     minHeight: 600,
@@ -78,7 +79,7 @@ app.on('ready', async () => {
       await installVueDevtools();
     } catch (e) {
       // tslint:disable-next-line:no-console
-      console.error('Vue Devtools failed to install:', e.toString());
+      console.error('Vue DevTools failed to install:', e.toString());
     }
   }
   createWindow();

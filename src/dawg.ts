@@ -10,7 +10,6 @@ export { ui } from '@/lib/framework/ui';
 export { pianoRoll } from '@/core/piano-roll';
 export { patterns } from '@/core/patterns';
 export { controls } from '@/core/controls';
-export { menubar } from '@/core/menubar';
 export { record } from '@/core/record';
 export { status } from '@/core/status';
 export { log } from '@/core/log';
@@ -21,6 +20,7 @@ export { IExtensionContext, Extension, createExtension, Subscription } from '@/l
 export { manager } from '@/lib/framework/manager';
 import * as io from '@/lib/io';
 
+import * as menubar from '@/lib/framework/menubar';
 import * as platform from '@/lib/framework/platform';
 import * as events from '@/lib/events';
 
@@ -28,4 +28,5 @@ export {
   io,
   events,
   platform,
+  menubar,
 };

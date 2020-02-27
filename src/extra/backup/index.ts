@@ -7,7 +7,6 @@ import auth from '@/extra/backup/auth';
 import firebase from 'firebase/app';
 import 'firebase/database';
 import 'firebase/auth';
-import { menubar } from '@/core/menubar';
 import { computed, watch, ref, createComponent } from '@vue/composition-api';
 import * as framework from '@/lib/framework';
 import { project, ProjectType, IProject } from '@/core/project';
@@ -248,16 +247,19 @@ export const extension = createExtension({
       // Ignore this error, it means we can't connect to the server (ie. internet is down)
     }
 
-    const open = {
+    const open = dawg.menubar.defineMenuBarItem({
+      type: 'callback',
+      menu: 'File',
+      section: '0_newOpen',
       text: 'Open From Backup',
       callback: () => backupAction('open'),
-    };
+    });
 
-    const file = menubar.getMenu('File');
     context.subscriptions.push(dawg.commands.registerCommand(open));
-    context.subscriptions.push(file.addItem(open));
+    context.subscriptions.push(dawg.menubar.addToMenu(open));
 
     context.subscriptions.push(dawg.commands.registerCommand({
+      type: 'callback',
       text: 'Delete Backup',
       callback: () => backupAction('delete'),
     }));

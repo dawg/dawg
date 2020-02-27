@@ -32,6 +32,9 @@ export {
 } from 'io-ts';
 import fs from '@/lib/fs';
 import { isLeft } from 'fp-ts/lib/Either';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('io');
 
 export interface DecodeSuccess<T> {
   type: 'success';
@@ -98,8 +101,7 @@ export const read = <T>(type: t.Type<T>, opts: { path: string }): DecodeSuccess<
     };
   }
 
-  // tslint:disable-next-line:no-console
-  console.info(`Loading from ${opts.path}`);
+  logger.info(`Loading from ${opts.path}`);
 
   let contents: string;
   try {

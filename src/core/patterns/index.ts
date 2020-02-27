@@ -24,11 +24,15 @@ export const patterns = framework.manager.activate({
       pattern.value = patternLookup.value[selectedPatternId.value];
     }
 
+    const openPatternsTab = () => {
+      framework.ui.openedSideTab.value = 'Patterns';
+    };
+
     watch(pattern, () => {
       selectedPatternId.value = pattern.value ? pattern.value.id : undefined;
 
       if (pattern.value && framework.ui.openedSideTab.value !== 'Patterns') {
-        framework.ui.openedSideTab.value = 'Patterns';
+        openPatternsTab();
       }
     });
 
@@ -67,6 +71,7 @@ export const patterns = framework.manager.activate({
 
     return {
       selectedPattern: pattern,
+      openPatternsTab,
     };
   },
 });

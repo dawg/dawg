@@ -29,9 +29,10 @@ jobs:
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
-          name: Release ${{ github.ref }}
+          # Note that v is prepended because it is removed above
+          name: v${{ steps.get_version.outputs.VERSION }}
           body_path: changelogs/${{ steps.get_version.outputs.VERSION }}-CHANGELOG.md
-          tag_name: ${{ github.ref }}
+          tag_name: v${{ steps.get_version.outputs.VERSION }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Output Release URL File

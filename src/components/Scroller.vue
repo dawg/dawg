@@ -9,7 +9,7 @@ import { createComponent, computed } from '@vue/composition-api';
 import { Vue, Component, Prop } from 'vue-property-decorator';
 import { clamp } from '@/lib/std';
 import { Nullable, update } from '@/lib/vutils';
-import { calculateScroll } from '../utils';
+import { calculateScroll } from '@/utils';
 
 // @Prop\((\{[ a-zA-Z:,]+\})\) public ([a-zA-Z]+)!: ([^\n]+)
 // $2: $1,
