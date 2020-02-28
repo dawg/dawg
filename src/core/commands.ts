@@ -120,7 +120,7 @@ export const commands = framework.manager.activate({
   activate(context) {
     const registerCommand = (command: Command) => {
       return pushAndReturnDispose(
-        cmmds, command, { registerAccelerator: command.registerAccelerator ?? false },
+        cmmds, command, { registerAccelerator: command.registerAccelerator ?? true },
       );
     };
 

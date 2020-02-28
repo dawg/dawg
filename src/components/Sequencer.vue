@@ -44,7 +44,7 @@
         @scroll="onScrollX"
       >
         <timeline 
-          v-model="data.progress" 
+          :cursor-position="data.cursorPosition" 
           class="w-full h-full"
           :set-loop-end.sync="data.userLoopEnd"
           :set-loop-start.sync="data.userLoopStart"
@@ -94,7 +94,7 @@
         :px-per-beat="pxPerBeat"
         :get-position="getPosition"
         :row-height="rowHeight"
-        :progress="data.progress"
+        :cursor-position="data.cursorPosition"
         :name="name"
         :transport="transport"
         :tool="tool"
@@ -156,7 +156,7 @@ export default createComponent({
     const data = reactive({
       scrollLeft: 0,
       scrollTop: 0,
-      progress: 0,
+      cursorPosition: 0,
       sequencerLoopEnd: 0,
       displayLoopEnd: 0,
 
@@ -248,7 +248,7 @@ export default createComponent({
 
     function doUpdate() {
       if (props.transport.state === 'started') { requestAnimationFrame(doUpdate); }
-      data.progress = props.transport.getProgress();
+      data.cursorPosition = props.transport.beat;
     }
 
     function onScrollX() {

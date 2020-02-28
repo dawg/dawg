@@ -13,7 +13,7 @@ export default createComponent({
   props: {
     pxPerBeat: { type: Number, required: true },
     // Range from 0 to 1
-    progress: { type: Number, required: true },
+    position: { type: Number, required: true },
     scrollLeft: { type: Number, required: true },
     // Since the progress is a range from 0-1, this needs the bounds to calculate the position.
     loopStart: { type: Number, required: true },
@@ -21,12 +21,8 @@ export default createComponent({
   },
   setup(props) {
     const progressPx = computed(() => {
-      return beatToPx((props.loopEnd - props.loopStart) * props.progress + props.loopStart);
+      return (props.position * props.pxPerBeat) + 'px';
     });
-
-    function beatToPx(beat: number) {
-      return ((beat * props.pxPerBeat) + props.scrollLeft) + 'px';
-    }
 
     const style = computed(() => {
       return {

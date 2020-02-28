@@ -84,7 +84,7 @@
     <progression
       :loop-start="loopStart"
       :loop-end="loopEnd"
-      :progress="progress"
+      :position="cursorPosition"
       :scroll-left="0"
       :px-per-beat="pxPerBeat"
       class="progress-bar z-20"
@@ -154,7 +154,7 @@ export default createComponent({
     sequencerLoopEnd: { type: Number, required: true },
 
     transport: { type: Object as () => Audio.Transport, required: true },
-    progress: { type: Number, required: true },
+    cursorPosition: { type: Number, required: true },
     displayLoopEnd: { type: Number, required: true },
 
     // scroll stuff

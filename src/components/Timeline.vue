@@ -41,7 +41,7 @@
       {{ step.textContent }}
     </div>
     <progression
-      :progress="value"
+      :position="cursorPosition"
       :loop-end="loopEnd"
       :loop-start="loopStart"
       :scroll-left="scrollLeft"
@@ -67,12 +67,11 @@ import { calculateSimpleSnap, doSnap } from '@/utils';
 type Location = 'start' | 'end' | 'center';
 
 export default createComponent({
-  // TODO remove mixin
   props: {
     stepsPerBeat: { type: Number, required: true },
     beatsPerMeasure: { type: Number, required: true },
     pxPerBeat: { type: Number, required: true },
-    value: { type: Number, required: true },
+    cursorPosition: { type: Number, required: true },
     loopStart: { type: Number, required: true },
     loopEnd: { type: Number, required: true },
     scrollLeft: { type: Number, default: 0 },
