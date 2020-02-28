@@ -67,10 +67,11 @@
         @update:duration="updateDuration(i, $event)"
         @update:offset="updateOffset(i, $event)"
       >
-        <template v-slot:default="{ width }">
+        <template v-slot:default="{ width, color }">
           <component
             :is="el.component"
             :row="el.row.value"
+            :color="color"
             :px-per-beat="pxPerBeat"
             :width="width"
             :height="rowHeight"

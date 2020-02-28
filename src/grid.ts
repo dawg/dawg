@@ -5,6 +5,9 @@ import { Keys, Disposer, reverse } from '@/lib/std';
 import { calculateSimpleSnap, slice } from '@/utils';
 import { SchedulablePrototype } from '@/models/schedulable';
 import * as history from '@/core/project/history';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('grid', { level: 'debug' });
 
 // For more information see the following link:
 // https://stackoverflow.com/questions/4270485/drawing-lines-on-html-page
@@ -305,9 +308,9 @@ export const createGrid = <T extends Element>(
       return;
     }
 
-    let itemsToMove: T[];
-    if (selected[i]) {
-      itemsToMove = sequence.l.filter((_, ind) => selected[ind]);
+    let itemsToMove: readonly T[];
+    if (selected.includes(el)) {
+      itemsToMove = selected;
     } else {
       itemsToMove = [el];
     }
@@ -350,17 +353,15 @@ export const createGrid = <T extends Element>(
     const el = sequence.l[i];
     const diff = value - el[attr].value;
 
-    const toUpdate = [el];
-    if (selected[i]) {
-      sequence.l.forEach((element, index) => {
-        if (selected[index] && el !== element) {
-          toUpdate.push(element);
-        }
-      });
+    let toUpdate: readonly T[];
+    if (selected.includes(el)) {
+      toUpdate = selected;
+    } else {
+      toUpdate = [el];
     }
 
     // If the diff is less than zero, make sure we aren't setting the offset of
-    // any of the elments to < 0
+    // any of the elements to < 0
     if (diff < 0 && toUpdate.some((element) => (element[attr].value + diff) < 0)) {
       return;
     }
@@ -372,17 +373,19 @@ export const createGrid = <T extends Element>(
 
   const select = (e: MouseEvent, i: number) => {
     const item = sequence.l[i];
-    if (!selected[i]) {
+    const elIsSelected = selected.includes(item);
+
+    if (!elIsSelected) {
       selected.splice(0, selected.length);
     }
 
-    const createItem = (oldItem: T, isSelected: boolean) => {
+    const createItem = (oldItem: T, addToSelected: boolean) => {
       const newItem = oldItem.copy();
 
       // We set selected to true because `newNew` will have a higher z-index
       // Thus, it will be displayed on top (which we want)
       // Try copying selected files and you will notice the selected notes stay on top
-      if (isSelected) {
+      if (addToSelected) {
         selected.push(newItem as T);
       }
 
@@ -391,13 +394,9 @@ export const createGrid = <T extends Element>(
 
     if (holdingShift) {
       // If selected, copy all selected. If not, just copy the item that was clicked.
-      if (selected[i]) {
+      if (elIsSelected) {
         // selected is all all selected except the element you pressed on
-        sequence.l.forEach((el, ind) => {
-          if (!selected.includes(el)) {
-            return;
-          }
-
+        selected.forEach((el) => {
           if (el === item) {
             // A copy of `item` will be created at this index which becomes the target for moving
             i = sequence.l.length;
@@ -445,13 +444,13 @@ export const createGrid = <T extends Element>(
         if (e.keyCode === Keys.Shift) {
           holdingShift = true;
         } else if (e.keyCode === Keys.Delete || e.keyCode === Keys.Backspace) {
-          // Slice and reverse sItemince we will be deleting from the array as we go
-          let i = sequence.l.length - 1;
-          for (const _ of reverse(sequence.l)) {
-            if (selected[i]) {
-              removeAtIndex(i);
+          for (const el of selected) {
+            const i = sequence.l.indexOf(el);
+            if (i === -1) {
+              continue;
             }
-            i--;
+
+            removeAtIndex(i);
           }
         }
       },
@@ -466,7 +465,6 @@ export const createGrid = <T extends Element>(
   const removeAtIndex = (i: number) => {
     const el = sequence.l[i];
     el.remove();
-    selected.splice(i, 1);
   };
 
   const remove = (i: number, e: MouseEvent) => {
@@ -494,8 +492,16 @@ export const createGrid = <T extends Element>(
     }
 
     const rect = opts.getPosition();
-    const left = Math.min(selectStart.value.clientX - rect.left, selectCurrent.value.clientX - rect.left);
-    const top = Math.min(selectStart.value.clientY - rect.top, selectCurrent.value.clientY - rect.top);
+    const left = Math.min(
+      selectStart.value.clientX - rect.left + scrollLeft.value,
+      selectCurrent.value.clientX - rect.left + scrollLeft.value,
+    );
+
+    const top = Math.min(
+      selectStart.value.clientY - rect.top + scrollTop.value,
+      selectCurrent.value.clientY - rect.top + scrollTop.value,
+    );
+
     const width = Math.abs(selectCurrent.value.clientX - selectStart.value.clientX);
     const height = Math.abs(selectCurrent.value.clientY - selectStart.value.clientY);
 
@@ -505,7 +511,7 @@ export const createGrid = <T extends Element>(
     const maxBeat = (left + width) / pxPerBeat.value;
     const maxRow = (top + height) / pxPerRow.value;
 
-    sequence.l.forEach((item, i) => {
+    sequence.l.forEach((item) => {
       // Check if there is any overlap between the rectangles
       // https://www.geeksforgeeks.org/find-two-rectangles-overlap/
       if (minRow > item.row.value + 1 || item.row.value > maxRow) {
@@ -513,9 +519,13 @@ export const createGrid = <T extends Element>(
       } else if (minBeat > item.time.value + item.duration.value || item.time.value > maxBeat) {
         sDel(item);
       } else {
-        selected.push(item);
+        if (!selected.includes(item)) {
+          selected.push(item);
+        }
       }
     });
+
+    logger.debug('There are ' + selected.length + ' selected elements!');
 
     return {
       borderRadius: '5px',
