@@ -24,6 +24,7 @@ const create = <T extends ScheduledElement<any, any, any>>(
   };
 
   const sequence = createSequence([createElement().copy()]);
+
   const o = {
     sequence,
     pxPerBeat: opts.pxPerBeat ?? ref(20),
@@ -93,7 +94,8 @@ const events = (grid: Grid) => {
 
 describe('grid', () => {
   it('creates correctly', () => {
-    create(({ grid }) => {
+    create(({ grid, sequence }) => {
+      expect(sequence.l.length).to.eq(1);
       expect(grid.sequencerLoopEnd.value).to.eq(4);
     });
   });

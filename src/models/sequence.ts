@@ -45,7 +45,6 @@ export const createSequence = <T extends ScheduledElement<any, any, any>>(l: T[]
 
   l.forEach((e) => {
     watchElement(l, e, onRemove, onAdd);
-    l.push(e);
   });
 
   function add(...newL: T[]) {

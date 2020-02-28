@@ -252,14 +252,12 @@ export default createComponent({
     }
 
     function onScrollX() {
-      // This only handles horizontal scrolls!
       if (scrollX.value) {
         data.scrollLeft = scrollX.value.scrollLeft;
       }
     }
 
     function onScrollY() {
-      // This only handles horizontal scrolls!
       if (scrollY.value) {
         data.scrollTop = scrollY.value.scrollTop;
       }

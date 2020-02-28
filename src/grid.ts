@@ -189,23 +189,14 @@ export const createGrid = <T extends Element>(
     }
   };
 
+  // Always call once at the start to initiate the loop end
+  checkLoopEnd();
+
   const displayBeats = computed(() => {
     return Math.max(
       256, // 256 is completely random
       sequencerLoopEnd.value + beatsPerMeasure.value * 2,
     );
-  });
-
-  const onSequenceChange = ({ forceUpdate }: { forceUpdate?: boolean } = {}) => {
-    if (forceUpdate || selected.length !== sequence.l.length) {
-      selected.splice(0, selected.length);
-    }
-
-    checkLoopEnd();
-  };
-
-  watch(() => sequence.l, () => {
-    onSequenceChange();
   });
 
   const addElement = (e: MouseEvent, el: T | undefined) => {
@@ -243,6 +234,8 @@ export const createGrid = <T extends Element>(
     el.time.value = time;
 
     opts.sequence.add(el);
+    checkLoopEnd();
+
     return el;
   };
 
@@ -297,7 +290,7 @@ export const createGrid = <T extends Element>(
       return;
     }
 
-    const doAdd = (o: { timeDiff: number, rowDiff: number }) => {
+    const doMove = (o: { timeDiff: number, rowDiff: number }) => {
       if (canMoveTime) {
         // TODO is this a bug?
         initialMoveBeat = time;
@@ -317,10 +310,10 @@ export const createGrid = <T extends Element>(
 
     history.execute({
       execute: () => {
-        doAdd({ timeDiff, rowDiff });
+        doMove({ timeDiff, rowDiff });
       },
       undo: () => {
-        doAdd({ timeDiff: -timeDiff, rowDiff: -rowDiff });
+        doMove({ timeDiff: -timeDiff, rowDiff: -rowDiff });
       },
     });
   };
@@ -542,7 +535,8 @@ export const createGrid = <T extends Element>(
     mousedown,
     setSequence(s: Sequence<T>) {
       sequence = s;
-      onSequenceChange({ forceUpdate: true });
+      selected.splice(0, selected.length);
+      checkLoopEnd();
     },
   };
 };
