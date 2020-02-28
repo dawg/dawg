@@ -1,32 +1,35 @@
 <template>
-<!-- 
-  .timeline {
-	position: relative;
-	overflow: hidden;
-	font: 14px monospace;
-	cursor: default;
-  border-bottom: 1px solid var(--background);
-}
- -->
-  <div 
-    class="bg-default text-default relative overflow-hidden border-solid text-sm border-b border-default-darken-1" 
+  <div
+    ref="el"
+    class="
+      bg-default
+      text-default
+      relative
+      overflow-hidden
+      border-solid
+      text-sm
+      border-b
+      border-default-darken-1
+    " 
     @dblclick="remove"
     @mousedown="mousedown"
     @contextmenu="disable"
   >
-      <div class="loop" :style="loopStyle" @mousedown="mousedown($event, 'center')">
-        <!-- The inner loop is where stuff is actually displayed -->
-        <!-- The outer loop is used for a click area -->
-        <div class="inner-loop">
-          <!-- These are the blocks the catch the events. The little hover things are too small -->
-          <div class="loopExt loopA" @mousedown="mousedown($event, 'start')"></div>
-          <div class="loopExt loopB" @mousedown="mousedown($event, 'end')"></div>
-
-          <!-- These next two elements are the little bars you see when you hover -->
-          <div class="loopBrd primary loopBrdA"></div>
-          <div class="loopBrd primary loopBrdB"></div>
-          
-          <div class="loopBg primary-lighten-3"></div>
+      <div 
+        class="absolute top-0 z-10" 
+        style="height: 2px" 
+        :style="loopStyle" 
+        @mousedown="mousedown($event, 'center')"
+      >
+        <div class="relative h-full w-full bg-primary-lighten-3">
+          <div 
+            class="loop-end left-0 cursor-pointer w-1 h-1 absolute bg-primary-lighten-3 z-10"
+            @mousedown="mousedown($event, 'start')"
+          ></div>
+          <div 
+            class="loop-end right-0 cursor-pointer w-1 h-1 absolute bg-primary-lighten-3 z-10" 
+            @mousedown="mousedown($event, 'end')"
+          ></div>
         </div>
         </div>
     <div 
@@ -38,10 +41,10 @@
       {{ step.textContent }}
     </div>
     <progression
-      :progress="value"
+      :position="cursorPosition"
       :loop-end="loopEnd"
       :loop-start="loopStart"
-      :offset="offset"
+      :scroll-left="scrollLeft"
       :px-per-beat="pxPerBeat"
       class="cursor-progress"
     >
@@ -54,293 +57,278 @@
 
 <script lang="ts">
 import { Vue, Component, Prop, Watch, Mixins, Inject } from 'vue-property-decorator';
-import { ResponsiveMixin, Directions, Nullable } from '@/lib/vutils';
+import { Directions, Nullable, useResponsive, update } from '@/lib/vutils';
 import { range, Mouse } from '@/lib/std';
 import * as dawg from '@/dawg';
+import { createComponent, computed, ref, watch } from '@vue/composition-api';
+import { addEventListeners } from '../lib/events';
+import { calculateSimpleSnap, doSnap } from '@/utils';
 
 type Location = 'start' | 'end' | 'center';
 
-@Component
-export default class Timeline extends Mixins(ResponsiveMixin) {
-  @Prop({ type: Number, required: true }) public stepsPerBeat!: number;
-  @Prop({ type: Number, required: true }) public beatsPerMeasure!: number;
-  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
-  @Prop({ type: Number, required: true }) public value!: number;
-  @Prop(Nullable(Number)) public setLoopStart!: number;
-  @Prop(Nullable(Number)) public setLoopEnd!: number;
-  @Prop({ type: Number, required: true }) public loopStart!: number;
-  @Prop({ type: Number, required: true }) public loopEnd!: number;
-  @Prop({ type: Number, default: 0 }) public offset!: number;
-  @Prop({ type: String, default: 'step' }) public detail!: 'step' | 'beat' | 'measure';
+export default createComponent({
+  props: {
+    stepsPerBeat: { type: Number, required: true },
+    beatsPerMeasure: { type: Number, required: true },
+    pxPerBeat: { type: Number, required: true },
+    cursorPosition: { type: Number, required: true },
+    loopStart: { type: Number, required: true },
+    loopEnd: { type: Number, required: true },
+    scrollLeft: { type: Number, default: 0 },
+    minSnap: { type: Number, required: true },
+    snap: { type: Number, required: true },
+    detail: { type: String as () => 'step' | 'beat' | 'measure', default: 'step' },
+    setLoopStart: Number,
+    setLoopEnd: Number,
+  },
+  setup(props, context) {
+    const { width, height, observe } = useResponsive();
 
-  public steps: HTMLElement[] = [];
-  public start: number | null  = null;
-  public displayStart: number | null  = null;
-  public end: number | null = null;
-  public displayEnd: number | null = null;
-  public inLoop = false;
-  public selectedStart = false;
-  public selectedEnd = false;
-  public rendered = false;
-  public justDragged = false;
+    const el = ref<Element>();
+    watch(el, () => {
+      if (el.value) {
+        observe(el.value);
+      }
+    });
 
-  get pxPerStep() {
-    return this.pxPerBeat / this.stepsPerBeat;
-  }
+    const pxPerStep = computed(() => {
+      return props.pxPerBeat / props.stepsPerBeat;
+    });
 
-  get stepsPerMeasure() {
-    return this.stepsPerBeat * this.beatsPerMeasure;
-  }
+    const stepsPerMeasure = computed(() => {
+      return props.stepsPerBeat * props.beatsPerMeasure;
+    });
 
-  get beatsPerStep() {
-    return 1 / this.stepsPerBeat;
-  }
+    const beatsPerStep = computed(() => {
+      return 1 / props.stepsPerBeat;
+    });
 
-  get stepsDuration() {
-    return Math.ceil(this.width / this.pxPerStep + 2);
-  }
+    const stepsDuration = computed(() => {
+      return Math.ceil(width.value / pxPerStep.value + 2);
+    });
 
-  get displayStep() {
-    return this.pxPerBeat > 40;
-  }
+    const displayStep = computed(() => {
+      return props.pxPerBeat > 40;
+    });
 
-  get displayBeat() {
-    return this.pxPerBeat > 20;
-  }
+    const displayBeat = computed(() => {
+      return props.pxPerBeat > 20;
+    });
 
-  get displaySteps() {
-    const stepOffset = Math.floor(this.offset * this.stepsPerBeat);
-    let em = -this.offset % this.beatsPerStep;
-    return range(this.stepsDuration).map((i) => {
-      const step = stepOffset + i;
-      const isBeat = !(step % this.stepsPerBeat);
-      const isMeasure = !(step % this.stepsPerMeasure);
-      const isStep = !isBeat && !isMeasure;
-      const className = isMeasure ? 'measure' : isBeat ? 'beat' : 'step';
-      const left = em * this.pxPerBeat + 'px';
-      let textContent: string;
-      // const textContent =
+    const beatOffset = computed(() => {
+      return props.scrollLeft / props.pxPerBeat;
+    });
 
-      if (isStep) {
-        if (this.displayStep) {
-          textContent = '.';
+    const stepOffset = computed(() => {
+      return props.scrollLeft / pxPerStep.value;
+    });
+
+    const displaySteps = computed(() => {
+      const stepOffsetFloored = Math.floor(props.scrollLeft / pxPerStep.value);
+
+      let em = -beatOffset.value % beatsPerStep.value;
+      return range(stepsDuration.value).map((i) => {
+        const step = stepOffsetFloored + i;
+        const isBeat = !(step % props.stepsPerBeat);
+        const isMeasure = !(step % stepsPerMeasure.value);
+        const isStep = !isBeat && !isMeasure;
+        const className = isMeasure ? 'measure' : isBeat ? 'beat' : 'step';
+        const left = em * props.pxPerBeat + 'px';
+        let textContent: string;
+
+        if (isStep) {
+          if (displayStep.value) {
+            textContent = '.';
+          } else {
+            textContent = '';
+          }
         } else {
-          textContent = '';
+          if (isBeat && !isMeasure && !displayBeat.value) {
+            textContent = '';
+          } else {
+            textContent = Math.floor(1 + step / props.stepsPerBeat).toString();
+          }
         }
-      } else {
-        if (isBeat && !isMeasure && !this.displayBeat) {
-          textContent = '';
-        } else {
-          textContent = Math.floor(1 + step / this.stepsPerBeat).toString();
-        }
+
+        em += beatsPerStep.value;
+        return {
+          className,
+          left,
+          textContent,
+        };
+      });
+    });
+
+    const loopStyle = computed(() => {
+      if (!el.value || props.setLoopStart === undefined || props.setLoopEnd === undefined) {
+        return {
+          display: 'none',
+        };
       }
 
-      em += this.beatsPerStep;
-      return {
-        className,
-        left,
-        textContent,
-      };
-    });
-  }
-
-  get loopStyle() {
-    if (this.inLoop) {
-      const width = this.$el.getBoundingClientRect().width;
+      const rect = el.value.getBoundingClientRect();
       return {
         display: 'block',
-        left: ( this.displayStart! - this.offset ) * this.pxPerBeat + 'px',
-        right: width - ( this.displayEnd! - this.offset ) * this.pxPerBeat + 'px',
+        left: (props.setLoopStart - beatOffset.value) * props.pxPerBeat + 'px',
+        right: rect.width - (props.setLoopEnd - beatOffset.value) * props.pxPerBeat + 'px',
       };
-    } else {
-      return {
-        display: 'none',
-      };
-    }
-  }
+    });
 
-  public remove() {
-    this.start = null;
-    this.end = null;
-    this.$emit('update:setLoopStart', null);
-    this.$emit('update:setLoopEnd', null);
-    this.inLoop = false;
-  }
-
-  public disable(e: MouseEvent) {
-    e.preventDefault();
-  }
-
-  public mousedown(e: MouseEvent, location?: Location) {
-    e.preventDefault();
-    switch (e.button) {
-      case Mouse.LEFT:
-        this.seek(e);
-        return this.startCursorDrag();
-      case Mouse.RIGHT:
-        return this.doLoop(e, location);
-    }
-  }
-
-  public startCursorDrag() {
-    window.addEventListener('mousemove', this.seek);
-    window.addEventListener('mouseup', this.removeSeekListeners);
-  }
-
-  public removeSeekListeners() {
-    window.removeEventListener('mousemove', this.seek);
-    window.removeEventListener('mouseup', this.removeSeekListeners);
-  }
-
-  public doLoop(e: MouseEvent, location?: Location) {
-    if (location) {
-      e.stopPropagation();
-      this.selectedStart = location === 'start';
-      this.selectedEnd = location === 'end';
+    function remove() {
+      update(props, context, 'setLoopStart', undefined);
+      update(props, context, 'setLoopEnd', undefined);
     }
 
-    window.addEventListener('mousemove', this.mousemove);
-    window.addEventListener('mouseup', this.removeMousemove);
-  }
-
-  public removeMousemove() {
-    window.removeEventListener('mousemove', this.mousemove);
-    window.removeEventListener('mouseup', this.removeMousemove);
-  }
-
-  public seek(e: MouseEvent) {
-    if (this.justDragged) {
-      this.justDragged = false;
-      return;
+    function disable(e: MouseEvent) {
+      e.preventDefault();
     }
 
-    const beat = Math.min(this.getPosition(e), this.loopEnd);
-    this.$emit('seek', beat);
-  }
+    function mousedown(e: MouseEvent, location?: Location) {
+      e.stopImmediatePropagation();
 
-  public getPosition(e: MouseEvent) {
-    const left = this.$el.getBoundingClientRect().left;
-    const position = (e.pageX - left) / this.pxPerBeat + this.offset;
-    return Math.max(0, position);
-  }
+      if (location || e.button === Mouse.RIGHT) {
+        const rect = el.value?.getBoundingClientRect();
 
-  public mousemove(e: MouseEvent) {
-    this.justDragged = true;
+        const beat = doSnap({
+          position: e.clientX,
+          offset: rect?.left ?? 0,
+          scroll: props.scrollLeft,
+          altKey: e.altKey,
+          snap: props.snap,
+          minSnap: props.minSnap,
+          pxPerBeat: props.pxPerBeat,
+          round: Math.round,
+        });
 
-    if (!this.inLoop) {
-      const position = this.getPosition(e);
-      this.inLoop = true;
-      this.start = position;
-      this.end = position;
-      this.selectedEnd = true;
-    }
+        dragContext = { beat, location: location ?? 'end' };
 
-    const beatDiff = e.movementX / this.pxPerBeat;
-    let start = this.start!;
-    let end = this.end!;
+        // If there already is a location that means that we are already in a loop
+        if (!location) {
+          update(props, context, 'setLoopStart', beat);
+          update(props, context, 'setLoopEnd', beat);
+        }
 
-    if (this.selectedStart || this.selectedEnd) {
-      this.selectedStart ? start += beatDiff : end += beatDiff;
-
-      if ( start > end ) {
-        this.selectedStart = !this.selectedStart;
-        this.selectedEnd = !this.selectedEnd;
+        const d2 = addEventListeners({
+          mousemove,
+          mouseup: () => {
+            d2.dispose();
+          },
+        });
+      } else if (e.button === Mouse.LEFT) {
+        seek(e);
+        const d1 = addEventListeners({
+          mousemove: seek,
+          mouseup: () => {
+            d1.dispose();
+          },
+        });
       }
-    } else {
-      // else we are moving the loop
-      start += beatDiff;
-      end += beatDiff;
     }
 
-    this.start = Math.max(0, Math.min(start, end));
-    this.end = Math.max(0, start, end);
-    this.displayStart = Math.round(this.start);
-    this.displayEnd = Math.round(this.end);
-
-    if (this.displayStart !== this.setLoopStart) {
-      this.$update('setLoopStart', this.displayStart);
+    function seek(e: MouseEvent) {
+      const beat = Math.min(getPosition(e), props.loopEnd);
+      context.emit('seek', beat);
     }
 
-    if (this.displayEnd !== this.setLoopEnd) {
-      this.$update('setLoopEnd', this.displayEnd);
+    function getPosition(e: MouseEvent) {
+      const rect = el.value?.getBoundingClientRect();
+      const value = doSnap({
+        position: e.clientX,
+        offset: rect?.left ?? 0,
+        scroll: props.scrollLeft,
+        altKey: false, // irrelevant
+        snap: props.minSnap,
+        minSnap: props.minSnap,
+        pxPerBeat: props.pxPerBeat,
+      });
+
+      return Math.max(0, value);
     }
-  }
 
-  public getWidth() {
-    return this.rendered ? this.$el.getBoundingClientRect().width : 0;
-  }
+    let dragContext: { beat: number, location: Location } | undefined;
+    function mousemove(e: MouseEvent) {
+      if (
+        dragContext === undefined ||
+        props.setLoopStart === undefined ||
+        props.setLoopEnd === undefined
+      ) {
+        return;
+      }
 
-  public mounted() {
-    this.rendered = true;
-  }
-}
+      const rect = el.value?.getBoundingClientRect();
+      const beat = doSnap({
+        position: e.clientX,
+        offset: rect?.left ?? 0,
+        scroll: props.scrollLeft,
+        altKey: e.altKey,
+        snap: props.snap,
+        minSnap: props.minSnap,
+        pxPerBeat: props.pxPerBeat,
+        round: Math.round,
+      });
+
+      const { beat: initialBeat, location } = dragContext;
+      const beatDiff = beat - initialBeat;
+
+      // First, let's check the bounds
+      if (
+        (location === 'start' || location === 'center') &&
+        props.setLoopStart + beatDiff < 0
+      ) {
+        return;
+      }
+
+      let setLoopStart = props.setLoopStart;
+      if (location === 'start' || location === 'center') {
+        setLoopStart += beatDiff;
+      }
+
+      let setLoopEnd = props.setLoopEnd;
+      if (location === 'end' || location === 'center') {
+        setLoopEnd += beatDiff;
+      }
+
+      if (setLoopStart > setLoopEnd) {
+        dragContext.location = location === 'start' ? 'end' : 'start';
+        const temp = setLoopStart;
+        setLoopStart = setLoopEnd;
+        setLoopEnd = temp;
+      }
+
+      dragContext.beat = beat;
+      update(props, context, 'setLoopStart', setLoopStart);
+      update(props, context, 'setLoopEnd', setLoopEnd);
+    }
+
+    function getWidth() {
+      return el.value?.getBoundingClientRect().width ?? 0;
+    }
+
+    return {
+      el,
+      remove,
+      mousedown,
+      disable,
+      loopStyle,
+      displaySteps,
+    };
+  },
+});
 </script>
 
-<style>
-.timeline {
-	position: relative;
-	overflow: hidden;
-	font: 14px monospace;
-	cursor: default;
-  border-bottom: 1px solid var(--background);
-}
+<style lang="scss">
+.loop-end {
+  width: 6px;
+  height: 4px;
+  opacity: 0;
+  
+  transition: .2s;
+  transition-property: opacity;
 
-.loop {
-	position: absolute;
-	height: 40%;
-	z-index: 1;
-	top: 0;
+  &:hover {
+    opacity: 1;
+  }
 }
-
-.inner-loop {
-  height: 1px;
-  position: relative;
-}
-
-.loop:hover .inner-loop {
-  height: 2px;
-}
-
-.loopBg {
-	position: absolute;
-	width: 100%;
-	height: 100%;
-  top: 1px;
-	transition: filter .2s;
-}
-
-.loopBg:hover {
-	filter: brightness( 1.2 );
-}
-.loopExt {
-	position: absolute;
-	z-index: 2;
-	width: 25%;
-	min-width: 5px;
-	max-width: 10px;
-	height: 250%;
-}
-.loopA { left: -5px; }
-.loopB { right: -5px; }
-
-.loopBrd {
-	position: absolute;
-	z-index: 0;
-	width: 2px;
-	height: 100%;
-	transition: .2s;
-	transition-property: height, background-color, z-index;
-}
-
-.loopBrdA { left: -1px; }
-.loopBrdB { right: -1px; }
-.loopA:hover ~ .loopBrdA,
-.loopB:hover ~ .loopBrdB {
-	z-index: 1;
-	height: 150%;
-	background-color: yellow;
-}
-
 
 .cursor-progress {
   margin-left: -8px;
@@ -356,8 +344,6 @@ export default class Timeline extends Mixins(ResponsiveMixin) {
   /* IDK why but float right pushes the element to the bottom */
   float: right;
 }
-
-
 
 .measure, .beat, .step {
 	position: absolute;

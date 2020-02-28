@@ -44,16 +44,18 @@
         @scroll="onScrollX"
       >
         <timeline 
-          v-model="data.progress" 
+          :cursor-position="data.cursorPosition" 
           class="w-full h-full"
           :set-loop-end.sync="data.userLoopEnd"
           :set-loop-start.sync="data.userLoopStart"
           :loop-start="loopStart"
           :loop-end="loopEnd"
-          :offset="offset"
+          :scroll-left="data.scrollLeft"
           :steps-per-beat="stepsPerBeat"
           :beats-per-measure="beatsPerMeasure"
           :px-per-beat.sync="pxPerBeat"
+          :snap="snap.raw"
+          :min-snap="minSnap"
           @seek="seek"
         ></timeline>
       </scroller>
@@ -92,7 +94,7 @@
         :px-per-beat="pxPerBeat"
         :get-position="getPosition"
         :row-height="rowHeight"
-        :progress="data.progress"
+        :cursor-position="data.cursorPosition"
         :name="name"
         :transport="transport"
         :tool="tool"
@@ -154,7 +156,7 @@ export default createComponent({
     const data = reactive({
       scrollLeft: 0,
       scrollTop: 0,
-      progress: 0,
+      cursorPosition: 0,
       sequencerLoopEnd: 0,
       displayLoopEnd: 0,
 
@@ -198,12 +200,6 @@ export default createComponent({
 
     const snap = computed(() => {
       return snaps.value[data.selectedSnap];
-    });
-
-    // Horizontal offset in beats.
-    // Used to offset the timeline
-    const offset = computed(() => {
-      return data.scrollLeft / props.pxPerBeat;
     });
 
     const style = computed(() => {
@@ -252,18 +248,16 @@ export default createComponent({
 
     function doUpdate() {
       if (props.transport.state === 'started') { requestAnimationFrame(doUpdate); }
-      data.progress = props.transport.getProgress();
+      data.cursorPosition = props.transport.beat;
     }
 
     function onScrollX() {
-      // This only handles horizontal scrolls!
       if (scrollX.value) {
         data.scrollLeft = scrollX.value.scrollLeft;
       }
     }
 
     function onScrollY() {
-      // This only handles horizontal scrolls!
       if (scrollY.value) {
         data.scrollTop = scrollY.value.scrollTop;
       }
@@ -309,7 +303,6 @@ export default createComponent({
       data,
       loopStart,
       loopEnd,
-      offset,
       style,
       cycleSnap,
       seek,

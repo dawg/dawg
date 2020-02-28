@@ -138,7 +138,6 @@ export const extension = createExtension({
     };
 
     const disposable = commands.registerCommand({
-      type: 'callback',
       text: 'Record Audio',
       callback: async () => {
         const trackNumber = await palette.showNumberInputBox();

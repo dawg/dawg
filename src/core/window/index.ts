@@ -16,14 +16,12 @@ export const window = framework.manager.activate({
     };
 
     context.subscriptions.push(commands.registerCommand({
-      type: 'callback',
       text: 'Close Application',
       shortcut: ['CmdOrCtrl', 'W'],
       callback: close,
     }));
 
     const reloadCommand = framework.defineMenuBarItem({
-      type: 'callback',
       menu: 'Application',
       section: '0_commands',
       text: 'Reload',
@@ -31,7 +29,7 @@ export const window = framework.manager.activate({
       callback: reload,
     });
 
-    context.subscriptions.push(commands.registerCommand(reloadCommand));
+    context.subscriptions.push(commands.registerCommand({ ...reloadCommand, registerAccelerator: false }));
     context.subscriptions.push(framework.addToMenu(reloadCommand));
 
     return {

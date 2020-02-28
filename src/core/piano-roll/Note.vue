@@ -1,5 +1,5 @@
 <template>
-  <div class="note bg-primary h-full">
+  <div class="note bg-primary h-full" :style="{ 'background-color':  color }">
     <div 
       class="body"
       v-on="$listeners"
@@ -29,6 +29,7 @@ export default createComponent({
     width: { type: Number, required: true },
     element: { type: Object as () => ScheduledNote, required: true },
     height: { type: Number, required: true },
+    color: String,
   },
   setup(props) {
     const noteName = computed(() => {

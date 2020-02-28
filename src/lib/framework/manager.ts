@@ -148,11 +148,16 @@ class Manager {
       }
     }
 
+    const isTemp = !!pastProject.tempPath;  // save this information for later
     if (pastProject.tempPath) {
       // Always remove temporary information once the file has been read
       // Even if there are errors we do this
       fs.unlink(pastProject.tempPath);
+
+      // Make sure we don't overwrite the projectPath since tempPath takes priority
       pastProject.tempPath = undefined;
+
+      // Btw no error handling here. If this fails there isn't much we can do anyway.
       t.write(PastProjectsType, { path: PROJECT_PATH, data: pastProject });
     }
 
@@ -181,6 +186,13 @@ class Manager {
 
     if (!info) {
       info = { id: uuid.v4(), path: null };
+    }
+
+    // We don't want to expose the path to the user when we open a tmp project.
+    // We we some reason fail to load the temp project then this does nothing.
+    // Since we this, when a user attempts to save, it will automatically open a save dialog.
+    if (isTemp) {
+      info.path = null;
     }
 
     let global: JSON = {};

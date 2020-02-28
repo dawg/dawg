@@ -4,7 +4,7 @@ import { Instrument } from '@/models/instrument/instrument';
 import { Serializable } from '@/models/serializable';
 import { createNotePrototype, ScheduledNoteType, ScheduledNote } from '@/models/schedulable';
 import { Transport } from '@/lib/audio';
-import { Sequence } from '@/models/sequence';
+import { Sequence, createSequence } from '@/models/sequence';
 
 const ScoreTypeRequired = t.type({
   instrumentId: t.string,
@@ -38,18 +38,18 @@ export class Score implements Serializable<IScore> {
       return createNotePrototype(iNote, this.instrument, { velocity: iNote.velocity })(transport).copy();
     });
 
-    this.notes = new Sequence(notes);
+    this.notes = createSequence(notes);
   }
 
   public serialize() {
     return {
       instrumentId: this.instrumentId,
       id: this.id,
-      notes: this.notes.map((note) => note.serialize()),
+      notes: this.notes.l.map((note) => note.serialize()),
     };
   }
 
   public dispose() {
-    this.notes.forEach((note) => note.removeNoHistory());
+    this.notes.l.forEach((note) => note.removeNoHistory());
   }
 }

@@ -45,7 +45,6 @@ export const controls = framework.manager.activate({
     });
 
     context.subscriptions.push(commands.registerCommand({
-      type: 'callback',
       text: 'Switch Context',
       shortcut: ['Ctrl', 'Tab'],
       callback: () => {
@@ -165,7 +164,6 @@ export const controls = framework.manager.activate({
     });
 
     context.subscriptions.push(commands.registerCommand({
-      type: 'callback',
       text: 'Play/Pause',
       shortcut: ['Space'],
       callback: playPause,

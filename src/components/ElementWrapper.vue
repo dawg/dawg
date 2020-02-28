@@ -6,18 +6,19 @@
       :style="elementWrapperStyle"
     >
       <div class="w-full" :style="borderStyle"></div>
-      <div class="w-full text-default select-none" :style="textBorderStyle">
+      <div class="w-full text-default select-none truncate" :style="textBorderStyle">
         {{ text }}
       </div>
       <div class="w-full" :style="spacerStyle"></div>
       <slot v-bind:width="width" v-bind:offset="offset"></slot>
     </div>
+    <!-- TODO make sure looping still works! -->
     <div
       v-else
       class="relative inline-block overflow-hidden"
-      :style="elementWrapperStyle"
+      :style="elementStyle"
     >
-      <slot v-bind:width="width" v-bind:offset="offset"></slot>
+      <slot v-bind:width="width" v-bind:offset="offset" v-bind:color="backgroundColor"></slot>
     </div>
     <drag-element
       v-if="resizable && !disableOffset"
@@ -36,7 +37,7 @@
 
 
 <script lang="ts">
-import { createComponent, computed, ref } from '@vue/composition-api';
+import { createComponent, computed, ref, watch } from '@vue/composition-api';
 import { update } from '@/lib/vutils';
 import tinycolor from 'tinycolor2';
 import { calculateSnap } from '@/utils';
@@ -65,8 +66,7 @@ export default createComponent({
   },
   setup(props, context) {
     const lightColor = computed(() => {
-      const color = tinycolor(props.color).lighten(15).setAlpha(.1).toRgbString();
-      return `${color}`;
+      return `${tinycolor(props.color).lighten(15).setAlpha(.1).toRgbString()}`;
     });
 
     const style = (side: 'left' | 'right') => {
@@ -134,6 +134,10 @@ export default createComponent({
       moveHelper(e, { canZero: true, prop: 'offset' });
     }
 
+    const backgroundColor = computed(() => {
+      return props.selected ? '#ff999950!important' : props.showBorder ? lightColor.value : undefined;
+    });
+
     return {
       moveRight,
       moveLeft,
@@ -142,10 +146,15 @@ export default createComponent({
         left: `${left.value}px`,
         top: `${top.value}px`,
       })),
+      backgroundColor,
+      elementStyle: computed(() => ({
+        width: `${width.value}px`,
+        height: `${props.rowHeight}px`,
+      })),
       elementWrapperStyle: computed(() => ({
         width: `${width.value}px`,
         height: `${props.rowHeight}px`,
-        backgroundColor: props.selected ? '#ff999950!important' : props.showBorder ? lightColor.value : '',
+        backgroundColor: backgroundColor.value,
       })),
       width,
       borderStyle: computed(() => {

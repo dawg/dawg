@@ -4,7 +4,7 @@ import { ScheduledPattern, ScheduledPatternType } from '@/models/schedulable';
 import { ScheduledSample, ScheduledSampleType } from '@/models/schedulable';
 import { ScheduledAutomation, ScheduledAutomationType } from '@/models/schedulable';
 import { Serializable } from '@/models/serializable';
-import { Sequence } from '@/models/sequence';
+import { Sequence, createSequence } from '@/models/sequence';
 
 export const PlaylistType = t.partial({
   elements: t.array(t.union([
@@ -28,12 +28,12 @@ export class Playlist implements Serializable<IPlaylist> {
   public elements: Sequence<PlaylistElements>;
 
   constructor(public transport: Audio.Transport, elements: PlaylistElements[]) {
-    this.elements = new Sequence(elements);
+    this.elements = createSequence(elements);
   }
 
   public serialize() {
     return {
-      elements: this.elements.map((element) => element.serialize()),
+      elements: this.elements.l.map((element) => element.serialize()),
     };
   }
 }

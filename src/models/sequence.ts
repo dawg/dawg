@@ -1,60 +1,91 @@
 import { ScheduledElement } from '@/models/schedulable';
-import { StrictEventEmitter } from '@/lib/events';
+import { emitter } from '@/lib/events';
 import * as history from '@/core/project/history';
+import { Disposer } from '@/lib/std';
+import { getLogger } from '@/lib/log';
 
+const logger = getLogger('sequence', { level: 'debug' });
 
 const watchElement = <T extends ScheduledElement<any, any, any>>(
-  elements: T[], element: T, onRemove: (event: T) => void,
+  l: T[], el: T, onRemove: (event: T) => void, onAdd: (event: T) => void,
 ) => {
-  const disposer = element.onDidRemove(() => {
-    const i = elements.indexOf(element);
+  let i: number | undefined;
+  const d1 = el.onDidRemove(() => {
+    i = l.indexOf(el);
     if (i >= 0) {
-      onRemove(element);
-      elements.splice(i, 1);
+      onRemove(el);
+      l.splice(i, 1);
     }
-    disposer.dispose();
+    d1.dispose();
+  });
+
+  const d2 = el.onUndidRemove(() => {
+    if (i === undefined) {
+      return;
+    }
+
+    if (i >= 0) {
+      onAdd(el);
+      l.splice(i, 0, el);
+    }
+
+    d2.dispose();
   });
 };
 
-export class Sequence<
-  T extends ScheduledElement<any, any, any>
-> extends StrictEventEmitter<{ added: [T], removed: [T] }> {
-  public map = this.elements.map.bind(this.elements);
-  public filter = this.elements.filter.bind(this.elements);
-  public forEach = this.elements.forEach.bind(this.elements);
-  public some = this.elements.some.bind(this.elements);
-  public every = this.elements.every.bind(this.elements);
-  public indexOf = this.elements.indexOf.bind(this.elements);
+export interface Sequence<T extends ScheduledElement<any, any, any>> {
+  l: T[];
+  add(...newL: T[]): void;
+  onDidAddElement(cb: (el: T) => void): Disposer;
+  onDidRemoveElement(cb: (el: T) => void): Disposer;
+}
 
-  constructor(public elements: T[]) {
-    super();
-    elements.forEach((e) => watchElement(elements, e, this.onRemove.bind(this)));
-  }
+export const createSequence = <T extends ScheduledElement<any, any, any>>(l: T[]): Sequence<T> => {
+  const events = emitter<{ added: [T], removed: [T] }>();
 
-  public add(...elements: T[]) {
+  l.forEach((e) => {
+    watchElement(l, e, onRemove, onAdd);
+  });
+
+  function add(...newL: T[]) {
     history.execute({
       execute: () => {
-        elements.forEach((e) => {
-          this.elements.push(e);
-          watchElement(this.elements, e, this.onRemove.bind(this));
-          this.emit('added', e);
+        logger.debug(`Adding ${newL.length} elements!`);
+        newL.forEach((el) => {
+          l.push(el);
+          watchElement(l, el, onRemove, onAdd);
+          onAdd(el);
         });
       },
       undo: () => {
-        elements.forEach((element) => element.removeNoHistory());
+        logger.debug(`Removing ${newL.length} elements!`);
+        newL.forEach((el) => {
+          el.removeNoHistory();
+        });
       },
     });
   }
 
-  public slice() {
-    return this.elements.slice();
+  function onDidAddElement(cb: (el: T) => void) {
+    return events.on('added', cb);
   }
 
-  public [Symbol.iterator]() {
-    return this.elements[Symbol.iterator];
+  function onDidRemoveElement(cb: (el: T) => void) {
+    return events.on('removed', cb);
   }
 
-  private onRemove(element: T) {
-    this.emit('removed', element);
+  function onAdd(el: T) {
+    events.emit('added', el);
   }
-}
+
+  function onRemove(el: T) {
+    events.emit('removed', el);
+  }
+
+  return {
+    add,
+    onDidAddElement,
+    onDidRemoveElement,
+    l,
+  };
+};
