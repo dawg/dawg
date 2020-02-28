@@ -50,10 +50,12 @@
           :set-loop-start.sync="data.userLoopStart"
           :loop-start="loopStart"
           :loop-end="loopEnd"
-          :offset="offset"
+          :scroll-left="data.scrollLeft"
           :steps-per-beat="stepsPerBeat"
           :beats-per-measure="beatsPerMeasure"
           :px-per-beat.sync="pxPerBeat"
+          :snap="snap.raw"
+          :min-snap="minSnap"
           @seek="seek"
         ></timeline>
       </scroller>
@@ -200,12 +202,6 @@ export default createComponent({
       return snaps.value[data.selectedSnap];
     });
 
-    // Horizontal offset in beats.
-    // Used to offset the timeline
-    const offset = computed(() => {
-      return data.scrollLeft / props.pxPerBeat;
-    });
-
     const style = computed(() => {
       return {
         minWidth: `${props.sideWidth}px`,
@@ -309,7 +305,6 @@ export default createComponent({
       data,
       loopStart,
       loopEnd,
-      offset,
       style,
       cycleSnap,
       seek,

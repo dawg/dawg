@@ -1,8 +1,8 @@
 import { Ref, watch, ref, computed } from '@vue/composition-api';
 import { ScheduledElement, Sequence } from '@/models';
 import { addEventListeners } from '@/lib/events';
-import { Keys, Disposer, reverse } from '@/lib/std';
-import { calculateSimpleSnap, slice } from '@/utils';
+import { Keys, Disposer } from '@/lib/std';
+import { calculateSimpleSnap, slice, doSnap } from '@/utils';
 import { SchedulablePrototype } from '@/models/schedulable';
 import * as history from '@/core/project/history';
 import { getLogger } from '@/lib/log';
@@ -39,31 +39,6 @@ function lineStyle(
 type Line = ReturnType<typeof lineStyle>;
 
 type Element = ScheduledElement<any, any, any>;
-
-export interface PlacementSnapOpts {
-  position: number;
-  minSnap: number;
-  snap: number;
-  pxPerBeat: number;
-  offset: number;
-  scroll: number;
-  altKey: boolean;
-}
-
-export const doSnap = (
-  opts: PlacementSnapOpts,
-) => {
-  // The amount of pixels that the mouse is from the edge of the of grid
-  const pxMouseFromLeft = opts.position - opts.offset + opts.scroll;
-
-  return calculateSimpleSnap({
-    value: pxMouseFromLeft / opts.pxPerBeat,
-    altKey: opts.altKey,
-    minSnap: opts.minSnap,
-    snap: opts.snap,
-    round: Math.floor,
-  });
-};
 
 export type SequencerTool = 'pointer' | 'slicer';
 
@@ -324,6 +299,7 @@ export const createGrid = <T extends Element>(
 
     const doAdd = (o: { timeDiff: number, rowDiff: number }) => {
       if (canMoveTime) {
+        // TODO is this a bug?
         initialMoveBeat = time;
         itemsToMove.forEach((item) => {
           item.time.value += o.timeDiff;

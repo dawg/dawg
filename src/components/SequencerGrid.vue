@@ -85,6 +85,7 @@
       :loop-start="loopStart"
       :loop-end="loopEnd"
       :progress="progress"
+      :scroll-left="0"
       :px-per-beat="pxPerBeat"
       class="progress-bar z-20"
     ></progression>

@@ -5,8 +5,6 @@
 import ResizeObserver from 'resize-observer-polyfill';
 import throttle from 'lodash.throttle';
 import { ref, Ref } from '@vue/composition-api';
-import Vue from 'vue';
-import Component from 'vue-class-component';
 import { getLogger } from '@/lib/log';
 
 const logger = getLogger('vutils');
@@ -18,7 +16,7 @@ export const update = <Props, K extends keyof Props, V extends Props[K]>(
 };
 
 // FIXME become a hook I'm almost ready
-export const useResponsive = (el: Element, opts: { wait?: number } = {}) => {
+export const useResponsive = (opts: { wait?: number } = {}) => {
   const { wait = 200 } = opts;
   const height = ref(0);
   const width = ref(0);
@@ -29,47 +27,16 @@ export const useResponsive = (el: Element, opts: { wait?: number } = {}) => {
     height.value = cr.height;
   }, wait));
 
-  observer.observe(el);
-
   return {
     height,
     width,
+    observe: observer.observe.bind(observer),
   };
 };
 
 export interface Directions {
   didHorizontal: boolean;
   didVertical: boolean;
-}
-
-@Component
-export class ResponsiveMixin extends Vue {
-  public width = 0;
-  public height = 0;
-  public mounted() {
-    this.$nextTick(() => {
-      const handleResize = throttle((entries) => {
-        const cr = entries[0].contentRect;
-        const didHorizontal = this.width !== cr.width;
-        const didVertical = this.height !== cr.height;
-        this.width = cr.width;
-        this.height = cr.height;
-
-        if (!didHorizontal && !didVertical) { return; }
-        this.onResize({ didHorizontal, didVertical });
-      }, 200);
-
-      const observer = new ResizeObserver(handleResize);
-      if (this.$el instanceof Element) {
-        observer.observe(this.$el);
-      } else {
-        logger.warn('Not adding resize watcher');
-      }
-    });
-  }
-  public onResize(direction: Directions) {
-    //
-  }
 }
 
 export const unwrap = <T extends string | boolean | number | undefined>(t: T | Ref<T>): T => {

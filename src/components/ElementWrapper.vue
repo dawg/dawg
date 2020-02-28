@@ -12,6 +12,7 @@
       <div class="w-full" :style="spacerStyle"></div>
       <slot v-bind:width="width" v-bind:offset="offset"></slot>
     </div>
+    <!-- TODO make sure looping still works! -->
     <div
       v-else
       class="relative inline-block overflow-hidden"
