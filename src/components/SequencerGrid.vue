@@ -45,7 +45,7 @@
     
     <div class="elements">
       <element-wrapper
-        v-for="(el, i) in sequence.elements"
+        v-for="(el, i) in tempElements"
         :key="i"
         :time="el.time.value"
         :row="el.row.value"
@@ -123,6 +123,9 @@ import { Ghost } from '@/models/ghost';
 import { UnscheduledPrototype, ScheduledElement, SchedulablePrototype } from '@/models/schedulable';
 import { createComponent, ref, computed, watch, onUnmounted, onMounted } from '@vue/composition-api';
 import { createGrid, SequencerTool } from '@/grid';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('SequenceGrid', { level: 'trace' });
 
 export default createComponent({
   components: { BeatLines },
@@ -166,10 +169,12 @@ export default createComponent({
     prototype: { type: Object as () => SchedulablePrototype<any, any, any> },
   },
   setup(props, context) {
+    const tempElements: Array<ScheduledElement<any, any, any>> = [];
+
     const rows = ref<Vue>(null);
 
     const grid = createGrid({
-      sequence: computed(() => props.sequence),
+      sequence: props.sequence,
       pxPerBeat: computed(() => props.pxPerBeat),
       pxPerRow: computed(() => props.rowHeight),
       snap: computed(() => props.snap),
@@ -180,6 +185,31 @@ export default createComponent({
       createElement: computed(() => props.prototype),
       tool: computed(() => props.tool),
       getPosition: props.getPosition,
+    });
+
+    // Sometimes reactivity drives me insane... this is one of those times...
+    // For some reason, the array in the sequence (ie props.sequence.l) is NOT REACTIVE.
+    // e.g. when you add/remove things the UI does not update unless it is forced to re-render.
+    // Because it's really not worth my time I created tempElements and them hooked on the the
+    // add/remove events. For now, this is definitely an adequate solution. In the future,
+    // we may need to resolve this issue or refactor how we do sequences in general.
+    const d1 = props.sequence.onDidAddElement((el) => {
+      tempElements.push(el);
+    });
+
+    const d2 = props.sequence.onDidRemoveElement((el) => {
+      tempElements.splice(tempElements.indexOf(el));
+    });
+
+    onUnmounted(() => {
+      d1.dispose();
+      d2.dispose();
+    });
+
+    watch(() => props.sequence, () => {
+      tempElements.slice(0, tempElements.length);
+      tempElements.push(...props.sequence.l.slice());
+      grid.setSequence(props.sequence);
     });
 
     onMounted(grid.onMounted);
@@ -234,15 +264,16 @@ export default createComponent({
     }
 
     function open(e: MouseEvent, i: number) {
-      const item = props.sequence.elements[i];
+      const item = props.sequence.l[i];
       context.emit('open', item);
     }
 
     function clickElement(i: number) {
-      update(props, context, 'prototype', props.sequence.elements[i]);
+      update(props, context, 'prototype', props.sequence.l[i]);
     }
 
     async function handleDrop(prototype: UnscheduledPrototype, e: MouseEvent) {
+      logger.debug('Dropping new element!');
       const element = prototype(props.transport);
       update(props, context, 'prototype', element);
       await Vue.nextTick();
@@ -257,6 +288,7 @@ export default createComponent({
     });
 
     return {
+      tempElements,
       rows,
       sequencerStyle,
       handleDrop,

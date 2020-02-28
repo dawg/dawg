@@ -93,8 +93,6 @@ const pushAndReturnDispose = <T extends Shortcut | Command>(
 
   if (registerAccelerator && shortcut) {
     hotkeys(shortcut, () => {
-      // tslint:disable-next-line:no-console
-      console.log('HELLO');
       item.callback();
     });
   }

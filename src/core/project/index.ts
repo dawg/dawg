@@ -452,7 +452,7 @@ const createApi = () => {
 
 
     const available: boolean[] = Array(prj.tracks.length).fill(true);
-    prj.master.elements.forEach((element) => {
+    prj.master.elements.l.forEach((element) => {
       if (
         start > element.time.value && start < element.time.value + element.duration.value ||
         end > element.time.value && end < element.time.value + element.duration.value
@@ -618,7 +618,7 @@ const createApi = () => {
 
       pattern.scores.forEach((score) => {
         if (score.instrument === instrument) {
-          removed.push({ score, notes: score.notes.elements });
+          removed.push({ score, notes: score.notes.l });
         } else {
           remaining.push(score);
         }
@@ -871,3 +871,6 @@ const extension = createExtension({
 });
 
 export const project = framework.manager.activate(extension);
+
+// tslint:disable-next-line:no-console
+console.log(project);

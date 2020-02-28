@@ -24,7 +24,7 @@ export default class PatternElement extends Vue {
 
   get notes() {
     const notes: ScheduledNote[] = [];
-    return notes.concat(...this.element.element.scores.map((score) => score.notes.slice()));
+    return notes.concat(...this.element.element.scores.map((score) => score.notes.l.slice()));
   }
 
   get scoreStyle() {

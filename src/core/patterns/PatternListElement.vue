@@ -56,7 +56,7 @@ export default createComponent({
 
     const prototype = computed(() => {
       let duration = props.pattern.scores.reduce((max, score) => {
-        return Math.max(max, ...score.notes.map((note) => note.time.value + note.duration.value));
+        return Math.max(max, ...score.notes.l.map((note) => note.time.value + note.duration.value));
       }, 0.001);
       duration = Math.ceil(duration / props.beatsPerMeasure) * props.beatsPerMeasure;
 

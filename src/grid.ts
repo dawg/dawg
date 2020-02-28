@@ -64,7 +64,7 @@ export const doSnap = (
 export type SequencerTool = 'pointer' | 'slicer';
 
 export interface GridOpts<T extends Element> {
-  sequence: Readonly<Ref<Readonly<Sequence<T>>>>;
+  sequence: Sequence<T>;
   pxPerBeat: Ref<number>;
   pxPerRow: Ref<number>;
   snap: Ref<number>;
@@ -80,7 +80,8 @@ export interface GridOpts<T extends Element> {
 export const createGrid = <T extends Element>(
   opts: GridOpts<T>,
 ) => {
-  const { sequence, pxPerBeat, pxPerRow, snap, minSnap, scrollLeft, scrollTop, createElement, beatsPerMeasure } = opts;
+  const { pxPerBeat, pxPerRow, snap, minSnap, scrollLeft, scrollTop, createElement, beatsPerMeasure } = opts;
+  let { sequence } = opts;
 
   // FIXME(Vue3) With Vue 3, we can move to a set I think
   const selected: boolean[] = [];
@@ -146,7 +147,7 @@ export const createGrid = <T extends Element>(
           const { x: x2, y: y2 } = calculatePos(event);
 
           const toAdd: T[] = [];
-          sequence.value.forEach((element) => {
+          sequence.l.forEach((element) => {
             const result = slice({
               row: element.row.value,
               time: element.time.value,
@@ -177,7 +178,7 @@ export const createGrid = <T extends Element>(
             }
           });
 
-          sequence.value.add(...toAdd);
+          sequence.add(...toAdd);
           selected.push(...toAdd.map(() => false));
           sliceStyle.value = null;
 
@@ -193,7 +194,7 @@ export const createGrid = <T extends Element>(
   const checkLoopEnd = () => {
     // Set the minimum to 1 measure!
     const maxTime = Math.max(
-      ...sequence.value.map((item) => item.time.value + item.duration.value),
+      ...sequence.l.map((item) => item.time.value + item.duration.value),
       beatsPerMeasure.value,
     );
 
@@ -211,12 +212,16 @@ export const createGrid = <T extends Element>(
     );
   });
 
-  watch(() => sequence.value.elements, () => {
-    if (selected.length !== sequence.value.elements.length) {
-      sequence.value.forEach((_, i) => selected[i] = false);
+  const onSequenceChange = ({ forceUpdate }: { forceUpdate?: boolean } = {}) => {
+    if (forceUpdate || selected.length !== sequence.l.length) {
+      sequence.l.forEach((_, i) => selected[i] = false);
     }
 
     checkLoopEnd();
+  };
+
+  watch(() => sequence.l, () => {
+    onSequenceChange();
   });
 
   const addElement = (e: MouseEvent, el: T | undefined) => {
@@ -253,7 +258,7 @@ export const createGrid = <T extends Element>(
     el.row.value = row;
     el.time.value = time;
 
-    opts.sequence.value.add(el);
+    opts.sequence.add(el);
     selected.push(false);
 
     return el;
@@ -265,7 +270,7 @@ export const createGrid = <T extends Element>(
       return;
     }
 
-    const el = sequence.value.elements[i];
+    const el = sequence.l[i];
     const rect = opts.getPosition();
 
     const time = doSnap({
@@ -293,7 +298,7 @@ export const createGrid = <T extends Element>(
 
     let itemsToMove: T[];
     if (selected[i]) {
-      itemsToMove = sequence.value.filter((_, ind) => selected[ind]);
+      itemsToMove = sequence.l.filter((_, ind) => selected[ind]);
     } else {
       itemsToMove = [el];
     }
@@ -315,12 +320,12 @@ export const createGrid = <T extends Element>(
   };
 
   const updateAttr = (i: number, value: number, attr: 'offset' | 'duration') => {
-    const el = sequence.value.elements[i];
+    const el = sequence.l[i];
     const diff = value - el[attr].value;
 
     const toUpdate = [el];
     if (selected[i]) {
-      sequence.value.forEach((element, index) => {
+      sequence.l.forEach((element, index) => {
         if (selected[index] && el !== element) {
           toUpdate.push(element);
         }
@@ -339,9 +344,9 @@ export const createGrid = <T extends Element>(
   };
 
   const select = (e: MouseEvent, i: number) => {
-    const item = sequence.value.elements[i];
+    const item = sequence.l[i];
     if (!selected[i]) {
-      sequence.value.forEach((_, ind) => selected[ind] = false);
+      sequence.l.forEach((_, ind) => selected[ind] = false);
     }
 
     const createItem = (oldItem: T, isSelected: boolean) => {
@@ -351,21 +356,21 @@ export const createGrid = <T extends Element>(
       // Thus, it will be displayed on top (which we want)
       // Try copying selected files and you will notice the selected notes stay on top
       selected.push(isSelected);
-      sequence.value.add(newItem as T);
+      sequence.add(newItem as T);
     };
 
     if (holdingShift) {
       // If selected, copy all selected. If not, just copy the item that was clicked.
       if (selected[i]) {
         // selected is all all selected except the element you pressed on
-        sequence.value.forEach((el, ind) => {
+        sequence.l.forEach((el, ind) => {
           if (!selected[ind]) {
             return;
           }
 
           if (el === item) {
             // A copy of `item` will be created at this index which becomes the target for moving
-            i = sequence.value.elements.length;
+            i = sequence.l.length;
           }
 
           // Set old item selected -> false and new item selected -> true since
@@ -374,7 +379,7 @@ export const createGrid = <T extends Element>(
           createItem(el, true);
         });
       } else {
-        i = sequence.value.elements.length;
+        i = sequence.l.length;
         createItem(item, false);
       }
     }
@@ -411,8 +416,8 @@ export const createGrid = <T extends Element>(
           holdingShift = true;
         } else if (e.keyCode === Keys.Delete || e.keyCode === Keys.Backspace) {
           // Slice and reverse sItemince we will be deleting from the array as we go
-          let i = sequence.value.elements.length - 1;
-          for (const _ of reverse(sequence.value.elements)) {
+          let i = sequence.l.length - 1;
+          for (const _ of reverse(sequence.l)) {
             if (selected[i]) {
               removeAtIndex(i);
             }
@@ -429,7 +434,7 @@ export const createGrid = <T extends Element>(
   };
 
   const removeAtIndex = (i: number) => {
-    const el = sequence.value.elements[i];
+    const el = sequence.l[i];
     el.remove();
     selected.splice(i, 1);
   };
@@ -470,7 +475,7 @@ export const createGrid = <T extends Element>(
     const maxBeat = (left + width) / pxPerBeat.value;
     const maxRow = (top + height) / pxPerRow.value;
 
-    sequence.value.forEach((item, i) => {
+    sequence.l.forEach((item, i) => {
       // Check if there is any overlap between the rectangles
       // https://www.geeksforgeeks.org/find-two-rectangles-overlap/
       if (minRow > item.row.value + 1 || item.row.value > maxRow) {
@@ -516,8 +521,12 @@ export const createGrid = <T extends Element>(
     onUnmounted: dispose,
     dispose,
     add: (e: MouseEvent) => {
-      return addElement(e, opts.createElement.value ? opts.createElement.value.copy() as T : undefined);
+      return addElement(e, createElement.value?.copy() as T);
     },
     mousedown,
+    setSequence(s: Sequence<T>) {
+      sequence = s;
+      onSequenceChange({ forceUpdate: true });
+    },
   };
 };

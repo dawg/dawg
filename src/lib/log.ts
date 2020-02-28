@@ -1,6 +1,5 @@
 import * as CSS from 'csstype';
 import { keys } from '@/lib/std';
-import path from 'path';
 
 type Level = 'info' | 'debug' | 'error' | 'trace' | 'warn';
 type LevelLookup = { [L in Level]: number };
@@ -54,6 +53,9 @@ const styles: { [K in Level]: CSS.Properties } = {
     borderRadius: '4px',
   },
   trace: {
+    backgroundColor: rgb(rgbs.gray),
+    color: 'white',
+    fontWeight: 'bold',
     padding: '4px 6px',
     borderRadius: '4px',
   },

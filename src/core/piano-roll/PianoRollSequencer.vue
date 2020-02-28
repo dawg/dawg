@@ -94,7 +94,7 @@ export default class PianoRollSequencer extends Vue {
   public checkAll() {
     let max: null | ScheduledNote = null;
     this.pattern.scores.forEach((score) => {
-      score.notes.forEach((note) => {
+      score.notes.l.forEach((note) => {
         if (!max || note.time.value + note.duration.value > max.time.value + max.duration.value) {
           max = note;
         }
@@ -121,13 +121,13 @@ export default class PianoRollSequencer extends Vue {
       this.eventDisposer.dispose();
     }
 
-    const addedDisposer = this.score.notes.on('added', (el) => {
+    const addedDisposer = this.score.notes.onDidAddElement((el) => {
       if (el.endBeat.value > this.playlistLoopEnd) {
         this.lastNote = el;
       }
     });
 
-    const removedDisposer = this.score.notes.on('removed', (el) => {
+    const removedDisposer = this.score.notes.onDidRemoveElement((el) => {
       if (el === this.lastNote) {
         this.checkAll();
       }
