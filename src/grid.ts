@@ -4,6 +4,7 @@ import { addEventListeners } from '@/lib/events';
 import { Keys, Disposer, reverse } from '@/lib/std';
 import { calculateSimpleSnap, slice } from '@/utils';
 import { SchedulablePrototype } from '@/models/schedulable';
+import * as history from '@/core/project/history';
 
 // For more information see the following link:
 // https://stackoverflow.com/questions/4270485/drawing-lines-on-html-page
@@ -84,7 +85,13 @@ export const createGrid = <T extends Element>(
   let { sequence } = opts;
 
   // FIXME(Vue3) With Vue 3, we can move to a set I think
-  const selected: boolean[] = [];
+  const selected: T[] = [];
+  const sDel = (el: T) => {
+    const i = selected.indexOf(el);
+    if (i === -1) { return; }
+    selected.splice(i, 1);
+  };
+
   let holdingShift = false;
   const sequencerLoopEnd = ref(0);
   const disposers = new Set<Disposer>();
@@ -179,7 +186,6 @@ export const createGrid = <T extends Element>(
           });
 
           sequence.add(...toAdd);
-          selected.push(...toAdd.map(() => false));
           sliceStyle.value = null;
 
           disposers.delete(disposer);
@@ -214,7 +220,7 @@ export const createGrid = <T extends Element>(
 
   const onSequenceChange = ({ forceUpdate }: { forceUpdate?: boolean } = {}) => {
     if (forceUpdate || selected.length !== sequence.l.length) {
-      sequence.l.forEach((_, i) => selected[i] = false);
+      selected.splice(0, selected.length);
     }
 
     checkLoopEnd();
@@ -229,8 +235,8 @@ export const createGrid = <T extends Element>(
       return;
     }
 
-    if (selected.some((value) => value)) {
-      selected.forEach((_, i) => selected[i] = false);
+    if (selected.length > 0) {
+      selected.splice(0, selected.length);
       return;
     }
 
@@ -259,8 +265,6 @@ export const createGrid = <T extends Element>(
     el.time.value = time;
 
     opts.sequence.add(el);
-    selected.push(false);
-
     return el;
   };
 
@@ -293,8 +297,13 @@ export const createGrid = <T extends Element>(
       pxPerBeat: pxPerRow.value,
     });
 
+
     const timeDiff = time - initialMoveBeat;
     const rowDiff = row - el.row.value;
+
+    if (timeDiff === 0 && rowDiff === 0) {
+      return;
+    }
 
     let itemsToMove: T[];
     if (selected[i]) {
@@ -303,20 +312,38 @@ export const createGrid = <T extends Element>(
       itemsToMove = [el];
     }
 
-    if (itemsToMove.every((item) => item.time.value + timeDiff >= 0)) {
-      initialMoveBeat = time;
-      itemsToMove.forEach((item) => {
-        item.time.value += timeDiff;
-      });
+    const canMoveTime = itemsToMove.every((item) => item.time.value + timeDiff >= 0);
+    const canMoveRow = itemsToMove.every((item) => item.row.value + rowDiff >= 0);
 
-      checkLoopEnd();
+    if (!canMoveRow && !canMoveTime) {
+      return;
     }
 
-    if (itemsToMove.every((item) => item.row.value + rowDiff >= 0)) {
-      itemsToMove.forEach((item) => {
-        item.row.value = item.row.value + rowDiff;
-      });
-    }
+    const doAdd = (o: { timeDiff: number, rowDiff: number }) => {
+      if (canMoveTime) {
+        initialMoveBeat = time;
+        itemsToMove.forEach((item) => {
+          item.time.value += o.timeDiff;
+        });
+
+        checkLoopEnd();
+      }
+
+      if (canMoveRow) {
+        itemsToMove.forEach((item) => {
+          item.row.value = item.row.value + o.rowDiff;
+        });
+      }
+    };
+
+    history.execute({
+      execute: () => {
+        doAdd({ timeDiff, rowDiff });
+      },
+      undo: () => {
+        doAdd({ timeDiff: -timeDiff, rowDiff: -rowDiff });
+      },
+    });
   };
 
   const updateAttr = (i: number, value: number, attr: 'offset' | 'duration') => {
@@ -346,7 +373,7 @@ export const createGrid = <T extends Element>(
   const select = (e: MouseEvent, i: number) => {
     const item = sequence.l[i];
     if (!selected[i]) {
-      sequence.l.forEach((_, ind) => selected[ind] = false);
+      selected.splice(0, selected.length);
     }
 
     const createItem = (oldItem: T, isSelected: boolean) => {
@@ -355,7 +382,10 @@ export const createGrid = <T extends Element>(
       // We set selected to true because `newNew` will have a higher z-index
       // Thus, it will be displayed on top (which we want)
       // Try copying selected files and you will notice the selected notes stay on top
-      selected.push(isSelected);
+      if (isSelected) {
+        selected.push(newItem as T);
+      }
+
       sequence.add(newItem as T);
     };
 
@@ -364,7 +394,7 @@ export const createGrid = <T extends Element>(
       if (selected[i]) {
         // selected is all all selected except the element you pressed on
         sequence.l.forEach((el, ind) => {
-          if (!selected[ind]) {
+          if (!selected.includes(el)) {
             return;
           }
 
@@ -375,7 +405,7 @@ export const createGrid = <T extends Element>(
 
           // Set old item selected -> false and new item selected -> true since
           // the new items will be placed over the old elements
-          selected[ind] = false;
+          sDel(el);
           createItem(el, true);
         });
       } else {
@@ -459,7 +489,7 @@ export const createGrid = <T extends Element>(
   const selectStyle = computed(() => {
     if (!selectStart.value) { return; }
     if (!selectCurrent.value) {
-      selected.forEach((_, i) => selected[i] = false);
+      selected.splice(0, selected.length);
       return;
     }
 
@@ -479,11 +509,11 @@ export const createGrid = <T extends Element>(
       // Check if there is any overlap between the rectangles
       // https://www.geeksforgeeks.org/find-two-rectangles-overlap/
       if (minRow > item.row.value + 1 || item.row.value > maxRow) {
-        selected[i] = false;
+        sDel(item);
       } else if (minBeat > item.time.value + item.duration.value || item.time.value > maxBeat) {
-        selected[i] = false;
+        sDel(item);
       } else {
-        selected[i] = true;
+        selected.push(item);
       }
     });
 

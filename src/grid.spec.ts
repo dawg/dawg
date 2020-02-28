@@ -102,7 +102,7 @@ describe('grid', () => {
     create(({ grid, sequence }) => {
       events(grid).emit('md', { x: 1, y: 1 }).emit('mu');
       expect(sequence.l.length).to.eq(2);
-      expect(grid.selected.length).to.eq(2);
+      expect(grid.selected.length).to.eq(0);
       expect(sequence.l[1].row.value).to.eq(1);
       expect(sequence.l[1].time.value).to.eq(1);
     });
@@ -116,14 +116,14 @@ describe('grid', () => {
   });
 
   it('correctly selects elements', () => {
-    create(({ grid }) => {
+    create(({ grid, sequence }) => {
       const emitter = events(grid).emit('md', { x: 0.5, y: 1 })
         .emit('mm', { x: 2.5, y: 2 });
       expect(grid.selectStyle.value?.left).to.eq('10px');
       expect(grid.selectStyle.value?.top).to.eq('10px');
       expect(grid.selectStyle.value?.width).to.eq('50px');
       expect(grid.selectStyle.value?.height).to.eq('20px');
-      expect(grid.selected[0]).to.eq(true);
+      expect(grid.selected.includes(sequence.l[0])).to.eq(true);
       emitter.emit('mu');
     }, { tool: ref('pointer') });
   });

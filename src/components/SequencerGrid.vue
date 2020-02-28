@@ -55,7 +55,7 @@
         :disable-offset="!el.offsettable"
         :snap="snap"
         :min-snap="minSnap"
-        :selected="selected[i]"
+        :selected="selected.includes(el)"
         :duration="el.duration.value"
         :offset="el.offset.value"
         :show-border="el.showBorder"
@@ -198,7 +198,7 @@ export default createComponent({
     });
 
     const d2 = props.sequence.onDidRemoveElement((el) => {
-      tempElements.splice(tempElements.indexOf(el));
+      tempElements.splice(tempElements.indexOf(el), 1);
     });
 
     onUnmounted(() => {

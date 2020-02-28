@@ -13,6 +13,9 @@ import { allKeys } from '@/utils';
 import { BuildingBlock } from '@/models/block';
 import { Disposer } from '@/lib/std';
 import { emitter } from '@/lib/events';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('schedulable', { level: 'debug' });
 
 export const createType = <T extends string, M extends t.Mixed>(
   type: T, options: M,
@@ -162,9 +165,11 @@ const createSchedulable = <
     const remove = () => {
       history.execute({
         execute: () => {
+          logger.debug('Removing element!');
           removeNoHistory();
         },
         undo: () => {
+          logger.debug('Undoing remove of element!');
           if (controller) {
             controller.undoRemove();
             events.emit('undoRemove');

@@ -2,18 +2,34 @@ import { ScheduledElement } from '@/models/schedulable';
 import { emitter } from '@/lib/events';
 import * as history from '@/core/project/history';
 import { Disposer } from '@/lib/std';
+import { getLogger } from '@/lib/log';
 
+const logger = getLogger('sequence', { level: 'debug' });
 
 const watchElement = <T extends ScheduledElement<any, any, any>>(
-  l: T[], el: T, onRemove: (event: T) => void,
+  l: T[], el: T, onRemove: (event: T) => void, onAdd: (event: T) => void,
 ) => {
-  const disposer = el.onDidRemove(() => {
-    const i = l.indexOf(el);
+  let i: number | undefined;
+  const d1 = el.onDidRemove(() => {
+    i = l.indexOf(el);
     if (i >= 0) {
       onRemove(el);
       l.splice(i, 1);
     }
-    disposer.dispose();
+    d1.dispose();
+  });
+
+  const d2 = el.onUndidRemove(() => {
+    if (i === undefined) {
+      return;
+    }
+
+    if (i >= 0) {
+      onAdd(el);
+      l.splice(i, 0, el);
+    }
+
+    d2.dispose();
   });
 };
 
@@ -28,22 +44,23 @@ export const createSequence = <T extends ScheduledElement<any, any, any>>(l: T[]
   const events = emitter<{ added: [T], removed: [T] }>();
 
   l.forEach((e) => {
-    watchElement(l, e, onRemove);
+    watchElement(l, e, onRemove, onAdd);
     l.push(e);
   });
 
   function add(...newL: T[]) {
     history.execute({
       execute: () => {
+        logger.debug(`Adding ${newL.length} elements!`);
         newL.forEach((el) => {
           l.push(el);
-          watchElement(l, el, onRemove);
-          events.emit('added', el);
+          watchElement(l, el, onRemove, onAdd);
+          onAdd(el);
         });
       },
       undo: () => {
+        logger.debug(`Removing ${newL.length} elements!`);
         newL.forEach((el) => {
-          onRemove(el);
           el.removeNoHistory();
         });
       },
@@ -56,6 +73,10 @@ export const createSequence = <T extends ScheduledElement<any, any, any>>(l: T[]
 
   function onDidRemoveElement(cb: (el: T) => void) {
     return events.on('removed', cb);
+  }
+
+  function onAdd(el: T) {
+    events.emit('added', el);
   }
 
   function onRemove(el: T) {
