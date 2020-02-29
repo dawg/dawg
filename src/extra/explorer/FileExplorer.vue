@@ -23,7 +23,6 @@
 </template>
 
 <script lang="ts">
-import { Component, Vue, Prop } from 'vue-property-decorator';
 import { Extensions, Folder, File } from '@/extra/explorer/types';
 import Tree from '@/extra/explorer/Tree.vue';
 import * as dawg from '@/dawg';

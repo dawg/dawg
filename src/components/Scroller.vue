@@ -6,7 +6,6 @@
 
 <script lang="ts">
 import { createComponent, computed } from '@vue/composition-api';
-import { Vue, Component, Prop } from 'vue-property-decorator';
 import { clamp } from '@/lib/std';
 import { Nullable, update } from '@/lib/vutils';
 import { calculateScroll } from '@/utils';

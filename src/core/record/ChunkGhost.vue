@@ -8,36 +8,43 @@
 </template>
 
 <script lang="ts">
-
-import { Vue, Component, Prop } from 'vue-property-decorator';
 import Waveform from '@/components/Waveform.vue';
 import { ChunkGhost as Ghost } from '@/models/ghost';
 import * as dawg from '@/dawg';
+import { createComponent, computed } from '@vue/composition-api';
 
-@Component({components: { Waveform }})
-export default class ChunkGhost extends Vue {
-  @Prop({ type: Object, required: true }) public ghost!: Ghost;
-  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
+export default createComponent({
+  components: { Waveform },
+  name: 'ChunkGhost',
+  props: {
+    ghost: { type: Object as () => Ghost, required: true },
+    pxPerBeat: { type: Number, required: true },
+  },
+  setup(props) {
+    const waveformStyle = computed(() => {
+      return {
+        width: `${bufferWidth.value}px`,
+        height: `40px`,
+      };
+    });
 
-  get buffer() {
-    return this.ghost.buffer;
-  }
+    const bufferWidth = computed(() => {
+      if (props.ghost.buffer) {
+        return (
+          props.ghost.buffer.length /
+          props.ghost.buffer.sampleRate / 60 *
+          dawg.project.bpm.value * props.pxPerBeat
+        );
+      } else {
+        return 0;
+      }
+    });
 
-  get waveformStyle() {
     return {
-      width: `${this.bufferWidth}px`,
-      height: `40px`,
+      waveformStyle,
     };
-  }
-
-  get bufferWidth() {
-    if (this.ghost.buffer) {
-      return this.ghost.buffer.length / this.ghost.buffer.sampleRate / 60 * dawg.project.bpm.value * this.pxPerBeat;
-    } else {
-      return 0;
-    }
-  }
-}
+  },
+});
 </script>
 
 <style scoped lang="sass">

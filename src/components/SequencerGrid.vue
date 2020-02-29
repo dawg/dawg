@@ -168,12 +168,14 @@ export default createComponent({
     getPosition: { type: Function as any as () => (() => { left: number, top: number }), required: true },
 
     // FIXME edge case -> what happens if the element is deleted?
-    prototype: { type: Object as () => SchedulablePrototype<any, any, any> },
+    prototype: { type: Function as any as () => SchedulablePrototype<any, any, any> },
   },
   setup(props, context) {
     const tempElements: Array<ScheduledElement<any, any, any>> = [];
 
     const rows = ref<Vue>(null);
+
+    const c = computed(() => (() => ''));
 
     const grid = createGrid({
       sequence: props.sequence,
@@ -184,7 +186,7 @@ export default createComponent({
       scrollLeft: computed(() => props.scrollLeft),
       scrollTop: computed(() => props.scrollTop),
       beatsPerMeasure: computed(() => props.beatsPerMeasure),
-      createElement: computed(() => props.prototype),
+      createElement: props.prototype,
       tool: computed(() => props.tool),
       getPosition: props.getPosition,
     });
@@ -271,13 +273,13 @@ export default createComponent({
     }
 
     function clickElement(i: number) {
-      update(props, context, 'prototype', props.sequence.l[i]);
+      update(props, context, 'prototype', props.sequence.l[i].copy);
     }
 
     async function handleDrop(prototype: UnscheduledPrototype, e: MouseEvent) {
       logger.debug('Dropping new element!');
       const element = prototype(props.transport);
-      update(props, context, 'prototype', element);
+      update(props, context, 'prototype', element.copy);
       await Vue.nextTick();
       const newEl = grid.add(e);
       if (newEl) {

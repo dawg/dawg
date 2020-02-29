@@ -12,7 +12,6 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 import Waveform from '@/components/Waveform.vue';
 import { Nullable } from '@/lib/vutils';
 import { ScheduledSample } from '@/models';

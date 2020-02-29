@@ -5,7 +5,6 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import { createComponent, computed, ref, watch } from '@vue/composition-api';
 
 export default createComponent({

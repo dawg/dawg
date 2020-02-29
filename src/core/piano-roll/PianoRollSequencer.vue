@@ -10,7 +10,7 @@
       :beats-per-measure="beatsPerMeasure"
       :row-height="rowHeight"
       :sequence="score.notes"
-      :transport="transport"
+      :transport="pattern.transport"
       :num-rows="allKeys.length"
       :prototype.sync="note"
       :side-width="90"
@@ -20,7 +20,7 @@
     >
       <template slot="side">
         <piano 
-          :synth="instrument"
+          :synth="score.instrument"
           :key-height="rowHeight"
         ></piano>
       </template>
@@ -29,116 +29,114 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import { allKeys, keyLookup } from '@/utils';
 import { INotes } from '@/lib/midi-parser';
-import { ScheduledNote, Instrument, Playlist, Pattern, Score, Sequence, createNotePrototype, ScheduledElement } from '@/models';
+import {
+  ScheduledNote,
+  Instrument,
+  Playlist,
+  Pattern,
+  Score,
+  Sequence,
+  createNotePrototype,
+  ScheduledElement,
+} from '@/models';
 import { Watch } from '@/lib/update';
-import { SchedulablePrototype } from '../../models/schedulable';
+import { SchedulablePrototype } from '@/models';
+import { createComponent, computed, watch, ref, reactive } from '@vue/composition-api';
 
-@Component
-export default class PianoRollSequencer extends Vue {
-  @Prop({ type: Number, required: true }) public beatsPerMeasure!: number;
-  @Prop({ type: Object, required: true }) public score!: Score;
-  @Prop({ type: Object, required: true }) public pattern!: Pattern;
-  @Prop({ type: Number, required: true }) public rowHeight!: number;
+export default createComponent({
+  name: 'PianoRollSequencer',
+  props: {
+    beatsPerMeasure: { type: Number, required: true },
+    score: { type: Object as () => Score, required: true },
+    pattern: { type: Object as () => Pattern, required: true },
+    rowHeight: { type: Number, required: true },
+  },
+  setup(props, context) {
+    const endBeat = ref(0);
+    let eventDisposer: { dispose: () => void } | undefined;
 
-  public lastNote: null | ScheduledNote = null;
-  public eventDisposer?: { dispose: () => void };
+    // This is the prototype
+    // row and time are overwritten so they can be set to 0 here
+    const note = ref<SchedulablePrototype<any, any, any>>();
 
-  // This is the prototype
-  // row and time are overwritten so they can be set to 0 here
-  public allKeys = allKeys;
-  public note: SchedulablePrototype<any, any, any> | null = null;
+    const setLoopEnd = computed(() => {
+      // Always round up to the nearest measure
+      return Math.ceil(endBeat.value / props.beatsPerMeasure) * props.beatsPerMeasure;
+    });
 
-  get instrument() {
-    return this.score.instrument;
-  }
-
-  get transport() {
-    return this.pattern.transport;
-  }
-
-  get setLoopEnd() {
-    // Always round up to the nearest measure
-    return Math.ceil(this.playlistLoopEnd / this.beatsPerMeasure) * this.beatsPerMeasure;
-  }
-
-  get playlistLoopEnd() {
-    if (!this.lastNote) {
-      return 0;
+    function rowClass(i: number) {
+      const key = allKeys[i].value;
+      return key.includes('#') ? 'bg-default-darken-1' : 'bg-default';
     }
 
-    return this.lastNote.endBeat.value;
-  }
+    function addNotes(notes: INotes) {
+      notes.forEach((iNote) => {
+        // Transform the interfaces into actual note classes
+        const row = keyLookup[iNote.name].id;
+        const n = createNotePrototype({
+          row,
+          duration: iNote.duration,
+          time: iNote.start,
+        }, props.score.instrument, { velocity: iNote.velocity })(props.pattern.transport).copy();
 
-  public rowClass(i: number) {
-    const key = allKeys[i].value;
-    return key.includes('#') ? 'bg-default-darken-1' : 'bg-default';
-  }
+        props.score.notes.add(n);
+      });
+    }
 
-  public addNotes(notes: INotes) {
-    notes.forEach((iNote) => {
-      // Transform the interfaces into actual note classes
-      const row = keyLookup[iNote.name].id;
-      const note = createNotePrototype({
-        row,
-        duration: iNote.duration,
-        time: iNote.start,
-      }, this.instrument, { velocity: iNote.velocity })(this.transport).copy();
+    function checkAll() {
+      let max: undefined | ScheduledNote;
+      props.pattern.scores.forEach((score) => {
+        score.notes.l.forEach((n) => {
+          if (!max || n.time.value + n.duration.value > max.time.value + max.duration.value) {
+            max = n;
+          }
+        });
+      });
 
-      this.score.notes.add(note);
+      endBeat.value = max?.endBeat.value ?? 0;
+    }
+
+    watch(() => props.pattern, checkAll, { lazy: true });
+
+    watch(() => props.score, () => {
+      const create = createNotePrototype({ row: 0, time: 0, duration: 1 }, props.score.instrument, { velocity: 1 });
+      note.value = create(props.pattern.transport).copy;
     });
-  }
 
-  public checkAll() {
-    let max: null | ScheduledNote = null;
-    this.pattern.scores.forEach((score) => {
-      score.notes.l.forEach((note) => {
-        if (!max || note.time.value + note.duration.value > max.time.value + max.duration.value) {
-          max = note;
+    watch(() => props.score, () => {
+      if (eventDisposer) {
+        eventDisposer.dispose();
+      }
+
+      const addedDisposer = props.score.notes.onDidAddElement((el) => {
+        if (el.endBeat.value > endBeat.value) {
+          endBeat.value = el.endBeat.value;
         }
       });
+
+      const removedDisposer = props.score.notes.onDidRemoveElement((el) => {
+        if (el.endBeat.value === endBeat.value) {
+          checkAll();
+        }
+      });
+
+      eventDisposer = {
+        dispose: () => {
+          addedDisposer.dispose();
+          removedDisposer.dispose();
+        },
+      };
     });
 
-    this.lastNote = max;
-  }
-
-  @Watch<PianoRollSequencer>('pattern')
-  public checkPattern() {
-    this.checkAll();
-  }
-
-  @Watch<PianoRollSequencer>('instrument', { immediate: true })
-  public setPrototype() {
-    const create = createNotePrototype({ row: 0, time: 0, duration: 1 }, this.instrument, { velocity: 1 });
-    this.note = create(this.transport);
-  }
-
-  @Watch<PianoRollSequencer>('score', { immediate: true })
-  public addListener() {
-    if (this.eventDisposer) {
-      this.eventDisposer.dispose();
-    }
-
-    const addedDisposer = this.score.notes.onDidAddElement((el) => {
-      if (el.endBeat.value > this.playlistLoopEnd) {
-        this.lastNote = el;
-      }
-    });
-
-    const removedDisposer = this.score.notes.onDidRemoveElement((el) => {
-      if (el === this.lastNote) {
-        this.checkAll();
-      }
-    });
-
-    this.eventDisposer = {
-      dispose: () => {
-        addedDisposer.dispose();
-        removedDisposer.dispose();
-      },
+    return {
+      addNotes,
+      allKeys,
+      rowClass,
+      setLoopEnd,
+      note,
     };
-  }
-}
+  },
+});
 </script>

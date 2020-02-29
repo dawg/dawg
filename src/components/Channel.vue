@@ -70,7 +70,6 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
 import { range, scale, clamp } from '@/lib/std';
 import { AnyEffect } from '@/models/filters/effect';
 import { Channel as C } from '@/models/channel';
@@ -201,9 +200,4 @@ export default createComponent({
     };
   },
 });
-
-
-export class Channel extends Vue {
-
-}
 </script>

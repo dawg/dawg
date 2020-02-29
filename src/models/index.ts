@@ -18,6 +18,7 @@ export {
   createNotePrototype,
   createPatternPrototype,
   createSamplePrototype,
+  SchedulablePrototype,
 } from '@/models/schedulable';
 export { Sample, SampleType } from '@/models/sample';
 export * from '@/models/automation';

@@ -15,7 +15,6 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
 import { ScheduledSample, Sample, createSamplePrototype } from '@/models';
 import * as dawg from '@/dawg';
 import { createComponent, computed } from '@vue/composition-api';
@@ -23,7 +22,6 @@ import { useClicker } from '@/lib/vutils';
 
 export default createComponent({
   name: 'AudioFiles',
-  props: {},
   setup() {
     let dispose: (() => void) | null = null;
 

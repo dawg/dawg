@@ -51,7 +51,7 @@ export interface GridOpts<T extends Element> {
   scrollLeft: Ref<number>;
   scrollTop: Ref<number>;
   beatsPerMeasure: Ref<number>;
-  createElement: Ref<undefined | SchedulablePrototype<any, any, any>>;
+  createElement: undefined | SchedulablePrototype<any, any, any>;
   getPosition: () => { left: number, top: number };
   tool: Ref<SequencerTool>;
 }
@@ -59,8 +59,8 @@ export interface GridOpts<T extends Element> {
 export const createGrid = <T extends Element>(
   opts: GridOpts<T>,
 ) => {
-  const { pxPerBeat, pxPerRow, snap, minSnap, scrollLeft, scrollTop, createElement, beatsPerMeasure } = opts;
-  let { sequence } = opts;
+  const { pxPerBeat, pxPerRow, snap, minSnap, scrollLeft, scrollTop, beatsPerMeasure } = opts;
+  let { sequence, createElement } = opts;
 
   // FIXME(Vue3) With Vue 3, we can move to a set I think
   const selected: T[] = [];
@@ -83,7 +83,10 @@ export const createGrid = <T extends Element>(
       mouseup: () => {
         generalDisposer.dispose();
         disposers.delete(generalDisposer);
-        addElement(e, createElement.value?.copy() as T);
+
+        if (createElement) {
+          addElement(e, createElement() as T);
+        }
       },
     });
 
@@ -530,13 +533,18 @@ export const createGrid = <T extends Element>(
     onUnmounted: dispose,
     dispose,
     add: (e: MouseEvent) => {
-      return addElement(e, createElement.value?.copy() as T);
+      if (createElement) {
+        return addElement(e, createElement() as T);
+      }
     },
     mousedown,
     setSequence(s: Sequence<T>) {
       sequence = s;
       selected.splice(0, selected.length);
       checkLoopEnd();
+    },
+    setPrototype(s: SchedulablePrototype<any, any, any>) {
+      createElement = s;
     },
   };
 };

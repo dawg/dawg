@@ -68,9 +68,9 @@ const wrap = (initial: number, onSet: (value: number) => void) => {
   return reference;
 };
 
-export type SchedulablePrototype<Element, Type extends string, Options extends t.Mixed> = Readonly<{
-  copy: () => ScheduledElement<Element, Type, Options>;
-}>;
+export type SchedulablePrototype<
+  Element, Type extends string, Options extends t.Mixed
+> = () => ScheduledElement<Element, Type, Options>;
 
 export type ScheduledElement<Element, Type extends string, Options extends t.Mixed> = Readonly<{
   component: string;
@@ -92,7 +92,8 @@ export type ScheduledElement<Element, Type extends string, Options extends t.Mix
   serialize: () => t.TypeOf<SerializationType<Type, Options>>;
   onDidRemove: (cb: () => void) => Disposer;
   onUndidRemove: (cb: () => void) => Disposer;
-}> & SchedulablePrototype<Element, Type, Options>;
+  copy: SchedulablePrototype<Element, Type, Options>;
+}>;
 
 interface Basics {
   duration: number;
