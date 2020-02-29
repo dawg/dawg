@@ -114,10 +114,13 @@ import PanelHeaders from '@/lib/framework/PanelHeaders.vue';
 import ActivityBar from '@/lib/framework/ActivityBar.vue';
 import * as framework from '@/lib/framework';
 import { sortOrdered } from '@/lib/std';
-import { createComponent, computed, ref, onMounted, onUnmounted } from '@vue/composition-api';
+import { createComponent, computed, ref, onMounted, onUnmounted, watch } from '@vue/composition-api';
 import { getLogger } from '@/lib/log';
+import { ipcSender } from '@/lib/framework/ipc';
+import { createSubscriptions } from '@/lib/vutils';
+import { remote } from 'electron';
 
-const logger = getLogger('App');
+const logger = getLogger('App', { level: 'debug' });
 
 export default createComponent({
   components: {
@@ -129,47 +132,79 @@ export default createComponent({
   name: 'App',
   setup() {
     const settings = ref(false);
+    const { subscriptions } = createSubscriptions();
+
     // This loaded flag is important
     // Bugs can appear if we render before we load the project file
     // This occurs because some components mutate objects
     // However, they do not reapply their mutations
     // ie. some components expect props to stay the same.
     const loaded = ref(false);
+
     const mainComponent = computed(() => {
       if (framework.ui.mainSection.length) {
         return framework.ui.mainSection[framework.ui.mainSection.length - 1];
       }
     });
+
     const toolbarLeft = computed(() => {
       return framework.ui.toolbar.filter((item) => item.position === 'left').sort(sortOrdered);
     });
+
     const toolbarRight = computed(() => {
       return framework.ui.toolbar.filter((item) => item.position === 'right').sort(sortOrdered).reverse();
     });
+
     const lineStyle = computed(() => {
       return `border-left: 1px solid ${framework.theme['text-default']}`;
     });
+
     const statusBarRight = computed(() => {
       return framework.ui.statusBar.filter((item) => item.position === 'right').sort(sortOrdered).reverse();
     });
+
     const statusBarLeft = computed(() => {
       return framework.ui.statusBar.filter((item) => item.position === 'left').sort(sortOrdered);
     });
+
     function online() {
       framework.notify.info('Connection has been restored');
     }
+
     function offline() {
       framework.notify.warning('You are disconnected', {
         detail: 'Features may not work as expected.',
       });
     }
+
     function openSettings() {
       settings.value = true;
     }
+
     // This is called before refresh / close
     // I don't remove this listner because the window is closing anyway
-    // I'm not even sure onExit would be called if we removed it in the destroy method
-    window.addEventListener('beforeunload', framework.manager.dispose);
+    window.addEventListener('beforeunload', (e) => {
+      // if not hasUnsavedChanged then default to yes because we don't want to prompt them
+      const choice = !hasUnsavedChanged ? 0 : remote.dialog.showMessageBoxSync(
+        remote.getCurrentWindow(),
+        {
+          type: 'question',
+          buttons: ['Yes', 'No'],
+          title: 'Confirm',
+          message: 'Are you sure you want to quit? Your unsaved changes will be lost.',
+        },
+      );
+
+      // 0 -> Yes
+      // 1 -> No
+      if (choice === 0) {
+        framework.manager.dispose();
+      } else {
+        // This is so dumb but it's how you prevent a reload/exit
+        // https://developer.mozilla.org/en-US/docs/Web/API/WindowEventHandlers/onbeforeunload
+        e.returnValue = '';
+      }
+    });
 
     // FIXME
     // automation.$on('automate', this.addAutomationClip);
@@ -179,6 +214,7 @@ export default createComponent({
       logger.info('Startup sequence complete...');
       loaded.value = true;
     }, 1250);
+
     onMounted(() => {
       window.addEventListener('offline', offline);
       window.addEventListener('online', online);
@@ -187,10 +223,25 @@ export default createComponent({
         offline();
       }
     });
+
     onUnmounted(() => {
       window.removeEventListener('offline', offline);
       window.removeEventListener('online', online);
     });
+
+
+    let hasUnsavedChanged = false;
+    subscriptions.push(framework.history.onDidHasUnsavedChangesChange((value) => {
+      logger.debug(
+        'Reference or top of history changed! Are there unsaved changes -> ' +
+        hasUnsavedChanged,
+      );
+
+      hasUnsavedChanged = value;
+    }));
+
+    // window.onbeforeunload = () => '';
+
     // public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T & string) {
     // FIXME Fix automation clips
     // const added = await ddd.project.createAutomationClip({

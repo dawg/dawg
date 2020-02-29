@@ -4,8 +4,9 @@
 
 import ResizeObserver from 'resize-observer-polyfill';
 import throttle from 'lodash.throttle';
-import { ref, Ref } from '@vue/composition-api';
+import { ref, Ref, onUnmounted } from '@vue/composition-api';
 import { getLogger } from '@/lib/log';
+import { Disposer } from '@/lib/std';
 
 const logger = getLogger('vutils');
 
@@ -13,6 +14,18 @@ export const update = <Props, K extends keyof Props, V extends Props[K]>(
   _: Props, context: { emit: (event: string, value: V) => void }, key: K, value: V,
 ) => {
   context.emit(`update:${key}`, value);
+};
+
+export const createSubscriptions = () => {
+  const subscriptions: Disposer[] = [];
+
+  onUnmounted(() => {
+    subscriptions.forEach((s) => s.dispose());
+  });
+
+  return {
+    subscriptions,
+  };
 };
 
 // FIXME become a hook I'm almost ready

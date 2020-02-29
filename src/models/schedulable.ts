@@ -2,7 +2,7 @@ import * as t from '@/lib/io';
 import Tone from 'tone';
 import * as Audio from '@/lib/audio';
 import { Beat } from '@/lib/audio/types';
-import * as history from '@/core/project/history';
+import * as history from '@/lib/framework/history';
 import { computed, Ref, ref, watch } from '@vue/composition-api';
 import { Context } from '@/lib/audio';
 import { Sample } from '@/models/sample';
