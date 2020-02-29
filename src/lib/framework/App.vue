@@ -183,7 +183,6 @@ export default createComponent({
 
     // This is called before refresh / close
     // I don't remove this listner because the window is closing anyway
-    // I'm not even sure onExit would be called if we removed it in the destroy method
     window.addEventListener('beforeunload', (e) => {
       // if not hasUnsavedChanged then default to yes because we don't want to prompt them
       const choice = !hasUnsavedChanged ? 0 : remote.dialog.showMessageBoxSync(
