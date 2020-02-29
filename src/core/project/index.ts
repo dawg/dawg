@@ -43,7 +43,7 @@ import {
   ScheduledNote,
 } from '@/models';
 import Tone from 'tone';
-import * as history from '@/core/project/history';
+import * as history from '@/lib/framework/history';
 import { getLogger } from '@/lib/log';
 
 const logger = getLogger('project', { level: 'debug' });
@@ -349,6 +349,7 @@ const createApi = () => {
     const encoded = serialize();
     await fs.writeFile(projectPath, JSON.stringify(encoded, null, 4));
     events.emit('save', encoded);
+    history.freezeReference();
   }
 
   async function removeOpenedFile() {

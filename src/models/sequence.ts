@@ -1,6 +1,6 @@
 import { ScheduledElement } from '@/models/schedulable';
 import { emitter } from '@/lib/events';
-import * as history from '@/core/project/history';
+import * as history from '@/lib/framework/history';
 import { Disposer } from '@/lib/std';
 import { getLogger } from '@/lib/log';
 

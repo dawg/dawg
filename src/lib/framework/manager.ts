@@ -39,6 +39,8 @@ export const ProjectIdType = t.type({
   id: t.string,
 });
 
+type ProjectID = t.TypeOf<typeof ProjectIdType>;
+
 type PastProject = t.TypeOf<typeof PastProjectsType>;
 
 let pastProject: PastProject = {};

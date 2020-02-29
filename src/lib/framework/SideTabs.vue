@@ -15,7 +15,7 @@
         @click="action.callback"
       ></dg-mat-icon>
     </div>
-    <div class="h-full overflow-y-scroll">
+    <div class="h-full">
       <base-tabs
         ref="tabs"
         :selected-tab.sync="openedSideTab"

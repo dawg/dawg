@@ -4,7 +4,7 @@ export { commands } from '@/core/commands';
 export { busy } from '@/core/busy';
 export { theme } from '@/core/theme';
 export { project } from '@/core/project';
-export { menu, context } from '@/lib/framework';
+export { menu, context, history } from '@/lib/framework';
 export { instruments } from '@/core/instruments';
 export { ui } from '@/lib/framework/ui';
 export { pianoRoll } from '@/core/piano-roll';

@@ -17,6 +17,10 @@ export const copy = <T>(o: T): T => {
   return JSON.parse(JSON.stringify(o));
 };
 
+export const peek = <T>(o: T[]): T | undefined => {
+  return o[o.length - 1];
+};
+
 export function mapRange(x: number, inMin: number, inMax: number, outMin: number, outMax: number) {
   return (((x - inMin) * (outMax - outMin)) / (inMax - inMin)) + outMin;
 }

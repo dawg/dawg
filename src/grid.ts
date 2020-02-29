@@ -1,10 +1,10 @@
-import { Ref, watch, ref, computed } from '@vue/composition-api';
+import { Ref, ref, computed } from '@vue/composition-api';
 import { ScheduledElement, Sequence } from '@/models';
 import { addEventListeners } from '@/lib/events';
 import { Keys, Disposer } from '@/lib/std';
 import { calculateSimpleSnap, slice, doSnap } from '@/utils';
 import { SchedulablePrototype } from '@/models/schedulable';
-import * as history from '@/core/project/history';
+import * as history from '@/lib/framework/history';
 import { getLogger } from '@/lib/log';
 
 const logger = getLogger('grid', { level: 'debug' });
