@@ -1,7 +1,7 @@
-import Vue from 'vue';
 import BusySignal from '@/core/busy/BusySignal.vue';
 import { Provider, bus } from '@/core/busy/helpers';
 import * as framework from '@/lib/framework';
+import { VueConstructor } from 'vue';
 
 /**
  * The configuration options.
@@ -27,7 +27,7 @@ export const busy = framework.manager.activate({
     };
 
     framework.ui.statusBar.push({
-      component: BusySignal,
+      component: BusySignal as any as VueConstructor,
       position: 'right',
       order: 2,
     });

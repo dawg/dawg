@@ -193,6 +193,12 @@ export default createComponent({
       getPosition: props.getPosition,
     });
 
+    watch(() => props.prototype, () => {
+      if (props.prototype) {
+        grid.setPrototype(props.prototype);
+      }
+    });
+
     // Sometimes reactivity drives me insane... this is one of those times...
     // For some reason, the array in the sequence (ie props.sequence.l) is NOT REACTIVE.
     // e.g. when you add/remove things the UI does not update unless it is forced to re-render.

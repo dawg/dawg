@@ -1,7 +1,6 @@
 <template>
 	<component :is="tag"
 		:draggable="draggable"
-		@drag="emitEvent('drag', $event)"
 		@dragstart="emitEvent('dragstart', $event)"
 		@dragenter="emitEvent('dragenter', $event)"
 		@dragleave="emitEvent('dragleave', $event)"
@@ -15,6 +14,9 @@
 import transferDataStore from './transferDataStore';
 import { dropEffects, effectsAllowed, DropEffect, AllowedEffect } from './constants';
 import { createComponent, ref, computed } from '@vue/composition-api';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('Drag');
 
 export default createComponent({
   props: {
@@ -23,6 +25,7 @@ export default createComponent({
     dropEffect: { type: String as () => DropEffect },
     effectAllowed: { type: String as () => AllowedEffect },
     tag: { type: String, default: 'div' },
+    group: { type: String, required: true },
   },
   setup(props, context) {
     const dragging = ref(false);
@@ -34,8 +37,10 @@ export default createComponent({
     const hideImageStyle = computed(() => ({ position: 'fixed', top: '-1000px' }));
 
     function emitEvent(
-      name: 'dragstart' | 'dragenter' | 'dragover' | 'drag' | 'dragleave' | 'dragend', nativeEvent: DragEvent,
+      name: 'dragstart' | 'dragenter' | 'dragover' | 'dragleave' | 'dragend', nativeEvent: DragEvent,
     ) {
+      logger.debug(`Starting ${name} event!`);
+
       const transfer = nativeEvent.dataTransfer;
       if (!transfer) {
         return;
@@ -49,10 +54,15 @@ export default createComponent({
       }
       // A number of things need to happen on drag start
       if (name === 'dragstart') {
+        transferDataStore.group = props.group;
+
         // Set the allowed effects
         if (props.effectAllowed) {
           transfer.effectAllowed = props.effectAllowed;
         }
+
+        logger.debug('Setting transferData to -> ', props.transferData);
+
         // Set the transfer data
         if (props.transferData !== undefined) {
           transferDataStore.data = props.transferData;
@@ -71,6 +81,7 @@ export default createComponent({
 
       // Clean up stored data on drag end after emitting.
       if (name === 'dragend') {
+        transferDataStore.group = undefined;
         transferDataStore.data = undefined;
         dragging.value = false;
       }
