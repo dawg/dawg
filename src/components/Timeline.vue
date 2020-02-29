@@ -56,7 +56,6 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch, Mixins, Inject } from 'vue-property-decorator';
 import { Directions, Nullable, useResponsive, update } from '@/lib/vutils';
 import { range, Mouse } from '@/lib/std';
 import * as dawg from '@/dawg';

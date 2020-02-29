@@ -73,6 +73,8 @@
             :row="el.row.value"
             :color="color"
             :px-per-beat="pxPerBeat"
+            :snap="snap"
+            :min-snap="minSnap"
             :width="width"
             :height="rowHeight"
             :element="el"
@@ -118,7 +120,7 @@ import Vue from 'vue';
 import { range, reverse } from '@/lib/std';
 import { addEventListeners } from '@/lib/events';
 import { update } from '@/lib/vutils';
-import BeatLines from '@/components/BeatLines';
+import BeatLines from '@/components/BeatLines.vue';
 import { Sequence } from '@/models';
 import * as Audio from '@/lib/audio';
 import { Ghost } from '@/models/ghost';
@@ -168,12 +170,14 @@ export default createComponent({
     getPosition: { type: Function as any as () => (() => { left: number, top: number }), required: true },
 
     // FIXME edge case -> what happens if the element is deleted?
-    prototype: { type: Object as () => SchedulablePrototype<any, any, any> },
+    prototype: { type: Function as any as () => SchedulablePrototype<any, any, any> },
   },
   setup(props, context) {
     const tempElements: Array<ScheduledElement<any, any, any>> = [];
 
     const rows = ref<Vue>(null);
+
+    const c = computed(() => (() => ''));
 
     const grid = createGrid({
       sequence: props.sequence,
@@ -184,9 +188,15 @@ export default createComponent({
       scrollLeft: computed(() => props.scrollLeft),
       scrollTop: computed(() => props.scrollTop),
       beatsPerMeasure: computed(() => props.beatsPerMeasure),
-      createElement: computed(() => props.prototype),
+      createElement: props.prototype,
       tool: computed(() => props.tool),
       getPosition: props.getPosition,
+    });
+
+    watch(() => props.prototype, () => {
+      if (props.prototype) {
+        grid.setPrototype(props.prototype);
+      }
     });
 
     // Sometimes reactivity drives me insane... this is one of those times...
@@ -271,13 +281,13 @@ export default createComponent({
     }
 
     function clickElement(i: number) {
-      update(props, context, 'prototype', props.sequence.l[i]);
+      update(props, context, 'prototype', props.sequence.l[i].copy);
     }
 
     async function handleDrop(prototype: UnscheduledPrototype, e: MouseEvent) {
       logger.debug('Dropping new element!');
       const element = prototype(props.transport);
-      update(props, context, 'prototype', element);
+      update(props, context, 'prototype', element.copy);
       await Vue.nextTick();
       const newEl = grid.add(e);
       if (newEl) {

@@ -14,44 +14,55 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
+import { createComponent, computed } from '@vue/composition-api';
+import { update } from '@/lib/vutils';
 
-@Component
-export default class VerticalSwitch extends Vue {
-  @Prop({ type: Boolean, required: true }) public top!: boolean;
+export default createComponent({
+  name: 'VerticalSwitch',
+  props: {
+    top: { type: Boolean, required: true },
+  },
+  setup(props, context) {
+    const bottom = computed(() => {
+      return !props.top;
+    });
 
-  get bottom() {
-    return !this.top;
-  }
+    const topClass = computed(() => {
+      if (props.top) {
+        return 'bg-primary';
+      } else {
+        return 'bg-white';
+      }
+    });
 
-  get topClass() {
-    if (this.top) {
-      return 'bg-primary';
-    } else {
-      return 'bg-white';
+    const bottomClass = computed(() => {
+      if (bottom.value) {
+        return 'bg-primary';
+      } else {
+        return 'bg-white';
+      }
+    });
+
+    function selectTop() {
+      if (!props.top) {
+        update(props, context, 'top', true);
+      }
     }
-  }
 
-  get bottomClass() {
-    if (this.bottom) {
-      return 'bg-primary';
-    } else {
-      return 'bg-white';
+    function selectBottom() {
+      if (props.top) {
+        update(props, context, 'top', false);
+      }
     }
-  }
 
-  public selectTop() {
-    if (!this.top) {
-      this.$update('top', true);
-    }
-  }
-
-  public selectBottom() {
-    if (this.top) {
-      this.$update('top', false);
-    }
-  }
-}
+    return {
+      selectTop,
+      topClass,
+      selectBottom,
+      bottomClass,
+    };
+  },
+});
 </script>
 
 <style scoped lang="sass">

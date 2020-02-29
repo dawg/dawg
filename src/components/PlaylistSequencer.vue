@@ -23,39 +23,43 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
 import { Track } from '@/models';
-import { theme } from '@/core/theme';
 import * as framework from '@/lib/framework';
+import { createComponent, ref } from '@vue/composition-api';
 
-@Component
-export default class PlaylistSequencer extends Vue {
-  @Prop({ type: Number, required: true }) public rowHeight!: number;
-  @Prop({ type: Array, required: true }) public tracks!: Track[];
+export default createComponent({
+  name: 'PlaylistSequencer',
+  props: {
+    rowHeight: { type: Number, required: true },
+    tracks: { type: Array as () => Track[], required: true },
+  },
+  setup() {
+    const prototype = ref();
 
-  public prototype = null;
-
-  public trackOptions(event: MouseEvent, i: number) {
-    framework.context({
-      position: event,
-      items: framework.ui.trackContext.map((item) => {
-        return {
-          ...item,
-          callback: () => {
-            item.callback(i);
-          },
-        };
-      }),
-    });
-  }
+    function trackOptions(event: MouseEvent, i: number) {
+      framework.context({
+        position: event,
+        items: framework.ui.trackContext.map((item) => {
+          return {
+            ...item,
+            callback: () => {
+              item.callback(i);
+            },
+          };
+        }),
+      });
+    }
 
 
-  public rowClass() {
-    return 'bg-default border-b border-default-darken-2';
-  }
-}
+    function rowClass() {
+      return 'bg-default border-b border-default-darken-2';
+    }
+
+    return {
+      rowClass,
+      trackOptions,
+      prototype,
+    };
+  },
+});
 </script>
-
-<style lang="sass" scoped>
-
-</style>

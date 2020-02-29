@@ -16,7 +16,6 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Inject, Vue } from 'vue-property-decorator';
 import { Instrument } from '@/models';
 import * as framework from '@/lib/framework';
 import { ref, computed, createComponent } from '@vue/composition-api';

@@ -14,31 +14,39 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
 import { ScheduledAutomation, createAutomationPrototype } from '@/models';
 import * as dawg from '@/dawg';
+import { createComponent, computed } from '@vue/composition-api';
 
-@Component
-export default class AutomationClips extends Vue {
-  get items() {
-    return dawg.project.automationClips.map((clip, i) => {
-      return {
-        prototype: createAutomationPrototype({ time: 0, row: 0, duration: clip.duration }, clip, {}),
-        name: clip.name,
-      };
+export default createComponent({
+  name: 'AutomationClips',
+  props: {},
+  setup() {
+    const items = computed(() => {
+      return dawg.project.automationClips.map((clip, i) => {
+        return {
+          prototype: createAutomationPrototype({ time: 0, row: 0, duration: clip.duration }, clip, {}),
+          name: clip.name,
+        };
+      });
     });
-  }
 
-  public context(event: MouseEvent, i: number) {
-    dawg.context({
-      position: event,
-      items: [
-        {
-          text: 'Delete',
-          callback: () => dawg.project.removeAutomation(i),
-        },
-      ],
-    });
-  }
-}
+    function context(event: MouseEvent, i: number) {
+      dawg.context({
+        position: event,
+        items: [
+          {
+            text: 'Delete',
+            callback: () => dawg.project.removeAutomation(i),
+          },
+        ],
+      });
+    }
+
+    return {
+      items,
+      context,
+    };
+  },
+});
 </script>

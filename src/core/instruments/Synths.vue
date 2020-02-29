@@ -14,72 +14,72 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
 import Synth from '@/components/Synth.vue';
-import { Nullable } from '@/lib/vutils';
+import { update } from '@/lib/vutils';
 import { Score, Instrument, Pattern } from '@/models';
-import { Watch } from '@/lib/update';
 import { notify } from '@/core/notify';
-import * as framework from '@/lib/framework';
 import { project } from '@/core/project';
+import { createComponent, computed, watch } from '@vue/composition-api';
 
-@Component({ components: { Synth } })
-export default class Synths extends Vue {
-  @Prop({ type: Array, required: true }) public instruments!: Array<Instrument<any, any>>;
-  @Prop(Nullable(Object)) public selectedScore!: Score | null;
-  @Prop(Object) public selectedPattern!: Pattern | undefined;
+export default createComponent({
+  components: { Synth },
+  name: 'Synths',
+  props: {
+    instruments: { type: Array as () => Array<Instrument<any, any>>, required: true },
+    selectedScore: { type: Object as () => Score },
+    selectedPattern: { type: Object as () => Pattern },
+  },
+  setup(props, context) {
+    const scoreLookup = computed(() => {
+      const lookup: {[k: string]: Score} = {};
+      if (props.selectedPattern) {
+        props.selectedPattern.scores.forEach((score) => {
+          lookup[score.instrumentId] = score;
+        });
+      }
+      return lookup;
+    });
 
-  get project() {
-    return project;
-  }
-
-  get scoreLookup() {
-    const lookup: {[k: string]: Score} = {};
-    if (this.selectedPattern) {
-      this.selectedPattern.scores.forEach((score) => {
-        lookup[score.instrumentId] = score;
-      });
-    }
-    return lookup;
-  }
-
-  public getNotes(instrument: Instrument<any, any>) {
-    if (instrument.id in this.scoreLookup) {
-      return this.scoreLookup[instrument.id].notes.l.slice();
-    }
-  }
-
-  public async openScore(i: number) {
-    if (!this.selectedPattern) {
-      notify.warning('Please select a Pattern first.', {
-        detail: 'You must select a pattern before you can open the Piano Roll',
-      });
-      return;
+    function getNotes(instrument: Instrument<any, any>) {
+      if (instrument.id in scoreLookup.value) {
+        return scoreLookup.value[instrument.id].notes.l.slice();
+      }
     }
 
-    const instrument = this.instruments[i];
-    if (!this.scoreLookup.hasOwnProperty(instrument.id)) {
-      project.addScore({ pattern: this.selectedPattern, instrument });
+    function openScore(i: number) {
+      if (!props.selectedPattern) {
+        notify.warning('Please select a Pattern first.', {
+          detail: 'You must select a pattern before you can open the Piano Roll',
+        });
+        return;
+      }
+
+      const instrument = props.instruments[i];
+      if (!scoreLookup.value.hasOwnProperty(instrument.id)) {
+        project.addScore({ pattern: props.selectedPattern, instrument });
+      }
+
+      update(props, context, 'selectedScore', scoreLookup.value[instrument.id]);
     }
 
-    this.$update('selectedScore', this.scoreLookup[instrument.id]);
-  }
-
-  public deleteInstrument(i: number) {
-    project.deleteInstrument(i);
-  }
-
-  @Watch<Synths>('selectedPattern', { immediate: true })
-  public selectScore() {
-    if (this.selectedPattern) {
-      this.$update('selectedScore', this.selectedPattern.scores[0] || null);
-    } else {
-      this.$update('selectedScore', null);
+    function deleteInstrument(i: number) {
+      project.deleteInstrument(i);
     }
-  }
-}
+
+    watch(() => props.selectedPattern, () => {
+      if (props.selectedPattern) {
+        update(props, context, 'selectedScore', props.selectedPattern.scores[0] || undefined);
+      } else {
+        update(props, context, 'selectedScore', undefined);
+      }
+    });
+
+    return {
+      deleteInstrument,
+      openScore,
+      getNotes,
+      project,
+    };
+  },
+});
 </script>
-
-<style lang="sass" scoped>
-
-</style>

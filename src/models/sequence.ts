@@ -4,7 +4,7 @@ import * as history from '@/core/project/history';
 import { Disposer } from '@/lib/std';
 import { getLogger } from '@/lib/log';
 
-const logger = getLogger('sequence', { level: 'debug' });
+const logger = getLogger('sequence');
 
 const watchElement = <T extends ScheduledElement<any, any, any>>(
   l: T[], el: T, onRemove: (event: T) => void, onAdd: (event: T) => void,
@@ -12,6 +12,7 @@ const watchElement = <T extends ScheduledElement<any, any, any>>(
   let i: number | undefined;
   const d1 = el.onDidRemove(() => {
     i = l.indexOf(el);
+    logger.debug('Removing element at position ' + i);
     if (i >= 0) {
       onRemove(el);
       l.splice(i, 1);

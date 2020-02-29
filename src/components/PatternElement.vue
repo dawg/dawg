@@ -9,30 +9,38 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Mixins, Inject } from 'vue-property-decorator';
 import MiniScore from '@/components/MiniScore.vue';
 import { ScheduledNote, ScheduledPattern } from '@/models';
+import { createComponent, computed, ref } from '@vue/composition-api';
 
-@Component({
+export default createComponent({
   components: { MiniScore },
-})
-export default class PatternElement extends Vue {
-  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
-  @Prop({ type: Object, required: true }) public element!: ScheduledPattern;
+  name: 'PatternElement',
+  props: {
+    pxPerBeat: { type: Number, required: true },
+    element: { type: Object as () => ScheduledPattern, required: true },
+  },
+  setup(props) {
+    const totalDuration = ref(0);
 
-  public totalDuration = 0;
+    const notes = computed(() => {
+      const allNotes: ScheduledNote[] = [];
+      return allNotes.concat(...props.element.element.scores.map((score) => score.notes.l.slice()));
+    });
 
-  get notes() {
-    const notes: ScheduledNote[] = [];
-    return notes.concat(...this.element.element.scores.map((score) => score.notes.l.slice()));
-  }
+    const scoreStyle = computed(() => {
+      return {
+        width: `${totalDuration.value * props.pxPerBeat}px`,
+      };
+    });
 
-  get scoreStyle() {
     return {
-      width: `${this.totalDuration * this.pxPerBeat}px`,
+      totalDuration,
+      notes,
+      scoreStyle,
     };
-  }
-}
+  },
+});
 </script>
 
 <style lang="sass" scoped>

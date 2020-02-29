@@ -20,34 +20,43 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Vue } from 'vue-property-decorator';
 import Channel from '@/components/Channel.vue';
-import { Watch } from '@/lib/update';
 import { range } from '@/lib/std';
 import { AnyEffect, Channel as C } from '@/models';
+import { createComponent, ref } from '@vue/composition-api';
 
-@Component({
+export default createComponent({
   components: { Channel },
-})
-export default class Mixer extends Vue {
-  @Prop({ type: Array, required: true  }) public channels!: C[];
-  @Prop({ type: Boolean, required: true }) public play!: boolean;
-  public openedEffect: null | AnyEffect = null;
+  name: 'Mixer',
+  props: {
+    channels: { type: Array as () => C[], required: true  },
+    play: { type: Boolean, required: true },
+  },
+  setup(props, context) {
+    const openedEffect = ref<AnyEffect>();
 
-  public addEffect(channel: C, { effect, index }: { effect: AnyEffect, index: number }) {
-    this.$emit('add', { channel, effect, index });
-  }
-
-  public openEffect(effect: AnyEffect) {
-    if (effect === this.openedEffect) {
-      this.openedEffect = null;
-    } else {
-      this.openedEffect = effect;
+    function addEffect(channel: C, { effect, index }: { effect: AnyEffect, index: number }) {
+      context.emit('add', { channel, effect, index });
     }
-  }
 
-  public deleteEffect(channel: C, effect: AnyEffect) {
-    this.$emit('delete', { channel, effect });
-  }
-}
+    function openEffect(effect: AnyEffect) {
+      if (effect === openedEffect.value) {
+        openedEffect.value = undefined;
+      } else {
+        openedEffect.value = effect;
+      }
+    }
+
+    function deleteEffect(channel: C, effect: AnyEffect) {
+      context.emit('delete', { channel, effect });
+    }
+
+    return {
+      openedEffect,
+      addEffect,
+      openEffect,
+      deleteEffect,
+    };
+  },
+});
 </script>

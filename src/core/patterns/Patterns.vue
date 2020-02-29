@@ -13,10 +13,8 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Pattern, ScheduledPattern, createPatternPrototype } from '@/models';
 import { Nullable } from '@/lib/vutils';
-import { Watch } from '@/lib/update';
 import * as framework from '@/lib/framework';
 import { theme } from '@/core/theme';
 import { createComponent, ref, computed, watch } from '@vue/composition-api';

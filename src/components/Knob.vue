@@ -36,7 +36,7 @@
           class="fg-primary"
           stroke="currentColor"
           :stroke-width="strokeWidth"
-          :style="lefStrokeStyle"
+          :style="leftStrokeStyle"
         ></path>
         <rect
           :width="rectWidth"
@@ -59,9 +59,9 @@
 </template>
 
 <script lang="ts">
-import { Component, Prop, Mixins, Watch, Vue } from 'vue-property-decorator';
 import * as dawg from '@/dawg';
 import { mapRange } from '@/lib/std';
+import { createComponent, computed } from '@vue/composition-api';
 
 // Credit to the styling goes to this codepen: https://codepen.io/mavrK/pen/erQPvP
 // They actually have some nice dials we may want to use
@@ -70,230 +70,261 @@ import { mapRange } from '@/lib/std';
 // 1. Most things here use angles from the +x axis; however, svg rotation starts from the +y axis
 // 2. The rotation of the knob is clockwise so the minimum variables are actually the larger values
 
-@Component
-export default class Knob extends Vue {
-  @Prop({ type: Number }) public value!: number;
-  @Prop({ type: String }) public name?: string;
-  @Prop({ type: Function }) public format?: (value: number) => string;
-  @Prop({ type: Number, default: 264 }) public range!: number;
-  @Prop({ type: Number, default: 100 }) public max!: number;
-  @Prop({ type: Number, default: 0 }) public min!: number;
-  @Prop({ type: Number, default: 30 }) public size!: number;
-  @Prop(String) public label?: string;
-  @Prop({ type: Number, default: 2.5 }) public strokeWidth!: number;
-  @Prop(Number) public midValue?: number;
-  @Prop(String) public strokeClass?: string;
-  @Prop(Boolean) public disableAutomation!: boolean;
+export default createComponent({
+  name: 'Knob',
+  props: {
+    value: { type: Number, required: true },
+    name: { type: String },
+    format: { type: Function as any as () => ((value: number) => string) },
+    range: { type: Number, default: 264 },
+    max: { type: Number, default: 100 },
+    min: { type: Number, default: 0 },
+    size: { type: Number, default: 30 },
+    strokeWidth: { type: Number, default: 2.5 },
+    label: { type: String },
+    midValue: { type: Number },
+    strokeClass: { type: String },
+    disableAutomation: { type: Boolean },
+  },
+  setup(props, context) {
+    const rectWidth = 3;
+    const rectHeight = props.size / 4;
 
-  public rectWidth = 3;
-  public rectHeight = this.size / 4;
+    const rotation = computed(() => {
+      return mapRange(props.value, props.min, props.max, -angle.value, angle.value);
+    });
 
-  get rotation() {
-    return mapRange(this.value, this.min, this.max, -this.angle, this.angle);
-  }
+    const midDegrees = computed(() => {
+      let midValue = props.midValue;
+      if (midValue === undefined) { midValue = props.min; }
+      return mapRange(midValue, props.min, props.max, minDegrees.value, maxDegrees.value);
+    });
 
-  get midDegrees() {
-    let midValue = this.midValue;
-    if (midValue === undefined) { midValue = this.min; }
-    return mapRange(midValue, this.min, this.max, this.minDegrees, this.maxDegrees);
-  }
+    const minDegrees = computed(() => {
+      return 90 + angle.value;
+    });
 
-  get minDegrees() {
-    return 90 + this.angle;
-  }
+    const maxDegrees = computed(() => {
+      return 90 - angle.value;
+    });
 
-  get maxDegrees() {
-    return 90 - this.angle;
-  }
+    const maxRadians = computed(() => {
+      return maxDegrees.value / 360 * 2 * Math.PI;
+    });
 
-  get maxRadians() {
-    return this.maxDegrees / 360 * 2 * Math.PI;
-  }
+    const minRadians = computed(() => {
+      return minDegrees.value / 360 * 2 * Math.PI;
+    });
 
-  get minRadians() {
-    return this.minDegrees / 360 * 2 * Math.PI;
-  }
+    const midRadians = computed(() => {
+      return midDegrees.value / 360 * 2 * Math.PI;
+    });
 
-  get midRadians() {
-    return this.midDegrees / 360 * 2 * Math.PI;
-  }
+    const minX = computed(() => {
+      return center.value + (Math.cos(minRadians.value) * r.value);
+    });
 
-  get minX() {
-    return this.center + (Math.cos(this.minRadians) * this.r);
-  }
+    const minY = computed(() => {
+      return center.value - (Math.sin(minRadians.value) * r.value);
+    });
 
-  get minY() {
-    return this.center - (Math.sin(this.minRadians) * this.r);
-  }
+    const maxX = computed(() => {
+      return center.value + (Math.cos(maxRadians.value) * r.value);
+    });
 
-  get maxX() {
-    return this.center + (Math.cos(this.maxRadians) * this.r);
-  }
+    const maxY = computed(() => {
+      return center.value - (Math.sin(maxRadians.value) * r.value);
+    });
 
-  get maxY() {
-    return this.center - (Math.sin(this.maxRadians) * this.r);
-  }
+    const midX = computed(() => {
+      return center.value + (Math.cos(midRadians.value) * r.value);
+    });
 
-  get midX() {
-    return this.center + (Math.cos(this.midRadians) * this.r);
-  }
+    const midY = computed(() => {
+      return center.value - (Math.sin(midRadians.value) * r.value);
+    });
 
-  get midY() {
-    return this.center - (Math.sin(this.midRadians) * this.r);
-  }
+    const angle = computed(() => {
+      return props.range / 2;
+    });
 
-  get angle() {
-    return this.range / 2;
-  }
+    const center = computed(() => {
+      return props.size / 2;
+    });
 
-  get center() {
-    return this.size / 2;
-  }
+    const r = computed(() => {
+      // We have to take off half of the stroke width due to how svg arcs work.
+      // If we were to tell an svg to create an arc with radius 10 and a stroke-width of 2
+      // the actual radius would be 11 (measuring from outside the path).
+      // However, we want to be more exact than that. If the size is 20, we want the size the be exactly 20
+      return props.size / 2 - props.strokeWidth / 2;
+    });
 
-  get r() {
-    // We have to take off half of the stroke width due to how svg arcs work.
-    // If we were to tell an svg to create an arc with radius 10 and a stroke-width of 2
-    // the actual radius would be 11 (measuring from outside the path).
-    // However, we want to be more exact than that. If the size is 20, we want the size the be exactly 20
-    return this.size / 2 - this.strokeWidth / 2;
-  }
+    const labelStyle = computed(() => {
+      const fontSize = `${Math.round(props.size / 3)}px`;
+      return { fontSize };
+    });
 
-  get labelStyle() {
-    const fontSize = `${Math.round(this.size / 3)}px`;
-    return { fontSize };
-  }
+    // dial
+    const transform = computed(() => {
+      return `rotate(${rotation.value} ${center.value} ${center.value})`;
+    });
+    const knobStyle = computed(() => {
+      return {
+        height: `${props.size}px`,
+        width: `${props.size}px`,
+      };
+    });
 
-  // dial
-  get transform() {
-    return `rotate(${this.rotation} ${this.center} ${this.center})`;
-  }
-  get knobStyle() {
-    return {
-      height: `${this.size}px`,
-      width: `${this.size}px`,
-    };
-  }
+    // background path
+    const rangePath = computed(() => {
+      return `M ${minX.value} ${minY.value} A ${r.value} ${r.value} 0 1 1 ${maxX.value} ${maxY.value}`;
+    });
 
-  // background path
-  get rangePath() {
-    return `M ${this.minX} ${this.minY} A ${this.r} ${this.r} 0 1 1 ${this.maxX} ${this.maxY}`;
-  }
+    // left path
+    const leftLarge = computed(() => {
+      return leftRange.value > 180 ? 1 : 0;
+    });
 
-  // left path
-  get leftLarge() {
-    return this.leftRange > 180 ? 1 : 0;
-  }
-  get leftRangePath() {
-    return `M ${this.midX} ${this.midY} A ${this.r} ${this.r} 0 ${this.leftLarge} 0 ${this.minX} ${this.minY}`;
-  }
-  get leftLength() {
-    return (this.minRadians - this.midRadians) * this.r;
-  }
-  get leftRange() {
-    return this.minDegrees - this.midDegrees;
-  }
-  get leftAngleBetween() {
-    const angle = 90 - this.rotation; // Converting to start from +x axis
-    return angle - this.midDegrees;
-  }
-  get showLeft() {
-    return this.leftAngleBetween > 0;
-  }
-  get lefStrokeStyle() {
-    let offset = this.leftRange - this.leftAngleBetween;
-    offset = (offset / this.leftRange) * this.leftLength;
-    return {
-      'stroke-dasharray': this.leftLength,
-      'stroke-dashoffset': offset,
-    };
-  }
+    const leftRangePath = computed(() => {
+      return `M ${midX.value} ${midY.value} A ${r.value} ${r.value} 0 ${leftLarge.value} 0 ${minX.value} ${minY.value}`;
+    });
 
-  // right path
-  get rightLarge() {
-    return this.rightRange > 180 ? 1 : 0;
-  }
+    const leftLength = computed(() => {
+      return (minRadians.value - midRadians.value) * r.value;
+    });
 
-  get rightRangePath() {
-    return `M ${this.midX} ${this.midY} A ${this.r} ${this.r} 0 ${this.rightLarge} 1 ${this.maxX} ${this.maxY}`;
-  }
+    const leftRange = computed(() => {
+      return minDegrees.value - midDegrees.value;
+    });
 
-  get rightLength() {
-    return (this.midRadians - this.maxRadians) * this.r;
-  }
+    const leftAngleBetween = computed(() => {
+      const ang = 90 - rotation.value; // Converting to start from +x axis
+      return ang - midDegrees.value;
+    });
 
-  get rightRange() {
-    return this.midDegrees - this.maxDegrees;
-  }
+    const showLeft = computed(() => {
+      return leftAngleBetween.value > 0;
+    });
 
-  get rightAngleBetween() {
-    const angle = 90 - this.rotation; // Converting to start from +x axis
-    return this.midDegrees - angle;
-  }
+    const leftStrokeStyle = computed(() => {
+      let offset = leftRange.value - leftAngleBetween.value;
+      offset = (offset / leftRange.value) * leftLength.value;
+      return {
+        'stroke-dasharray': leftLength.value,
+        'stroke-dashoffset': offset,
+      };
+    });
 
-  get showRight() {
-    return this.rightAngleBetween > 0;
-  }
+    // right path
+    const rightLarge = computed(() => {
+      return rightRange.value > 180 ? 1 : 0;
+    });
 
-  get rightStrokeStyle() {
-    let offset = this.rightRange - this.rightAngleBetween;
-    offset = (offset / this.rightRange) * this.rightLength;
-    return {
-      'stroke-dasharray': this.rightLength,
-      'stroke-dashoffset': offset,
-    };
-  }
+    const rightRangePath = computed(() => {
+      // tslint:disable-next-line:max-line-length
+      return `M ${midX.value} ${midY.value} A ${r.value} ${r.value} 0 ${rightLarge.value} 1 ${maxX.value} ${maxY.value}`;
+    });
 
-  public defaultFormat() {
-    return '' + Math.round(this.value);
-  }
+    const rightLength = computed(() => {
+      return (midRadians.value - maxRadians.value) * r.value;
+    });
 
-  public enter() {
-    if (this.name) {
-      dawg.status.set({
-        text: this.name,
-        value: this.format ? this.format(this.value) : this.defaultFormat(),
+    const rightRange = computed(() => {
+      return midDegrees.value - maxDegrees.value;
+    });
+
+    const rightAngleBetween = computed(() => {
+      const ang = 90 - rotation.value; // Converting to start from +x axis
+      return midDegrees.value - ang;
+    });
+
+    const showRight = computed(() => {
+      return rightAngleBetween.value > 0;
+    });
+
+    const rightStrokeStyle = computed(() => {
+      let offset = rightRange.value - rightAngleBetween.value;
+      offset = (offset / rightRange.value) * rightLength.value;
+      return {
+        'stroke-dasharray': rightLength.value,
+        'stroke-dashoffset': offset,
+      };
+    });
+
+    function defaultFormat() {
+      return '' + Math.round(props.value);
+    }
+
+    function enter() {
+      if (props.name) {
+        dawg.status.set({
+          text: props.name,
+          value: props.format ? props.format(props.value) : defaultFormat(),
+        });
+      }
+    }
+
+    function leave() {
+      dawg.status.set(null);
+    }
+
+    function move(e: MouseEvent) {
+      // Multiply by a factor to const better = computed( speed=> .
+      // This factor should eventually be computed by the changeX
+      // For example, as they move farther away from their inital x position, the factor decreases
+      let rot = rotation.value - e.movementY * 1.5;
+      rot = Math.max(-132, Math.min(angle.value, rot));
+      const value = mapRange(rot, -angle.value, angle.value, props.min, props.max);
+      context.emit('input', value);
+      enter();
+    }
+
+    function afterMove() {
+      // This isn't ideal but it works
+      // For example, if they are still on the element, it will clear it
+      // Even though we probably still want to display the value
+      dawg.status.set(null);
+    }
+
+    function contextmenu(event: MouseEvent) {
+      if (props.disableAutomation) {
+        return;
+      }
+
+      dawg.context({
+        position: event,
+        items: [
+          {
+            text: 'Create Automation Clip',
+            callback: () => context.emit('automate'),
+          },
+        ],
       });
     }
-  }
 
-  public leave() {
-    dawg.status.set(null);
-  }
-
-  public move(e: MouseEvent) {
-    // Multiply by a factor to get better speed.
-    // This factor should eventually be computed by the changeX
-    // For example, as they move farther away from their inital x position, the factor decreases
-    let rotation = this.rotation - e.movementY * 1.5;
-    rotation = Math.max(-132, Math.min(this.angle, rotation));
-    const value = mapRange(rotation, -this.angle, this.angle, this.min, this.max);
-    this.$emit('input', value);
-    this.enter();
-  }
-
-  public afterMove() {
-    // This isn't ideal but it works
-    // For example, if they are still on the element, it will clear it
-    // Even though we probably still want to display the value
-    dawg.status.set(null);
-  }
-
-  public contextmenu(event: MouseEvent) {
-    if (this.disableAutomation) {
-      return;
-    }
-
-    dawg.context({
-      position: event,
-      items: [
-        {
-          text: 'Create Automation Clip',
-          callback: () => this.$emit('automate'),
-        },
-      ],
-    });
-  }
-}
+    return {
+      move,
+      afterMove,
+      knobStyle,
+      contextmenu,
+      enter,
+      leave,
+      rangePath,
+      showRight,
+      rightRangePath,
+      rightStrokeStyle,
+      showLeft,
+      leftRangePath,
+      leftStrokeStyle,
+      rectWidth,
+      center,
+      rectHeight,
+      transform,
+      labelStyle,
+    };
+  },
+});
 </script>
 
 

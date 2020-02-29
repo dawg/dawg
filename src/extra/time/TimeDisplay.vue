@@ -9,42 +9,51 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { Component, Prop } from 'vue-property-decorator';
+import { createComponent, computed } from '@vue/composition-api';
 
-@Component
-export default class TimeDisplay extends Vue {
-  @Prop({ type: Number, required: true }) public raw!: number;
+export default createComponent({
+  name: 'TimeDisplay',
+  props: {
+    raw: { type: Number, required: true },
+  },
+  setup(props) {
+    const mraw = computed(() => {
+      return Math.max(props.raw, 0);
+    });
 
-  get mraw() {
-    return Math.max(this.raw, 0);
-  }
+    const minutes = computed(() => {
+      return Math.floor(mraw.value / 60);
+    });
 
-  get minutes() {
-    return Math.floor(this.mraw / 60);
-  }
+    const formattedSeconds = computed(() => {
+      return formatNumberLength(seconds.value, 2);
+    });
 
-  get formattedSeconds() {
-    return this.formatNumberLength(this.seconds, 2);
-  }
+    const seconds = computed(() => {
+      return Math.floor(mraw.value - (minutes.value * 60));
+    });
 
-  get seconds() {
-    return Math.floor(this.mraw - (this.minutes * 60));
-  }
+    const formattedMillis = computed(() => {
+      return formatNumberLength(millis.value, 3);
+    });
 
-  get formattedMillis() {
-    return this.formatNumberLength(this.millis, 3);
-  }
+    const millis = computed(() => {
+      return Math.floor((mraw.value - seconds.value) * 1000);
+    });
 
-  get millis() {
-    return Math.floor((this.mraw - this.seconds) * 1000);
-  }
-
-  public formatNumberLength(num: number, length: number) {
-    let r = `${num}`;
-    while (r.length < length) {
-      r = `0${r}`;
+    function formatNumberLength(num: number, length: number) {
+      let r = `${num}`;
+      while (r.length < length) {
+        r = `0${r}`;
+      }
+      return r;
     }
-    return r;
-  }
-}
+
+    return {
+      minutes,
+      formattedSeconds,
+      formattedMillis,
+    };
+  },
+});
 </script>

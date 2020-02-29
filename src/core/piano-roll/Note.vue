@@ -16,9 +16,7 @@
 </template>
 
 <script lang="ts">
-import { Mixins, Prop, Component, Inject, Vue } from 'vue-property-decorator';
 import { allKeys } from '@/utils';
-import { Watch } from '@/lib/update';
 import { ScheduledNote } from '@/models';
 import { computed, createComponent } from '@vue/composition-api';
 
@@ -58,12 +56,6 @@ export default createComponent({
     };
   },
 });
-
-@Component
-export class NNN extends Vue {
-
-
-}
 </script>
 
 <style lang="sass" scoped>

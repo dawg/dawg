@@ -34,7 +34,7 @@ const create = <T extends ScheduledElement<any, any, any>>(
     scrollLeft: opts.scrollLeft ?? ref(0),
     scrollTop: opts.scrollTop ?? ref(0),
     beatsPerMeasure: opts.beatsPerMeasure ?? ref(4),
-    createElement: ref(createElement()),
+    createElement: createElement().copy,
     tool: opts.tool ?? ref(0),
     getPosition: opts.getPosition ?? (() => ({ left: 0, top: 0 })),
   };
