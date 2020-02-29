@@ -21,82 +21,102 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop } from 'vue-property-decorator';
 import { Provider, bus } from '@/core/busy/helpers';
 import * as framework from '@/lib/framework';
+import { createComponent, computed, onMounted, onUnmounted } from '@vue/composition-api';
+import { Disposer } from '@/lib/std';
 
-@Component
-export default class BusySignal extends Vue {
-  @Prop({ type: Number, default: 18 }) public size!: number;
+export default createComponent({
+  name: 'BusySignal',
+  props: {
+    size: { type: Number, default: 18 },
+  },
+  setup(props) {
+    const iconSize = 7;
+    const providers: Provider[] = [];
+    const disposers: Disposer[] = [];
 
-  public iconSize = 7;
-  public providers: Provider[] = [];
-  public disposers: Array<{ dispose: () => void }> = [];
+    const sizeStyle = computed(() => {
+      return {
+        height: `${props.size}px`,
+        width: `${props.size}px`,
+      };
+    });
 
-  get sizeStyle() {
-    return {
-      height: `${this.size}px`,
-      width: `${this.size}px`,
-    };
-  }
+    const title = computed(() => {
+      if (providers.length === 0) {
+        return 'Idle';
+      }
 
-  get title() {
-    if (this.providers.length === 0) {
-      return 'Idle';
+      const max = 20;
+
+      return providers.map((provider) => {
+        const progress = provider.progress || 0;
+        const blocks = Math.round((progress / 100) * max);
+        const lines = max - blocks;
+        return `${provider.message}\n${'▆'.repeat(blocks)}${'▁'.repeat(lines)} ${progress}%`;
+      }).join('\n\n');
+    });
+
+    const progresStyle = computed(() => {
+      return {
+        ...sizeStyle.value,
+        top: 0,
+        left: 0,
+      };
+    });
+
+    const iconStyle = computed(() => {
+      return {
+        left: `${props.size / 2 - iconSize / 2}px`,
+        top: `${props.size / 2 - iconSize / 2}px`,
+        fontSize: `${iconSize}px`,
+      };
+    });
+
+    // TODO add function helper for this
+    let disposer: Disposer | undefined;
+    onMounted(() => {
+      disposer = bus.on('start', addProvider);
+    });
+
+    onUnmounted(() => {
+      if (disposer) {
+        disposer.dispose();
+      }
+    });
+
+    function addProvider(provider: Provider) {
+      if (providers.includes(provider)) {
+        return;
+      }
+
+      providers.push(provider);
+      disposers.push(provider.onDidDispose(removeProvider));
     }
 
-    const max = 20;
+    function removeProvider(provider: Provider) {
+      const index = providers.indexOf(provider);
+      if (index === -1) {
+        return;
+      }
 
-    return this.providers.map((provider) => {
-      const progress = provider.progress || 0;
-      const blocks = Math.round((progress / 100) * max);
-      const lines = max - blocks;
-      return `${provider.message}\n${'▆'.repeat(blocks)}${'▁'.repeat(lines)} ${progress}%`;
-    }).join('\n\n');
-  }
+      // Remove the event listner
+      disposers[index].dispose();
 
-  get progresStyle() {
-    return {
-      ...this.sizeStyle,
-      top: 0,
-      left: 0,
-    };
-  }
-
-  get iconStyle() {
-    return {
-      left: `${this.size / 2 - this.iconSize / 2}px`,
-      top: `${this.size / 2 - this.iconSize / 2}px`,
-      fontSize: `${this.iconSize}px`,
-    };
-  }
-
-  public mounted() {
-    bus.on('start', this.addProvider);
-  }
-
-  public addProvider(provider: Provider) {
-    if (this.providers.includes(provider)) {
-      return;
+      disposers.splice(index, 1);
+      providers.splice(index, 1);
     }
 
-    this.providers.push(provider);
-    this.disposers.push(provider.onDidDispose(this.removeProvider));
-  }
-
-  public removeProvider(provider: Provider) {
-    const index = this.providers.indexOf(provider);
-    if (index === -1) {
-      return;
-    }
-
-    // Remove the event listner
-    this.disposers[index].dispose();
-
-    this.disposers.splice(index, 1);
-    this.providers.splice(index, 1);
-  }
-}
+    return {
+      sizeStyle,
+      title,
+      iconStyle,
+      providers,
+      progresStyle,
+    };
+  },
+});
 </script>
 
 <style scoped>

@@ -21,7 +21,6 @@
 
 <script lang="ts">
 import Channel from '@/components/Channel.vue';
-import { Watch } from '@/lib/update';
 import { range } from '@/lib/std';
 import { AnyEffect, Channel as C } from '@/models';
 import { createComponent, ref } from '@vue/composition-api';

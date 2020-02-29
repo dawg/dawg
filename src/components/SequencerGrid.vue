@@ -73,6 +73,8 @@
             :row="el.row.value"
             :color="color"
             :px-per-beat="pxPerBeat"
+            :snap="snap"
+            :min-snap="minSnap"
             :width="width"
             :height="rowHeight"
             :element="el"
@@ -118,7 +120,7 @@ import Vue from 'vue';
 import { range, reverse } from '@/lib/std';
 import { addEventListeners } from '@/lib/events';
 import { update } from '@/lib/vutils';
-import BeatLines from '@/components/BeatLines';
+import BeatLines from '@/components/BeatLines.vue';
 import { Sequence } from '@/models';
 import * as Audio from '@/lib/audio';
 import { Ghost } from '@/models/ghost';

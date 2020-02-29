@@ -44,7 +44,6 @@
     "uuid": "^3.4.0",
     "vue": "^2.6.11",
     "vue-drag-drop": "^1.1.4",
-    "vue-property-decorator": "^8.4.0",
     "webmidi": "^2.5.1"
   },
   "devDependencies": {

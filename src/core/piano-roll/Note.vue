@@ -17,7 +17,6 @@
 
 <script lang="ts">
 import { allKeys } from '@/utils';
-import { Watch } from '@/lib/update';
 import { ScheduledNote } from '@/models';
 import { computed, createComponent } from '@vue/composition-api';
 

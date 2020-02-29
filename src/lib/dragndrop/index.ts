@@ -1,4 +1,6 @@
-import { Drag, Drop } from 'vue-drag-drop';
+// import { Drag, Drop } from 'vue-drag-drop';
+import Drag from '@/lib/dragndrop/Drag.vue';
+import Drop from '@/lib/dragndrop/Drop.vue';
 import Vue from 'vue';
 
 let dragging: string | null = null;

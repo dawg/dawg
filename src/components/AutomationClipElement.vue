@@ -1,6 +1,7 @@
 <template>
   <svg 
     class="envelope-visualizer" 
+    ref="el"
     :viewBox="viewBox" 
     preserveAspectRatio="xMinYMid slice"
     :height="height"
@@ -33,140 +34,171 @@
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Inject } from 'vue-property-decorator';
+import Vue from 'vue';
 import { Point, ScheduledAutomation } from '@/models';
 import { scale } from '@/lib/std';
 import * as dawg from '@/dawg';
+import { createComponent, computed, ref } from '@vue/composition-api';
+import { doSnap } from '@/utils';
 
-@Component
-export default class AutomationClipElement extends Vue {
-  @Prop({ type: Number, required: true }) public pxPerBeat!: number;
-  // FIXME(2) small bug height !== true height
-  @Prop({ type: Number, required: true }) public height!: number;
-  @Prop({ type: Number, required: true }) public snap!: number;
+export default createComponent({
+  name: 'AutomationClipElement',
+  props: {
+    pxPerBeat: { type: Number, required: true },
+    // FIXME small bug height !== true height
+    height: { type: Number, required: true },
+    snap: { type: Number, required: true },
+    minSnap: { type: Number, required: true },
 
-  @Prop({ type: Number, default: 4 }) public radius!: number;
-  @Prop({ type: Object, required: true }) public element!: ScheduledAutomation;
+    radius: { type: Number, default: 4 },
+    element: { type: Object as () => ScheduledAutomation, required: true },
+  },
+  setup(props, context) {
+    const el = ref<SVGElement>();
 
-  get clip() {
-    return this.element.element;
-  }
-
-  get points() {
-    return this.clip.points;
-  }
-
-  get minValue() {
-    return this.clip.minValue;
-  }
-
-  get maxValue() {
-    return this.clip.maxValue;
-  }
-
-  get fromRange(): [number, number] {
-    return [this.minValue, this.maxValue];
-  }
-
-  get processed() {
-    return this.points.sort(this.sort).map((point) => {
-      return {
-        cx: point.time * this.pxPerBeat,
-        cy: (1 - scale(point.value, this.fromRange, [0, 1])) * this.height,
-      };
+    const clip = computed(() => {
+      return props.element.element;
     });
-  }
 
-  get times() {
-    return this.points.map(({ time }) => time);
-  }
+    const points = computed(() => {
+      return clip.value.points;
+    });
 
-  get maxTime() {
-    return Math.max(...this.times);
-  }
+    const minValue = computed(() => {
+      return clip.value.minValue;
+    });
 
-  get width() {
-    return this.maxTime * this.pxPerBeat;
-  }
+    const maxValue = computed(() => {
+      return clip.value.maxValue;
+    });
 
-  get viewBox() {
-    return `0 0 ${this.width} ${this.height}`;
-  }
+    const fromRange = computed((): [number, number] => {
+      return [minValue.value, maxValue.value];
+    });
 
-  get path() {
-    if (this.processed.length < 1) {
-      return [];
+    const processed = computed(() => {
+      return points.value.slice().sort(sort).map((point) => {
+        return {
+          cx: point.time * props.pxPerBeat,
+          cy: (1 - scale(point.value, fromRange.value, [0, 1])) * props.height,
+        };
+      });
+    });
+
+    const times = computed(() => {
+      return points.value.map(({ time }) => time);
+    });
+
+    const maxTime = computed(() => {
+      return Math.max(...times.value);
+    });
+
+    const width = computed(() => {
+      return maxTime.value * props.pxPerBeat;
+    });
+
+    const viewBox = computed(() => {
+      return `0 0 ${width.value} ${props.height}`;
+    });
+
+    const path = computed(() => {
+      if (processed.value.length < 1) {
+        return [];
+      }
+
+      const pts =  [
+        { letter: 'M', point: processed.value[0] },
+        ...processed.value.slice(1).map((point) => ({ letter: 'L', point })),
+      ];
+
+      return pts.map(({ letter, point }) => `${letter} ${point.cx} ${point.cy}`).join(' ');
+    });
+
+    function getTimeValue(e: MouseEvent) {
+      if (!el.value) {
+        return {
+          time: 0,
+          value: 0,
+        };
+      }
+
+      const rect = el.value.getBoundingClientRect();
+      const time = doSnap({
+        position: e.clientX,
+        altKey: e.altKey,
+        snap: props.snap,
+        minSnap: props.minSnap,
+        offset: rect.left,
+        pxPerBeat: props.pxPerBeat,
+        scroll: 0,
+      });
+
+      const value = (e.clientY - rect.top) / props.height;
+
+      return {
+        time,
+        value,
+      };
     }
 
-    const points =  [
-      { letter: 'M', point: this.processed[0] },
-      ...this.processed.slice(1).map((point) => ({ letter: 'L', point })),
-    ];
+    function addPoint(e: MouseEvent) {
+      const { time, value } = getTimeValue(e);
+      clip.value.add(time, value);
+    }
 
-    return points.map(({ letter, point }) => `${letter} ${point.cx} ${point.cy}`).join(' ');
-  }
+    function move(e: MouseEvent, i: number) {
+      // We still NEED to put bounds on the returned values as
+      // it is possible to move out of bounds
+      let { time, value } = getTimeValue(e);
 
-  public getTimeValue(e: MouseEvent) {
-    // FIXME(3) duplication
-    const rect = this.$el.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    let time = x / this.pxPerBeat;
+      const lowerBound = i === 0 ? 0 : points.value[i - 1].time;
+      const upperBound = i === points.value.length - 1 ? Infinity : points.value[i + 1].time;
+      time = Math.max(lowerBound, Math.min(upperBound, time));
 
-    time = Math.round(time / this.snap) * this.snap;
-    const value = (e.clientY - rect.top) / this.height;
+      clip.value.setTime(i, time);
+      // FIXME(2) this needs a better home
+      props.element.duration.value = Math.max(props.element.duration.value, time);
+
+      value = Math.max(0, Math.min(1, value));
+      value = 1 - scale(value, [0, 1], fromRange.value);
+
+      dawg.log.debug(`Changing ${clip.value.points[i].value} -> ${value}`);
+      clip.value.setValue(i, value);
+      Vue.set(points.value, i, points.value[i]);
+    }
+
+    function sort(a: Point, b: Point) {
+      return a.time - b.time;
+    }
+
+    function deleteClip(i: number) {
+      clip.value.remove(i);
+    }
+
+    function pointContext(event: MouseEvent, i: number) {
+      dawg.context({
+        position: event,
+        items: [
+          {
+            text: 'Delete',
+            callback: () => deleteClip(i),
+          },
+        ],
+      });
+    }
 
     return {
-      time,
-      value,
+      el,
+      viewBox,
+      width,
+      addPoint,
+      path,
+      processed,
+      move,
+      pointContext,
     };
-  }
-
-  public addPoint(e: MouseEvent) {
-    const { time, value } = this.getTimeValue(e);
-    this.clip.add(time, value);
-  }
-
-  public move(e: MouseEvent, i: number) {
-    // We still NEED to put bounds on the returned values as
-    // it is possible to move out of bounds
-    let { time, value } = this.getTimeValue(e);
-
-    const lowerBound = i === 0 ? 0 : this.points[i - 1].time;
-    const upperBound = i === this.points.length - 1 ? Infinity : this.points[i + 1].time;
-    time = Math.max(lowerBound, Math.min(upperBound, time));
-
-    this.clip.setTime(i, time);
-    // FIXME(2) this needs a better home
-    this.element.duration.value = Math.max(this.element.duration.value, time);
-
-    value = Math.max(0, Math.min(1, value));
-    value = 1 - scale(value, [0, 1], this.fromRange);
-
-    dawg.log.debug(`Changing ${this.clip.points[i].value} -> ${value}`);
-    this.clip.setValue(i, value);
-    this.$set(this.points, i, this.points[i]);
-  }
-
-  public sort(a: Point, b: Point) {
-    return a.time - b.time;
-  }
-
-  public delete(i: number) {
-    this.clip.remove(i);
-  }
-
-  public pointContext(event: MouseEvent, i: number) {
-    dawg.context({
-      position: event,
-      items: [
-        {
-          text: 'Delete',
-          callback: () => this.delete(i),
-        },
-      ],
-    });
-  }
-}
+  },
+});
 </script>
 
 <style lang="sass" scoped>

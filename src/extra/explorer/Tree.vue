@@ -46,7 +46,6 @@ import Vue from 'vue';
 import path from 'path';
 import { Keys } from '@/lib/std';
 import { Folder, File, Extensions, Extension, ExtensionData } from '@/extra/explorer/types';
-import { Watch } from '@/lib/update';
 import { createComponent, computed, Ref, ref, watch } from '@vue/composition-api';
 
 export default createComponent({

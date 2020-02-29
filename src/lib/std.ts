@@ -21,7 +21,7 @@ export function mapRange(x: number, inMin: number, inMax: number, outMin: number
   return (((x - inMin) * (outMax - outMin)) / (inMax - inMin)) + outMin;
 }
 
-export function scale(value: number, from: [number, number], to: [number, number]) {
+export function scale(value: number, from: readonly [number, number], to: readonly [number, number]) {
   return (value - from[0]) * (to[1] - to[0]) / (from[1] - from[0]) + to[0];
 }
 

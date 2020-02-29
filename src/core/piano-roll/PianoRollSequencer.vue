@@ -41,7 +41,6 @@ import {
   createNotePrototype,
   ScheduledElement,
 } from '@/models';
-import { Watch } from '@/lib/update';
 import { SchedulablePrototype } from '@/models';
 import { createComponent, computed, watch, ref, reactive } from '@vue/composition-api';
 
