@@ -10,7 +10,7 @@ export const RefKey = 'vfa.key.refKey';
 
 // TODO not recursive, just two levels deep
 export interface IRecursiveDisposer {
-  dispose: () => IRecursiveDisposer;
+  dispose: () => Disposer;
 }
 
 export interface Command<T> {
@@ -126,14 +126,14 @@ export const freezeReference = () => {
 
 function proxy<T, V>(
   target: V, { get, set }: GetSet<T>,
-): V & { v: T } {
-  Object.defineProperty(target, 'v', {
+): V & { value: T } {
+  Object.defineProperty(target, 'value', {
     enumerable: true,
     configurable: true,
     get,
     set,
   });
-  return target as V & { v: T };
+  return target as V & { value: T };
 }
 
 interface GetSet<T> {
@@ -142,11 +142,17 @@ interface GetSet<T> {
 }
 
 interface Ref<T> {
-  v: T;
+  value: T;
+}
+
+interface ElementChangeContext<T> {
+  newValue: T;
+  oldValue: T;
+  subscriptions: IRecursiveDisposer[];
 }
 
 interface ElementChaining<T> {
-  onDidChange: (cb: (newValue: T, oldValue: T) => void) => Disposer;
+  onDidChange: (cb: (o: ElementChangeContext<T>) => void) => Disposer;
 }
 
 export type OlyRef<T> = Ref<T> & ElementChaining<T>;
@@ -154,12 +160,15 @@ export type OlyRef<T> = Ref<T> & ElementChaining<T>;
 export function olyRef<T>(raw: T): Ref<T> & ElementChaining<T> {
   const o = reactive({ [RefKey]: raw }) as { [RefKey]: T };
 
-  const events = emitter<{ change: [T, T] }>();
+  const events = emitter<{ change: [ElementChangeContext<T>] }>();
 
   const ref = proxy({}, {
     get: () => o[RefKey],
     set: (v) => {
       const oldValue = o[RefKey];
+
+      // TODO
+      const subscriptions: IRecursiveDisposer[] = [];
 
       // This is important as it prevents a command being placed on the stack
       if (oldValue === v) {
@@ -177,7 +186,7 @@ export function olyRef<T>(raw: T): Ref<T> & ElementChaining<T> {
         },
       });
 
-      events.emit('change', v, oldValue);
+      events.emit('change', { newValue: v, oldValue, subscriptions });
 
       env.finish();
     },
@@ -201,6 +210,8 @@ interface ArrayChaining<T> {
 }
 
 type Callback<T> = (o: { added: T[], removed: T[] }) => (() => void);
+
+export type OlyArr<T> = T[] & ArrayChaining<T>;
 
 const olyArrImpl = <T>(raw: T[], cb?: Callback<T>): T[] & ArrayChaining<T> => {
   // Explicitly make the array observable because we replace some of the methods

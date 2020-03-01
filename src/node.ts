@@ -8,6 +8,27 @@ interface AudioNode {
 }
 
 export class GraphNode<T extends AudioNode | null = AudioNode | null> implements oly.IRecursiveDisposer {
+  private static doConnect(me: GraphNode, o: { oldDest?: GraphNode, newDest?: GraphNode }) {
+    if (o.oldDest) {
+      const i = o.oldDest.inputs.indexOf(me);
+      o.oldDest.inputs.splice(i, 1);
+      if (o.oldDest.node && me.node) {
+        me.node.disconnect(o.oldDest.node);
+        me.connected = false;
+      }
+    }
+
+    me.output = o.newDest;
+
+    if (o.newDest) {
+      o.newDest.inputs.push(me);
+      if (o.newDest.node && me.node) {
+        me.node.connect(o.newDest.node);
+        me.connected = true;
+      }
+    }
+  }
+
   private inputs: GraphNode[] = [];
   private output: GraphNode | undefined = undefined;
   private isMuted = false;
@@ -35,29 +56,28 @@ export class GraphNode<T extends AudioNode | null = AudioNode | null> implements
     }
   }
 
-  public connect(node?: GraphNode) {
-    const local: AudioNode | null = this.node;
+  public connect(node?: GraphNode): oly.IRecursiveDisposer {
+    const forward = () => {
+      GraphNode.doConnect(this, { oldDest: this.output, newDest: node });
+    };
 
-    if (this.output) {
-      const i = this.output.inputs.indexOf(this);
-      this.output.inputs.splice(i, 1);
-      if (this.output.node && local) {
-        local.disconnect(this.output.node);
-        this.connected = false;
-      }
-    }
+    const backwards = () => {
+      GraphNode.doConnect(this, { oldDest: node, newDest: this.output });
+    };
 
-    this.output = node;
+    const dispose = () => {
+      forward();
 
-    if (this.output) {
-      this.output.inputs.push(this);
-      if (this.output.node && local) {
-        local.connect(this.output.node);
-        this.connected = true;
-      }
-    }
+      return {
+        dispose: () => {
+          backwards();
+        },
+      };
+    };
 
-    return this;
+    return {
+      dispose,
+    };
   }
 
   public redirect(node: GraphNode<any>) {

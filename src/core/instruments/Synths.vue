@@ -64,7 +64,7 @@ export default createComponent({
     }
 
     function deleteInstrument(i: number) {
-      project.deleteInstrument(i);
+      project.instruments.splice(i);
     }
 
     watch(() => props.selectedPattern, () => {

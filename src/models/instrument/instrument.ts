@@ -37,31 +37,25 @@ export abstract class Instrument<T, V extends string> extends BuildingBlock {
 
   public channel: oly.OlyRef<number | undefined>;
 
+  public output = new GraphNode(new Tone.Panner().toMaster());
+  public pan = new Audio.Signal(this.output.node.pan, -1, 1);
+  public input = new GraphNode(new Tone.Gain().connect(this.output.node));
+  public volume = new Audio.Signal(this.input.node.gain, 0, 1);
+
   protected source: GraphNode<Audio.Source<T> | null>;
-  // tslint:disable-next-line:member-ordering
-  private panner = new Tone.Panner().toMaster();
-  private connected = true;
-
-  // tslint:disable-next-line:member-ordering
-  public pan = new Audio.Signal(this.panner.pan, -1, 1);
-
-  private node = new GraphNode(new Tone.Gain().connect(this.panner));
-
-  // tslint:disable-next-line:member-ordering
-  public volume = new Audio.Signal(this.node.node.gain, 0, 1);
 
   constructor(source: Audio.Source<T> | null, destination: GraphNode, i: IInstrument) {
     super();
     this.source = new GraphNode(source);
-    this.source.connect(this.node);
+    this.source.connect(this.input);
 
     this.name = i.name;
     this.id = i.id || uuid.v4();
     this.channel = oly.olyRef(i.channel);
-    this.node.mute = !!i.mute;
+    this.input.mute = !!i.mute;
     this.pan.value = i.pan || 0;
     this.volume.value = i.volume === undefined ? 0.8 : i.volume;
-    this.node.connect(destination);
+    this.input.connect(destination);
   }
 
   public triggerAttackRelease(note: string, duration: Audio.Time, time: number, velocity?: number) {

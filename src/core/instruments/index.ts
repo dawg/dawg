@@ -3,8 +3,9 @@ import Synths from '@/core/instruments/Synths.vue';
 import * as framework from '@/lib/framework';
 import { ref, Ref, computed, watch } from '@vue/composition-api';
 import { patterns } from '@/core/patterns';
-import { Score } from '@/models';
+import { Score, Soundfont, Synth } from '@/models';
 import { project } from '@/core/project';
+import { findUniqueName } from '@/utils';
 
 export const instruments = framework.manager.activate({
   id: 'dawg.instruments',
@@ -28,16 +29,25 @@ export const instruments = framework.manager.activate({
     });
 
     function addInstrument(event: MouseEvent) {
+      const doAdd = async (type: 'Synth' | 'Soundfont') => {
+        const name = findUniqueName(project.instruments, type);
+        const instrument = type === 'Soundfont' ?
+          await Soundfont.create('acoustic_grand_piano', name) :
+          Synth.create(name);
+
+        project.instruments.push(instrument);
+      };
+
       framework.menu({
         position: event,
         items: [
           {
             text: 'Synth',
-            callback: () => project.addInstrument('Synth'),
+            callback: () => doAdd('Synth'),
           },
           {
             text: 'Soundfont',
-            callback: () => project.addInstrument('Soundfont'),
+            callback: () => doAdd('Soundfont'),
           },
         ],
         left: true,

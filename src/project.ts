@@ -1,5 +1,6 @@
 import * as t from '@/lib/io';
 import * as oly from '@/olyger';
+import uuid from 'uuid';
 import {
   SynthType,
   SoundfontType,
@@ -31,15 +32,25 @@ import {
 import Tone from 'tone';
 import * as Audio from '@/lib/audio';
 import { findUniqueName } from '@/utils';
-import { makeLookup, reverse } from '@/lib/std';
+import { makeLookup, reverse, range } from '@/lib/std';
 import fs from '@/lib/fs';
 import { loadBufferSync } from '@/lib/wav';
 import { notify } from '@/core/notify';
 import { getLogger } from '@/lib/log';
-import { computed } from '@vue/composition-api';
+import tmp from 'tmp';
 import { GraphNode, masterNode } from '@/node';
+import * as framework from '@/lib/framework';
+import { remote } from 'electron';
+import { emitter, addEventListener } from '@/lib/events';
+import { createExtension } from '@/lib/framework';
+import { ref, Ref } from '@vue/composition-api';
+import { commands } from '@/core/commands';
 
 const logger = getLogger('project', { level: 'debug' });
+
+const DG = 'dg';
+const FILTERS = [{ name: 'DAWG Files', extensions: [DG] }];
+const DG_EXTENSION = `.${DG}`;
 
 // Chaining Examples
 // If I delete an instrument, I need to delete the scores
@@ -52,8 +63,10 @@ const logger = getLogger('project', { level: 'debug' });
 // 2. Chains define dependencies and work off a simple API (ie. changed, added, removed)
 // 3. Any chain reactions will be encompassed into a single action (ie. only a single undo/redo for the whole chain)
 
-const ProjectTypeRequired = t.type({
+const ProjectType = t.type({
   id: t.string,
+  stepsPerBeat: t.number,
+  beatsPerMeasure: t.number,
   bpm: t.number,
   name: t.string,
   instruments: t.array(t.union([SynthType, SoundfontType])),
@@ -65,39 +78,48 @@ const ProjectTypeRequired = t.type({
   tracks: t.array(TrackType),
 });
 
-const ProjectTypePartial = t.partial({
-  stepsPerBeat: t.number,
-  beatsPerMeasure: t.number,
-});
-
-const ProjectType = t.intersection([ProjectTypeRequired, ProjectTypePartial]);
-
 type IProject = t.TypeOf<typeof ProjectType>;
 
-export const createProject = (i: IProject) => {
+interface LoadedProject {
+  bpm: number;
+  stepsPerBeat: number;
+  beatsPerMeasure: number;
+  name: string;
+  id: string;
+  patterns: Pattern[];
+  instruments: Array<Synth | Soundfont>;
+  channels: Channel[];
+  tracks: Track[];
+  master: Playlist;
+  samples: Sample[];
+  automationClips: AutomationClip[];
+}
+
+export interface InitializationError {
+  type: 'error';
+  message: string;
+  project: LoadedProject;
+}
+
+export interface InitializationSuccess {
+  type: 'success';
+  project: LoadedProject;
+}
+
+const load = (iProject: IProject): LoadedProject => {
   logger.info('Initiate loading of the project!');
 
   // TODO do we want to so this?
-  Audio.Context.BPM = i.bpm;
+  Audio.Context.BPM = iProject.bpm;
 
-  const channels =  oly.olyArr(i.channels.map((iChannel) => {
+  // FIXME what happens when we can add and delete channels?
+  // What should be the chain reaction?
+  const channels =  oly.olyArr(iProject.channels.map((iChannel) => {
     return new Channel(iChannel);
   }));
 
-  const instruments = oly.olyArr(i.instruments.map((iInstrument) => {
+  const instruments = oly.olyArr(iProject.instruments.map((iInstrument) => {
     const destination: Tone.AudioNode = Tone.Master;
-    // if (iInstrument.channel !== null && iInstrument.channel !== undefined) {
-    //   if (iInstrument.channel >= channels.length) {
-    //     throw Error(
-    //       `Channel of instrument ${iInstrument.id} (${iInstrument.channel}) ` +
-    //       `exceeds channel count ${channels.length}.`,
-    //     );
-    //   }
-
-    //   const channel = channels[iInstrument.channel];
-    //   destination = channel.input;
-    // }
-
     switch (iInstrument.instrument) {
       case 'soundfont':
         return new Soundfont(Audio.Soundfont.load(iInstrument.soundfont), destination, iInstrument);
@@ -109,32 +131,16 @@ export const createProject = (i: IProject) => {
   // TODO trigger non lazy
   instruments.onDidAdd(({ items }) => {
     items.forEach((instrument) => {
-      instrument.channel.onDidChange((channel) => {
+      instrument.channel.onDidChange(({ newValue: channel, subscriptions }) => {
         let destination: GraphNode;
         if (channel === undefined) {
           destination = masterNode;
         } else {
           const c = channels[channel];
-          destination = c.effects.length ? c.effects[0].effect : c.destination;
+          destination = c.effects[0]?.effect ?? c.destination;
         }
 
-        instrument.connect(destination);
-
-        const currentChannel = instrument.channel;
-        const currentDestination = instrument.destination;
-        history.execute({
-          execute: () => {
-            instrument.channel = channel;
-            instrument.disconnect();
-            instrument.connect(destination);
-          },
-          undo: () => {
-            if (!currentDestination) { return; }
-            instrument.channel = currentChannel;
-            instrument.disconnect();
-            instrument.connect(currentDestination);
-          },
-        });
+        subscriptions.push(instrument.output.connect(destination));
       });
     });
   });
@@ -144,9 +150,9 @@ export const createProject = (i: IProject) => {
 
   const instrumentLookup = makeLookup(instruments);
   const channelLookup = makeLookup(channels);
-  const tracks = oly.olyArr(i.tracks.map((iTrack) => new Track(iTrack)));
+  const tracks = oly.olyArr(iProject.tracks.map((iTrack) => new Track(iTrack)));
 
-  const patterns = oly.olyArr(i.patterns.map((iPattern) => {
+  const patterns = oly.olyArr(iProject.patterns.map((iPattern) => {
     const transport = new Audio.Transport();
     const scores = iPattern.scores.map((iScore) => {
       if (!(iScore.instrumentId in instrumentLookup)) {
@@ -162,7 +168,7 @@ export const createProject = (i: IProject) => {
   }));
 
   const notFound: string[] = [];
-  const samples = oly.olyArr(i.samples.map((iSample) => {
+  const samples = oly.olyArr(iProject.samples.map((iSample) => {
     let buffer: AudioBuffer | null = null;
     if (fs.existsSync(iSample.path)) {
       buffer = loadBufferSync(iSample.path);
@@ -173,7 +179,7 @@ export const createProject = (i: IProject) => {
     return new Sample(buffer, iSample);
   }));
 
-  const automationClips = oly.olyArr(i.automationClips.map((iAutomationClip) => {
+  const automationClips = oly.olyArr(iProject.automationClips.map((iAutomationClip) => {
     let signal: Audio.Signal;
     if (iAutomationClip.context === 'channel') {
       // FIXME(3) remove this
@@ -194,7 +200,7 @@ export const createProject = (i: IProject) => {
   const sampleLookup = makeLookup(samples);
 
   const mTransport = new Audio.Transport(); // master transport
-  const elements = oly.olyArr(i.master.elements.map((iElement) => {
+  const elements = oly.olyArr(iProject.master.elements.map((iElement) => {
     switch (iElement.type) {
       case 'automation':
         if (!(iElement.id in clipLookup)) {
@@ -248,6 +254,76 @@ export const createProject = (i: IProject) => {
     });
   });
 
+  return {
+    bpm: iProject.bpm,
+    stepsPerBeat: iProject.stepsPerBeat,
+    beatsPerMeasure: iProject.beatsPerMeasure,
+    name: iProject.name,
+    id: iProject.id,
+    patterns,
+    instruments,
+    channels,
+    tracks,
+    master,
+    samples,
+    automationClips,
+  };
+};
+
+function emptyProject(): LoadedProject {
+  return {
+    id: uuid.v4(),
+    bpm: 120,
+    stepsPerBeat: 4,
+    beatsPerMeasure: 4,
+    name: '',
+    master: new Playlist(new Audio.Transport(), []),
+    patterns: [Pattern.create('Pattern 0')],
+    instruments: [Synth.create('Synth 0')],
+    channels: range(10).map((index) => Channel.create(index)),
+    tracks: range(21).map((index) => Track.create(index)),
+    samples: [],
+    automationClips: [],
+  };
+}
+
+function loadProject(): InitializationError | InitializationSuccess {
+  const projectJSON = framework.manager.getProjectJSON();
+
+  if (!projectJSON) {
+    return {
+      type: 'success',
+      project: emptyProject(),
+    };
+  }
+
+  const result = t.decodeItem(ProjectType, projectJSON);
+  if (result.type === 'error') {
+    return {
+      type: 'error',
+      message: result.message,
+      project: emptyProject(),
+    };
+  }
+
+  return {
+    type: 'success',
+    project: load(result.decoded),
+  };
+}
+
+export const defineAPI = (i: LoadedProject) => {
+  const {
+    master,
+  } = i;
+
+  const patterns = oly.olyArr(i.patterns);
+  const instruments = oly.olyArr(i.instruments);
+  const channels = oly.olyArr(i.channels);
+  const tracks = oly.olyArr(i.tracks);
+  const samples = oly.olyArr(i.samples);
+  const automationClips = oly.olyArr(i.automationClips);
+
   const removeElements = <T extends PlaylistElementType>(
     type: T,
     removed: Array<PlaylistElementLookup[T]['element']>,
@@ -280,10 +356,10 @@ export const createProject = (i: IProject) => {
   const serialize = (): IProject => {
     return {
       id: project.id,
-      bpm: project.bpm.v,
-      name: project.name.v,
-      stepsPerBeat: project.stepsPerBeat.v,
-      beatsPerMeasure: project.beatsPerMeasure.v,
+      bpm: project.bpm.value,
+      name: project.name.value,
+      stepsPerBeat: project.stepsPerBeat.value,
+      beatsPerMeasure: project.beatsPerMeasure.value,
       patterns: patterns.map((pattern) => pattern.serialize()),
       instruments: instruments.map((instrument) => instrument.serialize()),
       channels: channels.map((channel) => channel.serialize()),
@@ -294,24 +370,12 @@ export const createProject = (i: IProject) => {
     };
   };
 
-  const addInstrument = async (type: 'Synth' | 'Soundfont') => {
-    const name = findUniqueName(project.instruments, type);
-    const instrument = type === 'Soundfont' ?
-      await Soundfont.create('acoustic_grand_piano', name) :
-      Synth.create(name);
-
-    instruments.push(instrument);
-  };
-
-  const deleteInstrument = (ind: number) => {
-    instruments.splice(ind, 1);
-  };
-
   async function save(path: string) {
     const encoded = serialize();
     await fs.writeFile(path, JSON.stringify(encoded, null, 4));
   }
 
+  // TODO move this somewhere else
   function createAutomationClip<T extends Automatable>(
     payload: { automatable: T, key: keyof T & string, end: number, start: number },
   ) {
@@ -362,7 +426,67 @@ export const createProject = (i: IProject) => {
     master.elements.add(placed);
   }
 
-  const project = {
+  async function openTempProject(p: IProject) {
+    const { name: path } = tmp.fileSync({ keep: true });
+    await fs.writeFile(path, JSON.stringify(p, null, 4));
+
+    logger.info(`Writing ${path} as backup`);
+    framework.manager.setOpenedFile(path, { isTemp: true });
+
+    const window = remote.getCurrentWindow();
+    window.reload();
+  }
+
+  const events = emitter<{ save: [IProject] }>();
+  function onDidSave(cb: (encoded: IProject) => void) {
+    events.addListener('save', cb);
+    return {
+      dispose() {
+        events.removeListener('save', cb);
+      },
+    };
+  }
+
+  async function saveProject(opts: { forceDialog?: boolean }) {
+    let projectPath = framework.manager.getOpenedFile();
+
+    if (!projectPath || opts.forceDialog) {
+      const saveDialogReturn = await remote.dialog.showSaveDialog(remote.getCurrentWindow(), {});
+      projectPath = saveDialogReturn.filePath || null;
+
+
+      // If the user cancels the dialog
+      if (!projectPath) {
+        return;
+      }
+
+      if (!projectPath.endsWith(DG_EXTENSION)) {
+        logger.info(`Adding ${DG_EXTENSION} to project path`);
+        projectPath = projectPath + DG_EXTENSION;
+      }
+
+      // Make sure we set the cache and the general
+      // The cache is what is written to the filesystem
+      // and the general is the file that is currently opened
+      logger.info(`Setting opened project as ${projectPath}`);
+      framework.manager.setOpenedFile(projectPath);
+    }
+
+    const encoded = serialize();
+    await fs.writeFile(projectPath, JSON.stringify(encoded, null, 4));
+    events.emit('save', encoded);
+    oly.freezeReference();
+  }
+
+  async function removeOpenedFile() {
+    await framework.manager.setOpenedFile();
+  }
+
+  async function setOpenedFile(path: string) {
+    await framework.manager.setOpenedFile(path);
+  }
+
+  return {
     id: i.id,
     bpm: oly.olyRef(i.bpm),
     name: oly.olyRef(i.name),
@@ -377,19 +501,138 @@ export const createProject = (i: IProject) => {
     tracks,
     channels,
     save,
-    addInstrument,
     createAutomationClip,
-    deleteInstrument,
-    // setChannel,
-    // openTempProject,
-    // onDidSave,
-    // openedFile,
-    // saveProject,
-    // removeOpenedFile,
-    // setOpenedFile,
+    openTempProject,
+    onDidSave,
+    onDidSetOpenedFile: framework.manager.onDidSetOpenedFile,
+    saveProject,
+    removeOpenedFile,
+    setOpenedFile,
   } as const;
-
-  return {
-    project,
-  };
 };
+
+const extension = createExtension({
+  id: 'dawg.project',
+  activate(context) {
+    const result = loadProject();
+    if (result.type === 'error') {
+      notify.info('Unable to load project.', { detail: result.message, duration: Infinity });
+    }
+
+    const api = defineAPI(result.project);
+
+    context.subscriptions.push(addEventListener('online', () => {
+      api.instruments.forEach((instrument) => {
+        instrument.online();
+      });
+    }));
+
+    const save = framework.defineMenuBarItem({
+      menu: 'File',
+      section: '1_save',
+      text: 'Save',
+      shortcut: ['CmdOrCtrl', 'S'],
+      callback: async () => {
+        logger.debug('"Save" initiated!');
+        await api.saveProject({
+          forceDialog: false,
+        });
+      },
+    });
+
+    const saveAs = framework.defineMenuBarItem({
+      menu: 'File',
+      section: '1_save',
+      text: 'Save As',
+      shortcut: ['CmdOrCtrl', 'Shift', 'S'],
+      callback: async () => {
+        logger.debug('"Save As" initiated!');
+        await api.saveProject({
+          forceDialog: true,
+        });
+      },
+    });
+
+    const open = framework.defineMenuBarItem({
+      menu: 'File',
+      section: '0_newOpen',
+      text: 'Open',
+      shortcut: ['CmdOrCtrl', 'O'],
+      callback: async () => {
+        // files can be undefined. There is an issue with the .d.ts files.
+        const files = await remote.dialog.showOpenDialog(
+          remote.getCurrentWindow(),
+          { filters: FILTERS, properties: ['openFile'] },
+        );
+
+
+        if (!files.filePaths || files.filePaths.length === 0) {
+          return;
+        }
+
+        const filePath = files.filePaths[0];
+        await api.setOpenedFile(filePath);
+
+        const window = remote.getCurrentWindow();
+        window.reload();
+      },
+    });
+
+    const newProject = framework.defineMenuBarItem({
+      menu: 'File',
+      section: '0_newOpen',
+      shortcut: ['CmdOrCtrl', 'N'],
+      text: 'New Project',
+      callback: async () => {
+        await api.removeOpenedFile();
+
+        const window = remote.getCurrentWindow();
+        window.reload();
+      },
+    });
+
+    const undo = framework.defineMenuBarItem({
+      menu: 'Edit',
+      section: '0_undoRedo',
+      shortcut: ['CmdOrCtrl', 'Z'],
+      text: 'Undo',
+      callback: () => {
+        oly.undo();
+      },
+    });
+
+    const redo = framework.defineMenuBarItem({
+      menu: 'Edit',
+      section: '0_undoRedo',
+      shortcut: ['CmdOrCtrl', 'Shift', 'Z'],
+      text: 'Redo',
+      callback: () => {
+        oly.redo();
+      },
+    });
+
+    [save, saveAs, open, newProject].map((command) => {
+      context.subscriptions.push(commands.registerCommand({ ...command, registerAccelerator: false }));
+      context.subscriptions.push(framework.addToMenu(command));
+    });
+
+    ([undo, redo]).map((command) => {
+      context.subscriptions.push(commands.registerCommand({ ...command, registerAccelerator: false }));
+      context.subscriptions.push(framework.addToMenu(command));
+    });
+
+    context.settings.push({
+      type: 'string',
+      label: 'Project Name',
+      description: 'Give your project a better name to make it more identifiable.',
+      value: api.name,
+    });
+
+    return api;
+  },
+});
+
+export const project = framework.manager.activate(extension);
+
+// tslint:disable-next-line:no-console
+console.log(project);
