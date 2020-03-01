@@ -57,7 +57,7 @@ export class Soundfont extends Instrument<Audio.SoundfontOptions, Soundfonts> im
       pan: this.pan.value,
       name: this.name,
       id: this.id,
-      channel: this.channel,
+      channel: this.channel.v,
       mute: this.mute,
     };
   }

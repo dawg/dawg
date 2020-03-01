@@ -59,7 +59,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
 
     // FIXME Maybe all of the clocks could share one "ticker"?? IDK? Then we wouldn't have to "watch" the BBM
     // Note, this will run automatically
-    watch(() => Context.BPM, () => {
+    const d = Context.onDidSetBPM(() => {
       this.clock.frequency.value = 1 / (60 / Context.BPM / Context.PPQ);
     });
 
@@ -68,6 +68,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
     });
 
     this.disposer = () => {
+      // d.dispose();
       // pause.dispose();
     };
   }

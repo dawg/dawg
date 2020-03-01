@@ -113,7 +113,7 @@ import SideTabs from '@/lib/framework/SideTabs.vue';
 import PanelHeaders from '@/lib/framework/PanelHeaders.vue';
 import ActivityBar from '@/lib/framework/ActivityBar.vue';
 import * as framework from '@/lib/framework';
-import { sortOrdered } from '@/lib/std';
+import { sortOrdered, Keys } from '@/lib/std';
 import { createComponent, computed, ref, onMounted, onUnmounted, watch } from '@vue/composition-api';
 import { getLogger } from '@/lib/log';
 import { ipcSender } from '@/lib/framework/ipc';
@@ -239,6 +239,13 @@ export default createComponent({
 
       hasUnsavedChanged = value;
     }));
+
+    // Prevent spacebar scrolling which isn't good for the sequencers
+    window.addEventListener('keydown', (e) => {
+      if (e.keyCode === Keys.Space && e.target === document.body) {
+        e.preventDefault();
+      }
+    });
 
     // window.onbeforeunload = () => '';
 

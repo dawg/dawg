@@ -3,13 +3,15 @@ import * as Audio from '@/lib/audio';
 import uuid from 'uuid';
 import * as t from '@/lib/io';
 import { BuildingBlock } from '@/models/block';
+import * as oly from '@/olyger';
+import { GraphNode } from '@/node';
 
 export const InstrumentType = t.intersection([
   t.type({
     name: t.string,
   }),
   t.partial({
-    channel: t.union([t.null, t.number]),
+    channel: t.number,
     id: t.string,
     pan: t.number,
     volume: t.number,
@@ -33,11 +35,9 @@ export abstract class Instrument<T, V extends string> extends BuildingBlock {
    */
   public abstract types: V[];
 
-  public channel?: number;
-  public destination: Tone.AudioNode | null = Tone.Master;
+  public channel: oly.OlyRef<number | undefined>;
 
-  protected source: Audio.Source<T> | null;
-  private muted: boolean;
+  protected source: GraphNode<Audio.Source<T> | null>;
   // tslint:disable-next-line:member-ordering
   private panner = new Tone.Panner().toMaster();
   private connected = true;
@@ -45,76 +45,47 @@ export abstract class Instrument<T, V extends string> extends BuildingBlock {
   // tslint:disable-next-line:member-ordering
   public pan = new Audio.Signal(this.panner.pan, -1, 1);
 
-  private gainNode = new Tone.Gain().connect(this.panner);
+  private node = new GraphNode(new Tone.Gain().connect(this.panner));
 
   // tslint:disable-next-line:member-ordering
-  public volume = new Audio.Signal(this.gainNode.gain, 0, 1);
+  public volume = new Audio.Signal(this.node.node.gain, 0, 1);
 
-  constructor(source: Audio.Source<T> | null, destination: Tone.AudioNode, i: IInstrument) {
+  constructor(source: Audio.Source<T> | null, destination: GraphNode, i: IInstrument) {
     super();
-    this.source = source;
-    if (source) {
-      source.connect(this.gainNode);
-    }
+    this.source = new GraphNode(source);
+    this.source.connect(this.node);
 
     this.name = i.name;
     this.id = i.id || uuid.v4();
-    this.channel = i.channel === null ? undefined : i.channel;
-    this.muted = !!i.mute;
-    this.mute = !!i.mute;
+    this.channel = oly.olyRef(i.channel);
+    this.node.mute = !!i.mute;
     this.pan.value = i.pan || 0;
     this.volume.value = i.volume === undefined ? 0.8 : i.volume;
-    this.connect(destination);
-  }
-
-  get mute() {
-    return this.muted;
-  }
-
-  set mute(mute: boolean) {
-    this.muted = mute;
-    this.checkConnection();
+    this.node.connect(destination);
   }
 
   public triggerAttackRelease(note: string, duration: Audio.Time, time: number, velocity?: number) {
-    if (this.source) {
-      this.source.triggerAttackRelease(note, duration, time, velocity);
+    if (this.source.node) {
+      this.source.node.triggerAttackRelease(note, duration, time, velocity);
     }
   }
 
   public triggerRelease(note: string) {
-    if (this.source) {
-      this.source.triggerRelease(note);
+    if (this.source.node) {
+      this.source.node.triggerRelease(note);
     }
   }
 
   public triggerAttack(note: string, velocity?: number) {
-    if (this.source) {
-      this.source.triggerAttack(note, undefined, velocity);
-    }
-  }
-
-  public connect(effect: Tone.AudioNode) {
-    this.panner.connect(effect);
-    this.destination = effect;
-    this.checkConnection();
-  }
-
-  public disconnect() {
-    if (this.destination) {
-      this.panner.disconnect(this.destination);
-      this.destination = null;
+    if (this.source.node) {
+      this.source.node.triggerAttack(note, undefined, velocity);
     }
   }
 
   public set<K extends keyof T>(o: { key: K, value: T[K] }) {
-    if (this.source) {
-      this.source.set(o);
+    if (this.source.node) {
+      this.source.node.set(o);
     }
-  }
-
-  public dispose() {
-    this.disconnect();
   }
 
   /**
@@ -125,27 +96,6 @@ export abstract class Instrument<T, V extends string> extends BuildingBlock {
   }
 
   protected setSource(source: Audio.Source<T> | null) {
-    if (this.source) {
-      this.source.disconnect(this.gainNode);
-    }
-
-    this.source = source;
-    if (this.source) {
-      this.source.connect(this.gainNode);
-    }
-  }
-
-  private checkConnection() {
-    if (!this.destination) {
-      return;
-    }
-
-    if (this.mute && this.connected) {
-      this.panner.disconnect(this.destination);
-      this.connected = false;
-    } else if (!this.mute && !this.connected) {
-      this.panner.connect(this.destination);
-      this.connected = true;
-    }
+    this.source.replace(source);
   }
 }

@@ -1,6 +1,5 @@
 import Tone from 'tone';
 import { Ticks, Beat } from '@/lib/audio/types';
-import { ref } from '@vue/composition-api';
 import { emitter } from '@/lib/events';
 
 class Ticker {
@@ -38,13 +37,26 @@ class Ticker {
 const events = emitter<{ tick: [] }>();
 const ticker = new Ticker(() => events.emit('tick'), 0.03); // updateInterval FIXME
 
+const cEvents = emitter<{ setBPM: [number] }>();
 
 export const context = (Tone.context as any)._context as unknown as AudioContext;
 export class Context {
   public static context = context;
   public static PPQ = 192;
   public static lookAhead = 0.1;
-  public static BPM = 120;
+
+  public static get BPM() {
+    return Context._BPM;
+  }
+
+  public static set BPM(value: number) {
+    Context._BPM = value;
+    cEvents.emit('setBPM', value);
+  }
+
+  public static onDidSetBPM(cb: (bpm: number) => void) {
+    return cEvents.on('setBPM', cb);
+  }
 
   public static ticksToSeconds(ticks: Ticks) {
     return (ticks / Context.PPQ) / Context.BPM * 60;
@@ -94,6 +106,8 @@ export class Context {
     events.removeAllListeners();
     ticker.dispose();
   }
+
+  private static _BPM = 120;
 
   private constructor() {}
 }

@@ -6,6 +6,7 @@ import { Pattern } from '@/models';
 import * as framework from '@/lib/framework';
 import { project } from '@/core/project';
 import * as t from '@/lib/io';
+import { findUniqueName } from '@/utils';
 
 export const patterns = framework.manager.activate({
   id: 'dawg.patterns',
@@ -51,7 +52,10 @@ export const patterns = framework.manager.activate({
         pattern,
         patterns: project.patterns,
         project,
-        remove: (i: number) => project.removePattern(i),
+        remove: (i: number) => {
+          // TODO notify
+          project.patterns.splice(i);
+        },
       }),
     }));
 
@@ -63,7 +67,8 @@ export const patterns = framework.manager.activate({
         icon: ref('add'),
         tooltip: ref('Add Pattern'),
         callback: () => {
-          project.addPattern();
+          const name = findUniqueName(project.patterns, 'Pattern');
+          project.patterns.push(Pattern.create(name));
         },
       }],
       order: 2,

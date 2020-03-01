@@ -16,7 +16,6 @@ export interface SoundfontOptions {
  * A soundfont source. Uses `soundfont-player` under the hood.
  */
 export class Soundfont implements Source<SoundfontOptions> {
-
   public static load(name: soundfonts.InstrumentName) {
     try {
       return new Soundfont(soundfonts.instrument(context, name));
@@ -84,5 +83,10 @@ export class Soundfont implements Source<SoundfontOptions> {
 
   public set<K extends keyof SoundfontOptions>(o: { key: K, value: SoundfontOptions[K] }) {
     this[o.key] = o.value;
+  }
+
+  public toMaster(): this {
+    this.connect(Tone.Master);
+    return this;
   }
 }

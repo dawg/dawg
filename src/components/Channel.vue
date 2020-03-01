@@ -18,7 +18,7 @@
         <div
           v-if="effect"
           @click="select($event, effect)"
-          @contextmenu="contextmenu($event, effect)"
+          @contextmenu="contextmenu($event, i)"
           class="bg-default text-default text-center truncate select-none"
           style="line-height: 23px"
         >
@@ -116,7 +116,11 @@ export default createComponent({
 
     function showEffects(event: MouseEvent, i: number) {
       const items = options.value.map((option) => ({
-        text: sentenceCase(option), callback: () => addEffect(option, i),
+        text: sentenceCase(option),
+        callback: () => {
+          props.channel.effects;
+          addEffect(option, i);
+        },
       }));
 
       framework.menu({
@@ -134,12 +138,14 @@ export default createComponent({
       context.emit('select', effect);
     }
 
-    function contextmenu(event: MouseEvent, effect: AnyEffect) {
+    function contextmenu(event: MouseEvent, i: number) {
       framework.context({
         position: event,
         items: [{
           text: 'Delete',
-          callback: () => context.emit('delete', effect),
+          callback: () => {
+            props.channel.deleteEffect(i);
+          },
         }],
       });
     }

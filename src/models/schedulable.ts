@@ -115,6 +115,7 @@ const createSchedulable = <
   ): ScheduledElement<T, M, Options> => {
     const info = {  ...opts };
 
+    // TODO
     idk.onDidDelete(() => {
       removeNoHistory();
     });
@@ -226,6 +227,7 @@ const createSchedulable = <
           offset: offset.value,
           type: o.type,
           id: idk.id,
+          ...options,
         };
       },
       onDidRemove: (cb: () => void) => {

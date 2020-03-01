@@ -60,7 +60,7 @@ export class Synth extends Instrument<Audio.SynthOptions, Oscillators> implement
       pan: this.pan.value,
       name: this.name,
       id: this.id,
-      channel: this.channel,
+      channel: this.channel.v,
       mute: this.mute,
     };
   }

@@ -56,7 +56,8 @@ export default createComponent({
 
       const instrument = props.instruments[i];
       if (!scoreLookup.value.hasOwnProperty(instrument.id)) {
-        project.addScore({ pattern: props.selectedPattern, instrument });
+        const newScore = Score.create(props.selectedPattern.transport, instrument);
+        props.selectedPattern.scores.push(newScore);
       }
 
       update(props, context, 'selectedScore', scoreLookup.value[instrument.id]);

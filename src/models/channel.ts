@@ -4,6 +4,9 @@ import Tone from 'tone';
 import * as Audio from '@/lib/audio';
 import { Serializable } from '@/models/serializable';
 import { EffectType, AnyEffect, Effect } from '@/models/filters/effect';
+import * as oly from '@/olyger';
+import { GraphNode, masterNode } from '@/node';
+import { EffectName } from '@/models/filters/effects';
 
 export const ChannelTypeRequired = t.type({
   number: t.number,
@@ -14,13 +17,27 @@ export const ChannelTypeRequired = t.type({
   mute: t.boolean,
 });
 
-export const ChannelTypePartial = t.partial({
+export const ChannelTypePartial = t.type({
   effects: t.array(EffectType),
 });
 
 export const ChannelType = t.intersection([ChannelTypeRequired, ChannelTypePartial]);
 
 export type IChannel = t.TypeOf<typeof ChannelType>;
+
+const initiate = (effects: AnyEffect[], { items, index }: { items: AnyEffect[], index: number }) => {
+  if (items.length === 0) {
+    return;
+  }
+
+  items.slice(0, items.length - 1).forEach((_, ind) => {
+    items[ind].effect.connect(items[ind + 1].effect);
+  });
+
+  const nodeReplaced = effects[index + items.length].effect ?? masterNode;
+  nodeReplaced.redirect(items[0].effect);
+  items[items.length - 1].effect.connect(nodeReplaced);
+};
 
 export class Channel implements Serializable<IChannel> {
   public static create(num: number) {
@@ -37,13 +54,15 @@ export class Channel implements Serializable<IChannel> {
 
   public number: number;
   public name: string;
-  public effects: AnyEffect[];
+  public effects: Readonly<AnyEffect[]>;
   public id: string;
 
   public left = new Tone.Meter();
   public right = new Tone.Meter();
   public split = new Tone.Split();
 
+  // tslint:disable-next-line:variable-name
+  private _effects: AnyEffect[];
   private pannerNode = new Tone.Panner().toMaster().connect(this.split);
 
   /**
@@ -61,7 +80,7 @@ export class Channel implements Serializable<IChannel> {
   public volume = new Audio.Signal(this.gainNode.gain, 0, 1);
 
   // tslint:disable-next-line:member-ordering
-  public destination = this.gainNode;
+  public destination = new GraphNode(this.gainNode);
   private connected = true;
   private muted: boolean;
 
@@ -80,19 +99,18 @@ export class Channel implements Serializable<IChannel> {
     this.split.left.connect(this.left);
     this.split.right.connect(this.right);
 
-    this.effects = (i.effects || []).map((iEffect) => {
+    const effects = oly.olyDisposerArr(i.effects.map((iEffect) => {
       return new Effect(iEffect);
+    }));
+
+    effects.onDidAdd(({ items, startingIndex: index }) => {
+      initiate(effects, { items, index });
     });
 
-    if (this.effects.length === 0) {
-      return;
-    }
+    this.effects = effects;
+    this._effects = effects;
 
-    for (const [index, effect] of this.effects.slice(1).entries()) {
-      this.effects[index - 1].connect(effect);
-    }
-
-    this.effects[this.effects.length - 1].connect(this.destination);
+    initiate(effects, { items: effects, index: 0 });
   }
 
   get mute() {
@@ -112,6 +130,28 @@ export class Channel implements Serializable<IChannel> {
 
   get input() {
     return this.effects.length ? this.effects[0].effect : this.destination;
+  }
+
+  public addEffect(name: EffectName, i: number) {
+    let toInsert = 0;
+    for (; toInsert < this.effects.length; toInsert++) {
+      const effect = this.effects[toInsert];
+      if (effect.slot === i) {
+        // An effect already exists in the slot
+        return;
+      }
+
+      if (effect.slot > i) {
+        break;
+      }
+    }
+
+    const newEffect = Effect.create(i, name);
+    this._effects.splice(toInsert, 0, newEffect);
+  }
+
+  public deleteEffect(i: number) {
+    this._effects.splice(i);
   }
 
   public serialize() {

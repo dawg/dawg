@@ -7,6 +7,15 @@
 <script lang="ts">
 import { createComponent, computed, ref, watch } from '@vue/composition-api';
 
+// TODO
+// 1. The panel is going back to the wrong one for some reason
+// 2. Can't change synths
+// 3. When creating a loop and dragging near the edge of the screen, the screen should move too
+// 4. Loops don't serialize
+// 5. Scroll positions don't serialize either
+// 6. A lot of things which should be "actions" are not actually actions. We need some kind of framework
+// for undo/redo.
+
 export default createComponent({
   name: 'Progression',
   props: {
@@ -20,7 +29,7 @@ export default createComponent({
   },
   setup(props) {
     const progressPx = computed(() => {
-      return (props.position * props.pxPerBeat) + 'px';
+      return ((props.position * props.pxPerBeat) - props.scrollLeft) + 'px';
     });
 
     const style = computed(() => {

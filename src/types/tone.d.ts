@@ -64,12 +64,12 @@ declare module 'tone' {
     dispose(): this;
   }
 
-  class AudioNode extends Tone {
+  class AudioNode {
     toMaster(): this;
     disconnect(output: number | AudioNode): this;
-    chain(...nodes: AudioNode[]): this;
+    // chain(...nodes: AudioNode[]): this;
     connect(unit: Tone | AudioParam | AudioNode, outputNum?: number, inputNum?: number): this;
-    dispose(): void;
+    // dispose(): this;
   }
 
   class AutoPanner extends Effect {
@@ -449,8 +449,8 @@ declare module 'tone' {
   class MasterClass extends AudioNode {
     volume: Signal;
     mute: boolean;
-    receive(node: any): MasterClass; //todo: AudioNode | tone
-    send(node: any): MasterClass; //todo: AudioNode | tone
+    // receive(node: any): MasterClass; //todo: AudioNode | tone
+    // send(node: any): MasterClass; //todo: AudioNode | tone
   }
 
   class Max extends Signal {

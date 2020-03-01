@@ -4,6 +4,7 @@ import * as t from '@/lib/io';
 import { EffectOptions, EffectName, EffectTones, EffectMap } from '@/models/filters/effects';
 import { EffectDefaults } from '@/models/filters/defaults';
 import { Serializable } from '@/models/serializable';
+import { GraphNode } from '@/node';
 
 export const EffectType = t.type({
   slot: t.number,
@@ -39,8 +40,7 @@ export class Effect<T extends EffectName> implements Serializable<IEffect> {
   public options: EffectOptions[T];
   public id = uuid.v4();
 
-  public effect!: EffectTones[T];
-  private destination: Tone.AudioNode | null = null;
+  public effect: GraphNode<Tone.Effect>;
 
   constructor(i: IEffect) {
     this.slot = i.slot;
@@ -49,29 +49,12 @@ export class Effect<T extends EffectName> implements Serializable<IEffect> {
     // FIXME Remove any cast
     this.options = i.options as any;
     // FIXME FIx this because we shouldn't have to use any type
-    this.effect = new EffectMap[this.type]() as any;
+    this.effect = new GraphNode(new EffectMap[this.type]() as any);
     // FIXME actually set options
   }
 
   get wet() {
-    return this.effect.wet;
-  }
-
-  public connect(effect: AnyEffect | Tone.AudioNode) {
-    if (effect instanceof Effect) {
-      this.effect.connect(effect.effect);
-      this.destination = effect.effect;
-    } else {
-      this.effect.connect(effect);
-      this.destination = effect;
-    }
-  }
-
-  public disconnect() {
-    if (this.destination) {
-      this.effect.disconnect(this.destination);
-      this.destination = null;
-    }
+    return this.effect.node.wet;
   }
 
   public serialize() {
@@ -87,7 +70,12 @@ export class Effect<T extends EffectName> implements Serializable<IEffect> {
     o: { key: K, value: EffectOptions[T][K] & EffectTones[T][K] },
   ) {
     this.options[o.key] = o.value;
-    this.effect[o.key] = o.value;
+    // TODO
+    (this.effect.node as any)[o.key] = o.value;
+  }
+
+  public dispose() {
+    return this.effect.dispose();
   }
 }
 

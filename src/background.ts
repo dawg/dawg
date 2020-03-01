@@ -1,4 +1,4 @@
-import { app, protocol, BrowserWindow, dialog } from 'electron';
+import { app, protocol, BrowserWindow } from 'electron';
 import menu from './lib/electron/context';
 import path from 'path';
 import {

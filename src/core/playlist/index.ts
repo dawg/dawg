@@ -92,7 +92,7 @@ export const playlist = framework.manager.activate({
           }
 
           logger.debug('Adding a sample!');
-          project.addSample(sample);
+          project.samples.push(sample);
         },
         open(element: PlaylistElements) {
           switch (element.type) {

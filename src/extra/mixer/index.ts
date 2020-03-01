@@ -24,7 +24,6 @@ export const extension = createExtension({
         :channels="project.channels"
         :play="play"
         @add="(payload) => project.addEffect(payload)"
-        @delete="(payload) => project.deleteEffect(payload)"
       ></mixer>
       `,
       data: () => ({

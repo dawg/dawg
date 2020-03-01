@@ -5,22 +5,17 @@ import { Serializable } from '@/models/serializable';
 import { Score, ScoreType } from '@/models/score';
 import { BuildingBlock } from '@/models/block';
 
-const PatternTypeRequired = t.type({
+export const PatternType = t.type({
   id: t.string,
   name: t.string,
-});
-
-const PatternTypePartial = t.partial({
   scores: t.array(ScoreType),
 });
-
-export const PatternType = t.intersection([PatternTypeRequired, PatternTypePartial]);
 
 export type IPattern = t.TypeOf<typeof PatternType>;
 
 export class Pattern extends BuildingBlock implements Serializable<IPattern> {
   public static create(name: string) {
-    return new Pattern({ name, id: uuid.v4() }, new Audio.Transport(), []);
+    return new Pattern({ name, id: uuid.v4(), scores: [] }, new Audio.Transport(), []);
   }
   public id: string;
   public name: string;

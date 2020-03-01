@@ -6,7 +6,7 @@ import { ScheduledAutomation, ScheduledAutomationType } from '@/models/schedulab
 import { Serializable } from '@/models/serializable';
 import { Sequence, createSequence } from '@/models/sequence';
 
-export const PlaylistType = t.partial({
+export const PlaylistType = t.type({
   elements: t.array(t.union([
     ScheduledPatternType,
     ScheduledSampleType,
@@ -20,6 +20,14 @@ export type IPlaylist = t.TypeOf<typeof PlaylistType>;
  * The possible elements that can be scheduled on a playlist.
  */
 export type PlaylistElements = ScheduledPattern | ScheduledSample | ScheduledAutomation;
+
+export type PlaylistElementType = PlaylistElements['type'];
+
+export interface PlaylistElementLookup {
+  pattern: ScheduledPattern;
+  sample: ScheduledSample;
+  automation: ScheduledAutomation;
+}
 
 export class Playlist implements Serializable<IPlaylist> {
   /**

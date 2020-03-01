@@ -395,8 +395,8 @@ const createApi = () => {
   async function addInstrument(type: 'Synth' | 'Soundfont') {
     const name = findUniqueName(prj.instruments, type);
     const instrument = type === 'Soundfont' ?
-      Synth.create(name) :
-      await Soundfont.create('acoustic_grand_piano', name);
+      await Soundfont.create('acoustic_grand_piano', name) :
+      Synth.create(name);
 
     history.execute({
       execute: () => prj.instruments.push(instrument),

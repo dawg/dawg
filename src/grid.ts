@@ -7,7 +7,7 @@ import { SchedulablePrototype } from '@/models/schedulable';
 import * as history from '@/lib/framework/history';
 import { getLogger } from '@/lib/log';
 
-const logger = getLogger('grid', { level: 'debug' });
+const logger = getLogger('grid');
 
 // For more information see the following link:
 // https://stackoverflow.com/questions/4270485/drawing-lines-on-html-page
@@ -367,16 +367,19 @@ export const createGrid = <T extends Element>(
     if (holdingShift) {
       // If selected, copy all selected. If not, just copy the item that was clicked.
       if (elIsSelected) {
+        const copy = selected.slice();
+
+        // First, clear the selected
+        // We do this as the new elements will actually be the ones that are selected
+        selected.splice(0, selected.length);
+
         // selected is all all selected except the element you pressed on
-        selected.forEach((el) => {
+        copy.forEach((el) => {
           if (el === item) {
             // A copy of `item` will be created at this index which becomes the target for moving
             i = sequence.l.length;
           }
 
-          // Set old item selected -> false and new item selected -> true since
-          // the new items will be placed over the old elements
-          sDel(el);
           createItem(el, true);
         });
       } else {

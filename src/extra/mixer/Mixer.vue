@@ -8,7 +8,6 @@
         :play="play"
         :channel="channel"
         @add="addEffect(channel, $event)"
-        @delete="deleteEffect(channel, $event)"
         @select="openEffect"
       ></channel>
     </div>
@@ -47,15 +46,10 @@ export default createComponent({
       }
     }
 
-    function deleteEffect(channel: C, effect: AnyEffect) {
-      context.emit('delete', { channel, effect });
-    }
-
     return {
       openedEffect,
       addEffect,
       openEffect,
-      deleteEffect,
     };
   },
 });
