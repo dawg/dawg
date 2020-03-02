@@ -68,9 +68,6 @@ export default createComponent({
           transferDataStore.data = props.transferData;
           // Set a dummy string for the real transfer data. Not actually used
           // for anything, but necesssary for browser compatibility.
-          //
-          // TODO: Maybe this should be the actual data serialized. But since
-          // it's not actually used for anything it seems like a waste of CPU.
           transfer.setData('text', '');
         }
         // Indicate that we're dragging.

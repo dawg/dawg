@@ -15,7 +15,6 @@
       :prototype.sync="note"
       :side-width="90"
       :row-class="rowClass"
-      :set-loop-end="setLoopEnd"
       name="Piano Roll"
     >
       <template slot="side">
@@ -52,16 +51,9 @@ export default createComponent({
     rowHeight: { type: Number, required: true },
   },
   setup(props, context) {
-    const endBeat = ref(0);
-
     // This is the prototype
     // row and time are overwritten so they can be set to 0 here
     const note = ref<SchedulablePrototype<any, any, any>>();
-
-    const setLoopEnd = computed(() => {
-      // Always round up to the nearest measure
-      return Math.ceil(endBeat.value / props.beatsPerMeasure) * props.beatsPerMeasure;
-    });
 
     function rowClass(i: number) {
       const key = allKeys[i].value;
@@ -82,36 +74,15 @@ export default createComponent({
       });
     }
 
-    function checkAll() {
-      let max: undefined | ScheduledNote;
-      props.pattern.scores.forEach((score) => {
-        score.notes.forEach((n) => {
-          if (!max || n.time.value + n.duration.value > max.time.value + max.duration.value) {
-            max = n;
-          }
-        });
-      });
-
-      endBeat.value = max?.endBeat.value ?? 0;
-    }
-
-    watch(() => props.pattern, checkAll, { lazy: true });
-
     watch(() => props.score, () => {
       const create = createNotePrototype({ row: 0, time: 0, duration: 1 }, props.score.instrument, { velocity: 1 });
       note.value = create(props.pattern.transport).copy;
-    });
-
-  // TODO is there a better solution ?? We can probably sync a property with the grid
-    watch(() => props.score.notes, () => {
-      checkAll();
     });
 
     return {
       addNotes,
       allKeys,
       rowClass,
-      setLoopEnd,
       note,
     };
   },

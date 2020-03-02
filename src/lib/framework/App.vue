@@ -117,7 +117,7 @@ import { sortOrdered, Keys } from '@/lib/std';
 import { createComponent, computed, ref, onMounted, onUnmounted, watch } from '@vue/composition-api';
 import { getLogger } from '@/lib/log';
 import { ipcSender } from '@/lib/framework/ipc';
-import { createSubscriptions } from '@/lib/vutils';
+import { useSubscriptions } from '@/lib/vutils';
 import { remote } from 'electron';
 import * as oly from '@/olyger';
 
@@ -133,7 +133,7 @@ export default createComponent({
   name: 'App',
   setup() {
     const settings = ref(false);
-    const { subscriptions } = createSubscriptions();
+    const subscriptions = useSubscriptions();
 
     // This loaded flag is important
     // Bugs can appear if we render before we load the project file

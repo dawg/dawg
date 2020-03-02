@@ -24,7 +24,7 @@ import { ScheduledAutomation, createAutomationPrototype } from '@/models';
 import * as dawg from '@/dawg';
 import { createComponent, computed } from '@vue/composition-api';
 import * as oly from '@/olyger';
-import { createSubscriptions } from '@/lib/vutils';
+import { useSubscriptions } from '@/lib/vutils';
 
 export default createComponent({
   name: 'AutomationClips',
@@ -51,7 +51,7 @@ export default createComponent({
       });
     }
 
-    const { subscriptions } = createSubscriptions();
+    const subscriptions = useSubscriptions();
 
     const count = oly.olyRef(0);
     const arr = oly.olyArr<number>([]);

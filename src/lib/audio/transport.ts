@@ -354,7 +354,6 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
     // Also, add them to the active list of events if required.
     this.timeline.forEachAtTime(ticks, (event) => {
       if (event.onStart) {
-        console.log('onStart');
         event.onStart({
           seconds,
           ticks,

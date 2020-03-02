@@ -1,7 +1,7 @@
 import { Ref, ref, computed } from '@vue/composition-api';
 import { ScheduledElement } from '@/models';
 import { addEventListeners } from '@/lib/events';
-import { Keys, Disposer } from '@/lib/std';
+import { Keys, Disposer, Mouse } from '@/lib/std';
 import { calculateSimpleSnap, slice, doSnap } from '@/utils';
 import { SchedulablePrototype } from '@/models/schedulable';
 import { getLogger } from '@/lib/log';
@@ -332,6 +332,10 @@ export const createGrid = <T extends Element>(
   };
 
   const select = (e: MouseEvent, i: number) => {
+    if (e.button !== Mouse.LEFT) {
+      return;
+    }
+
     const item = sequence[i];
     const elIsSelected = selected.includes(item);
 
@@ -426,8 +430,7 @@ export const createGrid = <T extends Element>(
   };
 
   const removeAtIndex = (i: number) => {
-    const el = sequence[i];
-    el.remove();
+    sequence.splice(i, 1);
   };
 
   const remove = (i: number, e: MouseEvent) => {

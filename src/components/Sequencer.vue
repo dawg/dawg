@@ -133,11 +133,6 @@ export default createComponent({
     isRecording: { type: Boolean, default: false },
 
     /**
-     * Set this if you want to control the end of the loop. This will be ignored if set to 0.
-     */
-    setLoopEnd: { type: Number, required: false },
-
-    /**
      * This will be synced with the end of the end of the loop.
      */
     end: { type: Number, required: false },
@@ -214,22 +209,16 @@ export default createComponent({
 
     const loopEnd = computed(() => {
       // Prioritize the loop end set by the user
-      // Then check if a specific loop end has been given
-      // Then fallback to the calculated loop end
-
       if (data.userLoopEnd) {
         return data.userLoopEnd;
       }
 
+      // Then check if we are recording
       if (props.isRecording) {
         return data.displayLoopEnd;
       }
 
-      if (props.setLoopEnd) {
-        return props.setLoopEnd;
-      }
-
-
+      // Then fallback to the calculated loop end
       return data.sequencerLoopEnd;
     });
 

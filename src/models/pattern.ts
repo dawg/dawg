@@ -30,7 +30,16 @@ export class Pattern extends BuildingBlock implements Serializable<IPattern> {
 
     olyScores.onDidRemove(({ items, subscriptions }) => {
       items.map((score) => {
-        subscriptions.push(...score.notes.map((note) => note.remove()));
+        subscriptions.push({
+          execute: () => {
+            const disposers = score.notes.map((note) => note.remove());
+            return {
+              undo: () => {
+                disposers.forEach((disposer) => disposer.dispose());
+              },
+            };
+          },
+        });
       });
     });
 

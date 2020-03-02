@@ -11,16 +11,26 @@ import { Instrument } from '@/models/instrument/instrument';
 import { allKeys } from '@/utils';
 import { BuildingBlock } from '@/models/block';
 import { Disposer } from '@/lib/std';
-import { emitter } from '@/lib/events';
 import * as oly from '@/olyger';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('schedulable', { level: 'debug' });
 
 export const watchOlyArray = <T extends ScheduledElement<any, any, any>>(arr: oly.OlyArr<T>) => {
-  arr.onDidAdd(({ items, subscriptions }) => {
-    subscriptions.push(...items.map((item) => item.remove()));
-  });
-
   arr.onDidRemove(({ items, subscriptions }) => {
-    subscriptions.push(...items.map((item) => item.remove()));
+    logger.debug(`onDidRemove ${items.length} elements`);
+    subscriptions.push({
+      execute: () => {
+        logger.debug(`Removing ${items.length} elements`);
+        const disposers = items.map((item) => item.remove());
+        return {
+          undo: () => {
+            logger.debug(`Undoing remove of ${items.length} elements`);
+            disposers.forEach((disposer) => disposer.dispose());
+          },
+        };
+      },
+    });
   });
 
   return arr;
@@ -71,7 +81,6 @@ interface SchedulableOpts<Element, Type extends string, Options extends t.Mixed>
 
 const wrap = (initial: number, onSet: (value: number) => void) => {
   const reference = oly.olyRef(initial);
-  // TODO make sure this works
   watch(() => reference.value, (value) => {
     onSet(value);
   }, { lazy: true });
@@ -97,7 +106,7 @@ export type ScheduledElement<Element, Type extends string, Options extends t.Mix
   name?: Readonly<Ref<string>>;
   slice: (timeToSlice: number) => ScheduledElement<Element, Type, Options> | undefined;
   // dispose: () => void;
-  remove: () => oly.IRecursiveDisposer;
+  remove: () => Disposer;
   serialize: () => t.TypeOf<SerializationType<Type, Options>>;
   copy: SchedulablePrototype<Element, Type, Options>;
 }>;
@@ -146,15 +155,10 @@ const createSchedulable = <
     };
 
     const remove = () => {
+      const disposer = controller?.remove();
       return {
         dispose: () => {
-          const disposer = controller?.remove();
-
-          return {
-            dispose: () => {
-              disposer?.dispose();
-            },
-          };
+          disposer?.dispose();
         },
       };
     };
@@ -208,7 +212,6 @@ const createSchedulable = <
       showBorder: o.showBorder,
     } as const;
 
-    console.log('ADDING', transport);
     const controller = o.add(transport, params, idk);
 
     return params;
@@ -305,7 +308,6 @@ export const { create: createNotePrototype, type: ScheduledNoteType } = createSc
   add: (transport, params, instrument: Instrument<any, any>) => {
     return transport.schedule({
       onStart: ({ seconds }) => {
-        console.log(instrument);
         const value = allKeys[params.row.value].value;
         const duration = new Tone.Ticks(params.duration.value * Audio.Context.PPQ).toSeconds();
         instrument.triggerAttackRelease(value, duration, seconds, params.options.velocity);

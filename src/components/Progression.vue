@@ -18,6 +18,7 @@ import { createComponent, computed, ref, watch } from '@vue/composition-api';
 // 7. When reloading, the project name disappears before the modal is finished.
 // Maybe print how some stuff to see why?
 // 8. Why are there still errors loading global/workspace?
+// 9. Why is the loop being set automatically??
 
 export default createComponent({
   name: 'Progression',

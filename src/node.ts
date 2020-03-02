@@ -1,5 +1,5 @@
 import Tone from 'tone';
-import * as oly from '@/olyger';
+import { Disposer } from '@/lib/std';
 
 interface AudioNode {
   disconnect(node: AudioNode): this;
@@ -7,7 +7,7 @@ interface AudioNode {
   toMaster(): this;
 }
 
-export class GraphNode<T extends AudioNode | null = AudioNode | null> implements oly.IRecursiveDisposer {
+export class GraphNode<T extends AudioNode | null = AudioNode | null> {
   private static doConnect(me: GraphNode, o: { oldDest?: GraphNode, newDest?: GraphNode }) {
     if (o.oldDest) {
       const i = o.oldDest.inputs.indexOf(me);
@@ -56,26 +56,12 @@ export class GraphNode<T extends AudioNode | null = AudioNode | null> implements
     }
   }
 
-  public connect(node?: GraphNode): oly.IRecursiveDisposer {
-    const forward = () => {
-      GraphNode.doConnect(this, { oldDest: this.output, newDest: node });
-    };
-
-    const backwards = () => {
-      GraphNode.doConnect(this, { oldDest: node, newDest: this.output });
-    };
-
-    forward();
+  public connect(node?: GraphNode): Disposer {
+    GraphNode.doConnect(this, { oldDest: this.output, newDest: node });
 
     return {
       dispose: () => {
-        backwards();
-
-        return {
-          dispose: () => {
-            forward();
-          },
-        };
+        GraphNode.doConnect(this, { oldDest: node, newDest: this.output });
       },
     };
 

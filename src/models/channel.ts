@@ -99,13 +99,25 @@ export class Channel implements Serializable<IChannel> {
     this.split.left.connect(this.left);
     this.split.right.connect(this.right);
 
-    const effects = oly.olyDisposerArr(i.effects.map((iEffect) => {
+    const effects = oly.olyArr(i.effects.map((iEffect) => {
       return new Effect(iEffect);
     }));
 
-    effects.onDidAdd(({ items, startingIndex: index }) => {
-      initiate(effects, { items, index });
+    // TODO make sure this all works
+    effects.onDidAdd(({ items: added, subscriptions, startingIndex: index }) => {
+      subscriptions.push({
+        execute: () => {
+          return {
+            undo: () => {
+              added.forEach((item) => item.dispose());
+            },
+          };
+        },
+      });
+
+      initiate(effects, { items: added, index });
     });
+
 
     this.effects = effects;
     this._effects = effects;

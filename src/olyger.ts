@@ -6,27 +6,28 @@ import { getLogger } from '@/lib/log';
 
 const logger = getLogger('olyger', { level: 'debug' });
 
-export const RefKey = 'vfa.key.refKey';
+const RefKey = 'vfa.key.refKey';
 
-// TODO is order of subscriptions OK??
-
-export interface IRecursiveDisposer {
-  dispose: () => Disposer;
-}
-
-export interface Command<T> {
+interface Command<T> {
   name: string;
   execute: () => T;
   undo: () => void;
+  subscriptions: Subscription[];
+}
+
+interface ExecutedCommand<T> extends Command<T> {
+  undoers: Array<ReturnType<Subscription['execute']>>;
+}
+
+interface ExecutedAction<T> {
+  commands: Array<ExecutedCommand<T>>;
 }
 
 interface Action<T> {
   commands: Array<Command<T>>;
-  subscriptions: IRecursiveDisposer[][];
-  undoSubscriptions: Disposer[][];
 }
 
-const undoHistory: Array<Action<any>> = [];
+const undoHistory: Array<ExecutedAction<any>> = [];
 let redoHistory: Array<Action<any>> = [];
 
 const context: { reference?: Action<any>, top?: Action<any> } = reactive({
@@ -39,19 +40,23 @@ export const hasUnsavedChanged = computed(() => {
 });
 
 
-let action: Action<any> | undefined;
-const getOrCreateExecutionContext = (subscriptions: IRecursiveDisposer[]) => {
+let action: ExecutedAction<any> | undefined;
+const getOrCreateExecutionContext = () => {
   const startOfExecution = action === undefined;
   if (!action) {
-    action = { commands: [], subscriptions: [subscriptions], undoSubscriptions: [] };
+    action = { commands: [] };
   }
 
   // create a local copy which is not undefined
   const local = action;
 
   const execute = <T>(command: Command<T>) => {
-    local.commands.push(command);
     const result = command.execute();
+    local.commands.push({
+      ...command,
+      undoers: command.subscriptions.map((subscription) => subscription.execute()),
+    });
+
     return result;
   };
 
@@ -95,11 +100,8 @@ export const undo = (): 'empty' | 'performed' => {
 
   for (const command of reverse(undoTop.commands)) {
     command.undo();
+    command.undoers.forEach((undoer) => undoer.undo());
   }
-
-  undoTop.undoSubscriptions = undoTop.subscriptions.map((subscriptions) => {
-    return subscriptions.map((disposer) => disposer.dispose());
-  });
 
   redoHistory.push(undoTop);
   context.top = peek(undoHistory);
@@ -121,11 +123,15 @@ export const redo = (): 'empty' | 'performed' => {
     command.execute();
   }
 
-  redoTop.undoSubscriptions.forEach((undoSubscriptions) => {
-    undoSubscriptions.forEach((disposer) => disposer.dispose());
+  undoHistory.push({
+    commands: redoTop.commands.map((command) => {
+      return {
+        ...command,
+        undoers: command.subscriptions.map((subscription) => subscription.execute()),
+      };
+    }),
   });
 
-  undoHistory.push(redoTop);
   context.top = redoTop;
 
   logger.debug(
@@ -160,10 +166,14 @@ interface Ref<T> {
   value: T;
 }
 
+interface Subscription {
+  execute: () => { undo: () => void };
+}
+
 interface ElementChangeContext<T> {
   newValue: T;
   oldValue: T;
-  subscriptions: IRecursiveDisposer[];
+  subscriptions: Subscription[];
 }
 
 interface ElementChaining<T> {
@@ -182,16 +192,17 @@ export function olyRef<T>(raw: T): Ref<T> & ElementChaining<T> {
     set: (v) => {
       const oldValue = o[RefKey];
 
-      const subscriptions: IRecursiveDisposer[] = [];
+      const subscriptions: Subscription[] = [];
 
       // This is important as it prevents a command being placed on the stack
       if (oldValue === v) {
         return;
       }
 
-      const env = getOrCreateExecutionContext(subscriptions);
+      const env = getOrCreateExecutionContext();
       env.execute({
         name: 'set',
+        subscriptions,
         execute: () => {
           o[RefKey] = v;
         },
@@ -216,7 +227,7 @@ export function olyRef<T>(raw: T): Ref<T> & ElementChaining<T> {
 interface Items<T> {
   items: T[];
   startingIndex: number;
-  subscriptions: IRecursiveDisposer[];
+  subscriptions: Subscription[];
 }
 
 interface ArrayChaining<T> {
@@ -224,11 +235,9 @@ interface ArrayChaining<T> {
   onDidRemove: (cb: (o: Items<T>) => void) => Disposer;
 }
 
-type Callback<T> = (o: { added: T[], removed: T[] }) => (() => void);
-
 export type OlyArr<T> = T[] & ArrayChaining<T>;
 
-const olyArrImpl = <T>(raw: T[], cb?: Callback<T>): T[] & ArrayChaining<T> => {
+const olyArrImpl = <T>(raw: T[]): OlyArr<T> => {
   // Explicitly make the array observable because we replace some of the methods
   // We store local variables in this closure and these NEED to be the vue ones for reactivity
   // Therefore, we make the following call
@@ -245,59 +254,45 @@ const olyArrImpl = <T>(raw: T[], cb?: Callback<T>): T[] & ArrayChaining<T> => {
 
   raw.push = (...items) => {
     const length = raw.length;
-    const subscriptions: IRecursiveDisposer[] = [];
-    const env = getOrCreateExecutionContext(subscriptions);
+    const subscriptions: Subscription[] = [];
+    const env = getOrCreateExecutionContext();
 
-    let onUndo: (() => void) | undefined;
     const addedLength = env.execute({
       name: 'push',
+      subscriptions,
       execute: () => {
         const result = push(...items);
-        if (cb) {
-          onUndo = cb({ added: items, removed: [] });
-        }
-
+        events.emit('add', { items, startingIndex: length, subscriptions });
         return result;
       },
       undo: () => {
         splice(length, items.length);
-        if (onUndo) {
-          onUndo();
-        }
       },
     });
 
-    events.emit('add', { items, startingIndex: length, subscriptions });
     env.finish();
 
     return addedLength;
   };
 
   raw.splice = (start: number, deleteCount: number, ...items: T[]) => {
-    const subscriptions: IRecursiveDisposer[] = [];
-    const env = getOrCreateExecutionContext(subscriptions);
-    let onUndo: (() => void) | undefined;
+    const subscriptions: Subscription[] = [];
+    const env = getOrCreateExecutionContext();
 
     const deleted: T[] = env.execute({
       name: 'splice',
+      subscriptions,
       execute: () => {
         const result = splice(start, deleteCount, ...items);
-        if (cb) {
-          onUndo = cb({ added: items, removed: result });
-        }
-
+        events.emit('remove', { items: result, startingIndex: start, subscriptions });
+        events.emit('add', { items, startingIndex: start, subscriptions });
         return result;
       },
       undo: () => {
         splice(start, items.length, ...deleted);
-        if (onUndo) {
-          onUndo();
-        }
       },
     });
 
-    events.emit('remove', { items: deleted, startingIndex: start, subscriptions });
-    events.emit('add', { items, startingIndex: start, subscriptions });
     env.finish();
 
     return deleted;
@@ -314,19 +309,6 @@ const olyArrImpl = <T>(raw: T[], cb?: Callback<T>): T[] & ArrayChaining<T> => {
   );
 };
 
-export function olyArr<T>(raw: T[]): T[] & ArrayChaining<T> {
+export function olyArr<T>(raw: T[]): OlyArr<T> {
   return olyArrImpl(raw);
 }
-
-// TODO do we need this??
-export const olyDisposerArr = <T extends IRecursiveDisposer>(raw: T[]): T[] & ArrayChaining<T> => {
-  const arr = olyArrImpl(raw, ({ added, removed }) => {
-    const disposeUndoers = removed.map((item) => item.dispose());
-    return () => {
-      disposeUndoers.forEach((disposer) => disposer.dispose());
-      added.forEach((item) => item.dispose());
-    };
-  });
-
-  return arr;
-};

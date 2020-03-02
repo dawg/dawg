@@ -27,6 +27,7 @@ import {
   PlaylistElementType,
   Automatable,
   ClipContext,
+  PlaylistElements,
 } from '@/models';
 import Tone from 'tone';
 import * as Audio from '@/lib/audio';
@@ -103,7 +104,7 @@ export interface InitializationSuccess {
   project: LoadedProject;
 }
 
-const load = (iProject: IProject): LoadedProject => {
+const load = (iProject: IProject): InitializationSuccess | InitializationError => {
   // FIXME what happens when we can add and delete channels?
   // What should be the chain reaction?
   const channels =  oly.olyArr(iProject.channels.map((iChannel) => {
@@ -128,7 +129,16 @@ const load = (iProject: IProject): LoadedProject => {
       destination = c.effects[0]?.effect ?? c.destination;
     }
 
-    return instrument.output.connect(destination);
+    return {
+      execute: () => {
+        const dispose = instrument.output.connect(destination);
+        return {
+          undo: () => {
+            dispose.dispose();
+          },
+        };
+      },
+    };
   };
 
   instruments.onDidAdd(({ items }) => {
@@ -140,28 +150,34 @@ const load = (iProject: IProject): LoadedProject => {
   });
 
   // Do the initial connection
-  instruments.forEach((instrument) => setChannel(instrument, instrument.channel.value));
-
-  // TODO notify
-  const errors: Array<{ title: string, message?: string }> = [];
+  instruments.forEach((instrument) => setChannel(instrument, instrument.channel.value).execute());
 
   const instrumentLookup = makeLookup(instruments);
   const channelLookup = makeLookup(channels);
   const tracks = oly.olyArr(iProject.tracks.map((iTrack) => new Track(iTrack)));
 
+  // First, check that all the IDs exist in the lookup
+  for (const iPattern of iProject.patterns) {
+    for (const iScore of iPattern.scores) {
+      if (!(iScore.instrumentId in instrumentLookup)) {
+        return {
+          type: 'error',
+          message: `Instrument from score ${iScore.id} was not found in instrument list.`,
+          project: emptyProject(),
+        };
+      }
+    }
+  }
+
   const patterns = oly.olyArr(iProject.patterns.map((iPattern) => {
     const transport = new Audio.Transport();
-    const scores = iPattern.scores.map((iScore) => {
-      if (!(iScore.instrumentId in instrumentLookup)) {
-        errors.push({ title: `Instrument from score ${iScore.id} was not found in instrument list.` });
-      }
 
-      const instrument = instrumentLookup[iScore.instrumentId];
-      return new Score(transport, instrument, iScore);
+    // Then create the scores now that we know the instruments all exist
+    const scores = iPattern.scores.map((iScore) => {
+      return new Score(transport, instrumentLookup[iScore.instrumentId], iScore);
     });
 
-    const pattern = new Pattern(iPattern, transport, scores);
-    return pattern;
+    return new Pattern(iPattern, transport, scores);
   }));
 
   const notFound: string[] = [];
@@ -176,16 +192,25 @@ const load = (iProject: IProject): LoadedProject => {
     return new Sample(buffer, iSample);
   }));
 
+
+
+  if (notFound.length !== 0) {
+    notify.warning(`Audio files not found`, {
+      detail: `${notFound.join('\n')}`,
+    });
+  }
+
   const automationClips = oly.olyArr(iProject.automationClips.map((iAutomationClip) => {
     let signal: Audio.Signal;
     if (iAutomationClip.context === 'channel') {
-      // FIXME(3) remove this
+      // FIXME remove this
       signal = (channelLookup[iAutomationClip.contextId] as any)[iAutomationClip.attr];
     } else {
       signal = (instrumentLookup[iAutomationClip.contextId] as any)[iAutomationClip.attr];
     }
 
     if (!signal) {
+      // FIXME remove this error and instead return error
       throw Error('Unable to parse automation clip');
     }
 
@@ -197,40 +222,46 @@ const load = (iProject: IProject): LoadedProject => {
   const sampleLookup = makeLookup(samples);
 
   const mTransport = new Audio.Transport(); // master transport
-  const elements = iProject.master.elements.map((iElement) => {
+  const elements: PlaylistElements[] = [];
+  for (const iElement of iProject.master.elements) {
     switch (iElement.type) {
       case 'automation':
         if (!(iElement.id in clipLookup)) {
-          throw Error(`An Automation clip from the Playlist was not found (${iElement.id}).`);
+          return {
+            type: 'error',
+            message: `An Automation clip from the Playlist was not found (${iElement.id}).`,
+            project: emptyProject(),
+          };
         }
 
         const clip = clipLookup[iElement.id];
-        return createAutomationPrototype(iElement, clip, {})(mTransport).copy();
+        elements.push(createAutomationPrototype(iElement, clip, {})(mTransport).copy());
       case 'pattern':
         if (!(iElement.id in patternLookup)) {
-          throw Error(`A Pattern from the Playlist was not found (${iElement.id}).`);
+          return {
+            type: 'error',
+            message: `A Pattern from the Playlist was not found (${iElement.id}).`,
+            project: emptyProject(),
+          };
         }
 
         const pattern = patternLookup[iElement.id];
-        return createPatternPrototype(iElement, pattern, {})(mTransport).copy();
+        elements.push(createPatternPrototype(iElement, pattern, {})(mTransport).copy());
       case 'sample':
         if (!(iElement.id in sampleLookup)) {
-          throw Error(`A sample from the Playlist was not found (${iElement.id}).`);
+          return {
+            type: 'error',
+            message: `A sample from the Playlist was not found (${iElement.id}).`,
+            project: emptyProject(),
+          };
         }
 
         const sample = sampleLookup[iElement.id];
-        return createSamplePrototype(iElement, sample, {})(mTransport).copy();
+        elements.push(createSamplePrototype(iElement, sample, {})(mTransport).copy());
     }
-  });
+  }
 
   const master = new Playlist(mTransport, elements);
-
-  if (notFound.length !== 0) {
-    errors.push({
-      title: `Audio files not found`,
-      message: notFound.join('\n'),
-    });
-  }
 
   instruments.onDidRemove(({ items: deletedInstruments }) => {
     const instrumentSet = new Set<Instrument<any, any>>(deletedInstruments);
@@ -250,18 +281,21 @@ const load = (iProject: IProject): LoadedProject => {
   });
 
   return {
-    bpm: iProject.bpm,
-    stepsPerBeat: iProject.stepsPerBeat,
-    beatsPerMeasure: iProject.beatsPerMeasure,
-    name: iProject.name,
-    id: iProject.id,
-    patterns,
-    instruments,
-    channels,
-    tracks,
-    master,
-    samples,
-    automationClips,
+    type: 'success',
+    project: {
+      bpm: iProject.bpm,
+      stepsPerBeat: iProject.stepsPerBeat,
+      beatsPerMeasure: iProject.beatsPerMeasure,
+      name: iProject.name,
+      id: iProject.id,
+      patterns,
+      instruments,
+      channels,
+      tracks,
+      master,
+      samples,
+      automationClips,
+    },
   };
 };
 
@@ -303,10 +337,7 @@ function loadProject(): InitializationError | InitializationSuccess {
     };
   }
 
-  return {
-    type: 'success',
-    project: load(result.decoded),
-  };
+  return load(result.decoded);
 }
 
 export const defineAPI = (i: LoadedProject) => {
@@ -372,7 +403,7 @@ export const defineAPI = (i: LoadedProject) => {
     await fs.writeFile(path, JSON.stringify(encoded, null, 4));
   }
 
-  // TODO move this somewhere else
+  // FIXME move this somewhere else
   function createAutomationClip<T extends Automatable>(
     payload: { automatable: T, key: keyof T & string, end: number, start: number },
   ) {
@@ -487,9 +518,24 @@ export const defineAPI = (i: LoadedProject) => {
     return framework.manager.getOpenedFile();
   }
 
+  Audio.Context.BPM = i.bpm;
+  const bpm = oly.olyRef(i.bpm);
+  bpm.onDidChange(({ newValue, oldValue, subscriptions }) => {
+    subscriptions.push({
+      execute: () => {
+        Audio.Context.BPM = newValue;
+        return {
+          undo: () => {
+            Audio.Context.BPM = oldValue;
+          },
+        };
+      },
+    });
+  });
+
   return {
     id: i.id,
-    bpm: oly.olyRef(i.bpm),
+    bpm,
     name: oly.olyRef(i.name),
     stepsPerBeat: i.stepsPerBeat,
     beatsPerMeasure: i.beatsPerMeasure,
@@ -520,9 +566,6 @@ const extension = createExtension({
     if (result.type === 'error') {
       notify.info('Unable to load project.', { detail: result.message, duration: Infinity });
     }
-
-    // TODO do we want to so this?
-    Audio.Context.BPM = result.project.bpm;
 
     const api = defineAPI(result.project);
 
