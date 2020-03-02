@@ -49,7 +49,7 @@ export class Effect<T extends EffectName> implements Serializable<IEffect> {
     // FIXME Remove any cast
     this.options = i.options as any;
     // FIXME FIx this because we shouldn't have to use any type
-    this.effect = new GraphNode(new EffectMap[this.type]() as any);
+    this.effect = new GraphNode(new EffectMap[this.type]() as any, this.type);
     // FIXME actually set options
   }
 
@@ -72,10 +72,6 @@ export class Effect<T extends EffectName> implements Serializable<IEffect> {
     this.options[o.key] = o.value;
     // This any cast should be addressed when this file is refactored
     (this.effect.node as any)[o.key] = o.value;
-  }
-
-  public dispose() {
-    return this.effect.dispose();
   }
 }
 

@@ -23,7 +23,6 @@ export const extension = createExtension({
       <mixer
         :channels="project.channels"
         :play="play"
-        @add="(payload) => project.addEffect(payload)"
       ></mixer>
       `,
       data: () => ({

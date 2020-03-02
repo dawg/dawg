@@ -11,6 +11,7 @@ const RefKey = 'vfa.key.refKey';
 interface Command<T> {
   name: string;
   execute: () => T;
+  emit: (o: T) => void;
   undo: () => void;
   subscriptions: Subscription[];
 }
@@ -52,6 +53,7 @@ const getOrCreateExecutionContext = () => {
 
   const execute = <T>(command: Command<T>) => {
     const result = command.execute();
+    command.emit(result);
     local.commands.push({
       ...command,
       undoers: command.subscriptions.map((subscription) => subscription.execute()),
@@ -80,11 +82,24 @@ const getOrCreateExecutionContext = () => {
     finish: () => {
       undoHistory.push(local);
       context.top = local;
+
+      // Everything in the redo stack is going to be lost forever at this point
+      // If needed, subscriptions can have a dispose method for cleaning up after themselves
+      redoHistory.forEach((a) => {
+        a.commands.forEach((command) => {
+          command.subscriptions.forEach((subscription) => {
+            if (subscription.dispose) {
+              subscription.dispose();
+            }
+          });
+        });
+      });
+
       redoHistory = [];
       action = undefined;
 
       logger.debug(
-        `Finished executing -> ${local.commands.map((c) => c.name).join(', ')} [${undoHistory.length}, ${redoHistory.length}]`,
+        `Executed -> ${local.commands.map((c) => c.name).join(', ')} [${undoHistory.length}, ${redoHistory.length}]`,
       );
     },
   };
@@ -107,7 +122,7 @@ export const undo = (): 'empty' | 'performed' => {
   context.top = peek(undoHistory);
 
   logger.debug(
-    `Finished undoing -> ${undoTop.commands.map((c) => c.name).join(', ')} [${undoHistory.length}, ${redoHistory.length}]`,
+    `Undid -> ${undoTop.commands.map((c) => c.name).join(', ')} [${undoHistory.length}, ${redoHistory.length}]`,
   );
 
   return 'performed';
@@ -135,7 +150,7 @@ export const redo = (): 'empty' | 'performed' => {
   context.top = redoTop;
 
   logger.debug(
-    `Finished redoing -> ${redoTop.commands.map((c) => c.name).join(', ')} [${undoHistory.length}, ${redoHistory.length}]`,
+    `Redid -> ${redoTop.commands.map((c) => c.name).join(', ')} [${undoHistory.length}, ${redoHistory.length}]`,
   );
 
   return 'performed';
@@ -168,6 +183,10 @@ interface Ref<T> {
 
 interface Subscription {
   execute: () => { undo: () => void };
+  /**
+   * This is called for cleaning up purposes. At this point, we will never call the subscription again.
+   */
+  dispose?: () => void;
 }
 
 interface ElementChangeContext<T> {
@@ -206,12 +225,13 @@ export function olyRef<T>(raw: T): Ref<T> & ElementChaining<T> {
         execute: () => {
           o[RefKey] = v;
         },
+        emit: () => {
+          events.emit('change', { newValue: v, oldValue, subscriptions });
+        },
         undo: () => {
           o[RefKey] = oldValue;
         },
       });
-
-      events.emit('change', { newValue: v, oldValue, subscriptions });
 
       env.finish();
     },
@@ -258,12 +278,14 @@ const olyArrImpl = <T>(raw: T[]): OlyArr<T> => {
     const env = getOrCreateExecutionContext();
 
     const addedLength = env.execute({
-      name: 'push',
+      name: `push([${items.length}])`,
       subscriptions,
       execute: () => {
         const result = push(...items);
-        events.emit('add', { items, startingIndex: length, subscriptions });
         return result;
+      },
+      emit: () => {
+        events.emit('add', { items, startingIndex: length, subscriptions });
       },
       undo: () => {
         splice(length, items.length);
@@ -280,13 +302,15 @@ const olyArrImpl = <T>(raw: T[]): OlyArr<T> => {
     const env = getOrCreateExecutionContext();
 
     const deleted: T[] = env.execute({
-      name: 'splice',
+      name: `splice(${start}, ${deleteCount}, [${items.length}])`,
       subscriptions,
       execute: () => {
         const result = splice(start, deleteCount, ...items);
+        return result;
+      },
+      emit(result) {
         events.emit('remove', { items: result, startingIndex: start, subscriptions });
         events.emit('add', { items, startingIndex: start, subscriptions });
-        return result;
       },
       undo: () => {
         splice(start, items.length, ...deleted);

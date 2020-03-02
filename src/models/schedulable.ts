@@ -33,6 +33,23 @@ export const watchOlyArray = <T extends ScheduledElement<any, any, any>>(arr: ol
     });
   });
 
+  arr.onDidAdd(({ items, subscriptions }) => {
+    logger.debug(`onDidAdd ${items.length} elements`);
+
+    subscriptions.push({
+      execute: () => {
+        logger.debug(`Adding ${items.length} elements`);
+        const disposers = items.map((item) => item.add());
+        return {
+          undo: () => {
+            logger.debug(`Undoing add of ${items.length} elements`);
+            disposers.forEach((disposer) => disposer.dispose());
+          },
+        };
+      },
+    });
+  });
+
   return arr;
 };
 
@@ -105,8 +122,8 @@ export type ScheduledElement<Element, Type extends string, Options extends t.Mix
   showBorder: boolean;
   name?: Readonly<Ref<string>>;
   slice: (timeToSlice: number) => ScheduledElement<Element, Type, Options> | undefined;
-  // dispose: () => void;
   remove: () => Disposer;
+  add: () => Disposer;
   serialize: () => t.TypeOf<SerializationType<Type, Options>>;
   copy: SchedulablePrototype<Element, Type, Options>;
 }>;
@@ -163,6 +180,15 @@ const createSchedulable = <
       };
     };
 
+    const add = () => {
+      const local = controller = o.add(transport, params, idk);
+      return {
+        dispose: () => {
+          local?.remove();
+        },
+      };
+    };
+
 
     const params: ScheduledElement<T, M, Options> = {
       name: computed(() => idk.name),
@@ -194,6 +220,7 @@ const createSchedulable = <
 
         return newElement;
       },
+      add,
       remove,
       endBeat: computed(() => {
         return time.value + duration.value;
@@ -212,7 +239,7 @@ const createSchedulable = <
       showBorder: o.showBorder,
     } as const;
 
-    const controller = o.add(transport, params, idk);
+    let controller: Audio.TransportEventController | undefined;
 
     return params;
   };
@@ -236,11 +263,11 @@ export const { create: createSamplePrototype, type: ScheduledSampleType } = crea
   offsettable: true,
   options: t.type({}),
   add: (transport, params, sample: Sample) => {
-    if (!sample.player) {
+    if (!sample.player.node) {
       return;
     }
 
-    const instance = sample.player.createInstance();
+    const instance = sample.player.node.createInstance();
     let controller: { stop: (seconds: Audio.ContextTime) => void } | null = null;
     return transport.schedule({
       time: params.time.value,
@@ -308,6 +335,7 @@ export const { create: createNotePrototype, type: ScheduledNoteType } = createSc
   add: (transport, params, instrument: Instrument<any, any>) => {
     return transport.schedule({
       onStart: ({ seconds }) => {
+        logger.debug('onStart Note -> ' + seconds);
         const value = allKeys[params.row.value].value;
         const duration = new Tone.Ticks(params.duration.value * Audio.Context.PPQ).toSeconds();
         instrument.triggerAttackRelease(value, duration, seconds, params.options.velocity);

@@ -4,7 +4,6 @@ import { Disposer } from '@/lib/std';
 interface AudioNode {
   disconnect(node: AudioNode): this;
   connect(node: AudioNode): this;
-  toMaster(): this;
 }
 
 export class GraphNode<T extends AudioNode | null = AudioNode | null> {
@@ -34,7 +33,7 @@ export class GraphNode<T extends AudioNode | null = AudioNode | null> {
   private isMuted = false;
   private connected = false;
 
-  constructor(public node: T) {}
+  constructor(public node: T, private name?: string) {}
 
   get mute() {
     return this.isMuted;
@@ -56,15 +55,15 @@ export class GraphNode<T extends AudioNode | null = AudioNode | null> {
     }
   }
 
-  public connect(node?: GraphNode): Disposer {
-    GraphNode.doConnect(this, { oldDest: this.output, newDest: node });
+  public connect(newDest?: GraphNode): Disposer {
+    const oldDest = this.output;
+    GraphNode.doConnect(this, { oldDest, newDest });
 
     return {
       dispose: () => {
-        GraphNode.doConnect(this, { oldDest: node, newDest: this.output });
+        GraphNode.doConnect(this, { oldDest: newDest, newDest: oldDest });
       },
     };
-
   }
 
   public redirect(node: GraphNode<any>) {
@@ -84,20 +83,74 @@ export class GraphNode<T extends AudioNode | null = AudioNode | null> {
   }
 
   public dispose() {
-    const dispose = () => {
-      this.inputs.forEach((input) => input.connect(this.output));
-
-      return {
-        dispose: () => {
-          this.inputs.forEach((input) => input.connect(this));
-        },
-      };
-    };
+    const inputs = this.inputs.slice();
+    inputs.forEach((input) => input.connect(this.output));
+    this.connect();
 
     return {
-      dispose,
+      dispose: () => {
+        this.connect(this.output);
+        inputs.forEach((input) => input.connect(this));
+      },
     };
+  }
+
+  public toString() {
+    const getRoot = (node: GraphNode): GraphNode => {
+      return node.output ? getRoot(node.output) : node;
+    };
+
+    interface Level {
+      name: string;
+      children?: Level[];
+    }
+
+    const generateLevel = (node: GraphNode): Level => {
+      const name = node.name ?? 'No Name';
+      if (node.inputs.length === 0) {
+        return {
+          name,
+        };
+      }
+
+      const level: Level = {
+        name,
+        children: node.inputs.map((input) => {
+          return generateLevel(input);
+        }),
+      };
+
+      return level;
+    };
+
+    const offset = (depth: number, name: string) => {
+      return Array(depth + 1).fill('').join('  ') + name;
+    };
+
+    const generateString = (level: Level, depth = 0): string => {
+      const name = offset(depth, level.name);
+
+      if (!level.children) {
+        return name;
+      }
+
+      const children = level.children.map((child) => generateString(child, depth + 1));
+      if (children.length === 1) {
+        return `${name} < ${children[0].trimLeft()}`;
+      }
+
+      return name + '\n' + children.join('\n');
+    };
+
+    const root = getRoot(this);
+    const rootLevel = generateLevel(root);
+    return generateString(rootLevel);
+  }
+
+  public toMaster() {
+    this.connect(masterNode);
+    return this;
   }
 }
 
-export const masterNode = new GraphNode(Tone.Master);
+export const masterNode = new GraphNode(Tone.Master, 'Master');

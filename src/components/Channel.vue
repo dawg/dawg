@@ -18,7 +18,7 @@
         <div
           v-if="effect"
           @click="select($event, effect)"
-          @contextmenu="contextmenu($event, i)"
+          @contextmenu="contextmenu($event, effect)"
           class="bg-default text-default text-center truncate select-none"
           style="line-height: 23px"
         >
@@ -129,7 +129,7 @@ export default createComponent({
     }
 
     function addEffect(effect: EffectName, i: number) {
-      context.emit('add', { effect, index: i });
+      props.channel.addEffect(effect, i);
     }
 
     function select(event: MouseEvent, effect: AnyEffect) {
@@ -137,12 +137,13 @@ export default createComponent({
       context.emit('select', effect);
     }
 
-    function contextmenu(event: MouseEvent, i: number) {
+    function contextmenu(event: MouseEvent, effect: AnyEffect) {
       framework.context({
         position: event,
         items: [{
           text: 'Delete',
           callback: () => {
+            const i = props.channel.effects.indexOf(effect);
             props.channel.deleteEffect(i);
           },
         }],
@@ -160,8 +161,8 @@ export default createComponent({
     function renderMeter() {
       if (props.play) {
         requestAnimationFrame(renderMeter);
-        left.value = process(props.channel.left.getLevel());
-        right.value = process(props.channel.right.getLevel());
+        left.value = process(props.channel.left.node.getLevel());
+        right.value = process(props.channel.right.node.getLevel());
       } else {
         left.value = 0;
         right.value = 0;

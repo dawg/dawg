@@ -84,9 +84,9 @@ export const instruments = framework.manager.activate({
         if (!scoreLookup.value.hasOwnProperty(selectedScoreId.value)) { return null; }
         return scoreLookup.value[selectedScoreId.value];
       },
-      set: (pattern) => {
-        if (pattern) {
-          selectedScoreId.value = pattern.id;
+      set: (score) => {
+        if (score) {
+          selectedScoreId.value = score.id;
         } else {
           selectedScoreId.value = null;
         }

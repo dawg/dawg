@@ -11,5 +11,4 @@ export interface Source<T> {
   disconnect(node: Tone.AudioNode): this;
   connect(node: Tone.AudioNode): this;
   set<K extends keyof T>(o: { key: K, value: T[K] }): void;
-  toMaster(): this;
 }

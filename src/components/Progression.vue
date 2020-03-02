@@ -19,6 +19,7 @@ import { createComponent, computed, ref, watch } from '@vue/composition-api';
 // Maybe print how some stuff to see why?
 // 8. Why are there still errors loading global/workspace?
 // 9. Why is the loop being set automatically??
+// 10. Changing channel/instrument params is not undoable
 
 export default createComponent({
   name: 'Progression',

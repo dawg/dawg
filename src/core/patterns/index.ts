@@ -21,6 +21,24 @@ export const patterns = framework.manager.activate({
       return makeLookup(project.patterns);
     });
 
+    project.patterns.onDidRemove(({ items, subscriptions }) => {
+      subscriptions.push({
+        execute: () => {
+          items.forEach((removedPattern) => {
+            if (pattern.value === removedPattern) {
+              pattern.value = undefined;
+            }
+          });
+
+          return {
+            undo: () => {
+              // Do nothing
+            },
+          };
+        },
+      });
+    });
+
     if (selectedPatternId.value) {
       pattern.value = patternLookup.value[selectedPatternId.value];
     }
@@ -43,18 +61,13 @@ export const patterns = framework.manager.activate({
       template: `
       <patterns
         v-model="pattern"
-        :patterns="patterns"
+        :patterns="project.patterns"
         :beats-per-measure="project.beatsPerMeasure"
-        @remove="remove"
       ></patterns>
       `,
       setup: () => ({
         pattern,
-        patterns: project.patterns,
         project,
-        remove: (i: number) => {
-          project.patterns.splice(i);
-        },
       }),
     }));
 

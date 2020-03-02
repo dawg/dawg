@@ -65,7 +65,7 @@ declare module 'tone' {
   }
 
   class AudioNode {
-    toMaster(): this;
+    // toMaster(): this;
     disconnect(output: number | AudioNode): this;
     // chain(...nodes: AudioNode[]): this;
     connect(unit: Tone | AudioParam | AudioNode, outputNum?: number, inputNum?: number): this;
@@ -701,7 +701,6 @@ declare module 'tone' {
     dispose(): this;
     load(url: string, callback?: (e: any) => any): Player;
     setLoopPoints(loopStart: _TimeArg, loopEnd: _TimeArg): Player;
-    toMaster(): this;
   }
 
   class PluckSynth extends Instrument {
@@ -849,7 +848,7 @@ declare module 'tone' {
     class State { }
   }
 
-  class Split extends Tone {
+  class Split extends AudioNode {
     left: Gain;
     right: Gain;
     dispose(): this;

@@ -7,6 +7,9 @@ import { EffectType, AnyEffect, Effect } from '@/models/filters/effect';
 import * as oly from '@/olyger';
 import { GraphNode, masterNode } from '@/node';
 import { EffectName } from '@/models/filters/effects';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('channel', { level: 'debug' });
 
 export const ChannelTypeRequired = t.type({
   number: t.number,
@@ -24,20 +27,6 @@ export const ChannelTypePartial = t.type({
 export const ChannelType = t.intersection([ChannelTypeRequired, ChannelTypePartial]);
 
 export type IChannel = t.TypeOf<typeof ChannelType>;
-
-const initiate = (effects: AnyEffect[], { items, index }: { items: AnyEffect[], index: number }) => {
-  if (items.length === 0) {
-    return;
-  }
-
-  items.slice(0, items.length - 1).forEach((_, ind) => {
-    items[ind].effect.connect(items[ind + 1].effect);
-  });
-
-  const nodeReplaced = effects[index + items.length].effect ?? masterNode;
-  nodeReplaced.redirect(items[0].effect);
-  items[items.length - 1].effect.connect(nodeReplaced);
-};
 
 export class Channel implements Serializable<IChannel> {
   public static create(num: number) {
@@ -57,30 +46,31 @@ export class Channel implements Serializable<IChannel> {
   public effects: Readonly<AnyEffect[]>;
   public id: string;
 
-  public left = new Tone.Meter();
-  public right = new Tone.Meter();
-  public split = new Tone.Split();
+  public left = new GraphNode(new Tone.Meter());
+  public right = new GraphNode(new Tone.Meter());
+  private split = new GraphNode(new Tone.Split());
+  private splitLeft = new GraphNode(this.split.node.left);
+  private splitRight = new GraphNode(this.split.node.left);
 
   // tslint:disable-next-line:variable-name
   private _effects: AnyEffect[];
-  private pannerNode = new Tone.Panner().toMaster().connect(this.split);
+  private output = new GraphNode(new Tone.Panner(), 'Panner');
 
   /**
    * The panner for the channel.
    */
   // tslint:disable-next-line:member-ordering
-  public panner = new Audio.Signal(this.pannerNode.pan, -1, 1);
+  public panner = new Audio.Signal(this.output.node.pan, -1, 1);
 
-  private gainNode = new Tone.Gain().connect(this.pannerNode);
+  // tslint:disable-next-line:member-ordering
+  public input = new GraphNode(new Tone.Gain(), 'Gain');
 
   /**
    * The volume for the channel.
    */
   // tslint:disable-next-line:member-ordering
-  public volume = new Audio.Signal(this.gainNode.gain, 0, 1);
+  public volume = new Audio.Signal(this.input.node.gain, 0, 1);
 
-  // tslint:disable-next-line:member-ordering
-  public destination = new GraphNode(this.gainNode);
   private connected = true;
   private muted: boolean;
 
@@ -89,6 +79,12 @@ export class Channel implements Serializable<IChannel> {
     this.name = i.name;
     this.id = i.id;
 
+    this.input.connect(this.output);
+    this.output.toMaster();
+
+    // TODO hack kinda
+    this.output.node.connect(this.split.node);
+
     this.volume.value = i.volume;
     this.panner.value = i.panner;
 
@@ -96,33 +92,47 @@ export class Channel implements Serializable<IChannel> {
     this.mute = i.mute;
 
     // Connecting the visualizers
-    this.split.left.connect(this.left);
-    this.split.right.connect(this.right);
+    this.splitLeft.connect(this.left);
+    this.splitRight.connect(this.right);
 
     const effects = oly.olyArr(i.effects.map((iEffect) => {
       return new Effect(iEffect);
     }));
 
-    // TODO make sure this all works
-    effects.onDidAdd(({ items: added, subscriptions, startingIndex: index }) => {
+    effects.onDidRemove(({ items, subscriptions }) => {
       subscriptions.push({
         execute: () => {
+          const disposers = items.map((item) => item.effect.dispose());
           return {
             undo: () => {
-              added.forEach((item) => item.dispose());
+              disposers.forEach((disposer) => disposer.dispose());
             },
           };
         },
       });
+    });
 
-      initiate(effects, { items: added, index });
+    effects.onDidAdd(({ items: added, subscriptions, startingIndex: index }) => {
+      subscriptions.push({
+        execute: () => {
+          logger.debug(`Added ${added.length} effect(s) at index ${index}`);
+          this.initiate({ items: added, index });
+
+          return {
+            undo: () => {
+              logger.debug(`Disconnecting ${added.length} effect(s)`);
+              added.forEach((item) => item.effect.dispose());
+            },
+          };
+        },
+      });
     });
 
 
     this.effects = effects;
     this._effects = effects;
 
-    initiate(effects, { items: effects, index: 0 });
+    this.initiate({ items: effects, index: 0 });
   }
 
   get mute() {
@@ -132,16 +142,12 @@ export class Channel implements Serializable<IChannel> {
   set mute(mute: boolean) {
     this.muted = mute;
     if (mute && this.connected) {
-      this.pannerNode.disconnect(Tone.Master);
+      this.output.connect();
       this.connected = false;
     } else if (!mute && !this.connected) {
-      this.pannerNode.connect(Tone.Master);
+      this.output.connect(masterNode);
       this.connected = true;
     }
-  }
-
-  get input() {
-    return this.effects.length ? this.effects[0].effect : this.destination;
   }
 
   public addEffect(name: EffectName, i: number) {
@@ -163,7 +169,7 @@ export class Channel implements Serializable<IChannel> {
   }
 
   public deleteEffect(i: number) {
-    this._effects.splice(i);
+    this._effects.splice(i, 1);
   }
 
   public serialize() {
@@ -176,5 +182,19 @@ export class Channel implements Serializable<IChannel> {
       volume: this.volume.value,
       mute: this.mute,
     };
+  }
+
+  private initiate({ items, index }: { items: AnyEffect[], index: number }) {
+    if (items.length === 0) {
+      return;
+    }
+
+    items.slice(0, items.length - 1).forEach((_, ind) => {
+      items[ind].effect.connect(items[ind + 1].effect);
+    });
+
+    const nodeReplaced = this.effects[index + items.length]?.effect ?? this.input;
+    nodeReplaced.redirect(items[0].effect);
+    items[items.length - 1].effect.connect(nodeReplaced);
   }
 }

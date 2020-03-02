@@ -22,6 +22,7 @@ export const InstrumentType = t.intersection([
 export type IInstrument = t.TypeOf<typeof InstrumentType>;
 
 export abstract class Instrument<T, V extends string> extends BuildingBlock {
+  // TODO oly refs
   public name: string;
   public id: string;
 
@@ -37,25 +38,25 @@ export abstract class Instrument<T, V extends string> extends BuildingBlock {
 
   public channel: oly.OlyRef<number | undefined>;
 
-  public output = new GraphNode(new Tone.Panner().toMaster());
+  public output = new GraphNode(new Tone.Panner(), 'Panner');
   public pan = new Audio.Signal(this.output.node.pan, -1, 1);
-  public input = new GraphNode(new Tone.Gain().connect(this.output.node));
+  public input = new GraphNode(new Tone.Gain(), 'Gain');
   public volume = new Audio.Signal(this.input.node.gain, 0, 1);
 
   protected source: GraphNode<Audio.Source<T> | null>;
 
-  constructor(source: Audio.Source<T> | null, destination: GraphNode, i: IInstrument) {
+  constructor(source: Audio.Source<T> | null, i: IInstrument) {
     super();
-    this.source = new GraphNode(source);
-    this.source.connect(this.input);
-
     this.name = i.name;
     this.id = i.id || uuid.v4();
     this.channel = oly.olyRef(i.channel);
     this.input.mute = !!i.mute;
     this.pan.value = i.pan || 0;
     this.volume.value = i.volume === undefined ? 0.8 : i.volume;
-    this.input.connect(destination);
+
+    this.source = new GraphNode(source, this.name);
+    this.source.connect(this.input);
+    this.input.connect(this.output);
   }
 
   public triggerAttackRelease(note: string, duration: Audio.Time, time: number, velocity?: number) {

@@ -45,7 +45,7 @@ export default createComponent({
         items: [
           {
             text: 'Delete',
-            callback: () => dawg.project.automationClips.splice(i),
+            callback: () => dawg.project.automationClips.splice(i, 1),
           },
         ],
       });

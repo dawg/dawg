@@ -114,43 +114,11 @@ const load = (iProject: IProject): InitializationSuccess | InitializationError =
   const instruments = oly.olyArr(iProject.instruments.map((iInstrument) => {
     switch (iInstrument.instrument) {
       case 'soundfont':
-        return new Soundfont(Audio.Soundfont.load(iInstrument.soundfont), masterNode, iInstrument);
+        return new Soundfont(Audio.Soundfont.load(iInstrument.soundfont), iInstrument);
       case 'synth':
-        return new Synth(masterNode, iInstrument);
+        return new Synth(iInstrument);
     }
   }));
-
-  const setChannel = (instrument: Soundfont | Synth, channel: number | undefined) => {
-    let destination: GraphNode;
-    if (channel === undefined) {
-      destination = masterNode;
-    } else {
-      const c = channels[channel];
-      destination = c.effects[0]?.effect ?? c.destination;
-    }
-
-    return {
-      execute: () => {
-        const dispose = instrument.output.connect(destination);
-        return {
-          undo: () => {
-            dispose.dispose();
-          },
-        };
-      },
-    };
-  };
-
-  instruments.onDidAdd(({ items }) => {
-    items.forEach((instrument) => {
-      instrument.channel.onDidChange(({ newValue: channel, subscriptions }) => {
-        subscriptions.push(setChannel(instrument, channel));
-      });
-    });
-  });
-
-  // Do the initial connection
-  instruments.forEach((instrument) => setChannel(instrument, instrument.channel.value).execute());
 
   const instrumentLookup = makeLookup(instruments);
   const channelLookup = makeLookup(channels);
@@ -191,8 +159,6 @@ const load = (iProject: IProject): InitializationSuccess | InitializationError =
 
     return new Sample(buffer, iSample);
   }));
-
-
 
   if (notFound.length !== 0) {
     notify.warning(`Audio files not found`, {
@@ -262,23 +228,6 @@ const load = (iProject: IProject): InitializationSuccess | InitializationError =
   }
 
   const master = new Playlist(mTransport, elements);
-
-  instruments.onDidRemove(({ items: deletedInstruments }) => {
-    const instrumentSet = new Set<Instrument<any, any>>(deletedInstruments);
-
-    patterns.forEach((pattern) => {
-      const toRemove: number[] = [];
-      pattern.scores.forEach((score, ind) => {
-        if (instrumentSet.has(score.instrument)) {
-          toRemove.push(ind);
-        }
-      });
-
-      for (const ind of reverse(toRemove)) {
-        pattern.scores.splice(ind, 1);
-      }
-    });
-  });
 
   return {
     type: 'success',
@@ -351,6 +300,62 @@ export const defineAPI = (i: LoadedProject) => {
     automationClips,
   } = i;
 
+  instruments.onDidRemove(({ items: deletedInstruments }) => {
+    logger.debug('instruments onDidRemove with ' + deletedInstruments.length + ' elements!');
+    const instrumentSet = new Set<Instrument<any, any>>(deletedInstruments);
+
+    patterns.forEach((pattern) => {
+      const toRemove: number[] = [];
+      pattern.scores.forEach((score, ind) => {
+        if (instrumentSet.has(score.instrument)) {
+          toRemove.push(ind);
+        }
+      });
+
+      logger.debug(`Removing ${toRemove.length} scores from "${pattern.name}"`);
+      for (const ind of reverse(toRemove)) {
+        pattern.scores.splice(ind, 1);
+      }
+    });
+  });
+
+  const setChannel = (instrument: Soundfont | Synth, channel: number | undefined) => {
+    let destination: GraphNode;
+    const destinationName = channel !== undefined ? `Channel ${channel}` : 'Master';
+    if (channel === undefined) {
+      destination = masterNode;
+    } else {
+      const c = channels[channel];
+      destination = c.effects[0]?.effect ?? c.input;
+    }
+
+    return {
+      execute: () => {
+        logger.debug(`Connecting "${instrument.name}" to ${destinationName}`);
+        const dispose = instrument.output.connect(destination);
+        return {
+          undo: () => {
+            logger.debug(`Undoing connecting of "${instrument.name}" to ${destinationName}`);
+            dispose.dispose();
+          },
+        };
+      },
+    };
+  };
+
+  const watchInstruments = ({ items }: { items: Array<Soundfont | Synth> }) => {
+    items.forEach((instrument) => {
+      instrument.channel.onDidChange(({ newValue: channel, subscriptions }) => {
+        subscriptions.push(setChannel(instrument, channel));
+      });
+    });
+  };
+
+  instruments.onDidAdd(watchInstruments);
+
+  // Do the initial connection
+  instruments.forEach((instrument) => setChannel(instrument, instrument.channel.value).execute());
+  watchInstruments({ items: instruments });
 
   const removeElements = <T extends PlaylistElementType>(
     type: T,
@@ -532,6 +537,8 @@ export const defineAPI = (i: LoadedProject) => {
       },
     });
   });
+
+  logger.info('Master node -> ', masterNode);
 
   return {
     id: i.id,

@@ -26,7 +26,7 @@ export type ISynth = t.TypeOf<typeof SynthType>;
 
 export class Synth extends Instrument<Audio.SynthOptions, Oscillators> implements Serializable<ISynth> {
   public static create(name: string) {
-    return new Synth(masterNode, {
+    return new Synth({
       instrument: 'synth',
       type: 'fatsawtooth',
       name,
@@ -37,8 +37,8 @@ export class Synth extends Instrument<Audio.SynthOptions, Oscillators> implement
 
   private oscillatorType: Oscillators;
 
-  constructor(destination: GraphNode<Tone.AudioNode>, i: ISynth) {
-    super(new Audio.Synth(8, Tone.Synth), destination, i);
+  constructor(i: ISynth) {
+    super(new Audio.Synth(8, Tone.Synth), i);
     this.oscillatorType = i.type;
     this.type = i.type;
     this.set({ key: 'envelope', value: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 } });

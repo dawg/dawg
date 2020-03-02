@@ -84,9 +84,4 @@ export class Soundfont implements Source<SoundfontOptions> {
   public set<K extends keyof SoundfontOptions>(o: { key: K, value: SoundfontOptions[K] }) {
     this[o.key] = o.value;
   }
-
-  public toMaster(): this {
-    this.connect(Tone.Master);
-    return this;
-  }
 }

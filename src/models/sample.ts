@@ -5,6 +5,7 @@ import * as Audio from '@/lib/audio';
 import { Serializable } from '@/models/serializable';
 import { Context } from '@/lib/audio/context';
 import { BuildingBlock } from '@/models/block';
+import { GraphNode } from '@/node';
 
 export const SampleType = t.type({
   id: t.string,
@@ -25,7 +26,7 @@ export class Sample extends BuildingBlock implements Serializable<ISample> {
 
   public id: string;
   public path: string;
-  public player: Audio.Player | null = null;
+  public player: GraphNode<Audio.Player | null>;
   public readonly name: string;
 
   constructor(public buffer: AudioBuffer | null, i: ISample) {
@@ -33,9 +34,10 @@ export class Sample extends BuildingBlock implements Serializable<ISample> {
     this.id = i.id;
     this.path = i.path;
     this.name = i.name;
-    if (buffer) {
-      this.player = new Audio.Player(buffer).toMaster();
-    }
+    this.player = new GraphNode(
+      buffer ? new Audio.Player(buffer) : null,
+      'Sample',
+    ).toMaster();
   }
 
   get beats() {
@@ -48,8 +50,8 @@ export class Sample extends BuildingBlock implements Serializable<ISample> {
   }
 
   public preview(opts?: { onended: () => void }): { started: true, dispose: () => void } | { started: false } {
-    if (this.player) {
-      const source = this.player.preview(opts);
+    if (this.player.node) {
+      const source = this.player.node.preview(opts);
       return {
         started: true,
         dispose: () => {

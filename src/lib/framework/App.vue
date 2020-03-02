@@ -121,7 +121,7 @@ import { useSubscriptions } from '@/lib/vutils';
 import { remote } from 'electron';
 import * as oly from '@/olyger';
 
-const logger = getLogger('App', { level: 'debug' });
+const logger = getLogger('App');
 
 export default createComponent({
   components: {
