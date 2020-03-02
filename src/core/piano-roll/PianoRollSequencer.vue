@@ -37,7 +37,6 @@ import {
   Playlist,
   Pattern,
   Score,
-  Sequence,
   createNotePrototype,
   ScheduledElement,
 } from '@/models';
@@ -54,7 +53,6 @@ export default createComponent({
   },
   setup(props, context) {
     const endBeat = ref(0);
-    let eventDisposer: { dispose: () => void } | undefined;
 
     // This is the prototype
     // row and time are overwritten so they can be set to 0 here
@@ -80,14 +78,14 @@ export default createComponent({
           time: iNote.start,
         }, props.score.instrument, { velocity: iNote.velocity })(props.pattern.transport).copy();
 
-        props.score.notes.add(n);
+        props.score.notes.push(n);
       });
     }
 
     function checkAll() {
       let max: undefined | ScheduledNote;
       props.pattern.scores.forEach((score) => {
-        score.notes.l.forEach((n) => {
+        score.notes.forEach((n) => {
           if (!max || n.time.value + n.duration.value > max.time.value + max.duration.value) {
             max = n;
           }
@@ -104,29 +102,9 @@ export default createComponent({
       note.value = create(props.pattern.transport).copy;
     });
 
-    watch(() => props.score, () => {
-      if (eventDisposer) {
-        eventDisposer.dispose();
-      }
-
-      const addedDisposer = props.score.notes.onDidAddElement((el) => {
-        if (el.endBeat.value > endBeat.value) {
-          endBeat.value = el.endBeat.value;
-        }
-      });
-
-      const removedDisposer = props.score.notes.onDidRemoveElement((el) => {
-        if (el.endBeat.value === endBeat.value) {
-          checkAll();
-        }
-      });
-
-      eventDisposer = {
-        dispose: () => {
-          addedDisposer.dispose();
-          removedDisposer.dispose();
-        },
-      };
+  // TODO is there a better solution ?? We can probably sync a property with the grid
+    watch(() => props.score.notes, () => {
+      checkAll();
     });
 
     return {

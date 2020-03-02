@@ -4,6 +4,7 @@ import { Context } from '@/lib/audio/context';
 import { watch } from '@vue/composition-api';
 import { Clock } from '@/lib/audio/clock';
 import { StrictEventEmitter } from '@/lib/events';
+import { Disposer } from '@/lib/std';
 
 interface EventContext {
   seconds: ContextTime;
@@ -34,8 +35,7 @@ export interface TransportEventController {
   setStartTime(startTime: Beat): void;
   setOffset(offset: Beat): void;
   setDuration(duration: Beat): void;
-  remove(): void;
-  undoRemove(): void;
+  remove(): Disposer;
 }
 
 export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext], beforeEnd: [EventContext] }> {
@@ -153,14 +153,27 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
       },
       remove: () => {
         if (!added) {
-          return;
+          return {
+            dispose: () => {
+              //
+            },
+          };
         }
 
         this.timeline.remove(event);
         added = false;
 
+        const dispose = () => {
+          this.timeline.add(event);
+          added = true;
+
+          checkNowActive();
+        };
+
         if (!this.active) {
-          return;
+          return {
+            dispose,
+          };
         }
 
         const i = this.active.indexOf(event);
@@ -174,16 +187,10 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
 
           this.active.splice(i, 1);
         }
-      },
-      undoRemove: () => {
-        if (added) {
-          return;
-        }
 
-        this.timeline.add(event);
-        added = true;
-
-        checkNowActive();
+        return {
+          dispose,
+        };
       },
     };
   }

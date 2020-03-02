@@ -1030,6 +1030,7 @@ declare module 'tone' {
   }
 
   class Volume extends AudioNode {
+    constructor(volume: number)
     volume: Signal;
     mute: boolean;
   }

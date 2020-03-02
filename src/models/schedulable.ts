@@ -2,7 +2,6 @@ import * as t from '@/lib/io';
 import Tone from 'tone';
 import * as Audio from '@/lib/audio';
 import { Beat } from '@/lib/audio/types';
-import * as history from '@/lib/framework/history';
 import { computed, Ref, ref, watch } from '@vue/composition-api';
 import { Context } from '@/lib/audio';
 import { Sample } from '@/models/sample';
@@ -14,6 +13,7 @@ import { BuildingBlock } from '@/models/block';
 import { Disposer } from '@/lib/std';
 import { emitter } from '@/lib/events';
 import { getLogger } from '@/lib/log';
+import * as oly from '@/olyger';
 
 const logger = getLogger('schedulable', { level: 'debug' });
 
@@ -61,8 +61,9 @@ interface SchedulableOpts<Element, Type extends string, Options extends t.Mixed>
 }
 
 const wrap = (initial: number, onSet: (value: number) => void) => {
-  const reference = ref<number>(initial);
-  watch(reference, (value) => {
+  const reference = oly.olyRef(initial);
+  // TODO make sure this works
+  watch(() => reference.value, (value) => {
     onSet(value);
   }, { lazy: true });
   return reference;
@@ -87,7 +88,7 @@ export type ScheduledElement<Element, Type extends string, Options extends t.Mix
   name?: Readonly<Ref<string>>;
   slice: (timeToSlice: number) => ScheduledElement<Element, Type, Options> | undefined;
   // dispose: () => void;
-  remove: () => void;
+  remove: () => oly.IRecursiveDisposer;
   removeNoHistory: () => void;
   serialize: () => t.TypeOf<SerializationType<Type, Options>>;
   onDidRemove: (cb: () => void) => Disposer;
@@ -115,15 +116,6 @@ const createSchedulable = <
   ): ScheduledElement<T, M, Options> => {
     const info = {  ...opts };
 
-    // TODO
-    idk.onDidDelete(() => {
-      removeNoHistory();
-    });
-
-    idk.onUndidDelete(() => {
-      controller = o.add(transport, params, idk);
-    });
-
     const duration = wrap(info.duration, (value) => {
       if (controller) { controller.setDuration(value); }
     });
@@ -136,17 +128,7 @@ const createSchedulable = <
       if (controller) { controller.setOffset(value); }
     });
 
-    // const offset = ref(info.offset ?? 0);
-
-    // const offset = computed({
-    //   get: () => info.offset ?? 0,
-    //   set: (value) => {
-    //     info.offset = value;
-    //     if (controller) { controller.setStartTime(value); }
-    //   },
-    // });
-
-    const row = ref(info.row);
+    const row = oly.olyRef(info.row);
 
     const copy = () => {
       return create(
@@ -165,20 +147,17 @@ const createSchedulable = <
     };
 
     const remove = () => {
-      history.execute({
-        execute: () => {
-          logger.debug('Removing element!');
-          removeNoHistory();
-        },
-        undo: () => {
-          logger.debug('Undoing remove of element!');
-          if (controller) {
-            controller.undoRemove();
-            events.emit('undoRemove');
-          }
-        },
+      return {
+        dispose: () => {
+          const disposer = controller?.remove();
 
-      });
+          return {
+            dispose: () => {
+              disposer?.dispose();
+            },
+          };
+        },
+      };
     };
 
 
@@ -239,7 +218,7 @@ const createSchedulable = <
       showBorder: o.showBorder,
     } as const;
 
-    let controller = o.add(transport, params, idk);
+    const controller = o.add(transport, params, idk);
 
     return params;
   };

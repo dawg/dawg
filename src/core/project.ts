@@ -23,7 +23,6 @@ import {
   createPatternPrototype,
   createSamplePrototype,
   Playlist,
-  AnyEffect,
   PlaylistElementLookup,
   PlaylistElementType,
   Automatable,
@@ -31,7 +30,6 @@ import {
 } from '@/models';
 import Tone from 'tone';
 import * as Audio from '@/lib/audio';
-import { findUniqueName } from '@/utils';
 import { makeLookup, reverse, range } from '@/lib/std';
 import fs from '@/lib/fs';
 import { loadBufferSync } from '@/lib/wav';
@@ -43,8 +41,8 @@ import * as framework from '@/lib/framework';
 import { remote } from 'electron';
 import { emitter, addEventListener } from '@/lib/events';
 import { createExtension } from '@/lib/framework';
-import { ref, Ref } from '@vue/composition-api';
 import { commands } from '@/core/commands';
+import { watchOlyArray } from '@/models/sequence';
 
 const logger = getLogger('project', { level: 'debug' });
 
@@ -63,7 +61,7 @@ const DG_EXTENSION = `.${DG}`;
 // 2. Chains define dependencies and work off a simple API (ie. changed, added, removed)
 // 3. Any chain reactions will be encompassed into a single action (ie. only a single undo/redo for the whole chain)
 
-const ProjectType = t.type({
+export const ProjectType = t.type({
   id: t.string,
   stepsPerBeat: t.number,
   beatsPerMeasure: t.number,
@@ -78,7 +76,7 @@ const ProjectType = t.type({
   tracks: t.array(TrackType),
 });
 
-type IProject = t.TypeOf<typeof ProjectType>;
+export type IProject = t.TypeOf<typeof ProjectType>;
 
 interface LoadedProject {
   bpm: number;
@@ -119,12 +117,11 @@ const load = (iProject: IProject): LoadedProject => {
   }));
 
   const instruments = oly.olyArr(iProject.instruments.map((iInstrument) => {
-    const destination: Tone.AudioNode = Tone.Master;
     switch (iInstrument.instrument) {
       case 'soundfont':
-        return new Soundfont(Audio.Soundfont.load(iInstrument.soundfont), destination, iInstrument);
+        return new Soundfont(Audio.Soundfont.load(iInstrument.soundfont), masterNode, iInstrument);
       case 'synth':
-        return new Synth(destination, iInstrument);
+        return new Synth(masterNode, iInstrument);
     }
   }));
 
@@ -225,6 +222,8 @@ const load = (iProject: IProject): LoadedProject => {
         return createSamplePrototype(iElement, sample, {})(mTransport).copy();
     }
   }));
+
+  watchOlyArray(elements);
 
   const master = new Playlist(mTransport, elements);
 
@@ -330,14 +329,14 @@ export const defineAPI = (i: LoadedProject) => {
   ) => {
     const set = new Set(removed);
     const toRemove: number[] = [];
-    master.elements.l.forEach((el, ind) => {
+    master.elements.forEach((el, ind) => {
       if (el.type === type && set.has(el.element)) {
         toRemove.push(ind);
       }
     });
 
     for (const ind of reverse(toRemove)) {
-      master.elements.l.splice(ind, 1);
+      master.elements.splice(ind, 1);
     }
   };
 
@@ -358,8 +357,8 @@ export const defineAPI = (i: LoadedProject) => {
       id: project.id,
       bpm: project.bpm.value,
       name: project.name.value,
-      stepsPerBeat: project.stepsPerBeat.value,
-      beatsPerMeasure: project.beatsPerMeasure.value,
+      stepsPerBeat: project.stepsPerBeat,
+      beatsPerMeasure: project.beatsPerMeasure,
       patterns: patterns.map((pattern) => pattern.serialize()),
       instruments: instruments.map((instrument) => instrument.serialize()),
       channels: channels.map((channel) => channel.serialize()),
@@ -383,7 +382,7 @@ export const defineAPI = (i: LoadedProject) => {
     const signal = automatable[key] as any as Audio.Signal;
 
     const available: boolean[] = Array(tracks.length).fill(true);
-    master.elements.l.forEach((element) => {
+    master.elements.forEach((element) => {
       if (
         start > element.time.value && start < element.time.value + element.duration.value ||
         end > element.time.value && end < element.time.value + element.duration.value
@@ -423,7 +422,7 @@ export const defineAPI = (i: LoadedProject) => {
       {},
     )(master.transport).copy();
     automationClips.push(clip);
-    master.elements.add(placed);
+    master.elements.push(placed);
   }
 
   async function openTempProject(p: IProject) {
@@ -486,12 +485,16 @@ export const defineAPI = (i: LoadedProject) => {
     await framework.manager.setOpenedFile(path);
   }
 
+  function getOpenedFile() {
+    return framework.manager.getOpenedFile();
+  }
+
   return {
     id: i.id,
     bpm: oly.olyRef(i.bpm),
     name: oly.olyRef(i.name),
-    stepsPerBeat: oly.olyRef(i.stepsPerBeat),
-    beatsPerMeasure: oly.olyRef(i.beatsPerMeasure),
+    stepsPerBeat: i.stepsPerBeat,
+    beatsPerMeasure: i.beatsPerMeasure,
     instruments,
     patterns,
     serialize,
@@ -508,6 +511,7 @@ export const defineAPI = (i: LoadedProject) => {
     saveProject,
     removeOpenedFile,
     setOpenedFile,
+    getOpenedFile,
   } as const;
 };
 

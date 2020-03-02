@@ -32,6 +32,5 @@ export { Score } from '@/models/score';
 export { Instrument } from '@/models/instrument/instrument';
 export { Pattern, PatternType } from '@/models/pattern';
 export { AnyEffect, Effect } from '@/models/filters/effect';
-export { Sequence } from '@/models/sequence';
 export { SoundfontType, Soundfont } from '@/models/instrument/soundfont';
 export { SynthType, Synth } from '@/models/instrument/synth';

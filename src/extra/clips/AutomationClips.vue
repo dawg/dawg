@@ -15,7 +15,7 @@
     <button @click="append" class="text-default">Append</button> <br>
     <button @click="undo" class="text-default">Undo</button> <br>
     <button @click="redo" class="text-default">Redo</button> <br>
-    <div class="text-default">{{ count.v }}</div> <br>
+    <div class="text-default">{{ count.value }}</div> <br>
     <div class="text-default">{{ arr }}</div> <br>
     <!-- <div class="text-default">{{ arr }}</div> <br> -->
   </div>
@@ -59,8 +59,7 @@ export default createComponent({
     const arr = oly.olyArr<number>([]);
 
     subscriptions.push(arr.onDidAdd(({ items: o }) => {
-      console.log('onDidAdd', o);
-      count.v += o.length;
+      count.value += o.length;
     }));
 
     return {
@@ -68,10 +67,10 @@ export default createComponent({
       context,
       arr,
       increment: () => {
-        count.v++;
+        count.value++;
       },
       append: () => {
-        arr.push(count.v);
+        arr.push(count.value);
       },
       count,
       undo: () => {

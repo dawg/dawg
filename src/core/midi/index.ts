@@ -65,7 +65,7 @@ export const extension: Extension = {
           time: noteStartTime,
         }, selectedScore.value.instrument, { velocity: noteOn.rawVelocity })(transport).copy();
 
-        selectedScore.value.notes.add(note);
+        selectedScore.value.notes.push(note);
       }
     };
 

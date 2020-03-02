@@ -7,8 +7,7 @@
       @open="openScore(i)"
       :instrument="instrument"
       :notes="getNotes(instrument)"
-      :channel="instrument.channel"
-      @update:channel="project.setChannel({ instrument, channel: $event })"
+      :channel.sync="instrument.channel.value"
     ></synth>
   </div>
 </template>
@@ -42,7 +41,7 @@ export default createComponent({
 
     function getNotes(instrument: Instrument<any, any>) {
       if (instrument.id in scoreLookup.value) {
-        return scoreLookup.value[instrument.id].notes.l.slice();
+        return scoreLookup.value[instrument.id].notes.slice();
       }
     }
 

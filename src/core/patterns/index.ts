@@ -53,7 +53,6 @@ export const patterns = framework.manager.activate({
         patterns: project.patterns,
         project,
         remove: (i: number) => {
-          // TODO notify
           project.patterns.splice(i);
         },
       }),

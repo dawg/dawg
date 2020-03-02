@@ -2,10 +2,12 @@ import Vue from 'vue';
 import VueCompositionApi, { ref, Ref } from '@vue/composition-api';
 Vue.use(VueCompositionApi);
 import { createGrid, GridOpts } from '@/grid';
-import { ScheduledElement, createNotePrototype, Instrument, Sequence, Synth } from '@/models';
+import { ScheduledElement, createNotePrototype, Instrument, Synth } from '@/models';
 import { expect } from '@/lib/testing';
 import * as Audio from '@/lib/audio';
-import { createSequence } from '@/models/sequence';
+import { watchOlyArray } from '@/models/sequence';
+import * as oly from '@/olyger';
+import { masterNode } from '@/node';
 
 type Element = ScheduledElement<Instrument<any, any>, 'note', any>;
 
@@ -13,17 +15,17 @@ type Grid = ReturnType<typeof createGrid>;
 
 const transport = new Audio.Transport();
 const create = <T extends ScheduledElement<any, any, any>>(
-  cb: (o: { grid: Grid, sequence: Sequence<Element> }) => void, opts: Partial<GridOpts<T>> = {},
+  cb: (o: { grid: Grid, sequence: Element[] }) => void, opts: Partial<GridOpts<T>> = {},
 ) => {
   const createElement = () => {
     return createNotePrototype(
       { time: 2, duration: 1, row: 2 },
-      new Synth(Audio.ToneMaster, { instrument: 'synth', type: 'fatsawtooth', name: '' }),
+      new Synth(masterNode, { instrument: 'synth', type: 'fatsawtooth', name: '' }),
       { velocity: 1 },
     )(transport);
   };
 
-  const sequence = createSequence([createElement().copy()]);
+  const sequence = watchOlyArray(oly.olyArr([createElement().copy()]));
 
   const o = {
     sequence,
@@ -95,7 +97,7 @@ const events = (grid: Grid) => {
 describe('grid', () => {
   it('creates correctly', () => {
     create(({ grid, sequence }) => {
-      expect(sequence.l.length).to.eq(1);
+      expect(sequence.length).to.eq(1);
       expect(grid.sequencerLoopEnd.value).to.eq(4);
     });
   });
@@ -103,17 +105,17 @@ describe('grid', () => {
   it('adds elements correctly', () => {
     create(({ grid, sequence }) => {
       events(grid).emit('md', { x: 1, y: 1 }).emit('mu');
-      expect(sequence.l.length).to.eq(2);
+      expect(sequence.length).to.eq(2);
       expect(grid.selected.length).to.eq(0);
-      expect(sequence.l[1].row.value).to.eq(1);
-      expect(sequence.l[1].time.value).to.eq(1);
+      expect(sequence[1].row.value).to.eq(1);
+      expect(sequence[1].time.value).to.eq(1);
     });
   });
 
   it('doesn\'t add elements if the user moves their mouse', () => {
     create(({ grid, sequence }) => {
       events(grid).emit('md', { x: 1, y: 1 }).emit('mm', { x: 0.1 }).emit('mu');
-      expect(sequence.l.length).to.eq(1);
+      expect(sequence.length).to.eq(1);
     });
   });
 
@@ -125,7 +127,7 @@ describe('grid', () => {
       expect(grid.selectStyle.value?.top).to.eq('10px');
       expect(grid.selectStyle.value?.width).to.eq('50px');
       expect(grid.selectStyle.value?.height).to.eq('20px');
-      expect(grid.selected.includes(sequence.l[0])).to.eq(true);
+      expect(grid.selected.includes(sequence[0])).to.eq(true);
       emitter.emit('mu');
     }, { tool: ref('pointer') });
   });
@@ -138,17 +140,17 @@ describe('grid', () => {
       expect(grid.sliceStyle.value?.top).to.eq(`${3 * 10 / 2}px`);
       expect(grid.sliceStyle.value?.width).to.eq(`${3 * 10}px`);
       emitter.emit('mu');
-      expect(sequence.l.length).to.eq(2);
-      expect(sequence.l[0].time.value).to.eq(2);
-      expect(sequence.l[0].duration.value).to.eq(0.5);
-      expect(sequence.l[1].time.value).to.eq(2.5);
-      expect(sequence.l[1].duration.value).to.eq(0.5);
+      expect(sequence.length).to.eq(2);
+      expect(sequence[0].time.value).to.eq(2);
+      expect(sequence[0].duration.value).to.eq(0.5);
+      expect(sequence[1].time.value).to.eq(2.5);
+      expect(sequence[1].duration.value).to.eq(0.5);
     }, { tool: ref('slicer') });
   });
 
   it('can move elements', () => {
     create(({ grid, sequence }) => {
-      const el = sequence.l[0];
+      const el = sequence[0];
       expect(el.time.value).to.eq(2);
       const emitter = events(grid);
       grid.select(emitter.build('md', { x: 2.5, y: 2.5 }), 0);
@@ -161,7 +163,7 @@ describe('grid', () => {
     await create(async ({ grid, sequence }) => {
       events(grid).emit('md', { x: 5, y: 0.5 }).emit('mu');
       await Vue.nextTick();
-      expect(sequence.l.length).to.eq(2);
+      expect(sequence.length).to.eq(2);
       expect(grid.sequencerLoopEnd.value).to.eq(8);
     });
   });
@@ -169,7 +171,7 @@ describe('grid', () => {
   it('can remove elements', () => {
     create(({ grid, sequence }) => {
       grid.remove(0, new MouseEvent(''));
-      expect(sequence.l.length).to.eq(0);
+      expect(sequence.length).to.eq(0);
     });
   });
 });

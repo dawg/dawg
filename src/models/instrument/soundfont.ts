@@ -5,6 +5,7 @@ import * as Audio from '@/lib/audio';
 import { Instrument, InstrumentType } from '@/models/instrument/instrument';
 import { Serializable } from '@/models/serializable';
 import { literal } from '@/lib/std';
+import { GraphNode, masterNode } from '@/node';
 
 export const SoundfontType = t.intersection([
   t.type({
@@ -24,7 +25,7 @@ export type Soundfonts = ISoundfont['soundfont'];
 
 export class Soundfont extends Instrument<Audio.SoundfontOptions, Soundfonts> implements Serializable<ISoundfont> {
   public static async create(soundfont: Soundfonts, name: string) {
-    return new Soundfont(await Audio.Soundfont.load(soundfont), Tone.Master, {
+    return new Soundfont(await Audio.Soundfont.load(soundfont), masterNode, {
       soundfont,
       instrument: 'soundfont',
       name,
@@ -35,7 +36,7 @@ export class Soundfont extends Instrument<Audio.SoundfontOptions, Soundfonts> im
 
   private soundfont: Soundfonts;
 
-  constructor(player: Audio.Soundfont | null, destination: Tone.AudioNode, i: ISoundfont) {
+  constructor(player: Audio.Soundfont | null, destination: GraphNode<Tone.AudioNode>, i: ISoundfont) {
     super(player, destination, i);
     this.soundfont = i.soundfont;
   }
@@ -57,8 +58,8 @@ export class Soundfont extends Instrument<Audio.SoundfontOptions, Soundfonts> im
       pan: this.pan.value,
       name: this.name,
       id: this.id,
-      channel: this.channel.v,
-      mute: this.mute,
+      channel: this.channel.value,
+      mute: this.input.mute,
     };
   }
 

@@ -202,6 +202,7 @@ export function olyRef<T>(raw: T): Ref<T> & ElementChaining<T> {
 interface Items<T> {
   items: T[];
   startingIndex: number;
+  subscriptions: IRecursiveDisposer[];
 }
 
 interface ArrayChaining<T> {
@@ -251,7 +252,9 @@ const olyArrImpl = <T>(raw: T[], cb?: Callback<T>): T[] & ArrayChaining<T> => {
       },
     });
 
-    events.emit('add', { items, startingIndex: length });
+    // TODO use
+    const subscriptions: IRecursiveDisposer[] = [];
+    events.emit('add', { items, startingIndex: length, subscriptions });
     env.finish();
 
     return addedLength;
@@ -279,8 +282,10 @@ const olyArrImpl = <T>(raw: T[], cb?: Callback<T>): T[] & ArrayChaining<T> => {
       },
     });
 
-    events.emit('remove', { items: deleted, startingIndex: start });
-    events.emit('add', { items, startingIndex: start });
+    // TODO use
+    const subscriptions: IRecursiveDisposer[] = [];
+    events.emit('remove', { items: deleted, startingIndex: start, subscriptions });
+    events.emit('add', { items, startingIndex: start, subscriptions });
     env.finish();
 
     return deleted;

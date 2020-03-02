@@ -27,10 +27,6 @@ export class Pattern extends BuildingBlock implements Serializable<IPattern> {
     this.scores = scores;
   }
 
-  public dispose() {
-    this.scores.forEach((score) => score.dispose());
-  }
-
   public serialize() {
     return {
       name: this.name,

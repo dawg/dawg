@@ -4,6 +4,7 @@ import * as Audio from '@/lib/audio';
 import { Instrument, InstrumentType } from '@/models/instrument/instrument';
 import { Serializable } from '@/models/serializable';
 import { literal } from '@/lib/std';
+import { GraphNode, masterNode } from '@/node';
 
 export const SynthType = t.intersection([
   t.type({
@@ -25,7 +26,7 @@ export type ISynth = t.TypeOf<typeof SynthType>;
 
 export class Synth extends Instrument<Audio.SynthOptions, Oscillators> implements Serializable<ISynth> {
   public static create(name: string) {
-    return new Synth(Tone.Master, {
+    return new Synth(masterNode, {
       instrument: 'synth',
       type: 'fatsawtooth',
       name,
@@ -36,7 +37,7 @@ export class Synth extends Instrument<Audio.SynthOptions, Oscillators> implement
 
   private oscillatorType: Oscillators;
 
-  constructor(destination: Tone.AudioNode, i: ISynth) {
+  constructor(destination: GraphNode<Tone.AudioNode>, i: ISynth) {
     super(new Audio.Synth(8, Tone.Synth), destination, i);
     this.oscillatorType = i.type;
     this.type = i.type;
@@ -60,8 +61,8 @@ export class Synth extends Instrument<Audio.SynthOptions, Oscillators> implement
       pan: this.pan.value,
       name: this.name,
       id: this.id,
-      channel: this.channel.v,
-      mute: this.mute,
+      channel: this.channel.value,
+      mute: this.input.mute,
     };
   }
 }

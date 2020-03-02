@@ -118,7 +118,6 @@ export default createComponent({
       const items = options.value.map((option) => ({
         text: sentenceCase(option),
         callback: () => {
-          props.channel.effects;
           addEffect(option, i);
         },
       }));

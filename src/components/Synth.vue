@@ -67,7 +67,7 @@
 import DotButton from '@/components/DotButton.vue';
 import MiniScore from '@/components/MiniScore.vue';
 import ChannelSelect from '@/components/ChannelSelect.vue';
-import { ScheduledNote, Instrument, Sequence } from '@/models';
+import { ScheduledNote, Instrument } from '@/models';
 import { update } from '@/lib/vutils';
 import { createComponent, computed, watch, ref } from '@vue/composition-api';
 import * as framework from '@/lib/framework';
@@ -82,7 +82,7 @@ export default createComponent({
     channel: Number as () => number | undefined,
   },
   setup(props, context) {
-    const active = ref(!props.instrument.mute);
+    const active = ref(!props.instrument.input.mute);
     const expand = ref(false);
     const strokeWidth = 2.5;
     const contenteditable = ref(false);
@@ -108,7 +108,7 @@ export default createComponent({
     }
 
     watch(active, () => {
-      props.instrument.mute = !active.value;
+      props.instrument.input.mute = !active.value;
     });
 
     function contextmenu(event: MouseEvent) {

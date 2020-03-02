@@ -3,12 +3,14 @@ import { createExtension } from '@/lib/framework/extensions';
 import * as dawg from '@/dawg';
 import path from 'path';
 import { computed, ref } from '@vue/composition-api';
-import { createSubscriptions } from '@/lib/vutils';
 
 export const extension = createExtension({
   id: 'dawg.project-name',
   activate(context) {
-    const openedFile = dawg.project.openedFile;
+    const openedFile = ref(dawg.project.getOpenedFile());
+    dawg.project.onDidSetOpenedFile(() => {
+      openedFile.value = dawg.project.getOpenedFile();
+    });
 
     const projectName = computed(() => {
       return openedFile.value === null ? '' : path.basename(openedFile.value).split('.')[0];
