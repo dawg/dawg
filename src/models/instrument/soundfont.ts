@@ -41,6 +41,7 @@ export class Soundfont extends Instrument<Audio.SoundfontOptions, Soundfonts> im
     this.soundfont = i.soundfont;
   }
 
+  // TODO remove
   get type() {
     return this.soundfont;
   }
@@ -56,7 +57,7 @@ export class Soundfont extends Instrument<Audio.SoundfontOptions, Soundfonts> im
       instrument: literal('soundfont'),
       volume: this.volume.value,
       pan: this.pan.value,
-      name: this.name,
+      name: this.name.value,
       id: this.id,
       channel: this.channel.value,
       mute: this.input.mute,

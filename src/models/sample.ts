@@ -6,6 +6,7 @@ import { Serializable } from '@/models/serializable';
 import { Context } from '@/lib/audio/context';
 import { BuildingBlock } from '@/models/block';
 import { GraphNode } from '@/node';
+import * as oly from '@/olyger';
 
 export const SampleType = t.type({
   id: t.string,
@@ -15,7 +16,7 @@ export const SampleType = t.type({
 
 export type ISample = t.TypeOf<typeof SampleType>;
 
-export class Sample extends BuildingBlock implements Serializable<ISample> {
+export class Sample implements BuildingBlock, Serializable<ISample> {
   public static create(samplePath: string, buffer: AudioBuffer) {
     return new Sample(buffer, {
       id: uuid.v4(),
@@ -24,16 +25,15 @@ export class Sample extends BuildingBlock implements Serializable<ISample> {
     });
   }
 
-  public id: string;
-  public path: string;
-  public player: GraphNode<Audio.Player | null>;
-  public readonly name: string;
+  public readonly id: string;
+  public readonly path: string;
+  public readonly player: GraphNode<Audio.Player | null>;
+  public readonly name: oly.OlyRef<string>;
 
   constructor(public buffer: AudioBuffer | null, i: ISample) {
-    super();
     this.id = i.id;
     this.path = i.path;
-    this.name = i.name;
+    this.name = oly.olyRef(i.name);
     this.player = new GraphNode(
       buffer ? new Audio.Player(buffer) : null,
       'Sample',
@@ -73,7 +73,7 @@ export class Sample extends BuildingBlock implements Serializable<ISample> {
     return {
       id: this.id,
       path: this.path,
-      name: this.name,
+      name: this.name.value,
     };
   }
 }

@@ -6,7 +6,7 @@
       v-model="active"
       :value="color"
     ></dot-button>
-    <editable class="select-none ml-3 truncate" v-model="track.name"></editable>
+    <editable class="select-none ml-3 truncate" v-model="track.name.value"></editable>
   </div>
 </template>
 
@@ -21,9 +21,9 @@ export default createComponent({
     track: { type: Object as () => T, required: true },
   },
   setup(props) {
-    const active = ref(!props.track.mute);
+    const active = ref(!props.track.mute.value);
     watch(active, () => {
-      props.track.mute = !active.value;
+      props.track.mute.value = !active.value;
     });
 
     return {

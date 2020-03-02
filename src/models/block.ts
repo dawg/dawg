@@ -1,4 +1,6 @@
-export abstract class BuildingBlock {
-  public abstract id: string;
-  public abstract readonly name: string;
+import * as oly from '@/olyger';
+
+export interface BuildingBlock {
+  readonly id: string;
+  readonly name: oly.OlyRef<string>;
 }

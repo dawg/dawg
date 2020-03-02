@@ -68,11 +68,12 @@ export class Channel implements Serializable<IChannel> {
   /**
    * The volume for the channel.
    */
+  // TODO
   // tslint:disable-next-line:member-ordering
   public volume = new Audio.Signal(this.input.node.gain, 0, 1);
 
   private connected = true;
-  private muted: boolean;
+  private muted: oly.OlyRef<boolean>;
 
   constructor(i: IChannel) {
     this.number = i.number;
@@ -82,13 +83,15 @@ export class Channel implements Serializable<IChannel> {
     this.input.connect(this.output);
     this.output.toMaster();
 
-    // TODO hack kinda
+    // Note this is a bit hacky
+    // Right now, each graph node can only have one output
+    // If we were to do this.output.connect(this.split) it would override the above this.output.toMaster()
     this.output.node.connect(this.split.node);
 
     this.volume.value = i.volume;
     this.panner.value = i.panner;
 
-    this.muted = i.mute;
+    this.muted = oly.olyRef(i.mute);
     this.mute = i.mute;
 
     // Connecting the visualizers
@@ -136,11 +139,12 @@ export class Channel implements Serializable<IChannel> {
   }
 
   get mute() {
-    return this.muted;
+    // TODO
+    return this.muted.value;
   }
 
   set mute(mute: boolean) {
-    this.muted = mute;
+    this.muted.value = mute;
     if (mute && this.connected) {
       this.output.connect();
       this.connected = false;

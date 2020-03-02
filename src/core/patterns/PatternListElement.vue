@@ -7,7 +7,7 @@
     @contextmenu.native="contextmenu($event)"
   >
     <editable
-      v-model="pattern.name"
+      v-model="pattern.name.value"
       :contenteditable.sync="contenteditable"
       disableDblClick
       class="label"

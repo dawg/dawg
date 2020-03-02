@@ -7,6 +7,7 @@ import { Channel } from '@/models/channel';
 import { Instrument } from '@/models/instrument/instrument';
 import { Beats } from '@/models/types';
 import { BuildingBlock } from '@/models/block';
+import * as oly from '@/olyger';
 
 export const AutomationType = t.type({
   context: t.union([t.literal('channel'), t.literal('instrument')]),
@@ -22,7 +23,7 @@ export type IAutomation = t.TypeOf<typeof AutomationType>;
 export type ClipContext = IAutomation['context'];
 export type Automatable = Channel | Instrument<any, any>;
 
-export class AutomationClip extends BuildingBlock implements Serializable<IAutomation> {
+export class AutomationClip implements Serializable<IAutomation>, BuildingBlock {
   public static create(length: number, signal: Audio.Signal, context: ClipContext, id: string, attr: string) {
     const ac = new AutomationClip(signal, {
       id: uuid.v4(),
@@ -45,23 +46,23 @@ export class AutomationClip extends BuildingBlock implements Serializable<IAutom
     return ac;
   }
 
+  // FIXME not undo/redo ready
   public points: Point[] = [];
   public context: ClipContext;
   public contextId: string;
   public attr: string;
   public id: string;
-  public readonly name: string;
+  public readonly name: oly.OlyRef<string>;
 
   public control: Audio.Controller;
   private signal: Audio.Signal;
 
   constructor(signal: Audio.Signal, i: IAutomation) {
-    super();
     this.context = i.context;
     this.contextId = i.contextId;
     this.attr = i.attr;
     this.id = i.id;
-    this.name = i.name;
+    this.name = oly.olyRef(i.name);
 
     this.signal = signal;
     this.control = new Audio.Controller(signal);
@@ -115,7 +116,7 @@ export class AutomationClip extends BuildingBlock implements Serializable<IAutom
       contextId: this.contextId,
       attr: this.attr,
       id: this.id,
-      name: this.name,
+      name: this.name.value,
       points: this.points.map((point) => point.serialize()),
     };
   }

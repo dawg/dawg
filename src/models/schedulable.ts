@@ -2,7 +2,7 @@ import * as t from '@/lib/io';
 import Tone from 'tone';
 import * as Audio from '@/lib/audio';
 import { Beat } from '@/lib/audio/types';
-import { computed, Ref, ref, watch } from '@vue/composition-api';
+import { computed, Ref, watch } from '@vue/composition-api';
 import { Context } from '@/lib/audio';
 import { Sample } from '@/models/sample';
 import { Pattern } from '@/models/pattern';
@@ -191,7 +191,7 @@ const createSchedulable = <
 
 
     const params: ScheduledElement<T, M, Options> = {
-      name: computed(() => idk.name),
+      name: idk.name,
       component: o.component,
       type: o.type,
       offsettable: o.offsettable ?? false,

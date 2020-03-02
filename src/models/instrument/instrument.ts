@@ -21,9 +21,8 @@ export const InstrumentType = t.intersection([
 
 export type IInstrument = t.TypeOf<typeof InstrumentType>;
 
-export abstract class Instrument<T, V extends string> extends BuildingBlock {
-  // TODO oly refs
-  public name: string;
+export abstract class Instrument<T, V extends string> implements BuildingBlock {
+  public name: oly.OlyRef<string>;
   public id: string;
 
   /**
@@ -43,18 +42,19 @@ export abstract class Instrument<T, V extends string> extends BuildingBlock {
   public input = new GraphNode(new Tone.Gain(), 'Gain');
   public volume = new Audio.Signal(this.input.node.gain, 0, 1);
 
+  // TODO pan and volume not undo/redo ready
+
   protected source: GraphNode<Audio.Source<T> | null>;
 
   constructor(source: Audio.Source<T> | null, i: IInstrument) {
-    super();
-    this.name = i.name;
+    this.name = oly.olyRef(i.name);
     this.id = i.id || uuid.v4();
     this.channel = oly.olyRef(i.channel);
     this.input.mute = !!i.mute;
     this.pan.value = i.pan || 0;
     this.volume.value = i.volume === undefined ? 0.8 : i.volume;
 
-    this.source = new GraphNode(source, this.name);
+    this.source = new GraphNode(source, this.name.value);
     this.source.connect(this.input);
     this.input.connect(this.output);
   }

@@ -44,6 +44,7 @@ export class Synth extends Instrument<Audio.SynthOptions, Oscillators> implement
     this.set({ key: 'envelope', value: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 } });
   }
 
+  // TODO remove
   get type() {
     return this.oscillatorType;
   }
@@ -59,7 +60,7 @@ export class Synth extends Instrument<Audio.SynthOptions, Oscillators> implement
       type: this.oscillatorType,
       volume: this.volume.value,
       pan: this.pan.value,
-      name: this.name,
+      name: this.name.value,
       id: this.id,
       channel: this.channel.value,
       mute: this.input.mute,

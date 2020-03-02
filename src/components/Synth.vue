@@ -33,7 +33,7 @@
         @automate="automatePan"
       ></pan>
       <editable
-        v-model="instrument.name"
+        v-model="instrument.name.value"
         :contenteditable.sync="contenteditable"
         disableDblClick
         class="text-default name flex-shrink-0"
