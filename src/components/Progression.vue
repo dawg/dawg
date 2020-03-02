@@ -15,6 +15,9 @@ import { createComponent, computed, ref, watch } from '@vue/composition-api';
 // 5. Scroll positions don't serialize either
 // 6. A lot of things which should be "actions" are not actually actions. We need some kind of framework
 // for undo/redo.
+// 7. When reloading, the project name disappears before the modal is finished.
+// Maybe print how some stuff to see why?
+// 8. Why are there still errors loading global/workspace?
 
 export default createComponent({
   name: 'Progression',

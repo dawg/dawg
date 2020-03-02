@@ -4,6 +4,8 @@ import * as Audio from '@/lib/audio';
 import { Serializable } from '@/models/serializable';
 import { Score, ScoreType } from '@/models/score';
 import { BuildingBlock } from '@/models/block';
+import * as oly from '@/olyger';
+import { flat } from '@/lib/std';
 
 export const PatternType = t.type({
   id: t.string,
@@ -24,6 +26,14 @@ export class Pattern extends BuildingBlock implements Serializable<IPattern> {
     super();
     this.id = i.id;
     this.name = i.name;
+    const olyScores = oly.olyArr(scores);
+
+    olyScores.onDidRemove(({ items, subscriptions }) => {
+      items.map((score) => {
+        subscriptions.push(...score.notes.map((note) => note.remove()));
+      });
+    });
+
     this.scores = scores;
   }
 

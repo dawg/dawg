@@ -65,19 +65,20 @@ export class GraphNode<T extends AudioNode | null = AudioNode | null> implements
       GraphNode.doConnect(this, { oldDest: node, newDest: this.output });
     };
 
-    const dispose = () => {
-      forward();
-
-      return {
-        dispose: () => {
-          backwards();
-        },
-      };
-    };
+    forward();
 
     return {
-      dispose,
+      dispose: () => {
+        backwards();
+
+        return {
+          dispose: () => {
+            forward();
+          },
+        };
+      },
     };
+
   }
 
   public redirect(node: GraphNode<any>) {
@@ -103,10 +104,6 @@ export class GraphNode<T extends AudioNode | null = AudioNode | null> implements
       return {
         dispose: () => {
           this.inputs.forEach((input) => input.connect(this));
-
-          return {
-            dispose,
-          };
         },
       };
     };

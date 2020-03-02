@@ -5,8 +5,6 @@ import { createGrid, GridOpts } from '@/grid';
 import { ScheduledElement, createNotePrototype, Instrument, Synth } from '@/models';
 import { expect } from '@/lib/testing';
 import * as Audio from '@/lib/audio';
-import { watchOlyArray } from '@/models/sequence';
-import * as oly from '@/olyger';
 import { masterNode } from '@/node';
 
 type Element = ScheduledElement<Instrument<any, any>, 'note', any>;
@@ -25,7 +23,7 @@ const create = <T extends ScheduledElement<any, any, any>>(
     )(transport);
   };
 
-  const sequence = watchOlyArray(oly.olyArr([createElement().copy()]));
+  const sequence = [createElement().copy()];
 
   const o = {
     sequence,

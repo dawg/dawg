@@ -42,8 +42,6 @@ export default createComponent({
             text: 'Delete',
             callback: () => {
               dawg.project.samples.splice(i, 1);
-              // TODO
-              // undoer = pattern.notifyOfDeletion();
             },
           },
         ],

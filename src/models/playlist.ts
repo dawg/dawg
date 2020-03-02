@@ -2,8 +2,9 @@ import * as t from '@/lib/io';
 import * as Audio from '@/lib/audio';
 import { ScheduledPattern, ScheduledPatternType } from '@/models/schedulable';
 import { ScheduledSample, ScheduledSampleType } from '@/models/schedulable';
-import { ScheduledAutomation, ScheduledAutomationType } from '@/models/schedulable';
+import { ScheduledAutomation, ScheduledAutomationType, watchOlyArray } from '@/models/schedulable';
 import { Serializable } from '@/models/serializable';
+import * as oly from '@/olyger';
 
 export const PlaylistType = t.type({
   elements: t.array(t.union([
@@ -35,7 +36,7 @@ export class Playlist implements Serializable<IPlaylist> {
   public elements: PlaylistElements[];
 
   constructor(public transport: Audio.Transport, elements: PlaylistElements[]) {
-    this.elements = elements;
+    this.elements = watchOlyArray(oly.olyArr(elements));
   }
 
   public serialize() {

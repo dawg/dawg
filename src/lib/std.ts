@@ -59,6 +59,10 @@ export const fromEntries = <K extends string, T>(
   return o as { [k in K]: T };
 };
 
+export const flat = <T>(arrs: T[][]): T[] => {
+  return ([] as T[]).concat.apply([], arrs);
+};
+
 export const mapObject = <V, T, O extends { [k: string]: V }>(o: O, f: (v: V) => T) => {
   const transformed: { [k: string]: T } = {};
   for (const key of keys(o)) {

@@ -3,6 +3,7 @@ import { createExtension } from '@/lib/framework/extensions';
 import * as dawg from '@/dawg';
 import path from 'path';
 import { computed, ref } from '@vue/composition-api';
+import * as oly from '@/olyger';
 
 export const extension = createExtension({
   id: 'dawg.project-name',
@@ -16,13 +17,8 @@ export const extension = createExtension({
       return openedFile.value === null ? '' : path.basename(openedFile.value).split('.')[0];
     });
 
-    const hasUnsavedChanged = ref(false);
-    context.subscriptions.push(dawg.history.onDidHasUnsavedChangesChange((value) => {
-      hasUnsavedChanged.value = value;
-    }));
-
     const title = computed(() => {
-      if (hasUnsavedChanged.value) {
+      if (oly.hasUnsavedChanged.value) {
         if (projectName.value) {
           return projectName.value + ' (Unsaved Changes)';
         } else {
@@ -35,7 +31,7 @@ export const extension = createExtension({
     });
 
     const text = computed(() => {
-      if (hasUnsavedChanged.value) {
+      if (oly.hasUnsavedChanged.value) {
         return '*' + projectName.value;
       } else {
         return projectName.value;

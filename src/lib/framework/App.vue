@@ -119,6 +119,7 @@ import { getLogger } from '@/lib/log';
 import { ipcSender } from '@/lib/framework/ipc';
 import { createSubscriptions } from '@/lib/vutils';
 import { remote } from 'electron';
+import * as oly from '@/olyger';
 
 const logger = getLogger('App', { level: 'debug' });
 
@@ -229,16 +230,16 @@ export default createComponent({
       window.removeEventListener('online', online);
     });
 
-
     let hasUnsavedChanged = false;
-    subscriptions.push(framework.history.onDidHasUnsavedChangesChange((value) => {
+    watch(oly.hasUnsavedChanged, (value) => {
       logger.debug(
         'Reference or top of history changed! Are there unsaved changes -> ' +
         hasUnsavedChanged,
       );
 
       hasUnsavedChanged = value;
-    }));
+    });
+
 
     // Prevent spacebar scrolling which isn't good for the sequencers
     window.addEventListener('keydown', (e) => {

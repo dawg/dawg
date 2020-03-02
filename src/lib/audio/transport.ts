@@ -57,11 +57,11 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
   constructor() {
     super();
 
+    const setBpm = () => this.clock.frequency.value = 1 / (60 / Context.BPM / Context.PPQ);
+
     // FIXME Maybe all of the clocks could share one "ticker"?? IDK? Then we wouldn't have to "watch" the BBM
     // Note, this will run automatically
-    const d = Context.onDidSetBPM(() => {
-      this.clock.frequency.value = 1 / (60 / Context.BPM / Context.PPQ);
-    });
+    const d = Context.onDidSetBPM(setBpm);
 
     const pause = this.clock.on('stopped', (o) => {
       this.checkOnEndEventsAndResetActive(o);
@@ -354,6 +354,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
     // Also, add them to the active list of events if required.
     this.timeline.forEachAtTime(ticks, (event) => {
       if (event.onStart) {
+        console.log('onStart');
         event.onStart({
           seconds,
           ticks,

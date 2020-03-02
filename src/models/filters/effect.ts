@@ -70,7 +70,7 @@ export class Effect<T extends EffectName> implements Serializable<IEffect> {
     o: { key: K, value: EffectOptions[T][K] & EffectTones[T][K] },
   ) {
     this.options[o.key] = o.value;
-    // TODO
+    // This any cast should be addressed when this file is refactored
     (this.effect.node as any)[o.key] = o.value;
   }
 

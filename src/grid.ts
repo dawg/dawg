@@ -4,7 +4,6 @@ import { addEventListeners } from '@/lib/events';
 import { Keys, Disposer } from '@/lib/std';
 import { calculateSimpleSnap, slice, doSnap } from '@/utils';
 import { SchedulablePrototype } from '@/models/schedulable';
-import * as history from '@/lib/framework/history';
 import { getLogger } from '@/lib/log';
 
 const logger = getLogger('grid');
@@ -293,32 +292,21 @@ export const createGrid = <T extends Element>(
       return;
     }
 
-    const doMove = (o: { timeDiff: number, rowDiff: number }) => {
-      if (canMoveTime) {
-        // TODO is this a bug?
-        initialMoveBeat = time;
-        itemsToMove.forEach((item) => {
-          item.time.value += o.timeDiff;
-        });
 
-        checkLoopEnd();
-      }
+    if (canMoveTime) {
+      initialMoveBeat = time;
+      itemsToMove.forEach((item) => {
+        item.time.value += timeDiff;
+      });
 
-      if (canMoveRow) {
-        itemsToMove.forEach((item) => {
-          item.row.value = item.row.value + o.rowDiff;
-        });
-      }
-    };
+      checkLoopEnd();
+    }
 
-    history.execute({
-      execute: () => {
-        doMove({ timeDiff, rowDiff });
-      },
-      undo: () => {
-        doMove({ timeDiff: -timeDiff, rowDiff: -rowDiff });
-      },
-    });
+    if (canMoveRow) {
+      itemsToMove.forEach((item) => {
+        item.row.value = item.row.value + rowDiff;
+      });
+    }
   };
 
   const updateAttr = (i: number, value: number, attr: 'offset' | 'duration') => {

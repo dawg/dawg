@@ -12,10 +12,19 @@ import { allKeys } from '@/utils';
 import { BuildingBlock } from '@/models/block';
 import { Disposer } from '@/lib/std';
 import { emitter } from '@/lib/events';
-import { getLogger } from '@/lib/log';
 import * as oly from '@/olyger';
 
-const logger = getLogger('schedulable', { level: 'debug' });
+export const watchOlyArray = <T extends ScheduledElement<any, any, any>>(arr: oly.OlyArr<T>) => {
+  arr.onDidAdd(({ items, subscriptions }) => {
+    subscriptions.push(...items.map((item) => item.remove()));
+  });
+
+  arr.onDidRemove(({ items, subscriptions }) => {
+    subscriptions.push(...items.map((item) => item.remove()));
+  });
+
+  return arr;
+};
 
 export const createType = <T extends string, M extends t.Mixed>(
   type: T, options: M,
@@ -89,10 +98,7 @@ export type ScheduledElement<Element, Type extends string, Options extends t.Mix
   slice: (timeToSlice: number) => ScheduledElement<Element, Type, Options> | undefined;
   // dispose: () => void;
   remove: () => oly.IRecursiveDisposer;
-  removeNoHistory: () => void;
   serialize: () => t.TypeOf<SerializationType<Type, Options>>;
-  onDidRemove: (cb: () => void) => Disposer;
-  onUndidRemove: (cb: () => void) => Disposer;
   copy: SchedulablePrototype<Element, Type, Options>;
 }>;
 
@@ -139,13 +145,6 @@ const createSchedulable = <
       );
     };
 
-    const removeNoHistory = () => {
-      if (controller) {
-        controller.remove();
-        events.emit('remove');
-      }
-    };
-
     const remove = () => {
       return {
         dispose: () => {
@@ -160,8 +159,6 @@ const createSchedulable = <
       };
     };
 
-
-    const events = emitter<{ remove: [], undoRemove: [] }>();
 
     const params: ScheduledElement<T, M, Options> = {
       name: computed(() => idk.name),
@@ -194,7 +191,6 @@ const createSchedulable = <
         return newElement;
       },
       remove,
-      removeNoHistory,
       endBeat: computed(() => {
         return time.value + duration.value;
       }),
@@ -209,15 +205,10 @@ const createSchedulable = <
           ...options,
         };
       },
-      onDidRemove: (cb: () => void) => {
-        return events.on('remove', cb);
-      },
-      onUndidRemove: (cb: () => void) => {
-        return events.on('undoRemove', cb);
-      },
       showBorder: o.showBorder,
     } as const;
 
+    console.log('ADDING', transport);
     const controller = o.add(transport, params, idk);
 
     return params;
@@ -314,6 +305,7 @@ export const { create: createNotePrototype, type: ScheduledNoteType } = createSc
   add: (transport, params, instrument: Instrument<any, any>) => {
     return transport.schedule({
       onStart: ({ seconds }) => {
+        console.log(instrument);
         const value = allKeys[params.row.value].value;
         const duration = new Tone.Ticks(params.duration.value * Audio.Context.PPQ).toSeconds();
         instrument.triggerAttackRelease(value, duration, seconds, params.options.velocity);

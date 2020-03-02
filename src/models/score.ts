@@ -2,9 +2,8 @@ import * as t from '@/lib/io';
 import uuid from 'uuid';
 import { Instrument } from '@/models/instrument/instrument';
 import { Serializable } from '@/models/serializable';
-import { createNotePrototype, ScheduledNoteType, ScheduledNote } from '@/models/schedulable';
+import { createNotePrototype, ScheduledNoteType, ScheduledNote, watchOlyArray } from '@/models/schedulable';
 import { Transport } from '@/lib/audio';
-import { watchOlyArray } from '@/models/sequence';
 import * as oly from '@/olyger';
 
 const ScoreTypeRequired = t.type({

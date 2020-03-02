@@ -42,7 +42,6 @@ import { remote } from 'electron';
 import { emitter, addEventListener } from '@/lib/events';
 import { createExtension } from '@/lib/framework';
 import { commands } from '@/core/commands';
-import { watchOlyArray } from '@/models/sequence';
 
 const logger = getLogger('project', { level: 'debug' });
 
@@ -84,13 +83,13 @@ interface LoadedProject {
   beatsPerMeasure: number;
   name: string;
   id: string;
-  patterns: Pattern[];
-  instruments: Array<Synth | Soundfont>;
-  channels: Channel[];
-  tracks: Track[];
+  patterns: oly.OlyArr<Pattern>;
+  instruments: oly.OlyArr<Synth | Soundfont>;
+  channels: oly.OlyArr<Channel>;
+  tracks: oly.OlyArr<Track>;
   master: Playlist;
-  samples: Sample[];
-  automationClips: AutomationClip[];
+  samples: oly.OlyArr<Sample>;
+  automationClips: oly.OlyArr<AutomationClip>;
 }
 
 export interface InitializationError {
@@ -105,11 +104,6 @@ export interface InitializationSuccess {
 }
 
 const load = (iProject: IProject): LoadedProject => {
-  logger.info('Initiate loading of the project!');
-
-  // TODO do we want to so this?
-  Audio.Context.BPM = iProject.bpm;
-
   // FIXME what happens when we can add and delete channels?
   // What should be the chain reaction?
   const channels =  oly.olyArr(iProject.channels.map((iChannel) => {
@@ -125,22 +119,28 @@ const load = (iProject: IProject): LoadedProject => {
     }
   }));
 
-  // TODO trigger non lazy
+  const setChannel = (instrument: Soundfont | Synth, channel: number | undefined) => {
+    let destination: GraphNode;
+    if (channel === undefined) {
+      destination = masterNode;
+    } else {
+      const c = channels[channel];
+      destination = c.effects[0]?.effect ?? c.destination;
+    }
+
+    return instrument.output.connect(destination);
+  };
+
   instruments.onDidAdd(({ items }) => {
     items.forEach((instrument) => {
       instrument.channel.onDidChange(({ newValue: channel, subscriptions }) => {
-        let destination: GraphNode;
-        if (channel === undefined) {
-          destination = masterNode;
-        } else {
-          const c = channels[channel];
-          destination = c.effects[0]?.effect ?? c.destination;
-        }
-
-        subscriptions.push(instrument.output.connect(destination));
+        subscriptions.push(setChannel(instrument, channel));
       });
     });
   });
+
+  // Do the initial connection
+  instruments.forEach((instrument) => setChannel(instrument, instrument.channel.value));
 
   // TODO notify
   const errors: Array<{ title: string, message?: string }> = [];
@@ -197,7 +197,7 @@ const load = (iProject: IProject): LoadedProject => {
   const sampleLookup = makeLookup(samples);
 
   const mTransport = new Audio.Transport(); // master transport
-  const elements = oly.olyArr(iProject.master.elements.map((iElement) => {
+  const elements = iProject.master.elements.map((iElement) => {
     switch (iElement.type) {
       case 'automation':
         if (!(iElement.id in clipLookup)) {
@@ -221,9 +221,7 @@ const load = (iProject: IProject): LoadedProject => {
         const sample = sampleLookup[iElement.id];
         return createSamplePrototype(iElement, sample, {})(mTransport).copy();
     }
-  }));
-
-  watchOlyArray(elements);
+  });
 
   const master = new Playlist(mTransport, elements);
 
@@ -246,8 +244,6 @@ const load = (iProject: IProject): LoadedProject => {
       });
 
       for (const ind of reverse(toRemove)) {
-        // TODO scores is not olyArr and scores need to be disposed
-        // ie. removed.forEach(({ score }) => score.dispose());
         pattern.scores.splice(ind, 1);
       }
     });
@@ -277,16 +273,18 @@ function emptyProject(): LoadedProject {
     beatsPerMeasure: 4,
     name: '',
     master: new Playlist(new Audio.Transport(), []),
-    patterns: [Pattern.create('Pattern 0')],
-    instruments: [Synth.create('Synth 0')],
-    channels: range(10).map((index) => Channel.create(index)),
-    tracks: range(21).map((index) => Track.create(index)),
-    samples: [],
-    automationClips: [],
+    patterns: oly.olyArr([Pattern.create('Pattern 0')]),
+    instruments: oly.olyArr([Synth.create('Synth 0')]),
+    channels: oly.olyArr(range(10).map((index) => Channel.create(index))),
+    tracks: oly.olyArr(range(21).map((index) => Track.create(index))),
+    samples: oly.olyArr([]),
+    automationClips: oly.olyArr([]),
   };
 }
 
 function loadProject(): InitializationError | InitializationSuccess {
+  logger.debug('Initiate loading of the project!');
+
   const projectJSON = framework.manager.getProjectJSON();
 
   if (!projectJSON) {
@@ -314,14 +312,14 @@ function loadProject(): InitializationError | InitializationSuccess {
 export const defineAPI = (i: LoadedProject) => {
   const {
     master,
+    patterns,
+    instruments,
+    channels,
+    tracks,
+    samples,
+    automationClips,
   } = i;
 
-  const patterns = oly.olyArr(i.patterns);
-  const instruments = oly.olyArr(i.instruments);
-  const channels = oly.olyArr(i.channels);
-  const tracks = oly.olyArr(i.tracks);
-  const samples = oly.olyArr(i.samples);
-  const automationClips = oly.olyArr(i.automationClips);
 
   const removeElements = <T extends PlaylistElementType>(
     type: T,
@@ -522,6 +520,9 @@ const extension = createExtension({
     if (result.type === 'error') {
       notify.info('Unable to load project.', { detail: result.message, duration: Infinity });
     }
+
+    // TODO do we want to so this?
+    Audio.Context.BPM = result.project.bpm;
 
     const api = defineAPI(result.project);
 

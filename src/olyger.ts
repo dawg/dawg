@@ -8,7 +8,8 @@ const logger = getLogger('olyger', { level: 'debug' });
 
 export const RefKey = 'vfa.key.refKey';
 
-// TODO not recursive, just two levels deep
+// TODO is order of subscriptions OK??
+
 export interface IRecursiveDisposer {
   dispose: () => Disposer;
 }
@@ -19,31 +20,37 @@ export interface Command<T> {
   undo: () => void;
 }
 
-type Action<T> = Array<Command<T>>;
+interface Action<T> {
+  commands: Array<Command<T>>;
+  subscriptions: IRecursiveDisposer[][];
+  undoSubscriptions: Disposer[][];
+}
 
 const undoHistory: Array<Action<any>> = [];
 let redoHistory: Array<Action<any>> = [];
 
-let reference: Action<any> | undefined;
-let top: Action<any> | undefined;
+const context: { reference?: Action<any>, top?: Action<any> } = reactive({
+  reference: undefined,
+  top: undefined,
+});
 
 export const hasUnsavedChanged = computed(() => {
-  return top !== reference;
+  return context.top !== context.reference;
 });
 
 
 let action: Action<any> | undefined;
-const getOrCreateExecutionContext = () => {
+const getOrCreateExecutionContext = (subscriptions: IRecursiveDisposer[]) => {
   const startOfExecution = action === undefined;
   if (!action) {
-    action = [];
+    action = { commands: [], subscriptions: [subscriptions], undoSubscriptions: [] };
   }
 
   // create a local copy which is not undefined
   const local = action;
 
   const execute = <T>(command: Command<T>) => {
-    local.push(command);
+    local.commands.push(command);
     const result = command.execute();
     return result;
   };
@@ -67,12 +74,12 @@ const getOrCreateExecutionContext = () => {
     execute,
     finish: () => {
       undoHistory.push(local);
-      top = local;
+      context.top = local;
       redoHistory = [];
       action = undefined;
 
       logger.debug(
-        `Finished executing -> ${local.map((c) => c.name).join(', ')} [${undoHistory.length}, ${redoHistory.length}]`,
+        `Finished executing -> ${local.commands.map((c) => c.name).join(', ')} [${undoHistory.length}, ${redoHistory.length}]`,
       );
     },
   };
@@ -86,15 +93,19 @@ export const undo = (): 'empty' | 'performed' => {
     return 'empty';
   }
 
-  for (const command of reverse(undoTop)) {
+  for (const command of reverse(undoTop.commands)) {
     command.undo();
   }
 
+  undoTop.undoSubscriptions = undoTop.subscriptions.map((subscriptions) => {
+    return subscriptions.map((disposer) => disposer.dispose());
+  });
+
   redoHistory.push(undoTop);
-  top = peek(undoHistory);
+  context.top = peek(undoHistory);
 
   logger.debug(
-    `Finished undoing -> ${undoTop.map((c) => c.name).join(', ')} [${undoHistory.length}, ${redoHistory.length}]`,
+    `Finished undoing -> ${undoTop.commands.map((c) => c.name).join(', ')} [${undoHistory.length}, ${redoHistory.length}]`,
   );
 
   return 'performed';
@@ -106,22 +117,26 @@ export const redo = (): 'empty' | 'performed' => {
     return 'empty';
   }
 
-  for (const command of redoTop) {
+  for (const command of redoTop.commands) {
     command.execute();
   }
 
+  redoTop.undoSubscriptions.forEach((undoSubscriptions) => {
+    undoSubscriptions.forEach((disposer) => disposer.dispose());
+  });
+
   undoHistory.push(redoTop);
-  top = redoTop;
+  context.top = redoTop;
 
   logger.debug(
-    `Finished redoing -> ${redoTop.map((c) => c.name).join(', ')} [${undoHistory.length}, ${redoHistory.length}]`,
+    `Finished redoing -> ${redoTop.commands.map((c) => c.name).join(', ')} [${undoHistory.length}, ${redoHistory.length}]`,
   );
 
   return 'performed';
 };
 
 export const freezeReference = () => {
-  reference = peek(undoHistory);
+  context.reference = peek(undoHistory);
 };
 
 function proxy<T, V>(
@@ -167,7 +182,6 @@ export function olyRef<T>(raw: T): Ref<T> & ElementChaining<T> {
     set: (v) => {
       const oldValue = o[RefKey];
 
-      // TODO
       const subscriptions: IRecursiveDisposer[] = [];
 
       // This is important as it prevents a command being placed on the stack
@@ -175,7 +189,7 @@ export function olyRef<T>(raw: T): Ref<T> & ElementChaining<T> {
         return;
       }
 
-      const env = getOrCreateExecutionContext();
+      const env = getOrCreateExecutionContext(subscriptions);
       env.execute({
         name: 'set',
         execute: () => {
@@ -231,7 +245,8 @@ const olyArrImpl = <T>(raw: T[], cb?: Callback<T>): T[] & ArrayChaining<T> => {
 
   raw.push = (...items) => {
     const length = raw.length;
-    const env = getOrCreateExecutionContext();
+    const subscriptions: IRecursiveDisposer[] = [];
+    const env = getOrCreateExecutionContext(subscriptions);
 
     let onUndo: (() => void) | undefined;
     const addedLength = env.execute({
@@ -252,8 +267,6 @@ const olyArrImpl = <T>(raw: T[], cb?: Callback<T>): T[] & ArrayChaining<T> => {
       },
     });
 
-    // TODO use
-    const subscriptions: IRecursiveDisposer[] = [];
     events.emit('add', { items, startingIndex: length, subscriptions });
     env.finish();
 
@@ -261,7 +274,8 @@ const olyArrImpl = <T>(raw: T[], cb?: Callback<T>): T[] & ArrayChaining<T> => {
   };
 
   raw.splice = (start: number, deleteCount: number, ...items: T[]) => {
-    const env = getOrCreateExecutionContext();
+    const subscriptions: IRecursiveDisposer[] = [];
+    const env = getOrCreateExecutionContext(subscriptions);
     let onUndo: (() => void) | undefined;
 
     const deleted: T[] = env.execute({
@@ -282,8 +296,6 @@ const olyArrImpl = <T>(raw: T[], cb?: Callback<T>): T[] & ArrayChaining<T> => {
       },
     });
 
-    // TODO use
-    const subscriptions: IRecursiveDisposer[] = [];
     events.emit('remove', { items: deleted, startingIndex: start, subscriptions });
     events.emit('add', { items, startingIndex: start, subscriptions });
     env.finish();
@@ -306,6 +318,7 @@ export function olyArr<T>(raw: T[]): T[] & ArrayChaining<T> {
   return olyArrImpl(raw);
 }
 
+// TODO do we need this??
 export const olyDisposerArr = <T extends IRecursiveDisposer>(raw: T[]): T[] & ArrayChaining<T> => {
   const arr = olyArrImpl(raw, ({ added, removed }) => {
     const disposeUndoers = removed.map((item) => item.dispose());

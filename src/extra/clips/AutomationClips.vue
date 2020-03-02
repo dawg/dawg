@@ -1,7 +1,6 @@
 <template>
   <div>
-    <!-- TODO -->
-    <!-- <drag
+    <drag
       v-for="(item, i) in items"
       group="arranger"
       :key="i"
@@ -10,14 +9,13 @@
       :transfer-data="item.prototype"
     >
       {{ item.name }}
-    </drag> -->
-    <button @click="increment" class="text-default">Increment</button> <br>
+    </drag>
+    <!-- <button @click="increment" class="text-default">Increment</button> <br>
     <button @click="append" class="text-default">Append</button> <br>
     <button @click="undo" class="text-default">Undo</button> <br>
     <button @click="redo" class="text-default">Redo</button> <br>
     <div class="text-default">{{ count.value }}</div> <br>
-    <div class="text-default">{{ arr }}</div> <br>
-    <!-- <div class="text-default">{{ arr }}</div> <br> -->
+    <div class="text-default">{{ arr }}</div> <br> -->
   </div>
 </template>
 

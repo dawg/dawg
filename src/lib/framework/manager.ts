@@ -203,7 +203,7 @@ class Manager {
     try {
       global = makeAndRead(GLOBAL_PATH);
     } catch (e) {
-      logger.error(`Unable to load workspace at ${GLOBAL_PATH}: ${e.message}`);
+      logger.error(`Unable to load global at ${GLOBAL_PATH}: ${e.message}`);
     }
 
     try {
