@@ -10,12 +10,6 @@
     >
       {{ item.name }}
     </drag>
-    <!-- <button @click="increment" class="text-default">Increment</button> <br>
-    <button @click="append" class="text-default">Append</button> <br>
-    <button @click="undo" class="text-default">Undo</button> <br>
-    <button @click="redo" class="text-default">Redo</button> <br>
-    <div class="text-default">{{ count.value }}</div> <br>
-    <div class="text-default">{{ arr }}</div> <br> -->
   </div>
 </template>
 
@@ -23,7 +17,7 @@
 import { ScheduledAutomation, createAutomationPrototype } from '@/models';
 import * as dawg from '@/dawg';
 import { createComponent, computed } from '@vue/composition-api';
-import * as oly from '@/olyger';
+import * as oly from '@/lib/olyger';
 import { useSubscriptions } from '@/lib/vutils';
 
 export default createComponent({
@@ -51,32 +45,9 @@ export default createComponent({
       });
     }
 
-    const subscriptions = useSubscriptions();
-
-    const count = oly.olyRef(0);
-    const arr = oly.olyArr<number>([]);
-
-    subscriptions.push(arr.onDidAdd(({ items: o }) => {
-      count.value += o.length;
-    }));
-
     return {
       items,
       context,
-      arr,
-      increment: () => {
-        count.value++;
-      },
-      append: () => {
-        arr.push(count.value);
-      },
-      count,
-      undo: () => {
-        oly.undo();
-      },
-      redo: () => {
-        oly.redo();
-      },
     };
   },
 });

@@ -17,6 +17,8 @@ protocol.registerSchemesAsPrivileged([{
   scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true },
 }]);
 
+declare var __static: string;
+
 function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
@@ -25,8 +27,7 @@ function createWindow() {
     height: 600,
     minHeight: 600,
     minWidth: 800,
-    // @ts-ignore
-    icon: path.join(__static as string, 'icon.png'),
+    icon: path.join(__static, 'icon.png'),
     webPreferences: {
       nodeIntegration: true,
     },

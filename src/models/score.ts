@@ -4,7 +4,7 @@ import { Instrument } from '@/models/instrument/instrument';
 import { Serializable } from '@/models/serializable';
 import { createNotePrototype, ScheduledNoteType, ScheduledNote, watchOlyArray } from '@/models/schedulable';
 import { Transport } from '@/lib/audio';
-import * as oly from '@/olyger';
+import * as oly from '@/lib/olyger';
 
 const ScoreTypeRequired = t.type({
   instrumentId: t.string,

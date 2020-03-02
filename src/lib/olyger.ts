@@ -1,3 +1,4 @@
+
 import { peek, Disposer, reverse } from '@/lib/std';
 import Vue from 'vue';
 import { computed, reactive } from '@vue/composition-api';
@@ -6,6 +7,8 @@ import { getLogger } from '@/lib/log';
 
 const logger = getLogger('olyger', { level: 'debug' });
 
+// This is from the composition API
+// We should probably remove this but idk
 const RefKey = 'vfa.key.refKey';
 
 interface Command<T> {
@@ -70,12 +73,6 @@ const getOrCreateExecutionContext = () => {
       },
     };
   }
-
-  if (action) {
-    action = action;
-  }
-
-
 
   return {
     execute,
@@ -189,15 +186,48 @@ interface Subscription {
   dispose?: () => void;
 }
 
+type Undo = () => void;
+type Execute = () => Undo | Disposer[] | Disposer;
+
 interface ElementChangeContext<T> {
   newValue: T;
   oldValue: T;
+  onExecute: (cb: Execute) => void;
   subscriptions: Subscription[];
 }
 
 interface ElementChaining<T> {
   onDidChange: (cb: (o: ElementChangeContext<T>) => void) => Disposer;
 }
+
+const onExecuteHelper = (subscriptions: Subscription[]) => {
+  return (cb: Execute) => {
+    subscriptions.push({
+      execute: () => {
+        const result = cb();
+        if (typeof result === 'function') {
+          return {
+            undo: result,
+          };
+        }
+
+        if (Array.isArray(result)) {
+          return {
+            undo: () => {
+              result.forEach((disposer) => disposer.dispose());
+            },
+          };
+        }
+
+        return {
+          undo: () => {
+            result.dispose();
+          },
+        };
+      },
+    });
+  };
+};
 
 export type OlyRef<T> = Ref<T> & ElementChaining<T>;
 
@@ -212,6 +242,7 @@ export function olyRef<T>(raw: T): Ref<T> & ElementChaining<T> {
       const oldValue = o[RefKey];
 
       const subscriptions: Subscription[] = [];
+      const onExecute = onExecuteHelper(subscriptions);
 
       // This is important as it prevents a command being placed on the stack
       if (oldValue === v) {
@@ -226,7 +257,7 @@ export function olyRef<T>(raw: T): Ref<T> & ElementChaining<T> {
           o[RefKey] = v;
         },
         emit: () => {
-          events.emit('change', { newValue: v, oldValue, subscriptions });
+          events.emit('change', { newValue: v, oldValue, subscriptions, onExecute });
         },
         undo: () => {
           o[RefKey] = oldValue;
@@ -247,6 +278,7 @@ export function olyRef<T>(raw: T): Ref<T> & ElementChaining<T> {
 interface Items<T> {
   items: T[];
   startingIndex: number;
+  onExecute: (cb: Execute) => void;
   subscriptions: Subscription[];
 }
 
@@ -257,7 +289,7 @@ interface ArrayChaining<T> {
 
 export type OlyArr<T> = T[] & ArrayChaining<T>;
 
-const olyArrImpl = <T>(raw: T[]): OlyArr<T> => {
+export const olyArr = <T>(raw: T[]): OlyArr<T> => {
   // Explicitly make the array observable because we replace some of the methods
   // We store local variables in this closure and these NEED to be the vue ones for reactivity
   // Therefore, we make the following call
@@ -268,13 +300,10 @@ const olyArrImpl = <T>(raw: T[]): OlyArr<T> => {
   const push = raw.push.bind(raw);
   const splice = raw.splice.bind(raw);
 
-  // const pop = raw.pop;
-  // const shift = raw.shift;
-  // const unshift = raw.unshift;
-
   raw.push = (...items) => {
     const length = raw.length;
     const subscriptions: Subscription[] = [];
+    const onExecute = onExecuteHelper(subscriptions);
     const env = getOrCreateExecutionContext();
 
     const addedLength = env.execute({
@@ -285,7 +314,7 @@ const olyArrImpl = <T>(raw: T[]): OlyArr<T> => {
         return result;
       },
       emit: () => {
-        events.emit('add', { items, startingIndex: length, subscriptions });
+        events.emit('add', { items, startingIndex: length, subscriptions, onExecute });
       },
       undo: () => {
         splice(length, items.length);
@@ -299,6 +328,7 @@ const olyArrImpl = <T>(raw: T[]): OlyArr<T> => {
 
   raw.splice = (start: number, deleteCount: number, ...items: T[]) => {
     const subscriptions: Subscription[] = [];
+    const onExecute = onExecuteHelper(subscriptions);
     const env = getOrCreateExecutionContext();
 
     const deleted: T[] = env.execute({
@@ -309,8 +339,8 @@ const olyArrImpl = <T>(raw: T[]): OlyArr<T> => {
         return result;
       },
       emit(result) {
-        events.emit('remove', { items: result, startingIndex: start, subscriptions });
-        events.emit('add', { items, startingIndex: start, subscriptions });
+        events.emit('remove', { items: result, startingIndex: start, subscriptions, onExecute });
+        events.emit('add', { items, startingIndex: start, subscriptions, onExecute });
       },
       undo: () => {
         splice(start, items.length, ...deleted);
@@ -332,7 +362,3 @@ const olyArrImpl = <T>(raw: T[]): OlyArr<T> => {
     chaining,
   );
 };
-
-export function olyArr<T>(raw: T[]): OlyArr<T> {
-  return olyArrImpl(raw);
-}

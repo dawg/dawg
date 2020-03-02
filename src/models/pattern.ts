@@ -4,7 +4,7 @@ import * as Audio from '@/lib/audio';
 import { Serializable } from '@/models/serializable';
 import { Score, ScoreType } from '@/models/score';
 import { BuildingBlock } from '@/models/block';
-import * as oly from '@/olyger';
+import * as oly from '@/lib/olyger';
 
 export const PatternType = t.type({
   id: t.string,

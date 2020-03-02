@@ -163,8 +163,8 @@ export default createComponent({
     scrollTop: { type: Number, required: true },
 
     // These values should only be set if there is a loop on the timeline by the user
-    setLoopEnd: Number,
-    setLoopStart: Number,
+    setLoopEnd: { type: Number, required: false },
+    setLoopStart: { type: Number, required: false },
 
     getPosition: { type: Function as any as () => (() => { left: number, top: number }), required: true },
 

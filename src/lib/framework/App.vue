@@ -119,7 +119,10 @@ import { getLogger } from '@/lib/log';
 import { ipcSender } from '@/lib/framework/ipc';
 import { useSubscriptions } from '@/lib/vutils';
 import { remote } from 'electron';
-import * as oly from '@/olyger';
+import * as oly from '@/lib/olyger';
+import path from 'path';
+
+declare var __static: string;
 
 const logger = getLogger('App');
 
@@ -193,6 +196,7 @@ export default createComponent({
           buttons: ['Yes', 'No'],
           title: 'Confirm',
           message: 'Are you sure you want to quit? Your unsaved changes will be lost.',
+          icon: path.join(__static, 'icon.png'),
         },
       );
 

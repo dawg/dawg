@@ -11,7 +11,7 @@ import { Instrument } from '@/models/instrument/instrument';
 import { allKeys } from '@/utils';
 import { BuildingBlock } from '@/models/block';
 import { Disposer } from '@/lib/std';
-import * as oly from '@/olyger';
+import * as oly from '@/lib/olyger';
 import { getLogger } from '@/lib/log';
 
 const logger = getLogger('schedulable', { level: 'debug' });

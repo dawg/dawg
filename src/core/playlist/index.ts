@@ -24,6 +24,20 @@ export const playlist = framework.manager.activate({
       type: t.number,
       default: 80,
     },
+    scrollLeft: {
+      type: t.number,
+      default: 0,
+    },
+    scrollTop: {
+      type: t.number,
+      default: 0,
+    },
+    cursorPosition: {
+      type: t.number,
+      default: 0,
+    },
+    userLoopStart: t.number,
+    userLoopEnd: t.number,
     tool: t.union([t.literal('slicer'), t.literal('pointer')]),
   },
   activate(context) {
@@ -34,8 +48,16 @@ export const playlist = framework.manager.activate({
     const masterEnd = ref(0);
     const ghosts: Ghost[] = [];
 
-    const playlistRowHeight = context.workspace.playlistRowHeight;
-    const playlistBeatWidth = context.workspace.playlistBeatWidth;
+    const {
+      playlistRowHeight,
+      playlistBeatWidth,
+      scrollLeft,
+      scrollTop,
+      userLoopStart,
+      userLoopEnd,
+      cursorPosition,
+    } = context.workspace;
+
     const logger = log.getLogger();
 
     const component = Vue.extend({
@@ -53,6 +75,11 @@ export const playlist = framework.manager.activate({
         :row-height.sync="playlistRowHeight.value"
         :px-per-beat.sync="playlistBeatWidth.value"
         :is-recording="recording.value"
+        :scroll-left.sync="scrollLeft.value"
+        :scroll-top.sync="scrollTop.value"
+        :user-loop-start.sync="userLoopStart.value"
+        :user-loop-end.sync="userLoopEnd.value"
+        :cursor-position.sync="cursorPosition.value"
         :ghosts="ghosts"
         @new-prototype="checkPrototype"
         @open="open"
@@ -68,8 +95,13 @@ export const playlist = framework.manager.activate({
         masterEnd,
         ghosts,
         project,
+        scrollLeft,
+        scrollTop,
+        userLoopStart,
+        userLoopEnd,
         playlistRowHeight,
         playlistBeatWidth,
+        cursorPosition,
         tool: context.workspace.tool,
       }),
       computed: {

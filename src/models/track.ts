@@ -1,5 +1,5 @@
 import * as t from '@/lib/io';
-import * as oly from '@/olyger';
+import * as oly from '@/lib/olyger';
 
 export const TrackType = t.type({
   mute: t.boolean,

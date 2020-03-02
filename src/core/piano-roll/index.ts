@@ -22,6 +22,20 @@ export const pianoRoll = framework.manager.activate({
       type: t.number,
       default: 80,
     },
+    scrollLeft: {
+      type: t.number,
+      default: 0,
+    },
+    scrollTop: {
+      type: t.number,
+      default: 0,
+    },
+    cursorPosition: {
+      type: t.number,
+      default: 0,
+    },
+    userLoopStart: t.number,
+    userLoopEnd: t.number,
     tool: t.union([t.literal('slicer'), t.literal('pointer')]),
   },
   activate(context) {
@@ -36,8 +50,15 @@ export const pianoRoll = framework.manager.activate({
       },
     }));
 
-    const pianoRollRowHeight = context.workspace.pianoRollRowHeight;
-    const pianoRollBeatWidth = context.workspace.pianoRollBeatWidth;
+    const {
+      pianoRollRowHeight,
+      pianoRollBeatWidth,
+      scrollLeft,
+      scrollTop,
+      userLoopStart,
+      userLoopEnd,
+      cursorPosition,
+    } = context.workspace;
 
     Vue.component('Note', Vue.extend(Note));
 
@@ -55,7 +76,12 @@ export const pianoRoll = framework.manager.activate({
         :beats-per-measure="project.beatsPerMeasure"
         :row-height.sync="pianoRollRowHeight.value"
         :px-per-beat.sync="pianoRollBeatWidth.value"
+        :scroll-left.sync="scrollLeft.value"
+        :scroll-top.sync="scrollTop.value"
         :is-recording="recording.value"
+        :user-loop-start.sync="userLoopStart.value"
+        :user-loop-end.sync="userLoopEnd.value"
+        :cursor-position.sync="cursorPosition.value"
         :tool.sync="tool.value"
       ></piano-roll-sequencer>
       `,
@@ -66,6 +92,11 @@ export const pianoRoll = framework.manager.activate({
         recording,
         pianoRollBeatWidth,
         pianoRollRowHeight,
+        scrollLeft,
+        scrollTop,
+        userLoopStart,
+        userLoopEnd,
+        cursorPosition,
         tool: context.workspace.tool,
       }),
       computed: {

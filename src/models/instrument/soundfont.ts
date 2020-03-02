@@ -1,11 +1,8 @@
-import soundfonts from 'soundfont-player';
-import Tone from 'tone';
 import * as t from '@/lib/io';
 import * as Audio from '@/lib/audio';
 import { Instrument, InstrumentType } from '@/models/instrument/instrument';
 import { Serializable } from '@/models/serializable';
 import { literal } from '@/lib/std';
-import { GraphNode, masterNode } from '@/node';
 
 export const SoundfontType = t.intersection([
   t.type({
@@ -32,28 +29,25 @@ export class Soundfont extends Instrument<Audio.SoundfontOptions, Soundfonts> im
     });
   }
 
-  public types: Soundfonts[] = ['acoustic_grand_piano', 'bright_acoustic_piano', 'acoustic_guitar_nylon'];
-
-  private soundfont: Soundfonts;
-
   constructor(player: Audio.Soundfont | null, i: ISoundfont) {
-    super(player, i);
-    this.soundfont = i.soundfont;
-  }
+    super(
+      i.soundfont,
+      ['acoustic_grand_piano', 'bright_acoustic_piano', 'acoustic_guitar_nylon'],
+      player,
+      i,
+    );
 
-  // TODO remove
-  get type() {
-    return this.soundfont;
-  }
-
-  set type(soundfont: Soundfonts) {
-    this.soundfont = soundfont;
-    this.updateSource();
+    this.type.onDidChange(({ onExecute }) => {
+      onExecute(() => {
+        this.updateSource();
+        return () => this.updateSource();
+      });
+    });
   }
 
   public serialize() {
     return {
-      soundfont: this.soundfont,
+      soundfont: this.type.value,
       instrument: literal('soundfont'),
       volume: this.volume.value,
       pan: this.pan.value,
@@ -71,6 +65,6 @@ export class Soundfont extends Instrument<Audio.SoundfontOptions, Soundfonts> im
   }
 
   private async updateSource() {
-    this.setSource(await Audio.Soundfont.load(this.soundfont));
+    this.setSource(await Audio.Soundfont.load(this.type.value));
   }
 }

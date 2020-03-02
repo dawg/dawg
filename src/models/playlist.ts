@@ -4,7 +4,7 @@ import { ScheduledPattern, ScheduledPatternType } from '@/models/schedulable';
 import { ScheduledSample, ScheduledSampleType } from '@/models/schedulable';
 import { ScheduledAutomation, ScheduledAutomationType, watchOlyArray } from '@/models/schedulable';
 import { Serializable } from '@/models/serializable';
-import * as oly from '@/olyger';
+import * as oly from '@/lib/olyger';
 
 export const PlaylistType = t.type({
   elements: t.array(t.union([

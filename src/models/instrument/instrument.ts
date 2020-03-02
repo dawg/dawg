@@ -3,8 +3,9 @@ import * as Audio from '@/lib/audio';
 import uuid from 'uuid';
 import * as t from '@/lib/io';
 import { BuildingBlock } from '@/models/block';
-import * as oly from '@/olyger';
+import * as oly from '@/lib/olyger';
 import { GraphNode } from '@/node';
+import { useSignal } from '@/utils';
 
 export const InstrumentType = t.intersection([
   t.type({
@@ -22,37 +23,60 @@ export const InstrumentType = t.intersection([
 export type IInstrument = t.TypeOf<typeof InstrumentType>;
 
 export abstract class Instrument<T, V extends string> implements BuildingBlock {
-  public name: oly.OlyRef<string>;
-  public id: string;
+  public readonly name: oly.OlyRef<string>;
+  public readonly id: string;
 
   /**
    * A type variable. For example, oscillator or soundfont.
    */
-  public abstract type: V;
+  public readonly type: oly.OlyRef<V>;
 
   /**
    * All of the possible options.
    */
-  public abstract types: V[];
+  public types: V[];
 
-  public channel: oly.OlyRef<number | undefined>;
+  /**
+   * The channel of the instrument, starting from 0. Undefined means it is connected directly to master.
+   */
+  public readonly channel: oly.OlyRef<number | undefined>;
 
-  public output = new GraphNode(new Tone.Panner(), 'Panner');
-  public pan = new Audio.Signal(this.output.node.pan, -1, 1);
-  public input = new GraphNode(new Tone.Gain(), 'Gain');
-  public volume = new Audio.Signal(this.input.node.gain, 0, 1);
-
-  // TODO pan and volume not undo/redo ready
+  public readonly output = new GraphNode(new Tone.Panner(), 'Panner');
+  public readonly input = new GraphNode(new Tone.Gain(), 'Gain');
+  public readonly pan: oly.OlyRef<number>;
+  public readonly volume: oly.OlyRef<number>;
 
   protected source: GraphNode<Audio.Source<T> | null>;
 
-  constructor(source: Audio.Source<T> | null, i: IInstrument) {
+  // private readonly panSignal: Audio.Signal;
+  // private readonly volumeSignal: Audio.Signal;
+
+  constructor(
+    type: V,
+    types: V[],
+    source: Audio.Source<T> | null,
+    i: IInstrument,
+  ) {
+    this.type = oly.olyRef(type);
+    this.types = types;
     this.name = oly.olyRef(i.name);
-    this.id = i.id || uuid.v4();
+    this.id = i.id ?? uuid.v4();
     this.channel = oly.olyRef(i.channel);
     this.input.mute = !!i.mute;
-    this.pan.value = i.pan || 0;
-    this.volume.value = i.volume === undefined ? 0.8 : i.volume;
+
+    const {
+      signal: panSignal,
+      ref: pan,
+    } = useSignal(new Audio.Signal(this.output.node.pan, -1, 1), i.pan ?? 0);
+    this.pan = pan;
+    // this.panSignal = panSignal;
+
+    const {
+      signal: volumeSignal,
+      ref: volume,
+    } = useSignal(new Audio.Signal(this.input.node.gain, 0, 1), i.volume ?? 0.8);
+    this.volume = volume;
+    // this.volumeSignal = volumeSignal;
 
     this.source = new GraphNode(source, this.name.value);
     this.source.connect(this.input);

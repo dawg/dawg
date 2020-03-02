@@ -37,8 +37,7 @@
       <div class="flex">
         <div class="flex flex-col items-center">
           <pan
-            :value="channel.panner.raw"
-            @input="panInput"
+            v-model="channel.pan.value"
             stroke-class="fg-default-lighten-2"
             :size="30"
             @automate="automatePan"
@@ -46,19 +45,18 @@
           <div style="flex-grow: 1"></div>
           <div 
             class="mute text-default text-center select-none cursor-pointer"
-            :class="{ 'bg-primary-lighten-1': !channel.mute, 'bg-primary-darken-3': channel.mute }"
+            :class="{ 'bg-primary-lighten-1': !channel.mute.value, 'bg-primary-darken-3': channel.mute.value }"
             style="line-height: 40px; width: 40px"
-            @click="mute"
+            @click="channel.mute.value = !channel.mute.value"
           >
             {{ channel.number }}
           </div>
         </div>
         <div class="ml-4 flex">
           <slider 
-            :value="channel.volume.raw"
-            :min="channel.volume.minValue"
-            :max="channel.volume.maxValue"
-            @input="volumeInput"
+            v-model="channel.volume.value"
+            :min="0"
+            :max="1"
             :left="left"
             :right="right"
             @automate="automateVolume"
@@ -150,10 +148,6 @@ export default createComponent({
       });
     }
 
-    function mute() {
-      props.channel.mute = !props.channel.mute;
-    }
-
     function process(level: number) {
       return clamp(scale(level, [-100, 6], [0, 1]), 0, 1);
     }
@@ -177,14 +171,6 @@ export default createComponent({
       // context.root.$automate(props.channel, 'volume');
     }
 
-    function panInput(v: number) {
-      props.channel.panner.value = v;
-    }
-
-    function volumeInput(v: number) {
-      props.channel.volume.value = v;
-    }
-
     watch(() => props.play, () => {
       if (props.play) {
         renderMeter();
@@ -195,9 +181,6 @@ export default createComponent({
       showEffects,
       automatePan,
       automateVolume,
-      panInput,
-      volumeInput,
-      mute,
       contextmenu,
       effects,
       left,

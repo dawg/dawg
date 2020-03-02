@@ -1,5 +1,5 @@
 import * as t from '@/lib/io';
-import * as oly from '@/olyger';
+import * as oly from '@/lib/olyger';
 import uuid from 'uuid';
 import {
   SynthType,
@@ -319,6 +319,8 @@ export const defineAPI = (i: LoadedProject) => {
     });
   });
 
+  // FIXME move to instrument?? This is kinda tough though as the instruments would need references
+  // to the channels.
   const setChannel = (instrument: Soundfont | Synth, channel: number | undefined) => {
     let destination: GraphNode;
     const destinationName = channel !== undefined ? `Channel ${channel}` : 'Master';

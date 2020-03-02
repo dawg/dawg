@@ -25,7 +25,12 @@ export const controls = framework.manager.activate({
     const component = Vue.extend({
       name: 'VerticalSwitchWrapper',
       components: { VerticalSwitch },
-      template: `<vertical-switch :top="sliderTop" @update:top="update"></vertical-switch>`,
+      template: `
+      <vertical-switch
+        :top="sliderTop"
+        @update:top="update"
+        title="Toggle Playback Context"
+      ></vertical-switch>`,
       methods:  {
         update(isTop: boolean) {
           c.value = isTop ? 'playlist' : 'pianoroll';
@@ -59,7 +64,11 @@ export const controls = framework.manager.activate({
     const stop = Vue.extend(createComponent({
       props: {},
       template: `
-      <dg-mat-icon class="text-default cursor-pointer" icon="stop"></dg-mat-icon>
+      <dg-mat-icon
+        class="text-default cursor-pointer"
+        icon="stop"
+        title="Stop Playback"
+      ></dg-mat-icon>
       `,
     }));
 
@@ -72,7 +81,12 @@ export const controls = framework.manager.activate({
     const playPauseComponent = Vue.extend(createComponent({
       props: {},
       template: `
-      <dg-mat-icon class="text-default cursor-pointer" :icon="icon" @click="toggle"></dg-mat-icon>
+      <dg-mat-icon
+        class="text-default cursor-pointer"
+        :icon="icon"
+        @click="toggle"
+        title="Play/Pause Playback"
+      ></dg-mat-icon>
       `,
       setup() {
         return {

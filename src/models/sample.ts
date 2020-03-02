@@ -6,7 +6,7 @@ import { Serializable } from '@/models/serializable';
 import { Context } from '@/lib/audio/context';
 import { BuildingBlock } from '@/models/block';
 import { GraphNode } from '@/node';
-import * as oly from '@/olyger';
+import * as oly from '@/lib/olyger';
 
 export const SampleType = t.type({
   id: t.string,

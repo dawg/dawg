@@ -77,8 +77,8 @@ export default createComponent({
     minSnap: { type: Number, required: true },
     snap: { type: Number, required: true },
     detail: { type: String as () => 'step' | 'beat' | 'measure', default: 'step' },
-    setLoopStart: Number,
-    setLoopEnd: Number,
+    setLoopStart: { type: Number, required: false },
+    setLoopEnd: { type: Number, required: false },
   },
   setup(props, context) {
     const { width, height, observe } = useResponsive();
@@ -210,6 +210,10 @@ export default createComponent({
         const d2 = addEventListeners({
           mousemove,
           mouseup: () => {
+            if (props.setLoopStart === props.setLoopEnd) {
+              remove();
+            }
+
             d2.dispose();
           },
         });

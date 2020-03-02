@@ -19,17 +19,15 @@
         class="m-3 flex-shrink-0"
         text-color="white"
         :stroke-width="strokeWidth"
-        :value="instrument.volume.raw"
-        @input="volumeInput"
+        v-model="instrument.volume.value"
         @automate="automateVolume"
         name="Volume"
-        :min="instrument.volume.minValue"
-        :max="instrument.volume.maxValue"
+        :min="0"
+        :max="1"
       ></knob>
       <pan
         class="flex-shrink-0"
-        :value="instrument.pan.raw"
-        @input="panInput"
+        v-model="instrument.pan.value"
         @automate="automatePan"
       ></pan>
       <editable
@@ -57,7 +55,7 @@
       <dg-select
         class="my-2 mx-5 grid"
         :options="instrument.types"
-        v-model="instrument.type"
+        v-model="instrument.type.value"
       ></dg-select>
     </div>
   </div>
@@ -89,14 +87,6 @@ export default createComponent({
 
     function setChannel(v: number | undefined) {
       update(props, context, 'channel', v);
-    }
-
-    function volumeInput(v: number) {
-      props.instrument.volume.value = v;
-    }
-
-    function panInput(v: number) {
-      props.instrument.pan.value = v;
     }
 
     function automateVolume() {
@@ -136,8 +126,6 @@ export default createComponent({
       contextmenu,
       automatePan,
       automateVolume,
-      panInput,
-      volumeInput,
       setChannel,
       expand,
       strokeWidth,

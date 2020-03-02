@@ -19,6 +19,8 @@
         focus:outline-none 
         focus:shadow-none
       "
+      :value="value"
+      @input="onInput"
     >
       <option 
         v-for="option in processed"
@@ -46,7 +48,7 @@ export default createComponent({
     options: { type: Array as () => SelectOption[], required: true },
     value: { type: String, required: false },
   },
-  setup(props) {
+  setup(props, context) {
     return {
       processed: computed(() => {
         return props.options.map((option): { value: string; display: string } => {
@@ -60,6 +62,9 @@ export default createComponent({
           }
         });
       }),
+      onInput: (e: { target: HTMLSelectElement }) => {
+        context.emit('input', e.target.value);
+      }
     };
   },
 });

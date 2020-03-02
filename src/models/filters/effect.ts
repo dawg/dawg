@@ -43,6 +43,7 @@ export class Effect<T extends EffectName> implements Serializable<IEffect> {
   public effect: GraphNode<Tone.Effect>;
 
   constructor(i: IEffect) {
+    // TODO make this better + undoable
     this.slot = i.slot;
     this.id = i.id;
     this.type = i.type as T;

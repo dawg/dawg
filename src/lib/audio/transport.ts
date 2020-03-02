@@ -247,7 +247,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
   }
 
   set loopStart(loopStart: Beat) {
-    this.ticks = this._loopStart = loopStart * Context.PPQ;
+    this._loopStart = loopStart * Context.PPQ;
   }
 
   get seconds() {

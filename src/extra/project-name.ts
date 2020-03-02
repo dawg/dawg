@@ -3,11 +3,11 @@ import { createExtension } from '@/lib/framework/extensions';
 import * as dawg from '@/dawg';
 import path from 'path';
 import { computed, ref } from '@vue/composition-api';
-import * as oly from '@/olyger';
+import * as oly from '@/lib/olyger';
 
 export const extension = createExtension({
   id: 'dawg.project-name',
-  activate(context) {
+  activate() {
     const openedFile = ref(dawg.project.getOpenedFile());
     dawg.project.onDidSetOpenedFile(() => {
       openedFile.value = dawg.project.getOpenedFile();
@@ -19,14 +19,14 @@ export const extension = createExtension({
 
     const title = computed(() => {
       if (oly.hasUnsavedChanged.value) {
-        if (projectName.value) {
-          return projectName.value + ' (Unsaved Changes)';
+        if (openedFile.value) {
+          return openedFile.value + ' (Unsaved Changes)';
         } else {
           return 'Unsaved Changes';
         }
 
       } else {
-        return projectName.value;
+        return openedFile.value;
       }
     });
 

@@ -1,13 +1,20 @@
 import Tone from 'tone';
-import { TransportTime, Ticks, Beat } from '@/lib/audio/types';
+import { Ticks, Beat } from '@/lib/audio/types';
 import { Transport } from '@/lib/audio/transport';
 import { Signal } from '@/lib/audio';
 import * as Audio from '@/lib/audio';
+import { Disposer } from '@/lib/std';
 
 interface IAutomationEvent {
   time: Audio.Beat;
   value: number;
   type: Tone.AutomationType;
+}
+
+export interface PointController {
+  setValue: (value: number) => void;
+  setTime: (time: number) => void;
+  remove: () => Disposer;
 }
 
 export class AutomationEvent implements IAutomationEvent {
@@ -68,45 +75,33 @@ export class Controller extends Tone.Signal {
     const val = this.getValueAtTime(`${ticks}i`);
     if (this.lastValue !== val) {
       this.lastValue = val;
-      // approximate ramp curves with linear ramps
+      // approximate curves with linear ramps
       this.output.linearRampToValueAtTime(val, seconds);
       this.output.value = val;
     }
   }
 
-  public add(time: Beat, value: number) {
+  public add(time: Beat, value: number): PointController {
     const event = new AutomationEvent({
       time: Audio.Context.beatsToTicks(time),
       value,
       type: 'linearRampToValueAtTime',
     });
-    return this.addEvent(event);
-  }
 
-  public change(eventId: string, value: number) {
-    if (this.scheduledEvents.hasOwnProperty(eventId)) {
-      const event = this.scheduledEvents[eventId];
-      event.value = value;
-    }
-    return this;
-  }
+    this._events.add(event);
+    this.scheduledEvents[event.id.toString()] = event;
 
-  public setTime(eventId: string, time: Audio.Beat) {
-    if (this.scheduledEvents.hasOwnProperty(eventId)) {
-      const event = this.scheduledEvents[eventId];
-      event.time = time;
-    }
-    return this;
-  }
-
-  public remove(eventId: string) {
-    if (this.scheduledEvents.hasOwnProperty(eventId)) {
-      const event = this.scheduledEvents[eventId];
-      this._events.remove(event);
-      // event.dispose();
-      delete this.scheduledEvents[eventId];
-    }
-    return this;
+    return {
+      setValue: (newValue: number) => {
+        event.value = newValue;
+      },
+      setTime: (newTime: number) => {
+        event.time = newTime;
+      },
+      remove: () => {
+        return this.remove(event.id);
+      },
+    };
   }
 
   public dispose() {
@@ -115,17 +110,16 @@ export class Controller extends Tone.Signal {
     return this;
   }
 
-  private anchorValue(time: number) {
-    // FIXME this whole file IDK and get rid of Tone.Transport
-    const val = this.getValueAtTime(Tone.Transport.seconds);
-    this.lastValue = val;
-    this.output.cancelScheduledValues(time);
-    this.output.setValueAtTime(val, time);
-  }
+  private remove(eventId: string) {
+    const event = this.scheduledEvents[eventId];
+    this._events.remove(event);
+    delete this.scheduledEvents[eventId];
 
-  private addEvent(event: AutomationEvent) {
-    this._events.add(event);
-    this.scheduledEvents[event.id.toString()] = event;
-    return event.id;
+    return {
+      dispose: () => {
+        this._events.add(event);
+        this.scheduledEvents[eventId] = event;
+      },
+    };
   }
 }

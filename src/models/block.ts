@@ -1,4 +1,4 @@
-import * as oly from '@/olyger';
+import * as oly from '@/lib/olyger';
 
 export interface BuildingBlock {
   readonly id: string;

@@ -9,7 +9,6 @@ export {
   PlaylistElementType,
   PlaylistElementLookup,
 } from '@/models/playlist';
-export { Point } from '@/models/automation/point';
 export {
   ScheduledSample,
   ScheduledAutomation,
