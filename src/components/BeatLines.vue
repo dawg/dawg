@@ -21,15 +21,15 @@ export default createComponent({
     const el = ref<HTMLElement>();
 
     const measureColor = computed(() => {
-      return dawg.theme.darken(dawg.theme.default, 5);
+      return dawg.theme.darken(dawg.theme.o.default, 5);
     });
 
     const stepColor = computed(() => {
-      return dawg.theme.darken(dawg.theme.default, 2);
+      return dawg.theme.darken(dawg.theme.o.default, 2);
     });
 
     const beatColor = computed(() => {
-      return dawg.theme.darken(dawg.theme.default, 4);
+      return dawg.theme.darken(dawg.theme.o.default, 4);
     });
 
     const viewBox = computed(() => {

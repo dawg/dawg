@@ -8,10 +8,12 @@ import { ref } from '@vue/composition-api';
 import * as framework from '@/lib/framework';
 import { Ghost } from '@/models/ghost';
 import { controls } from '@/core/controls';
-import { log } from '@/core/log';
 import { sampleViewer } from '@/core/sample-viewer';
 import { patterns } from '@/core/patterns';
 import { SequencerTool } from '@/grid';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('playlist');
 
 export const playlist = framework.manager.activate({
   id: 'dawg.playlist',
@@ -57,8 +59,6 @@ export const playlist = framework.manager.activate({
       userLoopEnd,
       cursorPosition,
     } = context.workspace;
-
-    const logger = log.getLogger();
 
     const component = Vue.extend({
       name: 'PlaylistSequencerWrapper',

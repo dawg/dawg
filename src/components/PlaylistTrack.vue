@@ -4,7 +4,6 @@
   >
     <dot-button
       v-model="active"
-      :value="color"
     ></dot-button>
     <editable class="select-none ml-3 truncate" v-model="track.name.value"></editable>
   </div>
@@ -28,7 +27,6 @@ export default createComponent({
 
     return {
       active,
-      color: computed(() => framework.theme.error),
     };
   },
 });

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col" :class="framework.ui.rootClasses">
+  <div class="flex flex-col" :class="rootClasses">
     <split direction="vertical" name="Root">
 
       <split direction="horizontal" resizable name="Everything">
@@ -283,6 +283,9 @@ export default createComponent({
       statusBarLeft,
       openSettings,
       framework,
+      // IDK why but this is the only was for this array to be reactive
+      // Sometimes I feel like I don't understand vue reactivity
+      rootClasses: framework.ui.rootClasses,
     };
   },
 });

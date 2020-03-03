@@ -8,9 +8,9 @@
 import { createComponent, computed, ref, watch } from '@vue/composition-api';
 
 // TODO
-// 3. When creating a loop and dragging near the edge of the screen, the screen should move too
 // 8. Why are there still errors loading global/workspace?
-// 10. themes don't work until reload
+// 11. Grouping commands by time
+// 12. Manual grouping of commands?
 
 export default createComponent({
   name: 'Progression',

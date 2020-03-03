@@ -134,12 +134,12 @@ export const extension: Extension = {
     }
 
     const props = {
-      color: theme['text-default'],
+      color: theme.o['text-default'],
       size: '14px',
     };
 
     watch(recording, () => {
-      props.color = recording.value ? theme.error : theme['text-default'];
+      props.color = recording.value ? theme.o.error : theme.o['text-default'];
     });
 
     pianoRoll.addAction({

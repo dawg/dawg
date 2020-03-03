@@ -333,11 +333,11 @@ export const defineAPI = (i: LoadedProject) => {
 
     return {
       execute: () => {
-        logger.debug(`Connecting "${instrument.name}" to ${destinationName}`);
+        logger.debug(`Connecting "${instrument.name.value}" to ${destinationName}`);
         const dispose = instrument.output.connect(destination);
         return {
           undo: () => {
-            logger.debug(`Undoing connecting of "${instrument.name}" to ${destinationName}`);
+            logger.debug(`Undoing connecting of "${instrument.name.value}" to ${destinationName}`);
             dispose.dispose();
           },
         };

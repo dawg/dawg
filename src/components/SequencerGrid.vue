@@ -128,7 +128,7 @@ import { createComponent, ref, computed, watch, onUnmounted, onMounted } from '@
 import { createGrid, SequencerTool } from '@/grid';
 import { getLogger } from '@/lib/log';
 
-const logger = getLogger('SequenceGrid', { level: 'trace' });
+const logger = getLogger('SequenceGrid', { level: 'silly' });
 
 export default createComponent({
   components: { BeatLines },

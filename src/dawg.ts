@@ -12,7 +12,6 @@ export { patterns } from '@/core/patterns';
 export { controls } from '@/core/controls';
 export { record } from '@/core/record';
 export { status } from '@/core/status';
-export { log } from '@/core/log';
 export { playlist } from '@/core/playlist';
 export { sampleViewer } from '@/core/sample-viewer';
 export { window } from '@/core/window';

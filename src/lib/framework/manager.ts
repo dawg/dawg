@@ -9,6 +9,7 @@ import {
   FieldOptions,
   ReactiveDefinition,
   Setting,
+  TypeOrOptions,
 } from '@/lib/framework/extensions';
 import fs from '@/lib/fs';
 import path from 'path';
@@ -53,7 +54,7 @@ const settings: Array<{ title: string, settings: Setting[] }> = [];
 const extensions: { [id: string]: any } = {};
 const resolved: { [id: string]: boolean } = {};
 
-let extensionsStack: Array<
+const extensionsStack: Array<
   { extension: Extension, context: IExtensionContext }
 > = [];
 
@@ -72,12 +73,12 @@ const write = async (file: string, contents: any) => {
   await fs.writeFile(file, JSON.stringify(contents, null, 4));
 };
 
-const isState = (oo: any): oo is StateType => {
-  return oo._tag !== undefined;
+const isState = (oo: TypeOrOptions): oo is StateType => {
+  return (oo as any)._tag !== undefined;
 };
 
-const isFieldOptions = (oo: any): oo is FieldOptions<StateType> => {
-  return oo.type !== undefined;
+const isFieldOptions = (oo: TypeOrOptions): oo is FieldOptions<StateType> => {
+  return (oo as any)._tag === undefined;
 };
 
 const getPartialFromDefinition = (props: ExtensionProps) => {
@@ -93,8 +94,8 @@ const getDataFromExtensions = (key: 'workspace' | 'global'): { [k: string]: Exte
   const data: { [k: string]: ExtensionData<ExtensionProps> } = {};
   for (const { extension, context } of reverse(extensionsStack)) {
     try {
-      const extensionInfo = extension[key];
-      if (!extensionInfo) {
+      const definition = extension[key];
+      if (!definition) {
         continue;
       }
 
@@ -104,7 +105,7 @@ const getDataFromExtensions = (key: 'workspace' | 'global'): { [k: string]: Exte
         toEncode[k] = state[k].value;
       }
 
-      const type = getPartialFromDefinition(extensionInfo);
+      const type = getPartialFromDefinition(definition);
       const encoded = type.encode(toEncode);
       data[extension.id] = encoded;
     } catch (e) {
@@ -271,6 +272,9 @@ export const manager = {
 
     return t.write(PastProjectsType, { path: PROJECT_PATH, data: pastProject });
   },
+  /**
+   * To be called at the end right before the application closes.
+   */
   async dispose() {
     if (!projectManager) {
       return;
@@ -297,7 +301,10 @@ export const manager = {
     const g = getDataFromExtensions('global');
     const w = getDataFromExtensions('workspace');
 
-    projectManager.workspace[projectManager.projectInfo.id] = w;
+    // If there is no file set then do not write workspace to the fs because it is irrelevant
+    if (projectManager.projectInfo.path) {
+      projectManager.workspace[projectManager.projectInfo.id] = w;
+    }
 
     await write(GLOBAL_PATH, g);
     await write(WORKSPACE_PATH, projectManager.workspace);
@@ -368,19 +375,6 @@ export const manager = {
     extensionsStack.push({ extension: extension as Extension, context: context as IExtensionContext });
 
     return api;
-  },
-  deactivateAll() {
-    // since we are resetting the stack, we can reverse in place
-    extensionsStack.reverse().forEach(({ extension, context }) => {
-      if (extension.deactivate) {
-        extension.deactivate(context);
-      }
-    });
-
-    // FIXME make sure to reset everything
-    // ie. reset the settings, extensions, resolved variables
-    // We should create an object called "state" that contains all of this information
-    extensionsStack = [];
   },
   get<T extends Extension<any, any, any>>(extension: T): ReturnType<T['activate']> {
     if (extensions.hasOwnProperty(extension.id)) {

@@ -40,6 +40,9 @@ import { scale } from '@/lib/std';
 import * as dawg from '@/dawg';
 import { createComponent, computed, ref } from '@vue/composition-api';
 import { doSnap } from '@/utils';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('AutomationClipElement');
 
 export default createComponent({
   name: 'AutomationClipElement',
@@ -164,7 +167,7 @@ export default createComponent({
       value = Math.max(0, Math.min(1, value));
       value = 1 - scale(value, [0, 1], fromRange.value);
 
-      dawg.log.debug(`Changing ${clip.value.points[i].value} -> ${value}`);
+      logger.debug(`Changing ${clip.value.points[i].value} -> ${value}`);
       clip.value.points[i].value.value = value;
       Vue.set(points.value, i, points.value[i]);
     }

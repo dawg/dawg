@@ -69,7 +69,7 @@ const insertTheme = (name: ThemeNames) => {
 
   const themeObject = defaults[name];
   keys(themeObject).forEach((key) => {
-    theme[key] = framework.theme[key] = themeObject[key];
+    theme.o[key] = framework.theme[key] = themeObject[key];
   });
 };
 
@@ -135,7 +135,7 @@ const extension = createExtension({
       lighten: (hex: string, amount: 1 | 2 | 3 | 4 | 5) => {
         return tinycolor(hex).lighten(PERCENTAGES[amount - 1]).toHexString();
       },
-      ...framework.theme,
+      o: framework.theme,
     };
   },
 });
