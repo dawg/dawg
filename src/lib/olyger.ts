@@ -45,10 +45,26 @@ export const hasUnsavedChanged = computed(() => {
 
 
 let action: ExecutedAction<any> | undefined;
+
+// Beware we group ALL actions together even if they are different actions
+// This works well for now but may not be desirable in future use cases
+let group: { action: ExecutedAction<any> } | undefined;
+
 const getOrCreateExecutionContext = () => {
-  const startOfExecution = action === undefined;
+  let startOfExecution = false;
+  let startOfGroupedExecution = false;
   if (!action) {
-    action = { commands: [] };
+    if (group) {
+      startOfGroupedExecution = true;
+      action = group.action;
+    } else {
+      startOfExecution = true;
+      action = { commands: [] };
+      group = { action };
+      setTimeout(() => {
+        group = undefined;
+      }, 500);
+    }
   }
 
   // create a local copy which is not undefined
@@ -64,6 +80,15 @@ const getOrCreateExecutionContext = () => {
 
     return result;
   };
+
+  if (startOfGroupedExecution) {
+    return {
+      execute,
+      finish: () => {
+        action = undefined;
+      },
+    };
+  }
 
   if (!startOfExecution) {
     return {
