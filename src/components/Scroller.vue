@@ -10,9 +10,6 @@ import { clamp } from '@/lib/std';
 import { Nullable, update } from '@/lib/vutils';
 import { calculateScroll } from '@/utils';
 
-// @Prop\((\{[ a-zA-Z:,]+\})\) public ([a-zA-Z]+)!: ([^\n]+)
-// $2: $1,
-
 /**
  * This class enables scrolling using the wheel and manages "steady" zoom logic.
  */

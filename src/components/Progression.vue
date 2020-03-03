@@ -8,11 +8,9 @@
 import { createComponent, computed, ref, watch } from '@vue/composition-api';
 
 // TODO
-// 1. The panel is going back to the wrong one for some reason
-// 2. Can't change synths
 // 3. When creating a loop and dragging near the edge of the screen, the screen should move too
 // 8. Why are there still errors loading global/workspace?
-// 10. themes don't work
+// 10. themes don't work until reload
 
 export default createComponent({
   name: 'Progression',

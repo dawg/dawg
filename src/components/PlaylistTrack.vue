@@ -16,7 +16,7 @@ import * as framework from '@/lib/framework';
 import { watch, ref, computed, createComponent } from '@vue/composition-api';
 
 export default createComponent({
-  name: 'DgTrack',
+  name: 'PlaylistTrack',
   props: {
     track: { type: Object as () => T, required: true },
   },

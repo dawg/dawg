@@ -64,7 +64,7 @@ export default createComponent({
       }),
       onInput: (e: { target: HTMLSelectElement }) => {
         context.emit('input', e.target.value);
-      }
+      },
     };
   },
 });

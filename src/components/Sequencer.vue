@@ -50,6 +50,7 @@
           @update:setLoopEnd="setUserLoopEnd"
           :set-loop-start="userLoopStart"
           @update:setLoopStart="setUserLoopStart"
+          @scroll="onTimelineScroll"
           :loop-start="loopStart"
           :loop-end="loopEnd"
           :scroll-left="scrollLeft"
@@ -263,6 +264,13 @@ export default createComponent({
       }
     }
 
+    function onTimelineScroll(scroll: number) {
+      if (scrollXVue.value) {
+        scrollXVue.value.$el.scrollLeft = scroll;
+        update(props, context, 'scrollLeft', scroll);
+      }
+    }
+
     function onScrollY() {
       if (scrollY.value) {
         update(props, context, 'scrollTop', scrollY.value.scrollTop);
@@ -322,6 +330,7 @@ export default createComponent({
       seek,
       onScrollX,
       setRowHeight,
+      onTimelineScroll,
       pxPerStep,
       setUserLoopEnd,
       setUserLoopStart,
