@@ -366,7 +366,6 @@ export const manager = {
       settings: context.settings,
     });
 
-    // beware of the any type
     const api = extension.activate(context);
 
     extensions[extension.id] = api;

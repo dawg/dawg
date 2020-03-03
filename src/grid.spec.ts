@@ -1,11 +1,11 @@
 import Vue from 'vue';
-import VueCompositionApi, { ref, Ref } from '@vue/composition-api';
+import VueCompositionApi, { ref } from '@vue/composition-api';
 Vue.use(VueCompositionApi);
+
 import { createGrid, GridOpts } from '@/grid';
 import { ScheduledElement, createNotePrototype, Instrument, Synth } from '@/models';
 import { expect } from '@/lib/testing';
 import * as Audio from '@/lib/audio';
-import { masterNode } from '@/node';
 
 type Element = ScheduledElement<Instrument<any, any>, 'note', any>;
 

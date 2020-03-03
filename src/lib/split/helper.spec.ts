@@ -5,8 +5,6 @@ Vue.use(VueCompositionApi);
 import { expect } from '@/lib/testing';
 import { Section, SectionOpts } from '@/lib/split/helper';
 
-
-
 const create = ( o?: SectionOpts) => {
   return new Section(o);
 };

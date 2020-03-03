@@ -1,6 +1,8 @@
 import * as CSS from 'csstype';
 import { keys } from '@/lib/std';
-import eLog from 'electron-log';
+import { ElectronLog } from 'electron-log';
+
+let eLog: ElectronLog | undefined;
 
 type Level = 'info' | 'debug' | 'error' | 'silly' | 'warn';
 type LevelLookup = { [L in Level]: number };
@@ -106,9 +108,7 @@ export interface LogMessage {
   args: any[];
 }
 
-eLog.transports.console.level = false;
-eLog.transports.file.level = 'warn';
-eLog.transports.file.format = '[{y}-{m}-{d} {h}:{i}:{s}.{ms}] {text}';
+
 
 export const log = (message: LogMessage) => {
   if (levelLookup[message.level] < levelLookup[message.setLevel]) {
@@ -120,7 +120,14 @@ export const log = (message: LogMessage) => {
   const styleString = styleArray.join('; ');
   const messageString = `[${message.name}] ${message.level.toUpperCase()}: ${message.message}`;
 
-  eLog[message.level](messageString, message.args);
+  if (!eLog) {
+    eLog = require('electron-log');
+    eLog!.transports.console.level = false;
+    eLog!.transports.file.level = 'warn';
+    eLog!.transports.file.format = '[{y}-{m}-{d} {h}:{i}:{s}.{ms}] {text}';
+  }
+
+  eLog![message.level](messageString, message.args);
 
   // tslint:disable-next-line:no-console
   console.log(`%c${messageString}`, styleString, ...message.args);

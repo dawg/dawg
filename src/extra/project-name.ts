@@ -7,7 +7,7 @@ import * as oly from '@/lib/olyger';
 
 export const extension = createExtension({
   id: 'dawg.project-name',
-  activate() {
+  activate(context) {
     const openedFile = ref(dawg.project.getOpenedFile());
     dawg.project.onDidSetOpenedFile(() => {
       openedFile.value = dawg.project.getOpenedFile();
@@ -17,8 +17,13 @@ export const extension = createExtension({
       return openedFile.value === null ? '' : path.basename(openedFile.value).split('.')[0];
     });
 
+    const hasUnsavedChanged = ref(false);
+    context.subscriptions.push(oly.onDidStateChange((value) => {
+      hasUnsavedChanged.value = value === 'unsaved';
+    }));
+
     const title = computed(() => {
-      if (oly.hasUnsavedChanged.value) {
+      if (hasUnsavedChanged.value) {
         if (openedFile.value) {
           return openedFile.value + ' (Unsaved Changes)';
         } else {
@@ -31,7 +36,7 @@ export const extension = createExtension({
     });
 
     const text = computed(() => {
-      if (oly.hasUnsavedChanged.value) {
+      if (hasUnsavedChanged.value) {
         return '*' + projectName.value;
       } else {
         return projectName.value;

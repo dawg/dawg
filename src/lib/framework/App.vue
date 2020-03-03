@@ -235,15 +235,14 @@ export default createComponent({
     });
 
     let hasUnsavedChanged = false;
-    watch(oly.hasUnsavedChanged, (value) => {
+    subscriptions.push(oly.onDidStateChange((value) => {
       logger.debug(
         'Reference or top of history changed! Are there unsaved changes -> ' +
         hasUnsavedChanged,
       );
 
-      hasUnsavedChanged = value;
-    });
-
+      hasUnsavedChanged = value === 'unsaved';
+    }));
 
     // Prevent spacebar scrolling which isn't good for the sequencers
     window.addEventListener('keydown', (e) => {

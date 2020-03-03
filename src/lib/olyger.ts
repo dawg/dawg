@@ -1,11 +1,11 @@
 
 import { peek, Disposer, reverse } from '@/lib/std';
 import Vue from 'vue';
-import { computed, reactive } from '@vue/composition-api';
+import { reactive } from '@vue/composition-api';
 import { emitter } from '@/lib/events';
 import { getLogger } from '@/lib/log';
 
-const logger = getLogger('olyger', { level: 'debug' });
+const logger = getLogger('olyger');
 
 // This is from the composition API
 // We should probably remove this but idk
@@ -34,15 +34,28 @@ interface Action<T> {
 const undoHistory: Array<ExecutedAction<any>> = [];
 let redoHistory: Array<Action<any>> = [];
 
-const context: { reference?: Action<any>, top?: Action<any> } = reactive({
+const context: { reference?: Action<any>, top?: Action<any>, hasUnsavedChanged: boolean } = {
   reference: undefined,
   top: undefined,
-});
+  hasUnsavedChanged: false,
+};
 
-export const hasUnsavedChanged = computed(() => {
-  return context.top !== context.reference;
-});
+type State = 'unsaved' | 'saved';
+const stateChangeEvents = emitter<{ stateChange: [State] }>();
 
+export const onDidStateChange = (cb: (state: State) => void) => {
+  return stateChangeEvents.on('stateChange', cb);
+};
+
+const setValue = (key: 'reference' | 'top', a: Action<any> | undefined) => {
+  context[key] = a;
+
+  const oldValue = context.hasUnsavedChanged;
+  const newValue = context.hasUnsavedChanged = context.reference !== context.top;
+  if (oldValue !== newValue) {
+    stateChangeEvents.emit('stateChange', newValue ? 'unsaved' : 'saved');
+  }
+};
 
 let action: ExecutedAction<any> | undefined;
 
@@ -103,7 +116,7 @@ const getOrCreateExecutionContext = () => {
     execute,
     finish: () => {
       undoHistory.push(local);
-      context.top = local;
+      setValue('top', local);
 
       // Everything in the redo stack is going to be lost forever at this point
       // If needed, subscriptions can have a dispose method for cleaning up after themselves
@@ -141,7 +154,8 @@ export const undo = (): 'empty' | 'performed' => {
   }
 
   redoHistory.push(undoTop);
-  context.top = peek(undoHistory);
+  setValue('top', peek(undoHistory));
+  context.hasUnsavedChanged = context.top !== context.reference;
 
   logger.debug(
     `Undid -> ${undoTop.commands.map((c) => c.name).join(', ')} [${undoHistory.length}, ${redoHistory.length}]`,
@@ -169,7 +183,7 @@ export const redo = (): 'empty' | 'performed' => {
     }),
   });
 
-  context.top = redoTop;
+  setValue('top', redoTop);
 
   logger.debug(
     `Redid -> ${redoTop.commands.map((c) => c.name).join(', ')} [${undoHistory.length}, ${redoHistory.length}]`,
@@ -179,7 +193,7 @@ export const redo = (): 'empty' | 'performed' => {
 };
 
 export const freezeReference = () => {
-  context.reference = peek(undoHistory);
+  setValue('reference', peek(undoHistory));
 };
 
 function proxy<T, V>(
