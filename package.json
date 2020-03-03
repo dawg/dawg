@@ -73,8 +73,8 @@
     "vue-template-compiler": "^2.6.11"
   },
   "engines": {
-    "node": "~10.0.0",
-    "npm": "~6.0.0"
+    "node": "10.x || 11.x",
+    "npm": "6.x"
   },
   "homepage": "https://dawg.dev"
 }
