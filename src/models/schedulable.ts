@@ -17,36 +17,20 @@ import { getLogger } from '@/lib/log';
 const logger = getLogger('schedulable', { level: 'debug' });
 
 export const watchOlyArray = <T extends ScheduledElement<any, any, any>>(arr: oly.OlyArr<T>) => {
-  arr.onDidRemove(({ items, subscriptions }) => {
+  arr.onDidRemove(({ items, onExecute }) => {
     logger.debug(`onDidRemove ${items.length} elements`);
-    subscriptions.push({
-      execute: () => {
-        logger.debug(`Removing ${items.length} elements`);
-        const disposers = items.map((item) => item.remove());
-        return {
-          undo: () => {
-            logger.debug(`Undoing remove of ${items.length} elements`);
-            disposers.forEach((disposer) => disposer.dispose());
-          },
-        };
-      },
+    onExecute(() => {
+      logger.debug(`Removing ${items.length} elements`);
+      return items.map((item) => item.remove());
     });
   });
 
-  arr.onDidAdd(({ items, subscriptions }) => {
+  arr.onDidAdd(({ items, onExecute }) => {
     logger.debug(`onDidAdd ${items.length} elements`);
 
-    subscriptions.push({
-      execute: () => {
-        logger.debug(`Adding ${items.length} elements`);
-        const disposers = items.map((item) => item.add());
-        return {
-          undo: () => {
-            logger.debug(`Undoing add of ${items.length} elements`);
-            disposers.forEach((disposer) => disposer.dispose());
-          },
-        };
-      },
+    onExecute(() => {
+      logger.debug(`Adding ${items.length} elements`);
+      return items.map((item) => item.add());
     });
   });
 
@@ -149,15 +133,15 @@ const createSchedulable = <
     const info = {  ...opts };
 
     const duration = wrap(info.duration, (value) => {
-      if (controller) { controller.setDuration(value); }
+      controller?.setDuration(value);
     });
 
     const time = wrap(info.time, (value) => {
-      if (controller) { controller.setStartTime(value); }
+      controller?.setStartTime(value);
     });
 
     const offset = wrap(info.offset ?? 0, (value) => {
-      if (controller) { controller.setOffset(value); }
+      controller?.setOffset(value);
     });
 
     const row = oly.olyRef(info.row);
@@ -181,10 +165,10 @@ const createSchedulable = <
     };
 
     const add = () => {
-      const local = controller = o.add(transport, params, idk);
+      controller = o.add(transport, params, idk);
       return {
         dispose: () => {
-          local?.remove();
+          controller?.remove();
         },
       };
     };

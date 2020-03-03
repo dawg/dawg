@@ -136,8 +136,12 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
         event.time = Context.beatsToTicks(startTime);
         // So we need to reposition the element in the sorted array after setting the time
         // This is a very simple way to do it but it could be done more efficiently
-        this.timeline.remove(event);
-        this.timeline.add(event);
+        const didRemove = this.timeline.remove(event);
+
+        // It may be the case that the element is not scheduled so we need to take that into consideration
+        if (didRemove) {
+          this.timeline.add(event);
+        }
         checkNowActive();
       },
       setDuration: (duration: Beat) => {

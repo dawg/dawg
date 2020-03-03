@@ -26,11 +26,14 @@ export class Timeline<T extends { time: Ticks; offset: Ticks }> {
    *  @param  event The event object to remove from the list.
    *  @returns this
    */
-  public remove(event: T) {
+  public remove(event: T): boolean {
     const index = this.timeline.indexOf(event);
     if (index !== -1) {
       this.timeline.splice(index, 1);
+      return true;
     }
+
+    return false;
   }
 
   /**
