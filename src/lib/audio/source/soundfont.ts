@@ -16,7 +16,6 @@ export interface SoundfontOptions {
  * A soundfont source. Uses `soundfont-player` under the hood.
  */
 export class Soundfont implements Source<SoundfontOptions> {
-
   public static load(name: soundfonts.InstrumentName) {
     try {
       return new Soundfont(soundfonts.instrument(context, name));

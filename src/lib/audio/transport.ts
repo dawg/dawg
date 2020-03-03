@@ -4,6 +4,7 @@ import { Context } from '@/lib/audio/context';
 import { watch } from '@vue/composition-api';
 import { Clock } from '@/lib/audio/clock';
 import { StrictEventEmitter } from '@/lib/events';
+import { Disposer } from '@/lib/std';
 
 interface EventContext {
   seconds: ContextTime;
@@ -34,8 +35,7 @@ export interface TransportEventController {
   setStartTime(startTime: Beat): void;
   setOffset(offset: Beat): void;
   setDuration(duration: Beat): void;
-  remove(): void;
-  undoRemove(): void;
+  remove(): Disposer;
 }
 
 export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext], beforeEnd: [EventContext] }> {
@@ -57,17 +57,18 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
   constructor() {
     super();
 
+    const setBpm = () => this.clock.frequency.value = 1 / (60 / Context.BPM / Context.PPQ);
+
     // FIXME Maybe all of the clocks could share one "ticker"?? IDK? Then we wouldn't have to "watch" the BBM
     // Note, this will run automatically
-    watch(() => Context.BPM, () => {
-      this.clock.frequency.value = 1 / (60 / Context.BPM / Context.PPQ);
-    });
+    const d = Context.onDidSetBPM(setBpm);
 
     const pause = this.clock.on('stopped', (o) => {
       this.checkOnEndEventsAndResetActive(o);
     });
 
     this.disposer = () => {
+      // d.dispose();
       // pause.dispose();
     };
   }
@@ -135,8 +136,12 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
         event.time = Context.beatsToTicks(startTime);
         // So we need to reposition the element in the sorted array after setting the time
         // This is a very simple way to do it but it could be done more efficiently
-        this.timeline.remove(event);
-        this.timeline.add(event);
+        const didRemove = this.timeline.remove(event);
+
+        // It may be the case that the element is not scheduled so we need to take that into consideration
+        if (didRemove) {
+          this.timeline.add(event);
+        }
         checkNowActive();
       },
       setDuration: (duration: Beat) => {
@@ -152,14 +157,27 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
       },
       remove: () => {
         if (!added) {
-          return;
+          return {
+            dispose: () => {
+              //
+            },
+          };
         }
 
         this.timeline.remove(event);
         added = false;
 
+        const dispose = () => {
+          this.timeline.add(event);
+          added = true;
+
+          checkNowActive();
+        };
+
         if (!this.active) {
-          return;
+          return {
+            dispose,
+          };
         }
 
         const i = this.active.indexOf(event);
@@ -173,16 +191,10 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
 
           this.active.splice(i, 1);
         }
-      },
-      undoRemove: () => {
-        if (added) {
-          return;
-        }
 
-        this.timeline.add(event);
-        added = true;
-
-        checkNowActive();
+        return {
+          dispose,
+        };
       },
     };
   }
@@ -239,7 +251,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
   }
 
   set loopStart(loopStart: Beat) {
-    this.ticks = this._loopStart = loopStart * Context.PPQ;
+    this._loopStart = loopStart * Context.PPQ;
   }
 
   get seconds() {

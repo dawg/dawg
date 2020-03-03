@@ -123,7 +123,7 @@ export const extension = createExtension({
           offset: 0,
         }, sample, {})(master.transport).copy();
 
-        master.elements.add(scheduled);
+        master.elements.push(scheduled);
 
         recording.value = false;
       };

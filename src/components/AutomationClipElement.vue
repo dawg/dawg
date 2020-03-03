@@ -35,11 +35,14 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import { Point, ScheduledAutomation } from '@/models';
+import { ScheduledAutomation } from '@/models';
 import { scale } from '@/lib/std';
 import * as dawg from '@/dawg';
 import { createComponent, computed, ref } from '@vue/composition-api';
 import { doSnap } from '@/utils';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('AutomationClipElement');
 
 export default createComponent({
   name: 'AutomationClipElement',
@@ -77,16 +80,18 @@ export default createComponent({
     });
 
     const processed = computed(() => {
-      return points.value.slice().sort(sort).map((point) => {
+      return points.value.slice().sort((a, b) => {
+        return a.time.value - b.time.value;
+      }).map((point) => {
         return {
-          cx: point.time * props.pxPerBeat,
-          cy: (1 - scale(point.value, fromRange.value, [0, 1])) * props.height,
+          cx: point.time.value * props.pxPerBeat,
+          cy: (1 - scale(point.value.value, fromRange.value, [0, 1])) * props.height,
         };
       });
     });
 
     const times = computed(() => {
-      return points.value.map(({ time }) => time);
+      return points.value.map(({ time }) => time.value);
     });
 
     const maxTime = computed(() => {
@@ -142,8 +147,7 @@ export default createComponent({
     }
 
     function addPoint(e: MouseEvent) {
-      const { time, value } = getTimeValue(e);
-      clip.value.add(time, value);
+      clip.value.add(getTimeValue(e));
     }
 
     function move(e: MouseEvent, i: number) {
@@ -151,28 +155,25 @@ export default createComponent({
       // it is possible to move out of bounds
       let { time, value } = getTimeValue(e);
 
-      const lowerBound = i === 0 ? 0 : points.value[i - 1].time;
-      const upperBound = i === points.value.length - 1 ? Infinity : points.value[i + 1].time;
+      const lowerBound = i === 0 ? 0 : points.value[i - 1].time.value;
+      const upperBound = i === points.value.length - 1 ? Infinity : points.value[i + 1].time.value;
       time = Math.max(lowerBound, Math.min(upperBound, time));
 
-      clip.value.setTime(i, time);
-      // FIXME(2) this needs a better home
+      clip.value.points[i].time.value = time;
+
+      // FIXME this needs a better home
       props.element.duration.value = Math.max(props.element.duration.value, time);
 
       value = Math.max(0, Math.min(1, value));
       value = 1 - scale(value, [0, 1], fromRange.value);
 
-      dawg.log.debug(`Changing ${clip.value.points[i].value} -> ${value}`);
-      clip.value.setValue(i, value);
+      logger.debug(`Changing ${clip.value.points[i].value} -> ${value}`);
+      clip.value.points[i].value.value = value;
       Vue.set(points.value, i, points.value[i]);
     }
 
-    function sort(a: Point, b: Point) {
-      return a.time - b.time;
-    }
-
     function deleteClip(i: number) {
-      clip.value.remove(i);
+      clip.value.points.splice(i, 1);
     }
 
     function pointContext(event: MouseEvent, i: number) {

@@ -3,32 +3,35 @@ import { createExtension } from '@/lib/framework/extensions';
 import * as dawg from '@/dawg';
 import path from 'path';
 import { computed, ref } from '@vue/composition-api';
-import { createSubscriptions } from '@/lib/vutils';
+import * as oly from '@/lib/olyger';
 
 export const extension = createExtension({
   id: 'dawg.project-name',
   activate(context) {
-    const openedFile = dawg.project.openedFile;
+    const openedFile = ref(dawg.project.getOpenedFile());
+    dawg.project.onDidSetOpenedFile(() => {
+      openedFile.value = dawg.project.getOpenedFile();
+    });
 
     const projectName = computed(() => {
       return openedFile.value === null ? '' : path.basename(openedFile.value).split('.')[0];
     });
 
     const hasUnsavedChanged = ref(false);
-    context.subscriptions.push(dawg.history.onDidHasUnsavedChangesChange((value) => {
-      hasUnsavedChanged.value = value;
+    context.subscriptions.push(oly.onDidStateChange((value) => {
+      hasUnsavedChanged.value = value === 'unsaved';
     }));
 
     const title = computed(() => {
       if (hasUnsavedChanged.value) {
-        if (projectName.value) {
-          return projectName.value + ' (Unsaved Changes)';
+        if (openedFile.value) {
+          return openedFile.value + ' (Unsaved Changes)';
         } else {
           return 'Unsaved Changes';
         }
 
       } else {
-        return projectName.value;
+        return openedFile.value;
       }
     });
 

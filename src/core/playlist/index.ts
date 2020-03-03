@@ -8,10 +8,12 @@ import { ref } from '@vue/composition-api';
 import * as framework from '@/lib/framework';
 import { Ghost } from '@/models/ghost';
 import { controls } from '@/core/controls';
-import { log } from '@/core/log';
 import { sampleViewer } from '@/core/sample-viewer';
 import { patterns } from '@/core/patterns';
 import { SequencerTool } from '@/grid';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('playlist');
 
 export const playlist = framework.manager.activate({
   id: 'dawg.playlist',
@@ -24,6 +26,20 @@ export const playlist = framework.manager.activate({
       type: t.number,
       default: 80,
     },
+    scrollLeft: {
+      type: t.number,
+      default: 0,
+    },
+    scrollTop: {
+      type: t.number,
+      default: 0,
+    },
+    cursorPosition: {
+      type: t.number,
+      default: 0,
+    },
+    userLoopStart: t.number,
+    userLoopEnd: t.number,
     tool: t.union([t.literal('slicer'), t.literal('pointer')]),
   },
   activate(context) {
@@ -34,9 +50,15 @@ export const playlist = framework.manager.activate({
     const masterEnd = ref(0);
     const ghosts: Ghost[] = [];
 
-    const playlistRowHeight = context.workspace.playlistRowHeight;
-    const playlistBeatWidth = context.workspace.playlistBeatWidth;
-    const logger = log.getLogger();
+    const {
+      playlistRowHeight,
+      playlistBeatWidth,
+      scrollLeft,
+      scrollTop,
+      userLoopStart,
+      userLoopEnd,
+      cursorPosition,
+    } = context.workspace;
 
     const component = Vue.extend({
       name: 'PlaylistSequencerWrapper',
@@ -53,6 +75,11 @@ export const playlist = framework.manager.activate({
         :row-height.sync="playlistRowHeight.value"
         :px-per-beat.sync="playlistBeatWidth.value"
         :is-recording="recording.value"
+        :scroll-left.sync="scrollLeft.value"
+        :scroll-top.sync="scrollTop.value"
+        :user-loop-start.sync="userLoopStart.value"
+        :user-loop-end.sync="userLoopEnd.value"
+        :cursor-position.sync="cursorPosition.value"
         :ghosts="ghosts"
         @new-prototype="checkPrototype"
         @open="open"
@@ -68,8 +95,13 @@ export const playlist = framework.manager.activate({
         masterEnd,
         ghosts,
         project,
+        scrollLeft,
+        scrollTop,
+        userLoopStart,
+        userLoopEnd,
         playlistRowHeight,
         playlistBeatWidth,
+        cursorPosition,
         tool: context.workspace.tool,
       }),
       computed: {
@@ -92,7 +124,7 @@ export const playlist = framework.manager.activate({
           }
 
           logger.debug('Adding a sample!');
-          project.addSample(sample);
+          project.samples.push(sample);
         },
         open(element: PlaylistElements) {
           switch (element.type) {

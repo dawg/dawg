@@ -1,10 +1,13 @@
 import * as CSS from 'csstype';
 import { keys } from '@/lib/std';
+import { ElectronLog } from 'electron-log';
 
-type Level = 'info' | 'debug' | 'error' | 'trace' | 'warn';
+let eLog: ElectronLog | undefined;
+
+type Level = 'info' | 'debug' | 'error' | 'silly' | 'warn';
 type LevelLookup = { [L in Level]: number };
 const levelLookup: LevelLookup = {
-  trace: 0,
+  silly: 0,
   debug: 1,
   info: 2,
   warn: 3,
@@ -52,7 +55,7 @@ const styles: { [K in Level]: CSS.Properties } = {
     padding: '4px 6px',
     borderRadius: '4px',
   },
-  trace: {
+  silly: {
     backgroundColor: rgb(rgbs.gray),
     color: 'white',
     fontWeight: 'bold',
@@ -79,8 +82,8 @@ const camelToKebabObject = (o: CSS.Properties) => {
 export const getLogger = (name: string, { level }: { level?: Level } = {}): Logger => {
   return {
     level: level ?? 'info',
-    trace(message: string, ...args: any[]) {
-      log({ setLevel: this.level, name, level: 'trace', message, args });
+    silly(message: string, ...args: any[]) {
+      log({ setLevel: this.level, name, level: 'silly', message, args });
     },
     debug(message: string, ...args: any[]) {
       log({ setLevel: this.level, name, level: 'debug', message, args });
@@ -105,6 +108,8 @@ export interface LogMessage {
   args: any[];
 }
 
+
+
 export const log = (message: LogMessage) => {
   if (levelLookup[message.level] < levelLookup[message.setLevel]) {
     return;
@@ -113,10 +118,19 @@ export const log = (message: LogMessage) => {
   const kebabStyle = camelToKebabObject(styles[message.level]);
   const styleArray = Object.keys(kebabStyle).map((key) => `${key}: ${kebabStyle[key]}`);
   const styleString = styleArray.join('; ');
-  const messageString = `%c[${message.name}] ${message.level.toUpperCase()}: ${message.message}`;
+  const messageString = `[${message.name}] ${message.level.toUpperCase()}: ${message.message}`;
+
+  if (!eLog) {
+    eLog = require('electron-log');
+    eLog!.transports.console.level = false;
+    eLog!.transports.file.level = 'warn';
+    eLog!.transports.file.format = '[{y}-{m}-{d} {h}:{i}:{s}.{ms}] {text}';
+  }
+
+  eLog![message.level](messageString, message.args);
 
   // tslint:disable-next-line:no-console
-  console.log(messageString, styleString, ...message.args);
+  console.log(`%c${messageString}`, styleString, ...message.args);
 };
 
 

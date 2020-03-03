@@ -2,8 +2,7 @@ import * as t from '@/lib/io';
 import Tone from 'tone';
 import * as Audio from '@/lib/audio';
 import { Beat } from '@/lib/audio/types';
-import * as history from '@/lib/framework/history';
-import { computed, Ref, ref, watch } from '@vue/composition-api';
+import { computed, Ref, watch } from '@vue/composition-api';
 import { Context } from '@/lib/audio';
 import { Sample } from '@/models/sample';
 import { Pattern } from '@/models/pattern';
@@ -12,10 +11,31 @@ import { Instrument } from '@/models/instrument/instrument';
 import { allKeys } from '@/utils';
 import { BuildingBlock } from '@/models/block';
 import { Disposer } from '@/lib/std';
-import { emitter } from '@/lib/events';
+import * as oly from '@/lib/olyger';
 import { getLogger } from '@/lib/log';
 
 const logger = getLogger('schedulable', { level: 'debug' });
+
+export const watchOlyArray = <T extends ScheduledElement<any, any, any>>(arr: oly.OlyArr<T>) => {
+  arr.onDidRemove(({ items, onExecute }) => {
+    logger.debug(`onDidRemove ${items.length} elements`);
+    onExecute(() => {
+      logger.debug(`Removing ${items.length} elements`);
+      return items.map((item) => item.remove());
+    });
+  });
+
+  arr.onDidAdd(({ items, onExecute }) => {
+    logger.debug(`onDidAdd ${items.length} elements`);
+
+    onExecute(() => {
+      logger.debug(`Adding ${items.length} elements`);
+      return items.map((item) => item.add());
+    });
+  });
+
+  return arr;
+};
 
 export const createType = <T extends string, M extends t.Mixed>(
   type: T, options: M,
@@ -61,8 +81,8 @@ interface SchedulableOpts<Element, Type extends string, Options extends t.Mixed>
 }
 
 const wrap = (initial: number, onSet: (value: number) => void) => {
-  const reference = ref<number>(initial);
-  watch(reference, (value) => {
+  const reference = oly.olyRef(initial);
+  watch(() => reference.value, (value) => {
     onSet(value);
   }, { lazy: true });
   return reference;
@@ -86,12 +106,9 @@ export type ScheduledElement<Element, Type extends string, Options extends t.Mix
   showBorder: boolean;
   name?: Readonly<Ref<string>>;
   slice: (timeToSlice: number) => ScheduledElement<Element, Type, Options> | undefined;
-  // dispose: () => void;
-  remove: () => void;
-  removeNoHistory: () => void;
+  remove: () => Disposer;
+  add: () => Disposer;
   serialize: () => t.TypeOf<SerializationType<Type, Options>>;
-  onDidRemove: (cb: () => void) => Disposer;
-  onUndidRemove: (cb: () => void) => Disposer;
   copy: SchedulablePrototype<Element, Type, Options>;
 }>;
 
@@ -115,37 +132,19 @@ const createSchedulable = <
   ): ScheduledElement<T, M, Options> => {
     const info = {  ...opts };
 
-    idk.onDidDelete(() => {
-      removeNoHistory();
-    });
-
-    idk.onUndidDelete(() => {
-      controller = o.add(transport, params, idk);
-    });
-
     const duration = wrap(info.duration, (value) => {
-      if (controller) { controller.setDuration(value); }
+      controller?.setDuration(value);
     });
 
     const time = wrap(info.time, (value) => {
-      if (controller) { controller.setStartTime(value); }
+      controller?.setStartTime(value);
     });
 
     const offset = wrap(info.offset ?? 0, (value) => {
-      if (controller) { controller.setOffset(value); }
+      controller?.setOffset(value);
     });
 
-    // const offset = ref(info.offset ?? 0);
-
-    // const offset = computed({
-    //   get: () => info.offset ?? 0,
-    //   set: (value) => {
-    //     info.offset = value;
-    //     if (controller) { controller.setStartTime(value); }
-    //   },
-    // });
-
-    const row = ref(info.row);
+    const row = oly.olyRef(info.row);
 
     const copy = () => {
       return create(
@@ -156,35 +155,27 @@ const createSchedulable = <
       );
     };
 
-    const removeNoHistory = () => {
-      if (controller) {
-        controller.remove();
-        events.emit('remove');
-      }
-    };
-
     const remove = () => {
-      history.execute({
-        execute: () => {
-          logger.debug('Removing element!');
-          removeNoHistory();
+      const disposer = controller?.remove();
+      return {
+        dispose: () => {
+          disposer?.dispose();
         },
-        undo: () => {
-          logger.debug('Undoing remove of element!');
-          if (controller) {
-            controller.undoRemove();
-            events.emit('undoRemove');
-          }
-        },
-
-      });
+      };
     };
 
+    const add = () => {
+      controller = o.add(transport, params, idk);
+      return {
+        dispose: () => {
+          controller?.remove();
+        },
+      };
+    };
 
-    const events = emitter<{ remove: [], undoRemove: [] }>();
 
     const params: ScheduledElement<T, M, Options> = {
-      name: computed(() => idk.name),
+      name: idk.name,
       component: o.component,
       type: o.type,
       offsettable: o.offsettable ?? false,
@@ -213,8 +204,8 @@ const createSchedulable = <
 
         return newElement;
       },
+      add,
       remove,
-      removeNoHistory,
       endBeat: computed(() => {
         return time.value + duration.value;
       }),
@@ -226,18 +217,13 @@ const createSchedulable = <
           offset: offset.value,
           type: o.type,
           id: idk.id,
+          ...options,
         };
-      },
-      onDidRemove: (cb: () => void) => {
-        return events.on('remove', cb);
-      },
-      onUndidRemove: (cb: () => void) => {
-        return events.on('undoRemove', cb);
       },
       showBorder: o.showBorder,
     } as const;
 
-    let controller = o.add(transport, params, idk);
+    let controller: Audio.TransportEventController | undefined;
 
     return params;
   };
@@ -261,11 +247,11 @@ export const { create: createSamplePrototype, type: ScheduledSampleType } = crea
   offsettable: true,
   options: t.type({}),
   add: (transport, params, sample: Sample) => {
-    if (!sample.player) {
+    if (!sample.player.node) {
       return;
     }
 
-    const instance = sample.player.createInstance();
+    const instance = sample.player.node.createInstance();
     let controller: { stop: (seconds: Audio.ContextTime) => void } | null = null;
     return transport.schedule({
       time: params.time.value,
@@ -333,6 +319,7 @@ export const { create: createNotePrototype, type: ScheduledNoteType } = createSc
   add: (transport, params, instrument: Instrument<any, any>) => {
     return transport.schedule({
       onStart: ({ seconds }) => {
+        logger.debug('onStart Note -> ' + seconds);
         const value = allKeys[params.row.value].value;
         const duration = new Tone.Ticks(params.duration.value * Audio.Context.PPQ).toSeconds();
         instrument.triggerAttackRelease(value, duration, seconds, params.options.velocity);

@@ -8,7 +8,7 @@ export const extension = createExtension({
   activate() {
     const component = Vue.extend(createComponent({
       props: {},
-      template: `<bpm v-model="bpm"></bpm>`,
+      template: `<bpm v-model="bpm.value"></bpm>`,
       setup() {
         return {
           bpm: dawg.project.bpm,

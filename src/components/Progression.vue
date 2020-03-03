@@ -20,7 +20,7 @@ export default createComponent({
   },
   setup(props) {
     const progressPx = computed(() => {
-      return (props.position * props.pxPerBeat) + 'px';
+      return ((props.position * props.pxPerBeat) - props.scrollLeft) + 'px';
     });
 
     const style = computed(() => {

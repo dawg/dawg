@@ -1,4 +1,4 @@
-import { app, protocol, BrowserWindow, dialog } from 'electron';
+import { app, protocol, BrowserWindow } from 'electron';
 import menu from './lib/electron/context';
 import path from 'path';
 import {
@@ -7,6 +7,10 @@ import {
 } from 'vue-cli-plugin-electron-builder/lib';
 import './lib/electron/ipc';
 import { isDevelopment } from './lib/electron/environment';
+import eLog from 'electron-log';
+
+eLog.transports.console.level = false;
+eLog.transports.file.level = false;
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -17,6 +21,8 @@ protocol.registerSchemesAsPrivileged([{
   scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true },
 }]);
 
+declare var __static: string;
+
 function createWindow() {
   // Create the browser window.
   win = new BrowserWindow({
@@ -25,8 +31,7 @@ function createWindow() {
     height: 600,
     minHeight: 600,
     minWidth: 800,
-    // @ts-ignore
-    icon: path.join(__static as string, 'icon.png'),
+    icon: path.join(__static, 'icon.png'),
     webPreferences: {
       nodeIntegration: true,
     },
@@ -38,6 +43,8 @@ function createWindow() {
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
+    // userAgent: Chrome fixes the following issues
+    // https://github.com/meetfranz/franz/issues/1720
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL, { userAgent: 'Chrome' });
     if (!process.env.IS_TEST) { win.webContents.openDevTools(); }
   } else {
@@ -70,7 +77,7 @@ app.on('activate', () => {
   }
 });
 
-// This method will be called when Electron has finished
+// This method is called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {

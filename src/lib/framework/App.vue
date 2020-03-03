@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col" :class="framework.ui.rootClasses">
+  <div class="flex flex-col" :class="rootClasses">
     <split direction="vertical" name="Root">
 
       <split direction="horizontal" resizable name="Everything">
@@ -113,14 +113,18 @@ import SideTabs from '@/lib/framework/SideTabs.vue';
 import PanelHeaders from '@/lib/framework/PanelHeaders.vue';
 import ActivityBar from '@/lib/framework/ActivityBar.vue';
 import * as framework from '@/lib/framework';
-import { sortOrdered } from '@/lib/std';
+import { sortOrdered, Keys } from '@/lib/std';
 import { createComponent, computed, ref, onMounted, onUnmounted, watch } from '@vue/composition-api';
 import { getLogger } from '@/lib/log';
 import { ipcSender } from '@/lib/framework/ipc';
-import { createSubscriptions } from '@/lib/vutils';
+import { useSubscriptions } from '@/lib/vutils';
 import { remote } from 'electron';
+import * as oly from '@/lib/olyger';
+import path from 'path';
 
-const logger = getLogger('App', { level: 'debug' });
+declare var __static: string;
+
+const logger = getLogger('App');
 
 export default createComponent({
   components: {
@@ -132,7 +136,7 @@ export default createComponent({
   name: 'App',
   setup() {
     const settings = ref(false);
-    const { subscriptions } = createSubscriptions();
+    const subscriptions = useSubscriptions();
 
     // This loaded flag is important
     // Bugs can appear if we render before we load the project file
@@ -192,6 +196,7 @@ export default createComponent({
           buttons: ['Yes', 'No'],
           title: 'Confirm',
           message: 'Are you sure you want to quit? Your unsaved changes will be lost.',
+          icon: path.join(__static, 'icon.png'),
         },
       );
 
@@ -229,16 +234,22 @@ export default createComponent({
       window.removeEventListener('online', online);
     });
 
-
     let hasUnsavedChanged = false;
-    subscriptions.push(framework.history.onDidHasUnsavedChangesChange((value) => {
+    subscriptions.push(oly.onDidStateChange((value) => {
       logger.debug(
         'Reference or top of history changed! Are there unsaved changes -> ' +
         hasUnsavedChanged,
       );
 
-      hasUnsavedChanged = value;
+      hasUnsavedChanged = value === 'unsaved';
     }));
+
+    // Prevent spacebar scrolling which isn't good for the sequencers
+    window.addEventListener('keydown', (e) => {
+      if (e.keyCode === Keys.Space && e.target === document.body) {
+        e.preventDefault();
+      }
+    });
 
     // window.onbeforeunload = () => '';
 
@@ -271,6 +282,9 @@ export default createComponent({
       statusBarLeft,
       openSettings,
       framework,
+      // IDK why but this is the only was for this array to be reactive
+      // Sometimes I feel like I don't understand vue reactivity
+      rootClasses: framework.ui.rootClasses,
     };
   },
 });

@@ -11,13 +11,13 @@
     :prototype.sync="prototype"
   >
     <template slot="side">
-      <d-track
+      <playlist-track
         v-for="(track, i) in tracks"
         :key="i" 
         :style="{ height: `${rowHeight}px`, marginTop: i === 1 ? '-1px' : '' }"
         :track="track"
         @contextmenu.native="trackOptions($event, i)"
-      ></d-track>
+      ></playlist-track>
     </template>
   </sequencer>
 </template>

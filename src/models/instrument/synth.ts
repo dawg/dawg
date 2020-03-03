@@ -25,31 +25,33 @@ export type ISynth = t.TypeOf<typeof SynthType>;
 
 export class Synth extends Instrument<Audio.SynthOptions, Oscillators> implements Serializable<ISynth> {
   public static create(name: string) {
-    return new Synth(Tone.Master, {
+    return new Synth({
       instrument: 'synth',
       type: 'fatsawtooth',
       name,
     });
   }
 
-  public types: Oscillators[] = ['fatsawtooth', 'sine', 'square', 'sawtooth', 'triangle'];
-
   private oscillatorType: Oscillators;
 
-  constructor(destination: Tone.AudioNode, i: ISynth) {
-    super(new Audio.Synth(8, Tone.Synth), destination, i);
+  constructor(i: ISynth) {
+    super(
+      i.type,
+      ['fatsawtooth', 'sine', 'square', 'sawtooth', 'triangle'],
+      new Audio.Synth(8, Tone.Synth),
+      i,
+    );
+
     this.oscillatorType = i.type;
-    this.type = i.type;
     this.set({ key: 'envelope', value: { attack: 0.005, decay: 0.1, sustain: 0.3, release: 1 } });
-  }
 
-  get type() {
-    return this.oscillatorType;
-  }
-
-  set type(type: Oscillators) {
-    this.oscillatorType = type;
-    this.set({ key: 'oscillator', value: { type } });
+    this.set({ key: 'oscillator', value: { type: i.type } });
+    this.type.onDidChange(({ onExecute, newValue, oldValue }) => {
+      onExecute(() => {
+        this.set({ key: 'oscillator', value: { type: newValue } });
+        return () => this.set({ key: 'oscillator', value: { type: oldValue } });
+      });
+    });
   }
 
   public serialize() {
@@ -58,10 +60,10 @@ export class Synth extends Instrument<Audio.SynthOptions, Oscillators> implement
       type: this.oscillatorType,
       volume: this.volume.value,
       pan: this.pan.value,
-      name: this.name,
+      name: this.name.value,
       id: this.id,
-      channel: this.channel,
-      mute: this.mute,
+      channel: this.channel.value,
+      mute: this.input.mute,
     };
   }
 }

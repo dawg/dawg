@@ -16,16 +16,14 @@ export const update = <Props, K extends keyof Props, V extends Props[K]>(
   context.emit(`update:${key}`, value);
 };
 
-export const createSubscriptions = () => {
+export const useSubscriptions = () => {
   const subscriptions: Disposer[] = [];
 
   onUnmounted(() => {
     subscriptions.forEach((s) => s.dispose());
   });
 
-  return {
-    subscriptions,
-  };
+  return subscriptions;
 };
 
 // FIXME become a hook I'm almost ready

@@ -4,17 +4,24 @@ import Tone from 'tone';
 import * as Audio from '@/lib/audio';
 import { Serializable } from '@/models/serializable';
 import { EffectType, AnyEffect, Effect } from '@/models/filters/effect';
+import * as oly from '@/lib/olyger';
+import { GraphNode, masterNode } from '@/node';
+import { EffectName } from '@/models/filters/effects';
+import { getLogger } from '@/lib/log';
+import { useSignal } from '@/utils';
+
+const logger = getLogger('channel', { level: 'debug' });
 
 export const ChannelTypeRequired = t.type({
   number: t.number,
   name: t.string,
   id: t.string,
-  panner: t.number,
+  pan: t.number,
   volume: t.number,
   mute: t.boolean,
 });
 
-export const ChannelTypePartial = t.partial({
+export const ChannelTypePartial = t.type({
   effects: t.array(EffectType),
 });
 
@@ -29,7 +36,7 @@ export class Channel implements Serializable<IChannel> {
       name: `Channel ${num}`,
       id: uuid.v4(),
       effects: [],
-      panner: 0,
+      pan: 0,
       volume: 0.7,
       mute: false,
     });
@@ -37,81 +44,131 @@ export class Channel implements Serializable<IChannel> {
 
   public number: number;
   public name: string;
-  public effects: AnyEffect[];
+  public effects: Readonly<AnyEffect[]>;
   public id: string;
 
-  public left = new Tone.Meter();
-  public right = new Tone.Meter();
-  public split = new Tone.Split();
+  public readonly pan: oly.OlyRef<number>;
+  public readonly volume: oly.OlyRef<number>;
+  public readonly mute: oly.OlyRef<boolean>;
 
-  private pannerNode = new Tone.Panner().toMaster().connect(this.split);
+  public readonly input = new GraphNode(new Tone.Gain(), 'Gain');
+  public readonly output = new GraphNode(new Tone.Panner(), 'Panner');
+
+  public readonly left = new GraphNode(new Tone.Meter());
+  public readonly right = new GraphNode(new Tone.Meter());
+  private readonly split = new GraphNode(new Tone.Split());
+  private readonly splitLeft = new GraphNode(this.split.node.left);
+  private readonly splitRight = new GraphNode(this.split.node.right);
+
+  // tslint:disable-next-line:variable-name
+  private readonly _effects: AnyEffect[];
 
   /**
    * The panner for the channel.
    */
-  // tslint:disable-next-line:member-ordering
-  public panner = new Audio.Signal(this.pannerNode.pan, -1, 1);
+  // private readonly panSignal: Audio.Signal;
+  // private readonly volumeSignal: Audio.Signal;
 
-  private gainNode = new Tone.Gain().connect(this.pannerNode);
-
-  /**
-   * The volume for the channel.
-   */
-  // tslint:disable-next-line:member-ordering
-  public volume = new Audio.Signal(this.gainNode.gain, 0, 1);
-
-  // tslint:disable-next-line:member-ordering
-  public destination = this.gainNode;
-  private connected = true;
-  private muted: boolean;
 
   constructor(i: IChannel) {
     this.number = i.number;
     this.name = i.name;
     this.id = i.id;
 
-    this.volume.value = i.volume;
-    this.panner.value = i.panner;
+    this.input.connect(this.output);
 
-    this.muted = i.mute;
-    this.mute = i.mute;
+    // Note this is a bit hacky
+    // Right now, each graph node can only have one output
+    // If we were to do this.output.connect(this.split) it would override the connection that happens below!
+    this.output.node.connect(this.split.node);
 
-    // Connecting the visualizers
-    this.split.left.connect(this.left);
-    this.split.right.connect(this.right);
+    const {
+      signal: panSignal,
+      ref: pan,
+    } = useSignal(new Audio.Signal(this.output.node.pan, -1, 1), i.pan ?? 0);
+    this.pan = pan;
+    // this.panSignal = panSignal;
 
-    this.effects = (i.effects || []).map((iEffect) => {
-      return new Effect(iEffect);
+    const {
+      signal: volumeSignal,
+      ref: volume,
+    } = useSignal(new Audio.Signal(this.input.node.gain, 0, 1), i.volume ?? 0.8);
+    this.volume = volume;
+    // this.volumeSignal = volumeSignal;
+
+    const connect = (isMuted: boolean) => {
+      const destination = isMuted ? undefined : masterNode;
+      this.output.connect(destination);
+    };
+
+    this.mute = oly.olyRef(i.mute);
+    this.mute.onDidChange(({ onExecute, newValue, oldValue }) => {
+      onExecute(() => {
+        connect(newValue);
+        return () => connect(oldValue);
+      });
     });
 
-    if (this.effects.length === 0) {
-      return;
-    }
+    // Do initial connection
+    connect(i.mute);
 
-    for (const [index, effect] of this.effects.slice(1).entries()) {
-      this.effects[index - 1].connect(effect);
-    }
+    // Connecting the visualizers
+    this.splitLeft.connect(this.left);
+    this.splitRight.connect(this.right);
 
-    this.effects[this.effects.length - 1].connect(this.destination);
+    const effects = oly.olyArr(i.effects.map((iEffect) => {
+      return new Effect(iEffect);
+    }));
+
+    effects.onDidRemove(({ items, onExecute }) => {
+      onExecute(() => {
+        return items.map((item) => item.effect.dispose());
+      });
+    });
+
+    effects.onDidAdd(({ items: added, subscriptions, startingIndex: index }) => {
+      subscriptions.push({
+        execute: () => {
+          logger.debug(`Added ${added.length} effect(s) at index ${index}`);
+          this.initiate({ items: added, index });
+
+          return {
+            undo: () => {
+              logger.debug(`Disconnecting ${added.length} effect(s)`);
+              added.forEach((item) => item.effect.dispose());
+            },
+          };
+        },
+      });
+    });
+
+
+    this.effects = effects;
+    this._effects = effects;
+
+    this.initiate({ items: effects, index: 0 });
   }
 
-  get mute() {
-    return this.muted;
-  }
+  public addEffect(name: EffectName, i: number) {
+    let toInsert = 0;
+    for (; toInsert < this.effects.length; toInsert++) {
+      const effect = this.effects[toInsert];
+      if (effect.slot === i) {
+        // An effect already exists in the slot
+        return;
+      }
 
-  set mute(mute: boolean) {
-    this.muted = mute;
-    if (mute && this.connected) {
-      this.pannerNode.disconnect(Tone.Master);
-      this.connected = false;
-    } else if (!mute && !this.connected) {
-      this.pannerNode.connect(Tone.Master);
-      this.connected = true;
+      if (effect.slot > i) {
+        break;
+      }
     }
+
+    const newEffect = Effect.create(i, name);
+    this._effects.splice(toInsert, 0, newEffect);
   }
 
-  get input() {
-    return this.effects.length ? this.effects[0].effect : this.destination;
+  public deleteEffect(i: number) {
+    this._effects.splice(i, 1);
   }
 
   public serialize() {
@@ -120,9 +177,23 @@ export class Channel implements Serializable<IChannel> {
       name: this.name,
       id: this.id,
       effects: this.effects.map((effect) => effect.serialize()),
-      panner: this.panner.value,
+      pan: this.pan.value,
       volume: this.volume.value,
-      mute: this.mute,
+      mute: this.mute.value,
     };
+  }
+
+  private initiate({ items, index }: { items: AnyEffect[], index: number }) {
+    if (items.length === 0) {
+      return;
+    }
+
+    items.slice(0, items.length - 1).forEach((_, ind) => {
+      items[ind].effect.connect(items[ind + 1].effect);
+    });
+
+    const nodeReplaced = this.effects[index + items.length]?.effect ?? this.input;
+    nodeReplaced.redirect(items[0].effect);
+    items[items.length - 1].effect.connect(nodeReplaced);
   }
 }

@@ -1,4 +1,6 @@
 import { range, clamp } from '@/lib/std';
+import * as Audio from '@/lib/audio';
+import * as oly from '@/lib/olyger';
 
 type Color = 'black' | 'white';
 
@@ -27,14 +29,14 @@ range(0, 9).reverse().forEach((value) => {
   });
 });
 
-export const findUniqueName = (objects: Array<{ name: string }>, prefix: string) => {
+export const findUniqueName = (objects: Array<{ name: { value: string } }>, prefix: string) => {
   let name: string;
   let count = 1;
   while (true) {
     name = `${prefix} ${count}`;
     let found = false;
     for (const o of objects) {
-      if (o.name === name) {
+      if (o.name.value === name) {
         found = true;
         break;
       }
@@ -279,5 +281,22 @@ export const slice = (
   return {
     result: 'slice',
     time: sliceTime / pxPerBeat,
+  };
+};
+
+export const useSignal = (signal: Audio.Signal, initial: number) => {
+  const ref = oly.olyRef(initial);
+  ref.onDidChange(({ onExecute, newValue, oldValue }) => {
+    onExecute(() => {
+      signal.value = newValue;
+      return () => {
+        signal.value = oldValue;
+      };
+    });
+  });
+
+  return {
+    signal,
+    ref,
   };
 };

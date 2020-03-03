@@ -44,13 +44,16 @@
         @scroll="onScrollX"
       >
         <timeline 
-          :cursor-position="data.cursorPosition" 
+          :cursor-position="cursorPosition" 
           class="w-full h-full"
-          :set-loop-end.sync="data.userLoopEnd"
-          :set-loop-start.sync="data.userLoopStart"
+          :set-loop-end="userLoopEnd"
+          @update:setLoopEnd="setUserLoopEnd"
+          :set-loop-start="userLoopStart"
+          @update:setLoopStart="setUserLoopStart"
+          @scroll="onTimelineScroll"
           :loop-start="loopStart"
           :loop-end="loopEnd"
-          :scroll-left="data.scrollLeft"
+          :scroll-left="scrollLeft"
           :steps-per-beat="stepsPerBeat"
           :beats-per-measure="beatsPerMeasure"
           :px-per-beat.sync="pxPerBeat"
@@ -87,19 +90,19 @@
         :sequencer-loop-end.sync="data.sequencerLoopEnd"
         :loop-start="loopStart"
         :loop-end="loopEnd"
-        :set-loop-start="data.userLoopStart"
-        :set-loop-end="data.userLoopEnd"
+        :set-loop-start="userLoopStart"
+        :set-loop-end="userLoopEnd"
         :steps-per-beat="stepsPerBeat"
         :beats-per-measure="beatsPerMeasure"
         :px-per-beat="pxPerBeat"
         :get-position="getPosition"
         :row-height="rowHeight"
-        :cursor-position="data.cursorPosition"
+        :cursor-position="cursorPosition"
         :name="name"
         :transport="transport"
         :tool="tool"
-        :scroll-left="data.scrollLeft"
-        :scroll-top="data.scrollTop"
+        :scroll-left="scrollLeft"
+        :scroll-top="scrollTop"
         :snap="snap.raw"
         :min-snap="minSnap"
         :display-loop-end.sync="data.displayLoopEnd"
@@ -133,9 +136,15 @@ export default createComponent({
     isRecording: { type: Boolean, default: false },
 
     /**
-     * Set this if you want to control the end of the loop. This will be ignored if set to 0.
+     * The scroll positions. These will be synced as the user scrolls. The scroll positions will also be synced
+     * to the given scroll positions only at the start.
      */
-    setLoopEnd: { type: Number, required: false },
+    scrollLeft: { type: Number, required: true },
+    scrollTop: { type: Number, required: true },
+
+    // The loop start/end set by the user using the timeline.
+    userLoopStart: { type: Number, required: false },
+    userLoopEnd: { type: Number, required: false },
 
     /**
      * This will be synced with the end of the end of the loop.
@@ -147,6 +156,9 @@ export default createComponent({
      */
     start: { type: Number, required: false },
 
+    // in beats
+    cursorPosition: { type: Number, required: true },
+
     /**
      * The currently selected tool!
      */
@@ -154,20 +166,29 @@ export default createComponent({
   },
   setup(props, context) {
     const data = reactive({
-      scrollLeft: 0,
-      scrollTop: 0,
-      cursorPosition: 0,
       sequencerLoopEnd: 0,
       displayLoopEnd: 0,
-
-      // The loop start/end set by the user using the timeline.
-      userLoopStart: null as null | number,
-      userLoopEnd: null as null | number,
       selectedSnap: 0,
     });
 
     const scrollXVue = ref<Vue>();
     const scrollY = ref<Element>(null);
+
+    // Make sure we initialize the cursor position
+    props.transport.beat = props.cursorPosition;
+
+    // Make sure we initialize the scroll positions
+    watch(scrollXVue, () => {
+      if (scrollXVue.value) {
+        scrollXVue.value.$el.scrollLeft = props.scrollLeft;
+      }
+    });
+
+    watch(scrollY, () => {
+      if (scrollY.value) {
+        scrollY.value.scrollTop = props.scrollTop;
+      }
+    });
 
     const scrollX = computed(() => {
       if (scrollXVue.value) {
@@ -214,27 +235,13 @@ export default createComponent({
 
     const loopEnd = computed(() => {
       // Prioritize the loop end set by the user
-      // Then check if a specific loop end has been given
+      // Then check if we are recording
       // Then fallback to the calculated loop end
-
-      if (data.userLoopEnd) {
-        return data.userLoopEnd;
-      }
-
-      if (props.isRecording) {
-        return data.displayLoopEnd;
-      }
-
-      if (props.setLoopEnd) {
-        return props.setLoopEnd;
-      }
-
-
-      return data.sequencerLoopEnd;
+      return props.userLoopEnd ?? (props.isRecording ? data.displayLoopEnd : data.sequencerLoopEnd);
     });
 
     const loopStart = computed(() => {
-      return data.userLoopStart || 0;
+      return props.userLoopStart ?? 0;
     });
 
     function cycleSnap() {
@@ -243,23 +250,30 @@ export default createComponent({
 
     function seek(beat: number) {
       props.transport.beat = beat;
-      doUpdate();
+      update(props, context, 'cursorPosition', beat);
     }
 
     function doUpdate() {
       if (props.transport.state === 'started') { requestAnimationFrame(doUpdate); }
-      data.cursorPosition = props.transport.beat;
+      update(props, context, 'cursorPosition', props.transport.beat);
     }
 
     function onScrollX() {
       if (scrollX.value) {
-        data.scrollLeft = scrollX.value.scrollLeft;
+        update(props, context, 'scrollLeft', scrollX.value.scrollLeft);
+      }
+    }
+
+    function onTimelineScroll(scroll: number) {
+      if (scrollXVue.value) {
+        scrollXVue.value.$el.scrollLeft = scroll;
+        update(props, context, 'scrollLeft', scroll);
       }
     }
 
     function onScrollY() {
       if (scrollY.value) {
-        data.scrollTop = scrollY.value.scrollTop;
+        update(props, context, 'scrollTop', scrollY.value.scrollTop);
       }
     }
 
@@ -269,6 +283,14 @@ export default createComponent({
 
     function setRowHeight(rowHeight: number) {
       update(props, context, 'rowHeight', rowHeight);
+    }
+
+    function setUserLoopEnd(value: number) {
+      update(props, context, 'userLoopEnd', value);
+    }
+
+    function setUserLoopStart(value: number) {
+      update(props, context, 'userLoopStart', value);
     }
 
     watch(loopEnd, () => {
@@ -282,8 +304,8 @@ export default createComponent({
     });
 
     watch(() => props.transport, () => {
-      data.userLoopStart = null;
-      data.userLoopEnd = null;
+      update(props, context, 'userLoopStart', undefined);
+      update(props, context, 'userLoopEnd', undefined);
     }, { lazy: true });
 
     watch(() => props.play, () => {
@@ -308,7 +330,10 @@ export default createComponent({
       seek,
       onScrollX,
       setRowHeight,
+      onTimelineScroll,
       pxPerStep,
+      setUserLoopEnd,
+      setUserLoopStart,
       listeners: context.listeners,
       selectTool: (tool: SequencerTool) => {
         update(props, context, 'tool', tool);

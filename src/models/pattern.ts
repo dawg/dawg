@@ -4,41 +4,50 @@ import * as Audio from '@/lib/audio';
 import { Serializable } from '@/models/serializable';
 import { Score, ScoreType } from '@/models/score';
 import { BuildingBlock } from '@/models/block';
+import * as oly from '@/lib/olyger';
 
-const PatternTypeRequired = t.type({
+export const PatternType = t.type({
   id: t.string,
   name: t.string,
-});
-
-const PatternTypePartial = t.partial({
   scores: t.array(ScoreType),
 });
 
-export const PatternType = t.intersection([PatternTypeRequired, PatternTypePartial]);
-
 export type IPattern = t.TypeOf<typeof PatternType>;
 
-export class Pattern extends BuildingBlock implements Serializable<IPattern> {
+export class Pattern implements BuildingBlock, Serializable<IPattern> {
   public static create(name: string) {
-    return new Pattern({ name, id: uuid.v4() }, new Audio.Transport(), []);
+    return new Pattern({ name, id: uuid.v4(), scores: [] }, new Audio.Transport(), []);
   }
-  public id: string;
-  public name: string;
+
+  public readonly id: string;
+  public readonly name: oly.OlyRef<string>;
 
   constructor(i: IPattern, public transport: Audio.Transport, public scores: Score[]) {
-    super();
     this.id = i.id;
-    this.name = i.name;
-    this.scores = scores;
-  }
+    this.name = oly.olyRef(i.name);
+    const olyScores = oly.olyArr(scores);
 
-  public dispose() {
-    this.scores.forEach((score) => score.dispose());
+    olyScores.onDidRemove(({ items, subscriptions }) => {
+      items.map((score) => {
+        subscriptions.push({
+          execute: () => {
+            const disposers = score.notes.map((note) => note.remove());
+            return {
+              undo: () => {
+                disposers.forEach((disposer) => disposer.dispose());
+              },
+            };
+          },
+        });
+      });
+    });
+
+    this.scores = scores;
   }
 
   public serialize() {
     return {
-      name: this.name,
+      name: this.name.value,
       id: this.id,
       scores: this.scores.map((score) => score.serialize()),
     };

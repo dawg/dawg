@@ -25,7 +25,7 @@ export default createComponent({
 
     const notes = computed(() => {
       const allNotes: ScheduledNote[] = [];
-      return allNotes.concat(...props.element.element.scores.map((score) => score.notes.l.slice()));
+      return allNotes.concat(...props.element.element.scores.map((score) => score.notes.slice()));
     });
 
     const scoreStyle = computed(() => {

@@ -57,13 +57,122 @@
 
 <script lang="ts">
 import { Directions, Nullable, useResponsive, update } from '@/lib/vutils';
-import { range, Mouse } from '@/lib/std';
+import { range, Mouse, Disposer, keys } from '@/lib/std';
 import * as dawg from '@/dawg';
-import { createComponent, computed, ref, watch } from '@vue/composition-api';
-import { addEventListeners } from '../lib/events';
+import { createComponent, computed, ref, watch, Ref } from '@vue/composition-api';
+import { addEventListener, addEventListeners } from '@/lib/events';
 import { calculateSimpleSnap, doSnap } from '@/utils';
 
 type Location = 'start' | 'end' | 'center';
+
+interface Levels {
+  8: number;
+  15: number;
+  30: number;
+}
+
+const defaults: Levels = {
+  8: 4,
+  15: 2,
+  30: 1,
+};
+
+// FIXME this could easily become more generalizable in the future and used in other locations
+const useAutoDrag = (
+  el: Ref<Element | undefined>,
+  onDidScroll: (scroll: number) => void,
+  levels: Partial<Levels> = {},
+  opts: { interval?: number, stop?: number } = {},
+) => {
+  const levs: Levels = {
+    8: levels['8'] ?? defaults['8'],
+    15: levels['15'] ?? defaults['15'],
+    30: levels['30'] ?? defaults['30'],
+  };
+
+  const interval = opts.interval ?? 20;
+  const stop = opts.stop ?? 10;
+
+  const doScroll = (px: number) => {
+    let done = false;
+
+    const helper = () => {
+      if (!el.value) {
+        return;
+      }
+
+      onDidScroll(px);
+
+      if (!done) {
+        setTimeout(helper, interval);
+      }
+    };
+
+    helper();
+
+    return {
+      dispose: () => {
+        done = true;
+      },
+    };
+  };
+
+  let previous: { disposer: Disposer, px: number } | undefined;
+  return {
+    onDidMouseMove: (e: MouseEvent) => {
+      if (!el.value) {
+        if (previous) {
+          previous.disposer.dispose();
+        }
+
+        return;
+      }
+
+      const rect = el.value.getBoundingClientRect();
+      const { x1, x2 } = { x1: rect.left, x2: rect.left + rect.width };
+
+      let px: number | undefined;
+      for (const key of keys(levs)) {
+        const limit = +key;
+        if (e.clientX - x1 <= limit) {
+          px = -levs[key];
+          break;
+        }
+
+        if (x2 - e.clientX <= limit) {
+          px = levs[key];
+          break;
+        }
+      }
+
+      // If we don't do this it becomes jerky (ie. stop and go).
+      // The idea: once scrolling the user needs to move several pixels in the opposite direction
+      // to stop the scrolling.
+      if (!px && previous) {
+        if (previous.px < 0 && e.clientX - x1 >= stop) {
+          previous.disposer.dispose();
+        }
+
+        if (previous.px > 0 && x2 - e.clientX >= stop) {
+          previous.disposer.dispose();
+        }
+      }
+
+      if (px && (!previous || previous.px !== px)) {
+        if (previous) {
+          previous.disposer.dispose();
+        }
+
+        previous = { disposer: doScroll(px), px };
+      }
+    },
+    onDidMouseUp: () => {
+      if (previous) {
+        previous.disposer.dispose();
+      }
+    },
+  };
+};
 
 export default createComponent({
   props: {
@@ -77,8 +186,8 @@ export default createComponent({
     minSnap: { type: Number, required: true },
     snap: { type: Number, required: true },
     detail: { type: String as () => 'step' | 'beat' | 'measure', default: 'step' },
-    setLoopStart: Number,
-    setLoopEnd: Number,
+    setLoopStart: { type: Number, required: false },
+    setLoopEnd: { type: Number, required: false },
   },
   setup(props, context) {
     const { width, height, observe } = useResponsive();
@@ -88,6 +197,14 @@ export default createComponent({
       if (el.value) {
         observe(el.value);
       }
+    });
+
+    const { onDidMouseMove, onDidMouseUp } = useAutoDrag(el, (px) => {
+      if (props.scrollLeft + px < 0) {
+        return;
+      }
+
+      context.emit('scroll', props.scrollLeft + px);
     });
 
     const pxPerStep = computed(() => {
@@ -208,8 +325,16 @@ export default createComponent({
         }
 
         const d2 = addEventListeners({
-          mousemove,
+          mousemove: (event) => {
+            onDidMouseMove(event);
+            mousemove(event);
+          },
           mouseup: () => {
+            if (props.setLoopStart === props.setLoopEnd) {
+              remove();
+            }
+
+            onDidMouseUp();
             d2.dispose();
           },
         });

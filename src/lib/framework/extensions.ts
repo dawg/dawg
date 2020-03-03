@@ -4,8 +4,10 @@ import { VueConstructor } from 'vue';
 
 export type StateType = t.Mixed;
 
+export type TypeOrOptions = StateType | FieldOptions<StateType>;
+
 export interface ExtensionProps {
-  [key: string]: StateType | FieldOptions<any>;
+  [key: string]: TypeOrOptions;
 }
 
 export interface FieldOptions<T extends StateType> {

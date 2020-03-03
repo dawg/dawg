@@ -3,13 +3,16 @@ import * as Audio from '@/lib/audio';
 import uuid from 'uuid';
 import * as t from '@/lib/io';
 import { BuildingBlock } from '@/models/block';
+import * as oly from '@/lib/olyger';
+import { GraphNode } from '@/node';
+import { useSignal } from '@/utils';
 
 export const InstrumentType = t.intersection([
   t.type({
     name: t.string,
   }),
   t.partial({
-    channel: t.union([t.null, t.number]),
+    channel: t.number,
     id: t.string,
     pan: t.number,
     volume: t.number,
@@ -19,102 +22,89 @@ export const InstrumentType = t.intersection([
 
 export type IInstrument = t.TypeOf<typeof InstrumentType>;
 
-export abstract class Instrument<T, V extends string> extends BuildingBlock {
-  public name: string;
-  public id: string;
+export abstract class Instrument<T, V extends string> implements BuildingBlock {
+  public readonly name: oly.OlyRef<string>;
+  public readonly id: string;
 
   /**
    * A type variable. For example, oscillator or soundfont.
    */
-  public abstract type: V;
+  public readonly type: oly.OlyRef<V>;
 
   /**
    * All of the possible options.
    */
-  public abstract types: V[];
+  public types: V[];
 
-  public channel?: number;
-  public destination: Tone.AudioNode | null = Tone.Master;
+  /**
+   * The channel of the instrument, starting from 0. Undefined means it is connected directly to master.
+   */
+  public readonly channel: oly.OlyRef<number | undefined>;
 
-  protected source: Audio.Source<T> | null;
-  private muted: boolean;
-  // tslint:disable-next-line:member-ordering
-  private panner = new Tone.Panner().toMaster();
-  private connected = true;
+  public readonly output = new GraphNode(new Tone.Panner(), 'Panner');
+  public readonly input = new GraphNode(new Tone.Gain(), 'Gain');
+  public readonly pan: oly.OlyRef<number>;
+  public readonly volume: oly.OlyRef<number>;
 
-  // tslint:disable-next-line:member-ordering
-  public pan = new Audio.Signal(this.panner.pan, -1, 1);
+  protected source: GraphNode<Audio.Source<T> | null>;
 
-  private gainNode = new Tone.Gain().connect(this.panner);
+  // private readonly panSignal: Audio.Signal;
+  // private readonly volumeSignal: Audio.Signal;
 
-  // tslint:disable-next-line:member-ordering
-  public volume = new Audio.Signal(this.gainNode.gain, 0, 1);
+  constructor(
+    type: V,
+    types: V[],
+    source: Audio.Source<T> | null,
+    i: IInstrument,
+  ) {
+    this.type = oly.olyRef(type);
+    this.types = types;
+    this.name = oly.olyRef(i.name);
+    this.id = i.id ?? uuid.v4();
+    this.channel = oly.olyRef(i.channel);
+    this.input.mute = !!i.mute;
 
-  constructor(source: Audio.Source<T> | null, destination: Tone.AudioNode, i: IInstrument) {
-    super();
-    this.source = source;
-    if (source) {
-      source.connect(this.gainNode);
-    }
+    const {
+      signal: panSignal,
+      ref: pan,
+    } = useSignal(new Audio.Signal(this.output.node.pan, -1, 1), i.pan ?? 0);
+    this.pan = pan;
+    // this.panSignal = panSignal;
 
-    this.name = i.name;
-    this.id = i.id || uuid.v4();
-    this.channel = i.channel === null ? undefined : i.channel;
-    this.muted = !!i.mute;
-    this.mute = !!i.mute;
-    this.pan.value = i.pan || 0;
-    this.volume.value = i.volume === undefined ? 0.8 : i.volume;
-    this.connect(destination);
-  }
+    const {
+      signal: volumeSignal,
+      ref: volume,
+    } = useSignal(new Audio.Signal(this.input.node.gain, 0, 1), i.volume ?? 0.8);
+    this.volume = volume;
+    // this.volumeSignal = volumeSignal;
 
-  get mute() {
-    return this.muted;
-  }
-
-  set mute(mute: boolean) {
-    this.muted = mute;
-    this.checkConnection();
+    this.source = new GraphNode(source, this.name.value);
+    this.source.connect(this.input);
+    this.input.connect(this.output);
   }
 
   public triggerAttackRelease(note: string, duration: Audio.Time, time: number, velocity?: number) {
-    if (this.source) {
-      this.source.triggerAttackRelease(note, duration, time, velocity);
+    if (this.source.node) {
+      this.source.node.triggerAttackRelease(note, duration, time, velocity);
     }
   }
 
   public triggerRelease(note: string) {
-    if (this.source) {
-      this.source.triggerRelease(note);
+    if (this.source.node) {
+      this.source.node.triggerRelease(note);
     }
   }
 
   public triggerAttack(note: string, velocity?: number) {
-    if (this.source) {
-      this.source.triggerAttack(note, undefined, velocity);
-    }
-  }
-
-  public connect(effect: Tone.AudioNode) {
-    this.panner.connect(effect);
-    this.destination = effect;
-    this.checkConnection();
-  }
-
-  public disconnect() {
-    if (this.destination) {
-      this.panner.disconnect(this.destination);
-      this.destination = null;
+    if (this.source.node) {
+      this.source.node.triggerAttack(note, undefined, velocity);
     }
   }
 
   public set<K extends keyof T>(o: { key: K, value: T[K] }) {
-    if (this.source) {
-      this.source.set(o);
+    if (this.source.node) {
+      this.source.node.set(o);
     }
-  }
-
-  public dispose() {
-    this.disconnect();
   }
 
   /**
@@ -125,27 +115,6 @@ export abstract class Instrument<T, V extends string> extends BuildingBlock {
   }
 
   protected setSource(source: Audio.Source<T> | null) {
-    if (this.source) {
-      this.source.disconnect(this.gainNode);
-    }
-
-    this.source = source;
-    if (this.source) {
-      this.source.connect(this.gainNode);
-    }
-  }
-
-  private checkConnection() {
-    if (!this.destination) {
-      return;
-    }
-
-    if (this.mute && this.connected) {
-      this.panner.disconnect(this.destination);
-      this.connected = false;
-    } else if (!this.mute && !this.connected) {
-      this.panner.connect(this.destination);
-      this.connected = true;
-    }
+    this.source.replace(source);
   }
 }

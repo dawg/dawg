@@ -25,6 +25,7 @@ import { Provider, bus } from '@/core/busy/helpers';
 import * as framework from '@/lib/framework';
 import { createComponent, computed, onMounted, onUnmounted } from '@vue/composition-api';
 import { Disposer } from '@/lib/std';
+import { useSubscriptions } from '@/lib/vutils';
 
 export default createComponent({
   name: 'BusySignal',
@@ -35,6 +36,7 @@ export default createComponent({
     const iconSize = 7;
     const providers: Provider[] = [];
     const disposers: Disposer[] = [];
+    const subscriptions = useSubscriptions();
 
     const sizeStyle = computed(() => {
       return {
@@ -74,17 +76,7 @@ export default createComponent({
       };
     });
 
-    // TODO add function helper for this
-    let disposer: Disposer | undefined;
-    onMounted(() => {
-      disposer = bus.on('start', addProvider);
-    });
-
-    onUnmounted(() => {
-      if (disposer) {
-        disposer.dispose();
-      }
-    });
+    subscriptions.push(bus.on('start', addProvider));
 
     function addProvider(provider: Provider) {
       if (providers.includes(provider)) {

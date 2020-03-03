@@ -7,8 +7,6 @@
         style="width: 100px"
         :play="play"
         :channel="channel"
-        @add="addEffect(channel, $event)"
-        @delete="deleteEffect(channel, $event)"
         @select="openEffect"
       ></channel>
     </div>
@@ -35,10 +33,6 @@ export default createComponent({
   setup(props, context) {
     const openedEffect = ref<AnyEffect>();
 
-    function addEffect(channel: C, { effect, index }: { effect: AnyEffect, index: number }) {
-      context.emit('add', { channel, effect, index });
-    }
-
     function openEffect(effect: AnyEffect) {
       if (effect === openedEffect.value) {
         openedEffect.value = undefined;
@@ -47,15 +41,9 @@ export default createComponent({
       }
     }
 
-    function deleteEffect(channel: C, effect: AnyEffect) {
-      context.emit('delete', { channel, effect });
-    }
-
     return {
       openedEffect,
-      addEffect,
       openEffect,
-      deleteEffect,
     };
   },
 });

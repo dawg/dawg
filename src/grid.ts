@@ -1,13 +1,12 @@
 import { Ref, ref, computed } from '@vue/composition-api';
-import { ScheduledElement, Sequence } from '@/models';
+import { ScheduledElement } from '@/models';
 import { addEventListeners } from '@/lib/events';
-import { Keys, Disposer } from '@/lib/std';
+import { Keys, Disposer, Mouse } from '@/lib/std';
 import { calculateSimpleSnap, slice, doSnap } from '@/utils';
 import { SchedulablePrototype } from '@/models/schedulable';
-import * as history from '@/lib/framework/history';
 import { getLogger } from '@/lib/log';
 
-const logger = getLogger('grid', { level: 'debug' });
+const logger = getLogger('grid');
 
 // For more information see the following link:
 // https://stackoverflow.com/questions/4270485/drawing-lines-on-html-page
@@ -43,7 +42,7 @@ type Element = ScheduledElement<any, any, any>;
 export type SequencerTool = 'pointer' | 'slicer';
 
 export interface GridOpts<T extends Element> {
-  sequence: Sequence<T>;
+  sequence: T[];
   pxPerBeat: Ref<number>;
   pxPerRow: Ref<number>;
   snap: Ref<number>;
@@ -135,7 +134,7 @@ export const createGrid = <T extends Element>(
           const { x: x2, y: y2 } = calculatePos(event);
 
           const toAdd: T[] = [];
-          sequence.l.forEach((element) => {
+          sequence.forEach((element) => {
             const result = slice({
               row: element.row.value,
               time: element.time.value,
@@ -166,7 +165,7 @@ export const createGrid = <T extends Element>(
             }
           });
 
-          sequence.add(...toAdd);
+          sequence.push(...toAdd);
           sliceStyle.value = null;
 
           disposers.delete(disposer);
@@ -181,7 +180,7 @@ export const createGrid = <T extends Element>(
   const checkLoopEnd = () => {
     // Set the minimum to 1 measure!
     const maxTime = Math.max(
-      ...sequence.l.map((item) => item.time.value + item.duration.value),
+      ...sequence.map((item) => item.time.value + item.duration.value),
       beatsPerMeasure.value,
     );
 
@@ -236,7 +235,7 @@ export const createGrid = <T extends Element>(
     el.row.value = row;
     el.time.value = time;
 
-    opts.sequence.add(el);
+    opts.sequence.push(el);
     checkLoopEnd();
 
     return el;
@@ -248,7 +247,7 @@ export const createGrid = <T extends Element>(
       return;
     }
 
-    const el = sequence.l[i];
+    const el = sequence[i];
     const rect = opts.getPosition();
 
     const time = doSnap({
@@ -293,36 +292,25 @@ export const createGrid = <T extends Element>(
       return;
     }
 
-    const doMove = (o: { timeDiff: number, rowDiff: number }) => {
-      if (canMoveTime) {
-        // TODO is this a bug?
-        initialMoveBeat = time;
-        itemsToMove.forEach((item) => {
-          item.time.value += o.timeDiff;
-        });
 
-        checkLoopEnd();
-      }
+    if (canMoveTime) {
+      initialMoveBeat = time;
+      itemsToMove.forEach((item) => {
+        item.time.value += timeDiff;
+      });
 
-      if (canMoveRow) {
-        itemsToMove.forEach((item) => {
-          item.row.value = item.row.value + o.rowDiff;
-        });
-      }
-    };
+      checkLoopEnd();
+    }
 
-    history.execute({
-      execute: () => {
-        doMove({ timeDiff, rowDiff });
-      },
-      undo: () => {
-        doMove({ timeDiff: -timeDiff, rowDiff: -rowDiff });
-      },
-    });
+    if (canMoveRow) {
+      itemsToMove.forEach((item) => {
+        item.row.value = item.row.value + rowDiff;
+      });
+    }
   };
 
   const updateAttr = (i: number, value: number, attr: 'offset' | 'duration') => {
-    const el = sequence.l[i];
+    const el = sequence[i];
     const diff = value - el[attr].value;
 
     let toUpdate: readonly T[];
@@ -344,7 +332,11 @@ export const createGrid = <T extends Element>(
   };
 
   const select = (e: MouseEvent, i: number) => {
-    const item = sequence.l[i];
+    if (e.button !== Mouse.LEFT) {
+      return;
+    }
+
+    const item = sequence[i];
     const elIsSelected = selected.includes(item);
 
     if (!elIsSelected) {
@@ -361,26 +353,29 @@ export const createGrid = <T extends Element>(
         selected.push(newItem as T);
       }
 
-      sequence.add(newItem as T);
+      sequence.push(newItem as T);
     };
 
     if (holdingShift) {
       // If selected, copy all selected. If not, just copy the item that was clicked.
       if (elIsSelected) {
+        const copy = selected.slice();
+
+        // First, clear the selected
+        // We do this as the new elements will actually be the ones that are selected
+        selected.splice(0, selected.length);
+
         // selected is all all selected except the element you pressed on
-        selected.forEach((el) => {
+        copy.forEach((el) => {
           if (el === item) {
             // A copy of `item` will be created at this index which becomes the target for moving
-            i = sequence.l.length;
+            i = sequence.length;
           }
 
-          // Set old item selected -> false and new item selected -> true since
-          // the new items will be placed over the old elements
-          sDel(el);
           createItem(el, true);
         });
       } else {
-        i = sequence.l.length;
+        i = sequence.length;
         createItem(item, false);
       }
     }
@@ -417,7 +412,7 @@ export const createGrid = <T extends Element>(
           holdingShift = true;
         } else if (e.keyCode === Keys.Delete || e.keyCode === Keys.Backspace) {
           for (const el of selected) {
-            const i = sequence.l.indexOf(el);
+            const i = sequence.indexOf(el);
             if (i === -1) {
               continue;
             }
@@ -435,8 +430,7 @@ export const createGrid = <T extends Element>(
   };
 
   const removeAtIndex = (i: number) => {
-    const el = sequence.l[i];
-    el.remove();
+    sequence.splice(i, 1);
   };
 
   const remove = (i: number, e: MouseEvent) => {
@@ -483,7 +477,7 @@ export const createGrid = <T extends Element>(
     const maxBeat = (left + width) / pxPerBeat.value;
     const maxRow = (top + height) / pxPerRow.value;
 
-    sequence.l.forEach((item) => {
+    sequence.forEach((item) => {
       // Check if there is any overlap between the rectangles
       // https://www.geeksforgeeks.org/find-two-rectangles-overlap/
       if (minRow > item.row.value + 1 || item.row.value > maxRow) {
@@ -538,7 +532,7 @@ export const createGrid = <T extends Element>(
       }
     },
     mousedown,
-    setSequence(s: Sequence<T>) {
+    setSequence(s: T[]) {
       sequence = s;
       selected.splice(0, selected.length);
       checkLoopEnd();

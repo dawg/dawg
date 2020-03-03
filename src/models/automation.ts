@@ -1,5 +1,4 @@
 import * as t from '@/lib/io';
-import { PointType, IPoint, Point } from '@/models/automation/point';
 import uuid from 'uuid';
 import * as Audio from '@/lib/audio';
 import { Serializable } from '@/models/serializable';
@@ -7,6 +6,12 @@ import { Channel } from '@/models/channel';
 import { Instrument } from '@/models/instrument/instrument';
 import { Beats } from '@/models/types';
 import { BuildingBlock } from '@/models/block';
+import * as oly from '@/lib/olyger';
+
+export const PointType = t.type({
+  time: t.number,
+  value: t.number,
+});
 
 export const AutomationType = t.type({
   context: t.union([t.literal('channel'), t.literal('instrument')]),
@@ -17,12 +22,23 @@ export const AutomationType = t.type({
   points: t.array(PointType),
 });
 
+export interface Point {
+  time: oly.OlyRef<number>;
+  value: oly.OlyRef<number>;
+}
+
+interface InternalPoint {
+  time: oly.OlyRef<number>;
+  value: oly.OlyRef<number>;
+  controller: Audio.PointController;
+}
+
 export type IAutomation = t.TypeOf<typeof AutomationType>;
 
 export type ClipContext = IAutomation['context'];
 export type Automatable = Channel | Instrument<any, any>;
 
-export class AutomationClip extends BuildingBlock implements Serializable<IAutomation> {
+export class AutomationClip implements Serializable<IAutomation>, BuildingBlock {
   public static create(length: number, signal: Audio.Signal, context: ClipContext, id: string, attr: string) {
     const ac = new AutomationClip(signal, {
       id: uuid.v4(),
@@ -45,29 +61,100 @@ export class AutomationClip extends BuildingBlock implements Serializable<IAutom
     return ac;
   }
 
-  public points: Point[] = [];
-  public context: ClipContext;
-  public contextId: string;
-  public attr: string;
-  public id: string;
-  public readonly name: string;
+  // tslint:disable
+  private readonly _points: oly.OlyArr<InternalPoint>;
+  public readonly points: Point[];
+  public readonly context: ClipContext;
+  public readonly contextId: string;
+  public readonly attr: string;
+  public readonly id: string;
+  public readonly name: oly.OlyRef<string>;
+  public readonly control: Audio.Controller;
+  // tslint:enable
 
-  public control: Audio.Controller;
-  private signal: Audio.Signal;
+  private readonly signal: Audio.Signal;
 
   constructor(signal: Audio.Signal, i: IAutomation) {
-    super();
     this.context = i.context;
     this.contextId = i.contextId;
     this.attr = i.attr;
     this.id = i.id;
-    this.name = i.name;
+    this.name = oly.olyRef(i.name);
 
     this.signal = signal;
     this.control = new Audio.Controller(signal);
 
-    this.points = i.points.map((point) => {
-      return this.schedule(point);
+    this.points = this._points = oly.olyArr(i.points.map((p) => {
+      const point: Point = { time: oly.olyRef(p.time), value: oly.olyRef(p.value) };
+      return {
+        ...point,
+        controller: this.schedule(point),
+      };
+    }));
+
+    const watch = (items: InternalPoint[]) => {
+      items.forEach((point) => {
+        point.time.onDidChange(({ subscriptions, newValue, oldValue }) => {
+          subscriptions.push({
+            execute: () => {
+              point.controller.setTime(newValue);
+              return {
+                undo: () => {
+                  point.controller.setTime(oldValue);
+                },
+              };
+            },
+          });
+        });
+
+        point.value.onDidChange(({ subscriptions, newValue, oldValue }) => {
+          subscriptions.push({
+            execute: () => {
+              point.controller.setValue(newValue);
+              return {
+                undo: () => {
+                  point.controller.setValue(oldValue);
+                },
+              };
+            },
+          });
+        });
+      });
+    };
+
+    watch(this._points);
+    this._points.onDidAdd(({ items, subscriptions }) => {
+      subscriptions.push({
+        execute: () => {
+          items.forEach((item) => {
+            item.controller = this.schedule(item);
+          });
+
+          return {
+            undo: () => {
+              items.forEach((item) => {
+                item.controller.remove();
+              });
+            },
+          };
+        },
+      });
+
+      watch(items);
+    });
+
+    this._points.onDidRemove(({ items, subscriptions }) => {
+      subscriptions.push({
+        execute: () => {
+          const disposers = items.map((item) => item.controller.remove());
+
+          return {
+            undo: () => {
+              disposers.forEach((disposer) => disposer.dispose());
+            },
+          };
+        },
+      });
     });
   }
 
@@ -76,7 +163,7 @@ export class AutomationClip extends BuildingBlock implements Serializable<IAutom
       return 0;
     }
 
-    return this.points[this.points.length - 1].time;
+    return this.points[this.points.length - 1].time.value;
   }
 
   get minValue() {
@@ -87,26 +174,11 @@ export class AutomationClip extends BuildingBlock implements Serializable<IAutom
     return this.signal.maxValue;
   }
 
-  public setValue(index: number, value: number) {
-    const point = this.points[index];
-    this.control.change(point.eventId, value);
-    this.points[index].value = value;
-  }
-
-  public setTime(index: number, time: Beats) {
-    const point = this.points[index];
-    this.control.setTime(point.eventId, time);
-    this.points[index].time = time;
-  }
-
-  public remove(i: number) {
-    const point = this.points[i];
-    this.control.remove(point.eventId);
-    this.points.splice(i, 1);
-  }
-
-  public add(time: Beats, value: number) {
-    this.points.push(this.schedule({ time, value }));
+  public add(p: { time: number, value: number }) {
+    this.points.push({
+      time: oly.olyRef(p.time),
+      value: oly.olyRef(p.value),
+    });
   }
 
   public serialize() {
@@ -115,8 +187,8 @@ export class AutomationClip extends BuildingBlock implements Serializable<IAutom
       contextId: this.contextId,
       attr: this.attr,
       id: this.id,
-      name: this.name,
-      points: this.points.map((point) => point.serialize()),
+      name: this.name.value,
+      points: this.points.map((point) => ({ time: point.time.value, value: point.value.value })),
     };
   }
 
@@ -124,9 +196,7 @@ export class AutomationClip extends BuildingBlock implements Serializable<IAutom
     this.control.dispose();
   }
 
-  private schedule(iPoint: IPoint) {
-    const eventId = this.control.add(iPoint.time, iPoint.value);
-    const point = new Point(iPoint, eventId);
-    return point;
+  private schedule(iPoint: Point) {
+    return this.control.add(iPoint.time.value, iPoint.value.value);
   }
 }

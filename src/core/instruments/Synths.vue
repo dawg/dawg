@@ -7,8 +7,7 @@
       @open="openScore(i)"
       :instrument="instrument"
       :notes="getNotes(instrument)"
-      :channel="instrument.channel"
-      @update:channel="project.setChannel({ instrument, channel: $event })"
+      :channel.sync="instrument.channel.value"
     ></synth>
   </div>
 </template>
@@ -42,7 +41,7 @@ export default createComponent({
 
     function getNotes(instrument: Instrument<any, any>) {
       if (instrument.id in scoreLookup.value) {
-        return scoreLookup.value[instrument.id].notes.l.slice();
+        return scoreLookup.value[instrument.id].notes.slice();
       }
     }
 
@@ -56,14 +55,15 @@ export default createComponent({
 
       const instrument = props.instruments[i];
       if (!scoreLookup.value.hasOwnProperty(instrument.id)) {
-        project.addScore({ pattern: props.selectedPattern, instrument });
+        const newScore = Score.create(props.selectedPattern.transport, instrument);
+        props.selectedPattern.scores.push(newScore);
       }
 
       update(props, context, 'selectedScore', scoreLookup.value[instrument.id]);
     }
 
     function deleteInstrument(i: number) {
-      project.deleteInstrument(i);
+      project.instruments.splice(i, 1);
     }
 
     watch(() => props.selectedPattern, () => {

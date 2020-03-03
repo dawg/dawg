@@ -1,4 +1,8 @@
 import { expect } from '@/lib/testing';
+import Vue from 'vue';
+import VueCompositionApi from '@vue/composition-api';
+Vue.use(VueCompositionApi);
+
 import { calculateSnap, ScrollerOpts, calculateScroll, getIntersection, slice, Line } from '@/utils';
 
 const calculate = (p: { snap?: number, current?: number, new?: number, elOffset?: number, scrollOffset?: number }) => {

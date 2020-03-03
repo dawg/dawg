@@ -17,6 +17,8 @@
 import { ScheduledAutomation, createAutomationPrototype } from '@/models';
 import * as dawg from '@/dawg';
 import { createComponent, computed } from '@vue/composition-api';
+import * as oly from '@/lib/olyger';
+import { useSubscriptions } from '@/lib/vutils';
 
 export default createComponent({
   name: 'AutomationClips',
@@ -37,7 +39,7 @@ export default createComponent({
         items: [
           {
             text: 'Delete',
-            callback: () => dawg.project.removeAutomation(i),
+            callback: () => dawg.project.automationClips.splice(i, 1),
           },
         ],
       });

@@ -48,7 +48,7 @@ export default createComponent({
       contenteditable,
       click,
       remove: (i: number) => {
-        context.emit('remove', i);
+        props.patterns.splice(i, 1);
       },
     };
   },

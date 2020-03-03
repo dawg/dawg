@@ -19,21 +19,19 @@
         class="m-3 flex-shrink-0"
         text-color="white"
         :stroke-width="strokeWidth"
-        :value="instrument.volume.raw"
-        @input="volumeInput"
+        v-model="instrument.volume.value"
         @automate="automateVolume"
         name="Volume"
-        :min="instrument.volume.minValue"
-        :max="instrument.volume.maxValue"
+        :min="0"
+        :max="1"
       ></knob>
       <pan
         class="flex-shrink-0"
-        :value="instrument.pan.raw"
-        @input="panInput"
+        v-model="instrument.pan.value"
         @automate="automatePan"
       ></pan>
       <editable
-        v-model="instrument.name"
+        v-model="instrument.name.value"
         :contenteditable.sync="contenteditable"
         disableDblClick
         class="text-default name flex-shrink-0"
@@ -57,7 +55,7 @@
       <dg-select
         class="my-2 mx-5 grid"
         :options="instrument.types"
-        v-model="instrument.type"
+        v-model="instrument.type.value"
       ></dg-select>
     </div>
   </div>
@@ -67,7 +65,7 @@
 import DotButton from '@/components/DotButton.vue';
 import MiniScore from '@/components/MiniScore.vue';
 import ChannelSelect from '@/components/ChannelSelect.vue';
-import { ScheduledNote, Instrument, Sequence } from '@/models';
+import { ScheduledNote, Instrument } from '@/models';
 import { update } from '@/lib/vutils';
 import { createComponent, computed, watch, ref } from '@vue/composition-api';
 import * as framework from '@/lib/framework';
@@ -82,21 +80,13 @@ export default createComponent({
     channel: Number as () => number | undefined,
   },
   setup(props, context) {
-    const active = ref(!props.instrument.mute);
+    const active = ref(!props.instrument.input.mute);
     const expand = ref(false);
     const strokeWidth = 2.5;
     const contenteditable = ref(false);
 
     function setChannel(v: number | undefined) {
       update(props, context, 'channel', v);
-    }
-
-    function volumeInput(v: number) {
-      props.instrument.volume.value = v;
-    }
-
-    function panInput(v: number) {
-      props.instrument.pan.value = v;
     }
 
     function automateVolume() {
@@ -108,7 +98,7 @@ export default createComponent({
     }
 
     watch(active, () => {
-      props.instrument.mute = !active.value;
+      props.instrument.input.mute = !active.value;
     });
 
     function contextmenu(event: MouseEvent) {
@@ -136,8 +126,6 @@ export default createComponent({
       contextmenu,
       automatePan,
       automateVolume,
-      panInput,
-      volumeInput,
       setChannel,
       expand,
       strokeWidth,

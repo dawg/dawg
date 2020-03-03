@@ -2,9 +2,9 @@ import * as t from '@/lib/io';
 import uuid from 'uuid';
 import { Instrument } from '@/models/instrument/instrument';
 import { Serializable } from '@/models/serializable';
-import { createNotePrototype, ScheduledNoteType, ScheduledNote } from '@/models/schedulable';
+import { createNotePrototype, ScheduledNoteType, ScheduledNote, watchOlyArray } from '@/models/schedulable';
 import { Transport } from '@/lib/audio';
-import { Sequence, createSequence } from '@/models/sequence';
+import * as oly from '@/lib/olyger';
 
 const ScoreTypeRequired = t.type({
   instrumentId: t.string,
@@ -29,27 +29,23 @@ export class Score implements Serializable<IScore> {
   }
   public id: string;
   public instrumentId: string;
-  public notes: Sequence<ScheduledNote>;
+  public notes: ScheduledNote[];
 
   constructor(transport: Transport, public instrument: Instrument<any, any>, i: IScore) {
     this.id = i.id;
     this.instrumentId = i.instrumentId;
-    const notes = (i.notes || []).map((iNote) => {
+    const notes = oly.olyArr((i.notes || []).map((iNote) => {
       return createNotePrototype(iNote, this.instrument, { velocity: iNote.velocity })(transport).copy();
-    });
+    }));
 
-    this.notes = createSequence(notes);
+    this.notes = watchOlyArray(notes);
   }
 
   public serialize() {
     return {
       instrumentId: this.instrumentId,
       id: this.id,
-      notes: this.notes.l.map((note) => note.serialize()),
+      notes: this.notes.map((note) => note.serialize()),
     };
-  }
-
-  public dispose() {
-    this.notes.l.forEach((note) => note.removeNoHistory());
   }
 }

@@ -64,12 +64,12 @@ declare module 'tone' {
     dispose(): this;
   }
 
-  class AudioNode extends Tone {
-    toMaster(): this;
+  class AudioNode {
+    // toMaster(): this;
     disconnect(output: number | AudioNode): this;
-    chain(...nodes: AudioNode[]): this;
+    // chain(...nodes: AudioNode[]): this;
     connect(unit: Tone | AudioParam | AudioNode, outputNum?: number, inputNum?: number): this;
-    dispose(): void;
+    // dispose(): this;
   }
 
   class AutoPanner extends Effect {
@@ -449,8 +449,8 @@ declare module 'tone' {
   class MasterClass extends AudioNode {
     volume: Signal;
     mute: boolean;
-    receive(node: any): MasterClass; //todo: AudioNode | tone
-    send(node: any): MasterClass; //todo: AudioNode | tone
+    // receive(node: any): MasterClass; //todo: AudioNode | tone
+    // send(node: any): MasterClass; //todo: AudioNode | tone
   }
 
   class Max extends Signal {
@@ -701,7 +701,6 @@ declare module 'tone' {
     dispose(): this;
     load(url: string, callback?: (e: any) => any): Player;
     setLoopPoints(loopStart: _TimeArg, loopEnd: _TimeArg): Player;
-    toMaster(): this;
   }
 
   class PluckSynth extends Instrument {
@@ -849,7 +848,7 @@ declare module 'tone' {
     class State { }
   }
 
-  class Split extends Tone {
+  class Split extends AudioNode {
     left: Gain;
     right: Gain;
     dispose(): this;
@@ -1030,6 +1029,7 @@ declare module 'tone' {
   }
 
   class Volume extends AudioNode {
+    constructor(volume: number)
     volume: Signal;
     mute: boolean;
   }

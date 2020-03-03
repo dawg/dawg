@@ -45,7 +45,7 @@
     
     <div class="elements">
       <element-wrapper
-        v-for="(el, i) in tempElements"
+        v-for="(el, i) in sequence"
         :key="i"
         :time="el.time.value"
         :row="el.row.value"
@@ -121,7 +121,6 @@ import { range, reverse } from '@/lib/std';
 import { addEventListeners } from '@/lib/events';
 import { update } from '@/lib/vutils';
 import BeatLines from '@/components/BeatLines.vue';
-import { Sequence } from '@/models';
 import * as Audio from '@/lib/audio';
 import { Ghost } from '@/models/ghost';
 import { UnscheduledPrototype, ScheduledElement, SchedulablePrototype } from '@/models/schedulable';
@@ -129,14 +128,14 @@ import { createComponent, ref, computed, watch, onUnmounted, onMounted } from '@
 import { createGrid, SequencerTool } from '@/grid';
 import { getLogger } from '@/lib/log';
 
-const logger = getLogger('SequenceGrid', { level: 'trace' });
+const logger = getLogger('SequenceGrid', { level: 'silly' });
 
 export default createComponent({
   components: { BeatLines },
   props: {
     name: { type: String as () => string, required: true },
     rowHeight: { type: Number, required: true },
-    sequence: { type: Object as () => Sequence<ScheduledElement<any, any, any>>, required: true },
+    sequence: { type: Array as () => Array<ScheduledElement<any, any, any>>, required: true },
     ghosts: { type: Array as () => Ghost[] | null, default: null },
     snap: { type: Number, required: true },
     minSnap: { type: Number, required: true },
@@ -163,9 +162,9 @@ export default createComponent({
     scrollLeft: { type: Number, required: true },
     scrollTop: { type: Number, required: true },
 
-    // These values should only be set if there is a loop on the timeline
-    setLoopEnd: Number,
-    setLoopStart: Number,
+    // These values should only be set if there is a loop on the timeline by the user
+    setLoopEnd: { type: Number, required: false },
+    setLoopStart: { type: Number, required: false },
 
     getPosition: { type: Function as any as () => (() => { left: number, top: number }), required: true },
 
@@ -173,8 +172,6 @@ export default createComponent({
     prototype: { type: Function as any as () => SchedulablePrototype<any, any, any> },
   },
   setup(props, context) {
-    const tempElements: Array<ScheduledElement<any, any, any>> = [];
-
     const rows = ref<Vue>(null);
 
     const c = computed(() => (() => ''));
@@ -199,28 +196,7 @@ export default createComponent({
       }
     });
 
-    // Sometimes reactivity drives me insane... this is one of those times...
-    // For some reason, the array in the sequence (ie props.sequence.l) is NOT REACTIVE.
-    // e.g. when you add/remove things the UI does not update unless it is forced to re-render.
-    // Because it's really not worth my time I created tempElements and them hooked on the the
-    // add/remove events. For now, this is definitely an adequate solution. In the future,
-    // we may need to resolve this issue or refactor how we do sequences in general.
-    const d1 = props.sequence.onDidAddElement((el) => {
-      tempElements.push(el);
-    });
-
-    const d2 = props.sequence.onDidRemoveElement((el) => {
-      tempElements.splice(tempElements.indexOf(el), 1);
-    });
-
-    onUnmounted(() => {
-      d1.dispose();
-      d2.dispose();
-    });
-
     watch(() => props.sequence, () => {
-      tempElements.slice(0, tempElements.length);
-      tempElements.push(...props.sequence.l.slice());
       grid.setSequence(props.sequence);
     });
 
@@ -276,12 +252,12 @@ export default createComponent({
     }
 
     function open(e: MouseEvent, i: number) {
-      const item = props.sequence.l[i];
+      const item = props.sequence[i];
       context.emit('open', item);
     }
 
     function clickElement(i: number) {
-      update(props, context, 'prototype', props.sequence.l[i].copy);
+      update(props, context, 'prototype', props.sequence[i].copy);
     }
 
     async function handleDrop(prototype: UnscheduledPrototype, e: MouseEvent) {
@@ -300,7 +276,6 @@ export default createComponent({
     });
 
     return {
-      tempElements,
       rows,
       sequencerStyle,
       handleDrop,
