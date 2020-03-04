@@ -33,6 +33,8 @@ jobs:
           name: v${{ steps.get_version.outputs.VERSION }}
           body_path: changelogs/${{ steps.get_version.outputs.VERSION }}-CHANGELOG.md
           tag_name: v${{ steps.get_version.outputs.VERSION }}
+          # Always draft because something might go wrong during the build
+          draft: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Output Release URL File
@@ -73,7 +75,7 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 10.x
-      - run: npm ci
+      - run: npm ci --no-optional
       - run: npm run install-app-deps
 
       # https://github.com/electron-userland/electron-builder/issues/4176
