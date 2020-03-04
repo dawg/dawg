@@ -24,7 +24,7 @@ export default createComponent({
   components: { Synth },
   name: 'Synths',
   props: {
-    instruments: { type: Array as () => Array<Instrument<any, any>>, required: true },
+    instruments: { type: Array as () => Array<Instrument>, required: true },
     selectedScore: { type: Object as () => Score },
     selectedPattern: { type: Object as () => Pattern },
   },
@@ -39,7 +39,7 @@ export default createComponent({
       return lookup;
     });
 
-    function getNotes(instrument: Instrument<any, any>) {
+    function getNotes(instrument: Instrument) {
       if (instrument.id in scoreLookup.value) {
         return scoreLookup.value[instrument.id].notes.slice();
       }

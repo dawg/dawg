@@ -5,7 +5,7 @@ import * as Audio from '@/lib/audio';
 import { Serializable } from '@/models/serializable';
 import { Context } from '@/lib/audio/context';
 import { BuildingBlock } from '@/models/block';
-import { GraphNode } from '@/node';
+import { GraphNode } from '@/lib/audio/node';
 import * as oly from '@/lib/olyger';
 
 export const SampleType = t.type({

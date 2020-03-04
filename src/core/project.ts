@@ -37,7 +37,7 @@ import { loadBufferSync } from '@/lib/wav';
 import { notify } from '@/core/notify';
 import { getLogger } from '@/lib/log';
 import tmp from 'tmp';
-import { GraphNode, masterNode } from '@/node';
+import { GraphNode, masterNode } from '@/lib/audio/node';
 import * as framework from '@/lib/framework';
 import { remote } from 'electron';
 import { emitter, addEventListener } from '@/lib/events';
@@ -114,7 +114,7 @@ const load = (iProject: IProject): InitializationSuccess | InitializationError =
   const instruments = oly.olyArr(iProject.instruments.map((iInstrument) => {
     switch (iInstrument.instrument) {
       case 'soundfont':
-        return new Soundfont(Audio.Soundfont.load(iInstrument.soundfont), iInstrument);
+        return new Soundfont(new Audio.Soundfont(iInstrument.soundfont), iInstrument);
       case 'synth':
         return new Synth(iInstrument);
     }
@@ -202,6 +202,7 @@ const load = (iProject: IProject): InitializationSuccess | InitializationError =
 
         const clip = clipLookup[iElement.id];
         elements.push(createAutomationPrototype(iElement, clip, {})(mTransport).copy());
+        break;
       case 'pattern':
         if (!(iElement.id in patternLookup)) {
           return {
@@ -213,6 +214,7 @@ const load = (iProject: IProject): InitializationSuccess | InitializationError =
 
         const pattern = patternLookup[iElement.id];
         elements.push(createPatternPrototype(iElement, pattern, {})(mTransport).copy());
+        break;
       case 'sample':
         if (!(iElement.id in sampleLookup)) {
           return {
@@ -224,6 +226,7 @@ const load = (iProject: IProject): InitializationSuccess | InitializationError =
 
         const sample = sampleLookup[iElement.id];
         elements.push(createSamplePrototype(iElement, sample, {})(mTransport).copy());
+        break;
     }
   }
 
@@ -302,7 +305,7 @@ export const defineAPI = (i: LoadedProject) => {
 
   instruments.onDidRemove(({ items: deletedInstruments }) => {
     logger.debug('instruments onDidRemove with ' + deletedInstruments.length + ' elements!');
-    const instrumentSet = new Set<Instrument<any, any>>(deletedInstruments);
+    const instrumentSet = new Set<Instrument>(deletedInstruments);
 
     patterns.forEach((pattern) => {
       const toRemove: number[] = [];
@@ -573,7 +576,7 @@ const extension = createExtension({
   activate(context) {
     const result = loadProject();
     if (result.type === 'error') {
-      notify.info('Unable to load project.', { detail: result.message, duration: Infinity });
+      notify.warning('Unable to load project.', { detail: result.message, duration: Infinity });
     }
 
     const api = defineAPI(result.project);

@@ -83,6 +83,8 @@
             :key="`status-bar-left-${i}`" 
           ><component :is="item.component"></component></div>
 
+          <!-- <spectrogram color="white"></spectrogram> -->
+
           <div style="flex: 1"></div>
 
           <div
@@ -205,7 +207,7 @@ export default createComponent({
       if (choice === 0) {
         framework.manager.dispose();
       } else {
-        // This is so dumb but it's how you prevent a reload/exit
+        // This is dumb but it's how you prevent a reload/exit (in Chrome)
         // https://developer.mozilla.org/en-US/docs/Web/API/WindowEventHandlers/onbeforeunload
         e.returnValue = '';
       }

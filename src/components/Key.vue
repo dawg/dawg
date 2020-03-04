@@ -25,7 +25,7 @@ export default createComponent({
   props: {
     keyHeight: { type: Number, required: true },
     value: { type: String, required: true },
-    synth: { type: Object as () => Instrument<any, any> | undefined, required: false },
+    synth: { type: Object as () => Instrument | undefined, required: false },
     width: { type: Number, default: 80 },
     widthProportion: { type: Number, default: 0.55 },
     heightProportion: { type: Number, default: 0.50 },

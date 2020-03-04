@@ -5,7 +5,7 @@ import * as Audio from '@/lib/audio';
 import { Serializable } from '@/models/serializable';
 import { EffectType, AnyEffect, Effect } from '@/models/filters/effect';
 import * as oly from '@/lib/olyger';
-import { GraphNode, masterNode } from '@/node';
+import { GraphNode, masterNode } from '@/lib/audio/node';
 import { EffectName } from '@/models/filters/effects';
 import { getLogger } from '@/lib/log';
 import { useSignal } from '@/utils';
@@ -63,9 +63,6 @@ export class Channel implements Serializable<IChannel> {
   // tslint:disable-next-line:variable-name
   private readonly _effects: AnyEffect[];
 
-  /**
-   * The panner for the channel.
-   */
   // private readonly panSignal: Audio.Signal;
   // private readonly volumeSignal: Audio.Signal;
 

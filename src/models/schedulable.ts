@@ -7,14 +7,14 @@ import { Context } from '@/lib/audio';
 import { Sample } from '@/models/sample';
 import { Pattern } from '@/models/pattern';
 import { AutomationClip } from '@/models/automation';
-import { Instrument } from '@/models/instrument/instrument';
+import { Instrument } from '@/models/instrument';
 import { allKeys } from '@/utils';
 import { BuildingBlock } from '@/models/block';
 import { Disposer } from '@/lib/std';
 import * as oly from '@/lib/olyger';
 import { getLogger } from '@/lib/log';
 
-const logger = getLogger('schedulable', { level: 'debug' });
+const logger = getLogger('schedulable');
 
 export const watchOlyArray = <T extends ScheduledElement<any, any, any>>(arr: oly.OlyArr<T>) => {
   arr.onDidRemove(({ items, onExecute }) => {
@@ -33,6 +33,8 @@ export const watchOlyArray = <T extends ScheduledElement<any, any, any>>(arr: ol
       return items.map((item) => item.add());
     });
   });
+
+  arr.forEach((item) => item.add());
 
   return arr;
 };
@@ -316,16 +318,16 @@ export const { create: createNotePrototype, type: ScheduledNoteType } = createSc
   offsettable: false,
   showBorder: false,
   options: t.type({ velocity: t.number }),
-  add: (transport, params, instrument: Instrument<any, any>) => {
+  add: (transport, params, instrument: Instrument) => {
     return transport.schedule({
       onStart: ({ seconds }) => {
         logger.debug('onStart Note -> ' + seconds);
         const value = allKeys[params.row.value].value;
-        const duration = new Tone.Ticks(params.duration.value * Audio.Context.PPQ).toSeconds();
+        const duration = Context.ticksToSeconds(params.duration.value * Audio.Context.PPQ);
         instrument.triggerAttackRelease(value, duration, seconds, params.options.velocity);
       },
       time: params.time.value,
-      duration: 0, // FIXME We shouldn't have to set a duration. This is explained more in the Transport class file.
+      duration: 0, // We shouldn't have to set a duration. This is explained more in the Transport class file.
       offset: 0,
     });
   },

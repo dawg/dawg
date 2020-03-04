@@ -1,4 +1,3 @@
-import { PathReporter } from 'io-ts/lib/PathReporter';
 import * as t from 'io-ts';
 export {
   string,
@@ -33,6 +32,35 @@ export {
 import fs from '@/lib/fs';
 import { isLeft } from 'fp-ts/lib/Either';
 import { getLogger } from '@/lib/log';
+import { Reporter } from 'io-ts/lib/Reporter';
+import { fold } from 'fp-ts/lib/Either';
+
+function stringify(v: any): string {
+  if (typeof v === 'function') {
+    return t.getFunctionName(v);
+  }
+  if (typeof v === 'number' && !isFinite(v)) {
+    if (isNaN(v)) {
+      return 'NaN';
+    }
+    return v > 0 ? 'Infinity' : '-Infinity';
+  }
+  return JSON.stringify(v);
+}
+
+function getContextPath(context: t.Context): string {
+  return context.map(({ key }) => `${key}`).join('.');
+}
+
+export const PathReporter: Reporter<string[] | null> = {
+  report: fold(
+    (es) => es.map((e) => {
+      return e.message ?? `Invalid value "${stringify(e.value)}" supplied to ${getContextPath(e.context)}`;
+    }),
+    () => null,
+  ),
+};
+
 
 const logger = getLogger('io');
 
@@ -49,10 +77,13 @@ export interface Error {
 export const decodeItem = <T>(type: t.Type<T>, item: unknown): Error | DecodeSuccess<T> => {
   const i = type.decode(item);
   if (isLeft(i)) {
+    // const errors = i.left;
+    // i.left.map((error) => error.context.map(({ key }) => key).join('.'));
+
     const errors = PathReporter.report(i);
     return {
       type: 'error',
-      message: errors.join('\n'),
+      message: errors ? errors.join('\n') : '',
     };
   }
 

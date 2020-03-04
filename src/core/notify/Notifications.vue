@@ -30,7 +30,7 @@
         </div>
         <div
           v-if="item.text"
-          class="notification-content border-warning border-t py-2 overflow-y-scroll"
+          class="notification-content border-warning border-t py-2 overflow-y-scroll whitespace-pre-line"
           v-html="parse(item.text)"
         ></div>
         <!-- The type error is wrong! We use a v-if -->
