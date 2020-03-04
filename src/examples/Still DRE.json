@@ -1,0 +1,785 @@
+{
+  "id": "b39676fa-79f0-47f3-a232-7f864726ae86",
+  "bpm": 90,
+  "name": "Still DRE",
+  "stepsPerBeat": 4,
+  "beatsPerMeasure": 4,
+  "patterns": [
+      {
+          "name": "Chord Progression",
+          "id": "6a71ac0e-2a19-4d2f-847d-db584c5b65de",
+          "scores": [
+              {
+                  "instrumentId": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                  "id": "15ccc137-c890-4169-8f0a-640ec1449bfa",
+                  "notes": [
+                      {
+                          "row": 48,
+                          "time": 0,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 39,
+                          "time": 0,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 44,
+                          "time": 0,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 39,
+                          "time": 0.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 44,
+                          "time": 0.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 48,
+                          "time": 0.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 39,
+                          "time": 1,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 44,
+                          "time": 1,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 48,
+                          "time": 1,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 39,
+                          "time": 1.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 44,
+                          "time": 1.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 48,
+                          "time": 1.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 48,
+                          "time": 3.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 48,
+                          "time": 3,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 44,
+                          "time": 3,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 44,
+                          "time": 3.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 44,
+                          "time": 2.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 48,
+                          "time": 2.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 39,
+                          "time": 2.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 39,
+                          "time": 3,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 39,
+                          "time": 3.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 48,
+                          "time": 2,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 39,
+                          "time": 2,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 44,
+                          "time": 2,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 49,
+                          "time": 5.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 49,
+                          "time": 5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 44,
+                          "time": 5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 44,
+                          "time": 5.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 44,
+                          "time": 4.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 49,
+                          "time": 4.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 39,
+                          "time": 4.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 39,
+                          "time": 5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 41,
+                          "time": 5.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 49,
+                          "time": 4,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 39,
+                          "time": 4,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 44,
+                          "time": 4,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 41,
+                          "time": 6,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 41,
+                          "time": 6.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 44,
+                          "time": 6.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 44,
+                          "time": 6,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 44,
+                          "time": 7,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 41,
+                          "time": 7,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 49,
+                          "time": 7,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 49,
+                          "time": 6.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 49,
+                          "time": 6,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 49,
+                          "time": 7.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 44,
+                          "time": 7.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 41,
+                          "time": 7.5,
+                          "duration": 0.5,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+                          "velocity": 1
+                      }
+                  ]
+              }
+          ]
+      },
+      {
+          "name": "Bass 1",
+          "id": "b4ff7b00-28e8-4de1-895f-966cf190047f",
+          "scores": [
+              {
+                  "instrumentId": "c68ae87d-7c7e-4d23-8ab0-7c206a0bbce9",
+                  "id": "3c01c655-7090-4e57-8387-aa9f68b501a8",
+                  "notes": [
+                      {
+                          "row": 80,
+                          "time": 0,
+                          "duration": 1,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "c68ae87d-7c7e-4d23-8ab0-7c206a0bbce9",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 68,
+                          "time": 0,
+                          "duration": 1,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "c68ae87d-7c7e-4d23-8ab0-7c206a0bbce9",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 75,
+                          "time": 1,
+                          "duration": 1,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "c68ae87d-7c7e-4d23-8ab0-7c206a0bbce9",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 63,
+                          "time": 1,
+                          "duration": 1,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "c68ae87d-7c7e-4d23-8ab0-7c206a0bbce9",
+                          "velocity": 1
+                      }
+                  ]
+              }
+          ]
+      },
+      {
+          "name": "Base 2",
+          "id": "295aef79-906a-42cd-adf9-0a8d57a230b6",
+          "scores": [
+              {
+                  "instrumentId": "c68ae87d-7c7e-4d23-8ab0-7c206a0bbce9",
+                  "id": "35fba6a6-d88a-4a15-9d42-553f6460fa27",
+                  "notes": [
+                      {
+                          "row": 61,
+                          "time": 0,
+                          "duration": 1,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "c68ae87d-7c7e-4d23-8ab0-7c206a0bbce9",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 68,
+                          "time": 1,
+                          "duration": 1,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "c68ae87d-7c7e-4d23-8ab0-7c206a0bbce9",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 73,
+                          "time": 0,
+                          "duration": 1,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "c68ae87d-7c7e-4d23-8ab0-7c206a0bbce9",
+                          "velocity": 1
+                      },
+                      {
+                          "row": 80,
+                          "time": 1,
+                          "duration": 1,
+                          "offset": 0,
+                          "type": "note",
+                          "id": "c68ae87d-7c7e-4d23-8ab0-7c206a0bbce9",
+                          "velocity": 1
+                      }
+                  ]
+              }
+          ]
+      }
+  ],
+  "instruments": [
+      {
+          "soundfont": "acoustic_grand_piano",
+          "instrument": "soundfont",
+          "volume": 0.8,
+          "pan": 0,
+          "name": "Soundfont 1",
+          "id": "cae3d9ac-9919-4442-aa9c-0c1338d19ad3",
+          "mute": false
+      },
+      {
+          "instrument": "synth",
+          "type": "fatsawtooth",
+          "volume": 0.2261363636363637,
+          "pan": 0,
+          "name": "Synth 1",
+          "id": "c68ae87d-7c7e-4d23-8ab0-7c206a0bbce9",
+          "mute": false
+      }
+  ],
+  "channels": [
+      {
+          "number": 0,
+          "name": "Channel 0",
+          "id": "8b0be36c-3192-4614-a927-98a1b43f04a3",
+          "effects": [],
+          "pan": 0,
+          "volume": 0.7,
+          "mute": false
+      },
+      {
+          "number": 1,
+          "name": "Channel 1",
+          "id": "3a94162f-0754-4e91-bf88-d391d412a22c",
+          "effects": [],
+          "pan": 0,
+          "volume": 0.7,
+          "mute": false
+      },
+      {
+          "number": 2,
+          "name": "Channel 2",
+          "id": "f24512b1-00e3-4a08-891f-36be937e5448",
+          "effects": [],
+          "pan": 0,
+          "volume": 0.7,
+          "mute": false
+      },
+      {
+          "number": 3,
+          "name": "Channel 3",
+          "id": "e9edb11a-d38d-418d-a022-ff0ae0da4a14",
+          "effects": [],
+          "pan": 0,
+          "volume": 0.7,
+          "mute": false
+      },
+      {
+          "number": 4,
+          "name": "Channel 4",
+          "id": "dadfa4af-eb84-4dd4-8638-a6cbdfafbab8",
+          "effects": [],
+          "pan": 0,
+          "volume": 0.7,
+          "mute": false
+      },
+      {
+          "number": 5,
+          "name": "Channel 5",
+          "id": "a61384e4-76ad-44f1-b362-02f2d12b211b",
+          "effects": [],
+          "pan": 0,
+          "volume": 0.7,
+          "mute": false
+      },
+      {
+          "number": 6,
+          "name": "Channel 6",
+          "id": "05af37c8-6768-4eaa-81cb-7de8eef397e8",
+          "effects": [],
+          "pan": 0,
+          "volume": 0.7,
+          "mute": false
+      },
+      {
+          "number": 7,
+          "name": "Channel 7",
+          "id": "536ebd9c-9b7d-4d01-bfd8-d5b48970972d",
+          "effects": [],
+          "pan": 0,
+          "volume": 0.7,
+          "mute": false
+      },
+      {
+          "number": 8,
+          "name": "Channel 8",
+          "id": "ea5a242b-4ee1-4e6d-b775-d35f7ea67ff9",
+          "effects": [],
+          "pan": 0,
+          "volume": 0.7,
+          "mute": false
+      },
+      {
+          "number": 9,
+          "name": "Channel 9",
+          "id": "0619b3c6-a034-4a7d-9d83-c5b2cff55964",
+          "effects": [],
+          "pan": 0,
+          "volume": 0.7,
+          "mute": false
+      }
+  ],
+  "tracks": [
+      {
+          "name": "Track 0",
+          "mute": false
+      },
+      {
+          "name": "Track 1",
+          "mute": false
+      },
+      {
+          "name": "Track 2",
+          "mute": false
+      },
+      {
+          "name": "Track 3",
+          "mute": false
+      },
+      {
+          "name": "Track 4",
+          "mute": false
+      },
+      {
+          "name": "Track 5",
+          "mute": false
+      },
+      {
+          "name": "Track 6",
+          "mute": false
+      },
+      {
+          "name": "Track 7",
+          "mute": false
+      },
+      {
+          "name": "Track 8",
+          "mute": false
+      },
+      {
+          "name": "Track 9",
+          "mute": false
+      },
+      {
+          "name": "Track 10",
+          "mute": false
+      },
+      {
+          "name": "Track 11",
+          "mute": false
+      },
+      {
+          "name": "Track 12",
+          "mute": false
+      },
+      {
+          "name": "Track 13",
+          "mute": false
+      },
+      {
+          "name": "Track 14",
+          "mute": false
+      },
+      {
+          "name": "Track 15",
+          "mute": false
+      },
+      {
+          "name": "Track 16",
+          "mute": false
+      },
+      {
+          "name": "Track 17",
+          "mute": false
+      },
+      {
+          "name": "Track 18",
+          "mute": false
+      },
+      {
+          "name": "Track 19",
+          "mute": false
+      },
+      {
+          "name": "Track 20",
+          "mute": false
+      }
+  ],
+  "samples": [],
+  "automationClips": [],
+  "master": {
+      "elements": [
+          {
+              "row": 0,
+              "time": 1,
+              "duration": 8,
+              "offset": 0,
+              "type": "pattern",
+              "id": "6a71ac0e-2a19-4d2f-847d-db584c5b65de"
+          },
+          {
+              "row": 1,
+              "time": 0,
+              "duration": 2,
+              "offset": 0,
+              "type": "pattern",
+              "id": "b4ff7b00-28e8-4de1-895f-966cf190047f"
+          },
+          {
+              "row": 1,
+              "time": 4,
+              "duration": 2,
+              "offset": 0,
+              "type": "pattern",
+              "id": "295aef79-906a-42cd-adf9-0a8d57a230b6"
+          },
+          {
+              "row": 1,
+              "time": 8,
+              "duration": 1,
+              "offset": 0,
+              "type": "pattern",
+              "id": "b4ff7b00-28e8-4de1-895f-966cf190047f"
+          }
+      ]
+  }
+}

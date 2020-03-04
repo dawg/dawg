@@ -14,9 +14,9 @@ export const status = framework.manager.activate({
       name: 'Status',
       template: `
       <span v-if="value === null">{{ statusValue }}</span>
-      <div v-else>
+      <div v-else class="text-sm">
         <span>{{ statusValue }}</span>
-        <span style="margin: 0 5px">|</span>
+        <span style="margin: 0 -6px">|</span>
         <span>{{ value }}</span>
       </div>
       `,
