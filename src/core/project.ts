@@ -109,7 +109,7 @@ const load = (iProject: IProject): InitializationSuccess | InitializationError =
   // What should be the chain reaction?
   const channels =  oly.olyArr(iProject.channels.map((iChannel) => {
     return new Channel(iChannel);
-  }));
+  }), 'Channel');
 
   const instruments = oly.olyArr(iProject.instruments.map((iInstrument) => {
     switch (iInstrument.instrument) {
@@ -118,11 +118,11 @@ const load = (iProject: IProject): InitializationSuccess | InitializationError =
       case 'synth':
         return new Synth(iInstrument);
     }
-  }));
+  }), 'Instrument');
 
   const instrumentLookup = makeLookup(instruments);
   const channelLookup = makeLookup(channels);
-  const tracks = oly.olyArr(iProject.tracks.map((iTrack) => new Track(iTrack)));
+  const tracks = oly.olyArr(iProject.tracks.map((iTrack) => new Track(iTrack)), 'Track');
 
   // First, check that all the IDs exist in the lookup
   for (const iPattern of iProject.patterns) {
@@ -146,7 +146,7 @@ const load = (iProject: IProject): InitializationSuccess | InitializationError =
     });
 
     return new Pattern(iPattern, transport, scores);
-  }));
+  }), 'Pattern');
 
   const notFound: string[] = [];
   const samples = oly.olyArr(iProject.samples.map((iSample) => {
@@ -158,7 +158,7 @@ const load = (iProject: IProject): InitializationSuccess | InitializationError =
     }
 
     return new Sample(buffer, iSample);
-  }));
+  }), 'Sample');
 
   if (notFound.length !== 0) {
     notify.warning(`Audio files not found`, {
@@ -181,7 +181,7 @@ const load = (iProject: IProject): InitializationSuccess | InitializationError =
     }
 
     return new AutomationClip(signal, iAutomationClip);
-  }));
+  }), 'Automation Clip');
 
   const clipLookup = makeLookup(automationClips);
   const patternLookup = makeLookup(patterns);
@@ -259,12 +259,12 @@ function emptyProject(): LoadedProject {
     beatsPerMeasure: 4,
     name: '',
     master: new Playlist(new Audio.Transport(), []),
-    patterns: oly.olyArr([Pattern.create('Pattern 0')]),
-    instruments: oly.olyArr([Synth.create('Synth 0')]),
-    channels: oly.olyArr(range(10).map((index) => Channel.create(index))),
-    tracks: oly.olyArr(range(21).map((index) => Track.create(index))),
-    samples: oly.olyArr([]),
-    automationClips: oly.olyArr([]),
+    patterns: oly.olyArr([Pattern.create('Pattern 0')], 'Pattern'),
+    instruments: oly.olyArr([Synth.create('Synth 0')], 'Instrument'),
+    channels: oly.olyArr(range(10).map((index) => Channel.create(index)), 'Channel'),
+    tracks: oly.olyArr(range(21).map((index) => Track.create(index)), 'Track'),
+    samples: oly.olyArr([], 'Sample'),
+    automationClips: oly.olyArr([], 'Automation Clip'),
   };
 }
 

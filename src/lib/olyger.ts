@@ -345,7 +345,7 @@ interface ArrayChaining<T> {
 
 export type OlyArr<T> = T[] & ArrayChaining<T>;
 
-export const olyArr = <T>(raw: T[]): OlyArr<T> => {
+export const olyArr = <T>(raw: T[], name: string): OlyArr<T> => {
   // Explicitly make the array observable because we replace some of the methods
   // We store local variables in this closure and these NEED to be the vue ones for reactivity
   // Therefore, we make the following call
@@ -365,9 +365,13 @@ export const olyArr = <T>(raw: T[]): OlyArr<T> => {
     const onExecute = onExecuteHelper(subscriptions);
     const env = getOrCreateExecutionContext();
 
+    const commandName = items.length === 1 ?
+      `Added ${name}` :
+      `Added ${items.length} ${items.length}s`;
+
     const addedLength = env.execute({
       id: pushId,
-      name: `push([${items.length}])`,
+      name: commandName,
       subscriptions,
       execute: () => {
         const result = push(...items);
@@ -387,13 +391,34 @@ export const olyArr = <T>(raw: T[]): OlyArr<T> => {
   };
 
   raw.splice = (start: number, deleteCount: number, ...items: T[]) => {
+    if (!deleteCount && items.length === 0) {
+      return [];
+    }
+
     const subscriptions: Subscription[] = [];
     const onExecute = onExecuteHelper(subscriptions);
     const env = getOrCreateExecutionContext();
 
+    let commandName = '';
+    if (items.length === 1) {
+      commandName += `Added ${name}`;
+    } else if (items.length > 1) {
+      commandName += `Added ${items.length} ${name}s`;
+    }
+
+    if (deleteCount === 1) {
+      commandName += commandName ?
+        ` and Deleted ${name}` :
+        `Deleted ${name}`;
+    } else if (deleteCount > 1) {
+      commandName += commandName ?
+        ` and Deleted ${deleteCount} ${name}s` :
+        `Deleted ${deleteCount} ${name}s`;
+    }
+
     const deleted: T[] = env.execute({
       id: spliceId,
-      name: `splice(${start}, ${deleteCount}, [${items.length}])`,
+      name: commandName,
       subscriptions,
       execute: () => {
         const result = splice(start, deleteCount, ...items);

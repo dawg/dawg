@@ -115,7 +115,7 @@ export class Channel implements Serializable<IChannel> {
 
     const effects = oly.olyArr(i.effects.map((iEffect) => {
       return new Effect(iEffect);
-    }));
+    }), 'Effect');
 
     effects.onDidRemove(({ items, onExecute }) => {
       onExecute(() => {

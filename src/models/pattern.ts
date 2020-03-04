@@ -25,7 +25,7 @@ export class Pattern implements BuildingBlock, Serializable<IPattern> {
   constructor(i: IPattern, public transport: Audio.Transport, public scores: Score[]) {
     this.id = i.id;
     this.name = oly.olyRef(i.name, 'Pattern Name');
-    const olyScores = oly.olyArr(scores);
+    const olyScores = oly.olyArr(scores, 'Score');
 
     olyScores.onDidRemove(({ items, subscriptions }) => {
       items.map((score) => {

@@ -94,7 +94,7 @@ export class AutomationClip implements Serializable<IAutomation>, BuildingBlock 
         ...point,
         controller: this.schedule(point),
       };
-    }));
+    }), 'Automation Point');
 
     const watch = (items: InternalPoint[]) => {
       items.forEach((point) => {
