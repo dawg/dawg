@@ -28,8 +28,8 @@ export {
 export { Sample, SampleType } from '@/models/sample';
 export * from '@/models/automation';
 export { Score } from '@/models/score';
-export { Instrument } from '@/models/instrument/instrument';
+export { Instrument } from '@/models/instrument';
 export { Pattern, PatternType } from '@/models/pattern';
 export { AnyEffect, Effect } from '@/models/filters/effect';
-export { SoundfontType, Soundfont } from '@/models/instrument/soundfont';
-export { SynthType, Synth } from '@/models/instrument/synth';
+export { SoundfontType, Soundfont } from '@/models/soundfont';
+export { SynthType, Synth } from '@/models/synth';

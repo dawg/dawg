@@ -295,6 +295,8 @@ export const useSignal = (signal: Audio.Signal, initial: number) => {
     });
   });
 
+  signal.value = initial;
+
   return {
     signal,
     ref,

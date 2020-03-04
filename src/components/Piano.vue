@@ -24,24 +24,26 @@ import { allKeys } from '@/utils';
 import Key from '@/components/Key.vue';
 import { Instrument } from '@/models';
 import { createComponent } from '@vue/composition-api';
+import { Disposer } from '@/lib/std';
 
 export default createComponent({
   name: 'Piano',
   components: { Key },
   props: {
     keyHeight: { type: Number, required: true },
-    synth: { type: Object as () => Instrument<any, any>, required: true },
+    synth: { type: Object as () => Instrument, required: true },
   },
   setup(props) {
+
+    const disposers: { [k: string]: Disposer } = {};
     return {
       allKeys,
       start(value: string) {
-        props.synth.triggerAttack(value);
+        disposers[value] = props.synth.triggerAttack(value);
       },
       stop(value: string) {
-        // I'm not sure what would happen if there were two notes playing.
-        // I assume it would stop both. I didn't see a way to only stops one.
-        props.synth.triggerRelease(value);
+        disposers[value].dispose();
+        delete disposers[value];
       },
     };
   },

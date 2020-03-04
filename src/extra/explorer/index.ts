@@ -4,7 +4,7 @@ import * as t from '@/lib/io';
 import { remote } from 'electron';
 import { Extensions } from '@/extra/explorer/types';
 import { loadBuffer } from '@/lib/wav';
-import parser from '@/lib/midi-parser';
+import { parseMidi } from '@/lib/mutils';
 import fs from '@/lib/fs';
 import { Sample, createSamplePrototype } from '@/models';
 import { commands } from '@/core/commands';
@@ -21,7 +21,7 @@ const loadMidi = async (path: string) => {
     view[i] = value;
   });
 
-  return parser.parse(ab, dawg.project.bpm.value);
+  return parseMidi(ab, dawg.project.bpm.value);
 };
 
 const extensions: Extensions = {

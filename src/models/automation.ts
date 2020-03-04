@@ -3,7 +3,7 @@ import uuid from 'uuid';
 import * as Audio from '@/lib/audio';
 import { Serializable } from '@/models/serializable';
 import { Channel } from '@/models/channel';
-import { Instrument } from '@/models/instrument/instrument';
+import { Instrument } from '@/models/instrument';
 import { Beats } from '@/models/types';
 import { BuildingBlock } from '@/models/block';
 import * as oly from '@/lib/olyger';
@@ -36,7 +36,7 @@ interface InternalPoint {
 export type IAutomation = t.TypeOf<typeof AutomationType>;
 
 export type ClipContext = IAutomation['context'];
-export type Automatable = Channel | Instrument<any, any>;
+export type Automatable = Channel | Instrument;
 
 export class AutomationClip implements Serializable<IAutomation>, BuildingBlock {
   public static create(length: number, signal: Audio.Signal, context: ClipContext, id: string, attr: string) {

@@ -9,7 +9,7 @@
 <script lang="ts">
 import tinycolor from 'tinycolor2';
 import * as Audio from '@/lib/audio';
-import { computed, onUnmounted, createComponent, ref } from '@vue/composition-api';
+import { computed, onUnmounted, onMounted, createComponent, ref } from '@vue/composition-api';
 
 export default createComponent({
   name: 'Spectrogram',
@@ -41,12 +41,12 @@ export default createComponent({
     });
 
     const canvas = ref<HTMLCanvasElement>(null);
-    function mounted() {
+    onMounted(() => {
       ctx = canvas.value!.getContext('2d');
       analyserNode.fftSize = 1024;
       output.connect(analyserNode);
       requestAnimationFrame(doRender);
-    }
+    });
 
     onUnmounted(() => {
       output.connect(analyserNode);

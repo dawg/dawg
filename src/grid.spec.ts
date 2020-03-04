@@ -7,7 +7,7 @@ import { ScheduledElement, createNotePrototype, Instrument, Synth } from '@/mode
 import { expect } from '@/lib/testing';
 import * as Audio from '@/lib/audio';
 
-type Element = ScheduledElement<Instrument<any, any>, 'note', any>;
+type Element = ScheduledElement<Instrument, 'note', any>;
 
 type Grid = ReturnType<typeof createGrid>;
 

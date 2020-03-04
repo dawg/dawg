@@ -29,7 +29,7 @@
 
 <script lang="ts">
 import { allKeys, keyLookup } from '@/utils';
-import { INotes } from '@/lib/midi-parser';
+import { INotes } from '@/lib/mutils';
 import {
   ScheduledNote,
   Instrument,

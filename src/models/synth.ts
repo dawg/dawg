@@ -1,7 +1,7 @@
 import Tone from 'tone';
 import * as t from '@/lib/io';
 import * as Audio from '@/lib/audio';
-import { Instrument, InstrumentType } from '@/models/instrument/instrument';
+import { Instrument, InstrumentType } from '@/models/instrument';
 import { Serializable } from '@/models/serializable';
 import { literal } from '@/lib/std';
 
@@ -23,7 +23,7 @@ export type Oscillators = ISynth['type'];
 
 export type ISynth = t.TypeOf<typeof SynthType>;
 
-export class Synth extends Instrument<Audio.SynthOptions, Oscillators> implements Serializable<ISynth> {
+export class Synth extends Instrument<Audio.SynthOptions, Audio.Synth, Oscillators> implements Serializable<ISynth> {
   public static create(name: string) {
     return new Synth({
       instrument: 'synth',
@@ -38,7 +38,7 @@ export class Synth extends Instrument<Audio.SynthOptions, Oscillators> implement
     super(
       i.type,
       ['fatsawtooth', 'sine', 'square', 'sawtooth', 'triangle'],
-      new Audio.Synth(8, Tone.Synth),
+      new Audio.Synth(),
       i,
     );
 

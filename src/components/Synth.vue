@@ -74,7 +74,7 @@ export default createComponent({
   name: 'Synth',
   components: { DotButton, MiniScore, ChannelSelect },
   props: {
-    instrument: { type: Object as () => Instrument<any, any>, required: true },
+    instrument: { type: Object as () => Instrument, required: true },
     height: { type: Number, default: 50 },
     notes: { type: Array as () => ScheduledNote[], default: () => [] },
     channel: Number as () => number | undefined,

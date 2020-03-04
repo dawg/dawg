@@ -4,7 +4,7 @@ import * as t from '@/lib/io';
 import { EffectOptions, EffectName, EffectTones, EffectMap } from '@/models/filters/effects';
 import { EffectDefaults } from '@/models/filters/defaults';
 import { Serializable } from '@/models/serializable';
-import { GraphNode } from '@/node';
+import { GraphNode } from '@/lib/audio/node';
 
 export const EffectType = t.type({
   slot: t.number,

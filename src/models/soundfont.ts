@@ -1,6 +1,6 @@
 import * as t from '@/lib/io';
 import * as Audio from '@/lib/audio';
-import { Instrument, InstrumentType } from '@/models/instrument/instrument';
+import { Instrument, InstrumentType } from '@/models/instrument';
 import { Serializable } from '@/models/serializable';
 import { literal } from '@/lib/std';
 
@@ -20,16 +20,20 @@ export type ISoundfont = t.TypeOf<typeof SoundfontType>;
 
 export type Soundfonts = ISoundfont['soundfont'];
 
-export class Soundfont extends Instrument<Audio.SoundfontOptions, Soundfonts> implements Serializable<ISoundfont> {
+export class Soundfont extends Instrument<
+  Audio.SoundfontOptions,
+  Audio.Soundfont,
+  Soundfonts
+> implements Serializable<ISoundfont> {
   public static async create(soundfont: Soundfonts, name: string) {
-    return new Soundfont(await Audio.Soundfont.load(soundfont), {
+    return new Soundfont(new Audio.Soundfont(soundfont), {
       soundfont,
       instrument: 'soundfont',
       name,
     });
   }
 
-  constructor(player: Audio.Soundfont | null, i: ISoundfont) {
+  constructor(player: Audio.Soundfont, i: ISoundfont) {
     super(
       i.soundfont,
       ['acoustic_grand_piano', 'bright_acoustic_piano', 'acoustic_guitar_nylon'],
@@ -59,12 +63,10 @@ export class Soundfont extends Instrument<Audio.SoundfontOptions, Soundfonts> im
   }
 
   public online() {
-    if (this.source === null) {
-      this.updateSource();
-    }
+    this.source.node.attemptReloadIfNecessary();
   }
 
-  private async updateSource() {
-    this.setSource(await Audio.Soundfont.load(this.type.value));
+  private updateSource() {
+    this.setSource(new Audio.Soundfont(this.type.value));
   }
 }

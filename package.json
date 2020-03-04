@@ -24,9 +24,11 @@
     "@types/tmp": "^0.1.0",
     "@types/webmidi": "^2.0.4",
     "@vue/composition-api": "^0.3.4",
+    "audio-decode": "^1.4.0",
     "babel-plugin-macros": "^2.8.0",
     "core-js": "^3.6.4",
     "electron-log": "^4.0.7",
+    "envelope-generator": "^3.0.0",
     "firebase": "^7.8.1",
     "fp-ts": "2.4.4",
     "hotkeys-js": "^3.7.3",
@@ -37,7 +39,6 @@
     "python-shell": "^1.0.7",
     "require-context.macro": "^1.2.2",
     "resize-observer-polyfill": "^1.5.0",
-    "soundfont-player": "github:dawg/soundfont-player",
     "tailwindcss": "^1.2.0",
     "tinycolor2": "^1.4.1",
     "tmp": "^0.1.0",
@@ -73,8 +74,8 @@
     "vue-template-compiler": "^2.6.11"
   },
   "engines": {
-    "node": "~10.0.0",
-    "npm": "~6.0.0"
+    "node": "10.x || 11.x",
+    "npm": "6.x"
   },
   "homepage": "https://dawg.dev"
 }

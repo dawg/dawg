@@ -9,7 +9,7 @@ import { defaultIpcRenderer } from '@/lib/ipc';
 import { uniqueId, Key } from '@/lib/std';
 import { getLogger } from '@/lib/log';
 
-const logger = getLogger('ipc', { level: 'debug' });
+const logger = getLogger('ipc');
 
 export interface Command<T extends any[]> {
   text: string;

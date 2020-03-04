@@ -827,6 +827,10 @@ declare module 'tone' {
     setValueCurveAtTime(values: number[], startTime: _TimeArg, duration: _TimeArg): this;
   }
 
+  class Analyser extends AudioNode {
+    getValue(): Float32Array;
+  }
+
   class SignalBase extends AudioNode {
     // @ts-ignore
     connect(node: AudioParam | AudioNode | Signal | Tone, outputNumber?: number, inputNumber?: number): SignalBase;

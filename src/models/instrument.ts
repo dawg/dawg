@@ -4,7 +4,6 @@ import uuid from 'uuid';
 import * as t from '@/lib/io';
 import { BuildingBlock } from '@/models/block';
 import * as oly from '@/lib/olyger';
-import { GraphNode } from '@/node';
 import { useSignal } from '@/utils';
 
 export const InstrumentType = t.intersection([
@@ -22,7 +21,11 @@ export const InstrumentType = t.intersection([
 
 export type IInstrument = t.TypeOf<typeof InstrumentType>;
 
-export abstract class Instrument<T, V extends string> implements BuildingBlock {
+export abstract class Instrument<
+  T = any,
+  S extends Audio.Source<T> = any,
+  V extends string = any,
+> implements BuildingBlock {
   public readonly name: oly.OlyRef<string>;
   public readonly id: string;
 
@@ -41,12 +44,12 @@ export abstract class Instrument<T, V extends string> implements BuildingBlock {
    */
   public readonly channel: oly.OlyRef<number | undefined>;
 
-  public readonly output = new GraphNode(new Tone.Panner(), 'Panner');
-  public readonly input = new GraphNode(new Tone.Gain(), 'Gain');
+  public readonly output = new Audio.GraphNode(new Tone.Panner(), 'Panner');
+  public readonly input = new Audio.GraphNode(new Tone.Gain(), 'Gain');
   public readonly pan: oly.OlyRef<number>;
   public readonly volume: oly.OlyRef<number>;
 
-  protected source: GraphNode<Audio.Source<T> | null>;
+  protected source: Audio.GraphNode<S>;
 
   // private readonly panSignal: Audio.Signal;
   // private readonly volumeSignal: Audio.Signal;
@@ -54,7 +57,7 @@ export abstract class Instrument<T, V extends string> implements BuildingBlock {
   constructor(
     type: V,
     types: V[],
-    source: Audio.Source<T> | null,
+    source: S,
     i: IInstrument,
   ) {
     this.type = oly.olyRef(type);
@@ -65,40 +68,28 @@ export abstract class Instrument<T, V extends string> implements BuildingBlock {
     this.input.mute = !!i.mute;
 
     const {
-      signal: panSignal,
       ref: pan,
     } = useSignal(new Audio.Signal(this.output.node.pan, -1, 1), i.pan ?? 0);
     this.pan = pan;
     // this.panSignal = panSignal;
 
     const {
-      signal: volumeSignal,
       ref: volume,
     } = useSignal(new Audio.Signal(this.input.node.gain, 0, 1), i.volume ?? 0.8);
     this.volume = volume;
     // this.volumeSignal = volumeSignal;
 
-    this.source = new GraphNode(source, this.name.value);
+    this.source = new Audio.GraphNode(source, this.name.value);
     this.source.connect(this.input);
     this.input.connect(this.output);
   }
 
-  public triggerAttackRelease(note: string, duration: Audio.Time, time: number, velocity?: number) {
-    if (this.source.node) {
-      this.source.node.triggerAttackRelease(note, duration, time, velocity);
-    }
-  }
-
-  public triggerRelease(note: string) {
-    if (this.source.node) {
-      this.source.node.triggerRelease(note);
-    }
+  public triggerAttackRelease(note: string, duration: Audio.Seconds, time: number, velocity?: number) {
+    this.source.node.triggerAttackRelease(note, duration, time, velocity);
   }
 
   public triggerAttack(note: string, velocity?: number) {
-    if (this.source.node) {
-      this.source.node.triggerAttack(note, undefined, velocity);
-    }
+    return this.source.node.triggerAttack(note, undefined, velocity);
   }
 
   public set<K extends keyof T>(o: { key: K, value: T[K] }) {
@@ -114,7 +105,7 @@ export abstract class Instrument<T, V extends string> implements BuildingBlock {
     // By default, do nothing
   }
 
-  protected setSource(source: Audio.Source<T> | null) {
+  protected setSource(source: S) {
     this.source.replace(source);
   }
 }
