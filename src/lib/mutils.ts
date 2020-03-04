@@ -1,3 +1,5 @@
+import Midi from '@tonejs/midi';
+
 export function midiToFreq(midi: number, tuning?: number) {
   return Math.pow(2, (midi - 69) / 12) * (tuning ?? 440);
 }
@@ -82,10 +84,21 @@ const SEMITONES = [0, 2, 4, 5, 7, 9, 11];
  * parse('fx')
  * // => { letter: 'F', acc: '##', pc: 'F##', step: 3, alt: 2, chroma: 7 })
  */
-export function parse(str: string, isTonic?: boolean, tuning?: number) {
+export function parseNote(str: string | number, isTonic?: boolean, tuning?: number) {
+  if (
+    (typeof str === 'number' || typeof str === 'string') &&
+    str >= 0 && str < 128
+  ) {
+    return +str;
+  }
+
+  if (typeof str === 'number') {
+    return;
+  }
+
   const m = REGEX.exec(str);
   if (!m || (!isTonic && m[4])) {
-    return null;
+    return undefined;
   }
 
   const acc = m[2].replace(/x/g, '##');
@@ -122,37 +135,82 @@ export function parse(str: string, isTonic?: boolean, tuning?: number) {
     midi,
     freq,
     tonicOf,
+  }.midi;
+}
+
+export function base64Decode(base64: string) {
+  const binaryString = window.atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+
+  return bytes;
+}
+
+export interface INote {
+  start: number;
+  duration: number;
+  velocity: number;
+  name: string;
+}
+
+export type INotes = INote[];
+
+export const parseMidi = (buffer: ArrayBuffer, bpm: number): INotes => {
+  const json = new Midi(buffer);
+  const bps = bpm / 60;
+
+  const notes: INote[] = [];
+  json.tracks.forEach((track) => {
+    track.notes.forEach((note) => {
+      notes.push({
+        name: note.name,
+        start: note.time * bps,
+        duration: note.duration * bps,
+        velocity: note.velocity,
+      });
+    });
+  });
+
+  return notes;
+};
+
+
+interface RequestError {
+  type: 'error';
+  message: string;
+}
+
+interface RequestSuccess {
+  type: 'success';
+  body: string;
+}
+
+
+export async function sendRequest(url: string): Promise<RequestError | RequestSuccess> {
+  let response;
+  try {
+    response = await fetch(url);
+  } catch (e) {
+    return {
+      type: 'error',
+      message: e.message,
+    };
+  }
+
+  return {
+    type: 'success',
+    body: await response.text(),
   };
 }
 
-/**
- * Get midi of a note
- *
- * @name midi
- * @function
- * @param {String|Integer} note - the note name or midi number
- * @return {Integer} the midi number of the note or null if not a valid note
- * or the note does NOT contains octave
- * @example
- * var parser = require('note-parser')
- * parser.midi('A4') // => 69
- * parser.midi('A') // => null
- * @example
- * // midi numbers are bypassed (even as strings)
- * parser.midi(60) // => 60
- * parser.midi('60') // => 60
- */
-export function parseNote(note: string | number) {
-  if (
-    (typeof note === 'number' || typeof note === 'string') &&
-    note >= 0 && note < 128
-  ) {
-    return +note;
-  }
-
-  if (typeof note === 'number') {
-    return;
-  }
-
-  return parse(note)?.midi;
+/*
+* Get playback rate for a given pitch change (in cents)
+* Basic [math](http://www.birdsoft.demon.co.uk/music/samplert.htm):
+* f2 = f1 * 2^( C / 1200 )
+*/
+export function centsToRate(cents?: number) {
+  return cents ? Math.pow(2, cents / 1200) : 1;
 }

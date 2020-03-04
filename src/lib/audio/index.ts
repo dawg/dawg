@@ -1,5 +1,5 @@
 import Tone from 'tone';
-export { TransportTime, Time, Ticks, ContextTime, Beat } from '@/lib/audio/types';
+export { TransportTime, Time, Ticks, ContextTime, Beat, Seconds } from '@/lib/audio/types';
 export { Controller, PointController } from '@/lib/audio/controller';
 export { Transport, TransportEvent, TransportEventController } from '@/lib/audio/transport';
 export { Signal } from '@/lib/audio/signal';

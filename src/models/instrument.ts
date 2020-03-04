@@ -84,7 +84,7 @@ export abstract class Instrument<
     this.input.connect(this.output);
   }
 
-  public triggerAttackRelease(note: string, duration: Audio.Time, time: number, velocity?: number) {
+  public triggerAttackRelease(note: string, duration: Audio.Seconds, time: number, velocity?: number) {
     this.source.node.triggerAttackRelease(note, duration, time, velocity);
   }
 

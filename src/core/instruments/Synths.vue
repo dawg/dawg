@@ -24,7 +24,7 @@ export default createComponent({
   components: { Synth },
   name: 'Synths',
   props: {
-    instruments: { type: Array as () => Array<Instrument>, required: true },
+    instruments: { type: Array as () => Instrument[], required: true },
     selectedScore: { type: Object as () => Score },
     selectedPattern: { type: Object as () => Pattern },
   },
