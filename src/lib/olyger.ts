@@ -12,6 +12,7 @@ const logger = getLogger('olyger');
 const RefKey = 'vfa.key.refKey';
 
 interface Command<T> {
+  id: number;
   name: string;
   execute: () => T;
   emit: (o: T) => void;
@@ -23,22 +24,35 @@ interface ExecutedCommand<T> extends Command<T> {
   undoers: Array<ReturnType<Subscription['execute']>>;
 }
 
-interface ExecutedAction<T> {
+export const genId = ((i) => () => i++)(0);
+
+export interface ExecutedAction<T> {
+  id: number;
   commands: Array<ExecutedCommand<T>>;
 }
 
-interface Action<T> {
+export interface Action<T> {
+  id: number;
   commands: Array<Command<T>>;
 }
 
-const undoHistory: Array<ExecutedAction<any>> = [];
-let redoHistory: Array<Action<any>> = [];
+interface Context {
+  reference?: Action<any>;
+  top?: Action<any>;
+  hasUnsavedChanged: boolean;
+}
 
-const context: { reference?: Action<any>, top?: Action<any>, hasUnsavedChanged: boolean } = {
+const undoHistory: Array<ExecutedAction<any>> = [];
+const redoHistory: Array<Action<any>> = [];
+const context: Context = {
   reference: undefined,
   top: undefined,
   hasUnsavedChanged: false,
 };
+
+export const undoStack: Readonly<Array<ExecutedAction<any>>> = undoHistory;
+export const redoStack: Readonly<Array<Action<any>>> = redoHistory;
+export const undoRedoContext: Readonly<Context> = context;
 
 type State = 'unsaved' | 'saved';
 const stateChangeEvents = emitter<{ stateChange: [State] }>();
@@ -72,7 +86,7 @@ const getOrCreateExecutionContext = () => {
       action = group.action;
     } else {
       startOfExecution = true;
-      action = { commands: [] };
+      action = { commands: [], id: genId() };
       group = { action };
       setTimeout(() => {
         group = undefined;
@@ -130,7 +144,7 @@ const getOrCreateExecutionContext = () => {
         });
       });
 
-      redoHistory = [];
+      redoHistory.splice(0, redoHistory.length);
       action = undefined;
 
       logger.debug(
@@ -175,6 +189,7 @@ export const redo = (): 'empty' | 'performed' => {
   }
 
   undoHistory.push({
+    id: redoTop.id,
     commands: redoTop.commands.map((command) => {
       return {
         ...command,
@@ -270,8 +285,9 @@ const onExecuteHelper = (subscriptions: Subscription[]) => {
 
 export type OlyRef<T> = Ref<T> & ElementChaining<T>;
 
-export function olyRef<T>(raw: T): Ref<T> & ElementChaining<T> {
+export function olyRef<T>(raw: T, name?: string): Ref<T> & ElementChaining<T> {
   const o = reactive({ [RefKey]: raw }) as { [RefKey]: T };
+  const id = genId();
 
   const events = emitter<{ change: [ElementChangeContext<T>] }>();
 
@@ -290,7 +306,8 @@ export function olyRef<T>(raw: T): Ref<T> & ElementChaining<T> {
 
       const env = getOrCreateExecutionContext();
       env.execute({
-        name: 'set',
+        id,
+        name: `Set${name ? ` ${name}` : ''} to ${v}`,
         subscriptions,
         execute: () => {
           o[RefKey] = v;
@@ -328,7 +345,7 @@ interface ArrayChaining<T> {
 
 export type OlyArr<T> = T[] & ArrayChaining<T>;
 
-export const olyArr = <T>(raw: T[]): OlyArr<T> => {
+export const olyArr = <T>(raw: T[], name: string): OlyArr<T> => {
   // Explicitly make the array observable because we replace some of the methods
   // We store local variables in this closure and these NEED to be the vue ones for reactivity
   // Therefore, we make the following call
@@ -339,14 +356,22 @@ export const olyArr = <T>(raw: T[]): OlyArr<T> => {
   const push = raw.push.bind(raw);
   const splice = raw.splice.bind(raw);
 
+  const pushId = genId();
+  const spliceId = genId();
+
   raw.push = (...items) => {
     const length = raw.length;
     const subscriptions: Subscription[] = [];
     const onExecute = onExecuteHelper(subscriptions);
     const env = getOrCreateExecutionContext();
 
+    const commandName = items.length === 1 ?
+      `Added ${name}` :
+      `Added ${items.length} ${items.length}s`;
+
     const addedLength = env.execute({
-      name: `push([${items.length}])`,
+      id: pushId,
+      name: commandName,
       subscriptions,
       execute: () => {
         const result = push(...items);
@@ -366,12 +391,34 @@ export const olyArr = <T>(raw: T[]): OlyArr<T> => {
   };
 
   raw.splice = (start: number, deleteCount: number, ...items: T[]) => {
+    if (!deleteCount && items.length === 0) {
+      return [];
+    }
+
     const subscriptions: Subscription[] = [];
     const onExecute = onExecuteHelper(subscriptions);
     const env = getOrCreateExecutionContext();
 
+    let commandName = '';
+    if (items.length === 1) {
+      commandName += `Added ${name}`;
+    } else if (items.length > 1) {
+      commandName += `Added ${items.length} ${name}s`;
+    }
+
+    if (deleteCount === 1) {
+      commandName += commandName ?
+        ` and Deleted ${name}` :
+        `Deleted ${name}`;
+    } else if (deleteCount > 1) {
+      commandName += commandName ?
+        ` and Deleted ${deleteCount} ${name}s` :
+        `Deleted ${deleteCount} ${name}s`;
+    }
+
     const deleted: T[] = env.execute({
-      name: `splice(${start}, ${deleteCount}, [${items.length}])`,
+      id: spliceId,
+      name: commandName,
       subscriptions,
       execute: () => {
         const result = splice(start, deleteCount, ...items);

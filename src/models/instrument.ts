@@ -60,22 +60,22 @@ export abstract class Instrument<
     source: S,
     i: IInstrument,
   ) {
-    this.type = oly.olyRef(type);
+    this.type = oly.olyRef(type, 'Instrument Type');
     this.types = types;
-    this.name = oly.olyRef(i.name);
+    this.name = oly.olyRef(i.name, 'Instrument Name');
     this.id = i.id ?? uuid.v4();
-    this.channel = oly.olyRef(i.channel);
+    this.channel = oly.olyRef(i.channel, 'Instrument Channel');
     this.input.mute = !!i.mute;
 
     const {
       ref: pan,
-    } = useSignal(new Audio.Signal(this.output.node.pan, -1, 1), i.pan ?? 0);
+    } = useSignal(new Audio.Signal(this.output.node.pan, -1, 1), i.pan ?? 0, 'Pan');
     this.pan = pan;
     // this.panSignal = panSignal;
 
     const {
       ref: volume,
-    } = useSignal(new Audio.Signal(this.input.node.gain, 0, 1), i.volume ?? 0.8);
+    } = useSignal(new Audio.Signal(this.input.node.gain, 0, 1), i.volume ?? 0.8, 'Volume');
     this.volume = volume;
     // this.volumeSignal = volumeSignal;
 

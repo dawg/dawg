@@ -32,7 +32,7 @@ export class Score implements Serializable<IScore> {
     this.instrumentId = i.instrumentId;
     const notes = oly.olyArr(i.notes.map((iNote) => {
       return createNotePrototype(iNote, this.instrument, { velocity: iNote.velocity })(transport).copy();
-    }));
+    }), 'Note');
 
     this.notes = watchOlyArray(notes);
   }

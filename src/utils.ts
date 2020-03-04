@@ -284,8 +284,8 @@ export const slice = (
   };
 };
 
-export const useSignal = (signal: Audio.Signal, initial: number) => {
-  const ref = oly.olyRef(initial);
+export const useSignal = (signal: Audio.Signal, initial: number, name: string) => {
+  const ref = oly.olyRef(initial, name);
   ref.onDidChange(({ onExecute, newValue, oldValue }) => {
     onExecute(() => {
       signal.value = newValue;

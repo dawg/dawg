@@ -9,7 +9,7 @@
 </template>
 
 <script lang="ts">
-import { computed , createComponent} from '@vue/composition-api';
+import { computed , createComponent } from '@vue/composition-api';
 
 export default createComponent({
   name: 'DotButton',

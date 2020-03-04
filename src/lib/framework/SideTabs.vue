@@ -26,6 +26,7 @@
           :key="tab.name"
           :name="tab.name"
           :selected-tab="openedSideTab"
+          class="overflow-y-auto"
         >
           <component
             :is="tab.component"

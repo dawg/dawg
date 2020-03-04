@@ -82,14 +82,14 @@ export class Channel implements Serializable<IChannel> {
     const {
       signal: panSignal,
       ref: pan,
-    } = useSignal(new Audio.Signal(this.output.node.pan, -1, 1), i.pan ?? 0);
+    } = useSignal(new Audio.Signal(this.output.node.pan, -1, 1), i.pan ?? 0, 'Pan');
     this.pan = pan;
     // this.panSignal = panSignal;
 
     const {
       signal: volumeSignal,
       ref: volume,
-    } = useSignal(new Audio.Signal(this.input.node.gain, 0, 1), i.volume ?? 0.8);
+    } = useSignal(new Audio.Signal(this.input.node.gain, 0, 1), i.volume ?? 0.8, 'Volume');
     this.volume = volume;
     // this.volumeSignal = volumeSignal;
 
@@ -98,7 +98,7 @@ export class Channel implements Serializable<IChannel> {
       this.output.connect(destination);
     };
 
-    this.mute = oly.olyRef(i.mute);
+    this.mute = oly.olyRef(i.mute, 'Channel Mute');
     this.mute.onDidChange(({ onExecute, newValue, oldValue }) => {
       onExecute(() => {
         connect(newValue);
@@ -115,7 +115,7 @@ export class Channel implements Serializable<IChannel> {
 
     const effects = oly.olyArr(i.effects.map((iEffect) => {
       return new Effect(iEffect);
-    }));
+    }), 'Effect');
 
     effects.onDidRemove(({ items, onExecute }) => {
       onExecute(() => {

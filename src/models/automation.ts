@@ -79,18 +79,22 @@ export class AutomationClip implements Serializable<IAutomation>, BuildingBlock 
     this.contextId = i.contextId;
     this.attr = i.attr;
     this.id = i.id;
-    this.name = oly.olyRef(i.name);
+    this.name = oly.olyRef(i.name, 'Automation Name');
 
     this.signal = signal;
     this.control = new Audio.Controller(signal);
 
     this.points = this._points = oly.olyArr(i.points.map((p) => {
-      const point: Point = { time: oly.olyRef(p.time), value: oly.olyRef(p.value) };
+      const point: Point = {
+        time: oly.olyRef(p.time),
+        value: oly.olyRef(p.value),
+      };
+
       return {
         ...point,
         controller: this.schedule(point),
       };
-    }));
+    }), 'Automation Point');
 
     const watch = (items: InternalPoint[]) => {
       items.forEach((point) => {

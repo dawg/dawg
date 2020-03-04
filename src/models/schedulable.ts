@@ -82,8 +82,8 @@ interface SchedulableOpts<Element, Type extends string, Options extends t.Mixed>
   ) => Audio.TransportEventController | undefined;
 }
 
-const wrap = (initial: number, onSet: (value: number) => void) => {
-  const reference = oly.olyRef(initial);
+const wrap = (initial: number, name: string, onSet: (value: number) => void) => {
+  const reference = oly.olyRef(initial, name);
   watch(() => reference.value, (value) => {
     onSet(value);
   }, { lazy: true });
@@ -134,19 +134,19 @@ const createSchedulable = <
   ): ScheduledElement<T, M, Options> => {
     const info = {  ...opts };
 
-    const duration = wrap(info.duration, (value) => {
+    const duration = wrap(info.duration, 'Duration', (value) => {
       controller?.setDuration(value);
     });
 
-    const time = wrap(info.time, (value) => {
+    const time = wrap(info.time, 'Time', (value) => {
       controller?.setStartTime(value);
     });
 
-    const offset = wrap(info.offset ?? 0, (value) => {
+    const offset = wrap(info.offset ?? 0, 'Offset', (value) => {
       controller?.setOffset(value);
     });
 
-    const row = oly.olyRef(info.row);
+    const row = oly.olyRef(info.row, 'Row');
 
     const copy = () => {
       return create(

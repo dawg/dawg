@@ -36,7 +36,7 @@ export class Playlist implements Serializable<IPlaylist> {
   public elements: PlaylistElements[];
 
   constructor(public transport: Audio.Transport, elements: PlaylistElements[]) {
-    this.elements = watchOlyArray(oly.olyArr(elements));
+    this.elements = watchOlyArray(oly.olyArr(elements, 'Playlist Element'));
   }
 
   public serialize() {
