@@ -60,6 +60,7 @@ const extensionsStack: Array<
 
 const makeAndRead = (file: string): JSON => {
   if (!fs.existsSync(file)) {
+    logger.debug(`${file} does not exist and is being created`);
     const dir = path.dirname(file);
     fs.mkdirRecursiveSync(dir);
     fs.writeFileSync(file, JSON.stringify({}));
@@ -70,7 +71,11 @@ const makeAndRead = (file: string): JSON => {
 };
 
 const write = async (file: string, contents: any) => {
-  await fs.writeFile(file, JSON.stringify(contents, null, 4));
+  try {
+    await fs.writeFile(file, JSON.stringify(contents, null, 4));
+  } catch (e) {
+    logger.error(e.message);
+  }
 };
 
 const isState = (oo: TypeOrOptions): oo is StateType => {

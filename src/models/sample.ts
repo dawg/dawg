@@ -33,7 +33,7 @@ export class Sample implements BuildingBlock, Serializable<ISample> {
   constructor(public buffer: AudioBuffer | null, i: ISample) {
     this.id = i.id;
     this.path = i.path;
-    this.name = oly.olyRef(i.name);
+    this.name = oly.olyRef(i.name, 'Sample Name');
     this.player = new GraphNode(
       buffer ? new Audio.Player(buffer) : null,
       'Sample',

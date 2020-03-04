@@ -20,8 +20,8 @@ export class Track {
   public mute: oly.OlyRef<boolean>;
 
   constructor(i: ITrack) {
-    this.name = oly.olyRef(i.name);
-    this.mute = oly.olyRef(i.mute);
+    this.name = oly.olyRef(i.name, 'Track Name');
+    this.mute = oly.olyRef(i.mute, 'Track Mute');
   }
 
   public serialize(): ITrack {

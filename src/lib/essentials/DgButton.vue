@@ -1,6 +1,6 @@
 <template>
   <button 
-    class="py-1 px-3 rounded text-primary outline-none focus:outline-none"
+    class="py-1 px-3 relative rounded text-primary outline-none focus:outline-none"
     :class="classes"
     v-on="$listeners"
   >
@@ -16,7 +16,7 @@ import { literal } from '@/lib/std';
 export default createComponent({
   name: 'DgButton',
   props: {
-    type: { type: String as () => 'text' | 'outline' | 'default', default: literal('default') },
+    type: { type: String as () => 'text' | 'outline' | 'default' | 'icon', default: literal('default') },
     level: { type: String, default: 'primary' },
   },
   setup(props) {
@@ -43,6 +43,10 @@ export default createComponent({
           return [
             'overlay',
           ];
+        } else if (props.type === 'icon') {
+          return [
+            'icon',
+          ];
         }
       }),
     };
@@ -57,5 +61,29 @@ export default createComponent({
 
 .overlay:active {
   background-color: rgba(255, 255, 255, 0.10);
+}
+
+.icon::before {
+  content: "";
+  opacity: 0;
+  border-radius: 50%;
+  color: inherit;
+  background-color: currentColor;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+.icon {
+  height: 36px;
+  width: 36px;
+
+  &:hover::before {
+    opacity: 0.08;
+  }
 }
 </style>

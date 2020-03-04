@@ -529,7 +529,7 @@ export const defineAPI = (i: LoadedProject) => {
   }
 
   Audio.Context.BPM = i.bpm;
-  const bpm = oly.olyRef(i.bpm);
+  const bpm = oly.olyRef(i.bpm, 'BPM');
   bpm.onDidChange(({ newValue, oldValue, subscriptions }) => {
     subscriptions.push({
       execute: () => {
