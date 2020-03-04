@@ -103,39 +103,18 @@ export function parseNote(str: string | number, isTonic?: boolean, tuning?: numb
 
   const acc = m[2].replace(/x/g, '##');
   const letter = m[1].toUpperCase();
-  const pc = letter + acc;
   const step = (letter.charCodeAt(0) + 3) % 7;
   const alt = acc[0] === 'b' ? -acc.length : acc.length;
   const pos = SEMITONES[step] + alt;
-  const chroma = pos < 0 ? 12 + pos : pos % 12;
 
   let oct: number | undefined;
   let midi: number | undefined;
-  let freq: number | undefined;
   if (m[3]) { // has octave
     oct = +m[3];
     midi = pos + 12 * (oct + 1);
-    freq = midiToFreq(midi, tuning);
   }
 
-  let tonicOf: string | undefined;
-  if (isTonic) {
-    tonicOf = m[4];
-  }
-
-  return {
-    acc,
-    letter,
-    pc,
-    step,
-    alt,
-    pos,
-    chroma,
-    oct,
-    midi,
-    freq,
-    tonicOf,
-  }.midi;
+  return midi;
 }
 
 export function base64Decode(base64: string) {
