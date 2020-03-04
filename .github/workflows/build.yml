@@ -75,15 +75,14 @@ jobs:
         with:
           name: release_version
 
-      - name: Get Release Version
-        id: get_release_info
-        run: |
-          value=`cat release_version/release_version.txt`
-          echo ::set-output name=version::$value
+      - uses: pCYSl5EDgo/cat@master
+        id: get_version
+        with:
+          path: release_version/release_version.txt
 
       - name: Information Output
         id: information_output
-        run: echo Version -> ${{ steps.get_release_info.outputs.version }}
+        run: echo Version -> ${{ steps.get_version.outputs.text }}
 
       - name: Cache Node Modules
         uses: actions/cache@v1
@@ -121,6 +120,6 @@ jobs:
       - name: Upload Release Asset
         uses: AButler/upload-release-assets@v2.0
         with:
-          release-tag: v${{ steps.get_release_info.outputs.version }}
+          release-tag: v${{ steps.get_version.outputs.text }}
           files: 'dist_electron/*'
           repo-token: ${{ secrets.GITHUB_TOKEN }}

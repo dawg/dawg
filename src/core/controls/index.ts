@@ -61,19 +61,21 @@ export const controls = framework.manager.activate({
       },
     }));
 
-    const stop = Vue.extend(createComponent({
+    const stopComponent = Vue.extend(createComponent({
       props: {},
       template: `
       <dg-mat-icon
         class="text-default cursor-pointer"
         icon="stop"
         title="Stop Playback"
+        @click="stop"
       ></dg-mat-icon>
       `,
+      setup: () => ({ stop }),
     }));
 
     dawg.ui.toolbar.push({
-      component: stop,
+      component: stopComponent,
       position: 'right',
       order: 2,
     });
@@ -85,13 +87,13 @@ export const controls = framework.manager.activate({
         class="text-default cursor-pointer"
         :icon="icon"
         @click="toggle"
-        title="Play/Pause Playback"
+        title="Play/Stop Playback"
       ></dg-mat-icon>
       `,
       setup() {
         return {
           toggle: () => {
-            playPause();
+            playOr('pause');
           },
           icon: computed(() => {
             return state.value === 'started' ? 'pause' : 'play_arrow';
@@ -106,7 +108,7 @@ export const controls = framework.manager.activate({
       order: 3,
     });
 
-    function playPause() {
+    function playOr(action: 'stop' | 'pause') {
       if (!transport.value) {
         dawg.notify.warning('Please select a Pattern.', {
           detail: 'Please create and select a `Pattern` first or switch the `Playlist` context.',
@@ -116,7 +118,11 @@ export const controls = framework.manager.activate({
       }
 
       if (transport.value.state === 'started') {
-        pause();
+        if (action === 'pause') {
+          pause();
+        } else {
+          stop();
+        }
       } else {
         startTransport();
       }
@@ -129,6 +135,15 @@ export const controls = framework.manager.activate({
 
       transport.value.stop();
       state.value = 'paused';
+    }
+
+    function stop() {
+      if (!transport.value) {
+        return;
+      }
+
+      transport.value.stop();
+      state.value = 'stopped';
     }
 
     function getTime() {
@@ -174,13 +189,13 @@ export const controls = framework.manager.activate({
 
     // Pause every time the context changes
     watch(c, () => {
-      pause();
+      stop();
     });
 
     context.subscriptions.push(commands.registerCommand({
-      text: 'Play/Pause',
+      text: 'Play/Stop',
       shortcut: ['Space'],
-      callback: playPause,
+      callback: () => playOr('stop'),
     }));
 
     return {
