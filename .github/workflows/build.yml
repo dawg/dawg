@@ -95,10 +95,16 @@ jobs:
         env:
           CI: true
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Removing "refs/tags/v"
+      # duplicate from above but we need the version in both jobs
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
 
       - name: Upload Release Asset
         uses: AButler/upload-release-assets@v2.0
         with:
-          release-tag: ${{ github.ref }}
+          release-tag: v${{ steps.get_version.outputs.VERSION }}
           files: 'dist_electron/*'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
