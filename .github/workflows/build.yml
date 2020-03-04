@@ -39,11 +39,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Output Release URL File
         run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
+      - name: Output Release Version File
+        run: echo "${{ steps.get_version.outputs.VERSION }}" > release_version.txt
       - name: Save Release URL File for publish
         uses: actions/upload-artifact@v1
         with:
           name: release_url
           path: release_url.txt
+      - name: Save Version File for publish
+        uses: actions/upload-artifact@v1
+        with:
+          name: release_version
+          path: release_version.txt
 
   build:
     name: Build
@@ -62,6 +69,22 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: release_url
+      
+      - name: Load Version
+        uses: actions/download-artifact@v1
+        with:
+          name: release_version
+
+      - name: Get Release Version
+        id: get_release_info
+        run: |
+          value=`cat release_version/release_version.txt`
+          echo ::set-output name=version::$value
+
+      - name: Information Output
+        id: information_output
+        run: |
+          echo Version -> ${{ version }}
 
       - name: Cache Node Modules
         uses: actions/cache@v1
@@ -95,16 +118,10 @@ jobs:
         env:
           CI: true
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
-      # Removing "refs/tags/v"
-      # duplicate from above but we need the version in both jobs
-      - name: Get the version
-        id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
 
       - name: Upload Release Asset
         uses: AButler/upload-release-assets@v2.0
         with:
-          release-tag: v${{ steps.get_version.outputs.VERSION }}
+          release-tag: v${{ version }}
           files: 'dist_electron/*'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
