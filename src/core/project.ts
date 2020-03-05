@@ -45,7 +45,7 @@ import { createExtension } from '@/lib/framework';
 import { commands } from '@/core/commands';
 import { computed } from '@vue/composition-api';
 
-const logger = getLogger('project', { level: 'debug' });
+const logger = getLogger('project');
 
 const DG = 'dg';
 const FILTERS = [{ name: 'DAWG Files', extensions: [DG] }];

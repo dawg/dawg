@@ -86,6 +86,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 10.x
+      # Necessary because there is a currently a dependency audio-decode > av > speaker which fails to be built on windows
+      # *But* it is an optional depedency so we don't actually need to install thankfully
       - run: npm ci --no-optional
       - run: npm run install-app-deps
 
