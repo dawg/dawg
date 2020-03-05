@@ -38,7 +38,7 @@ const middleware = () => {
   });
 
   const extensions = require.context(
-    './/extra',
+    './extra',
     // Whether or not to look in subfolders
     true,
     /^.+\.ts/,
@@ -46,7 +46,9 @@ const middleware = () => {
 
   extensions.keys().forEach((fileNameOrFolderName) => {
     // slice(1) to remove "."
-    const parts = fileNameOrFolderName.split(path.sep).slice(1);
+    // OK so I initially used path.sep to split the path *but* it wasn't working on windows
+    // IDK why but on windows "/" is still used as the seperator
+    const parts = fileNameOrFolderName.split('/').slice(1);
 
     let extensionModule: any;
     switch (parts.length) {

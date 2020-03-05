@@ -29,6 +29,8 @@ export type MenuBarItem<K extends keyof MenuBarSections> = MenuItem & {
 export interface ElectronMenuPosition {
   x: number;
   y: number;
+  preventDefault: () => void;
+  stopImmediatePropagation: () => void;
 }
 
 export interface ElectronMenuOptions {

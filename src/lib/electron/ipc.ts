@@ -1,6 +1,7 @@
 import electron, { Menu, MenuItemConstructorOptions } from 'electron';
 import { MenuBarItem, MenuBarSections, MainEvents, RendererEvents } from '../ipc-interface';
 import { defaultIpcMain } from '../ipc';
+import { keys } from '../std';
 
 export type ElectronMenuItem = {
   type: 'callback';
@@ -131,7 +132,7 @@ const menuLookup: MenuLookup = {
 const untypedMenu: { [K: string]: { [S: string]: ElectronMenuItem[]; } } = menuLookup;
 
 const renderMenu = () => {
-  const template = Object.keys(menuLookup).map((menuLabel): MenuItemConstructorOptions => {
+  const template = keys(menuLookup).map((menuLabel): MenuItemConstructorOptions => {
     const submenu: MenuItemConstructorOptions[] = [];
     Object.keys(untypedMenu[menuLabel]).forEach((section, i) => {
       if (i !== 0) {
@@ -157,7 +158,11 @@ const renderMenu = () => {
     });
 
     return {
-      label: menuLabel,
+      // On MacOS, this is done automatically. For consistency across operating systems we do this explicitly
+      // MacOS explicitly shows the application name as the first menu
+      // https://stackoverflow.com/questions/41551110/unable-to-override-app-name-on-mac-os-electron-menu
+      // provides a bit more info although it is not really related to this
+      label: menuLabel === 'Application' ? electron.app.getName() : menuLabel,
       submenu,
     };
   });

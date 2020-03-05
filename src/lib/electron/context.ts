@@ -4,7 +4,7 @@ interface Options {
   showInspectElement?: boolean;
 }
 
-const webContents = (win: any) => win.webContents || win.getWebContents();
+const webContents = (win: electron.BrowserWindow) => win.webContents;
 
 const decorateMenuItem = (menuItem: any) => {
   return (options: any = {}) => {
@@ -31,9 +31,9 @@ const removeUnusedMenuItems = (menuTemplate: any[]) => {
     });
 };
 
-const create = (win: any, options: Options) => {
-  webContents(win).on('context-menu', (event: any, props: any) => {
-    const {editFlags} = props;
+const create = (win: electron.BrowserWindow, options: Options) => {
+  win.webContents.on('context-menu', (_, props: any) => {
+    const { editFlags } = props;
     const hasText = props.selectionText.trim().length > 0;
     const isLink = Boolean(props.linkURL);
     const can = (type: any) => editFlags[`can${type}`] && hasText;
@@ -99,7 +99,7 @@ const create = (win: any, options: Options) => {
         id: 'inspect',
         label: 'Inspect Element',
         click() {
-          win.inspectElement(props.x, props.y);
+          win.webContents.inspectElement(props.x, props.y);
 
           if (webContents(win).isDevToolsOpened()) {
             webContents(win).devToolsWebContents.focus();
@@ -141,8 +141,8 @@ const create = (win: any, options: Options) => {
 			context-menu should open in.
 			When this is being called from a webView, we can't use win as this
 			would refere to the webView which is not allowed to render a popup menu.
-			*/
-      menu.popup(electron.remote ? electron.remote.getCurrentWindow() : win);
+      */
+      menu.popup();
     }
   });
 };

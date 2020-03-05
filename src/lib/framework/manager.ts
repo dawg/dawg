@@ -142,6 +142,8 @@ class Manager {
         `Unable to load previously opened project information. ` +
         `Opening blank project instead. Error message:` + result.message,
       );
+    } else if (result.type === 'not-found') {
+      logger.info('Past project information not found. Opening a blank project!');
     } else {
       pastProject = result.decoded;
     }

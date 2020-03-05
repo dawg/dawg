@@ -69,6 +69,10 @@ export interface DecodeSuccess<T> {
   decoded: T;
 }
 
+export interface NotFound {
+  type: 'not-found';
+}
+
 export interface Error {
   type: 'error';
   message: string;
@@ -124,11 +128,10 @@ export const write = <T>(type: t.Type<T>, opts: { data: T, path: string }): Erro
   };
 };
 
-export const read = <T>(type: t.Type<T>, opts: { path: string }): DecodeSuccess<T> | Error => {
+export const read = <T>(type: t.Type<T>, opts: { path: string }): DecodeSuccess<T> | NotFound | Error => {
   if (!fs.existsSync(opts.path)) {
     return {
-      type: 'error',
-      message: `${opts.path} does not exist.`,
+      type: 'not-found',
     };
   }
 

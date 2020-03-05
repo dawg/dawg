@@ -10,7 +10,14 @@ import { isDevelopment } from './lib/electron/environment';
 import eLog from 'electron-log';
 
 eLog.transports.console.level = false;
-eLog.transports.file.level = false;
+eLog.transports.file.level = 'info';
+
+eLog.catchErrors({
+  showDialog: false,
+  onError: (e) => {
+    eLog.error(`${e.name}: ${e.message}`);
+  },
+});
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -36,10 +43,6 @@ function createWindow() {
       nodeIntegration: true,
     },
   });
-
-  // Make the menu initially not visible
-  // Basically, get rid of the default menu
-  win.setMenuBarVisibility(false);
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode

@@ -3,7 +3,7 @@
   "productName": "DAWG",
   "version": "0.2.2",
   "private": true,
-  "author": "DAWG People <dawgpeople@gmail.com>",
+  "author": "Jacob Smith <jacob.smith@unb.ca>",
   "scripts": {
     "serve": "vue-cli-service electron:serve",
     "build": "vue-cli-service electron:build",

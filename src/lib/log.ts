@@ -120,17 +120,28 @@ export const log = (message: LogMessage) => {
   const styleString = styleArray.join('; ');
   const messageString = `[${message.name}] ${message.level.toUpperCase()}: ${message.message}`;
 
+  // We do this because if we try to import electron-log while testing the tests fail silently
   if (!eLog) {
     eLog = require('electron-log');
     eLog!.transports.console.level = false;
     eLog!.transports.file.level = 'warn';
     eLog!.transports.file.format = '[{y}-{m}-{d} {h}:{i}:{s}.{ms}] {text}';
+    eLog!.catchErrors({
+      showDialog: false,
+      onError: (e) => {
+        log({
+          level: 'error',
+          message: e.message,
+          name: 'Unhandled',
+          setLevel: 'info',
+          args: [],
+        });
+      },
+    });
   }
 
-  eLog![message.level](messageString, message.args);
+  eLog![message.level](messageString, ...message.args);
 
   // tslint:disable-next-line:no-console
   console.log(`%c${messageString}`, styleString, ...message.args);
 };
-
-
