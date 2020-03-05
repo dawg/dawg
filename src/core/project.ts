@@ -29,14 +29,13 @@ import {
   ClipContext,
   PlaylistElements,
 } from '@/models';
-import Tone from 'tone';
 import * as Audio from '@/lib/audio';
 import { makeLookup, reverse, range } from '@/lib/std';
 import fs from '@/lib/fs';
 import { loadBufferSync } from '@/lib/wav';
 import { notify } from '@/core/notify';
 import { getLogger } from '@/lib/log';
-import tmp from 'tmp';
+import * as tmp from '@/lib/tmp';
 import { GraphNode, masterNode } from '@/lib/audio/node';
 import * as framework from '@/lib/framework';
 import { remote } from 'electron';
@@ -490,11 +489,17 @@ export const defineAPI = (i: LoadedProject) => {
   }
 
   async function openTempProject(p: IProject) {
-    const { name: path } = tmp.fileSync({ keep: true });
-    await fs.writeFile(path, JSON.stringify(p, null, 4));
+    // TODO test
+    const result = tmp.generate();
+    if (result.type === 'unsuccessful') {
+      notify.warning('Unable to generate temporary directory. Please try again!');
+      return;
+    }
 
-    logger.info(`Writing ${path} as backup`);
-    framework.manager.setOpenedFile(path, { isTemp: true });
+    await fs.writeFile(result.dir, JSON.stringify(p, null, 4));
+
+    logger.info(`Writing ${result.dir} as backup`);
+    framework.manager.setOpenedFile(result.dir, { isTemp: true });
 
     const window = remote.getCurrentWindow();
     window.reload();
@@ -514,8 +519,9 @@ export const defineAPI = (i: LoadedProject) => {
     let projectPath = framework.manager.getOpenedFile();
 
     if (!projectPath || opts.forceDialog) {
-      const saveDialogReturn = await remote.dialog.showSaveDialog(remote.getCurrentWindow(), {});
-      projectPath = saveDialogReturn.filePath || null;
+      // const saveDialogReturn = await remote.dialog.showSaveDialog(remote.getCurrentWindow(), {});
+      // projectPath = saveDialogReturn.filePath || null;
+      projectPath = '/some/path/file.dg' || null;
 
 
       // If the user cancels the dialog
@@ -645,10 +651,12 @@ const extension = createExtension({
       shortcut: ['CmdOrCtrl', 'O'],
       callback: async () => {
         // files can be undefined. There is an issue with the .d.ts files.
-        const files = await remote.dialog.showOpenDialog(
-          remote.getCurrentWindow(),
-          { filters: FILTERS, properties: ['openFile'] },
-        );
+        // const files = await remote.dialog.showOpenDialog(
+        //   remote.getCurrentWindow(),
+        //   { filters: FILTERS, properties: ['openFile'] },
+        // );
+
+        const files = { filePaths: [] };
 
 
         if (!files.filePaths || files.filePaths.length === 0) {
@@ -658,8 +666,8 @@ const extension = createExtension({
         const filePath = files.filePaths[0];
         await api.setOpenedFile(filePath);
 
-        const window = remote.getCurrentWindow();
-        window.reload();
+        // const window = remote.getCurrentWindow();
+        // window.reload();
       },
     });
 
@@ -671,8 +679,8 @@ const extension = createExtension({
       callback: async () => {
         await api.removeOpenedFile();
 
-        const window = remote.getCurrentWindow();
-        window.reload();
+        // const window = remote.getCurrentWindow();
+        // window.reload();
       },
     });
 

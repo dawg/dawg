@@ -1,6 +1,17 @@
 import path from 'path';
 import fs from 'fs';
 export { FSWatcher } from 'fs';
+import * as BrowserFS from 'browserfs';
+
+BrowserFS.configure({
+  fs: 'LocalStorage',
+  options: {},
+}, (e) => {
+  if (e) {
+    // An error happened!
+    throw e;
+  }
+});
 
 const exists = (p: string) => {
   return new Promise((resolve) => {
@@ -62,6 +73,10 @@ export const statSync = fs.statSync;
 
 export const watch = fs.watch;
 
+export const openSync = fs.openSync;
+
+export const closeSync = fs.closeSync;
+
 const unlink = (p: string): Promise<void> => {
   return new Promise((resolve, reject) => {
     fs.unlink(p, (err) => {
@@ -87,7 +102,7 @@ const mkdirRecursive = async (dir: string) => {
 };
 
 const mkdirRecursiveSync = (dir: string) => {
-  if (!exists(dir)) {
+  if (!fs.existsSync(dir)) {
     mkdirRecursiveSync(path.join(dir, '..'));
     fs.mkdirSync(dir);
   }
@@ -122,6 +137,7 @@ const writeFileIfNonExistent = async (filename: string, data: string) => {
 
 
 export default {
+  ...fs,
   mkdirRecursive,
   mkdirRecursiveSync,
   writeFile,
@@ -137,4 +153,6 @@ export default {
   unlink,
   existsSync,
   readFileSync,
+  openSync,
+  closeSync,
 };

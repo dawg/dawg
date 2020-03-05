@@ -98,6 +98,7 @@ export const extension = createExtension({
           dawg.project.master.transport.start();
         };
 
+        // TODO
         const path = await remote.dialog.showSaveDialog(remote.getCurrentWindow(), {
           filters: [{ name: 'WAV', extensions: ['wav'] }],
         });

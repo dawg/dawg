@@ -94,16 +94,17 @@ export const extension = createExtension({
     }));
 
     const openFolder = async () => {
-      const { dialog } = remote;
-      const toAdd = await dialog.showOpenDialog({ properties: ['openDirectory'] });
+      // TODO
+      // const { dialog } = remote;
+      // const toAdd = await dialog.showOpenDialog({ properties: ['openDirectory'] });
 
       // We should only ever get undefined or an array of length 1
-      if (!toAdd.filePaths || toAdd.filePaths.length === 0) {
-        return;
-      }
+      // if (!toAdd.filePaths || toAdd.filePaths.length === 0) {
+      //   return;
+      // }
 
-      const rootFolder = toAdd.filePaths[0];
-      nonNullApi.addFolder(rootFolder);
+      // const rootFolder = toAdd.filePaths[0];
+      // nonNullApi.addFolder(rootFolder);
     };
 
     const component = Vue.extend(createComponent({

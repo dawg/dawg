@@ -1,8 +1,13 @@
-import { ipcMain as ipcM, ipcRenderer as ipcR, Event, WebContents } from 'electron';
+import {
+  // ipcMain as ipcM,
+  // ipcRenderer as ipcR,
+  // Event,
+  // WebContents,
+} from 'electron';
 import { keys } from './std';
 
-type ElectronIpcMain = typeof ipcM;
-type ElectronIpcRenderer = typeof ipcR;
+type ElectronIpcMain = { TODO: string } & { SO: string };
+type ElectronIpcRenderer = { TODO: string } & { SO: string };
 
 // This interface is not exported :(
 interface IpcMainEvent<T extends EventInformation> extends Event {
@@ -21,7 +26,7 @@ interface EventInformation {
   [key: string]: any[];
 }
 
-interface ElectronWebContents<T extends EventInformation> extends WebContents {
+interface ElectronWebContents<T extends EventInformation> {
   send<K extends keyof T>(channel: K, ...args: T[K]): void;
 }
 
@@ -61,8 +66,9 @@ type RendererListeners<T extends EventInformation, V extends EventInformation> =
 export const defaultIpcRenderer = <A extends EventInformation, B extends EventInformation>(
   events: RendererListeners<A, B>,
 ) => {
+  // TODO
   // RendererEvents, MainEvents
-  const ipcRenderer = ipcR as IpcRendererGeneric<A, B>;
+  const ipcRenderer = { on: () => ({}), send: () => ({}) } as any as IpcRendererGeneric<A, B>;
 
   keys(events).forEach((key) => {
     ipcRenderer.on(key, events[key] as any);
@@ -79,7 +85,7 @@ export const defaultIpcMain = <A extends EventInformation, B extends EventInform
   events: MainListeners<A, B>,
 ) => {
   // MainEvents, RendererEvents
-  const ipcMain = ipcM as IpcMainGeneric<A, B>;
+  const ipcMain = { on: () => ({}) } as any as IpcMainGeneric<A, B>;
 
   keys(events).forEach((key) => {
     ipcMain.on(key, events[key] as any);

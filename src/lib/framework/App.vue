@@ -202,6 +202,11 @@ export default createComponent({
         },
       );
 
+      // In the web, showMessageBoxSync will always return 1 (ie. No) *but* when we return an empty
+      // string it will then prompt for us.
+      // This means that we can't dispose of anything on the web but this is OK since the browsers manage
+      // that for us. In electron, we still need to dispose as some things are persisted even after reload
+
       // 0 -> Yes
       // 1 -> No
       if (choice === 0) {

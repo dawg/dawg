@@ -71,8 +71,13 @@ export const mapObject = <V, T, O extends { [k: string]: V }>(o: O, f: (v: V) =>
   return transformed as { [K in keyof O]: T };
 };
 
-export const uniqueId = () => {
-  return Math.random().toString().substr(2, 9);
+const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+const charactersLength = characters.length;
+
+export const uniqueId = (length = 6) => {
+  return range(length).map(() => {
+    return characters.charAt(Math.floor(Math.random() * charactersLength));
+  }).join('');
 };
 
 export function* chain<T>(...arrays: T[][]) {

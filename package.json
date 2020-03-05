@@ -6,6 +6,7 @@
   "author": "Jacob Smith <jacob.smith@unb.ca>",
   "scripts": {
     "serve": "vue-cli-service electron:serve",
+    "serve:web": "vue-cli-service serve",
     "build": "vue-cli-service electron:build",
     "test:unit": "vue-cli-service test:unit",
     "test:unit:watch": "vue-cli-service test:unit --watch",
@@ -21,11 +22,11 @@
   "main": "background.js",
   "dependencies": {
     "@tonejs/midi": "^1.2.2",
-    "@types/tmp": "^0.1.0",
     "@types/webmidi": "^2.0.4",
     "@vue/composition-api": "^0.3.4",
     "audio-decode": "^1.4.0",
     "babel-plugin-macros": "^2.8.0",
+    "browserfs": "^1.4.3",
     "core-js": "^3.6.4",
     "electron-log": "^4.0.7",
     "envelope-generator": "^3.0.0",
@@ -41,7 +42,6 @@
     "resize-observer-polyfill": "^1.5.0",
     "tailwindcss": "^1.2.0",
     "tinycolor2": "^1.4.1",
-    "tmp": "^0.1.0",
     "tone": "^13.8.25",
     "uuid": "^3.4.0",
     "vue": "^2.6.11",

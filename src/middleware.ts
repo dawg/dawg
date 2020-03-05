@@ -1,6 +1,5 @@
 import Vue from 'vue';
 import * as dawg from '@/dawg';
-import path from 'path';
 import '@/styles/material.css';
 import '@/styles/fontawesome/all.css';
 import '@/styles/main.css';

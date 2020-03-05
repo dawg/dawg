@@ -26,7 +26,8 @@ export default createComponent({
   name: 'VersionModal',
   props: { value: { type: Boolean, required: true } },
   setup(props, context) {
-    const versions: { [k: string]: string } = {
+    const versions: { [k: string]: string | undefined } = {
+      // TODO
       Version: app.getVersion(),
       Date: (new Date()).toISOString(),
       V8: process.versions.v8,

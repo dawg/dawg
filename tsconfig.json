@@ -23,6 +23,9 @@
       ],
       "@tonejs/midi": [
         "src/types/tonejs__midi.d.ts"
+      ],
+      "browserfs": [
+        "src/types/browserfs.d.ts"
       ]
     },
     "lib": [
