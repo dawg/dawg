@@ -22,10 +22,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
       # Removing "refs/tags/v"
       - name: Get the version
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}
+
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
@@ -33,19 +35,12 @@ jobs:
           name: v${{ steps.get_version.outputs.VERSION }}
           body_path: changelogs/${{ steps.get_version.outputs.VERSION }}-CHANGELOG.md
           tag_name: v${{ steps.get_version.outputs.VERSION }}
-          # Always draft because something might go wrong during the build
-          draft: true
+          # OK so I don't think we can set draft to true or else the build can't upload artifacts
+          draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Output Release URL File
-        run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
       - name: Output Release Version File
         run: echo "${{ steps.get_version.outputs.VERSION }}" > release_version.txt
-      - name: Save Release URL File for publish
-        uses: actions/upload-artifact@v1
-        with:
-          name: release_url
-          path: release_url.txt
       - name: Save Version File for publish
         uses: actions/upload-artifact@v1
         with:
@@ -64,11 +59,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      
-      - name: Load Release URL File from release job
-        uses: actions/download-artifact@v1
-        with:
-          name: release_url
       
       - name: Load Version
         uses: actions/download-artifact@v1

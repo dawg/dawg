@@ -1,8 +1,7 @@
 import * as t from '@/lib/io';
-import Tone from 'tone';
 import * as Audio from '@/lib/audio';
 import { Beat } from '@/lib/audio/types';
-import { computed, Ref, watch } from '@vue/composition-api';
+import { Ref } from '@vue/composition-api';
 import { Context } from '@/lib/audio';
 import { Sample } from '@/models/sample';
 import { Pattern } from '@/models/pattern';
@@ -15,6 +14,7 @@ import * as oly from '@/lib/olyger';
 import { getLogger } from '@/lib/log';
 
 const logger = getLogger('schedulable');
+
 
 export const watchOlyArray = <T extends ScheduledElement<any, any, any>>(arr: oly.OlyArr<T>) => {
   arr.onDidRemove(({ items, onExecute }) => {
@@ -84,9 +84,9 @@ interface SchedulableOpts<Element, Type extends string, Options extends t.Mixed>
 
 const wrap = (initial: number, name: string, onSet: (value: number) => void) => {
   const reference = oly.olyRef(initial, name);
-  watch(() => reference.value, (value) => {
-    onSet(value);
-  }, { lazy: true });
+  reference.onDidChange(({ newValue }) => {
+    onSet(newValue);
+  });
   return reference;
 };
 
@@ -104,7 +104,6 @@ export type ScheduledElement<Element, Type extends string, Options extends t.Mix
   offset: Ref<number>;
   options: t.TypeOf<Options>;
   row: Ref<number>;
-  endBeat: Readonly<Ref<number>>;
   showBorder: boolean;
   name?: Readonly<Ref<string>>;
   slice: (timeToSlice: number) => ScheduledElement<Element, Type, Options> | undefined;
@@ -146,7 +145,9 @@ const createSchedulable = <
       controller?.setOffset(value);
     });
 
-    const row = oly.olyRef(info.row, 'Row');
+    const row = wrap(info.row, 'Row', (value) => {
+      controller?.setRow(value);
+    });
 
     const copy = () => {
       return create(
@@ -208,9 +209,6 @@ const createSchedulable = <
       },
       add,
       remove,
-      endBeat: computed(() => {
-        return time.value + duration.value;
-      }),
       serialize: () => {
         return {
           row: row.value,
@@ -259,6 +257,7 @@ export const { create: createSamplePrototype, type: ScheduledSampleType } = crea
       time: params.time.value,
       duration: params.duration.value,
       offset: 0,
+      row: params.row.value,
       onStart: ({ seconds }) => {
         controller = instance.start({
           startTime: seconds,
@@ -293,7 +292,10 @@ export const { create: createPatternPrototype, type: ScheduledPatternType } = cr
   showBorder: true,
   options: t.type({}),
   add: (transport, params, pattern: Pattern) => {
-    return transport.embed(pattern.transport, params.time.value, params.duration.value);
+    return transport.embed(
+      pattern.transport,
+      { time: params.time.value, duration: params.duration.value, row: params.row.value },
+    );
   },
 });
 
@@ -329,6 +331,7 @@ export const { create: createNotePrototype, type: ScheduledNoteType } = createSc
       time: params.time.value,
       duration: 0, // We shouldn't have to set a duration. This is explained more in the Transport class file.
       offset: 0,
+      row: params.row.value,
     });
   },
 });

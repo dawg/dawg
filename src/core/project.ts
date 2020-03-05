@@ -43,6 +43,7 @@ import { remote } from 'electron';
 import { emitter, addEventListener } from '@/lib/events';
 import { createExtension } from '@/lib/framework';
 import { commands } from '@/core/commands';
+import { computed } from '@vue/composition-api';
 
 const logger = getLogger('project', { level: 'debug' });
 
@@ -302,6 +303,30 @@ export const defineAPI = (i: LoadedProject) => {
     samples,
     automationClips,
   } = i;
+
+  const mutedTracks = computed(() => {
+    // 1. Get the track and the index in a tuple
+    // 2. Filter to only the muted tracks
+    // 3. Map so that you only have the indices
+    // 4. Create a set with the indices
+    return new Set(tracks
+      .map((tr, ind) => [tr, ind] as const)
+      .filter(([tr]) => tr.mute.value)
+      .map(([_, ind]) => ind),
+    );
+  });
+
+  // Ok this this solution kinda works but isn't complete
+  // I honestly don't know how to go about fixing this issue but here is a description:
+  // When a track is unmuted, everything in that track needs to be checked for onMidStart, onTick, and onEnd
+  // Right now, we do nothing so for e.g. if a sample is halfway finish in a muted track which is subsequently
+  // unmuted then we don't trigger the onMidStart or onEnd events
+  // IMO this isn't a very simple problem to solve because the transport which handles all playback doesn't
+  // have the concept on a track so how do we tell it to check all previous events which were previously filtered
+  // out?? This isn't a huge issue though so I'm not fixing it ATM
+  master.transport.addFilter((event) => {
+    return !mutedTracks.value.has(event.row);
+  });
 
   instruments.onDidRemove(({ items: deletedInstruments }) => {
     logger.debug('instruments onDidRemove with ' + deletedInstruments.length + ' elements!');

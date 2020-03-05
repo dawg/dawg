@@ -21,7 +21,7 @@ export default createComponent({
       if (props.value) {
         return 'fg-primary';
       } else {
-        return 'fg-default-darken-3';
+        return 'fg-default-lighten-2';
       }
     });
 

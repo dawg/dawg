@@ -68,6 +68,8 @@ export class Controller extends Tone.Signal {
       onStart: onEndAndStart,
       onEnd: onEndAndStart,
       offset: 0,
+      // FIXME when you refactor this file this should be set
+      row: 0,
     });
   }
 
