@@ -87,7 +87,7 @@ export const controls = framework.manager.activate({
         class="text-default cursor-pointer"
         :icon="icon"
         @click="toggle"
-        title="Play/Stop Playback"
+        title="Play/Pause Playback"
       ></dg-mat-icon>
       `,
       setup() {
@@ -133,7 +133,7 @@ export const controls = framework.manager.activate({
         return;
       }
 
-      transport.value.stop();
+      transport.value.pause();
       state.value = 'paused';
     }
 

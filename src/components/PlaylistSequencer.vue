@@ -33,7 +33,7 @@ export default createComponent({
     rowHeight: { type: Number, required: true },
     tracks: { type: Array as () => Track[], required: true },
   },
-  setup() {
+  setup(props) {
     const prototype = ref();
 
     function trackOptions(event: MouseEvent, i: number) {
@@ -51,8 +51,9 @@ export default createComponent({
     }
 
 
-    function rowClass() {
-      return 'bg-default border-b border-default-darken-2';
+    function rowClass(i: number) {
+      const classes = props.tracks[i].mute.value ? 'bg-default-lighten-1' : 'bg-default';
+      return classes + ' border-b border-default-darken-2';
     }
 
     return {

@@ -18,6 +18,11 @@ export interface TransportEvent {
   // Must be defined if `onMidStart` OR `onEnd` OR `onTick` are defined
   duration: Ticks;
   offset: Ticks;
+  // This is kinda irrelevant and should maybe be removed
+  // But it was definitely the easiest solution to implementing row muting
+  // The reason this isn't the best is that the transport shouldn't really care about rows but if you can find a
+  // better solution then we can remove this
+  row: number;
   // Called ONLY at the start of the event
   onStart?: (context: EventContext) => void;
   // Called when the event is started at ANY point during its duration, EXCLUDING the start
@@ -34,6 +39,7 @@ export interface TransportEvent {
 export interface TransportEventController {
   setStartTime(startTime: Beat): void;
   setOffset(offset: Beat): void;
+  setRow(row: number): void;
   setDuration(duration: Beat): void;
   remove(): Disposer;
 }
@@ -43,6 +49,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
   private timeline = new Timeline<TransportEvent>();
   private active: TransportEvent[] = [];
   private isFirstTick = false;
+  private filters: Array<(event: TransportEvent) => boolean> = [];
 
   // tslint:disable-next-line:variable-name
   private _loopStart: Ticks = 0;
@@ -89,6 +96,10 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
 
     const checkNowActive = () => {
       if (this.state !== 'started') {
+        return;
+      }
+
+      if (this.filter(event)) {
         return;
       }
 
@@ -148,6 +159,9 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
         event.duration = Context.beatsToTicks(duration);
         checkNowActive();
       },
+      setRow: (row: number) => {
+        event.row = row;
+      },
       setOffset: (offset: Beat) => {
         event.offset = Context.beatsToTicks(offset);
         // We also need to make sure it's sorted here
@@ -199,7 +213,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
     };
   }
 
-  public embed(child: Transport, ticks: Ticks, duration: Ticks) {
+  public embed(child: Transport, o: { time: Beat, duration: Beat, row: number }) {
     return this.schedule({
       onStart: () => {
         child.isFirstTick = true;
@@ -213,10 +227,30 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
         // transport A to think it is time tick 1
         child.processTick(seconds, currentTick - this.time, true);
       },
-      time: ticks,
+      time: o.time,
       offset: 0,
-      duration,
+      duration: o.duration,
+      row: o.row,
     });
+  }
+
+  /**
+   * Filter out events during playback.
+   *
+   * @param filter The filter function. It should return false if the event should be ignored.
+   */
+  public addFilter(filter: (event: TransportEvent) => boolean) {
+    this.filters.push(filter);
+
+    return {
+      dispose: () => {
+        const i = this.filters.indexOf(filter);
+
+        if (i >= 0) {
+          this.filters.splice(i, 1);
+        }
+      },
+    };
   }
 
   /**
@@ -322,6 +356,10 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
     this.active = [];
   }
 
+  private filter(event: TransportEvent) {
+    return this.filters.some((filter) => !filter(event));
+  }
+
   private processTick(seconds: ContextTime, ticks: Ticks, isChild = false) {
     if (!isChild && ticks >= this._loopEnd) {
       this.emit('beforeEnd', { seconds, ticks });
@@ -336,6 +374,10 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
 
       // The upper bound is exclusive but we don't care about checking about events that haven't started yet.
       this.timeline.forEachBetween(0, ticks, (event) => {
+        if (this.filter(event)) {
+          return;
+        }
+
         // Check if it's already finished
         if (event.time + event.duration < ticks) {
           return;
@@ -357,6 +399,10 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
     // Invoke onTick callbacks for events scheduled on this tick.
     // Also, add them to the active list of events if required.
     this.timeline.forEachAtTime(ticks, (event) => {
+      if (this.filter(event)) {
+        return;
+      }
+
       if (event.onStart) {
         event.onStart({
           seconds,
@@ -371,6 +417,11 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
     });
 
     this.active = this.active.filter((event) => {
+      if (this.filter(event)) {
+        if (event.onEnd) { event.onEnd({ seconds, ticks }); }
+        return false;
+      }
+
       const endTime = event.time + event.duration;
       const startTime = event.time + event.offset;
       if (endTime < ticks) {
