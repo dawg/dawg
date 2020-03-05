@@ -6,7 +6,7 @@
   "author": "Jacob Smith <jacob.smith@unb.ca>",
   "scripts": {
     "serve": "vue-cli-service electron:serve",
-    "serve:web": "vue-cli-service serve",
+    "serve:web": "VUE_APP_ENVIRONMENT=web vue-cli-service serve",
     "build": "vue-cli-service electron:build",
     "test:unit": "vue-cli-service test:unit",
     "test:unit:watch": "vue-cli-service test:unit --watch",

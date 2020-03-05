@@ -13,7 +13,7 @@ const logger = getLogger('ipc');
 
 export interface Command<T extends any[]> {
   text: string;
-  shortcut?: Key[];
+  shortcut?: Key[] | string;
   callback: (...args: T) => void;
 }
 
@@ -22,6 +22,7 @@ export type MenuCommand = Command<[ElectronMenuPosition]>;
 export interface MenuOptions {
   position: ElectronMenuPosition;
   items: Array<MenuCommand | null>;
+  // TODO is this left used anywhere
   left?: boolean;
 }
 
@@ -43,7 +44,11 @@ export const transformMenuOptionsAndSaveCallback = (opts: MenuOptions): Electron
         type: 'callback',
         label: item.text,
         uniqueEvent,
-        accelerator: item.shortcut ? item.shortcut.join('+') : '',
+        accelerator: item.shortcut ?
+          typeof item.shortcut === 'string' ?
+            item.shortcut :
+            item.shortcut.join('+') :
+          '',
       };
     }),
   };

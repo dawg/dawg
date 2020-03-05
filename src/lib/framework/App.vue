@@ -120,9 +120,10 @@ import { createComponent, computed, ref, onMounted, onUnmounted, watch } from '@
 import { getLogger } from '@/lib/log';
 import { ipcSender } from '@/lib/framework/ipc';
 import { useSubscriptions } from '@/lib/vutils';
-import { remote } from 'electron';
+import { remote, Menu } from 'electron';
 import * as oly from '@/lib/olyger';
 import path from 'path';
+import * as etron from '@/lib/etron';
 
 declare var __static: string;
 
@@ -186,6 +187,14 @@ export default createComponent({
     function openSettings() {
       settings.value = true;
     }
+
+    subscriptions.push(etron.events.on('setApplicationMenu', (menu: Menu) => {
+      // TODO
+    }));
+
+    subscriptions.push(etron.events.on('popup', (menu: Menu) => {
+      // TODO
+    }));
 
     // This is called before refresh / close
     // I don't remove this listner because the window is closing anyway

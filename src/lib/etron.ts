@@ -1,4 +1,5 @@
 import { BrowserWindow, MessageBoxSyncOptions } from 'electron';
+import { emitter } from '@/lib/events';
 
 const browserSpecs = (() => {
   const ua = navigator.userAgent;
@@ -115,6 +116,62 @@ const app = {
   getVersion,
   getPath,
   getName,
+};
+
+type TODO = any;
+type IpcRendererEvent = TODO;
+type Send = (channel: string, ...args: any[]) => void;
+
+interface IpcMainEvent {
+  sender: { send: Send };
+}
+
+const mainEvents = emitter();
+
+const send: Send = (channel, ...args) => {
+  rendererEvents.emit(channel, {}, ...args);
+};
+
+const sender = { send };
+
+export const ipcMain = {
+  on: (channel: string, listener: (event: IpcMainEvent, ...args: any[]) => void) => {
+    mainEvents.on(channel, listener);
+  },
+};
+
+const rendererEvents = emitter();
+
+export const ipcRenderer = {
+  on: (channel: string, listener: (event: IpcRendererEvent, ...args: any[]) => void) => {
+    rendererEvents.on(channel, listener);
+  },
+  send: (channel: string, ...args: any[]) => {
+    mainEvents.emit(channel, { sender }, ...args);
+  },
+};
+
+// TODO what if you import Menu??
+export const events = emitter<{ setApplicationMenu: [any], popup: [any, () => void] }>();
+
+export const Menu = {
+  buildFromTemplate: (menu: any) => {
+    const onCloseEmitter = emitter<{ 'menu-will-close': [] }>();
+
+    return {
+      popup: () => {
+        events.emit('popup', menu, () => {
+          onCloseEmitter.emit('menu-will-close');
+        });
+      },
+      addListener: (e: 'menu-will-close', cb: () => void) => {
+        onCloseEmitter.on(e, cb);
+      },
+    };
+  },
+  setApplicationMenu: (menu: any) => {
+    events.emit('setApplicationMenu', menu);
+  },
 };
 
 export const remote = {

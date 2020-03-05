@@ -1,4 +1,4 @@
-import electron, { Menu, MenuItemConstructorOptions } from 'electron';
+import { Menu, MenuItemConstructorOptions, app } from 'electron';
 import { MenuBarItem, MenuBarSections, MainEvents, RendererEvents } from '../ipc-interface';
 import { defaultIpcMain } from '../ipc';
 import { keys } from '../std';
@@ -17,7 +17,7 @@ export type ElectronMenuItem = {
 
 defaultIpcMain<MainEvents, RendererEvents>({
   showMenu: (event, payload) => {
-    const options = payload.items.map((item): electron.MenuItemConstructorOptions => {
+    const options = payload.items.map((item): MenuItemConstructorOptions => {
       if (item === null) {
         return {
           type: 'separator',
@@ -41,11 +41,12 @@ defaultIpcMain<MainEvents, RendererEvents>({
       };
     });
 
-    const menu = electron.Menu.buildFromTemplate(options);
+    const menu = Menu.buildFromTemplate(options);
     menu.addListener('menu-will-close', () => {
       event.sender.send('closeMenu', payload);
     });
 
+    // TODO leak?
     menu.popup();
   },
   addToMenuBar: (event, item) => {
@@ -162,7 +163,7 @@ const renderMenu = () => {
       // MacOS explicitly shows the application name as the first menu
       // https://stackoverflow.com/questions/41551110/unable-to-override-app-name-on-mac-os-electron-menu
       // provides a bit more info although it is not really related to this
-      label: menuLabel === 'Application' ? electron.app.getName() : menuLabel,
+      label: menuLabel === 'Application' ? app.getName() : menuLabel,
       submenu,
     };
   });
