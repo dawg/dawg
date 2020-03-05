@@ -38,7 +38,7 @@ const middleware = () => {
   });
 
   const extensions = require.context(
-    './/extra',
+    './extra',
     // Whether or not to look in subfolders
     true,
     /^.+\.ts/,

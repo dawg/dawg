@@ -126,6 +126,18 @@ export const log = (message: LogMessage) => {
     eLog!.transports.console.level = false;
     eLog!.transports.file.level = 'warn';
     eLog!.transports.file.format = '[{y}-{m}-{d} {h}:{i}:{s}.{ms}] {text}';
+    eLog!.catchErrors({
+      showDialog: false,
+      onError: (e) => {
+        log({
+          level: 'error',
+          message: e.message,
+          name: 'Unhandled',
+          setLevel: 'info',
+          args: [],
+        });
+      },
+    });
   }
 
   eLog![message.level](messageString, ...message.args);
@@ -133,5 +145,3 @@ export const log = (message: LogMessage) => {
   // tslint:disable-next-line:no-console
   console.log(`%c${messageString}`, styleString, ...message.args);
 };
-
-
