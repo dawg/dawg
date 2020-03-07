@@ -39,9 +39,16 @@ const ticker = new Ticker(() => events.emit('tick'), 0.03); // updateInterval FI
 
 const cEvents = emitter<{ setBPM: [number] }>();
 
-// TODO
-// tslint:disable-next-line:variable-name
-export const context = (Tone.context as any)._context as unknown as AudioContext;
+const unmodified = new AudioContext();
+
+// const enhancedments = definedP{
+//   PPQ:  192,
+//   lookAhead:  0.1,
+// };
+
+export const context = Object.assign({
+
+}, unmodified);
 // export const context = Object.assign({
 //   createGain: () => {
 //     return createGain(_context);
