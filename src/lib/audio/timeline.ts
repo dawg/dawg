@@ -7,7 +7,7 @@ import { Ticks } from '@/lib/audio/types';
  *         retrieval.
  */
 export class Timeline<T extends { time: Ticks; offset: Ticks }> {
-  protected timeline: T[] = [];
+  private timeline: T[] = [];
 
   public add(event: T) {
     const result = this.search(this.getStart(event));

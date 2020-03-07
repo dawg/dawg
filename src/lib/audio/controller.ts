@@ -5,10 +5,17 @@ import { Signal } from '@/lib/audio';
 import * as Audio from '@/lib/audio';
 import { Disposer } from '@/lib/std';
 
+type AutomationType =
+    'linearRampToValueAtTime' |
+    'exponentialRampToValueAtTime' |
+    'setTargetAtTime' |
+    'setValueAtTime' |
+    'cancelScheduledValues';
+
 interface IAutomationEvent {
   time: Audio.Beat;
   value: number;
-  type: Tone.AutomationType;
+  type: AutomationType;
 }
 
 export interface PointController {
@@ -22,7 +29,7 @@ export class AutomationEvent implements IAutomationEvent {
 
   public time: Audio.Beat;
   public value: number;
-  public type: Tone.AutomationType;
+  public type: AutomationType;
   public id = '' + AutomationEvent.eventId++;
 
   constructor(o: IAutomationEvent) {
@@ -32,6 +39,7 @@ export class AutomationEvent implements IAutomationEvent {
   }
 }
 
+// TODO
 export class Controller extends Tone.Signal {
   private lastValue: number;
   private output: Signal;

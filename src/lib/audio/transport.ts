@@ -1,7 +1,6 @@
 import { Timeline } from '@/lib/audio/timeline';
 import { ContextTime, Ticks, Seconds, Beat } from '@/lib/audio/types';
 import { Context } from '@/lib/audio/context';
-import { watch } from '@vue/composition-api';
 import { Clock } from '@/lib/audio/clock';
 import { StrictEventEmitter } from '@/lib/events';
 import { Disposer } from '@/lib/std';

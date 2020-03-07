@@ -1,10 +1,10 @@
-import Tone from 'tone';
 import * as Audio from '@/lib/audio';
 import uuid from 'uuid';
 import * as t from '@/lib/io';
 import { BuildingBlock } from '@/models/block';
 import * as oly from '@/lib/olyger';
 import { useSignal } from '@/utils';
+import { context } from '@/lib/audio/context';
 
 export const InstrumentType = t.intersection([
   t.type({
@@ -44,8 +44,9 @@ export abstract class Instrument<
    */
   public readonly channel: oly.OlyRef<number | undefined>;
 
-  public readonly output = new Audio.GraphNode(new Tone.Panner(), 'Panner');
-  public readonly input = new Audio.GraphNode(new Tone.Gain(), 'Gain');
+  // TODO Same thing with these
+  public readonly output = new Audio.GraphNode(context.createStereoPanner(), 'Panner');
+  public readonly input = new Audio.GraphNode(context.createGain(), 'Gain');
   public readonly pan: oly.OlyRef<number>;
   public readonly volume: oly.OlyRef<number>;
 

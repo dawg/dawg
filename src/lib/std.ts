@@ -83,6 +83,26 @@ export function* chain<T>(...arrays: T[][]) {
   }
 }
 
+interface PropertyDescriptor<T> {
+  configurable?: boolean;
+  enumerable?: boolean;
+  value?: T;
+  writable?: boolean;
+  get?(): T;
+  set?(v: T): void;
+}
+
+interface PropertyDescriptorMap {
+  [s: string]: PropertyDescriptor<any>;
+}
+
+export const defineProperties = <T, V extends PropertyDescriptorMap>(
+  o: T,
+  properties: V,
+): T & { [K in keyof V]: V[K]['value'] } => {
+  return Object.defineProperties(o, properties);
+};
+
 export interface XYPosition {
   x: number;
   y: number;

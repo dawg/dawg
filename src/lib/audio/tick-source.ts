@@ -2,11 +2,13 @@ import Tone from 'tone';
 import { ContextTime, Ticks } from '@/lib/audio/types';
 import { Context } from '@/lib/audio/context';
 import { literal } from '@/lib/std';
+import { Timeline } from '@/lib/audio/timeline';
 
 export class TickSource {
   public readonly frequency = new Tone.TickSignal();
   private state = new Tone.TimelineState('stopped');
-  private tickOffset = new Tone.Timeline<{ time: number, ticks: number, seconds: number }>();
+  // TODO we have a timeline?? Also why do we have all of this?? I guess to automate the bpm
+  private tickOffset = new Tone.Timeline<{ time: number, ticks: number, seconds: number, offset: 0 }>();
 
   constructor(opts: { frequency: number }) {
     this.frequency.value = opts.frequency;
@@ -65,6 +67,7 @@ export class TickSource {
       time,
       ticks,
       seconds : this.frequency.getDurationOfTicks(ticks, time),
+      offset: 0,
     });
     return this;
   }

@@ -1,59 +1,55 @@
-import Tone from 'tone';
-import { Source } from '@/lib/audio/source';
-import { Time, Seconds, ContextTime } from '@/lib/audio/types';
+import { MonophonicOptions, createMonophonic } from '@/lib/audio/monophonic';
+import { EnvelopeOptions, createEnvelope } from '@/lib/audio/envelope';
+import { Context } from '@/lib/audio/context';
+import { createOscillator, OscillatorOptions } from '@/lib/audio/oscillator';
+import { createVolume } from '@/lib/audio/volume';
 
-export interface SynthOptions {
-  envelope: {
-    attack: number,
-    decay: number,
-    sustain: number,
-    release: number,
-  };
-  oscillator: {
-    type: string,
-  };
+
+
+export interface SynthOptions extends MonophonicOptions {
+  oscillator: Partial<OscillatorOptions>;
+  envelope: Partial<EnvelopeOptions>;
 }
 
-/**
- * An instrument source. Uses `Tone` under the hood.
- */
-export class Synth implements Source<SynthOptions> {
-  private synth: Tone.PolySynth;
+export const createSynth = (options?: Partial<SynthOptions>) => {
+  const oscillator = createOscillator(options?.oscillator);
+  const frequency = oscillator.frequency;
+  const detune = oscillator.detune;
 
-  constructor() {
-    this.synth = new Tone.PolySynth(8, Tone.Synth);
-  }
+  const envelope = createEnvelope(options?.envelope);
+  const volume = createVolume();
 
-  public triggerAttackRelease(
-    note: string,
-    duration: Seconds,
-    time: ContextTime,
-    velocity?: number,
-  ) {
-    this.synth.triggerAttackRelease(note, duration, time, velocity);
-    return this;
-  }
+  oscillator.connect(envelope);
+  envelope.connect(volume);
 
-  public disconnect(node: Tone.AudioNode): this {
-    this.synth.connect(node);
-    return this;
-  }
+  const monophonic = createMonophonic({
+    getLevelAtTime: (time) => {
+      time = time ?? Context.now();
+      return envelope.getValueAtTime(time);
+    },
+    frequency: null,
+    detune: null,
+    triggerEnvelopeAttack: (time, velocity) => {
+        // the envelopes
+      envelope.triggerAttack(time, velocity);
+      oscillator.start(time);
+      // if there is no release portion, stop the oscillator
+      if (envelope.sustain === 0) {
+        const computedAttack = envelope.attack;
+        const computedDecay = envelope.decay;
+        oscillator.stop(time + computedAttack + computedDecay);
+      }
+    },
+    triggerEnvelopeRelease: (time) => {
+      envelope.triggerRelease(time);
+      oscillator.stop(time + envelope.release);
+    },
+  }, options);
 
-  public connect(node: Tone.AudioNode): this {
-    this.synth.connect(node);
-    return this;
-  }
-
-  public set<K extends keyof SynthOptions>(o: { key: K, value: SynthOptions[K] }) {
-    this.synth.set({ [o.key]: o.value });
-  }
-
-  public triggerAttack(note: string, time?: ContextTime, velocity?: number) {
-    this.synth.triggerAttack(note, time, velocity);
-    return {
-      dispose: () => {
-        this.synth.triggerRelease(note);
-      },
-    };
-  }
-}
+  // TODO generalize to helper function maybe to extract core AudioNode attributes ??
+  return Object.assign({
+    connect: volume.connect,
+    frequency,
+    detune,
+  }, monophonic);
+};

@@ -15,6 +15,7 @@ interface TimeTicks {
 }
 
 export class Clock extends StrictEventEmitter<{ started: [TimeTicks], stopped: [TimeTicks] }> {
+  // TODO
   public readonly frequency: Tone.TickSignal;
   private callback: (seconds: ContextTime, ticks: Ticks) => void;
   private tickSource: TickSource;

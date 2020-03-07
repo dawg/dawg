@@ -1,14 +1,16 @@
 import * as t from '@/lib/io';
 import uuid from 'uuid';
-import Tone from 'tone';
 import * as Audio from '@/lib/audio';
 import { Serializable } from '@/models/serializable';
 import { EffectType, AnyEffect, Effect } from '@/models/filters/effect';
 import * as oly from '@/lib/olyger';
-import { GraphNode, masterNode } from '@/lib/audio/node';
+import { GraphNode } from '@/lib/audio/node';
 import { EffectName } from '@/models/filters/effects';
 import { getLogger } from '@/lib/log';
 import { useSignal } from '@/utils';
+import { context } from '@/lib/audio/context';
+import { createGain } from '@/lib/audio/gain';
+import { createMeter } from '@/lib/audio/meter';
 
 const logger = getLogger('channel', { level: 'debug' });
 
@@ -51,14 +53,13 @@ export class Channel implements Serializable<IChannel> {
   public readonly volume: oly.OlyRef<number>;
   public readonly mute: oly.OlyRef<boolean>;
 
-  public readonly input = new GraphNode(new Tone.Gain(), 'Gain');
-  public readonly output = new GraphNode(new Tone.Panner(), 'Panner');
+  // TODO yeah uh let's implement these
+  public readonly input = new GraphNode(createGain(), 'Gain');
+  public readonly output = new GraphNode(context.createStereoPanner(), 'Panner');
 
-  public readonly left = new GraphNode(new Tone.Meter());
-  public readonly right = new GraphNode(new Tone.Meter());
-  private readonly split = new GraphNode(new Tone.Split());
-  private readonly splitLeft = new GraphNode(this.split.node.left);
-  private readonly splitRight = new GraphNode(this.split.node.right);
+  public readonly left = new GraphNode(createMeter());
+  public readonly right = new GraphNode(createMeter());
+  private readonly split = new GraphNode(context.createChannelSplitter(2));
 
   // tslint:disable-next-line:variable-name
   private readonly _effects: AnyEffect[];

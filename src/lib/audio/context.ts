@@ -1,5 +1,5 @@
 import Tone from 'tone';
-import { Ticks, Beat } from '@/lib/audio/types';
+import { Ticks, Beat, Seconds } from '@/lib/audio/types';
 import { emitter } from '@/lib/events';
 
 class Ticker {
@@ -39,7 +39,17 @@ const ticker = new Ticker(() => events.emit('tick'), 0.03); // updateInterval FI
 
 const cEvents = emitter<{ setBPM: [number] }>();
 
+// TODO
+// tslint:disable-next-line:variable-name
 export const context = (Tone.context as any)._context as unknown as AudioContext;
+// export const context = Object.assign({
+//   createGain: () => {
+//     return createGain(_context);
+//   },
+// }, _context);
+
+
+// TODO add to context instead of creating a class ie. use Object.assign
 export class Context {
   public static context = context;
   public static PPQ = 192;
@@ -96,6 +106,13 @@ export class Context {
 
   public static sampleTime() {
     return 1 / context.sampleRate;
+  }
+
+  /**
+   * The number of seconds of 1 processing block (128 samples)
+   */
+  public static blockTime(): Seconds {
+    return 128 / this.context.sampleRate;
   }
 
   public static resume() {

@@ -1,10 +1,4 @@
-import Tone from 'tone';
 import { Disposer } from '@/lib/std';
-
-interface AudioNode {
-  disconnect(node: AudioNode): this;
-  connect(node: AudioNode): this;
-}
 
 export class GraphNode<T extends AudioNode | null = AudioNode | null> {
   private static doConnect(me: GraphNode, o: { oldDest?: GraphNode, newDest?: GraphNode }) {
@@ -148,9 +142,8 @@ export class GraphNode<T extends AudioNode | null = AudioNode | null> {
   }
 
   public toMaster() {
-    this.connect(masterNode);
+    // TODO
+    // this.connect(masterNode);
     return this;
   }
 }
-
-export const masterNode = new GraphNode(Tone.Master, 'Master');

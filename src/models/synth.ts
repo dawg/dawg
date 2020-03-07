@@ -1,4 +1,3 @@
-import Tone from 'tone';
 import * as t from '@/lib/io';
 import * as Audio from '@/lib/audio';
 import { Instrument, InstrumentType } from '@/models/instrument';

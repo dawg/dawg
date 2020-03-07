@@ -1,72 +1,57 @@
-import Tone from 'tone';
 import { ContextTime, Seconds } from '@/lib/audio/types';
 import { Context } from '@/lib/audio/context';
+import { createVolume } from '@/lib/audio/volume';
+import { createBufferSource } from '@/lib/audio/buffer-source';
 
-export class Player extends Tone.AudioNode {
-  public volume: Tone.Signal;
-  protected output: Tone.AudioNode;
-  // tslint:disable-next-line:variable-name
-  private _volume: Tone.Volume;
+export interface PlayerOptions {
+  volume: number;
+  mute: boolean;
+}
 
-  constructor(public buffer: AudioBuffer, options: { volume?: number, mute?: boolean } = {}) {
-    super();
-    this._volume = this.output = new Tone.Volume(options.volume || 0);
+export interface PreviewOptions {
+  onEnded: () => void;
+}
+
+// TODO are options even used? ie. are they every given?
+export const createSource = (buffer: AudioBuffer, options?: Partial<PlayerOptions>) => {
+  const volume = createVolume();
+  // TODO we are not wrapping .value
+  volume.volume.value = options?.volume ?? 0;
+  volume.mute(options?.mute ?? false);
 
 
-    this.volume = this._volume.volume;
+  const create = (opts?: Partial<PreviewOptions>) => {
+    const source = createBufferSource(buffer, opts);
+    source.connect(volume);
+    return source;
+ };
 
-    (this._volume as any).output.output.channelCount = 2;
-    (this._volume as any).output.output.channelCountMode = 'explicit';
-
-    this.mute = options.mute || false;
-  }
-
-  get mute() {
-    return this._volume.mute;
-  }
-
-  set mute(mute: boolean) {
-    this._volume.mute = mute;
-  }
-
-  public preview(o?: { onended?: () => void }) {
-    const source = this.createSource(o);
+  const preview = (opts?: Partial<PreviewOptions>) => {
+    const source = create(opts);
     source.start(Context.now(), 0);
     return source;
-  }
+  };
 
-  public createInstance() {
-    return new PlayerInstance(this.createSource.bind(this));
-  }
-
-  private createSource(o?: { onended?: () => void }) {
-     // make the source
-     return new Tone.BufferSource({
-      buffer: this.buffer,
-      fadeOut: 0,
-      ...o,
-      // playbackRate: this.playbackRate,
-    }).connect(this.output);
-  }
-}
-
-
-export class PlayerInstance {
-  constructor(private create: () => Tone.BufferSource) {}
-
-  public start(o: { startTime: Seconds, offset: Seconds, duration: Seconds }) {
-    const { offset, duration, startTime } = o;
-    const source = this.create();
-
-    source.start(startTime, offset, duration);
+  const createInstance = () => {
     return {
-      stop: (seconds: ContextTime) => {
-        try {
-          source.stop(seconds);
-        } catch (e) {
-          // already stopped
-        }
+      start: (o: { startTime: Seconds, offset: Seconds, duration: Seconds }) => {
+        const { offset, duration, startTime } = o;
+        const source = create();
+
+        source.start(startTime, offset, duration);
+        return {
+          stop: (seconds: ContextTime) => {
+            try {
+              source.stop(seconds);
+            } catch (e) {
+              // already stopped
+            }
+          },
+        };
       },
     };
-  }
-}
+  };
+
+
+  return Object.assign({ createInstance, preview }, volume);
+};

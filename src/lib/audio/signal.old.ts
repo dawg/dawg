@@ -1,9 +1,10 @@
 import Tone from 'tone';
 
+// TODO uhh refactor
 export class Signal {
   public raw = 0;
 
-  constructor(public signal: Tone.Signal, public minValue: number, public maxValue: number) {
+  constructor(public signal: AudioParam, public minValue: number, public maxValue: number) {
     this.raw = signal.value;
   }
 
@@ -28,9 +29,4 @@ export class Signal {
   public setValueAtTime(value: number, time: number) {
     this.signal.setValueAtTime(value, time);
   }
-
-  public dispose() {
-    this.signal.dispose();
-  }
-
 }

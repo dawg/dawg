@@ -3,11 +3,10 @@ import { createExtension } from '@/lib/framework/extensions';
 import * as dawg from '@/dawg';
 import ExportProgressModal from '@/extra/exporter/ExportProgressModal.vue';
 import { ref } from '@vue/composition-api';
-import * as Audio from '@/lib/audio';
 import { remote } from 'electron';
 import { blobsToAudioBuffer, audioBufferToWav } from '@/lib/wav';
 import fs from '@/lib/fs';
-import Tone from 'tone';
+import * as Audio from '@/lib/audio';
 
 export const extension = createExtension({
   id: 'dawg.spectrogram',
@@ -87,14 +86,14 @@ export const extension = createExtension({
               dawg.project.master.transport.loopStart = loopStart;
               dawg.project.master.transport.loopEnd = loopEnd;
               open.value = false;
-              Tone.Master.mute = false;
+              Audio.masterNode.mute = false;
               recorder.stop();
               disposer.dispose();
             },
           });
 
           dawg.controls.stopIfStarted();
-          Tone.Master.mute = true;
+          Audio.masterNode.mute = true;
           dawg.project.master.transport.start();
         };
 

@@ -40,6 +40,7 @@ export class Effect<T extends EffectName> implements Serializable<IEffect> {
   public options: EffectOptions[T];
   public id = uuid.v4();
 
+  // TODO maybe we want to hold off on this for a bit... or maybe not??
   public effect: GraphNode<Tone.Effect>;
 
   constructor(i: IEffect) {

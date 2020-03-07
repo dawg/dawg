@@ -29,7 +29,6 @@ import {
   ClipContext,
   PlaylistElements,
 } from '@/models';
-import Tone from 'tone';
 import * as Audio from '@/lib/audio';
 import { makeLookup, reverse, range } from '@/lib/std';
 import fs from '@/lib/fs';

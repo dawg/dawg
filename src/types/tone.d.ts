@@ -929,7 +929,9 @@ declare module 'tone' {
     memory: number;
     cancel(time: number): this;
     add(event: T): void;
-    get(time: number, comparator?: keyof T): T;
+    get(time: number, comparator?: keyof T): T | null;
+    getAfter(time: number, comparator?: keyof T): T | null;
+    getBefore(time: number, comparator?: keyof T): T | null;
     forEach(callback: (event: T) => void): void;
     forEachAtTime(time: number, callback: (event: T) => void): void;
     forEachBetween(startTime: number, endTime: number, callback: (e: T) => void): this;
@@ -944,6 +946,7 @@ declare module 'tone' {
     getLastState(state: TransportState, time: number): T;
     setStateAtTime(state: TransportState, time: number): this;
     getValueAtTime(time: number): TransportState;
+    getNextState(state: TransportState, time: number): T | undefined;
   }
 
   type _TimeArg = string | number | Time;
