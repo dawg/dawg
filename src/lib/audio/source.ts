@@ -1,92 +1,30 @@
-// import { Volume } from "../component/channel/Volume";
-// import "../core/context/Destination";
-// import "../core/clock/Transport";
-// import { Param } from "../core/context/Param";
-// import { OutputNode, ToneAudioNode, ToneAudioNodeOptions } from "../core/context/ToneAudioNode";
-// import { Decibels, Seconds, Time } from "../core/type/Units";
-// import { defaultArg } from "../core/util/Defaults";
-// import { noOp, readOnly } from "../core/util/Interface";
-// import { BasicPlaybackState, StateTimeline, StateTimelineEvent } from "../core/util/StateTimeline";
-// import { isDefined, isUndef } from "../core/util/TypeCheck";
-// import { assert, assertContextRunning } from "../core/util/Debug";
-// import { GT } from "../core/util/Math";
-
-import Tone, { TransportState } from 'tone';
-import { Decibels, ContextTime, Seconds } from '@/lib/audio/types';
-import { createVolume } from '@/lib/audio/volume';
-import { Context, context } from '@/lib/audio/context';
+import { ContextTime, Seconds } from '@/lib/audio/types';
+import { context } from '@/lib/audio/online';
 
 export interface SourceOptions {
-  // TODO not used
-  volume: Decibels;
-  mute: boolean;
-  onStop: () => void;
-  start(time: ContextTime, offset?: Seconds, duration?: Seconds): void;
-  stop(time: ContextTime): void;
-  restart(time: Seconds, offset?: Seconds, duration?: Seconds): void;
+  onEnded: () => AudioScheduledSourceNode['onended'];
 }
 
-export const createSource = (options: SourceOptions) => {
-  // this._volume = this.output = new Volume({
-  //   context: this.context,
-  //   mute: options.mute,
-  //   volume: options.volumfe,
-  // });
-  // this.volume = this._volume.volume;
-  const volume = createVolume();
+export const augmentSource = <T extends AudioScheduledSourceNode>(node: T, options?: Partial<SourceOptions>) => {
+  const savedStart = node.start.bind(node);
+  const savedStop = node.stop.bind(node);
 
-  // TODO
-  const onStop = options.onStop;
-
-  /**
-   * Keep track of the scheduled state.
-   */
-  const state: Tone.TimelineState<{
-    time: ContextTime;
-    state: TransportState;
-    duration?: Seconds;
-    offset?: Seconds;
-    /**
-     * Either the buffer is explicitly scheduled to end using the stop method,
-     * or it's implicitly ended when the buffer is over.
-     */
-    implicitEnd?: boolean;
-  }> = new Tone.TimelineState('stopped');
+  if (options?.onEnded) {
+    node.onended = options.onEnded;
+  }
 
   /**
    * Start the source at the specified time. If no time is given,
-   * stareft the source now.
+   * start the source now.
    * @param  time When the source should be started.
-   * @example
-   * import { Oscillator } from "tone";
-   * const source = new Oscillator().toDestination();
-   * source.start("+0.5"); // starts the source 0.5 seconds from now
    */
-  const start = (time?: ContextTime, offset?: Seconds, duration?: Seconds) => {
-    let computedTime = time ?? Context.now();
-    computedTime = Math.max(computedTime, context.currentTime);
-    // if it's started, stop it and restart it
-    if (state.getValueAtTime(computedTime) === 'started') {
-      state.cancel(computedTime);
-      state.setStateAtTime('started', computedTime);
-      restart(computedTime, offset, duration);
-    } else {
-      state.setStateAtTime('started', computedTime);
-      options.start(computedTime, offset, duration);
+  const start = (o: { time?: ContextTime, offset?: Seconds, duration?: Seconds }) => {
+    const computedTime = Math.max(o.time ?? context.now(), context.currentTime);
+    const startTime = computedTime + (o.offset ?? 0);
+    savedStart(startTime);
 
-      // TODO
-      // assertContextRunning(this.context);
-    }
-  };
-
-  /**
-   * Restart the source.
-   */
-  const restart = (time?: ContextTime, offset?: Seconds, duration?: Seconds) => {
-    time = time ?? Context.now();
-    if (state.getValueAtTime(time) === 'started') {
-      state.cancel(time);
-      options.restart(time, offset, duration);
+    if (o.duration !== undefined) {
+      savedStop(startTime + o.duration);
     }
   };
 
@@ -96,16 +34,9 @@ export const createSource = (options: SourceOptions) => {
    * @param time When the source should be stopped.
    */
   const stop = (time?: ContextTime) => {
-    const computedTime = Math.max(time ?? Context.now(), context.currentTime);
-    if (
-      state.getValueAtTime(computedTime) === 'started' ||
-      state.getNextState('started', computedTime) !== undefined
-    ) {
-      options.stop(computedTime);
-      state.cancel(computedTime);
-      state.setStateAtTime('stopped', computedTime);
-    }
+    const computedTime = Math.max(time ?? context.now(), context.currentTime);
+    savedStop(computedTime);
   };
 
-  return Object.assign({ start, stop, restart }, volume);
+  return Object.assign(node, { start, stop });
 };

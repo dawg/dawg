@@ -1,5 +1,6 @@
 import { Disposer } from '@/lib/std';
 
+// TODO refactor ??
 export class GraphNode<T extends AudioNode | null = AudioNode | null> {
   private static doConnect(me: GraphNode, o: { oldDest?: GraphNode, newDest?: GraphNode }) {
     if (o.oldDest) {

@@ -1,6 +1,6 @@
 import { MonophonicOptions, createMonophonic } from '@/lib/audio/monophonic';
 import { EnvelopeOptions, createEnvelope } from '@/lib/audio/envelope';
-import { Context } from '@/lib/audio/context';
+import { context } from '@/lib/audio/online';
 import { createOscillator, OscillatorOptions } from '@/lib/audio/oscillator';
 import { createVolume } from '@/lib/audio/volume';
 
@@ -13,8 +13,9 @@ export interface SynthOptions extends MonophonicOptions {
 
 export const createSynth = (options?: Partial<SynthOptions>) => {
   const oscillator = createOscillator(options?.oscillator);
-  const frequency = oscillator.frequency;
-  const detune = oscillator.detune;
+
+  const frequency = oscillator.sources.frequency;
+  const detune = oscillator.sources.detune;
 
   const envelope = createEnvelope(options?.envelope);
   const volume = createVolume();
@@ -24,11 +25,11 @@ export const createSynth = (options?: Partial<SynthOptions>) => {
 
   const monophonic = createMonophonic({
     getLevelAtTime: (time) => {
-      time = time ?? Context.now();
+      time = time ?? context.now();
       return envelope.getValueAtTime(time);
     },
-    frequency: null,
-    detune: null,
+    frequency,
+    detune,
     triggerEnvelopeAttack: (time, velocity) => {
         // the envelopes
       envelope.triggerAttack(time, velocity);
@@ -48,7 +49,7 @@ export const createSynth = (options?: Partial<SynthOptions>) => {
 
   // TODO generalize to helper function maybe to extract core AudioNode attributes ??
   return Object.assign({
-    connect: volume.connect,
+    connect: volume.connect.bind(volume),
     frequency,
     detune,
   }, monophonic);

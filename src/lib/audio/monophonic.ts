@@ -1,6 +1,6 @@
 import { Seconds, Cents, NormalRange, ContextTime, Note } from '@/lib/audio/types';
 import { createInstrument } from '@/lib/audio/instrument';
-import { Context } from '@/lib/audio/context';
+import { context } from '@/lib/audio/online';
 import { ConstantSource } from '@/lib/audio/constant-source';
 import { parseNote } from '@/lib/audio/util';
 
@@ -47,20 +47,20 @@ export const createMonophonic = (opts: MonophonicOpts, options?: Partial<Monopho
   const setNote = (note: Note, time: ContextTime) => {
     const hertz = parseNote(note);
     if (portamento > 0 && getLevelAtTime(time) > 0.05) {
-      frequency.offset.exponentialRampTo(hertz, portamento, time);
+      frequency.output.exponentialRampTo(hertz, portamento, time);
     } else {
-      frequency.offset.setValueAtTime(hertz, time);
+      frequency.output.setValueAtTime(hertz, time);
     }
   };
 
   const instrument = createInstrument({
     triggerAttack: (note, time, velocity) => {
-      const seconds = time ?? Context.now();
+      const seconds = time ?? context.now();
       triggerEnvelopeAttack(seconds, velocity ?? 1);
       setNote(note, seconds);
     },
     triggerRelease: (time) => {
-      const seconds = time ?? Context.now();
+      const seconds = time ?? context.now();
       triggerEnvelopeRelease(seconds);
     },
   });

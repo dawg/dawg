@@ -86,11 +86,18 @@ export function* chain<T>(...arrays: T[][]) {
 interface PropertyDescriptor<T> {
   configurable?: boolean;
   enumerable?: boolean;
-  value?: T;
   writable?: boolean;
-  get?(): T;
+  get(): T;
   set?(v: T): void;
 }
+
+type Properties<V extends PropertyDescriptorMap> = {
+  [K in keyof V]: undefined extends V[K]['set'] ? never : ReturnType<V[K]['get']>
+};
+
+type ReadonlyProperties<V extends PropertyDescriptorMap> = Readonly<{
+  [K in keyof V]: undefined extends V[K]['set'] ? ReturnType<V[K]['get']> : never
+}>;
 
 interface PropertyDescriptorMap {
   [s: string]: PropertyDescriptor<any>;
@@ -99,7 +106,7 @@ interface PropertyDescriptorMap {
 export const defineProperties = <T, V extends PropertyDescriptorMap>(
   o: T,
   properties: V,
-): T & { [K in keyof V]: V[K]['value'] } => {
+): T & Properties<V> & ReadonlyProperties<V> => {
   return Object.defineProperties(o, properties);
 };
 

@@ -1,5 +1,5 @@
 import { ContextTime, Seconds } from '@/lib/audio/types';
-import { Context } from '@/lib/audio/context';
+import { context } from '@/lib/audio/online';
 import { createVolume } from '@/lib/audio/volume';
 import { createBufferSource } from '@/lib/audio/buffer-source';
 
@@ -28,7 +28,7 @@ export const createSource = (buffer: AudioBuffer, options?: Partial<PlayerOption
 
   const preview = (opts?: Partial<PreviewOptions>) => {
     const source = create(opts);
-    source.start(Context.now(), 0);
+    source.start(context.now(), 0);
     return source;
   };
 

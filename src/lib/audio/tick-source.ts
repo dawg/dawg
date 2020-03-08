@@ -1,6 +1,6 @@
 import Tone from 'tone';
 import { ContextTime, Ticks } from '@/lib/audio/types';
-import { Context } from '@/lib/audio/context';
+import { context } from '@/lib/audio/online';
 import { literal } from '@/lib/std';
 import { Timeline } from '@/lib/audio/timeline';
 
@@ -18,15 +18,15 @@ export class TickSource {
   }
 
   get ticks() {
-    return this.getTicksAtTime(Context.now());
+    return this.getTicksAtTime(context.now());
   }
 
   set ticks(t: Ticks) {
-    this.setTicksAtTime(t, Context.now());
+    this.setTicksAtTime(t, context.now());
   }
 
   get seconds() {
-    return this.getSecondsAtTime(Context.now());
+    return this.getSecondsAtTime(context.now());
   }
 
   public getSecondsAtTime(time: ContextTime) {
@@ -40,7 +40,7 @@ export class TickSource {
     let elapsedSeconds = 0;
 
     // iterate through all the events since the last stop
-    this.state.forEachBetween(stopEvent.time, time + Context.sampleTime(), (e) => {
+    this.state.forEachBetween(stopEvent.time, time + context.sampleTime, (e) => {
       let periodStartTime = lastState.time;
       // if there is an offset event in this period use that
       const offsetEvent = this.tickOffset.get(e.time);
@@ -83,7 +83,7 @@ export class TickSource {
     let elapsedTicks = 0;
 
     // iterate through all the events since the last stop
-    this.state.forEachBetween(stopEvent.time, time + Context.sampleTime(), (e) => {
+    this.state.forEachBetween(stopEvent.time, time + context.sampleTime, (e) => {
       let periodStartTime = lastState.time;
       // if there is an offset event in this period use that
       const offsetEvent = this.tickOffset.get(e.time);
@@ -138,7 +138,7 @@ export class TickSource {
     let lastStateEvent = this.state.get(startTime);
     this.state.forEachBetween(startTime, endTime, (event) => {
       if (lastStateEvent.state === 'started' && event.state !== 'started') {
-        this.forEachTickBetween(Math.max(lastStateEvent.time, startTime), event.time - Context.sampleTime(), callback);
+        this.forEachTickBetween(Math.max(lastStateEvent.time, startTime), event.time - context.sampleTime, callback);
       }
       lastStateEvent = event;
     });

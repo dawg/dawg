@@ -1,5 +1,5 @@
 import { Note, ContextTime, Seconds, NormalRange } from '@/lib/audio/types';
-import { Context } from '@/lib/audio/context';
+import { context } from '@/lib/audio/online';
 
 interface InstrumentOptions {
   triggerAttack(note: Note, time?: ContextTime, velocity?: NormalRange): void;
@@ -8,7 +8,7 @@ interface InstrumentOptions {
 
 export const createInstrument = ({ triggerAttack, triggerRelease }: InstrumentOptions) => {
   const triggerAttackRelease = (note: Note, duration: Seconds, time?: ContextTime, velocity?: NormalRange) => {
-    time = time ?? Context.now();
+    time = time ?? context.now();
     triggerAttack(note, time, velocity);
     triggerRelease(time + duration);
   };

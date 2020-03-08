@@ -1,8 +1,7 @@
 import Tone from 'tone';
 import { Ticks, Beat } from '@/lib/audio/types';
 import { Transport } from '@/lib/audio/transport';
-import { Signal } from '@/lib/audio';
-import * as Audio from '@/lib/audio';
+import { Signal, context } from '@/lib/audio';
 import { Disposer } from '@/lib/std';
 
 type AutomationType =
@@ -13,7 +12,7 @@ type AutomationType =
     'cancelScheduledValues';
 
 interface IAutomationEvent {
-  time: Audio.Beat;
+  time: Beat;
   value: number;
   type: AutomationType;
 }
@@ -27,7 +26,7 @@ export interface PointController {
 export class AutomationEvent implements IAutomationEvent {
   public static eventId = 0;
 
-  public time: Audio.Beat;
+  public time: Beat;
   public value: number;
   public type: AutomationType;
   public id = '' + AutomationEvent.eventId++;
@@ -93,7 +92,7 @@ export class Controller extends Tone.Signal {
 
   public add(time: Beat, value: number): PointController {
     const event = new AutomationEvent({
-      time: Audio.Context.beatsToTicks(time),
+      time: context.beatsToTicks(time),
       value,
       type: 'linearRampToValueAtTime',
     });

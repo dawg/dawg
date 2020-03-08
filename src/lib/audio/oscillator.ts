@@ -1,71 +1,28 @@
-import { createSource } from '@/lib/audio/source';
+import { augmentSource, SourceOptions } from '@/lib/audio/source';
 import { createConstantSource } from '@/lib/audio/constant-source';
-import { Cents, Hertz, ContextTime } from '@/lib/audio/types';
-import { Context } from '@/lib/audio/context';
-import { OscillatorNode, createOscillatorNode } from '@/lib/audio/oscillator-node';
+import { Cents, Hertz } from '@/lib/audio/types';
+import { context } from '@/lib/audio/online';
+import { createParam } from '@/lib/audio/param';
 
-export interface OscillatorOptions {
+export interface OscillatorOptions extends SourceOptions {
   type: OscillatorType;
   frequency: Hertz;
   detune: Cents;
-  // TODO
-  // partialCount: number;
-  // partials: number[];
-  // phase: number;
 }
 
 export const createOscillator = (options?: Partial<OscillatorOptions>) => {
-  const type = options?.type ?? 'sine';
-  let oscillator: OscillatorNode | undefined;
+  const oscillator = augmentSource(context.createOscillator(), options);
+  oscillator.type = options?.type ?? 'sine';
 
-  const frequency = createConstantSource({
-    value: options?.frequency ?? 440,
-  });
+  const frequencyParam = createParam(oscillator.frequency, { value: options?.frequency ?? 440 });
+  const detuneParam = createParam(oscillator.detune, { value: options?.detune ?? 0 });
 
-  const detune = createConstantSource({
-    value: options?.detune ?? 0,
-  });
+  // TODO initial values ??
+  const frequency = createConstantSource();
+  frequency.connect(frequencyParam);
 
-  /**
-   * start the oscillator
-   */
-  const start = (time?: ContextTime) => {
-    const computedTime = time ?? Context.now();
-    oscillator = createOscillatorNode();
-    oscillator.type = type;
+  const detune = createConstantSource();
+  detune.connect(detuneParam);
 
-    // connect the control signal to the oscillator frequency & detune
-    oscillator.connect(source);
-    frequency.connect(oscillator.frequency);
-    detune.connect(oscillator.detune);
-
-    // start the oscillator
-    oscillator.start(computedTime);
-  };
-
-  /**
-   * stop the oscillator
-   */
-  const stop = (time?: ContextTime) => {
-    const computedTime = time ?? Context.now();
-    if (oscillator) {
-      oscillator.stop(computedTime);
-    }
-  };
-
-  const source = createSource({
-    start,
-    stop,
-    restart: () => {
-      //
-    },
-    // TODO the next three things
-    volume: 1,
-    mute: false,
-    onStop: () => {
-      //
-    },
-  });
-
-  return Object.assign({ frequency, detune }, source);
+  return Object.assign(oscillator, { sources: { frequency, detune } });
 };

@@ -106,7 +106,9 @@
     ></loading>
   </div> -->
   <div>
-    
+    <button @click="start">
+      START TESTING
+    </button>
   </div>
 </template>
 
@@ -125,6 +127,7 @@ import { createComponent, computed, ref, onMounted, onUnmounted, watch } from '@
 // import * as oly from '@/lib/olyger';
 // import path from 'path';
 import * as Audio from '@/lib/audio';
+import { context } from '@/lib/audio/online';
 
 // declare var __static: string;
 
@@ -291,7 +294,34 @@ export default createComponent({
     //   rootClasses: framework.ui.rootClasses,
     // };
 
-    return {};
+    const synth = Audio.createSynth({
+      oscillator: {
+        type: 'sawtooth',
+      },
+    });
+
+    synth.connect(Audio.context.destination);
+
+    // const oscillator = Audio.context.createOscillator({
+    //   //
+    // });
+
+    // const context = new AudioContext();
+    // const context = Audio.context;
+
+    // const oscillator = Audio.createOscillator();
+    // oscillator.connect(Audio.context.destination);
+    // oscillator.frequency.setValueAtTime(440, context.currentTime); // value in hertz
+
+    return {
+      start: () => {
+        synth.triggerAttackRelease('C5', 2);
+
+        // oscillator.type = 'square';
+        // oscillator.start(context.currentTime);
+        // oscillator.stop(context.currentTime + 2);
+      },
+    };
   },
 });
 </script>

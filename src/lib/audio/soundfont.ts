@@ -1,7 +1,6 @@
 import Tone from 'tone';
 import { ContextTime, Seconds } from '@/lib/audio/types';
-import { Source } from '@/lib/audio/source.old';
-import { context } from '@/lib/audio/context';
+import { context } from '@/lib/audio/online';
 import { sendRequest, parseNote, base64Decode } from '@/lib/mutils';
 import decode from 'audio-decode';
 import ADSR from 'envelope-generator';
@@ -152,7 +151,6 @@ interface SoundfontSuccess {
 }
 
 export async function loadSoundfont(
-  ac: AudioContext,
   name: string,
   options: Partial<Options> = {},
 ): Promise<SoundfontError | SoundfontSuccess> {
@@ -209,14 +207,11 @@ export interface SoundfontOptions {
 
 export const genId = ((i) => () => i++)(0);
 
-/**
- * A soundfont source.
- */
-export class Soundfont implements Source<SoundfontOptions> {
-  // private player: soundfonts.Player | null = null;
-  private out = context.createGain();
-  private buffers: { [k: string]: AudioBuffer } | null = null;
-  private defaults: SoundfontOptions = {
+// TODO consolidate this + synth
+export const createSoundfont = (name: SoundfontName, options?: Partial<SoundfontOptions>) => {
+  const out = context.createGain();
+  let buffers: { [k: string]: AudioBuffer } | null = null;
+  const defaults: SoundfontOptions = {
     attack: 0.01,
     decay: 0.1,
     sustain: 0.9,
@@ -224,58 +219,53 @@ export class Soundfont implements Source<SoundfontOptions> {
     gain: 1,
   };
 
-  constructor(private name: SoundfontName) {
-    this.attemptReloadIfNecessary();
-  }
+  const attemptReloadIfNecessary = () => {
+    if (buffers !== null) {
+      return;
+    }
 
-  public triggerAttackRelease(note: string, duration: Seconds, time: ContextTime, velocity?: number) {
-    this.start(note, time, {
+    loadSoundfont(name).then((result) => {
+      if (result.type === 'error') {
+        // TODO
+        // tslint:disable-next-line:no-console
+        console.warn(result);
+      } else {
+        buffers = result.buffers;
+      }
+    });
+  };
+
+  // Make sure to call it once at the start to attempt to load
+  attemptReloadIfNecessary();
+
+  const triggerAttackRelease = (note: string, duration: Seconds, time: ContextTime, velocity?: number) => {
+    start(note, time, {
       duration,
       gain: velocity,
     });
+  };
 
-    return this;
-  }
+  const triggerAttack = (note: string, time?: Seconds, velocity?: number) => {
+    start(note, time, { gain: velocity });
+  };
 
-  public triggerAttack(note: string, time?: Seconds, velocity?: number) {
-    return this.start(note, time, { gain: velocity });
-  }
-
-  public connect(node: Tone.AudioNode): this {
+  const connect = (node: Tone.AudioNode) => {
     // A bit of a hacky solution to make Tone.js work with soundfonts
-    this.out.connect((node as any).output as AudioNode);
-    return this;
-  }
+    out.connect((node as any).output as AudioNode);
+  };
 
-  public disconnect(node: Tone.AudioNode) {
+  const disconnect = (node: Tone.AudioNode) => {
     // FIXME A bit of a hacky solution to make Tone.js work with soundfonts
-    this.out.disconnect((node as any).output as AudioNode);
-    return this;
-  }
+    out.disconnect((node as any).output as AudioNode);
+  };
 
-  public set<K extends keyof SoundfontOptions>(o: { key: K, value: SoundfontOptions[K] }) {
-    this.defaults[o.key] = o.value;
-  }
+  const set = <K extends keyof SoundfontOptions>(o: { key: K, value: SoundfontOptions[K] }) => {
+    defaults[o.key] = o.value;
+  };
 
-  public attemptReloadIfNecessary() {
-    if (this.buffers === null) {
-      const promise = loadSoundfont(context, this.name);
-
-      promise.then((result) => {
-        if (result.type === 'error') {
-          // TODO
-          // tslint:disable-next-line:no-console
-          console.warn(result);
-        } else {
-          this.buffers = result.buffers;
-        }
-      });
-    }
-  }
-
-  private start(name: string, when?: number, o: Partial<{ duration: number } & SoundfontOptions> = {}) {
-    const midi = parseNote(name);
-    if (midi === undefined || !this.buffers) {
+  const start = (note: string, when?: number, o: Partial<{ duration: number } & SoundfontOptions> = {}) => {
+    const midi = parseNote(note);
+    if (midi === undefined || !buffers) {
       return {
         dispose: () => {
           //
@@ -285,8 +275,8 @@ export class Soundfont implements Source<SoundfontOptions> {
 
     when = when ?? context.currentTime;
 
-    const buffer = this.buffers[midi];
-    const node = this.createNode(buffer, o);
+    const buffer = buffers[midi];
+    const node = createNode(buffer, o);
     node.env.start(when);
     node.source.start(when);
 
@@ -295,18 +285,18 @@ export class Soundfont implements Source<SoundfontOptions> {
     }
 
     return node;
-  }
+  };
 
-  private createNode(buffer: AudioBuffer, o: Partial<SoundfontOptions>) {
+  const createNode = (buffer: AudioBuffer, o: Partial<SoundfontOptions>) => {
     const node = context.createGain();
     node.gain.value = 0; // the envelope will control the gain
-    node.connect(this.out);
+    node.connect(out);
 
     const env = new ADSR(context, {
-      attackTime: o.attack ?? this.defaults.attack,
-      decayTime: o.decay ?? this.defaults.decay,
-      sustainLevel: o.sustain ?? this.defaults.sustain,
-      releaseTime: o.release ?? this.defaults.release,
+      attackTime: o.attack ?? defaults.attack,
+      decayTime: o.decay ?? defaults.decay,
+      sustainLevel: o.sustain ?? defaults.sustain,
+      releaseTime: o.release ?? defaults.release,
     });
 
     env.connect(node.gain);
@@ -340,5 +330,7 @@ export class Soundfont implements Source<SoundfontOptions> {
         source.stop();
       },
     };
-  }
-}
+  };
+
+  return Object.assign({ triggerAttack, triggerAttackRelease }, out);
+};

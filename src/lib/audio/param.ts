@@ -1,6 +1,6 @@
 import Tone from 'tone';
 import { Seconds, ContextTime } from '@/lib/audio/types';
-import { Context } from '@/lib/audio/context';
+import { context } from '@/lib/audio/online';
 import { assert } from '@/lib/audio/util';
 
 export type Conversion = (value: number) => number;
@@ -40,31 +40,36 @@ export const createParam = (
   const minOutput = 1e-7;
   param.value = opts.value ?? initialValue;
 
+  const savedExponentialRampToValueAtTime = param.exponentialRampToValueAtTime.bind(param);
+  const savedLinearRampToValueAtTime = param.linearRampToValueAtTime.bind(param);
+  const savedSetTargetAtTime = param.setTargetAtTime.bind(param);
+  const savedSetValueAtTime = param.setValueAtTime.bind(param);
+
   const exponentialRampToValueAtTime = (value: number, endTime: number): AudioParam => {
     value = fromUnit(value);
     events.add({ time: endTime, type: 'exponentialRampToValueAtTime', value });
-    exponentialRampToValueAtTime(value, endTime);
+    savedExponentialRampToValueAtTime(value, endTime);
     return extended;
   };
 
   const linearRampToValueAtTime = (value: number, endTime: number): AudioParam => {
     value = fromUnit(value);
     events.add({ time: endTime, type: 'linearRampToValueAtTime', value });
-    linearRampToValueAtTime(value, endTime);
+    savedLinearRampToValueAtTime(value, endTime);
     return extended;
   };
 
   const setTargetAtTime = (target: number, startTime: number, timeConstant: number): AudioParam => {
     target = fromUnit(target);
     events.add({ time: startTime, type: 'setTargetAtTime', value: target, constant: timeConstant });
-    setTargetAtTime(target, startTime, timeConstant);
+    savedSetTargetAtTime(target, startTime, timeConstant);
     return extended;
   };
 
   const setValueAtTime = (value: number, startTime: number): AudioParam => {
     value = fromUnit(value);
     events.add({ time: startTime, type: 'setValueAtTime', value });
-    setValueAtTime(value, startTime);
+    savedSetValueAtTime(value, startTime);
     return extended;
   };
 
@@ -138,19 +143,19 @@ export const createParam = (
   };
 
   const exponentialRampTo = (value: number, rampTime: Seconds, startTime?: ContextTime) => {
-    startTime = startTime ?? Context.now();
+    startTime = startTime ?? context.now();
     setRampPoint(startTime);
     exponentialRampToValueAtTime(value, startTime + rampTime);
   };
 
   const linearRampTo = (value: number, rampTime: Seconds, startTime?: ContextTime) => {
-    startTime = startTime ?? Context.now();
+    startTime = startTime ?? context.now();
     setRampPoint(startTime);
     linearRampToValueAtTime(value, startTime + rampTime);
   };
 
   const targetRampTo = (value: number, rampTime: Seconds, startTime?: ContextTime) => {
-    startTime = startTime ?? Context.now();
+    startTime = startTime ?? context.now();
     setRampPoint(startTime);
     exponentialApproachValueAtTime(value, startTime, rampTime);
   };
@@ -172,7 +177,7 @@ export const createParam = (
         events.cancel(after.time);
       } else {
         param.cancelAndHoldAtTime(computedTime);
-        events.cancel(computedTime + Context.sampleTime());
+        events.cancel(computedTime + context.sampleTime);
       }
     } else if (after) {
       param.cancelScheduledValues(after.time);

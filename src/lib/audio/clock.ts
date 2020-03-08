@@ -1,8 +1,9 @@
 import Tone from 'tone';
-import { Context } from '@/lib/audio/context';
+import { onDidTick } from '@/lib/audio/ticker';
 import { ContextTime, Ticks } from '@/lib/audio/types';
 import { TickSource } from '@/lib/audio/tick-source';
 import { StrictEventEmitter } from '@/lib/events';
+import { context } from '@/lib/audio/online';
 
 interface ClockOptions {
   callback: (seconds: ContextTime, ticks: Ticks) => void;
@@ -31,7 +32,7 @@ export class Clock extends StrictEventEmitter<{ started: [TimeTicks], stopped: [
     this.tickSource = new TickSource({ frequency: options.frequency });
     this.frequency = this.tickSource.frequency;
     this.boundLoop = this.loop.bind(this);
-    Context.onDidTick(this.boundLoop);
+    onDidTick(this.boundLoop);
   }
 
   get seconds() {
@@ -43,7 +44,7 @@ export class Clock extends StrictEventEmitter<{ started: [TimeTicks], stopped: [
   }
 
   get ticks() {
-    return Math.ceil(this.getTicksAtTime(Context.now()));
+    return Math.ceil(this.getTicksAtTime(context.now()));
   }
 
   set ticks(t: number) {
@@ -51,20 +52,20 @@ export class Clock extends StrictEventEmitter<{ started: [TimeTicks], stopped: [
   }
 
   public start() {
-    const seconds = Context.now();
-    Context.resume();
+    const seconds = context.now();
+    context.resume();
     this.nextState = 'started';
     this.tickSource.start(seconds);
   }
 
   public stop() {
-    const seconds = Context.now();
+    const seconds = context.now();
     this.nextState = 'stopped';
     this.tickSource.stop(seconds);
   }
 
   public pause() {
-    const seconds = Context.now();
+    const seconds = context.now();
     this.nextState = 'stopped';
     this.tickSource.pause(seconds);
   }
@@ -80,7 +81,7 @@ export class Clock extends StrictEventEmitter<{ started: [TimeTicks], stopped: [
 
   private loop() {
     const startTime = this.lastUpdate;
-    const endTime = Context.now();
+    const endTime = context.now();
     this.lastUpdate = endTime;
 
     if (this.nextState) {

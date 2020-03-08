@@ -1,4 +1,5 @@
-// import Vue from 'vue';
+import Vue from 'vue';
+import CompositionAPI from '@vue/composition-api';
 // import * as dawg from '@/dawg';
 // import path from 'path';
 // import '@/styles/material.css';
@@ -12,6 +13,7 @@
 // const logger = getLogger('middleware');
 
 const middleware = () => {
+  Vue.use(CompositionAPI);
   // // This imports all .vue files in the components folder
   // const components = require.context(
   //   './components',

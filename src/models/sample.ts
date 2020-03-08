@@ -3,7 +3,7 @@ import * as t from '@/lib/io';
 import uuid from 'uuid';
 import * as Audio from '@/lib/audio';
 import { Serializable } from '@/models/serializable';
-import { Context } from '@/lib/audio/context';
+import { Context } from '@/lib/audio/online';
 import { BuildingBlock } from '@/models/block';
 import { GraphNode } from '@/lib/audio/node';
 import * as oly from '@/lib/olyger';

@@ -4,7 +4,7 @@ import * as t from '@/lib/io';
 import { BuildingBlock } from '@/models/block';
 import * as oly from '@/lib/olyger';
 import { useSignal } from '@/utils';
-import { context } from '@/lib/audio/context';
+import { context } from '@/lib/audio/online';
 
 export const InstrumentType = t.intersection([
   t.type({

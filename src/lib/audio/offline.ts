@@ -1,7 +1,8 @@
 import { Seconds } from '@/lib/audio/types';
+import { enhanceBaseContext } from '@/lib/audio/context';
 
 export const createOfflineContext = (options: OfflineAudioContextOptions) => {
-  const offline = new OfflineAudioContext(options);
+  const offline = enhanceBaseContext(new OfflineAudioContext(options));
   let currentTime: Seconds = 0;
 
   const renderClock = async (asynchronous: boolean) => {

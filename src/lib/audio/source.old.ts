@@ -1,14 +1,14 @@
 import { Seconds, ContextTime } from '@/lib/audio/types';
-import Tone from 'tone';
 import { Disposer } from '@/lib/std';
 
+// TODO maybe remove??
 /**
  * A source of an audio signal.
  */
 export interface Source<T> {
   triggerAttackRelease(note: string, duration: Seconds, time: ContextTime, velocity?: number): this;
   triggerAttack(note: string, time?: ContextTime, velocity?: number): Disposer;
-  disconnect(node: Tone.AudioNode): this;
-  connect(node: Tone.AudioNode): this;
+  disconnect(node: AudioNode): void;
+  connect(node: AudioNode): void;
   set<K extends keyof T>(o: { key: K, value: T[K] }): void;
 }

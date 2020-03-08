@@ -1,6 +1,6 @@
 import { Timeline } from '@/lib/audio/timeline';
 import { ContextTime, Ticks, Seconds, Beat } from '@/lib/audio/types';
-import { Context } from '@/lib/audio/context';
+import { context } from '@/lib/audio/online';
 import { Clock } from '@/lib/audio/clock';
 import { StrictEventEmitter } from '@/lib/events';
 import { Disposer } from '@/lib/std';
@@ -63,11 +63,11 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
   constructor() {
     super();
 
-    const setBpm = () => this.clock.frequency.value = 1 / (60 / Context.BPM / Context.PPQ);
+    const setBpm = () => this.clock.frequency.value = 1 / (60 / context.BPM / context.PPQ);
 
     // FIXME Maybe all of the clocks could share one "ticker"?? IDK? Then we wouldn't have to "watch" the BBM
     // Note, this will run automatically
-    const d = Context.onDidSetBPM(setBpm);
+    const d = context.onDidSetBPM(setBpm);
 
     const pause = this.clock.on('stopped', (o) => {
       this.checkOnEndEventsAndResetActive(o);
@@ -87,9 +87,9 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
     event = {
       ...event,
       // FIXME we probably shouldn't be converting to beats here??
-      duration: Context.beatsToTicks(event.duration),
-      time: Context.beatsToTicks(event.time),
-      offset: Context.beatsToTicks(event.offset),
+      duration: context.beatsToTicks(event.duration),
+      time: context.beatsToTicks(event.time),
+      offset: context.beatsToTicks(event.offset),
     };
     this.timeline.add(event);
 
@@ -128,13 +128,13 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
       if (startTime === current) {
         if (event.onStart) {
           event.onStart({
-            seconds: Context.now(),
+            seconds: context.now(),
             ticks: this.clock.ticks,
           });
         }
       } else {
         this.checkMidStart(event, {
-          seconds: Context.now(),
+          seconds: context.now(),
           ticks: this.clock.ticks,
         });
       }
@@ -143,7 +143,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
     let added = true;
     return {
       setStartTime: (startTime: Beat) => {
-        event.time = Context.beatsToTicks(startTime);
+        event.time = context.beatsToTicks(startTime);
         // So we need to reposition the element in the sorted array after setting the time
         // This is a very simple way to do it but it could be done more efficiently
         const didRemove = this.timeline.remove(event);
@@ -155,14 +155,14 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
         checkNowActive();
       },
       setDuration: (duration: Beat) => {
-        event.duration = Context.beatsToTicks(duration);
+        event.duration = context.beatsToTicks(duration);
         checkNowActive();
       },
       setRow: (row: number) => {
         event.row = row;
       },
       setOffset: (offset: Beat) => {
-        event.offset = Context.beatsToTicks(offset);
+        event.offset = context.beatsToTicks(offset);
         // We also need to make sure it's sorted here
         this.timeline.remove(event);
         this.timeline.add(event);
@@ -198,7 +198,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
           if (event.onEnd) {
             event.onEnd({
               ticks: this.clock.ticks,
-              seconds: Context.now(),
+              seconds: context.now(),
             });
           }
 
@@ -280,11 +280,11 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
   }
 
   get loopStart() {
-    return this._loopStart / Context.PPQ;
+    return this._loopStart / context.PPQ;
   }
 
   set loopStart(loopStart: Beat) {
-    this._loopStart = loopStart * Context.PPQ;
+    this._loopStart = loopStart * context.PPQ;
   }
 
   get seconds() {
@@ -292,11 +292,11 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
   }
 
   get loopEnd() {
-    return this._loopEnd / Context.PPQ;
+    return this._loopEnd / context.PPQ;
   }
 
   set loopEnd(loopEnd: Beat) {
-    this._loopEnd = loopEnd * Context.PPQ;
+    this._loopEnd = loopEnd * context.PPQ;
   }
 
   get ticks() {
@@ -305,7 +305,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
 
   set ticks(t: number) {
     if (this.clock.ticks !== t) {
-      const now = Context.now();
+      const now = context.now();
       // stop everything synced to the transport
       if (this.state === 'started') {
         // restart it with the new time
@@ -319,11 +319,11 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
   }
 
   get beat() {
-    return this.ticks / Context.PPQ;
+    return this.ticks / context.PPQ;
   }
 
   set beat(beat: number) {
-    this.ticks = beat * Context.PPQ;
+    this.ticks = beat * context.PPQ;
   }
 
   get state() {
@@ -337,7 +337,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
   private checkMidStart(event: TransportEvent, c: EventContext) {
     if (event.onMidStart) {
       const ticksOffset = c.ticks - event.time;
-      const secondsOffset = Context.ticksToSeconds(ticksOffset);
+      const secondsOffset = context.ticksToSeconds(ticksOffset);
       event.onMidStart({
         ...c,
         secondsOffset,

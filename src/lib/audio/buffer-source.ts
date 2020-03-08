@@ -1,4 +1,4 @@
-import { context, Context } from '@/lib/audio/context';
+import { context } from '@/lib/audio/online';
 import { createGain } from '@/lib/audio/gain';
 import { ContextTime, Seconds, Positive, GainFactor } from '@/lib/audio/types';
 import { assert } from '@/lib/audio/util';
@@ -29,7 +29,7 @@ export const createBufferSource = (buffer: AudioBuffer, options?: Partial<ToneBu
    * the full length of the sample (minus any offset).
    */
   const start = (time?: ContextTime, offset?: Seconds, duration?: Seconds) => {
-    const computedTime = time ?? Context.now();
+    const computedTime = time ?? context.now();
 
     // otherwise the default offset is 0
     offset = offset ?? 0;
@@ -62,7 +62,7 @@ export const createBufferSource = (buffer: AudioBuffer, options?: Partial<ToneBu
     if (!sourceStopped && sourceStarted) {
       sourceStopped = true;
       // TODO refactor all + context.currentTime!!
-      source.stop(time ?? Context.now());
+      source.stop(time ?? context.now());
       onended();
     }
   };

@@ -8,7 +8,7 @@ import { GraphNode } from '@/lib/audio/node';
 import { EffectName } from '@/models/filters/effects';
 import { getLogger } from '@/lib/log';
 import { useSignal } from '@/utils';
-import { context } from '@/lib/audio/context';
+import { context } from '@/lib/audio/online';
 import { createGain } from '@/lib/audio/gain';
 import { createMeter } from '@/lib/audio/meter';
 

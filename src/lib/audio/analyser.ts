@@ -1,4 +1,4 @@
-import { context } from '@/lib/audio/context';
+import { context } from '@/lib/audio/online';
 import { PowerOfTwo, NormalRange } from '@/lib/audio/types';
 
 export type AnalyserType = 'fft' | 'waveform';
@@ -28,5 +28,5 @@ export const createAnalyser = (opts?: Partial<AnalyserOptions>) => {
     return buffer;
   };
 
-  return Object.assign({ getValue }, analyser);
+  return Object.assign(analyser, { getValue });
 };

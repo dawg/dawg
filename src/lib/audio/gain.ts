@@ -1,7 +1,12 @@
-import { context } from '@/lib/audio/context';
+import { context } from '@/lib/audio/online';
 
-export const createGain = () => {
+export interface GainInterface {
+  gain?: number;
+}
+
+export const createGain = (options?: Partial<GainInterface>) => {
   const gain = context.createGain();
+  gain.gain.value = options?.gain ?? gain.gain.defaultValue;
 
   let unmutedValue: number | undefined;
   const mute = (value: boolean) => {
