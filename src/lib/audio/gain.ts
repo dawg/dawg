@@ -1,12 +1,20 @@
 import { context } from '@/lib/audio/online';
+import { createParam, ObeoParamOptions, ObeoParam } from '@/lib/audio/param';
+import { ObeoNode, extractAudioNode } from '@/lib/audio/node';
 
-export interface GainInterface {
-  gain?: number;
+
+export interface ObeoGainNode extends ObeoNode {
+  readonly gain: ObeoParam;
+  mute: (value: boolean) => void;
 }
 
-export const createGain = (options?: Partial<GainInterface>) => {
+// tslint:disable-next-line:no-empty-interface
+export interface GainInterface extends ObeoParamOptions {
+  //
+}
+
+export const createGain = (options?: Partial<GainInterface>): ObeoGainNode => {
   const gain = context.createGain();
-  gain.gain.value = options?.gain ?? gain.gain.defaultValue;
 
   let unmutedValue: number | undefined;
   const mute = (value: boolean) => {
@@ -19,5 +27,12 @@ export const createGain = (options?: Partial<GainInterface>) => {
     }
   };
 
-  return Object.assign(gain, { mute });
+  return {
+    ...extractAudioNode(gain),
+    gain: createParam(gain.gain, {
+      ...options,
+      name: 'Gain',
+    }),
+    mute,
+  };
 };

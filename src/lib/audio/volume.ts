@@ -1,8 +1,17 @@
 import { createGain } from '@/lib/audio/gain';
-import { createParam } from '@/lib/audio/param';
 import { dbToGain, gainToDb } from '@/lib/audio/conversions';
+import { ObeoParam } from '@/lib/audio/param';
+import { ObeoNode } from '@/lib/audio/node';
 
-export const createVolume = () => {
-  const gain = createGain();
-  return Object.assign(gain, { volume: createParam(gain.gain, { toUnit: dbToGain, fromUnit: gainToDb }) });
+export interface ObeoVolumeNode extends ObeoNode {
+  readonly volume: ObeoParam;
+  mute: (value: boolean) => void;
+}
+
+export const createVolume = (): ObeoVolumeNode => {
+  const gain = createGain({ toUnit: dbToGain, fromUnit: gainToDb });
+  return {
+    ...gain,
+    volume: gain.gain,
+  };
 };

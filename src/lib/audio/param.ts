@@ -2,6 +2,26 @@ import Tone from 'tone';
 import { Seconds, ContextTime } from '@/lib/audio/types';
 import { context } from '@/lib/audio/online';
 import { assert } from '@/lib/audio/util';
+import { defineProperties } from '@/lib/std';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('envelope', { level: 'debug' });
+
+export interface ObeoParam extends AudioParam {
+  name: 'param';
+  param: AudioParam;
+  exponentialRampTo(value: number, rampTime: Seconds, startTime?: ContextTime): void;
+  linearRampTo(value: number, rampTime: Seconds, startTime?: ContextTime): void;
+  targetRampTo(value: number, rampTime: Seconds, startTime?: ContextTime): void;
+  exponentialApproachValueAtTime(value: number, time: ContextTime, rampTime: Seconds): void;
+  getValueAtTime(time: ContextTime): number;
+  setValueCurveAtTime(
+    values: number[] | Float32Array,
+    startTime: ContextTime,
+    duration: Seconds,
+    scaling?: number,
+  ): ObeoParam;
+}
 
 export type Conversion = (value: number) => number;
 
@@ -24,52 +44,62 @@ interface NormalAutomationEvent {
   time: number;
   value: number;
 }
+
 /**
  * The events on the automation
  */
 export type AutomationEvent = NormalAutomationEvent | TargetAutomationEvent;
 
+export interface ObeoParamOptions {
+  name?: string;
+  value?: number;
+  toUnit?: Conversion;
+  fromUnit?: Conversion;
+}
+
 // TODO min/max values??
 export const createParam = (
   param: AudioParam,
-  opts: { value?: number, toUnit?: Conversion, fromUnit?: Conversion } = {},
+  opts: ObeoParamOptions = {},
 ) => {
   const { toUnit = (v) => v, fromUnit = (v) => v } = opts;
   const events = new Tone.Timeline<AutomationEvent>(1000);
   const initialValue = param.defaultValue;
   const minOutput = 1e-7;
+
+  // TODO should we set the property we defined
   param.value = opts.value ?? initialValue;
 
-  const savedExponentialRampToValueAtTime = param.exponentialRampToValueAtTime.bind(param);
-  const savedLinearRampToValueAtTime = param.linearRampToValueAtTime.bind(param);
-  const savedSetTargetAtTime = param.setTargetAtTime.bind(param);
-  const savedSetValueAtTime = param.setValueAtTime.bind(param);
-
-  const exponentialRampToValueAtTime = (value: number, endTime: number): AudioParam => {
+  const exponentialRampToValueAtTime = (value: number, endTime: number) => {
+    logger.debug(`${opts.name ?? ''}:exponentialRampToValueAtTime`, value, endTime);
     value = fromUnit(value);
     events.add({ time: endTime, type: 'exponentialRampToValueAtTime', value });
-    savedExponentialRampToValueAtTime(value, endTime);
+    param.exponentialRampToValueAtTime(value, endTime);
     return extended;
   };
 
-  const linearRampToValueAtTime = (value: number, endTime: number): AudioParam => {
+  const linearRampToValueAtTime = (value: number, endTime: number) => {
+    logger.debug(`${opts.name ?? ''}:linearRampToValueAtTime`, value, endTime);
     value = fromUnit(value);
     events.add({ time: endTime, type: 'linearRampToValueAtTime', value });
-    savedLinearRampToValueAtTime(value, endTime);
+    param.linearRampToValueAtTime(value, endTime);
     return extended;
   };
 
-  const setTargetAtTime = (target: number, startTime: number, timeConstant: number): AudioParam => {
+  const setTargetAtTime = (target: number, startTime: number, timeConstant: number) => {
+    logger.debug(`${opts.name ?? ''}:setTargetAtTime`, target, startTime, timeConstant);
     target = fromUnit(target);
     events.add({ time: startTime, type: 'setTargetAtTime', value: target, constant: timeConstant });
-    savedSetTargetAtTime(target, startTime, timeConstant);
+    param.setTargetAtTime(target, startTime, timeConstant);
     return extended;
   };
 
-  const setValueAtTime = (value: number, startTime: number): AudioParam => {
+  const setValueAtTime = (value: number, startTime: number) => {
+    logger.debug(`${opts.name ?? ''}:setValueAtTime`, value, startTime);
     value = fromUnit(value);
     events.add({ time: startTime, type: 'setValueAtTime', value });
-    savedSetValueAtTime(value, startTime);
+    console.log(param, value, startTime);
+    param.setValueAtTime(value, startTime);
     return extended;
   };
 
@@ -78,7 +108,8 @@ export const createParam = (
     startTime: ContextTime,
     duration: Seconds,
     scaling = 1,
-  ): AudioParam => {
+  ) => {
+    logger.debug(`${opts.name ?? ''}:setValueCurveAtTime`, values, startTime, duration, scaling);
     const startingValue = fromUnit(values[0] * scaling);
     setValueAtTime(toUnit(startingValue), startTime);
     const segTime = duration / (values.length - 1);
@@ -90,6 +121,7 @@ export const createParam = (
   };
 
   const getValueAtTime = (time: ContextTime) => {
+    logger.debug(`${opts.name ?? ''}:getValueAtTime`, time);
     const computedTime = Math.max(time, 0);
     const after = events.getAfter(computedTime);
     const before = events.get(computedTime);
@@ -143,21 +175,31 @@ export const createParam = (
   };
 
   const exponentialRampTo = (value: number, rampTime: Seconds, startTime?: ContextTime) => {
+    logger.debug(`${opts.name ?? ''}:exponentialRampTo`, value, rampTime, startTime);
     startTime = startTime ?? context.now();
     setRampPoint(startTime);
     exponentialRampToValueAtTime(value, startTime + rampTime);
   };
 
   const linearRampTo = (value: number, rampTime: Seconds, startTime?: ContextTime) => {
+    logger.debug(`${opts.name ?? ''}:linearRampTo`, value, rampTime, startTime);
     startTime = startTime ?? context.now();
     setRampPoint(startTime);
     linearRampToValueAtTime(value, startTime + rampTime);
   };
 
   const targetRampTo = (value: number, rampTime: Seconds, startTime?: ContextTime) => {
+    logger.debug(`${opts.name ?? ''}:targetRampTo`, value, rampTime, startTime);
     startTime = startTime ?? context.now();
     setRampPoint(startTime);
     exponentialApproachValueAtTime(value, startTime, rampTime);
+  };
+
+  const cancelScheduledValues = (time: ContextTime) => {
+    assert(isFinite(time), `Invalid argument to cancelScheduledValues: ${JSON.stringify(time)}`);
+    events.cancel(time);
+    param.cancelScheduledValues(time);
+    return extended;
   };
 
   const cancelAndHoldAtTime = (time: ContextTime) => {
@@ -201,6 +243,7 @@ export const createParam = (
   };
 
   const exponentialApproachValueAtTime = (value: number, time: ContextTime, rampTime: Seconds) => {
+    logger.debug(`${opts.name ?? ''}:exponentialApproachValueAtTime`, value, time, rampTime);
     const timeConstant = Math.log(rampTime + 1) / Math.log(200);
     setTargetAtTime(value, time, timeConstant);
     // at 90% start a linear ramp to the final value
@@ -228,18 +271,43 @@ export const createParam = (
     return v0 * Math.pow(v1 / v0, (t - t0) / (t1 - t0));
   };
 
-  const extended = Object.assign(param, {
+  const extended: ObeoParam = defineProperties({
+    // AudioParam
+    // TODO properties ??
+    automationRate: param.automationRate,
+    defaultValue: param.defaultValue,
+    maxValue: param.maxValue,
+    minValue: param.minValue,
+    // until here
+    cancelAndHoldAtTime,
+    cancelScheduledValues,
     exponentialRampToValueAtTime,
     linearRampToValueAtTime,
     setTargetAtTime,
     setValueAtTime,
     setValueCurveAtTime,
+
+    // Custom
+    name: 'param',
+    param,
     exponentialRampTo,
     linearRampTo,
     targetRampTo,
     getValueAtTime,
     exponentialApproachValueAtTime,
-    cancelAndHoldAtTime,
+  }, {
+    value: {
+      get() {
+        logger.debug(`${opts.name ?? ''}:value:get`);
+        const now = context.now();
+        return getValueAtTime(now);
+      },
+      set(value: number) {
+        logger.debug(`${opts.name ?? ''}:value:set`, value);
+        cancelScheduledValues(context.now());
+        setValueAtTime(value, context.now());
+      },
+    },
   });
 
   return extended;

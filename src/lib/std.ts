@@ -91,13 +91,15 @@ interface PropertyDescriptor<T> {
   set?(v: T): void;
 }
 
-type Properties<V extends PropertyDescriptorMap> = {
-  [K in keyof V]: undefined extends V[K]['set'] ? never : ReturnType<V[K]['get']>
-};
+type ReadWriteKeys<V extends PropertyDescriptorMap> = {
+  [K in keyof V]: undefined extends V[K]['set'] ? never : K
+}[keyof V];
 
-type ReadonlyProperties<V extends PropertyDescriptorMap> = Readonly<{
-  [K in keyof V]: undefined extends V[K]['set'] ? ReturnType<V[K]['get']> : never
-}>;
+type ReadonlyKeys<V extends PropertyDescriptorMap> = {
+  [K in keyof V]: undefined extends V[K]['set'] ? K : never
+}[keyof V];
+
+type Properties<V extends PropertyDescriptorMap, T extends keyof V> = { [K in T]: ReturnType<V[K]['get']> };
 
 interface PropertyDescriptorMap {
   [s: string]: PropertyDescriptor<any>;
@@ -106,7 +108,7 @@ interface PropertyDescriptorMap {
 export const defineProperties = <T, V extends PropertyDescriptorMap>(
   o: T,
   properties: V,
-): T & Properties<V> & ReadonlyProperties<V> => {
+): T & Properties<V, ReadWriteKeys<V>> & Readonly<Properties<V, ReadonlyKeys<V>>> => {
   return Object.defineProperties(o, properties);
 };
 

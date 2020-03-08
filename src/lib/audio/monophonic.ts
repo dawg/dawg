@@ -1,19 +1,19 @@
 import { Seconds, Cents, NormalRange, ContextTime, Note } from '@/lib/audio/types';
 import { createInstrument } from '@/lib/audio/instrument';
 import { context } from '@/lib/audio/online';
-import { ConstantSource } from '@/lib/audio/constant-source';
 import { parseNote } from '@/lib/audio/util';
+import { ObeoConstantSourceNode } from '@/lib/audio/constant-source';
 
 interface MonophonicOpts {
   /**
    * The instrument's frequency signal.
    */
-  frequency: ConstantSource;
+  frequency: ObeoConstantSourceNode;
 
   /**
    * The instrument's frequency signal.
    */
-  detune: ConstantSource;
+  detune: ObeoConstantSourceNode;
 
   /**
    * Internal method which starts the envelope attack
@@ -47,9 +47,9 @@ export const createMonophonic = (opts: MonophonicOpts, options?: Partial<Monopho
   const setNote = (note: Note, time: ContextTime) => {
     const hertz = parseNote(note);
     if (portamento > 0 && getLevelAtTime(time) > 0.05) {
-      frequency.output.exponentialRampTo(hertz, portamento, time);
+      frequency.offset.exponentialRampTo(hertz, portamento, time);
     } else {
-      frequency.output.setValueAtTime(hertz, time);
+      frequency.offset.setValueAtTime(hertz, time);
     }
   };
 

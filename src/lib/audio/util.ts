@@ -1,4 +1,4 @@
-import { Note, Hertz, MidiNote } from '@/lib/audio/types';
+import { Note, Hertz, MidiNote, Seconds, ContextTime } from '@/lib/audio/types';
 
 /**
  * Assert that the statement is true, otherwise invoke the error.
@@ -41,10 +41,10 @@ const noteToScaleIndex = {
   'bbb': 9, 'bb': 10, 'b': 11, 'b#': 12, 'bx': 13,
 };
 
-export function parseNote(str: Note): Hertz {
+export const parseNote = (str: Note): Hertz => {
   const m = REGEX.exec(str);
   const [pitch, octave] = [m![1], m![2]];
   const index = noteToScaleIndex[pitch.toLowerCase() as keyof typeof noteToScaleIndex];
   const noteNumber = index + (parseInt(octave, 10) + 1) * 12;
   return mtof(noteNumber as MidiNote);
-}
+};

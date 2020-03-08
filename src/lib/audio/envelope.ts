@@ -5,6 +5,10 @@ import { createConstantSource } from '@/lib/audio/constant-source';
 import { createOfflineContext } from '@/lib/audio/offline';
 import { EnhancedContext } from '@/lib/audio/context';
 import { createGain } from '@/lib/audio/gain';
+import { destination } from '@/lib/audio/destination';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('envelope');
 
 export interface EnvelopeOptions {
   /**
@@ -92,9 +96,8 @@ export interface EnvelopeOptions {
 }
 
 /**
- * Envelope is an [ADSR](https://en.wikipedia.org/wiki/Synthesizer#ADSR_envelope)
- * envelope generator. Envelope outputs a signal which
- * can be connected to an AudioParam or Tone.Signal.
+ * Envelope is an [ADSR](https://en.wikipedia.org/wiki/Synthesizer#ADSR_envelope) envelope
+ * generator. Envelope outputs a signal which can be connected to an AudioParam or Tone.Signal.
  * ```
  *           /\
  *          /  \
@@ -115,8 +118,9 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
   const attackCurve = options?.attackCurve ?? 'linear';
   const releaseCurve = options?.releaseCurve ?? 'exponential';
   const decayCurve = options?.decayCurve ?? 'exponential';
-  const sig = createConstantSource();
-  sig.output.value = 0;
+  const sig = createConstantSource({ name: 'EnvelopeSignal' });
+  // TOOD should init 0 like tone?
+  sig.offset.value = 0.05;
   const context = options?.context ?? c;
 
   /**
@@ -125,11 +129,12 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
    * @param velocity The velocity of the envelope scales the vales.
    */
   const triggerAttack = (time?: ContextTime, velocity: NormalRange = 1) => {
+
     time = time ?? context.now();
     let att = attack;
 
     // check if it's not a complete attack
-    const currentValue = sig.output.getValueAtTime(time);
+    const currentValue = sig.offset.getValueAtTime(time);
     if (currentValue > 0) {
       // subtract the current value from the attack time
       const attackRate = 1 / att;
@@ -137,17 +142,20 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
       // the att is now the remaining time
       att = remainingDistance / attackRate;
     }
+
+    logger.debug('triggerAttack', time, velocity, attack, currentValue, att);
+
     // att
     if (att < context.sampleTime) {
-      sig.output.cancelScheduledValues(time);
+      sig.offset.cancelScheduledValues(time);
       // case where the att time is 0 should set instantly
-      sig.output.setValueAtTime(velocity, time);
+      sig.offset.setValueAtTime(velocity, time);
     } else if (attackCurve === 'linear') {
-      sig.output.linearRampTo(velocity, att, time);
+      sig.offset.linearRampTo(velocity, att, time);
     } else if (attackCurve === 'exponential') {
-      sig.output.targetRampTo(velocity, att, time);
+      sig.offset.targetRampTo(velocity, att, time);
     } else {
-      sig.output.cancelAndHoldAtTime(time);
+      sig.offset.cancelAndHoldAtTime(time);
       let curve = attackCurve;
       // find the starting position in the curve
       for (let i = 1; i < curve.length; i++) {
@@ -159,16 +167,16 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
           break;
         }
       }
-      sig.output.setValueCurveAtTime(curve, time, att, velocity);
+      sig.offset.setValueCurveAtTime(curve, time, att, velocity);
     }
     // decay
     if (decay && sustain < 1) {
       const decayValue = velocity * sustain;
       const decayStart = time + att;
       if (decayCurve === 'linear') {
-        sig.output.linearRampToValueAtTime(decayValue, decay + decayStart);
+        sig.offset.linearRampToValueAtTime(decayValue, decayStart + decay);
       } else {
-        sig.output.exponentialApproachValueAtTime(decayValue, decayStart, decay);
+        sig.offset.exponentialApproachValueAtTime(decayValue, decayStart, decay);
       }
     }
   };
@@ -182,14 +190,14 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
     const currentValue = getValueAtTime(time);
     if (currentValue > 0) {
       if (release < context.sampleTime) {
-        sig.output.setValueAtTime(0, time);
+        sig.offset.setValueAtTime(0, time);
       } else if (releaseCurve === 'linear') {
-        sig.output.linearRampTo(0, release, time);
+        sig.offset.linearRampTo(0, release, time);
       } else if (releaseCurve === 'exponential') {
-        sig.output.targetRampTo(0, release, time);
+        sig.offset.targetRampTo(0, release, time);
       } else {
-        sig.output.cancelAndHoldAtTime(time);
-        sig.output.setValueCurveAtTime(releaseCurve, time, release, currentValue);
+        sig.offset.cancelAndHoldAtTime(time);
+        sig.offset.setValueCurveAtTime(releaseCurve, time, release, currentValue);
       }
     }
   };
@@ -212,22 +220,15 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
    * return the unconverted (raw) value.
    */
   const getValueAtTime = (time: ContextTime): NormalRange => {
-    return sig.output.getValueAtTime(time);
+    return sig.offset.getValueAtTime(time);
   };
 
   /**
    * Cancels all scheduled envelope changes after the given time.
    */
   const cancel = (after?: ContextTime) => {
-    sig.output.cancelScheduledValues(after ?? context.now());
+    sig.offset.cancelScheduledValues(after ?? context.now());
   };
-
-  /**
-   * Connect the envelope to a destination node.
-   */
-  // TODO
-  // connectSignal(this, destination, outputNumber, inputNumber);
-  const connect = sig.connect.bind(sig);
 
   /**
    * Render the envelope curve to an array of the given length.
@@ -253,7 +254,7 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
       context: offline,
     });
 
-    clone.connect(context.destination);
+    clone.connect(destination);
     clone.triggerAttackRelease(duration * (attackPortion + sustainTime) / totalDuration, 0);
 
     const buffer = await offline.render();
@@ -264,16 +265,24 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
     sig.disconnect();
   };
 
-  const gain = createGain({ gain: 0 });
+  // TODO should init to 0 like tone?
+  const gain = createGain({ value: 0.05 });
   sig.connect(gain.gain);
+
+  gain.gain.cancelScheduledValues(0);
+  // reset the value
+  gain.gain.setValueAtTime(0, 0);
+
+  sig.offset.value = 1;
 
   return Object.assign(
     defineProperties(gain, {
       /**
        * Read the current value of the envelope. Useful for
-       * synchronizing visual output to the envelope.
+       * synchronizing visual offset to the envelope.
        */
       value: {
+        // TODO maybe don't need this
         get: () => {
           return getValueAtTime(context.now());
         },
@@ -283,7 +292,6 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
       asArray,
       dispose,
       triggerAttackRelease,
-      connect,
       cancel,
       getValueAtTime,
       triggerAttack,
@@ -293,6 +301,9 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
       release,
       attack,
       decay,
+
+      // TODO only for debug
+      sig,
     },
   );
 };

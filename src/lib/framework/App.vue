@@ -109,6 +109,18 @@
     <button @click="start">
       START TESTING
     </button>
+    <div class="controls">
+      <div class="left">
+        <div @click="play" class="button cursor-pointer" role="button">
+          {{ text }}
+        </div>
+      </div>
+      <div class="right">
+        <span>Volume: </span>
+        <input type="range" min="0.0" max="1.0" step="0.01"
+            value="0.8" name="volume" v-model="volumeControl">
+      </div>
+    </div>
   </div>
 </template>
 
@@ -127,7 +139,6 @@ import { createComponent, computed, ref, onMounted, onUnmounted, watch } from '@
 // import * as oly from '@/lib/olyger';
 // import path from 'path';
 import * as Audio from '@/lib/audio';
-import { context } from '@/lib/audio/online';
 
 // declare var __static: string;
 
@@ -298,28 +309,91 @@ export default createComponent({
       oscillator: {
         type: 'sawtooth',
       },
+      envelope: {
+        sustain: 0.1,
+      },
     });
 
-    synth.connect(Audio.context.destination);
+    synth.connect(Audio.destination);
 
     // const oscillator = Audio.context.createOscillator({
     //   //
     // });
 
-    // const context = new AudioContext();
-    // const context = Audio.context;
+    // TEST
+    const playing = ref(false);
+    const volumeControl = ref(0);
+    watch(volumeControl, () => {
+      constantNode.offset.value = volumeControl.value;
+    }, { lazy: true });
 
-    // const oscillator = Audio.createOscillator();
-    // oscillator.connect(Audio.context.destination);
-    // oscillator.frequency.setValueAtTime(440, context.currentTime); // value in hertz
+    const gainNode1 = Audio.context.createGain();
+    gainNode1.gain.value = 0.5;
+
+    const gainNode2 = Audio.context.createGain();
+    const gainNode3 = Audio.context.createGain();
+    gainNode2.gain.value = gainNode1.gain.value;
+    gainNode3.gain.value = gainNode1.gain.value;
+    volumeControl.value = gainNode1.gain.value;
+
+    const constantNode = Audio.context.createConstantSource();
+    constantNode.connect(gainNode2.gain);
+    constantNode.connect(gainNode3.gain);
+    constantNode.start();
+
+    gainNode1.connect(Audio.context.destination);
+    gainNode2.connect(Audio.context.destination);
+    gainNode3.connect(Audio.context.destination);
+
+    let oscNode1: OscillatorNode;
+    let oscNode2: OscillatorNode;
+    let oscNode3: OscillatorNode;
+    function startOscillators() {
+      oscNode1 = Audio.context.createOscillator();
+      oscNode1.type = 'sine';
+      oscNode1.frequency.value = 261.625565300598634; // middle C
+      oscNode1.connect(gainNode1);
+
+      oscNode2 = Audio.context.createOscillator();
+      oscNode2.type = 'sine';
+      oscNode2.frequency.value = 329.627556912869929; // E
+      oscNode2.connect(gainNode2);
+
+      oscNode3 = Audio.context.createOscillator();
+      oscNode3.type = 'sine';
+      oscNode3.frequency.value = 391.995435981749294; // G
+      oscNode3.connect(gainNode3);
+
+      oscNode1.start();
+      oscNode2.start();
+      oscNode3.start();
+
+      playing.value = true;
+    }
+
+    function stopOscillators() {
+      oscNode1.stop();
+      oscNode2.stop();
+      oscNode3.stop();
+      playing.value = false;
+    }
 
     return {
+      volumeControl,
+      playing,
+      text: computed(() => playing.value ? '⏸' : '▶️'),
+      play: () => {
+        if (!playing.value) {
+          startOscillators();
+        } else {
+          stopOscillators();
+        }
+      },
       start: () => {
         synth.triggerAttackRelease('C5', 2);
 
-        // oscillator.type = 'square';
-        // oscillator.start(context.currentTime);
-        // oscillator.stop(context.currentTime + 2);
+        // oscillator.start(Audio.context.currentTime);
+        // oscillator.stop(Audio.context.currentTime + 2);
       },
     };
   },
