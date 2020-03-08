@@ -11,7 +11,7 @@ export interface ConstantSourceOptions {
   name: string;
 }
 
-// Enhances the "offset" value and renames it "output" ("offset" is readonly)
+// Enhances the "offset" param
 // See https://developer.mozilla.org/en-US/docs/Web/API/ConstantSourceNode
 export const createConstantSource = (options?: Partial<ConstantSourceOptions>): ObeoConstantSourceNode => {
   const source = context.createConstantSource();
@@ -20,8 +20,6 @@ export const createConstantSource = (options?: Partial<ConstantSourceOptions>): 
 
   return {
     ...extractAudioScheduledSourceNode(source),
-
-    // Custom
     offset,
   };
 };

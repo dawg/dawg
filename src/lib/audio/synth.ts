@@ -2,6 +2,9 @@ import { MonophonicOptions, createMonophonic } from '@/lib/audio/monophonic';
 import { EnvelopeOptions, createEnvelope } from '@/lib/audio/envelope';
 import { createOscillator, OscillatorOptions } from '@/lib/audio/oscillator';
 import { createVolume } from '@/lib/audio/volume';
+import { getLogger } from '@/lib/log';
+
+const logger = getLogger('synth');
 
 export interface SynthOptions extends MonophonicOptions {
   oscillator: Partial<OscillatorOptions>;
@@ -20,13 +23,13 @@ export const createSynth = (options?: Partial<SynthOptions>) => {
 
   const monophonic = createMonophonic({
     getLevelAtTime: (time) => {
-      console.log('getLevelAtTime', time);
+      logger.debug('getLevelAtTime', time);
       return envelope.getValueAtTime(time);
     },
     frequency: oscillator.frequency,
     detune: oscillator.detune,
     triggerEnvelopeAttack: (time, velocity) => {
-      console.log('triggerEnvelopeAttack', time, velocity);
+      logger.debug('triggerEnvelopeAttack', time, velocity);
         // the envelopes
       envelope.triggerAttack(time, velocity);
       oscillator.start(time);
@@ -38,7 +41,7 @@ export const createSynth = (options?: Partial<SynthOptions>) => {
       }
     },
     triggerEnvelopeRelease: (time) => {
-      console.log('triggerEnvelopeRelease', time);
+      logger.debug('triggerEnvelopeRelease', time);
       envelope.triggerRelease(time);
       oscillator.stop(time + envelope.release);
     },

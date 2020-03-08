@@ -120,7 +120,7 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
   const decayCurve = options?.decayCurve ?? 'exponential';
   const sig = createConstantSource({ name: 'EnvelopeSignal' });
   // TOOD should init 0 like tone?
-  sig.offset.value = 0.05;
+  sig.offset.value = 0;
   const context = options?.context ?? c;
 
   /**
@@ -265,15 +265,12 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
     sig.disconnect();
   };
 
-  // TODO should init to 0 like tone?
-  const gain = createGain({ value: 0.05 });
+  // Be must init to 0 because the signal is additive
+  const gain = createGain({ value: 0 });
   sig.connect(gain.gain);
 
-  gain.gain.cancelScheduledValues(0);
-  // reset the value
-  gain.gain.setValueAtTime(0, 0);
-
-  sig.offset.value = 1;
+  // TODO maybe actually make signal?
+  sig.start(0);
 
   return Object.assign(
     defineProperties(gain, {

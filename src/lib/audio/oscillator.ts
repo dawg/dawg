@@ -76,9 +76,11 @@ export const createOscillator = (options?: Partial<OscillatorOptions>): ObeoOsci
 
     const frequencyParam = createParam(internal.frequency, { value: options?.frequency ?? 440, name: 'Frequency' });
     frequency.connect(frequencyParam);
+    frequencyParam.value = frequency.offset.value;
 
     const detuneParam = createParam(internal.detune, { value: options?.detune ?? 0, name: 'Detune' });
     detune.connect(detuneParam);
+    detuneParam.value = detune.offset.value;
 
     internal.start(when ?? context.now());
   };

@@ -310,7 +310,9 @@ export default createComponent({
         type: 'sawtooth',
       },
       envelope: {
-        sustain: 0.1,
+        sustain: 0.3,
+        attack: 0.5,
+        decay: 0.3,
       },
     });
 
@@ -324,57 +326,53 @@ export default createComponent({
     const playing = ref(false);
     const volumeControl = ref(0);
     watch(volumeControl, () => {
-      constantNode.offset.value = volumeControl.value;
+      // constantNode.offset.value = volumeControl.value;
     }, { lazy: true });
 
-    const gainNode1 = Audio.context.createGain();
+    const envelope = Audio.createEnvelope();
+    const constantNode = envelope.sig;
+    const gainNode1 = envelope;
+    // const gainNode1 = Audio.createGain();
+    // const gainNode2 = Audio.createGain();
+    // const gainNode3 = Audio.createGain();
     gainNode1.gain.value = 0.5;
+    // gainNode2.gain.value = 0.5;
+    // gainNode3.gain.value = 0.5;
+    volumeControl.value = 0.5;
 
-    const gainNode2 = Audio.context.createGain();
-    const gainNode3 = Audio.context.createGain();
-    gainNode2.gain.value = gainNode1.gain.value;
-    gainNode3.gain.value = gainNode1.gain.value;
-    volumeControl.value = gainNode1.gain.value;
+    // const constantNode = Audio.createConstantSource();
+    constantNode.connect(gainNode1.gain);
+    // constantNode.connect(gainNode2.gain);
+    // constantNode.connect(gainNode3.gain);
+    // constantNode.start();
 
-    const constantNode = Audio.context.createConstantSource();
-    constantNode.connect(gainNode2.gain);
-    constantNode.connect(gainNode3.gain);
-    constantNode.start();
 
-    gainNode1.connect(Audio.context.destination);
-    gainNode2.connect(Audio.context.destination);
-    gainNode3.connect(Audio.context.destination);
+    gainNode1.connect(Audio.destination);
 
-    let oscNode1: OscillatorNode;
-    let oscNode2: OscillatorNode;
-    let oscNode3: OscillatorNode;
+    // gainNode2.connect(Audio.destination);
+    // gainNode3.connect(Audio.destination);
+
+    const oscNode1 = Audio.createOscillator();
+    oscNode1.frequency.offset.value = 261.625565300598634; // middle C
+    oscNode1.connect(gainNode1);
+    // const oscNode2 = Audio.createOscillator();
+    // oscNode2.frequency.offset.value = 329.627556912869929; // E
+    // oscNode2.connect(gainNode2);
+    // const oscNode3 = Audio.createOscillator();
+    // oscNode3.frequency.offset.value = 391.995435981749294; // G
+    // oscNode3.connect(gainNode3);
     function startOscillators() {
-      oscNode1 = Audio.context.createOscillator();
-      oscNode1.type = 'sine';
-      oscNode1.frequency.value = 261.625565300598634; // middle C
-      oscNode1.connect(gainNode1);
-
-      oscNode2 = Audio.context.createOscillator();
-      oscNode2.type = 'sine';
-      oscNode2.frequency.value = 329.627556912869929; // E
-      oscNode2.connect(gainNode2);
-
-      oscNode3 = Audio.context.createOscillator();
-      oscNode3.type = 'sine';
-      oscNode3.frequency.value = 391.995435981749294; // G
-      oscNode3.connect(gainNode3);
-
       oscNode1.start();
-      oscNode2.start();
-      oscNode3.start();
+      // oscNode2.start();
+      // oscNode3.start();
 
       playing.value = true;
     }
 
     function stopOscillators() {
       oscNode1.stop();
-      oscNode2.stop();
-      oscNode3.stop();
+      // oscNode2.stop();
+      // oscNode3.stop();
       playing.value = false;
     }
 
@@ -392,6 +390,7 @@ export default createComponent({
       start: () => {
         synth.triggerAttackRelease('C5', 2);
 
+        // envelope.triggerAttackRelease(3, Audio.context.now());
         // oscillator.start(Audio.context.currentTime);
         // oscillator.stop(Audio.context.currentTime + 2);
       },

@@ -98,7 +98,6 @@ export const createParam = (
     logger.debug(`${opts.name ?? ''}:setValueAtTime`, value, startTime);
     value = fromUnit(value);
     events.add({ time: startTime, type: 'setValueAtTime', value });
-    console.log(param, value, startTime);
     param.setValueAtTime(value, startTime);
     return extended;
   };
