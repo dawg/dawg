@@ -5,7 +5,7 @@ import { assert } from '@/lib/audio/util';
 import { defineProperties } from '@/lib/std';
 import { getLogger } from '@/lib/log';
 
-const logger = getLogger('envelope', { level: 'debug' });
+const logger = getLogger('envelope');
 
 export interface ObeoParam extends AudioParam {
   name: 'param';
@@ -64,7 +64,7 @@ export const createParam = (
 ) => {
   const { toUnit = (v) => v, fromUnit = (v) => v } = opts;
   const events = new Tone.Timeline<AutomationEvent>(1000);
-  const initialValue = param.defaultValue;
+  const initialValue = opts.value ?? param.defaultValue;
   const minOutput = 1e-7;
 
   // TODO should we set the property we defined

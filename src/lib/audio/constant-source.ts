@@ -6,14 +6,14 @@ export interface ObeoConstantSourceNode extends ObeoScheduledSourceNode {
   readonly offset: ObeoParam;
 }
 
-export interface ConstantSourceOptions {
+export interface ObeoConstantSourceOptions {
   value: number;
   name: string;
 }
 
 // Enhances the "offset" param
 // See https://developer.mozilla.org/en-US/docs/Web/API/ConstantSourceNode
-export const createConstantSource = (options?: Partial<ConstantSourceOptions>): ObeoConstantSourceNode => {
+export const createConstantSource = (options?: Partial<ObeoConstantSourceOptions>): ObeoConstantSourceNode => {
   const source = context.createConstantSource();
 
   const offset = createParam(source.offset, options);

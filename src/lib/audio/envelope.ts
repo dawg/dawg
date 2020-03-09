@@ -1,12 +1,12 @@
 import { Seconds, NormalRange, ContextTime } from '@/lib/audio/types';
 import { context as c } from '@/lib/audio/online';
 import { defineProperties } from '@/lib/std';
-import { createConstantSource } from '@/lib/audio/constant-source';
 import { createOfflineContext } from '@/lib/audio/offline';
 import { EnhancedContext } from '@/lib/audio/context';
 import { createGain } from '@/lib/audio/gain';
 import { destination } from '@/lib/audio/destination';
 import { getLogger } from '@/lib/log';
+import { createSignal } from '@/lib/audio/signal';
 
 const logger = getLogger('envelope');
 
@@ -118,7 +118,7 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
   const attackCurve = options?.attackCurve ?? 'linear';
   const releaseCurve = options?.releaseCurve ?? 'exponential';
   const decayCurve = options?.decayCurve ?? 'exponential';
-  const sig = createConstantSource({ name: 'EnvelopeSignal' });
+  const sig = createSignal({ name: 'EnvelopeSignal' });
   // TOOD should init 0 like tone?
   sig.offset.value = 0;
   const context = options?.context ?? c;
@@ -268,9 +268,6 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
   // Be must init to 0 because the signal is additive
   const gain = createGain({ value: 0 });
   sig.connect(gain.gain);
-
-  // TODO maybe actually make signal?
-  sig.start(0);
 
   return Object.assign(
     defineProperties(gain, {

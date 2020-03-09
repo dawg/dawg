@@ -3,7 +3,7 @@ import { createParam, ObeoParamOptions, ObeoParam } from '@/lib/audio/param';
 import { ObeoNode, extractAudioNode } from '@/lib/audio/node';
 
 
-export interface ObeoGainNode extends ObeoNode {
+export interface ObeoGainNode extends ObeoNode<GainNode> {
   readonly gain: ObeoParam;
   mute: (value: boolean) => void;
 }

@@ -1,8 +1,9 @@
-import { MonophonicOptions, createMonophonic } from '@/lib/audio/monophonic';
+import { MonophonicOptions, createMonophonic, ObeoMonophonic } from '@/lib/audio/monophonic';
 import { EnvelopeOptions, createEnvelope } from '@/lib/audio/envelope';
 import { createOscillator, OscillatorOptions } from '@/lib/audio/oscillator';
-import { createVolume } from '@/lib/audio/volume';
+import { createVolume, ObeoVolumeNode } from '@/lib/audio/volume';
 import { getLogger } from '@/lib/log';
+import { ObeoSignalNode } from '@/lib/audio/signal';
 
 const logger = getLogger('synth');
 
@@ -11,7 +12,12 @@ export interface SynthOptions extends MonophonicOptions {
   envelope: Partial<EnvelopeOptions>;
 }
 
-export const createSynth = (options?: Partial<SynthOptions>) => {
+export interface ObeoSynth extends ObeoMonophonic, ObeoVolumeNode {
+  frequency: ObeoSignalNode;
+  detune: ObeoSignalNode;
+}
+
+export const createSynth = (options?: Partial<SynthOptions>): ObeoSynth => {
   const oscillator = createOscillator(options?.oscillator);
 
   const envelope = createEnvelope(options?.envelope);
@@ -32,26 +38,31 @@ export const createSynth = (options?: Partial<SynthOptions>) => {
       logger.debug('triggerEnvelopeAttack', time, velocity);
         // the envelopes
       envelope.triggerAttack(time, velocity);
-      oscillator.start(time);
+      const stopper = oscillator.start(time);
       // if there is no release portion, stop the oscillator
       if (envelope.sustain === 0) {
         const computedAttack = envelope.attack;
         const computedDecay = envelope.decay;
-        oscillator.stop(time + computedAttack + computedDecay);
+        stopper.stop(time + computedAttack + computedDecay);
       }
-    },
-    triggerEnvelopeRelease: (time) => {
-      logger.debug('triggerEnvelopeRelease', time);
-      envelope.triggerRelease(time);
-      oscillator.stop(time + envelope.release);
+
+      return {
+        triggerEnvelopeRelease: (when) => {
+          logger.debug('triggerEnvelopeRelease', when);
+          envelope.triggerRelease(when);
+          stopper.stop(when + envelope.release);
+        },
+      };
     },
   }, options);
 
   // TODO generalize to helper function maybe to extract core AudioNode attributes ??
-  return Object.assign({
-    connect: volume.connect.bind(volume),
-    disconnect: volume.disconnect.bind(volume),
+  return {
+    ...volume,
+    ...monophonic,
+    // connect: volume.connect.bind(volume),
+    // disconnect: volume.disconnect.bind(volume),
     frequency: oscillator.frequency,
     detune: oscillator.detune,
-  }, monophonic);
+  };
 };

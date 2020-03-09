@@ -1,5 +1,3 @@
-import Tone from 'tone';
-
 // TODO uhh refactor
 export class Signal {
   public raw = 0;

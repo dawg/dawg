@@ -139,6 +139,8 @@ import { createComponent, computed, ref, onMounted, onUnmounted, watch } from '@
 // import * as oly from '@/lib/olyger';
 // import path from 'path';
 import * as Audio from '@/lib/audio';
+import { Disposer } from '../std';
+import { Stopper } from '../audio/scheduled-source-node';
 
 // declare var __static: string;
 
@@ -361,8 +363,10 @@ export default createComponent({
     // const oscNode3 = Audio.createOscillator();
     // oscNode3.frequency.offset.value = 391.995435981749294; // G
     // oscNode3.connect(gainNode3);
+
+    let disposers: Stopper[] = [];
     function startOscillators() {
-      oscNode1.start();
+      disposers.push(oscNode1.start());
       // oscNode2.start();
       // oscNode3.start();
 
@@ -370,7 +374,8 @@ export default createComponent({
     }
 
     function stopOscillators() {
-      oscNode1.stop();
+      disposers.forEach((disposer) => disposer.stop());
+      disposers = [];
       // oscNode2.stop();
       // oscNode3.stop();
       playing.value = false;

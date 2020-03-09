@@ -1,11 +1,11 @@
 import { SourceOptions } from '@/lib/audio/source';
-import { createConstantSource, ObeoConstantSourceNode } from '@/lib/audio/constant-source';
 import { Cents, Hertz, ContextTime } from '@/lib/audio/types';
 import { context } from '@/lib/audio/online';
 import { createParam } from '@/lib/audio/param';
 import { createVolume } from '@/lib/audio/volume';
 import { reverse } from '@/lib/std';
-import { ObeoScheduledSourceNode } from '@/lib/audio/scheduled-source-node';
+import { ObeoScheduledSourceNode, Stopper } from '@/lib/audio/scheduled-source-node';
+import { createSignal, ObeoSignalNode } from '@/lib/audio/signal';
 
 export interface OscillatorOptions extends SourceOptions {
   type: OscillatorType;
@@ -15,8 +15,8 @@ export interface OscillatorOptions extends SourceOptions {
 
 export interface ObeoOscillator extends ObeoScheduledSourceNode<AudioNode> {
   // OscillatorNode
-  readonly detune: ObeoConstantSourceNode;
-  readonly frequency: ObeoConstantSourceNode;
+  readonly detune: ObeoSignalNode;
+  readonly frequency: ObeoSignalNode;
   type: OscillatorType;
   setPeriodicWave(periodicWave: PeriodicWave): void;
   addEventListener<K extends keyof AudioScheduledSourceNodeEventMap>(
@@ -43,13 +43,13 @@ export const createOscillator = (options?: Partial<OscillatorOptions>): ObeoOsci
   };
 
   // TODO initial values ??
-  const frequency = createConstantSource({ name: 'Frequency' });
-  const detune = createConstantSource({ name: 'Detune' });
+  const frequency = createSignal({ name: 'Frequency' });
+  const detune = createSignal({ name: 'Detune' });
 
   let wave: PeriodicWave | undefined;
 
   let saved: OscillatorNode | undefined;
-  const start = (when?: ContextTime) => {
+  const start = (when?: ContextTime): Stopper => {
     const internal = saved = context.createOscillator();
     internal.type = oscillator.type;
     internal.onended = oscillator.onended;
@@ -83,6 +83,10 @@ export const createOscillator = (options?: Partial<OscillatorOptions>): ObeoOsci
     detuneParam.value = detune.offset.value;
 
     internal.start(when ?? context.now());
+
+    return {
+      stop,
+    };
   };
 
   const stop = (when?: ContextTime) => {
@@ -100,7 +104,6 @@ export const createOscillator = (options?: Partial<OscillatorOptions>): ObeoOsci
     frequency,
     type: options?.type ?? 'sine',
     start,
-    stop,
     onended: () => ({}),
     setPeriodicWave: (value) => {
       wave = value;
