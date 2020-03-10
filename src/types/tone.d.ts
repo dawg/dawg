@@ -930,6 +930,7 @@ declare module 'tone' {
     cancel(time: number): this;
     add(event: T): void;
     get(time: number, comparator?: keyof T): T;
+    previousEvent(event: T): T | null;
     getAfter(time: number, comparator?: keyof T): T | null;
     getBefore(time: number, comparator?: keyof T): T | null;
     forEach(callback: (event: T) => void): void;
