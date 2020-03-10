@@ -2,7 +2,7 @@
 ![Build Status](https://img.shields.io/github/workflow/status/dawg/dawg/Release?style=for-the-badge&logo=GitHub)
 ![Version](https://img.shields.io/github/package-json/v/dawg/dawg?style=for-the-badge)
 
-![DAWG](https://i.ibb.co/qRRVRwh/image.png)
+![DAWG](https://i.ibb.co/gF2Hc4Z/Screen-Shot-2020-03-10-at-2-40-51-PM.png)
 > A DAW for the 21st century! 
 
 ## About
