@@ -1,4 +1,4 @@
-import { Note, Hertz, MidiNote, Seconds, ContextTime } from '@/lib/audio/types';
+import { Note, Hertz, MidiNote } from '@/lib/audio/types';
 
 /**
  * Assert that the statement is true, otherwise invoke the error.

@@ -1,6 +1,12 @@
 import { context } from '@/lib/audio/online';
 import { ObeoParamOptions } from '@/lib/audio/param';
-import { createAbstractParam, AutomationEvent, exponentialApproach, ObeoParam, exponentialInterpolate } from '@/lib/audio/abstract-param';
+import {
+  createAbstractParam,
+  AutomationEvent,
+  exponentialApproach,
+  ObeoAbstractParam,
+  exponentialInterpolate,
+} from '@/lib/audio/abstract-param';
 import { ContextTime, Ticks, Seconds } from '@/lib/audio/types';
 
 interface Extension {
@@ -12,7 +18,7 @@ interface Extension {
   timeToTicks(duration: Seconds, when: ContextTime): Ticks;
 }
 
-export type ObeoTickParam = ObeoParam & Extension;
+export type ObeoTickParam = ObeoAbstractParam & Extension;
 
 export type ObeoTickSignalOptions = ObeoParamOptions;
 
@@ -94,6 +100,7 @@ export const createTickParam = (param: AudioParam, options: Partial<ObeoTickSign
           };
         }
 
+        // tslint:disable-next-line:no-console
         // TODO I don't this this is needed in my implementation
         // else if (isUndef(event.ticks)) {
         //   const previousEvent = events.previousEvent(event);
@@ -118,9 +125,8 @@ export const createTickParam = (param: AudioParam, options: Partial<ObeoTickSign
        * @return The number of ticks which have elapsed at the time given any automations.
        */
       const getTicksAtTime = (time: ContextTime): Ticks => {
-        const computedTime = time ?? context.now();
-        const event = events.get(computedTime);
-        return Math.max(getTicksUntilEvent(event, computedTime), 0);
+        const event = events.get(time);
+        return Math.max(getTicksUntilEvent(event, time), 0);
       };
 
       /**
@@ -130,9 +136,8 @@ export const createTickParam = (param: AudioParam, options: Partial<ObeoTickSign
        * @return The duration of the number of ticks from the given time in seconds
        */
       const getDurationOfTicks = (ticks: Ticks, time: ContextTime): Seconds => {
-        const computedTime = time ?? context.now();
         const currentTick = getTicksAtTime(time);
-        return getTimeOfTick(currentTick + ticks) - computedTime;
+        return getTimeOfTick(currentTick + ticks) - time;
       };
 
       /**

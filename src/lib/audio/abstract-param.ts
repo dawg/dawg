@@ -1,13 +1,13 @@
 import Tone from 'tone';
 import { Seconds, ContextTime } from '@/lib/audio/types';
-import { context } from '@/lib/audio/online';
 import { assert } from '@/lib/audio/util';
 import { defineProperties } from '@/lib/std';
 import { getLogger } from '@/lib/log';
+import { getContext } from '@/lib/audio/global';
 
-const logger = getLogger('envelope');
+const logger = getLogger('envelope', { level: 'info', style: false });
 
-export interface ObeoParam extends AudioParam {
+export interface ObeoAbstractParam extends AudioParam {
   name: 'param';
   param: AudioParam;
   exponentialRampTo(value: number, rampTime: Seconds, startTime?: ContextTime): void;
@@ -21,7 +21,8 @@ export interface ObeoParam extends AudioParam {
     startTime: ContextTime,
     duration: Seconds,
     scaling?: number,
-  ): ObeoParam;
+  ): ObeoAbstractParam;
+  dispose(): void;
 }
 
 export type ObeoConversion = (value: number) => number;
@@ -58,7 +59,7 @@ export interface ObeoAbstractParamOptions {
   fromUnit: ObeoConversion;
 }
 
-export type ObeoParamExtension<T, V> = (events: Tone.Timeline<AutomationEvent<T>>, param: ObeoParam) => {
+export type ObeoParamExtension<T, V> = (events: Tone.Timeline<AutomationEvent<T>>, param: ObeoAbstractParam) => {
   addEventInformation: (event: AutomationEvent<T>) => T;
   extension: V;
 };
@@ -88,16 +89,17 @@ export const createAbstractParam = <T, V>(
   param: AudioParam,
   extend: ObeoParamExtension<T, V>,
   opts: Partial<ObeoAbstractParamOptions> = {},
-): ObeoParam & V => {
+): ObeoAbstractParam & V => {
+  const context = getContext();
   const { toUnit = (v) => v, fromUnit = (v) => v } = opts;
   const events = new Tone.Timeline<AutomationEvent<T>>(1000);
   const initialValue = opts.value ?? param.defaultValue;
   const minOutput = 1e-7;
-  param.value = opts.value ?? initialValue;
 
   const exponentialRampToValueAtTime = (value: number, endTime: ContextTime) => {
     logger.debug(`${opts.name ?? ''}:exponentialRampToValueAtTime`, value, endTime);
     value = fromUnit(value);
+    value = Math.max(minOutput, value);
     add({ time: endTime, type: 'exponentialRampToValueAtTime', value });
     param.exponentialRampToValueAtTime(value, endTime);
     return extended;
@@ -135,11 +137,11 @@ export const createAbstractParam = <T, V>(
   ) => {
     logger.debug(`${opts.name ?? ''}:setValueCurveAtTime`, values, startTime, duration, scaling);
     const startingValue = fromUnit(values[0] * scaling);
-    setValueAtTime(toUnit(startingValue), startTime);
+    api.setValueAtTime(toUnit(startingValue), startTime);
     const segTime = duration / (values.length - 1);
     for (let i = 1; i < values.length; i++) {
       const numericValue = fromUnit(values[i] * scaling);
-      linearRampToValueAtTime(toUnit(numericValue), startTime + i * segTime);
+      api.linearRampToValueAtTime(toUnit(numericValue), startTime + i * segTime);
     }
     return extended;
   };
@@ -149,6 +151,7 @@ export const createAbstractParam = <T, V>(
     const computedTime = Math.max(time, 0);
     const after = events.getAfter(computedTime);
     const before = events.get(computedTime);
+
     let value = initialValue;
     // if it was set by
     if (before === null) {
@@ -190,33 +193,33 @@ export const createAbstractParam = <T, V>(
   };
 
   const setRampPoint = (time: ContextTime) => {
-    let currentVal = getValueAtTime(time);
-    cancelAndHoldAtTime(time);
+    let currentVal = api.getValueAtTime(time);
+    api.cancelAndHoldAtTime(time);
     if (fromUnit(currentVal) === 0) {
       currentVal = toUnit(minOutput);
     }
-    setValueAtTime(currentVal, time);
+    api.setValueAtTime(currentVal, time);
   };
 
   const exponentialRampTo = (value: number, rampTime: Seconds, startTime?: ContextTime) => {
     logger.debug(`${opts.name ?? ''}:exponentialRampTo`, value, rampTime, startTime);
     startTime = startTime ?? context.now();
-    setRampPoint(startTime);
-    exponentialRampToValueAtTime(value, startTime + rampTime);
+    api.setRampPoint(startTime);
+    api.exponentialRampToValueAtTime(value, startTime + rampTime);
   };
 
   const linearRampTo = (value: number, rampTime: Seconds, startTime?: ContextTime) => {
     logger.debug(`${opts.name ?? ''}:linearRampTo`, value, rampTime, startTime);
     startTime = startTime ?? context.now();
-    setRampPoint(startTime);
-    linearRampToValueAtTime(value, startTime + rampTime);
+    api.setRampPoint(startTime);
+    api.linearRampToValueAtTime(value, startTime + rampTime);
   };
 
   const targetRampTo = (value: number, rampTime: Seconds, startTime?: ContextTime) => {
     logger.debug(`${opts.name ?? ''}:targetRampTo`, value, rampTime, startTime);
     startTime = startTime ?? context.now();
-    setRampPoint(startTime);
-    exponentialApproachValueAtTime(value, startTime, rampTime);
+    api.setRampPoint(startTime);
+    api.exponentialApproachValueAtTime(value, startTime, rampTime);
   };
 
   const cancelScheduledValues = (time: ContextTime) => {
@@ -228,7 +231,7 @@ export const createAbstractParam = <T, V>(
 
   const cancelAndHoldAtTime = (time: ContextTime) => {
     const computedTime = time;
-    const valueAtTime = fromUnit(getValueAtTime(computedTime));
+    const valueAtTime = fromUnit(api.getValueAtTime(computedTime));
     // remove the schedule events
     assert(isFinite(computedTime), `Invalid argument to cancelAndHoldAtTime: ${JSON.stringify(time)}`);
 
@@ -250,9 +253,9 @@ export const createAbstractParam = <T, V>(
       // cancel the next event(s)
       events.cancel(after.time);
       if (after.type === 'linearRampToValueAtTime') {
-        linearRampToValueAtTime(toUnit(valueAtTime), computedTime);
+        api.linearRampToValueAtTime(toUnit(valueAtTime), computedTime);
       } else if (after.type === 'exponentialRampToValueAtTime') {
-        exponentialRampToValueAtTime(toUnit(valueAtTime), computedTime);
+        api.exponentialRampToValueAtTime(toUnit(valueAtTime), computedTime);
       }
     }
 
@@ -269,13 +272,17 @@ export const createAbstractParam = <T, V>(
   const exponentialApproachValueAtTime = (value: number, time: ContextTime, rampTime: Seconds) => {
     logger.debug(`${opts.name ?? ''}:exponentialApproachValueAtTime`, value, time, rampTime);
     const timeConstant = Math.log(rampTime + 1) / Math.log(200);
-    setTargetAtTime(value, time, timeConstant);
+    api.setTargetAtTime(value, time, timeConstant);
     // at 90% start a linear ramp to the final value
-    cancelAndHoldAtTime(time + rampTime * 0.9);
-    linearRampToValueAtTime(value, time + rampTime);
+    api.cancelAndHoldAtTime(time + rampTime * 0.9);
+    api.linearRampToValueAtTime(value, time + rampTime);
   };
 
-  const extended: ObeoParam = defineProperties({
+  const dispose = () => {
+    events.dispose();
+  };
+
+  const extended: ObeoAbstractParam = defineProperties({
     // AudioParam
     // TODO properties ??
     automationRate: param.automationRate,
@@ -300,12 +307,13 @@ export const createAbstractParam = <T, V>(
     targetRampTo,
     getValueAtTime,
     exponentialApproachValueAtTime,
+    dispose,
   }, {
     value: {
       get() {
         logger.debug(`${opts.name ?? ''}:value:get`);
         const now = context.now();
-        return getValueAtTime(now);
+        return api.getValueAtTime(now);
       },
       set(value: number) {
         logger.debug(`${opts.name ?? ''}:value:set`, value);
@@ -315,18 +323,28 @@ export const createAbstractParam = <T, V>(
     },
   });
 
-  const { extension, addEventInformation } = extend(events, extended);
-
-  const add = (event: AutomationEvent<{}>) => {
+  // We must define add here before we initialize (which calls a function which calls `add`)
+  const add = (event: AutomationEvent<T>) => {
+    // Not sure if this is the best but it's necessary for the tick param which calls
+    // `getTicksUntilEvent` during the `addEventInformation`
+    events.add(event);
     const params = addEventInformation(event);
     Object.assign(event, params);
-    events.add(event);
   };
 
-  return {
-    ...extended,
+  // We *must* also call this before initializing
+  const { extension, addEventInformation } = extend(events, extended);
 
-    // This must go at the end to overwrite any functions
-    ...extension,
-  };
+  // Ok finally do the initialization down here
+  // It is important that we set the at time 0
+  if (opts.value !== undefined) {
+    extended.setValueAtTime(opts.value ?? initialValue, 0);
+  }
+
+  // We assign `extension` -> `extended` to overwrite any functions
+  // We also use `assign` so that the properties defined above are not removed
+  const api = Object.assign(extended, extension);
+
+  // TODO names of all these things
+  return api;
 };

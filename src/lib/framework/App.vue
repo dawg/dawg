@@ -141,6 +141,7 @@ import { createComponent, computed, ref, onMounted, onUnmounted, watch } from '@
 import * as Audio from '@/lib/audio';
 import { Disposer } from '../std';
 import { Stopper } from '../audio/scheduled-source-node';
+import { getContext } from '../audio/global';
 
 // declare var __static: string;
 
@@ -307,68 +308,42 @@ export default createComponent({
     //   rootClasses: framework.ui.rootClasses,
     // };
 
-    const synth = Audio.createSynth({
-      oscillator: {
-        type: 'sawtooth',
-      },
-      envelope: {
-        sustain: 0.3,
-        attack: 0.5,
-        decay: 0.3,
-      },
-    });
-
-    synth.connect(Audio.destination);
-
-    // const oscillator = Audio.context.createOscillator({
-    //   //
+    // const synth = Audio.createSynth({
+    //   oscillator: {
+    //     type: 'sawtooth',
+    //   },
+    //   envelope: {
+    //     sustain: 0.3,
+    //     attack: 0.5,
+    //     decay: 0.3,
+    //   },
     // });
 
-    // TEST
+    // synth.connect(Audio.destination);
+
+    // // TEST
     const playing = ref(false);
     const volumeControl = ref(0);
-    watch(volumeControl, () => {
-      // constantNode.offset.value = volumeControl.value;
-    }, { lazy: true });
+    // watch(volumeControl, () => {
+    //   // constantNode.offset.value = volumeControl.value;
+    // }, { lazy: true });
 
-    const envelope = Audio.createEnvelope();
-    const constantNode = envelope.sig;
-    const gainNode1 = envelope;
-    // const gainNode1 = Audio.createGain();
-    // const gainNode2 = Audio.createGain();
-    // const gainNode3 = Audio.createGain();
-    gainNode1.gain.value = 0.5;
-    // gainNode2.gain.value = 0.5;
-    // gainNode3.gain.value = 0.5;
-    volumeControl.value = 0.5;
-
-    // const constantNode = Audio.createConstantSource();
-    constantNode.connect(gainNode1.gain);
-    // constantNode.connect(gainNode2.gain);
-    // constantNode.connect(gainNode3.gain);
-    // constantNode.start();
+    // const envelope = Audio.createEnvelope();
+    // const constantNode = envelope.sig;
+    // const gainNode1 = envelope;
+    // gainNode1.gain.value = 0.5;
+    // volumeControl.value = 0.5;
+    // constantNode.connect(gainNode1.gain);
+    // gainNode1.connect(Audio.destination);
 
 
-    gainNode1.connect(Audio.destination);
-
-    // gainNode2.connect(Audio.destination);
-    // gainNode3.connect(Audio.destination);
-
-    const oscNode1 = Audio.createOscillator();
-    oscNode1.frequency.offset.value = 261.625565300598634; // middle C
-    oscNode1.connect(gainNode1);
-    // const oscNode2 = Audio.createOscillator();
-    // oscNode2.frequency.offset.value = 329.627556912869929; // E
-    // oscNode2.connect(gainNode2);
-    // const oscNode3 = Audio.createOscillator();
-    // oscNode3.frequency.offset.value = 391.995435981749294; // G
-    // oscNode3.connect(gainNode3);
+    // const oscNode1 = Audio.createOscillator();
+    // oscNode1.frequency.offset.value = 261.625565300598634; // middle C
+    // oscNode1.connect(gainNode1);
 
     let disposers: Stopper[] = [];
     function startOscillators() {
-      disposers.push(oscNode1.start());
-      // oscNode2.start();
-      // oscNode3.start();
+      // disposers.push(oscNode1.start());
 
       playing.value = true;
     }
@@ -376,8 +351,6 @@ export default createComponent({
     function stopOscillators() {
       disposers.forEach((disposer) => disposer.stop());
       disposers = [];
-      // oscNode2.stop();
-      // oscNode3.stop();
       playing.value = false;
     }
 
@@ -393,7 +366,27 @@ export default createComponent({
         }
       },
       start: () => {
-        synth.triggerAttackRelease('C5', 2);
+        // synth.triggerAttackRelease('C5', 2);
+
+        const context = getContext();
+        const source = context.createConstantSource();
+        source.connect(context.destination);
+        source.start(0);
+        const param = Audio.createParam(source.offset, { value: 0.1 });
+        param.setValueAtTime(0, 0);
+        param.setValueAtTime(1, 0.1);
+        // param.linearRampToValueAtTime(3, 0.2);
+        // param.exponentialRampToValueAtTime(0.01, 0.3);
+        // param.setTargetAtTime(-1, 0.35, 0.2);
+        // param.cancelAndHoldAtTime(0.6);
+        // param.linearRampTo(1.1, 0.2, 0.7); // changed from rampTo
+        // param.exponentialRampTo(0, 0.1, 0.85);
+        param.setValueAtTime(0, 1);
+        // expect(param.getValueAtTime(0.95)).to.closeTo(0, 0.001);
+        // expect(param.getValueAtTime(1)).to.eq(0);
+        param.linearRampTo(1, 0.2, 1);
+
+        const value = param.getValueAtTime(1103 / context.sampleRate);
 
         // envelope.triggerAttackRelease(3, Audio.context.now());
         // oscillator.start(Audio.context.currentTime);

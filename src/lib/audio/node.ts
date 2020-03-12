@@ -14,6 +14,7 @@ export interface ObeoNode<T extends AudioNode = AudioNode> extends AudioNode {
   disconnect(destinationParam: ObeoParam): void;
   disconnect(destinationParam: ObeoParam, output: number): void;
   // tslint:enable:unified-signatures
+  dispose(): void;
 }
 
 export const extractAudioNode = <T extends AudioNode>(node: T): ObeoNode<T> => {
@@ -64,6 +65,9 @@ export const extractAudioNode = <T extends AudioNode>(node: T): ObeoNode<T> => {
           node.disconnect(nodeParamOrOutput.param);
         }
       }
+    },
+    dispose: () => {
+      node.disconnect();
     },
   };
 

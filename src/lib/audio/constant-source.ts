@@ -15,9 +15,7 @@ export interface ObeoConstantSourceOptions {
 // See https://developer.mozilla.org/en-US/docs/Web/API/ConstantSourceNode
 export const createConstantSource = (options?: Partial<ObeoConstantSourceOptions>): ObeoConstantSourceNode => {
   const source = context.createConstantSource();
-
   const offset = createParam(source.offset, options);
-
   return {
     ...extractAudioScheduledSourceNode(source),
     offset,

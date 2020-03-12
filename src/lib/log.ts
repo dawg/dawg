@@ -79,23 +79,24 @@ const camelToKebabObject = (o: CSS.Properties) => {
   return result;
 };
 
-export const getLogger = (name: string, { level }: { level?: Level } = {}): Logger => {
+export const getLogger = (name: string, { level, style }: { level?: Level, style?: boolean } = {}): Logger => {
+  const local = style ?? true;
   return {
     level: level ?? 'info',
     silly(message: string, ...args: any[]) {
-      log({ setLevel: this.level, name, level: 'silly', message, args });
+      log({ setLevel: this.level, name, level: 'silly', message, args, style: local });
     },
     debug(message: string, ...args: any[]) {
-      log({ setLevel: this.level, name, level: 'debug', message, args });
+      log({ setLevel: this.level, name, level: 'debug', message, args, style: local });
     },
     info(message: string, ...args: any[]) {
-      log({ setLevel: this.level, name, level: 'info', message, args });
+      log({ setLevel: this.level, name, level: 'info', message, args, style: local });
     },
     warn(message: string, ...args: any[]) {
-      log({ setLevel: this.level, name, level: 'warn', message, args });
+      log({ setLevel: this.level, name, level: 'warn', message, args, style: local });
     },
     error(message: string, ...args: any[]) {
-      log({ setLevel: this.level, name, level: 'error', message, args });
+      log({ setLevel: this.level, name, level: 'error', message, args, style: local });
     },
   };
 };
@@ -104,11 +105,10 @@ export interface LogMessage {
   message: string;
   name: string;
   level: Level;
+  style: boolean;
   setLevel: Level;
   args: any[];
 }
-
-
 
 export const log = (message: LogMessage) => {
   if (levelLookup[message.level] < levelLookup[message.setLevel]) {
@@ -120,6 +120,7 @@ export const log = (message: LogMessage) => {
   const styleString = styleArray.join('; ');
   const messageString = `[${message.name}] ${message.level.toUpperCase()}: ${message.message}`;
 
+  // TODO
   // We do this because if we try to import electron-log while testing the tests fail silently
   // if (!eLog) {
   //   eLog = require('electron-log');
@@ -142,6 +143,11 @@ export const log = (message: LogMessage) => {
 
   // eLog![message.level](messageString, ...message.args);
 
-  // tslint:disable-next-line:no-console
-  console.log(`%c${messageString}`, styleString, ...message.args);
+  if (message.style) {
+    // tslint:disable-next-line:no-console
+    console.log(`%c${messageString}`, styleString, ...message.args);
+  } else {
+    // tslint:disable-next-line:no-console
+    console.log(messageString, ...message.args);
+  }
 };

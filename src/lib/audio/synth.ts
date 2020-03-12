@@ -25,7 +25,6 @@ export const createSynth = (options?: Partial<SynthOptions>): ObeoSynth => {
 
   oscillator.connect(envelope);
   envelope.connect(volume);
-  // oscillator.connect(volume);
 
   const monophonic = createMonophonic({
     getLevelAtTime: (time) => {
