@@ -3,7 +3,7 @@
 ![Version](https://img.shields.io/github/package-json/v/dawg/dawg?style=for-the-badge)
 
 ![DAWG](https://i.ibb.co/gF2Hc4Z/Screen-Shot-2020-03-10-at-2-40-51-PM.png)
-> A DAW for the 21st century! 
+> A DAW built using the Web Audio API 🤘
 
 ## About
 `DAWG` is Digital Audio Workstation (DAW) built using web technologies and distributed as a native application using [Electron](https://www.electronjs.org/) 🎹 It was initially developed as part of the 2018-2019 `ENGG 4000` (`Senior Design Project`) course at [UNB](http://unb.ca/) but is now being developed as a side project. `DAWG` strives (although currently fails) to offer the same functionality of DAWs such as `FL Studio` and `Ableton`. The name `DAWG` initially comes from our group name in the `ENGG 4000` course: `Digital Audio Workstation Group (DAWG)`.
