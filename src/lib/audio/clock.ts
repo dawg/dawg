@@ -1,12 +1,28 @@
-import Tone from 'tone';
 import { onDidTick } from '@/lib/audio/ticker';
-import { ContextTime, Ticks } from '@/lib/audio/types';
-import { TickSource } from '@/lib/audio/tick-source';
-import { StrictEventEmitter } from '@/lib/events';
+import { ContextTime, Ticks, Seconds } from '@/lib/audio/types';
+import { createTickSource } from '@/lib/audio/tick-source';
+import { emitter } from '@/lib/events';
 import { context } from '@/lib/audio/online';
+import { ObeoTickSignal } from '@/lib/audio/tick-signal';
+import { PlaybackState } from '@/lib/audio/timeline-state';
+import { Disposer } from '@/lib/std';
 
-interface ClockOptions {
-  callback: (seconds: ContextTime, ticks: Ticks) => void;
+export interface ObeoClock {
+  readonly frequency: ObeoTickSignal;
+  getSeconds(): Seconds;
+  getState(): PlaybackState;
+  getTicks(): Ticks;
+  setTicks(ticks: Ticks): void;
+  start(): void;
+  stop(): void;
+  pause(): void;
+  setTicksAtTime(ticks: Ticks, time: ContextTime): void;
+  onDidStop(cb: (o: TimeTicks) => void): Disposer;
+}
+
+export type ClockCallback = (seconds: ContextTime, ticks: Ticks) => void;
+
+export interface ObeoClockOptions {
   frequency: number;
 }
 
@@ -15,80 +31,63 @@ interface TimeTicks {
   ticks: Ticks;
 }
 
-export class Clock extends StrictEventEmitter<{ started: [TimeTicks], stopped: [TimeTicks] }> {
-  // TODO
-  public readonly frequency: Tone.TickSignal;
-  private callback: (seconds: ContextTime, ticks: Ticks) => void;
-  private tickSource: TickSource;
+export const createClock = (callback: ClockCallback, options?: Partial<ObeoClockOptions>): ObeoClock => {
+  const tickSource = createTickSource(options);
   // tslint:disable-next-line:variable-name
-  private _state: 'stopped' | 'started' = 'stopped';
-  private nextState: 'stopped' | 'started' | null = null;
-  private boundLoop: () => void;
-  private lastUpdate = 0;
+  let _state: 'stopped' | 'started' = 'stopped';
+  let nextState: 'stopped' | 'started' | null = null;
+  let lastUpdate = 0;
+  const events = emitter<{ started: [TimeTicks], stopped: [TimeTicks] }>();
 
-  constructor(options: ClockOptions) {
-    super();
-    this.callback = options.callback;
-    this.tickSource = new TickSource({ frequency: options.frequency });
-    this.frequency = this.tickSource.frequency;
-    this.boundLoop = this.loop.bind(this);
-    onDidTick(this.boundLoop);
-  }
+  const getSeconds = () => {
+    return tickSource.getSecondsAtTime();
+  };
 
-  get seconds() {
-    return this.tickSource.seconds;
-  }
+  const getState = () => {
+    return nextState || _state;
+  };
 
-  get state() {
-    return this.nextState || this._state;
-  }
+  const getTicks = () => {
+    return Math.ceil(tickSource.getTicksAtTime(context.now()));
+  };
 
-  get ticks() {
-    return Math.ceil(this.getTicksAtTime(context.now()));
-  }
+  const setTicks = (ticks: number) => {
+    tickSource.setTicksAtTime(ticks);
+  };
 
-  set ticks(t: number) {
-    this.tickSource.ticks = t;
-  }
-
-  public start() {
+  const start = () => {
     const seconds = context.now();
     context.resume();
-    this.nextState = 'started';
-    this.tickSource.start(seconds);
-  }
+    nextState = 'started';
+    tickSource.start(seconds);
+  };
 
-  public stop() {
+  const stop = () => {
     const seconds = context.now();
-    this.nextState = 'stopped';
-    this.tickSource.stop(seconds);
-  }
+    nextState = 'stopped';
+    tickSource.stop(seconds);
+  };
 
-  public pause() {
+  const pause = () => {
     const seconds = context.now();
-    this.nextState = 'stopped';
-    this.tickSource.pause(seconds);
-  }
+    nextState = 'stopped';
+    tickSource.pause(seconds);
+  };
 
-  public setTicksAtTime(ticks: Ticks, time: ContextTime) {
-    this.tickSource.setTicksAtTime(ticks, time);
-    return this;
-  }
+  const setTicksAtTime = (ticks: Ticks, time: ContextTime) => {
+    tickSource.setTicksAtTime(ticks, time);
+  };
 
-  public getTicksAtTime(time: ContextTime) {
-    return this.tickSource.getTicksAtTime(time);
-  }
-
-  private loop() {
-    const startTime = this.lastUpdate;
+  const loop = () => {
+    const startTime = lastUpdate;
     const endTime = context.now();
-    this.lastUpdate = endTime;
+    lastUpdate = endTime;
 
-    if (this.nextState) {
-      const ticks = this.ticks;
-      this._state = this.nextState;
-      this.nextState = null;
-      this.emit(this._state, {
+    if (nextState) {
+      const ticks = getTicks();
+      _state = nextState;
+      nextState = null;
+      events.emit(_state, {
         seconds: endTime,
         ticks,
       });
@@ -96,11 +95,30 @@ export class Clock extends StrictEventEmitter<{ started: [TimeTicks], stopped: [
 
     // Not really necessary but more efficient
     // This function is always being called
-    if (this._state === 'stopped') {
+    if (_state === 'stopped') {
       return;
     }
 
     // the tick callbacks
-    this.tickSource.forEachTickBetween(startTime, endTime, this.callback);
-  }
-}
+    tickSource.forEachTickBetween(startTime, endTime, callback);
+  };
+
+  const onDidStop = (cb: (o: TimeTicks) => void) => {
+    return events.on('stopped', cb);
+  };
+
+  onDidTick(loop);
+
+  return {
+    frequency: tickSource.frequency,
+    getSeconds,
+    getState,
+    getTicks,
+    setTicks,
+    start,
+    stop,
+    pause,
+    setTicksAtTime,
+    onDidStop,
+  };
+};

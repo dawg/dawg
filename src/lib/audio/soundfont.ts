@@ -1,4 +1,3 @@
-import Tone from 'tone';
 import { ContextTime, Seconds } from '@/lib/audio/types';
 import { context } from '@/lib/audio/online';
 import { sendRequest, parseNote, base64Decode } from '@/lib/mutils';
@@ -249,16 +248,6 @@ export const createSoundfont = (name: SoundfontName, options?: Partial<Soundfont
     start(note, time, { gain: velocity });
   };
 
-  const connect = (node: Tone.AudioNode) => {
-    // A bit of a hacky solution to make Tone.js work with soundfonts
-    out.connect((node as any).output as AudioNode);
-  };
-
-  const disconnect = (node: Tone.AudioNode) => {
-    // FIXME A bit of a hacky solution to make Tone.js work with soundfonts
-    out.disconnect((node as any).output as AudioNode);
-  };
-
   const set = <K extends keyof SoundfontOptions>(o: { key: K, value: SoundfontOptions[K] }) => {
     defaults[o.key] = o.value;
   };
@@ -332,5 +321,5 @@ export const createSoundfont = (name: SoundfontName, options?: Partial<Soundfont
     };
   };
 
-  return Object.assign({ triggerAttack, triggerAttackRelease }, out);
+  return Object.assign(out, { triggerAttack, triggerAttackRelease });
 };

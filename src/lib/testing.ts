@@ -16,7 +16,21 @@ interface Deep<T> {
   eq: Equal<T>;
 }
 
-interface Assertion<T> {
+interface NumericComparison<T> {
+  above: NumberComparer<T>;
+  gt: NumberComparer<T>;
+  greaterThan: NumberComparer<T>;
+  least: NumberComparer<T>;
+  gte: NumberComparer<T>;
+  below: NumberComparer<T>;
+  lt: NumberComparer<T>;
+  lessThan: NumberComparer<T>;
+  most: NumberComparer<T>;
+  lte: NumberComparer<T>;
+  within(start: T, finish: T, message?: string): Assertion<T>;
+}
+
+type Assertion<T> = {
   to: Assertion<T>;
   deep: Deep<T>;
   be: Assertion<T>;
@@ -24,11 +38,12 @@ interface Assertion<T> {
   not: Assertion<T>;
   eq: Equal<T>;
   equal: Equal<T>;
+  is: Assertion<T>
   throw: Throw<T>;
   gte: NumberComparer<T>;
   gt: NumberComparer<T>;
   greaterThan: NumberComparer<T>;
-}
+} & (number extends T ? NumericComparison<T> : {});
 
 export const expect = ex as Expect;
 

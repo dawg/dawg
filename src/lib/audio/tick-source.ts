@@ -1,49 +1,65 @@
 import Tone from 'tone';
-import { ContextTime, Ticks } from '@/lib/audio/types';
+import { ContextTime, Ticks, Seconds } from '@/lib/audio/types';
 import { context } from '@/lib/audio/online';
 import { literal } from '@/lib/std';
+import { createTickSignal, ObeoTickSignal } from '@/lib/audio/tick-signal';
+import { createTimeline } from '@/lib/audio/timeline';
 
-export class TickSource {
-  public readonly frequency = new Tone.TickSignal();
-  private state = new Tone.TimelineState('stopped');
-  // TODO we have a timeline?? Also why do we have all of this?? I guess to automate the bpm
-  private tickOffset = new Tone.Timeline<{ time: number, ticks: number, seconds: number, offset: 0 }>();
+export interface ObeoTickSource {
+  frequency: ObeoTickSignal;
+  getSecondsAtTime(time?: ContextTime): Seconds;
+  setTicksAtTime(ticks: Ticks, time?: ContextTime): void;
+  getTicksAtTime(time?: ContextTime): Ticks;
+  start(time: ContextTime): void;
+  stop(time: ContextTime): void;
+  pause(time: ContextTime): void;
+  forEachTickBetween(
+    startTime: ContextTime,
+    endTime: ContextTime,
+    callback: (time: ContextTime, ticks: Ticks) => void,
+  ): void;
+}
 
-  constructor(opts: { frequency: number }) {
-    this.frequency.value = opts.frequency;
-    this.state.setStateAtTime('stopped', 0);
-    // add the first event
-    this.setTicksAtTime(0, 0);
-  }
+export interface TickSourceOptions {
+  frequency: number;
+}
 
-  get ticks() {
-    return this.getTicksAtTime(context.now());
-  }
+export const createTickSource = (options?: Partial<TickSourceOptions>): ObeoTickSource => {
+  const frequency = createTickSignal({
+    value: options?.frequency,
+  });
 
-  set ticks(t: Ticks) {
-    this.setTicksAtTime(t, context.now());
-  }
+  /**
+   * Record the state of the timeline. Although stop resets the ticks, need this because we can
+   * start/pause multiple times.
+   */
+  const state = new Tone.TimelineState('stopped');
 
-  get seconds() {
-    return this.getSecondsAtTime(context.now());
-  }
+  /**
+   * Tracks explicit sets of the ticks. For example, if the user uses the timeline to set, we use this
+   * to record that action!
+   */
+  const tickOffset = createTimeline<{ time: number, ticks: number, seconds: number, offset: 0 }>();
 
-  public getSecondsAtTime(time: ContextTime) {
-    const stopEvent = this.state.getLastState('stopped', time);
+  const getSecondsAtTime = (time?: ContextTime) => {
+    time = time ?? context.now();
+    const stopEvent = state.getLastState('stopped', time);
     // this event allows forEachBetween to iterate until the current time
     const tmpEvent = { state: literal('paused'), time };
-    this.state.add(tmpEvent);
+    state.add(tmpEvent);
 
     // keep track of the previous offset event
     let lastState = stopEvent;
     let elapsedSeconds = 0;
 
+    // TODO duplicate code
+
     // iterate through all the events since the last stop
-    this.state.forEachBetween(stopEvent.time, time + context.sampleTime, (e) => {
+    state.forEachBetween(stopEvent.time, time + context.sampleTime, (e) => {
       let periodStartTime = lastState.time;
       // if there is an offset event in this period use that
-      const offsetEvent = this.tickOffset.get(e.time);
-      if (offsetEvent.time >= lastState.time) {
+      const offsetEvent = tickOffset.get(e.time);
+      if (offsetEvent && offsetEvent.time >= lastState.time) {
         elapsedSeconds = offsetEvent.seconds;
         periodStartTime = offsetEvent.time;
       }
@@ -54,90 +70,92 @@ export class TickSource {
     });
 
     // remove the temporary event
-    this.state.remove(tmpEvent);
+    state.remove(tmpEvent);
 
     // return the ticks
     return elapsedSeconds;
-  }
+  };
 
-  public setTicksAtTime(ticks: Ticks, time: ContextTime) {
-    this.tickOffset.cancel(time);
-    this.tickOffset.add({
+  const setTicksAtTime = (ticks: Ticks, time?: ContextTime) => {
+    time = time ?? context.now();
+    tickOffset.cancel(time);
+    tickOffset.add({
       time,
       ticks,
-      seconds : this.frequency.getDurationOfTicks(ticks, time),
+      seconds : frequency.offset.getDurationOfTicks(ticks, time),
       offset: 0,
     });
-    return this;
-  }
+  };
 
-  public getTicksAtTime(time: ContextTime) {
-    const stopEvent = this.state.getLastState('stopped', time);
+  const getTicksAtTime = (time?: ContextTime) => {
+    time = time ?? context.now();
+    const stopEvent = state.getLastState('stopped', time);
     // this event allows forEachBetween to iterate until the current time
     const tmpEvent = { state: 'paused', time } as const;
-    this.state.add(tmpEvent);
+    state.add(tmpEvent);
 
     // keep track of the previous offset event
     let lastState = stopEvent;
     let elapsedTicks = 0;
 
     // iterate through all the events since the last stop
-    this.state.forEachBetween(stopEvent.time, time + context.sampleTime, (e) => {
+    state.forEachBetween(stopEvent.time, time + context.sampleTime, (e) => {
       let periodStartTime = lastState.time;
       // if there is an offset event in this period use that
-      const offsetEvent = this.tickOffset.get(e.time);
-      if (offsetEvent.time >= lastState.time) {
+      const offsetEvent = tickOffset.get(e.time);
+      if (offsetEvent && offsetEvent.time >= lastState.time) {
         elapsedTicks = offsetEvent.ticks;
         periodStartTime = offsetEvent.time;
       }
       if (lastState.state === 'started' && e.state !== 'started') {
-        elapsedTicks += this.frequency.getTicksAtTime(e.time) - this.frequency.getTicksAtTime(periodStartTime);
+        elapsedTicks +=
+          frequency.offset.getTicksAtTime(e.time) -
+          frequency.offset.getTicksAtTime(periodStartTime);
       }
       lastState = e;
     });
 
     // remove the temporary event
-    this.state.remove(tmpEvent);
+    state.remove(tmpEvent);
 
     // return the ticks
     return elapsedTicks;
-  }
+  };
 
-  public start(time: ContextTime) {
-    if (this.state.getValueAtTime(time) !== 'started') {
-      this.state.setStateAtTime('started', time);
+  const start = (time: ContextTime) => {
+    if (state.getValueAtTime(time) !== 'started') {
+      state.setStateAtTime('started', time);
     }
-  }
+  };
 
-  public stop(time: ContextTime) {
+  const stop = (time: ContextTime) => {
     // cancel the previous stop
-    if (this.state.getValueAtTime(time) === 'stopped') {
-      const event = this.state.get(time);
+    if (state.getValueAtTime(time) === 'stopped') {
+      const event = state.get(time);
       if (event.time > 0) {
-        this.tickOffset.cancel(event.time);
-        this.state.cancel(event.time);
+        tickOffset.cancel(event.time);
+        state.cancel(event.time);
       }
     }
-    this.state.cancel(time);
-    this.state.setStateAtTime('stopped', time);
-    this.setTicksAtTime(0, time);
-    return this;
-  }
+    state.cancel(time);
+    state.setStateAtTime('stopped', time);
+    setTicksAtTime(0, time);
+  };
 
-  public pause(time: ContextTime) {
-    if (this.state.getValueAtTime(time) === 'started') {
-      this.state.setStateAtTime('paused', time);
+  const pause = (time: ContextTime) => {
+    if (state.getValueAtTime(time) === 'started') {
+      state.setStateAtTime('paused', time);
     }
-  }
+  };
 
-  public forEachTickBetween(
+  const forEachTickBetween = (
     startTime: ContextTime, endTime: ContextTime, callback: (time: ContextTime, ticks: Ticks,
-  ) => void) {
+  ) => void) => {
     // only iterate through the sections where it is "started"
-    let lastStateEvent = this.state.get(startTime);
-    this.state.forEachBetween(startTime, endTime, (event) => {
+    let lastStateEvent = state.get(startTime);
+    state.forEachBetween(startTime, endTime, (event) => {
       if (lastStateEvent.state === 'started' && event.state !== 'started') {
-        this.forEachTickBetween(Math.max(lastStateEvent.time, startTime), event.time - context.sampleTime, callback);
+        forEachTickBetween(Math.max(lastStateEvent.time, startTime), event.time - context.sampleTime, callback);
       }
       lastStateEvent = event;
     });
@@ -145,25 +163,25 @@ export class TickSource {
     startTime = Math.max(lastStateEvent.time, startTime);
 
     let error = null;
-    if (lastStateEvent.state === 'started' && this.state) {
+    if (lastStateEvent.state === 'started' && state) {
       // figure out the difference between the frequency ticks and the
-      const startTicks = this.frequency.getTicksAtTime(startTime);
-      const ticksAtStart = this.frequency.getTicksAtTime(lastStateEvent.time);
+      const startTicks = frequency.offset.getTicksAtTime(startTime);
+      const ticksAtStart = frequency.offset.getTicksAtTime(lastStateEvent.time);
       const diff = startTicks - ticksAtStart;
       let offset = diff % 1;
       if (offset !== 0) {
         offset = 1 - offset;
       }
-      let nextTickTime = this.frequency.getTimeOfTick(startTicks + offset);
-      while (nextTickTime < endTime && this.state) {
+      let nextTickTime = frequency.offset.getTimeOfTick(startTicks + offset);
+      while (nextTickTime < endTime && state) {
         try {
-          callback(nextTickTime, Math.round(this.getTicksAtTime(nextTickTime)));
+          callback(nextTickTime, Math.round(getTicksAtTime(nextTickTime)));
         } catch (e) {
           error = e;
           break;
         }
-        if (this.state) {
-          nextTickTime += this.frequency.getDurationOfTicks(1, nextTickTime);
+        if (state) {
+          nextTickTime += frequency.offset.getDurationOfTicks(1, nextTickTime);
         }
       }
     }
@@ -171,5 +189,22 @@ export class TickSource {
     if (error) {
       throw error;
     }
-  }
-}
+  };
+
+  // Just doing the initializations down at the bottom
+  state.setStateAtTime('stopped', 0);
+  // add the first event
+  setTicksAtTime(0, 0);
+
+  return {
+    frequency,
+    getSecondsAtTime,
+    setTicksAtTime,
+    getTicksAtTime,
+    start,
+    stop,
+    pause,
+    forEachTickBetween,
+  };
+};
+

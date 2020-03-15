@@ -9,7 +9,7 @@ export interface ObeoVolumeNode extends ObeoNode<GainNode> {
 }
 
 export const createVolume = (): ObeoVolumeNode => {
-  const gain = createGain({ toUnit: dbToGain, fromUnit: gainToDb });
+  const gain = createGain({ toUnit: gainToDb, fromUnit: dbToGain });
   return {
     ...gain,
     volume: gain.gain,

@@ -35,7 +35,7 @@ export const createSynth = (options?: Partial<SynthOptions>): ObeoSynth => {
     detune: oscillator.detune,
     triggerEnvelopeAttack: (time, velocity) => {
       logger.debug('triggerEnvelopeAttack', time, velocity);
-        // the envelopes
+      // the envelopes
       envelope.triggerAttack(time, velocity);
       const stopper = oscillator.start(time);
       // if there is no release portion, stop the oscillator

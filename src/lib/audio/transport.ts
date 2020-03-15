@@ -1,7 +1,7 @@
-import { Timeline } from '@/lib/audio/timeline';
+import { createTimeline } from '@/lib/audio/timeline';
 import { ContextTime, Ticks, Seconds, Beat } from '@/lib/audio/types';
 import { context } from '@/lib/audio/online';
-import { Clock } from '@/lib/audio/clock';
+import { createClock } from '@/lib/audio/clock';
 import { StrictEventEmitter } from '@/lib/events';
 import { Disposer } from '@/lib/std';
 
@@ -45,7 +45,7 @@ export interface TransportEventController {
 
 export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext], beforeEnd: [EventContext] }> {
   private startPosition: Ticks = 0;
-  private timeline = new Timeline<TransportEvent>();
+  private timeline = createTimeline<TransportEvent>();
   private active: TransportEvent[] = [];
   private isFirstTick = false;
   private filters: Array<(event: TransportEvent) => boolean> = [];
@@ -54,8 +54,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
   private _loopStart: Ticks = 0;
   // tslint:disable-next-line:variable-name
   private _loopEnd: Ticks = 0;
-  private clock = new Clock({
-    callback: this.processTick.bind(this),
+  private clock = createClock(this.processTick.bind(this), {
     frequency: 0,
   });
   private disposer: () => void;
@@ -63,13 +62,13 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
   constructor() {
     super();
 
-    const setBpm = () => this.clock.frequency.value = 1 / (60 / context.BPM / context.PPQ);
+    const setBpm = () => this.clock.frequency.offset.value = 1 / (60 / context.BPM / context.PPQ);
 
     // FIXME Maybe all of the clocks could share one "ticker"?? IDK? Then we wouldn't have to "watch" the BBM
     // Note, this will run automatically
     const d = context.onDidSetBPM(setBpm);
 
-    const pause = this.clock.on('stopped', (o) => {
+    const pause = this.clock.onDidStop((o) => {
       this.checkOnEndEventsAndResetActive(o);
     });
 
@@ -103,7 +102,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
       }
 
       // If the event hasn't started yet or if it has already ended, we don't care
-      const current = this.clock.ticks;
+      const current = this.clock.getTicks();
       const startTime = event.time + event.offset;
       const endTime = startTime + event.duration;
       if (
@@ -129,13 +128,13 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
         if (event.onStart) {
           event.onStart({
             seconds: context.now(),
-            ticks: this.clock.ticks,
+            ticks: this.clock.getTicks(),
           });
         }
       } else {
         this.checkMidStart(event, {
           seconds: context.now(),
-          ticks: this.clock.ticks,
+          ticks: this.clock.getTicks(),
         });
       }
     };
@@ -197,7 +196,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
         if (i >= 0) {
           if (event.onEnd) {
             event.onEnd({
-              ticks: this.clock.ticks,
+              ticks: this.clock.getTicks(),
               seconds: context.now(),
             });
           }
@@ -288,7 +287,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
   }
 
   get seconds() {
-    return this.clock.seconds;
+    return this.clock.getSeconds();
   }
 
   get loopEnd() {
@@ -300,11 +299,11 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
   }
 
   get ticks() {
-    return this.clock.ticks;
+    return this.clock.getTicks();
   }
 
   set ticks(t: number) {
-    if (this.clock.ticks !== t) {
+    if (this.clock.getTicks() !== t) {
       const now = context.now();
       // stop everything synced to the transport
       if (this.state === 'started') {
@@ -327,7 +326,7 @@ export class Transport extends StrictEventEmitter<{ beforeStart: [EventContext],
   }
 
   get state() {
-    return this.clock.state;
+    return this.clock.getState();
   }
 
   public getProgress() {

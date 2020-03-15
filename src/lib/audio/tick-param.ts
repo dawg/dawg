@@ -10,7 +10,7 @@ import {
 import { ContextTime, Ticks, Seconds } from '@/lib/audio/types';
 
 interface Extension {
-  getTicksUntilEvent(event: TickAutomationEvent | null, time: number): Ticks;
+  getTicksUntilEvent(event: TickAutomationEvent | undefined, time: number): Ticks;
   getTicksAtTime(time: ContextTime): Ticks;
   getDurationOfTicks(ticks: Ticks, time: ContextTime): Seconds;
   getTimeOfTick(tick: Ticks): Seconds;
@@ -90,8 +90,8 @@ export const createTickParam = (param: AudioParam, options: Partial<ObeoTickSign
        * @param  event The time to get the tick count at
        * @return The number of ticks which have elapsed at the time given any automations.
        */
-      const getTicksUntilEvent = (event: TickAutomationEvent | null, time: number): Ticks => {
-        if (event === null) {
+      const getTicksUntilEvent = (event: TickAutomationEvent | undefined, time: number): Ticks => {
+        if (!event) {
           event = {
             ticks: 0,
             time: 0,
@@ -145,8 +145,8 @@ export const createTickParam = (param: AudioParam, options: Partial<ObeoTickSign
        * @return The time that the tick occurs.
        */
       const getTimeOfTick = (tick: Ticks): Seconds => {
-        const before = events.get(tick, 'ticks');
-        const after = events.getAfter(tick, 'ticks');
+        const before = events.get(tick, (e) => e.ticks);
+        const after = events.getAfter(tick, (e) => e.ticks);
         if (before && before.ticks === tick) {
           return before.time;
         } else if (before && after &&

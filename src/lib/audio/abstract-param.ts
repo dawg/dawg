@@ -1,9 +1,9 @@
-import Tone from 'tone';
 import { Seconds, ContextTime } from '@/lib/audio/types';
 import { assert } from '@/lib/audio/util';
 import { defineProperties } from '@/lib/std';
 import { getLogger } from '@/lib/log';
 import { getContext } from '@/lib/audio/global';
+import { createTimeline, ObeoTimeline } from '@/lib/audio/timeline';
 
 const logger = getLogger('envelope', { level: 'info', style: false });
 
@@ -59,7 +59,7 @@ export interface ObeoAbstractParamOptions {
   fromUnit: ObeoConversion;
 }
 
-export type ObeoParamExtension<T, V> = (events: Tone.Timeline<AutomationEvent<T>>, param: ObeoAbstractParam) => {
+export type ObeoParamExtension<T, V> = (events: ObeoTimeline<AutomationEvent<T>>, param: ObeoAbstractParam) => {
   addEventInformation: (event: AutomationEvent<T>) => T;
   extension: V;
 };
@@ -92,7 +92,8 @@ export const createAbstractParam = <T, V>(
 ): ObeoAbstractParam & V => {
   const context = getContext();
   const { toUnit = (v) => v, fromUnit = (v) => v } = opts;
-  const events = new Tone.Timeline<AutomationEvent<T>>(1000);
+  const events = createTimeline<AutomationEvent<T>>();
+  // const events = new Tone.Timeline<AutomationEvent<T>>(1000);
   const initialValue = opts.value ?? param.defaultValue;
   const minOutput = 1e-7;
 
@@ -154,12 +155,12 @@ export const createAbstractParam = <T, V>(
 
     let value = initialValue;
     // if it was set by
-    if (before === null) {
+    if (!before) {
       value = initialValue;
-    } else if (before.type === 'setTargetAtTime' && (after === null || after.type === 'setValueAtTime')) {
+    } else if (before.type === 'setTargetAtTime' && (!after || after.type === 'setValueAtTime')) {
       const previous = events.getBefore(before.time);
       let previousVal;
-      if (previous === null) {
+      if (!previous) {
         previousVal = initialValue;
       } else {
         previousVal = previous.value;
@@ -167,13 +168,13 @@ export const createAbstractParam = <T, V>(
       if (before.type === 'setTargetAtTime') {
         value = exponentialApproach(before.time, previousVal, before.value, before.constant, computedTime);
       }
-    } else if (after === null) {
+    } else if (!after) {
       value = before.value;
     } else if (after.type === 'linearRampToValueAtTime' || after.type === 'exponentialRampToValueAtTime') {
       let beforeValue = before.value;
       if (before.type === 'setTargetAtTime') {
         const previous = events.getBefore(before.time);
-        if (previous === null) {
+        if (!previous) {
           beforeValue = initialValue;
         } else {
           beforeValue = previous.value;

@@ -1,21 +1,15 @@
-import Tone from 'tone';
 import { Ticks, Beat } from '@/lib/audio/types';
 import { Transport } from '@/lib/audio/transport';
-import { Signal, context } from '@/lib/audio';
-import { Disposer } from '@/lib/std';
+import { Disposer, literal } from '@/lib/std';
+import { createAbstractParam } from '@/lib/audio/abstract-param';
+import { getContext } from '@/lib/audio/global';
+import { ObeoScheduledSourceNode } from '@/lib/audio/scheduled-source-node';
 
-type AutomationType =
-    'linearRampToValueAtTime' |
-    'exponentialRampToValueAtTime' |
-    'setTargetAtTime' |
-    'setValueAtTime' |
-    'cancelScheduledValues';
-
-interface IAutomationEvent {
-  time: Beat;
-  value: number;
-  type: AutomationType;
+interface ObeoAutomation extends ObeoScheduledSourceNode {
+  readonly offset: ObeoParam;
 }
+
+// TODO
 
 export interface PointController {
   setValue: (value: number) => void;
@@ -23,112 +17,81 @@ export interface PointController {
   remove: () => Disposer;
 }
 
-export class AutomationEvent implements IAutomationEvent {
-  public static eventId = 0;
+export const createAutomation = () => {
+  const context = getContext();
+  const source = context.createConstantSource();
+  const param = createAbstractParam(
+    source.offset,
+    (events) => {
+      const add = (time: Beat, value: number): PointController => {
+        const event = {
+          time: context.beatsToTicks(time),
+          value,
+          type: literal('linearRampToValueAtTime'),
+        };
 
-  public time: Beat;
-  public value: number;
-  public type: AutomationType;
-  public id = '' + AutomationEvent.eventId++;
+        events.add(event);
 
-  constructor(o: IAutomationEvent) {
-    this.time = o.time;
-    this.value = o.value;
-    this.type = o.type;
-  }
-}
+        return {
+          setValue: (newValue: number) => {
+            event.value = newValue;
+          },
+          setTime: (newTime: number) => {
+            event.time = newTime;
+          },
+          remove: () => {
+            events.remove(event);
+            return {
+              dispose: () => {
+                events.add(event);
+              },
+            };
+          },
+        };
+      };
 
-// TODO
-export class Controller extends Tone.Signal {
-  private lastValue: number;
-  private output: Signal;
-  private scheduledEvents: { [id: string]: AutomationEvent } = {};
-  // tslint:disable-next-line:variable-name
-  private _events: Tone.Timeline<AutomationEvent>;
+      const sync = (transport: Transport, time: Ticks, duration: Ticks) => {
+        let lastValue: number | undefined;
 
-  constructor(signal: Signal) {
-    super();
+        const onEndAndStart = ({ seconds }: { seconds: number }) => {
+          const val = param.getValueAtTime(transport.seconds);
+          lastValue = val;
+          param.cancelScheduledValues(seconds);
+          param.setValueAtTime(val, seconds);
+        };
 
-    // The real output
-    this.output = signal;
+        const onTick = ({ seconds, ticks }: { seconds: number, ticks: number }) => {
+          const val = param.getValueAtTime(context.ticksToSeconds(ticks));
+          if (lastValue !== val) {
+            lastValue = val;
+            // approximate curves with linear ramps
+            param.linearRampToValueAtTime(val, seconds);
+            param.value = val;
+          }
+        };
 
-    this.lastValue = this.value;
+        return transport.schedule({
+          time,
+          duration,
+          onTick,
+          onStart: onEndAndStart,
+          onEnd: onEndAndStart,
+          offset: 0,
+          // FIXME when you refactor this file this should be set
+          row: 0,
+        });
+      };
 
-    // This overrides the parent _events which doesn't use AutomationEvent
-    // We only really need to do this because of TypeScript
-    this._events = new Tone.Timeline<AutomationEvent>();
-    this._events.memory = Infinity;
-  }
+      return {
+        addEventInformation: () => ({}),
+        extension: {
+          add,
+          sync,
+        },
+      };
+    },
+  );
 
-  public sync(transport: Transport, time: Ticks, duration: Ticks) {
-    const onEndAndStart = ({ seconds }: { seconds: number }) => {
-      const val = this.getValueAtTime(transport.seconds);
-      this.lastValue = val;
-      this.output.cancelScheduledValues(seconds);
-      this.output.setValueAtTime(val, seconds);
-    };
 
-    return transport.schedule({
-      time,
-      duration,
-      onTick: this.onTick.bind(this),
-      onStart: onEndAndStart,
-      onEnd: onEndAndStart,
-      offset: 0,
-      // FIXME when you refactor this file this should be set
-      row: 0,
-    });
-  }
-
-  public onTick({ seconds, ticks }: { seconds: number, ticks: number }) {
-    const val = this.getValueAtTime(`${ticks}i`);
-    if (this.lastValue !== val) {
-      this.lastValue = val;
-      // approximate curves with linear ramps
-      this.output.linearRampToValueAtTime(val, seconds);
-      this.output.value = val;
-    }
-  }
-
-  public add(time: Beat, value: number): PointController {
-    const event = new AutomationEvent({
-      time: context.beatsToTicks(time),
-      value,
-      type: 'linearRampToValueAtTime',
-    });
-
-    this._events.add(event);
-    this.scheduledEvents[event.id.toString()] = event;
-
-    return {
-      setValue: (newValue: number) => {
-        event.value = newValue;
-      },
-      setTime: (newTime: number) => {
-        event.time = newTime;
-      },
-      remove: () => {
-        return this.remove(event.id);
-      },
-    };
-  }
-
-  public dispose() {
-    this._events.cancel(0);
-    super.dispose.call(this);
-    return this;
-  }
-
-  private remove(eventId: string) {
-    const event = this.scheduledEvents[eventId];
-    this._events.remove(event);
-    delete this.scheduledEvents[eventId];
-
-    return {
-      dispose: () => {
-        this._events.add(event);
-        this.scheduledEvents[eventId] = event;
-      },
-    };
-  }
-}
+  return param;
+};

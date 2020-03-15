@@ -13,7 +13,7 @@ export interface PreviewOptions {
 }
 
 // TODO are options even used? ie. are they every given?
-export const createSource = (buffer: AudioBuffer, options?: Partial<PlayerOptions>) => {
+export const createPlayer = (buffer: AudioBuffer, options?: Partial<PlayerOptions>) => {
   const volume = createVolume();
   // TODO we are not wrapping .value
   volume.volume.value = options?.volume ?? 0;

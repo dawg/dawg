@@ -1,9 +1,9 @@
 import { expect } from '@/lib/testing';
-import { Timeline } from '@/lib/audio/timeline';
+import { createTimeline } from '@/lib/audio/timeline';
 
-describe(Timeline.name, () => {
+describe('ObeoTimeline', () => {
   it('search works correctly', async () => {
-    const timeline = new Timeline();
+    const timeline = createTimeline();
     expect(timeline.search(0).type).to.eq('before');
 
     timeline.add({ time: 1, offset: 0 });

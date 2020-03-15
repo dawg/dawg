@@ -1,7 +1,7 @@
 import { SourceOptions } from '@/lib/audio/source';
 import { Cents, Hertz, ContextTime } from '@/lib/audio/types';
 import { context } from '@/lib/audio/online';
-import { createParam } from '@/lib/audio/param';
+import { createParam, ObeoParam } from '@/lib/audio/param';
 import { createVolume } from '@/lib/audio/volume';
 import { reverse } from '@/lib/std';
 import { ObeoScheduledSourceNode, Stopper } from '@/lib/audio/scheduled-source-node';
@@ -18,6 +18,7 @@ export interface ObeoOscillator extends ObeoScheduledSourceNode<AudioNode> {
   readonly detune: ObeoSignalNode;
   readonly frequency: ObeoSignalNode;
   type: OscillatorType;
+  volume: ObeoParam;
   setPeriodicWave(periodicWave: PeriodicWave): void;
   addEventListener<K extends keyof AudioScheduledSourceNodeEventMap>(
     type: K,
@@ -97,9 +98,11 @@ export const createOscillator = (options?: Partial<OscillatorOptions>): ObeoOsci
 
   // TODO properties
   const oscillator: ObeoOscillator = {
+    // TODO this is kinda messed up?? Is it??
     ...volume,
 
     // OscillatorNode
+    volume: volume.volume,
     detune,
     frequency,
     type: options?.type ?? 'sine',

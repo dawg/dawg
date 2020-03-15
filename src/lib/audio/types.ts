@@ -43,15 +43,6 @@ export type GainFactor = number;
 export type Positive = number;
 
 /**
- * Represents a subdivision of a measure.
- * The number represents the subdivision. "t" represents a triplet.
- * e.g. "4n" is a quarter note, and "4t" is a quarter note triplet.
- * @category Unit
- */
-export type Subdivision = '1m' | '1n' | '2n' | '2t' | '4n' | '4t' | '8n' | '8t' | '16n' | '16t' |
-'32n' | '32t' | '64n' | '64t' | '128n' | '128t' | '256n' | '256t' | '0';
-
-/**
  * A note in Scientific pitch notation.
  * The pitch class + octave number
  * e.g. "C4", "D#3", "G-1"
@@ -98,17 +89,6 @@ export type MidiNote =
   100 | 101 | 102 | 103 | 104 | 105 | 106 | 107 | 108 | 109 |
   110 | 111 | 112 | 113 | 114 | 115 | 116 | 117 | 118 | 119 |
   120 | 121 | 122 | 123 | 124 | 125 | 126 | 127;
-
-/**
- * Frequency can be described similar to time, except ultimately the
- * values are converted to frequency instead of seconds. A number
- * is taken literally as the value in hertz. Additionally any of the
- * Time encodings can be used. Note names in the form
- * of NOTE OCTAVE (i.e. C4) are also accepted and converted to their
- * frequency value.
- * @category Unit
- */
-export type Frequency = Subdivision | Note | string | Hertz;
 
 /**
  * A Cent is 1/100th of a semitone.
