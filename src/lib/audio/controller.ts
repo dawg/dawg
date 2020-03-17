@@ -6,7 +6,7 @@ import { getContext } from '@/lib/audio/global';
 import { ObeoScheduledSourceNode } from '@/lib/audio/scheduled-source-node';
 
 interface ObeoAutomation extends ObeoScheduledSourceNode {
-  readonly offset: ObeoParam;
+  readonly offset: any; // ObeoParam
 }
 
 // TODO

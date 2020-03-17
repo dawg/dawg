@@ -1,7 +1,5 @@
-import { context } from '@/lib/audio/online';
-import { createGain } from '@/lib/audio/gain';
-import { ContextTime, Seconds, Positive, GainFactor } from '@/lib/audio/types';
-import { assert } from '@/lib/audio/util';
+import { ContextTime, Seconds, Positive } from '@/lib/audio/types';
+import { getContext } from '@/lib/audio/global';
 
 export interface ToneBufferSourceOptions {
   playbackRate: Positive;
@@ -13,6 +11,7 @@ export interface ToneBufferSourceOptions {
 // });
 
 export const createBufferSource = (buffer: AudioBuffer, options?: Partial<ToneBufferSourceOptions>) => {
+  const context = getContext();
   const source = context.createBufferSource();
   source.buffer = buffer;
 

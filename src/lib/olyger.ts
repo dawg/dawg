@@ -285,7 +285,7 @@ const onExecuteHelper = (subscriptions: Subscription[]) => {
 
 export type OlyRef<T> = Ref<T> & ElementChaining<T>;
 
-export function olyRef<T>(raw: T, name?: string): Ref<T> & ElementChaining<T> {
+export function olyRef<T>(raw: T, name?: string): OlyRef<T> {
   const o = reactive({ [RefKey]: raw }) as { [RefKey]: T };
   const id = genId();
 

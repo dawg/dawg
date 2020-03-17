@@ -1,17 +1,17 @@
-import { ObeoContext } from '@/lib/audio/context';
+import { ObeoBaseContext } from '@/lib/audio/context';
 import { context } from '@/lib/audio/online';
 
 /**
  * The global audio context which is getable and assignable through
  * getContext and setContext
  */
-let globalContext: ObeoContext = context;
+let globalContext: ObeoBaseContext = context;
 
 /**
  * Returns the default system-wide [[Context]]
  * @category Core
  */
-export function getContext(): ObeoContext {
+export function getContext(): ObeoBaseContext {
   return globalContext;
 }
 
@@ -19,7 +19,7 @@ export function getContext(): ObeoContext {
  * Set the default audio context
  * @category Core
  */
-export function setContext(c: ObeoContext): void {
+export function setContext(c: ObeoBaseContext): void {
   globalContext = c;
 }
 

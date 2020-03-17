@@ -1,11 +1,12 @@
 import { ContextTime, Seconds } from '@/lib/audio/types';
-import { context } from '@/lib/audio/online';
+import { getContext } from '@/lib/audio/global';
 
 export interface SourceOptions {
   onEnded: () => AudioScheduledSourceNode['onended'];
 }
 
 export const augmentSource = <T extends AudioScheduledSourceNode>(node: T, options?: Partial<SourceOptions>) => {
+  const context = getContext();
   const savedStart = node.start.bind(node);
   const savedStop = node.stop.bind(node);
 
@@ -19,7 +20,7 @@ export const augmentSource = <T extends AudioScheduledSourceNode>(node: T, optio
    * @param  time When the source should be started.
    */
   const start = (o: { time?: ContextTime, offset?: Seconds, duration?: Seconds }) => {
-    const computedTime = Math.max(o.time ?? context.now(), context.currentTime);
+    const computedTime = Math.max(o.time ?? context.now(), context.currentTime.value);
     const startTime = computedTime + (o.offset ?? 0);
     savedStart(startTime);
 
@@ -34,7 +35,7 @@ export const augmentSource = <T extends AudioScheduledSourceNode>(node: T, optio
    * @param time When the source should be stopped.
    */
   const stop = (time?: ContextTime) => {
-    const computedTime = Math.max(time ?? context.now(), context.currentTime);
+    const computedTime = Math.max(time ?? context.now(), context.currentTime.value);
     savedStop(computedTime);
   };
 

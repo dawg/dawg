@@ -52,7 +52,6 @@ export const createMeter = (opts?: Partial<ObeoMeterOptions>): ObeoMeter => {
   const getValue = (): number => {
     const values = analyser.getValue();
     const totalSquared = values.reduce((total, current) => total + current * current, 0);
-    console.log(values);
     const newRms = Math.sqrt(totalSquared / values.length);
     // the rms can only fall at the rate of the smoothing
     // but can jump up instantly

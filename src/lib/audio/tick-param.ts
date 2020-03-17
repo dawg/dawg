@@ -1,4 +1,3 @@
-import { context } from '@/lib/audio/online';
 import { ObeoParamOptions } from '@/lib/audio/param';
 import {
   createAbstractParam,
@@ -8,6 +7,7 @@ import {
   exponentialInterpolate,
 } from '@/lib/audio/abstract-param';
 import { ContextTime, Ticks, Seconds } from '@/lib/audio/types';
+import { getContext } from '@/lib/audio/global';
 
 interface Extension {
   getTicksUntilEvent(event: TickAutomationEvent | undefined, time: number): Ticks;
@@ -38,6 +38,7 @@ type TickAutomationEvent = AutomationEvent<{ ticks: number }>;
  * easy :)
  */
 export const createTickParam = (param: AudioParam, options: Partial<ObeoTickSignalOptions> = {}): ObeoTickParam => {
+  const context = getContext();
   const { toUnit = (v) => v, fromUnit = (v) => v } = options;
 
   // This isn't exactly the cleanest in the world but it works well enough

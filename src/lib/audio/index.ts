@@ -1,11 +1,11 @@
 export { TransportTime, Time, Ticks, ContextTime, Beat, Seconds } from '@/lib/audio/types';
-export { Controller, PointController } from '@/lib/audio/controller';
 export { Transport, TransportEvent, TransportEventController } from '@/lib/audio/transport';
 export { Signal } from '@/lib/audio/signal.old';
 export { Source } from '@/lib/audio/source.old';
 export * from '@/lib/audio/soundfont';
 export { GraphNode } from '@/lib/audio/node.old';
 
+export * from '@/lib/audio/controller';
 export * from '@/lib/audio/gain';
 export * from '@/lib/audio/player';
 export * from '@/lib/audio/online';

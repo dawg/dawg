@@ -1,8 +1,8 @@
 import { Seconds, Cents, NormalRange, ContextTime, Note } from '@/lib/audio/types';
 import { createInstrument, ObeoInstrument } from '@/lib/audio/instrument';
-import { context } from '@/lib/audio/online';
 import { parseNote } from '@/lib/audio/util';
 import { ObeoSignalNode } from '@/lib/audio/signal';
+import { getContext } from '@/lib/audio/global';
 
 export interface EnvelopeReleaser {
   /**
@@ -58,6 +58,7 @@ export const createMonophonic = (
   params: MonophonicParams,
   options?: Partial<MonophonicOptions>,
 ): ObeoMonophonic => {
+  const context = getContext();
 
   const setNote = (note: Note, time: ContextTime) => {
     const hertz = parseNote(note);

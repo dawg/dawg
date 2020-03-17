@@ -2,7 +2,7 @@ import { Seconds, NormalRange, ContextTime } from '@/lib/audio/types';
 import { context as c } from '@/lib/audio/online';
 import { defineProperties } from '@/lib/std';
 import { createOfflineContext } from '@/lib/audio/offline';
-import { ObeoContext } from '@/lib/audio/context';
+import { ObeoBaseContext } from '@/lib/audio/context';
 import { createGain } from '@/lib/audio/gain';
 import { destination } from '@/lib/audio/destination';
 import { getLogger } from '@/lib/log';
@@ -92,7 +92,7 @@ export interface EnvelopeOptions {
   decayCurve: BasicEnvelopeCurve;
 
   // TODO generalize
-  context?: ObeoContext;
+  context?: ObeoBaseContext;
 }
 
 /**

@@ -1,5 +1,5 @@
 import { Note, ContextTime, Seconds, NormalRange } from '@/lib/audio/types';
-import { context } from '@/lib/audio/online';
+import { getContext } from '@/lib/audio/global';
 
 export interface ObeoInstrument {
   triggerAttackRelease(note: Note, duration: Seconds, time?: ContextTime, velocity?: NormalRange): void;
@@ -15,6 +15,7 @@ export interface InstrumentOptions {
 }
 
 export const createInstrument = ({ triggerAttack }: InstrumentOptions) => {
+  const context = getContext();
   const triggerAttackRelease = (note: Note, duration: Seconds, time?: ContextTime, velocity?: NormalRange) => {
     time = time ?? context.now();
     const releaser = triggerAttack(note, time, velocity);

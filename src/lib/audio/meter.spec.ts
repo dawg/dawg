@@ -2,7 +2,7 @@ import { createMeter } from '@/lib/audio/meter';
 import { expect } from '@/lib/testing';
 import { createOscillator } from '@/lib/audio/oscillator';
 
-describe.only('ObeoMeter', () => {
+describe('ObeoMeter', () => {
   it('can be constructed with the smoothing', () => {
     const meter = createMeter({ smoothing: 0.5 });
     expect(meter.smoothing).to.equal(0.5);

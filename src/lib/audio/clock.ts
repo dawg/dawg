@@ -2,10 +2,10 @@ import { onDidTick } from '@/lib/audio/ticker';
 import { ContextTime, Ticks, Seconds } from '@/lib/audio/types';
 import { createTickSource } from '@/lib/audio/tick-source';
 import { emitter } from '@/lib/events';
-import { context } from '@/lib/audio/online';
 import { ObeoTickSignal } from '@/lib/audio/tick-signal';
-import { PlaybackState } from '@/lib/audio/timeline-state';
+import { PlaybackState } from '@/lib/audio/state-timeline';
 import { Disposer } from '@/lib/std';
+import { getContext } from '@/lib/audio/global';
 
 export interface ObeoClock {
   readonly frequency: ObeoTickSignal;
@@ -32,6 +32,7 @@ interface TimeTicks {
 }
 
 export const createClock = (callback: ClockCallback, options?: Partial<ObeoClockOptions>): ObeoClock => {
+  const context = getContext();
   const tickSource = createTickSource(options);
   // tslint:disable-next-line:variable-name
   let _state: 'stopped' | 'started' = 'stopped';

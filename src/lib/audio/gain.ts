@@ -1,6 +1,6 @@
-import { context } from '@/lib/audio/online';
 import { createParam, ObeoParamOptions, ObeoParam } from '@/lib/audio/param';
 import { ObeoNode, extractAudioNode } from '@/lib/audio/node';
+import { getContext } from '@/lib/audio/global';
 
 
 export interface ObeoGainNode extends ObeoNode<GainNode> {
@@ -14,6 +14,7 @@ export interface GainInterface extends ObeoParamOptions {
 }
 
 export const createGain = (options?: Partial<GainInterface>): ObeoGainNode => {
+  const context = getContext();
   const gain = context.createGain();
 
   let unmutedValue: number | undefined;

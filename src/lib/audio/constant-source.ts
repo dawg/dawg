@@ -1,6 +1,6 @@
-import { context } from '@/lib/audio/online';
 import { createParam, ObeoParam } from '@/lib/audio/param';
 import { ObeoScheduledSourceNode, extractAudioScheduledSourceNode } from '@/lib/audio/scheduled-source-node';
+import { getContext } from '@/lib/audio/global';
 
 export interface ObeoConstantSourceNode extends ObeoScheduledSourceNode {
   readonly offset: ObeoParam;
@@ -14,6 +14,7 @@ export interface ObeoConstantSourceOptions {
 // Enhances the "offset" param
 // See https://developer.mozilla.org/en-US/docs/Web/API/ConstantSourceNode
 export const createConstantSource = (options?: Partial<ObeoConstantSourceOptions>): ObeoConstantSourceNode => {
+  const context = getContext();
   const source = context.createConstantSource();
   const offset = createParam(source.offset, options);
   return {

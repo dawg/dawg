@@ -105,11 +105,27 @@ interface PropertyDescriptorMap {
   [s: string]: PropertyDescriptor<any>;
 }
 
+interface ReadonlyProperties {
+  [s: string]: () => any;
+}
+
 export const defineProperties = <T, V extends PropertyDescriptorMap>(
   o: T,
   properties: V,
 ): T & Properties<V, ReadWriteKeys<V>> & Readonly<Properties<V, ReadonlyKeys<V>>> => {
   return Object.defineProperties(o, properties);
+};
+
+export const defineReadonlyProperties = <T, V extends ReadonlyProperties>(
+  o: T,
+  properties: V,
+): T & Readonly<{ [K in keyof V]: ReturnType<V[K]> }> => {
+  return Object.defineProperties(
+    o,
+    Object.fromEntries(Object.keys(properties).map((key): [string, PropertyDescriptor<any>] => {
+      return [key, { get: properties[key] }];
+    })),
+  );
 };
 
 export interface XYPosition {

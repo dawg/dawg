@@ -1,11 +1,11 @@
 import { SourceOptions } from '@/lib/audio/source';
 import { Cents, Hertz, ContextTime } from '@/lib/audio/types';
-import { context } from '@/lib/audio/online';
 import { createParam, ObeoParam } from '@/lib/audio/param';
 import { createVolume } from '@/lib/audio/volume';
 import { reverse } from '@/lib/std';
 import { ObeoScheduledSourceNode, Stopper } from '@/lib/audio/scheduled-source-node';
 import { createSignal, ObeoSignalNode } from '@/lib/audio/signal';
+import { getContext } from '@/lib/audio/global';
 
 export interface OscillatorOptions extends SourceOptions {
   type: OscillatorType;
@@ -38,6 +38,7 @@ type Listener<K extends keyof AudioScheduledSourceNodeEventMap> =
 type ListenerOptions = boolean | EventListenerOptions;
 
 export const createOscillator = (options?: Partial<OscillatorOptions>): ObeoOscillator => {
+  const context = getContext();
   const volume = createVolume();
   const events: { [K in keyof AudioScheduledSourceNodeEventMap]: Array<[Listener<K>, ListenerOptions | undefined]> } = {
     ended: [],

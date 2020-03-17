@@ -1,6 +1,6 @@
-import { context } from '@/lib/audio/online';
 import { PowerOfTwo, NormalRange } from '@/lib/audio/types';
 import { ObeoNode, extractAudioNode } from '@/lib/audio/node';
+import { getContext } from '@/lib/audio/global';
 
 export interface ObeoAnalyser extends ObeoNode<AnalyserNode> {
   fftSize: number;
@@ -21,6 +21,7 @@ export interface AnalyserOptions {
 }
 
 export const createAnalyser = (opts?: Partial<AnalyserOptions>): ObeoAnalyser => {
+  const context = getContext();
   const analyser = context.createAnalyser();
   const size = opts?.size ?? 1024;
   const smoothing = opts?.smoothing ?? 0.8;

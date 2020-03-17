@@ -1,8 +1,8 @@
 import { ContextTime, Seconds } from '@/lib/audio/types';
-import { context } from '@/lib/audio/online';
 import { sendRequest, parseNote, base64Decode } from '@/lib/mutils';
 import decode from 'audio-decode';
 import ADSR from 'envelope-generator';
+import { getContext } from '@/lib/audio/global';
 
 export type SoundfontName =
   | 'accordion'
@@ -208,6 +208,8 @@ export const genId = ((i) => () => i++)(0);
 
 // TODO consolidate this + synth
 export const createSoundfont = (name: SoundfontName, options?: Partial<SoundfontOptions>) => {
+  const context = getContext();
+  // TODO options
   const out = context.createGain();
   let buffers: { [k: string]: AudioBuffer } | null = null;
   const defaults: SoundfontOptions = {
@@ -262,7 +264,7 @@ export const createSoundfont = (name: SoundfontName, options?: Partial<Soundfont
       };
     }
 
-    when = when ?? context.currentTime;
+    when = when ?? context.now();
 
     const buffer = buffers[midi];
     const node = createNode(buffer, o);
@@ -281,7 +283,8 @@ export const createSoundfont = (name: SoundfontName, options?: Partial<Soundfont
     node.gain.value = 0; // the envelope will control the gain
     node.connect(out);
 
-    const env = new ADSR(context, {
+    // TODO use own envelope
+    const env = new ADSR(context as any, {
       attackTime: o.attack ?? defaults.attack,
       decayTime: o.decay ?? defaults.decay,
       sustainLevel: o.sustain ?? defaults.sustain,
@@ -296,7 +299,7 @@ export const createSoundfont = (name: SoundfontName, options?: Partial<Soundfont
     // source.playbackRate.value = centsToRate(options.cents);
 
     const stop = (when?: number) => {
-      const time = when ?? context.currentTime;
+      const time = when ?? context.now();
 
       env.stop(time);
       source.stop(time);

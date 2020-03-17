@@ -1,13 +1,13 @@
 import { extractAudioNode, ObeoNode } from '@/lib/audio/node';
 import { getContext } from '@/lib/audio/global';
-import { ObeoContext } from '@/lib/audio/context';
+import { ObeoBaseContext } from '@/lib/audio/context';
 
 export interface ObeoDestination extends ObeoNode {
   readonly maxChannelCount: number;
 }
 
 export interface ObeoDestinationOptions {
-  context: ObeoContext;
+  context: ObeoBaseContext;
 }
 
 export const createDestination = (options?: Partial<ObeoDestinationOptions>): ObeoDestination => {

@@ -1,7 +1,7 @@
 import { ContextTime, Seconds } from '@/lib/audio/types';
-import { context } from '@/lib/audio/online';
 import { createVolume } from '@/lib/audio/volume';
 import { createBufferSource } from '@/lib/audio/buffer-source';
+import { getContext } from '@/lib/audio/global';
 
 export interface PlayerOptions {
   volume: number;
@@ -14,6 +14,8 @@ export interface PreviewOptions {
 
 // TODO are options even used? ie. are they every given?
 export const createPlayer = (buffer: AudioBuffer, options?: Partial<PlayerOptions>) => {
+  const context = getContext();
+
   const volume = createVolume();
   // TODO we are not wrapping .value
   volume.volume.value = options?.volume ?? 0;

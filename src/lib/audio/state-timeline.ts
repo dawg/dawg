@@ -1,7 +1,7 @@
-import { createTimeline, TimelineEvent } from '@/lib/audio/timeline';
+import { createTimeline, TimelineEvent, ObeoTimeline } from '@/lib/audio/timeline';
 import { Seconds } from '@/lib/audio/types';
 
-export type PlaybackState = 'stopped' | 'started' | 'stopped';
+export type PlaybackState = 'stopped' | 'started' | 'paused';
 
 export interface StateTimelineEvent extends TimelineEvent {
   state: PlaybackState;
@@ -11,7 +11,14 @@ export interface StateTimelineOption {
   initial: PlaybackState;
 }
 
-export const createStateTimeline = (options?: Partial<StateTimelineOption>) => {
+export interface ObeoStateTimeline extends ObeoTimeline<StateTimelineEvent> {
+  getValueAtTime(time: Seconds): PlaybackState;
+  getLastState(state: PlaybackState, time: number): StateTimelineEvent | undefined;
+  getNextState(state: PlaybackState, time: number): StateTimelineEvent | undefined;
+  setStateAtTime(state: PlaybackState, time: Seconds): void;
+}
+
+export const createStateTimeline = (options?: Partial<StateTimelineOption>): ObeoStateTimeline => {
   const timeline = createTimeline<{ time: Seconds, state: PlaybackState }>();
   const initial: PlaybackState = options?.initial ?? 'stopped';
 
@@ -107,10 +114,10 @@ export const createStateTimeline = (options?: Partial<StateTimelineOption>) => {
 
   setStateAtTime(initial, 0);
 
-  return {
+  return Object.assign(timeline, {
     setStateAtTime,
     getNextState,
     getLastState,
     getValueAtTime,
-  };
+  });
 };
