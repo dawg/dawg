@@ -17,7 +17,7 @@ describe('offline', () => {
     expect(offline.sampleTime).to.be.closeTo(1 / 3000, 0.001);
   });
 
-  it.only('renders correctly', async () => {
+  it('renders correctly', async () => {
     const offline = createOfflineContext({
       length: 4500,
       sampleRate: 3000,

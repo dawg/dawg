@@ -1,11 +1,29 @@
-import { Ticks } from '@/lib/audio/types';
+import { Ticks, ContextTime } from '@/lib/audio/types';
 import { Disposer } from '@/lib/std';
+import { Getter, getter } from '@/lib/reactor';
 
 export interface ObeoTimeline<T extends TimelineEvent> extends Disposer {
+  length: Getter<number>;
   add(event: T): void; // TODO
+  /**
+   *  Remove an event from the timeline.
+   *  @param  event The event object to remove from the list.
+   *  @returns this
+   */
   remove(event: T): boolean;
+  /**
+   *  Iterate over everything in the array between the startTime and endTime.
+   *  The range is inclusive of the startTime, but exclusive of the endTime.
+   *  range = [startTime, endTime).
+   *  @param startTime The time to check if items are before
+   *  @param endTime The end of the test interval.
+   *  @param  callback The callback to invoke with every item
+   */
   forEachBetween(startTime: Ticks, endTime: Ticks, callback: (event: T) => void): void;
   forEachAtTime(ticks: Ticks, callback: (event: T) => void): void;
+  forEachBefore(time: number, callback: (event: T) => void): void;
+  forEachAfter(time: number, callback: (event: T) => void): void;
+  forEach(cb: (event: T, i: number) => void): void;
   get(value: number, cmp?: (event: T) => number): T | undefined;
   getBefore(value: number, cmp?: (event: T) => number): T | undefined;
   getAfter(value: number, cmp?: (event: T) => number): T | undefined;
@@ -49,11 +67,6 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
     timeline.splice(index, 0, event);
   };
 
-  /**
-   *  Remove an event from the timeline.
-   *  @param  event The event object to remove from the list.
-   *  @returns this
-   */
   const remove = (event: T): boolean => {
     const index = timeline.indexOf(event);
     if (index !== -1) {
@@ -64,14 +77,6 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
     return false;
   };
 
-  /**
-   *  Iterate over everything in the array between the startTime and endTime.
-   *  The range is inclusive of the startTime, but exclusive of the endTime.
-   *  range = [startTime, endTime).
-   *  @param startTime The time to check if items are before
-   *  @param endTime The end of the test interval.
-   *  @param  callback The callback to invoke with every item
-   */
   const forEachBetween = (startTime: Ticks, endTime: Ticks, callback: (event: T) => void) => {
     const lower = search(startTime);
     const upper = search(endTime);
@@ -85,12 +90,10 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
     const upperIndex =
       upper.type === 'before' ? 0 :
       upper.type === 'after' ? timeline.length :
-      upper.type === 'between' ? upper.indexA :
-      upper.firstOccurrenceIndex - 1;
+      upper.type === 'between' ? upper.indexB :
+      upper.firstOccurrenceIndex;
 
-    for (let i = lowerIndex; i < upperIndex; i++) {
-      callback(timeline[i]);
-    }
+    timeline.slice(lowerIndex, upperIndex).forEach(callback);
   };
 
   const forEachAtTime = (ticks: Ticks, callback: (event: T) => void) => {
@@ -103,6 +106,60 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
     timeline.slice(
       result.firstOccurrenceIndex, result.lastOccurrenceIndex + 1,
     ).forEach(callback);
+  };
+
+  const forEach = (cb: (event: T, index: number) => void) => {
+    timeline.slice().forEach(cb);
+  };
+
+  /**
+   * Iterate over everything in the array at or before the given time.
+   * @param  time The time to check if items are before
+   * @param  callback The callback to invoke with every item
+   */
+  const forEachBefore = (time: number, callback: (event: T) => void) => {
+    // iterate over the items in reverse so that removing an item doesn't break things
+    const result = search(time);
+    const getIndex = (): number => {
+      switch (result.type) {
+        case 'after':
+          return timeline.length;
+        case 'before':
+          return 0;
+        case 'between':
+          return result.indexA + 1;
+        case 'hit':
+          return result.lastOccurrenceIndex + 1;
+      }
+    };
+
+
+    timeline.slice(0, getIndex()).forEach((callback));
+  };
+
+  /**
+   * Iterate over everything in the array after the given time.
+   * @param  time The time to check if items are before
+   * @param  callback The callback to invoke with every item
+   */
+  const forEachAfter = (time: number, callback: (event: T) => void) => {
+    // iterate over the items in reverse so that removing an item doesn't break things
+    const result = search(time);
+    const getIndex = (): number => {
+      switch (result.type) {
+        case 'after':
+          return timeline.length;
+        case 'before':
+          return 0;
+        case 'between':
+          return result.indexB;
+        case 'hit':
+          return result.lastOccurrenceIndex + 1;
+      }
+    };
+
+    const lowerBound = getIndex();
+    timeline.slice(lowerBound).forEach(callback);
   };
 
   /**
@@ -292,5 +349,9 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
     search,
     size,
     getAtIndex,
+    forEach,
+    forEachBefore,
+    forEachAfter,
+    length: getter(() => timeline.length),
   };
 };

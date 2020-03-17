@@ -65,7 +65,7 @@ export const createStateTimeline = (options?: Partial<StateTimelineOption>): Obe
         case 'hit':
           return result.firstOccurrenceIndex - 1;
         case 'between':
-          return result.indexB;
+          return result.indexA;
         case 'after':
           return timeline.size() - 1;
       }
