@@ -5,6 +5,7 @@ import { BuildingBlock } from '@/models/block';
 import * as oly from '@/lib/olyger';
 import { useSignal } from '@/utils';
 import { context } from '@/lib/audio/online';
+import { GraphNode } from '@/models/node';
 
 export const InstrumentType = t.intersection([
   t.type({
@@ -22,13 +23,13 @@ export const InstrumentType = t.intersection([
 export type IInstrument = t.TypeOf<typeof InstrumentType>;
 
 export abstract class Instrument<
-  T = any,
-  S extends Audio.Source<T> = any,
+  S extends Audio.ObeoInstrument = Audio.ObeoInstrument,
   V extends string = any,
 > implements BuildingBlock {
   public readonly name: oly.OlyRef<string>;
   public readonly id: string;
 
+  // TODO what happens when set?
   /**
    * A type variable. For example, oscillator or soundfont.
    */
@@ -45,15 +46,12 @@ export abstract class Instrument<
   public readonly channel: oly.OlyRef<number | undefined>;
 
   // TODO Same thing with these
-  public readonly output = new Audio.GraphNode(context.createStereoPanner(), 'Panner');
-  public readonly input = new Audio.GraphNode(context.createGain(), 'Gain');
+  public readonly output = new GraphNode(Audio.createStereoPanner(), 'Panner');
+  public readonly input = new GraphNode(Audio.createGain(), 'Gain');
   public readonly pan: oly.OlyRef<number>;
   public readonly volume: oly.OlyRef<number>;
 
-  protected source: Audio.GraphNode<S>;
-
-  // private readonly panSignal: Audio.Signal;
-  // private readonly volumeSignal: Audio.Signal;
+  protected source: GraphNode<S>;
 
   constructor(
     type: V,
@@ -70,33 +68,27 @@ export abstract class Instrument<
 
     const {
       ref: pan,
-    } = useSignal(new Audio.Signal(this.output.node.pan, -1, 1), i.pan ?? 0, 'Pan');
+    } = useSignal(this.output.node.pan, i.pan ?? 0, 'Pan');
     this.pan = pan;
     // this.panSignal = panSignal;
 
     const {
       ref: volume,
-    } = useSignal(new Audio.Signal(this.input.node.gain, 0, 1), i.volume ?? 0.8, 'Volume');
+    } = useSignal(this.input.node.gain, i.volume ?? 0.8, 'Volume');
     this.volume = volume;
     // this.volumeSignal = volumeSignal;
 
-    this.source = new Audio.GraphNode(source, this.name.value);
+    this.source = new GraphNode(source, this.name.value);
     this.source.connect(this.input);
     this.input.connect(this.output);
   }
 
-  public triggerAttackRelease(note: string, duration: Audio.Seconds, time: number, velocity?: number) {
+  public triggerAttackRelease(note: Audio.Note, duration: Audio.Seconds, time: number, velocity?: number) {
     this.source.node.triggerAttackRelease(note, duration, time, velocity);
   }
 
-  public triggerAttack(note: string, velocity?: number) {
+  public triggerAttack(note: Audio.Note, velocity?: number) {
     return this.source.node.triggerAttack(note, undefined, velocity);
-  }
-
-  public set<K extends keyof T>(o: { key: K, value: T[K] }) {
-    if (this.source.node) {
-      this.source.node.set(o);
-    }
   }
 
   /**

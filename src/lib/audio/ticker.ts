@@ -26,12 +26,7 @@ worker.onmessage = () => events.emit('tick');
 
 
 export const onDidTick = (f: () => void) => {
-  events.on('tick', f);
-  return {
-    dispose: () => {
-      events.off('tick', f);
-    },
-  };
+  return events.on('tick', f);
 };
 
 export const dispose = () => {

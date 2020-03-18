@@ -3,10 +3,9 @@ import * as t from '@/lib/io';
 import uuid from 'uuid';
 import * as Audio from '@/lib/audio';
 import { Serializable } from '@/models/serializable';
-import { Context } from '@/lib/audio/online';
 import { BuildingBlock } from '@/models/block';
-import { GraphNode } from '@/lib/audio/node';
 import * as oly from '@/lib/olyger';
+import { GraphNode } from '@/models/node';
 
 export const SampleType = t.type({
   id: t.string,
@@ -27,7 +26,7 @@ export class Sample implements BuildingBlock, Serializable<ISample> {
 
   public readonly id: string;
   public readonly path: string;
-  public readonly player: GraphNode<Audio.Player | null>;
+  public readonly player: GraphNode<Audio.ObeoPlayer | null>;
   public readonly name: oly.OlyRef<string>;
 
   constructor(public buffer: AudioBuffer | null, i: ISample) {
@@ -35,7 +34,7 @@ export class Sample implements BuildingBlock, Serializable<ISample> {
     this.path = i.path;
     this.name = oly.olyRef(i.name, 'Sample Name');
     this.player = new GraphNode(
-      buffer ? new Audio.Player(buffer) : null,
+      buffer ? Audio.createPlayer(buffer) : null,
       'Sample',
     ).toMaster();
   }
@@ -43,7 +42,7 @@ export class Sample implements BuildingBlock, Serializable<ISample> {
   get beats() {
     if (this.buffer) {
       const minutes = this.buffer.length / this.buffer.sampleRate / 60;
-      return Context.round(minutes * Context.BPM);
+      return Audio.context.round(minutes * Audio.context.BPM.value);
     } else {
       return 0;
     }

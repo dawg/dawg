@@ -1,9 +1,7 @@
 
 export abstract class Ghost {
-    public abstract component: string;
-
-    constructor(public time: number, public row: number) {}
-
+  public abstract component: string;
+  constructor(public time: number, public row: number) {}
 }
 
 export class ChunkGhost extends Ghost {

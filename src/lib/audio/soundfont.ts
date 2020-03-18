@@ -3,6 +3,10 @@ import { sendRequest, parseNote, base64Decode } from '@/lib/mutils';
 import decode from 'audio-decode';
 import ADSR from 'envelope-generator';
 import { getContext } from '@/lib/audio/global';
+import { ObeoInstrument } from '@/lib/audio/instrument';
+import { Setter, setter } from '@/lib/reactor';
+import { createVolume } from '@/lib/audio/volume';
+import { createTrigger } from '@/lib/audio/util';
 
 export type SoundfontName =
   | 'accordion'
@@ -204,13 +208,15 @@ export interface SoundfontOptions {
   release: number;
 }
 
-export const genId = ((i) => () => i++)(0);
+export interface ObeoSoundfont extends ObeoInstrument {
+  type: Setter<SoundfontName>;
+  attemptReloadIfNecessary(): void;
+}
 
-// TODO consolidate this + synth
-export const createSoundfont = (name: SoundfontName, options?: Partial<SoundfontOptions>) => {
+export const createSoundfont = (name: SoundfontName, options?: Partial<SoundfontOptions>): ObeoSoundfont => {
   const context = getContext();
   // TODO options
-  const out = context.createGain();
+  const out = createVolume();
   let buffers: { [k: string]: AudioBuffer } | null = null;
   const defaults: SoundfontOptions = {
     attack: 0.01,
@@ -220,8 +226,8 @@ export const createSoundfont = (name: SoundfontName, options?: Partial<Soundfont
     gain: 1,
   };
 
-  const attemptReloadIfNecessary = () => {
-    if (buffers !== null) {
+  const attemptReloadIfNecessary = (force = false) => {
+    if (!force && buffers !== null) {
       return;
     }
 
@@ -247,7 +253,7 @@ export const createSoundfont = (name: SoundfontName, options?: Partial<Soundfont
   };
 
   const triggerAttack = (note: string, time?: Seconds, velocity?: number) => {
-    start(note, time, { gain: velocity });
+    return start(note, time, { gain: velocity });
   };
 
   const set = <K extends keyof SoundfontOptions>(o: { key: K, value: SoundfontOptions[K] }) => {
@@ -257,11 +263,7 @@ export const createSoundfont = (name: SoundfontName, options?: Partial<Soundfont
   const start = (note: string, when?: number, o: Partial<{ duration: number } & SoundfontOptions> = {}) => {
     const midi = parseNote(note);
     if (midi === undefined || !buffers) {
-      return {
-        dispose: () => {
-          //
-        },
-      };
+      return;
     }
 
     when = when ?? context.now();
@@ -324,5 +326,31 @@ export const createSoundfont = (name: SoundfontName, options?: Partial<Soundfont
     };
   };
 
-  return Object.assign(out, { triggerAttack, triggerAttackRelease });
+  const trigger = createTrigger({
+    triggerAttack: (note, time, velocity) => {
+      const node = triggerAttack(note, time, velocity);
+
+      return {
+        triggerRelease: (when) => {
+          if (node) {
+            node.stop(when);
+          }
+        },
+      };
+    },
+  });
+
+  return {
+    ...out,
+    ...trigger,
+    attemptReloadIfNecessary,
+    type: setter(() => {
+      return name;
+    }, (value) => {
+      if (name !== value) {
+        name = value;
+        attemptReloadIfNecessary(true);
+      }
+    }),
+  };
 };

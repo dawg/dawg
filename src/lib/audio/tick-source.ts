@@ -186,7 +186,9 @@ export const createTickSource = (options?: Partial<TickSourceOptions>): ObeoTick
   };
 
   const forEachTickBetween = (
-    startTime: ContextTime, endTime: ContextTime, callback: (time: ContextTime, ticks: Ticks,
+    startTime: ContextTime,
+    endTime: ContextTime,
+    callback: (time: ContextTime, ticks: Ticks,
   ) => void) => {
     // only iterate through the sections where it is "started"
     let lastStateEvent = state.get(startTime) ?? { time: 0, state: 'stopped' };

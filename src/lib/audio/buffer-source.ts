@@ -1,16 +1,32 @@
 import { ContextTime, Seconds, Positive } from '@/lib/audio/types';
 import { getContext } from '@/lib/audio/global';
+import { ObeoNode, extractAudioNode } from '@/lib/audio/node';
 
 export interface ToneBufferSourceOptions {
   playbackRate: Positive;
-  onEnded: () => void;
+  onended: () => void;
 }
 
-// return Object.assign(OneShotSource.getDefaults(), {
-//   playbackRate: 1,
-// });
+export interface ObeoBufferSource extends ObeoNode<AudioBufferSourceNode> {
+  /**
+   * Start the buffer
+   * @param  time When the player should start.
+   * @param  offset The offset from the beginning of the sample to start at.
+   * @param  duration How long the sample should play. If no duration is given, it will default to
+   * the full length of the sample (minus any offset).
+   */
+  start(time?: ContextTime, offset?: Seconds, duration?: Seconds): void;
+  /**
+   * Stop the source node at the given time.
+   * @param time When to stop the source
+   */
+  stop(time?: ContextTime): void;
+}
 
-export const createBufferSource = (buffer: AudioBuffer, options?: Partial<ToneBufferSourceOptions>) => {
+export const createBufferSource = (
+  buffer: AudioBuffer,
+  options?: Partial<ToneBufferSourceOptions>,
+): ObeoBufferSource => {
   const context = getContext();
   const source = context.createBufferSource();
   source.buffer = buffer;
@@ -20,13 +36,6 @@ export const createBufferSource = (buffer: AudioBuffer, options?: Partial<ToneBu
 
   // TODO make it so you can't stop before starting
 
-  /**
-   * Start the buffer
-   * @param  time When the player should start.
-   * @param  offset The offset from the beginning of the sample to start at.
-   * @param  duration How long the sample should play. If no duration is given, it will default to
-   * the full length of the sample (minus any offset).
-   */
   const start = (time?: ContextTime, offset?: Seconds, duration?: Seconds) => {
     const computedTime = time ?? context.now();
 
@@ -48,10 +57,6 @@ export const createBufferSource = (buffer: AudioBuffer, options?: Partial<ToneBu
     }
   };
 
-  /**
-   * Stop the source node at the given time.
-   * @param time When to stop the source
-   */
   const stop = (time?: ContextTime) => {
     stopSource(time);
     onended();
@@ -67,8 +72,8 @@ export const createBufferSource = (buffer: AudioBuffer, options?: Partial<ToneBu
   };
 
   const onended = () => {
-    if (options?.onEnded) {
-      options.onEnded();
+    if (options?.onended) {
+      options.onended();
     }
 
     // dispose when it's ended to free up for garbage collection only in the online context
@@ -93,5 +98,9 @@ export const createBufferSource = (buffer: AudioBuffer, options?: Partial<ToneBu
   //   value: options.playbackRate,
   // });
 
-  return Object.assign({ start, stop }, source);
+  return {
+    ...extractAudioNode(source),
+    start,
+    stop,
+  };
 };

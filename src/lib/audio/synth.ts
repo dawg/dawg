@@ -3,7 +3,8 @@ import { EnvelopeOptions, createEnvelope } from '@/lib/audio/envelope';
 import { createOscillator, OscillatorOptions } from '@/lib/audio/oscillator';
 import { createVolume, ObeoVolumeNode } from '@/lib/audio/volume';
 import { getLogger } from '@/lib/log';
-import { ObeoSignalNode } from '@/lib/audio/signal';
+import { Setter, setter } from '@/lib/reactor';
+import { ObeoInstrument } from '@/lib/audio/instrument';
 
 const logger = getLogger('synth');
 
@@ -12,9 +13,8 @@ export interface SynthOptions extends MonophonicOptions {
   envelope: Partial<EnvelopeOptions>;
 }
 
-export interface ObeoSynth extends ObeoMonophonic, ObeoVolumeNode {
-  frequency: ObeoSignalNode;
-  detune: ObeoSignalNode;
+export interface ObeoSynth extends ObeoInstrument {
+  type: Setter<OscillatorType>;
 }
 
 export const createSynth = (options?: Partial<SynthOptions>): ObeoSynth => {
@@ -63,5 +63,10 @@ export const createSynth = (options?: Partial<SynthOptions>): ObeoSynth => {
     // disconnect: volume.disconnect.bind(volume),
     frequency: oscillator.frequency,
     detune: oscillator.detune,
+    type: setter(() => {
+      return oscillator.type;
+    }, (value) => {
+      oscillator.type = value;
+    }),
   };
 };

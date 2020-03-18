@@ -1,4 +1,4 @@
-import { Seconds } from '@/lib/audio/types';
+import { Seconds, ContextTime } from '@/lib/audio/types';
 import { enhanceBaseContext, ObeoBaseContext } from '@/lib/audio/context';
 import { getContext, setContext } from '@/lib/audio/global';
 import { createAudioBuffer, ObeoBuffer } from '@/lib/audio/audio-buffer';
@@ -8,7 +8,6 @@ import { getter } from '@/lib/reactor';
 
 export interface ObeoOfflineContext extends ObeoBaseContext {
   readonly length: number;
-  onDidTick(cb: () => void): Disposer;
   render(asynchronous?: boolean): Promise<AudioBuffer>;
   resume(): Promise<void>;
   dispose(): void;
@@ -18,7 +17,9 @@ export const createOfflineContext = (options: OfflineAudioContextOptions): ObeoO
   const events = emitter<{ tick: [] }>();
 
   const offlineContext = new OfflineAudioContext(options);
-  const offline = enhanceBaseContext(offlineContext);
+  const offline = enhanceBaseContext(offlineContext, (cb) => {
+    return events.on('tick', cb);
+  });
 
   let currentTime: Seconds = 0;
 
@@ -27,7 +28,6 @@ export const createOfflineContext = (options: OfflineAudioContextOptions): ObeoO
     let samples = 0;
     const yieldEvery = Math.floor(offline.sampleRate / 128);
     while (samples <= offlineContext.length) {
-
       // invoke all the callbacks on that time
       events.emit('tick');
 
@@ -42,10 +42,6 @@ export const createOfflineContext = (options: OfflineAudioContextOptions): ObeoO
         await new Promise((done) => setTimeout(done, 1));
       }
     }
-  };
-
-  const onDidTick: ObeoOfflineContext['onDidTick'] = (cb) => {
-    return events.on('tick', cb);
   };
 
   const render: ObeoOfflineContext['render'] = async (asynchronous = true) => {
@@ -73,7 +69,6 @@ export const createOfflineContext = (options: OfflineAudioContextOptions): ObeoO
     },
 
     // Extra functionality
-    onDidTick,
     dispose,
     render,
   };
@@ -94,8 +89,11 @@ interface RunOfflineOptions {
   sampleRate?: number;
 }
 
+type Nothing = void | Promise<void>;
+type OnTick = ((time: ContextTime) => void) | Promise<(time: ContextTime) => void>;
+
 export const runOffline = async (
-  callback: (context: ObeoOfflineContext) => void | Promise<void>,
+  callback: (context: ObeoOfflineContext) => Nothing | OnTick,
   { duration = 0.1, channels = 1, sampleRate = 44100 }: RunOfflineOptions = {},
 ): Promise<ObeoBuffer> => {
   const originalContext = getContext();
@@ -106,11 +104,33 @@ export const runOffline = async (
   });
 
   setContext(offline);
-  await callback(offline);
-  setContext(originalContext);
+  const onTick = await callback(offline);
+  if (onTick) {
+    offline.onDidTick(() => {
+      onTick(offline.now());
+    });
+  }
 
   const buffer = await offline.render();
+
+  setContext(originalContext);
   offline.dispose();
 
   return createAudioBuffer(buffer);
 };
+
+export function whenBetween(value: Seconds, start: Seconds, stop: Seconds, callback: () => void): void {
+  if (value >= start && value < stop) {
+    callback();
+  }
+}
+
+export function atTime(when: Seconds, callback: (time: Seconds) => void): (time: Seconds) => void {
+  let wasInvoked = false;
+  return (time) => {
+    if (time >= when && !wasInvoked) {
+      callback(time);
+      wasInvoked = true;
+    }
+  };
+}

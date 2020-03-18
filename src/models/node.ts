@@ -1,13 +1,50 @@
+import * as Audio from '@/lib/audio';
 import { Disposer } from '@/lib/std';
+import { destination } from '@/models/destination';
+
+interface Input {
+  input?: number;
+  output?: number;
+  node: GraphNode;
+}
+
+interface Output {
+  input?: number;
+  output?: number;
+  node: GraphNode;
+}
+
+const connect = (a: GraphNode, b: GraphNode, output?: number, input?: number) => {
+  if (a.node && b.node) {
+    a.node.connect(b.node, output, input);
+    return true;
+  }
+  return false;
+};
+
+const disconnect = (a: GraphNode, b: GraphNode, output?: number, input?: number) => {
+  if (a.node && b.node) {
+    if (input !== undefined && output !== undefined) {
+      a.node.disconnect(b.node, output, input);
+    } else if (output !== undefined) {
+      a.node.disconnect(b.node, output);
+    } else {
+      a.node.disconnect(b.node);
+    }
+    return true;
+  }
+  return false;
+};
 
 // TODO refactor ??
-export class GraphNode<T extends AudioNode | null = AudioNode | null> {
-  private static doConnect(me: GraphNode, o: { oldDest?: GraphNode, newDest?: GraphNode }) {
+export class GraphNode<T extends Audio.ObeoNode | null = Audio.ObeoNode | null> {
+  private static doConnect(
+    me: GraphNode, o: { oldDest?: Output, newDest?: Output },
+  ) {
     if (o.oldDest) {
-      const i = o.oldDest.inputs.indexOf(me);
-      o.oldDest.inputs.splice(i, 1);
-      if (o.oldDest.node && me.node) {
-        me.node.disconnect(o.oldDest.node);
+      const i = o.oldDest.node.inputs.map((input) => input.node).indexOf(me);
+      o.oldDest.node.inputs.splice(i, 1);
+      if (disconnect(me, o.oldDest.node, o.oldDest.output, o.oldDest.input)) {
         me.connected = false;
       }
     }
@@ -15,16 +52,20 @@ export class GraphNode<T extends AudioNode | null = AudioNode | null> {
     me.output = o.newDest;
 
     if (o.newDest) {
-      o.newDest.inputs.push(me);
-      if (o.newDest.node && me.node) {
-        me.node.connect(o.newDest.node);
+      o.newDest.node.inputs.push({
+        node: me,
+        input: o.newDest.input,
+        output: o.newDest.output,
+      });
+
+      if (connect(me, o.newDest.node, o.newDest.input, o.newDest.output)) {
         me.connected = true;
       }
     }
   }
 
-  private inputs: GraphNode[] = [];
-  private output: GraphNode | undefined = undefined;
+  private inputs: Input[] = [];
+  private output: Output | undefined = undefined;
   private isMuted = false;
   private connected = false;
 
@@ -37,20 +78,21 @@ export class GraphNode<T extends AudioNode | null = AudioNode | null> {
   set mute(value: boolean) {
     this.isMuted = value;
 
-    if (!this.output || !this.output.node || !this.node) {
+    if (!this.output || !this.output.node.node || !this.node) {
       return;
     }
 
     if (this.mute && this.connected) {
-      this.node.disconnect(this.output.node);
+      this.node.disconnect(this.output.node.node);
       this.connected = false;
     } else if (!this.mute && !this.connected) {
-      this.node.connect(this.output.node);
+      this.node.connect(this.output.node.node);
       this.connected = true;
     }
   }
 
-  public connect(newDest?: GraphNode): Disposer {
+  public connect(node?: GraphNode, input?: number, output?: number): Disposer {
+    const newDest = node ? { node, input, output } : undefined;
     const oldDest = this.output;
     GraphNode.doConnect(this, { oldDest, newDest });
 
@@ -63,7 +105,7 @@ export class GraphNode<T extends AudioNode | null = AudioNode | null> {
 
   public redirect(node: GraphNode<any>) {
     this.inputs.forEach((input) => {
-      input.connect(node);
+      input.node.connect(node);
     });
   }
 
@@ -71,28 +113,31 @@ export class GraphNode<T extends AudioNode | null = AudioNode | null> {
     this.node = node;
 
     this.inputs.forEach((input) => {
-      input.connect(this);
+      input.node.connect(this);
     });
 
-    this.connect(this.output);
+    this.connect(this.output?.node, this.output?.output, this.output?.input);
   }
 
   public dispose() {
     const inputs = this.inputs.slice();
-    inputs.forEach((input) => input.connect(this.output));
+    inputs.forEach((input) => {
+      input.node.connect(this.output?.node, this.output?.input, this.output?.input);
+    });
+
     this.connect();
 
     return {
       dispose: () => {
-        this.connect(this.output);
-        inputs.forEach((input) => input.connect(this));
+        this.connect(this.output?.node, this.output?.output, this.output?.input);
+        inputs.forEach((input) => input.node.connect(this));
       },
     };
   }
 
   public toString() {
     const getRoot = (node: GraphNode): GraphNode => {
-      return node.output ? getRoot(node.output) : node;
+      return node.output ? getRoot(node.output.node) : node;
     };
 
     interface Level {
@@ -111,7 +156,7 @@ export class GraphNode<T extends AudioNode | null = AudioNode | null> {
       const level: Level = {
         name,
         children: node.inputs.map((input) => {
-          return generateLevel(input);
+          return generateLevel(input.node);
         }),
       };
 
@@ -143,8 +188,7 @@ export class GraphNode<T extends AudioNode | null = AudioNode | null> {
   }
 
   public toMaster() {
-    // TODO
-    // this.connect(masterNode);
+    this.connect(destination);
     return this;
   }
 }

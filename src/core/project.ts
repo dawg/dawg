@@ -138,7 +138,7 @@ const load = (iProject: IProject): InitializationSuccess | InitializationError =
   }
 
   const patterns = oly.olyArr(iProject.patterns.map((iPattern) => {
-    const transport = new Audio.Transport();
+    const transport = new Audio.createTransport();
 
     // Then create the scores now that we know the instruments all exist
     const scores = iPattern.scores.map((iScore) => {
@@ -187,7 +187,7 @@ const load = (iProject: IProject): InitializationSuccess | InitializationError =
   const patternLookup = makeLookup(patterns);
   const sampleLookup = makeLookup(samples);
 
-  const mTransport = new Audio.Transport(); // master transport
+  const mTransport = new Audio.createTransport(); // master transport
   const elements: PlaylistElements[] = [];
   for (const iElement of iProject.master.elements) {
     switch (iElement.type) {
@@ -258,7 +258,7 @@ function emptyProject(): LoadedProject {
     stepsPerBeat: 4,
     beatsPerMeasure: 4,
     name: '',
-    master: new Playlist(new Audio.Transport(), []),
+    master: new Playlist(new Audio.createTransport(), []),
     patterns: oly.olyArr([Pattern.create('Pattern 0')], 'Pattern'),
     instruments: oly.olyArr([Synth.create('Synth 0')], 'Instrument'),
     channels: oly.olyArr(range(10).map((index) => Channel.create(index)), 'Channel'),

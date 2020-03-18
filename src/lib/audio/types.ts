@@ -96,3 +96,9 @@ export type MidiNote =
  * @category Unit
  */
 export type Cents = number;
+
+/**
+ * The beats per minutes.
+ * @category Unit
+ */
+export type  BPM = number;

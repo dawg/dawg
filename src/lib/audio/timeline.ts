@@ -47,7 +47,7 @@ export interface TimelineEvent {
 }
 
 /**
- * A Timeline class for scheduling and maintaining state
+ * A timeline for scheduling and maintaining state
  * along a timeline. All events must have a "time" property.
  * Internally, events are stored in time order for fast
  * retrieval.

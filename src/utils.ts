@@ -5,7 +5,7 @@ import * as oly from '@/lib/olyger';
 type Color = 'black' | 'white';
 
 interface OctaveKey {
-  value: string;
+  value: Audio.Note;
   color: Color;
   id: number;
 }
@@ -19,7 +19,7 @@ range(0, 9).reverse().forEach((value) => {
     if (noteNumber >= 0 && noteNumber < 88) {
       const keyString = `${key}${value}`;
       allKeys.push({
-        value: keyString,
+        value: keyString as Audio.Note,
         color: key.endsWith('#') ? 'black' : 'white',
         id: noteNumber,
       });
@@ -284,7 +284,7 @@ export const slice = (
   };
 };
 
-export const useSignal = (signal: Audio.Signal, initial: number, name: string) => {
+export const useSignal = (signal: Audio.ObeoParam, initial: number, name: string) => {
   const ref = oly.olyRef(initial, name);
   ref.onDidChange(({ onExecute, newValue, oldValue }) => {
     onExecute(() => {

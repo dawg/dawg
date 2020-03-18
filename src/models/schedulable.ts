@@ -2,7 +2,6 @@ import * as t from '@/lib/io';
 import * as Audio from '@/lib/audio';
 import { Beat } from '@/lib/audio/types';
 import { Ref } from '@vue/composition-api';
-import { Context } from '@/lib/audio';
 import { Sample } from '@/models/sample';
 import { Pattern } from '@/models/pattern';
 import { AutomationClip } from '@/models/automation';
@@ -12,6 +11,7 @@ import { BuildingBlock } from '@/models/block';
 import { Disposer } from '@/lib/std';
 import * as oly from '@/lib/olyger';
 import { getLogger } from '@/lib/log';
+import { getContext } from '@/lib/audio/global';
 
 const logger = getLogger('schedulable');
 
@@ -76,7 +76,7 @@ interface SchedulableOpts<Element, Type extends string, Options extends t.Mixed>
   offsettable?: boolean;
   options: Options;
   add: (
-    transport: Audio.Transport,
+    transport: Audio.ObeoTransport,
     params: ScheduledElement<Element, Type, Options>,
     element: Element,
   ) => Audio.TransportEventController | undefined;
@@ -128,7 +128,7 @@ const createSchedulable = <
   const create = (
     opts: Basics,
     idk: T,
-    transport: Audio.Transport,
+    transport: Audio.ObeoTransport,
     options: t.TypeOf<Options>,
   ): ScheduledElement<T, M, Options> => {
     const info = {  ...opts };
@@ -229,7 +229,7 @@ const createSchedulable = <
   };
 
   return {
-    create: (opts: Basics, element: T, options: t.TypeOf<Options>) => (transport: Audio.Transport) => ({
+    create: (opts: Basics, element: T, options: t.TypeOf<Options>) => (transport: Audio.ObeoTransport) => ({
       copy: () => create(opts, element, transport, options),
     }),
     type: createType(o.type, o.options),
@@ -237,7 +237,7 @@ const createSchedulable = <
 };
 
 export type UnscheduledPrototype<T = any, K extends string = any, Options extends t.Mixed = any> = (
-  transport: Audio.Transport,
+  transport: Audio.ObeoTransport,
 ) => ScheduledElement<T, K, Options>;
 
 export const { create: createSamplePrototype, type: ScheduledSampleType } = createSchedulable({
@@ -261,15 +261,15 @@ export const { create: createSamplePrototype, type: ScheduledSampleType } = crea
       onStart: ({ seconds }) => {
         controller = instance.start({
           startTime: seconds,
-          offset: Context.beatsToSeconds(params.offset.value),
-          duration: Context.beatsToSeconds(params.duration.value),
+          offset: Audio.context.beatsToSeconds(params.offset.value),
+          duration: Audio.context.beatsToSeconds(params.duration.value),
         });
       },
       onMidStart: ({ seconds, secondsOffset }) => {
         controller = instance.start({
           startTime: seconds,
           offset: secondsOffset,
-          duration: Context.beatsToSeconds(params.duration.value),
+          duration: Audio.context.beatsToSeconds(params.duration.value),
         });
       },
       onEnd: ({ seconds }) => {
@@ -292,8 +292,8 @@ export const { create: createPatternPrototype, type: ScheduledPatternType } = cr
   showBorder: true,
   options: t.type({}),
   add: (transport, params, pattern: Pattern) => {
-    return transport.embed(
-      pattern.transport,
+    return pattern.transport.embedIn(
+      transport,
       { time: params.time.value, duration: params.duration.value, row: params.row.value },
     );
   },
@@ -308,7 +308,38 @@ export const { create: createAutomationPrototype, type: ScheduledAutomationType 
   showBorder: true,
   options: t.type({}),
   add: (transport, params, clip: AutomationClip) => {
-    return clip.control.sync(transport, params.time.value, params.duration.value);
+  // const sync = (transport: ObeoTransport, time: Ticks, duration: Ticks) => {
+    let lastValue: number | undefined;
+    const context = getContext();
+
+    const onEndAndStart = ({ seconds }: { seconds: number }) => {
+      const val = clip.param.getValueAtTime(transport.seconds.value);
+      lastValue = val;
+      clip.param.cancelScheduledValues(seconds);
+      clip.param.setValueAtTime(val, seconds);
+    };
+
+    const onTick = ({ seconds, ticks }: { seconds: number, ticks: number }) => {
+      const val = clip.param.getValueAtTime(context.ticksToSeconds(ticks));
+      if (lastValue !== val) {
+        lastValue = val;
+        // approximate curves with linear ramps
+        clip.param.linearRampToValueAtTime(val, seconds);
+        clip.param.value = val;
+      }
+    };
+
+    return transport.schedule({
+      time: params.time.value,
+      duration: params.duration.value,
+      onTick,
+      onStart: onEndAndStart,
+      onEnd: onEndAndStart,
+      offset: 0,
+      // FIXME when you refactor this file this should be set
+      row: 0,
+    });
+    // return clip.control.sync(transport, params.time.value, params.duration.value);
   },
 });
 
@@ -325,7 +356,7 @@ export const { create: createNotePrototype, type: ScheduledNoteType } = createSc
       onStart: ({ seconds }) => {
         logger.debug('onStart Note -> ' + seconds);
         const value = allKeys[params.row.value].value;
-        const duration = Context.ticksToSeconds(params.duration.value * Audio.Context.PPQ);
+        const duration = Audio.context.ticksToSeconds(params.duration.value * Audio.context.PPQ.value);
         instrument.triggerAttackRelease(value, duration, seconds, params.options.velocity);
       },
       time: params.time.value,

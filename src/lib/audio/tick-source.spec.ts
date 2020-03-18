@@ -1,9 +1,8 @@
 import { expect } from '@/lib/testing';
 import { runOffline } from '@/lib/audio/offline';
 import { createTickSource } from '@/lib/audio/tick-source';
-import { getContext } from '@/lib/audio/global';
 
-describe.only('ObeoTickSource', () => {
+describe('ObeoTickSource', () => {
   it('can pass in the frequency', () => {
     const source = createTickSource({ frequency: 2 });
     expect(source.frequency.offset.value).to.equal(2);

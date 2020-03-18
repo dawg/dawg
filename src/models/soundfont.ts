@@ -21,19 +21,18 @@ export type ISoundfont = t.TypeOf<typeof SoundfontType>;
 export type Soundfonts = ISoundfont['soundfont'];
 
 export class Soundfont extends Instrument<
-  Audio.SoundfontOptions,
-  Audio.Soundfont,
+  Audio.ObeoSoundfont,
   Soundfonts
 > implements Serializable<ISoundfont> {
   public static async create(soundfont: Soundfonts, name: string) {
-    return new Soundfont(new Audio.Soundfont(soundfont), {
+    return new Soundfont(Audio.createSoundfont(soundfont), {
       soundfont,
       instrument: 'soundfont',
       name,
     });
   }
 
-  constructor(player: Audio.Soundfont, i: ISoundfont) {
+  constructor(player: Audio.ObeoSoundfont, i: ISoundfont) {
     super(
       i.soundfont,
       ['acoustic_grand_piano', 'bright_acoustic_piano', 'acoustic_guitar_nylon'],
@@ -67,6 +66,6 @@ export class Soundfont extends Instrument<
   }
 
   private updateSource() {
-    this.setSource(new Audio.Soundfont(this.type.value));
+    this.setSource(Audio.createSoundfont(this.type.value));
   }
 }

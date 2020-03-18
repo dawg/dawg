@@ -1,7 +1,6 @@
 import { Ticks, Beat, Seconds, ContextTime } from '@/lib/audio/types';
-import { defineProperties } from '@/lib/std';
-import { emitter } from '@/lib/events';
-import { Derived, Prim, getter, Getter, prim } from '@/lib/reactor';
+import { Disposer } from '@/lib/std';
+import { Prim, getter, Getter, prim } from '@/lib/reactor';
 
 export const extractBaseAudioContext = (
   context: BaseAudioContext & BaseAudioContextCommon,
@@ -84,18 +83,22 @@ export interface ObeoBaseContext extends ObeoExtractedBaseContext {
   beatsToSeconds(beat: Beat): Seconds;
   now(): ContextTime;
   ticksToSeconds(ticks: Ticks): Seconds;
+  onDidTick(cb: () => void): Disposer;
 }
 
 export interface BaseAudioContextCommon {
   resume(): Promise<void>;
 }
 
-export const enhanceBaseContext = (context: BaseAudioContext & BaseAudioContextCommon): ObeoBaseContext => {
+export const enhanceBaseContext = (
+  context: BaseAudioContext & BaseAudioContextCommon,
+  onDidTick: (cb: () => void) => Disposer,
+): ObeoBaseContext => {
   const baseContext = extractBaseAudioContext(context);
 
   const PPQ = prim(192);
   const BPM = prim(120);
-  const lookAhead = prim(120);
+  const lookAhead = prim(0.1);
 
   return {
     ...baseContext,
@@ -121,5 +124,6 @@ export const enhanceBaseContext = (context: BaseAudioContext & BaseAudioContextC
     now: (): ContextTime => {
       return baseContext.currentTime.value + lookAhead.value;
     },
+    onDidTick,
   };
 };

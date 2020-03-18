@@ -3,8 +3,8 @@ import uuid from 'uuid';
 import { Instrument } from '@/models/instrument';
 import { Serializable } from '@/models/serializable';
 import { createNotePrototype, ScheduledNoteType, ScheduledNote, watchOlyArray } from '@/models/schedulable';
-import { Transport } from '@/lib/audio';
 import * as oly from '@/lib/olyger';
+import * as Audio from '@/lib/audio';
 
 export const ScoreType = t.type({
   instrumentId: t.string,
@@ -15,7 +15,7 @@ export const ScoreType = t.type({
 export type IScore = t.TypeOf<typeof ScoreType>;
 
 export class Score implements Serializable<IScore> {
-  public static create(transport: Transport, instrument: Instrument) {
+  public static create(transport: Audio.ObeoTransport, instrument: Instrument) {
     const score = new Score(transport, instrument, {
       id: uuid.v4(),
       instrumentId: instrument.id,
@@ -27,7 +27,7 @@ export class Score implements Serializable<IScore> {
   public instrumentId: string;
   public notes: ScheduledNote[];
 
-  constructor(transport: Transport, public instrument: Instrument<any, any, any>, i: IScore) {
+  constructor(transport: Audio.ObeoTransport, public instrument: Instrument<any, any>, i: IScore) {
     this.id = i.id;
     this.instrumentId = i.instrumentId;
     const notes = oly.olyArr(i.notes.map((iNote) => {

@@ -4,7 +4,7 @@ import * as Audio from '@/lib/audio';
 
 function createBuffer(sampleRate: number, buffer: number[][]) {
   const numberOfChannels = buffer.length;
-  const audioBuffer = Audio.Context.context.createBuffer(numberOfChannels, buffer[0].length, sampleRate);
+  const audioBuffer = Audio.context.createBuffer(numberOfChannels, buffer[0].length, sampleRate);
 
   for (let channel = 0; channel < audioBuffer.numberOfChannels; channel++) {
     // This gives us the actual ArrayBuffer that contains the data

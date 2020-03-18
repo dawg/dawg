@@ -4,13 +4,14 @@ import * as Audio from '@/lib/audio';
 import { Serializable } from '@/models/serializable';
 import { EffectType, AnyEffect, Effect } from '@/models/filters/effect';
 import * as oly from '@/lib/olyger';
-import { GraphNode } from '@/lib/audio/node';
+import { GraphNode } from '@/models/node';
 import { EffectName } from '@/models/filters/effects';
 import { getLogger } from '@/lib/log';
 import { useSignal } from '@/utils';
 import { context } from '@/lib/audio/online';
 import { createGain } from '@/lib/audio/gain';
 import { createMeter } from '@/lib/audio/meter';
+import { destination } from '@/models/destination';
 
 const logger = getLogger('channel', { level: 'debug' });
 
@@ -53,13 +54,12 @@ export class Channel implements Serializable<IChannel> {
   public readonly volume: oly.OlyRef<number>;
   public readonly mute: oly.OlyRef<boolean>;
 
-  // TODO yeah uh let's implement these
   public readonly input = new GraphNode(createGain(), 'Gain');
-  public readonly output = new GraphNode(context.createStereoPanner(), 'Panner');
+  public readonly output = new GraphNode(Audio.createStereoPanner(), 'Panner');
 
   public readonly left = new GraphNode(createMeter());
   public readonly right = new GraphNode(createMeter());
-  private readonly split = new GraphNode(context.createChannelSplitter(2));
+  private readonly split = new GraphNode(Audio.createChannelSplitter(2));
 
   // tslint:disable-next-line:variable-name
   private readonly _effects: AnyEffect[];
@@ -83,20 +83,20 @@ export class Channel implements Serializable<IChannel> {
     const {
       signal: panSignal,
       ref: pan,
-    } = useSignal(new Audio.Signal(this.output.node.pan, -1, 1), i.pan ?? 0, 'Pan');
+    } = useSignal(this.output.node.pan, i.pan ?? 0, 'Pan');
     this.pan = pan;
     // this.panSignal = panSignal;
 
     const {
       signal: volumeSignal,
       ref: volume,
-    } = useSignal(new Audio.Signal(this.input.node.gain, 0, 1), i.volume ?? 0.8, 'Volume');
+    } = useSignal(this.input.node.gain, i.volume ?? 0.8, 'Volume');
     this.volume = volume;
     // this.volumeSignal = volumeSignal;
 
     const connect = (isMuted: boolean) => {
-      const destination = isMuted ? undefined : masterNode;
-      this.output.connect(destination);
+      const newDestination = isMuted ? undefined : destination;
+      this.output.connect(newDestination);
     };
 
     this.mute = oly.olyRef(i.mute, 'Channel Mute');
@@ -111,8 +111,8 @@ export class Channel implements Serializable<IChannel> {
     connect(i.mute);
 
     // Connecting the visualizers
-    this.splitLeft.connect(this.left);
-    this.splitRight.connect(this.right);
+    this.split.connect(this.left, 0);
+    this.split.connect(this.right, 1);
 
     const effects = oly.olyArr(i.effects.map((iEffect) => {
       return new Effect(iEffect);

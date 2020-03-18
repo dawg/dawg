@@ -3,7 +3,10 @@ import { expect } from '@/lib/testing';
 
 describe('context', () => {
   const create = () => {
-    const context = enhanceBaseContext(new OfflineAudioContext({ sampleRate: 4000, length: 4000 }));
+    const context = enhanceBaseContext(
+      new OfflineAudioContext({ sampleRate: 4000, length: 4000 }),
+      () => ({ dispose: () => ({}) }),
+    );
     context.BPM.value = 100;
     context.PPQ.value = 200;
     return context;

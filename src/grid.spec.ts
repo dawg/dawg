@@ -11,14 +11,14 @@ type Element = ScheduledElement<Instrument, 'note', any>;
 
 type Grid = ReturnType<typeof createGrid>;
 
-const transport = new Audio.Transport();
+const transport = Audio.createTransport();
 const create = <T extends ScheduledElement<any, any, any>>(
   cb: (o: { grid: Grid, sequence: Element[] }) => void, opts: Partial<GridOpts<T>> = {},
 ) => {
   const createElement = () => {
     return createNotePrototype(
       { time: 2, duration: 1, row: 2 },
-      new Synth({ instrument: 'synth', type: 'fatsawtooth', name: '' }),
+      new Synth({ instrument: 'synth', type: 'sine', name: '' }),
       { velocity: 1 },
     )(transport);
   };

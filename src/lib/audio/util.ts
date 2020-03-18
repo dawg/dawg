@@ -1,4 +1,5 @@
-import { Note, Hertz, MidiNote } from '@/lib/audio/types';
+import { Note, ContextTime, Hertz, MidiNote, Seconds, NormalRange } from '@/lib/audio/types';
+import { getContext } from '@/lib/audio/global';
 
 /**
  * Assert that the statement is true, otherwise invoke the error.
@@ -47,4 +48,31 @@ export const parseNote = (str: Note): Hertz => {
   const index = noteToScaleIndex[pitch.toLowerCase() as keyof typeof noteToScaleIndex];
   const noteNumber = index + (parseInt(octave, 10) + 1) * 12;
   return mtof(noteNumber as MidiNote);
+};
+
+export interface ObeoTrigger {
+  triggerAttackRelease(note: Note, duration: Seconds, time?: ContextTime, velocity?: NormalRange): void;
+  triggerAttack(note: Note, time?: ContextTime, velocity?: NormalRange): ObeoReleaser;
+}
+
+export interface ObeoReleaser {
+  triggerRelease(time?: ContextTime): void;
+}
+
+export interface InstrumentOptions {
+  triggerAttack(note: Note, time?: ContextTime, velocity?: NormalRange): ObeoReleaser;
+}
+
+export const createTrigger = ({ triggerAttack }: InstrumentOptions) => {
+  const context = getContext();
+  const triggerAttackRelease = (note: Note, duration: Seconds, time?: ContextTime, velocity?: NormalRange) => {
+    time = time ?? context.now();
+    const releaser = triggerAttack(note, time, velocity);
+    releaser.triggerRelease(time + duration);
+  };
+
+  return {
+    triggerAttackRelease,
+    triggerAttack,
+  };
 };

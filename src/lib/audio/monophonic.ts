@@ -1,5 +1,5 @@
 import { Seconds, Cents, NormalRange, ContextTime, Note } from '@/lib/audio/types';
-import { createInstrument, ObeoInstrument } from '@/lib/audio/instrument';
+import { createTrigger, ObeoTrigger } from '@/lib/audio/util';
 import { parseNote } from '@/lib/audio/util';
 import { ObeoSignalNode } from '@/lib/audio/signal';
 import { getContext } from '@/lib/audio/global';
@@ -11,7 +11,7 @@ export interface EnvelopeReleaser {
   triggerEnvelopeRelease(time: Seconds): void;
 }
 
-export interface ObeoMonophonic extends ObeoInstrument {
+export interface ObeoMonophonic extends ObeoTrigger {
   frequency: ObeoSignalNode;
   detune: ObeoSignalNode;
   portamento: number;
@@ -69,7 +69,7 @@ export const createMonophonic = (
     }
   };
 
-  const instrument = createInstrument({
+  const trigger = createTrigger({
     triggerAttack: (note, time, velocity) => {
       const seconds = time ?? context.now();
       setNote(note, seconds);
@@ -88,7 +88,7 @@ export const createMonophonic = (
   }
 
   const monophonic: ObeoMonophonic = {
-    ...instrument,
+    ...trigger,
     portamento: options?.portamento ?? 0,
     frequency: params.frequency,
     detune: params.detune,

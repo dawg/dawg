@@ -159,3 +159,15 @@ export const getter = <T>(f: () => T): Getter<T> => {
     get: f,
   });
 };
+
+// tslint:disable-next-line:interface-over-type-literal
+export type Setter<T> = {
+  value: T;
+};
+
+export const setter = <T>(g: () => T, s: (value: T) => void): Setter<T> => {
+  return Object.defineProperty({}, 'value', {
+    get: g,
+    set: s,
+  });
+};

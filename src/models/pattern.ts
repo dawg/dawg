@@ -16,13 +16,13 @@ export type IPattern = t.TypeOf<typeof PatternType>;
 
 export class Pattern implements BuildingBlock, Serializable<IPattern> {
   public static create(name: string) {
-    return new Pattern({ name, id: uuid.v4(), scores: [] }, new Audio.Transport(), []);
+    return new Pattern({ name, id: uuid.v4(), scores: [] }, Audio.createTransport(), []);
   }
 
   public readonly id: string;
   public readonly name: oly.OlyRef<string>;
 
-  constructor(i: IPattern, public transport: Audio.Transport, public scores: Score[]) {
+  constructor(i: IPattern, public transport: Audio.ObeoTransport, public scores: Score[]) {
     this.id = i.id;
     this.name = oly.olyRef(i.name, 'Pattern Name');
     const olyScores = oly.olyArr(scores, 'Score');

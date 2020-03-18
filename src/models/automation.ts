@@ -4,7 +4,6 @@ import * as Audio from '@/lib/audio';
 import { Serializable } from '@/models/serializable';
 import { Channel } from '@/models/channel';
 import { Instrument } from '@/models/instrument';
-import { Beats } from '@/models/types';
 import { BuildingBlock } from '@/models/block';
 import * as oly from '@/lib/olyger';
 
@@ -39,7 +38,7 @@ export type ClipContext = IAutomation['context'];
 export type Automatable = Channel | Instrument;
 
 export class AutomationClip implements Serializable<IAutomation>, BuildingBlock {
-  public static create(length: number, signal: Audio.Signal, context: ClipContext, id: string, attr: string) {
+  public static create(length: number, signal: Audio.ObeoParam, context: ClipContext, id: string, attr: string) {
     const ac = new AutomationClip(signal, {
       id: uuid.v4(),
       context,
@@ -69,20 +68,14 @@ export class AutomationClip implements Serializable<IAutomation>, BuildingBlock 
   public readonly attr: string;
   public readonly id: string;
   public readonly name: oly.OlyRef<string>;
-  public readonly control: Audio.Controller;
   // tslint:enable
 
-  private readonly signal: Audio.Signal;
-
-  constructor(signal: Audio.Signal, i: IAutomation) {
+  constructor(public readonly param: Audio.ObeoParam, i: IAutomation) {
     this.context = i.context;
     this.contextId = i.contextId;
     this.attr = i.attr;
     this.id = i.id;
     this.name = oly.olyRef(i.name, 'Automation Name');
-
-    this.signal = signal;
-    this.control = new Audio.Controller(signal);
 
     this.points = this._points = oly.olyArr(i.points.map((p) => {
       const point: Point = {
@@ -98,29 +91,21 @@ export class AutomationClip implements Serializable<IAutomation>, BuildingBlock 
 
     const watch = (items: InternalPoint[]) => {
       items.forEach((point) => {
-        point.time.onDidChange(({ subscriptions, newValue, oldValue }) => {
-          subscriptions.push({
-            execute: () => {
-              point.controller.setTime(newValue);
-              return {
-                undo: () => {
-                  point.controller.setTime(oldValue);
-                },
-              };
-            },
+        point.time.onDidChange(({ onExecute, newValue, oldValue }) => {
+          onExecute(() => {
+            point.controller.setTime(newValue);
+            return () => {
+                point.controller.setTime(oldValue);
+            };
           });
         });
 
-        point.value.onDidChange(({ subscriptions, newValue, oldValue }) => {
-          subscriptions.push({
-            execute: () => {
-              point.controller.setValue(newValue);
-              return {
-                undo: () => {
-                  point.controller.setValue(oldValue);
-                },
-              };
-            },
+        point.value.onDidChange(({ onExecute, newValue, oldValue }) => {
+          onExecute(() => {
+            point.controller.setValue(newValue);
+            return () => {
+              point.controller.setValue(oldValue);
+            };
           });
         });
       });
@@ -170,13 +155,14 @@ export class AutomationClip implements Serializable<IAutomation>, BuildingBlock 
     return this.points[this.points.length - 1].time.value;
   }
 
-  get minValue() {
-    return this.signal.minValue;
-  }
+  // TODO needed?
+  // get minValue() {
+  //   return this.signal.minValue;
+  // }
 
-  get maxValue() {
-    return this.signal.maxValue;
-  }
+  // get maxValue() {
+  //   return this.signal.maxValue;
+  // }
 
   public add(p: { time: number, value: number }) {
     this.points.push({
@@ -197,10 +183,39 @@ export class AutomationClip implements Serializable<IAutomation>, BuildingBlock 
   }
 
   public dispose() {
-    this.control.dispose();
+    // TODO
+    // this.control.dispose();
   }
 
   private schedule(iPoint: Point) {
-    return this.control.add(iPoint.time.value, iPoint.value.value);
+    // TODO This all makes no sense
+    // const add = (time: Beat, value: number): PointController => {
+    // const event = {
+    //   time: context.beatsToTicks(time),
+    //   value,
+    //   type: literal('linearRampToValueAtTime'),
+    // };
+
+    // this.param.linearRampToValueAtTime(
+    //   iPoint.value.value,
+    //   Audio.context.beatsToTicks(iPoint.time.value),
+    // );
+
+    return {
+      setValue: (newValue: number) => {
+        // event.value = newValue;
+      },
+      setTime: (newTime: number) => {
+        // event.time = newTime;
+      },
+      remove: () => {
+        // events.remove(event);
+        return {
+          dispose: () => {
+            // events.add(event);
+          },
+        };
+      },
+    };
   }
 }
