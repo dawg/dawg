@@ -553,22 +553,17 @@ export const defineAPI = (i: LoadedProject) => {
     return framework.manager.getOpenedFile();
   }
 
-  const setBpmOnTransports = (newValue: Audio.BPM) => {
-    master.transport.bpm.offset.value = newValue;
-    patterns.forEach((pattern) => {
-      pattern.transport.bpm.offset.value = newValue;
-    });
-  };
 
-  setBpmOnTransports(i.bpm);
+  // Do the initial set
+  Audio.context.BPM.value = i.bpm;
   const bpm = oly.olyRef(i.bpm, 'BPM');
   bpm.onDidChange(({ newValue, oldValue, subscriptions }) => {
     subscriptions.push({
       execute: () => {
-        setBpmOnTransports(newValue);
+        Audio.context.BPM.value = newValue;
         return {
           undo: () => {
-            setBpmOnTransports(oldValue);
+            Audio.context.BPM.value = oldValue;
           },
         };
       },

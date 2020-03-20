@@ -5,7 +5,6 @@ export interface SourceOptions {
   onEnded: () => AudioScheduledSourceNode['onended'];
 }
 
-// TODO??????
 export const augmentSource = <T extends AudioScheduledSourceNode>(node: T, options?: Partial<SourceOptions>) => {
   const context = getContext();
   const savedStart = node.start.bind(node);

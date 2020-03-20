@@ -354,7 +354,7 @@ export const { create: createNotePrototype, type: ScheduledNoteType } = createSc
       onStart: ({ seconds }) => {
         logger.debug('onStart Note -> ' + seconds);
         const value = allKeys[params.row.value].value;
-        const duration = Audio.context.ticksToSeconds(params.duration.value * Audio.context.PPQ.value);
+        const duration = Audio.context.beatsToSeconds(params.duration.value);
         instrument.triggerAttackRelease(value, duration, seconds, params.options.velocity);
       },
       time: params.time.value,

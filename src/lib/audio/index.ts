@@ -11,6 +11,7 @@ export * from '@/lib/audio/player';
 export * from '@/lib/audio/online';
 export * from '@/lib/audio/node';
 export * from '@/lib/audio/volume';
+export * from '@/lib/audio/poly-synth';
 export * from '@/lib/audio/synth';
 export * from '@/lib/audio/effect';
 export * from '@/lib/audio/analyser';

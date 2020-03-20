@@ -217,9 +217,9 @@ export const createTransport = (options?: Partial<ObeoTransportOptions>): ObeoTr
   const disposers: Disposer[] = [];
 
   const bpm = clock.frequency;
-  bpm.offset.value = options?.bpm ?? 120;
+  // TODO should we be able to set the BPM here?? probs not
+  bpm.offset.value = options?.bpm ?? context.BPM.value;
 
-  // TODO this should be handled by the project, not ..
   disposers.push(context.BPM.onDidChange(() => {
     bpm.offset.value = context.BPM.value;
   }));

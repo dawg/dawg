@@ -23,7 +23,7 @@ export type Oscillators = ISynth['type'];
 export type ISynth = t.TypeOf<typeof SynthType>;
 
 export class Synth extends Instrument<
-  Audio.ObeoSynth,
+  Audio.ObeoPolySynth,
   Oscillators
 > implements Serializable<ISynth> {
   public static create(name: string) {
@@ -38,14 +38,19 @@ export class Synth extends Instrument<
     super(
       i.type,
       ['custom', 'sine', 'square', 'sawtooth', 'triangle'],
-      Audio.createSynth({
-        envelope: {
-          attack: 0.005,
-          decay: 0.1,
-          sustain: 0.3,
-          release: 1,
-        },
-      }),
+      Audio.createPolySynth(
+        ({ onended }) => Audio.createSynth({
+          envelope: {
+            attack: 0.005,
+            decay: 0.1,
+            sustain: 0.3,
+            release: 1,
+          },
+          oscillator: {
+            onended,
+          },
+        }),
+      ),
       i,
     );
 

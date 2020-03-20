@@ -1,4 +1,3 @@
-import { SourceOptions } from '@/lib/audio/source';
 import { Cents, Hertz, ContextTime } from '@/lib/audio/types';
 import { createParam, ObeoParam } from '@/lib/audio/param';
 import { createVolume } from '@/lib/audio/volume';
@@ -6,7 +5,7 @@ import { ObeoScheduledSourceNode, Stopper } from '@/lib/audio/scheduled-source-n
 import { createSignal, ObeoSignalNode } from '@/lib/audio/signal';
 import { getContext } from '@/lib/audio/global';
 
-export interface OscillatorOptions extends SourceOptions {
+export interface OscillatorOptions {
   type: OscillatorType;
   frequency: Hertz;
   detune: Cents;
@@ -26,9 +25,8 @@ export const createOscillator = (options?: Partial<OscillatorOptions>): ObeoOsci
   const context = getContext();
   const volume = createVolume();
 
-  // TODO initial values ??
-  const frequency = createSignal({ name: 'Frequency' });
-  const detune = createSignal({ name: 'Detune' });
+  const frequency = createSignal({ name: 'Frequency', value: options?.frequency ?? 440 });
+  const detune = createSignal({ name: 'Detune', value: options?.frequency ?? 0 });
 
   let wave: PeriodicWave | undefined;
 
@@ -43,21 +41,11 @@ export const createOscillator = (options?: Partial<OscillatorOptions>): ObeoOsci
       internal.setPeriodicWave(wave);
     }
 
-    const frequencyParam = createParam(
-      internal.frequency,
-      { value: options?.frequency ?? 440, name: 'Frequency' },
-    );
-
+    const frequencyParam = createParam(internal.frequency, { name: 'Frequency' });
     frequency.connect(frequencyParam);
-    frequencyParam.value = frequency.offset.value;
 
-    const detuneParam = createParam(
-      internal.detune,
-      { value: options?.detune ?? 0, name: 'Detune' },
-    );
-
+    const detuneParam = createParam(internal.detune, { name: 'Detune' });
     detune.connect(detuneParam);
-    detuneParam.value = detune.offset.value;
 
     internal.start(when ?? context.now());
 
@@ -69,13 +57,11 @@ export const createOscillator = (options?: Partial<OscillatorOptions>): ObeoOsci
   };
 
 
-  // TODO properties
+  // TODO how to make sure that you can't connect to oscillator ??
   const oscillator: ObeoOscillator = {
-    // TODO this is kinda messed up?? Is it??
     ...volume,
 
     // OscillatorNode
-    volume: volume.volume,
     detune,
     frequency,
     type: options?.type ?? 'sine',

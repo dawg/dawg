@@ -6,6 +6,7 @@
     @mousedown="mousedown"
     @mouseenter="enter"
     @mouseleave="exit"
+    :title="value"
   >
     <div
       :style="keyOverlay"

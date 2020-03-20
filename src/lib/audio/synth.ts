@@ -1,7 +1,7 @@
 import { MonophonicOptions, createMonophonic, ObeoMonophonic } from '@/lib/audio/monophonic';
-import { EnvelopeOptions, createEnvelope } from '@/lib/audio/envelope';
+import { EnvelopeOptions } from '@/lib/audio/envelope';
 import { createOscillator, OscillatorOptions } from '@/lib/audio/oscillator';
-import { createVolume, ObeoVolumeNode } from '@/lib/audio/volume';
+import { createVolume } from '@/lib/audio/volume';
 import { getLogger } from '@/lib/log';
 import { Setter, setter } from '@/lib/reactor';
 import { ObeoInstrument } from '@/lib/audio/instrument';
@@ -14,9 +14,11 @@ export interface SynthOptions extends MonophonicOptions {
   envelope: Partial<EnvelopeOptions>;
 }
 
-export interface ObeoSynth extends ObeoInstrument, ObeoMonophonic {
+export interface SynthParameters {
   type: Setter<OscillatorType>;
 }
+
+export type ObeoSynth = ObeoInstrument & ObeoMonophonic & SynthParameters;
 
 export const createSynth = (options?: Partial<SynthOptions>): ObeoSynth => {
   const oscillator = createOscillator(options?.oscillator);
