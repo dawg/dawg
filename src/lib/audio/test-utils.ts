@@ -4,6 +4,7 @@ import { Seconds } from '@/lib/audio/types';
 import { ObeoBuffer, createAudioBuffer } from '@/lib/audio/audio-buffer';
 import dsp from 'dsp.js';
 import windowing from 'fft-windowing';
+import { expect } from '@/lib/testing';
 
 export function whenBetween(value: Seconds, start: Seconds, stop: Seconds, callback: () => void): void {
   if (value >= start && value < stop) {
@@ -24,11 +25,13 @@ export function atTime(when: Seconds, callback: (time: Seconds) => void): (time:
 export const compareToFile = async (
   cb: (offline: ObeoOfflineContext) => void,
   file: string,
-  options: Partial<RunOfflineOptions & { threshold: number }>,
+  options: Partial<RunOfflineOptions & { threshold: number }> = {},
 ) => {
   const { duration = 0.1, threshold = 0.1 } = options;
-  const url = '/base/test/src/assets/' + file;
-  const blob = await fetch(url).then((r) => r.blob());
+  const url = '/base/src/assets/' + file;
+  const response = await fetch(url);
+  expect(response.status).to.eq(200, 'Status is: ' + response.status);
+  const blob = await response.blob();
   const reader = new FileReader();
 
   const getArrayBuffer = (): Promise<ArrayBuffer> => {
@@ -53,8 +56,6 @@ export const compareToFile = async (
       numberOfChannels: 1,
     });
 
-
-
     // const audioBuffer = await blobToAudioBuffer(origContext, blob);
     const targetBuffer = await offlineContext.decodeAudioData(arrayBuffer);
 
@@ -62,23 +63,24 @@ export const compareToFile = async (
     await cb(offlineContext);
     const actualBuffer = await offlineContext.render();
 
-    if (targetBuffer.length > actualBuffer.length) {
-      throw new Error(`
-        The actual buffer is smaller than the target buffer: ${targetBuffer.length} vs. ${actualBuffer.length}
-      `);
-    }
-
     const analysisA = analyse(createAudioBuffer(targetBuffer), 1024, 64);
     const analysisB = analyse(createAudioBuffer(actualBuffer), 1024, 64);
 
+    expect(analysisA.length).to.be.gte(1, `The target buffer analysis is empty (${targetBuffer.length})`);
+    expect(analysisB.length).to.be.gte(1, `The actual buffer analysis is empty (${actualBuffer.length})`);
+
+    const minColum = Math.min(analysisA.length, analysisB.length);
+
     let diff = 0;
-    analysisA.forEach((columnA, columnNum) => {
-      const columnB = analysisB[columnNum];
+    for (let i = 0; i < minColum; i++) {
+      const columnA = analysisA[i];
+      const columnB = analysisB[i];
       columnA.forEach((valA, index) => {
         const valB = columnB[index];
         diff += Math.pow(valA - valB, 2);
       });
-    });
+    }
+
     const error = Math.sqrt(diff / analysisA.length);
 
     if (error > threshold) {
@@ -91,7 +93,7 @@ export const compareToFile = async (
 
 export function analyse(buffer: ObeoBuffer, fftSize = 256, hopSize = 128): Float64Array[] {
   const spectrogram: Float64Array[] = [];
-  buffer.toMono(buffer).toArray().forEach((channel) => {
+  buffer.toMono().toArray().forEach((channel) => {
     for (let index = 0; index < channel.length - fftSize; index += hopSize) {
       const FFT = new dsp.FFT(fftSize, buffer.sampleRate);
       const segment = windowing.blackman_harris(channel.slice(index, index + fftSize));
@@ -116,4 +118,23 @@ export const createTestAudioBuffer = (arr: number[], ...arrs: number[][]): ObeoB
   }
 
   return createAudioBuffer(audioBuffer);
+};
+
+export const warns = (cb: () => void) => {
+  // tslint:disable-next-line:no-console
+  const original = console.warn;
+  let warned = false;
+  // tslint:disable-next-line:no-console
+  console.warn = () => {
+    warned = true;
+  };
+
+  try {
+    cb();
+  } finally {
+    // tslint:disable-next-line:no-console
+    console.warn = original;
+  }
+
+  expect(warned).to.eq(true, 'Warning did not occur!');
 };

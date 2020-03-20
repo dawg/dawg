@@ -23,6 +23,20 @@ describe('ObeoDistortion', () => {
     // expect(channel.some((value) => value !== 0)).to.eq(true);
   });
 
+  it('matches a file', () => {
+    return compareToFile(() => {
+      const dist = createDistortion({ distortion: 0.8 });
+      dist.toDestination();
+
+      const osc = createOscillator();
+      osc.connect(dist);
+
+      osc.type = 'square';
+      osc.start(0).stop(0.4);
+    }, 'distortion.wav');
+  });
+
+
   it('can pass in options in the constructor', () => {
     const dist = createDistortion({
       distortion: 0.2,

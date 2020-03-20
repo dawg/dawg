@@ -115,6 +115,7 @@ export const pianoRoll = framework.manager.activate({
     });
 
     watch(instruments.selectedScore, () => {
+      // TODO this doesn't seem to be working
       if (instruments.selectedScore.value) {
         framework.ui.openedPanel.value = 'Piano Roll';
       }

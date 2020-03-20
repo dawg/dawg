@@ -8,12 +8,11 @@ import { GraphNode } from '@/models/node';
 import { EffectName } from '@/models/filters/effects';
 import { getLogger } from '@/lib/log';
 import { useSignal } from '@/utils';
-import { context } from '@/lib/audio/online';
 import { createGain } from '@/lib/audio/gain';
 import { createMeter } from '@/lib/audio/meter';
 import { destination } from '@/models/node';
 
-const logger = getLogger('channel', { level: 'debug' });
+const logger = getLogger('channel');
 
 export const ChannelTypeRequired = t.type({
   number: t.number,

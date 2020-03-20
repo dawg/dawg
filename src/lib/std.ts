@@ -109,6 +109,7 @@ interface ReadonlyProperties {
   [s: string]: () => any;
 }
 
+// TODO remove this??
 export const defineProperties = <T, V extends PropertyDescriptorMap>(
   o: T,
   properties: V,

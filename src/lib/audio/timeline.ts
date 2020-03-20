@@ -1,4 +1,4 @@
-import { Ticks, ContextTime } from '@/lib/audio/types';
+import { Ticks } from '@/lib/audio/types';
 import { Disposer } from '@/lib/std';
 import { Getter, getter } from '@/lib/reactor';
 

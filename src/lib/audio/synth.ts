@@ -5,6 +5,7 @@ import { createVolume, ObeoVolumeNode } from '@/lib/audio/volume';
 import { getLogger } from '@/lib/log';
 import { Setter, setter } from '@/lib/reactor';
 import { ObeoInstrument } from '@/lib/audio/instrument';
+import { createAmplitudeEnvelope } from '@/lib/audio/amplitude-envelope';
 
 const logger = getLogger('synth');
 
@@ -13,14 +14,15 @@ export interface SynthOptions extends MonophonicOptions {
   envelope: Partial<EnvelopeOptions>;
 }
 
-export interface ObeoSynth extends ObeoInstrument {
+export interface ObeoSynth extends ObeoInstrument, ObeoMonophonic {
   type: Setter<OscillatorType>;
 }
 
 export const createSynth = (options?: Partial<SynthOptions>): ObeoSynth => {
   const oscillator = createOscillator(options?.oscillator);
 
-  const envelope = createEnvelope(options?.envelope);
+  // TODO test ??
+  const envelope = createAmplitudeEnvelope(options?.envelope);
   const volume = createVolume();
 
   oscillator.connect(envelope);
@@ -39,17 +41,17 @@ export const createSynth = (options?: Partial<SynthOptions>): ObeoSynth => {
       envelope.triggerAttack(time, velocity);
       const stopper = oscillator.start(time);
       // if there is no release portion, stop the oscillator
-      if (envelope.sustain === 0) {
+      if (envelope.sustain.value === 0) {
         const computedAttack = envelope.attack;
         const computedDecay = envelope.decay;
-        stopper.stop(time + computedAttack + computedDecay);
+        stopper.stop(time + computedAttack.value + computedDecay.value);
       }
 
       return {
         triggerEnvelopeRelease: (when) => {
           logger.debug('triggerEnvelopeRelease', when);
           envelope.triggerRelease(when);
-          stopper.stop(when + envelope.release);
+          stopper.stop(when + envelope.release.value);
         },
       };
     },

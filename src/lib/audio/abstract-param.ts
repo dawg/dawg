@@ -282,6 +282,7 @@ export const createAbstractParam = <T, V>(
     events.dispose();
   };
 
+  // TODO remove this??
   const extended: ObeoAbstractParam = defineProperties({
     // AudioParam
     // TODO property for automationRate??? Others are readonly

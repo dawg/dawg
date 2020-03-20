@@ -1,14 +1,58 @@
 import { Seconds, NormalRange, ContextTime } from '@/lib/audio/types';
-import { context as c } from '@/lib/audio/online';
-import { defineProperties } from '@/lib/std';
 import { createOfflineContext } from '@/lib/audio/offline';
-import { ObeoBaseContext } from '@/lib/audio/context';
-import { createGain } from '@/lib/audio/gain';
 import { destination } from '@/lib/audio/destination';
 import { getLogger } from '@/lib/log';
 import { createSignal } from '@/lib/audio/signal';
+import { getContext, withContext } from '@/lib/audio/global';
+import { ObeoNode } from '@/lib/audio/node';
+import { prim, Prim, Getter, getter } from '@/lib/reactor';
 
 const logger = getLogger('envelope');
+
+export interface ObeoEnvelope extends ObeoNode {
+  readonly value: Getter<number>;
+  readonly sustain: Prim<number>;
+  readonly release: Prim<number>;
+  readonly attack: Prim<number>;
+  readonly decay: Prim<number>;
+  readonly attackCurve: Prim<InternalEnvelopeCurve>;
+  readonly releaseCurve: Prim<InternalEnvelopeCurve>;
+  readonly decayCurve: Prim<BasicEnvelopeCurve>;
+  /**
+   * triggerAttackRelease is shorthand for triggerAttack, then waiting
+   * some duration, then triggerRelease.
+   * @param duration The duration of the sustain.
+   * @param time When the attack should be triggered.
+   * @param velocity The velocity of the envelope.
+   */
+  triggerAttackRelease(duration: Seconds, time?: ContextTime, velocity?: NormalRange): void;
+  /**
+   * Cancels all scheduled envelope changes after the given time.
+   */
+  cancel(after?: ContextTime): void;
+  /**
+   * Get the scheduled value at the given time. This will
+   * return the unconverted (raw) value.
+   */
+  getValueAtTime(when: ContextTime): NormalRange;
+  /**
+   * Trigger the attack/decay portion of the ADSR envelope.
+   * @param  when When the attack should start.
+   * @param velocity The velocity of the envelope scales the vales.
+   */
+  triggerAttack(when?: ContextTime, velocity?: NormalRange): void;
+  /**
+   * Triggers the release of the envelope.
+   * @param  when When the release portion of the envelope should start.
+   */
+  triggerRelease(when?: ContextTime): void;
+  /**
+   * Render the envelope curve to an array of the given length.
+   * Good for visualizing the envelope curve
+   */
+  asArray(length?: number): Promise<Float32Array>;
+  dispose(): void;
+}
 
 export interface EnvelopeOptions {
   /**
@@ -90,10 +134,25 @@ export interface EnvelopeOptions {
   attackCurve: InternalEnvelopeCurve;
   releaseCurve: InternalEnvelopeCurve;
   decayCurve: BasicEnvelopeCurve;
-
-  // TODO generalize
-  context?: ObeoBaseContext;
 }
+
+/**
+ * Do a bounds check and throw an `TimeRange` if the value is not within the bounds. Note that the
+ * bounds are inclusive.
+ *
+ * @param minValue The minimum value.
+ * @param maxValue The maximum vaulue.
+ * @return A validation function.
+ */
+const timeRange = (minValue: number, maxValue?: number) => (value: number) => {
+  if (value < minValue ) {
+    throw RangeError(`Value (${value}) is lesser than min value (${minValue})`);
+  }
+
+  if (maxValue !== undefined && value > maxValue) {
+    throw RangeError(`Value (${value}) is greater than max value (${maxValue})`);
+  }
+};
 
 /**
  * Envelope is an [ADSR](https://en.wikipedia.org/wiki/Synthesizer#ADSR_envelope) envelope
@@ -110,28 +169,21 @@ export interface EnvelopeOptions {
  *   /                           \
  * ```
  */
-export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
-  const attack = options?.attack ?? 0.01;
-  const decay = options?.decay ?? 0.1;
-  const sustain = options?.sustain ?? 1;
-  const release = options?.release ?? 0.5;
-  const attackCurve = options?.attackCurve ?? 'linear';
-  const releaseCurve = options?.releaseCurve ?? 'exponential';
-  const decayCurve = options?.decayCurve ?? 'exponential';
-  const sig = createSignal({ name: 'EnvelopeSignal' });
-  // TOOD should init 0 like tone?
-  sig.offset.value = 0;
-  const context = options?.context ?? c;
+export const createEnvelope = (options?: Partial<EnvelopeOptions>): ObeoEnvelope => {
+  const attack = prim(options?.attack ?? 0.005, timeRange(0));
+  const decay = prim(options?.decay ?? 0.1, timeRange(0));
+  const sustain = prim(options?.sustain ?? 1, timeRange(0, 1));
+  const release = prim(options?.release ?? 0.3, timeRange(0));
+  const attackCurve = prim(options?.attackCurve ?? 'linear');
+  const releaseCurve = prim(options?.releaseCurve ?? 'exponential');
+  const decayCurve = prim(options?.decayCurve ?? 'exponential');
+  const sig = createSignal({ name: 'EnvelopeSignal', value: 0 });
+  const context = getContext();
 
-  /**
-   * Trigger the attack/decay portion of the ADSR envelope.
-   * @param  time When the attack should start.
-   * @param velocity The velocity of the envelope scales the vales.
-   */
   const triggerAttack = (time?: ContextTime, velocity: NormalRange = 1) => {
 
     time = time ?? context.now();
-    let att = attack;
+    let att = attack.value;
 
     // check if it's not a complete attack
     const currentValue = sig.offset.getValueAtTime(time);
@@ -150,18 +202,18 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
       sig.offset.cancelScheduledValues(time);
       // case where the att time is 0 should set instantly
       sig.offset.setValueAtTime(velocity, time);
-    } else if (attackCurve === 'linear') {
+    } else if (attackCurve.value === 'linear') {
       sig.offset.linearRampTo(velocity, att, time);
-    } else if (attackCurve === 'exponential') {
+    } else if (attackCurve.value === 'exponential') {
       sig.offset.targetRampTo(velocity, att, time);
     } else {
       sig.offset.cancelAndHoldAtTime(time);
-      let curve = attackCurve;
+      let curve = attackCurve.value;
       // find the starting position in the curve
       for (let i = 1; i < curve.length; i++) {
         // the starting index is between the two values
         if (curve[i - 1] <= currentValue && currentValue <= curve[i]) {
-          curve = attackCurve.slice(i);
+          curve = attackCurve.value.slice(i);
           // the first index is the current value
           curve[0] = currentValue;
           break;
@@ -170,136 +222,104 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>) => {
       sig.offset.setValueCurveAtTime(curve, time, att, velocity);
     }
     // decay
-    if (decay && sustain < 1) {
-      const decayValue = velocity * sustain;
+    if (decay.value && sustain.value < 1) {
+      const decayValue = velocity * sustain.value;
       const decayStart = time + att;
-      if (decayCurve === 'linear') {
-        sig.offset.linearRampToValueAtTime(decayValue, decayStart + decay);
+      if (decayCurve.value === 'linear') {
+        sig.offset.linearRampToValueAtTime(decayValue, decayStart + decay.value);
       } else {
-        sig.offset.exponentialApproachValueAtTime(decayValue, decayStart, decay);
+        sig.offset.exponentialApproachValueAtTime(decayValue, decayStart, decay.value);
       }
     }
   };
 
-  /**
-   * Triggers the release of the envelope.
-   * @param  time When the release portion of the envelope should start.
-   */
-  const triggerRelease = (time?: ContextTime) => {
-    time = time ?? context.now();
-    const currentValue = getValueAtTime(time);
+  const triggerRelease = (when?: ContextTime) => {
+    when = when ?? context.now();
+    const currentValue = getValueAtTime(when);
     if (currentValue > 0) {
-      if (release < context.sampleTime) {
-        sig.offset.setValueAtTime(0, time);
-      } else if (releaseCurve === 'linear') {
-        sig.offset.linearRampTo(0, release, time);
-      } else if (releaseCurve === 'exponential') {
-        sig.offset.targetRampTo(0, release, time);
+      if (release.value < context.sampleTime) {
+        sig.offset.setValueAtTime(0, when);
+      } else if (releaseCurve.value === 'linear') {
+        sig.offset.linearRampTo(0, release.value, when);
+      } else if (releaseCurve.value === 'exponential') {
+        sig.offset.targetRampTo(0, release.value, when);
       } else {
-        sig.offset.cancelAndHoldAtTime(time);
-        sig.offset.setValueCurveAtTime(releaseCurve, time, release, currentValue);
+        sig.offset.cancelAndHoldAtTime(when);
+        sig.offset.setValueCurveAtTime(releaseCurve.value, when, release.value, currentValue);
       }
     }
   };
 
-  /**
-   * triggerAttackRelease is shorthand for triggerAttack, then waiting
-   * some duration, then triggerRelease.
-   * @param duration The duration of the sustain.
-   * @param time When the attack should be triggered.
-   * @param velocity The velocity of the envelope.
-   */
   const triggerAttackRelease = (duration: Seconds, time?: ContextTime, velocity: NormalRange = 1) => {
     time = time ?? context.now();
     triggerAttack(time, velocity);
     triggerRelease(time + duration);
   };
 
-  /**
-   * Get the scheduled value at the given time. This will
-   * return the unconverted (raw) value.
-   */
   const getValueAtTime = (time: ContextTime): NormalRange => {
     return sig.offset.getValueAtTime(time);
   };
 
-  /**
-   * Cancels all scheduled envelope changes after the given time.
-   */
   const cancel = (after?: ContextTime) => {
     sig.offset.cancelScheduledValues(after ?? context.now());
   };
 
-  /**
-   * Render the envelope curve to an array of the given length.
-   * Good for visualizing the envelope curve
-   */
   const asArray = async (length = 1024): Promise<Float32Array> => {
     const duration = length / context.sampleRate;
     const offline = createOfflineContext({
-      length: duration,
+      length,
       numberOfChannels: 1,
       sampleRate: context.sampleRate,
     });
 
-    // normalize the ADSR for the given duration with 20% sustain time
-    const attackPortion = attack + decay;
-    const envelopeDuration = attackPortion + release;
-    const sustainTime = envelopeDuration * 0.1;
-    const totalDuration = envelopeDuration + sustainTime;
-    const clone = createEnvelope({
-      attack: duration * attack / totalDuration,
-      decay: duration * decay / totalDuration,
-      release: duration * release / totalDuration,
-      context: offline,
+    return withContext(offline, async () => {
+      // normalize the ADSR for the given duration with 20% sustain time
+      const attackPortion = attack.value + decay.value;
+      const envelopeDuration = attackPortion + release.value;
+      const sustainTime = envelopeDuration * 0.1;
+      const totalDuration = envelopeDuration + sustainTime;
+
+      const cloneOptions: EnvelopeOptions = {
+        attack: duration * attack.value / totalDuration,
+        decay: duration * decay.value / totalDuration,
+        release: duration * release.value / totalDuration,
+        sustain: sustain.value,
+        attackCurve: attackCurve.value,
+        decayCurve: decayCurve.value,
+        releaseCurve: releaseCurve.value,
+      };
+
+      const clone = createEnvelope(cloneOptions);
+      clone.toDestination();
+      clone.triggerAttackRelease(duration * (attackPortion + sustainTime) / totalDuration, 0);
+
+      const buffer = await offline.render();
+      return buffer.getChannelData(0);
     });
-
-    clone.connect(destination);
-    clone.triggerAttackRelease(duration * (attackPortion + sustainTime) / totalDuration, 0);
-
-    const buffer = await offline.render();
-    return buffer.getChannelData(0);
   };
 
   const dispose = () => {
     sig.disconnect();
   };
 
-  // Be must init to 0 because the signal is additive
-  const gain = createGain({ value: 0 });
-  sig.connect(gain.gain);
-
-  return Object.assign(
-    defineProperties(gain, {
-      /**
-       * Read the current value of the envelope. Useful for
-       * synchronizing visual offset to the envelope.
-       */
-      value: {
-        // TODO maybe don't need this
-        get: () => {
-          return getValueAtTime(context.now());
-        },
-      },
-    }),
-    {
-      asArray,
-      dispose,
-      triggerAttackRelease,
-      cancel,
-      getValueAtTime,
-      triggerAttack,
-      triggerRelease,
-      // TODO maybe properties??
-      sustain,
-      release,
-      attack,
-      decay,
-
-      // TODO only for debug
-      sig,
-    },
-  );
+  return {
+    ...sig,
+    value: getter(() => getValueAtTime(context.now())),
+    asArray,
+    dispose,
+    triggerAttackRelease,
+    cancel,
+    getValueAtTime,
+    triggerAttack,
+    triggerRelease,
+    sustain,
+    release,
+    attack,
+    decay,
+    attackCurve,
+    releaseCurve,
+    decayCurve,
+  };
 };
 
 

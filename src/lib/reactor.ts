@@ -96,6 +96,8 @@ export interface ElementChangeContext<T> {
   oldValue: T;
 }
 
+type Validator<T> = (value: T) => void;
+
 export type ChangeCallback<T> = (value: ElementChangeContext<T>) => void;
 
 export interface Prim<T> {
@@ -103,7 +105,7 @@ export interface Prim<T> {
   onDidChange(cb: ChangeCallback<T>): Disposer;
 }
 
-const helper = <T>(o: { value: T }) => {
+const helper = <T>(o: { value: T }, validator?: Validator<T>) => {
   const events = emitter<{ change: [ElementChangeContext<T>] }>();
 
   return proxy({
@@ -119,6 +121,10 @@ const helper = <T>(o: { value: T }) => {
       o.value = newValue;
 
       if (oldValue !== newValue) {
+        if (validator) {
+          validator(newValue);
+        }
+
         events.emit('change', { newValue, oldValue });
       }
     },
@@ -127,9 +133,9 @@ const helper = <T>(o: { value: T }) => {
 
 const activeEffects: Array<() => any> = [];
 
-export const prim = <T>(value: T): Prim<T> => {
+export const prim = <T>(value: T, validator?: Validator<T>): Prim<T> => {
   const o = reactive({ value });
-  return helper(o);
+  return helper(o, validator);
 };
 
 export interface Derived<T> {

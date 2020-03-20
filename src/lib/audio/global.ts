@@ -24,6 +24,22 @@ export function setContext(c: ObeoBaseContext): void {
 }
 
 /**
+ * Temporarily set a context for the duration of a function.Useful
+ *
+ * @param temporary The context to set for the duration of the function.
+ * @param cb The callback to invoke.
+ */
+export const withContext = <T>(temporary: ObeoBaseContext, cb: () => T): T => {
+  const original = getContext();
+  setContext(temporary);
+  try {
+    return cb();
+  } finally {
+    setContext(original);
+  }
+};
+
+/**
  * Most browsers will not play _any_ audio until a user
  * clicks something (like a play button). Invoke this method
  * on a click or keypress event handler to start the audio context.

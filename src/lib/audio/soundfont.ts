@@ -245,19 +245,8 @@ export const createSoundfont = (name: SoundfontName, options?: Partial<Soundfont
   // Make sure to call it once at the start to attempt to load
   attemptReloadIfNecessary();
 
-  const triggerAttackRelease = (note: string, duration: Seconds, time: ContextTime, velocity?: number) => {
-    start(note, time, {
-      duration,
-      gain: velocity,
-    });
-  };
-
   const triggerAttack = (note: string, time?: Seconds, velocity?: number) => {
     return start(note, time, { gain: velocity });
-  };
-
-  const set = <K extends keyof SoundfontOptions>(o: { key: K, value: SoundfontOptions[K] }) => {
-    defaults[o.key] = o.value;
   };
 
   const start = (note: string, when?: number, o: Partial<{ duration: number } & SoundfontOptions> = {}) => {
@@ -326,6 +315,7 @@ export const createSoundfont = (name: SoundfontName, options?: Partial<Soundfont
     };
   };
 
+  // TODO make sure you can change the type
   const trigger = createTrigger({
     triggerAttack: (note, time, velocity) => {
       const node = triggerAttack(note, time, velocity);

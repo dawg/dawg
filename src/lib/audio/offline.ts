@@ -109,10 +109,11 @@ export interface RunOfflineOptions {
 }
 
 type Nothing = void | Promise<void>;
-type OnTick = ((time: ContextTime) => void) | Promise<(time: ContextTime) => void>;
+type OnTick = (time: ContextTime) => void;
+// type OnTick = ((time: ContextTime) => void) | Promise<(time: ContextTime) => void>;
 
 export const runOffline = async (
-  callback: (context: ObeoOfflineContext) => Nothing | OnTick,
+  callback: (context: ObeoOfflineContext) => Nothing | OnTick | Promise<OnTick> | OnTick[],
   options: RunOfflineOptions | number = {},
 ): Promise<ObeoBuffer> => {
   if (typeof options === 'number') {
@@ -130,8 +131,10 @@ export const runOffline = async (
   setContext(offline);
   const onTick = await callback(offline);
   if (onTick) {
+    const onTicks = Array.isArray(onTick) ? onTick : [onTick];
+
     offline.onDidTick(() => {
-      onTick(offline.now());
+      onTicks.forEach((cb) => cb(offline.now()));
     });
   }
 

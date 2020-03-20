@@ -1,4 +1,4 @@
-import { extractAudioNode, ObeoNode, mimicAudioNode } from '@/lib/audio/node';
+import { ObeoNode } from '@/lib/audio/node';
 import { getContext } from '@/lib/audio/global';
 import { ObeoBaseContext } from '@/lib/audio/context';
 import { createVolume, ObeoVolumeNode } from '@/lib/audio/volume';
@@ -21,7 +21,7 @@ export const createDestination = (options?: Partial<ObeoDestinationOptions>): Ob
   volume.output.connect(internal);
 
   return {
-    ...mimicAudioNode(volume.input, internal),
+    ...volume,
     volume,
     maxChannelCount: internal.maxChannelCount,
   };
