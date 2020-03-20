@@ -6,11 +6,18 @@ import { Channel } from '@/models/channel';
 import { Instrument } from '@/models/instrument';
 import { BuildingBlock } from '@/models/block';
 import * as oly from '@/lib/olyger';
+import { Disposer } from '@/lib/std';
 
 export const PointType = t.type({
   time: t.number,
   value: t.number,
 });
+
+interface PointController {
+  setValue: (newValue: number) => void;
+  setTime: (newTime: number) => void;
+  remove: () => Disposer;
+}
 
 export const AutomationType = t.type({
   context: t.union([t.literal('channel'), t.literal('instrument')]),
@@ -29,7 +36,7 @@ export interface Point {
 interface InternalPoint {
   time: oly.OlyRef<number>;
   value: oly.OlyRef<number>;
-  controller: Audio.PointController;
+  controller: PointController;
 }
 
 export type IAutomation = t.TypeOf<typeof AutomationType>;
@@ -187,7 +194,7 @@ export class AutomationClip implements Serializable<IAutomation>, BuildingBlock 
     // this.control.dispose();
   }
 
-  private schedule(iPoint: Point) {
+  private schedule(iPoint: Point): PointController {
     // TODO This all makes no sense
     // const add = (time: Beat, value: number): PointController => {
     // const event = {

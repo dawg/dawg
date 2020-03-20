@@ -65,9 +65,9 @@ export type ObeoParamExtension<T, V> = (events: ObeoTimeline<AutomationEvent<T>>
 };
 
 // -------------------------------------
-  // 	AUTOMATION CURVE CALCULATIONS
-  // 	MIT License, copyright (c) 2014 Jordan Santell
-  // -------------------------------------
+// 	AUTOMATION CURVE CALCULATIONS
+// 	MIT License, copyright (c) 2014 Jordan Santell
+// -------------------------------------
 
 // Calculates the the value along the curve produced by setTargetAtTime
 export const exponentialApproach = (t0: number, v0: number, v1: number, timeConstant: number, t: number) => {
@@ -93,7 +93,6 @@ export const createAbstractParam = <T, V>(
   const context = getContext();
   const { toUnit = (v) => v, fromUnit = (v) => v } = opts;
   const events = createTimeline<AutomationEvent<T>>();
-  // const events = new Tone.Timeline<AutomationEvent<T>>(1000);
   const initialValue = opts.value ?? param.defaultValue;
   const minOutput = 1e-7;
 

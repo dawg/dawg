@@ -1,6 +1,6 @@
-import { ContextTime, Ticks, Seconds } from '@/lib/audio/types';
+import { ContextTime, Ticks, Seconds, Hertz } from '@/lib/audio/types';
 import { literal, Disposer } from '@/lib/std';
-import { createTickSignal, ObeoTickSignal } from '@/lib/audio/tick-signal';
+import { createTickSignal, ObeoTickSignal, ObeoTickSignalOptions } from '@/lib/audio/tick-signal';
 import { createTimeline } from '@/lib/audio/timeline';
 import { createStateTimeline, PlaybackState } from '@/lib/audio/state-timeline';
 import { getContext } from '@/lib/audio/global';
@@ -37,17 +37,16 @@ export interface ObeoTickSource extends Disposer {
   getStateAtTime(time: ContextTime): PlaybackState;
 }
 
-// TODO remove
-
-export interface TickSourceOptions {
-  frequency: number;
-}
+export type TickSourceOptions = Omit<ObeoTickSignalOptions, 'value'> & { frequency: Hertz };
 
 export const createTickSource = (options?: Partial<TickSourceOptions>): ObeoTickSource => {
   const context = getContext();
 
   const frequency = createTickSignal({
     value: options?.frequency,
+    toUnit: options?.toUnit,
+    fromUnit: options?.fromUnit,
+    name: options?.name,
   });
 
   /**
@@ -191,38 +190,32 @@ export const createTickSource = (options?: Partial<TickSourceOptions>): ObeoTick
     callback: (time: ContextTime, ticks: Ticks,
   ) => void) => {
     // only iterate through the sections where it is "started"
-    let lastStateEvent = state.get(startTime) ?? { time: 0, state: 'stopped' };
-
+    let lastStateEvent = state.get(startTime);
     state.forEachBetween(startTime, endTime, (event) => {
-      if (lastStateEvent.state === 'started' && event.state !== 'started') {
+      if (lastStateEvent && lastStateEvent.state === 'started' && event.state !== 'started') {
         forEachTickBetween(Math.max(lastStateEvent.time, startTime), event.time - context.sampleTime, callback);
       }
       lastStateEvent = event;
     });
 
-    startTime = Math.max(lastStateEvent.time, startTime);
+    let error: Error | null = null;
 
-    let error = null;
-    if (lastStateEvent.state === 'started' && state) {
+    if (lastStateEvent && lastStateEvent.state === 'started') {
+      const maxStartTime = Math.max(lastStateEvent.time, startTime);
       // figure out the difference between the frequency ticks and the
-      const startTicks = frequency.offset.getTicksAtTime(startTime);
+      const startTicks = frequency.offset.getTicksAtTime(maxStartTime);
       const ticksAtStart = frequency.offset.getTicksAtTime(lastStateEvent.time);
       const diff = startTicks - ticksAtStart;
-      let offset = diff % 1;
-      if (offset !== 0) {
-        offset = 1 - offset;
-      }
+      const offset = Math.ceil(diff) - diff;
       let nextTickTime = frequency.offset.getTimeOfTick(startTicks + offset);
-      while (nextTickTime < endTime && state) {
+      while (nextTickTime < endTime) {
         try {
           callback(nextTickTime, Math.round(getTicksAtTime(nextTickTime)));
         } catch (e) {
           error = e;
           break;
         }
-        if (state) {
-          nextTickTime += frequency.offset.getDurationOfTicks(1, nextTickTime);
-        }
+        nextTickTime += frequency.offset.getDurationOfTicks(1, nextTickTime);
       }
     }
 
@@ -234,7 +227,6 @@ export const createTickSource = (options?: Partial<TickSourceOptions>): ObeoTick
   const getStateAtTime: ObeoTickSource['getStateAtTime'] = (time) => {
     return state.getValueAtTime(time);
   };
-
 
   const getTimeOfTick = (tick: Ticks, before?: ContextTime): Seconds => {
     before = before ?? context.now();

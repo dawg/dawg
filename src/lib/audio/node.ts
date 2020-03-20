@@ -1,75 +1,78 @@
 import { ObeoParam } from '@/lib/audio/param';
 
-export interface ObeoNode<T extends AudioNode = AudioNode> extends AudioNode {
+export interface ObeoNode<I extends AudioNode = AudioNode, O extends AudioNode = I> {
   name: 'node';
-  node: T;
-  connect(destinationNode: ObeoNode, output?: number, input?: number): ObeoNode<T>;
-  connect(destinationParam: ObeoParam, output?: number): void;
+  input: I;
+  output: O;
+  readonly channelCount: number; // this isn't actually readonly
+  readonly numberOfInputs: number;
+  readonly numberOfOutputs: number;
   // tslint:disable:unified-signatures
+  connect(destinationNode: ObeoNode, output?: number, input?: number): void;
+  connect(destinationParam: ObeoParam, output?: number): void;
   disconnect(): void;
   disconnect(output: number): void;
-  disconnect(destinationNode: ObeoNode): void;
-  disconnect(destinationNode: ObeoNode, output: number): void;
-  disconnect(destinationNode: ObeoNode, output: number, input: number): void;
-  disconnect(destinationParam: ObeoParam): void;
-  disconnect(destinationParam: ObeoParam, output: number): void;
+  disconnect(destinationNode: ObeoNode, output?: number, input?: number): void;
+  disconnect(destinationParam: ObeoParam, output?: number): void;
   // tslint:enable:unified-signatures
   dispose(): void;
 }
 
-export const extractAudioNode = <T extends AudioNode>(node: T): ObeoNode<T> => {
-  // TODO properties ??
-  const audea: ObeoNode<T> = {
-    // EventTarget
-    addEventListener: node.addEventListener.bind(node),
-    dispatchEvent: node.dispatchEvent.bind(node),
-    removeEventListener: node.removeEventListener.bind(node),
+export const extractAudioNode = <T extends AudioNode>(node: T): ObeoNode<T, T> => {
+  return mimicAudioNode(node, node);
+};
 
-    // AudioNode
-    channelCount: node.channelCount,
-    channelCountMode: node.channelCountMode,
-    channelInterpretation: node.channelInterpretation,
-    context: node.context,
-    numberOfInputs: node.numberOfInputs,
-    numberOfOutputs: node.numberOfOutputs,
+export const mimicAudioNode = <
+  I extends AudioNode,
+  O extends AudioNode
+>(i: I, o: O): ObeoNode<I, O> => {
+  const node: ObeoNode<I, O> = {
+    // Using the input node but they should be the same
+    channelCount: i.channelCount,
+    numberOfInputs: i.numberOfInputs,
+    numberOfOutputs: o.numberOfOutputs,
 
-    // Custom
     name: 'node',
-    node,
+
+    // Having an input AND output allows us to treat complex audio node combinations as being a single node
+    // The, the connect and disconnect logic handles all of the connection logic allowing the user to forget
+    // about the internals of any particular node
+    input: i,
+    output: o,
     connect: (target: ObeoNode | ObeoParam, output?: number, input?: number) => {
       if (target.name === 'node') {
-        node.connect(target.node, output, input);
+        o.connect(target.input, output, input);
       } else {
-        node.connect(target.param, output);
+        o.connect(target.param, output);
       }
-      return audea;
+      return node;
     },
     disconnect: (nodeParamOrOutput?: number | ObeoNode | ObeoParam, output?: number, input?: number) => {
       // Handling all 7 cases explicitly to satisfy ts
       if (!nodeParamOrOutput) {
-        node.disconnect();
+        o.disconnect();
       } else if (typeof nodeParamOrOutput === 'number') {
-        node.disconnect(nodeParamOrOutput);
+        o.disconnect(nodeParamOrOutput);
       } else if (nodeParamOrOutput.name === 'node') {
         if (output !== undefined && input !== undefined) {
-          node.disconnect(nodeParamOrOutput.node, output, input);
+          o.disconnect(nodeParamOrOutput.input, output, input);
         } else if (output !== undefined) {
-          node.disconnect(nodeParamOrOutput.node, output);
+          o.disconnect(nodeParamOrOutput.input, output);
         } else {
-          node.disconnect(nodeParamOrOutput.node);
+          o.disconnect(nodeParamOrOutput.input);
         }
       } else {
         if (output !== undefined) {
-          node.disconnect(nodeParamOrOutput.param, output);
+          o.disconnect(nodeParamOrOutput.param, output);
         } else {
-          node.disconnect(nodeParamOrOutput.param);
+          o.disconnect(nodeParamOrOutput.param);
         }
       }
     },
     dispose: () => {
-      node.disconnect();
+      o.disconnect();
     },
   };
 
-  return audea;
+  return node;
 };

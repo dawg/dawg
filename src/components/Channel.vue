@@ -71,7 +71,7 @@
 import { range, scale, clamp } from '@/lib/std';
 import { AnyEffect } from '@/models/filters/effect';
 import { Channel as C } from '@/models/channel';
-import { EffectMap, EffectName } from '@/models';
+import { EffectName } from '@/models';
 import * as framework from '@/lib/framework';
 import { ref, computed, watch, createComponent } from '@vue/composition-api';
 
@@ -109,6 +109,7 @@ export default createComponent({
     });
 
     const options = computed(() => {
+      // TODO
       return Object.keys(EffectMap) as EffectName[];
     });
 
@@ -155,8 +156,8 @@ export default createComponent({
     function renderMeter() {
       if (props.play) {
         requestAnimationFrame(renderMeter);
-        left.value = process(props.channel.left.node.getLevel());
-        right.value = process(props.channel.right.node.getLevel());
+        left.value = process(props.channel.left.node.getValue());
+        right.value = process(props.channel.right.node.getValue());
       } else {
         left.value = 0;
         right.value = 0;

@@ -55,14 +55,9 @@ export const createSynth = (options?: Partial<SynthOptions>): ObeoSynth => {
     },
   }, options);
 
-  // TODO generalize to helper function maybe to extract core AudioNode attributes ??
   return {
     ...volume,
     ...monophonic,
-    // connect: volume.connect.bind(volume),
-    // disconnect: volume.disconnect.bind(volume),
-    frequency: oscillator.frequency,
-    detune: oscillator.detune,
     type: setter(() => {
       return oscillator.type;
     }, (value) => {

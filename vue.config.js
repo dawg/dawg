@@ -4,7 +4,7 @@ const config = {
   runtimeCompiler: true,
   pluginOptions: {
     karma: {
-      files: ['src/**/*.spec.ts'],
+      files: ['src/**/*.spec.ts', 'src/assets/*'],
       karmaConfig: {
         browsers: ['ChromeHeadless'],
       }

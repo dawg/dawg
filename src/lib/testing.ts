@@ -36,13 +36,11 @@ type Assertion<T> = {
   be: Assertion<T>;
   closeTo: CloseTo<T>;
   not: Assertion<T>;
+  at: Assertion<T>;
   eq: Equal<T>;
   equal: Equal<T>;
   is: Assertion<T>
   throw: Throw<T>;
-  gte: NumberComparer<T>;
-  gt: NumberComparer<T>;
-  greaterThan: NumberComparer<T>;
 } & (number extends T ? NumericComparison<T> : {});
 
 export const expect = ex as Expect;

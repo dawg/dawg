@@ -283,7 +283,7 @@ export const createSoundfont = (name: SoundfontName, options?: Partial<Soundfont
   const createNode = (buffer: AudioBuffer, o: Partial<SoundfontOptions>) => {
     const node = context.createGain();
     node.gain.value = 0; // the envelope will control the gain
-    node.connect(out);
+    node.connect(out.input);
 
     // TODO use own envelope
     const env = new ADSR(context as any, {

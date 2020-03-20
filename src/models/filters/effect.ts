@@ -1,10 +1,10 @@
-import Tone from 'tone';
 import uuid from 'uuid';
 import * as t from '@/lib/io';
-import { EffectOptions, EffectName, EffectTones, EffectMap } from '@/models/filters/effects';
+import { EffectOptions, EffectName, EffectTones } from '@/models/filters/effects';
 import { EffectDefaults } from '@/models/filters/defaults';
 import { Serializable } from '@/models/serializable';
-import { GraphNode } from '@/lib/audio/node';
+import { GraphNode } from '@/models/node';
+import * as Audio from '@/lib/audio';
 
 export const EffectType = t.type({
   slot: t.number,
@@ -21,6 +21,13 @@ export const EffectType = t.type({
   options: t.object, // FIXME
   id: t.string,
 });
+
+const createEffect = <T extends EffectName>(type: EffectName): EffectTones[T] => {
+  switch (type) {
+    case 'Distortion':
+      return Audio.createDistortion();
+  }
+};
 
 export type IEffect = t.TypeOf<typeof EffectType>;
 
@@ -40,19 +47,17 @@ export class Effect<T extends EffectName> implements Serializable<IEffect> {
   public options: EffectOptions[T];
   public id = uuid.v4();
 
-  // TODO maybe we want to hold off on this for a bit... or maybe not??
-  public effect: GraphNode<Tone.Effect>;
+  public effect: GraphNode<Audio.ObeoEffect>;
 
   constructor(i: IEffect) {
-    // FIXME make this better + undoable
+    // TODO make this undoable
     this.slot = i.slot;
     this.id = i.id;
     this.type = i.type as T;
     // FIXME Remove any cast
     this.options = i.options as any;
-    // FIXME FIx this because we shouldn't have to use any type
-    this.effect = new GraphNode(new EffectMap[this.type]() as any, this.type);
-    // FIXME actually set options
+    this.effect = new GraphNode(createEffect(this.type), this.type);
+    // TODO actually set options
   }
 
   get wet() {

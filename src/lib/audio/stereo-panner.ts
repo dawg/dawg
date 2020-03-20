@@ -1,16 +1,16 @@
 // TODO test
 
 import { getContext } from '@/lib/audio/global';
-import { extractAudioNode } from '@/lib/audio/node';
+import { extractAudioNode, ObeoNode } from '@/lib/audio/node';
 import { ObeoParam, createParam, ObeoParamOptions } from '@/lib/audio/param';
 
-export interface ObeoStereoPanner {
+export interface ObeoStereoPanner extends ObeoNode<StereoPannerNode> {
   readonly pan: ObeoParam;
 }
 
 export type ObeoStereoPannerOptions = ObeoParamOptions;
 
-export const createStereoPanner = (options?: Partial<ObeoStereoPannerOptions>) => {
+export const createStereoPanner = (options?: Partial<ObeoStereoPannerOptions>): ObeoStereoPanner => {
   const context = getContext();
   const panner = context.createStereoPanner();
 

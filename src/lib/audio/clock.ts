@@ -1,5 +1,5 @@
 import { ContextTime, Ticks, Seconds } from '@/lib/audio/types';
-import { createTickSource, ObeoTickSource } from '@/lib/audio/tick-source';
+import { createTickSource, ObeoTickSource, TickSourceOptions } from '@/lib/audio/tick-source';
 import { emitter } from '@/lib/events';
 import { ObeoTickSignal } from '@/lib/audio/tick-signal';
 import { PlaybackState, createStateTimeline } from '@/lib/audio/state-timeline';
@@ -16,9 +16,11 @@ export interface ObeoClock extends Disposer {
   getState(): PlaybackState;
   getTicks(): Ticks;
   setTicks(ticks: Ticks): void;
+  // TODO should I be using ContextTime???
   start(when?: ContextTime): ObeoClock;
   stop(when?: ContextTime): ObeoClock;
   pause(when?: ContextTime): ObeoClock;
+  getTicksAtTime(time?: Seconds): Ticks;
   setTicksAtTime(ticks: Ticks, time: ContextTime): void;
   onDidStop(cb: (o: TimeTicks) => void): Disposer;
   onDidStart(cb: (o: TimeTicks) => void): Disposer;
@@ -27,9 +29,7 @@ export interface ObeoClock extends Disposer {
 
 export type ClockCallback = (seconds: ContextTime, ticks: Ticks) => void;
 
-export interface ObeoClockOptions {
-  frequency: number;
-}
+export type ObeoClockOptions = TickSourceOptions;
 
 interface TimeTicks {
   seconds: ContextTime;
@@ -60,6 +60,7 @@ export const createClock = (
     return _state.getValueAtTime(context.now());
   };
 
+  // TODO Not sure this is really necessary
   const getTicks = () => {
     return Math.ceil(tickSource.getTicksAtTime(context.now()));
   };
@@ -173,6 +174,7 @@ export const createClock = (
     stop,
     pause,
     setTicksAtTime,
+    getTicksAtTime: tickSource.getTicksAtTime,
     onDidStop,
     onDidStart,
     onDidPaused,

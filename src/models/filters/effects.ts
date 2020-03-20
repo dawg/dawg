@@ -1,17 +1,6 @@
-import Tone from 'tone';
+import * as Audio from '@/lib/audio';
 
 export type EffectName = keyof EffectOptions;
-
-export const EffectMap = {
-  'Wah': Tone.AutoWah,
-  'Reverb': Tone.Freeverb,
-  'Phaser': Tone.Phaser,
-  'Bit Crusher': Tone.BitCrusher,
-  'Ping Pong Delay': Tone.PingPongDelay,
-  'Chorus': Tone.Chorus,
-  'Tremolo': Tone.Tremolo,
-  'Distortion': Tone.Distortion,
-};
 
 interface PhaserOptions {
   frequency: number;
@@ -56,23 +45,23 @@ interface DistortionOptions {
 }
 
 export interface EffectTones {
-  Wah: Tone.AutoWah;
-  Reverb: Tone.Freeverb;
-  Phaser: Tone.Phaser;
-  'Bit Crusher': Tone.BitCrusher;
-  'Ping Pong Delay': Tone.PingPongDelay;
-  Chorus: Tone.Chorus;
-  Tremolo: Tone.Tremolo;
-  Distortion: Tone.Distortion;
+  // Wah: Audio.AutoWah;
+  // Reverb: Audio.ObeoFreeverb;
+  // Phaser: Audio.Phaser;
+  // 'Bit Crusher': Audio.BitCrusher;
+  // 'Ping Pong Delay': Audio.PingPongDelay;
+  // Chorus: Audio.Chorus;
+  // Tremolo: Audio.Tremolo;
+  Distortion: Audio.ObeoDistortion;
 }
 
 export interface EffectOptions {
-  Wah: WahOptions;
-  Reverb: ReverbOptions;
-  Phaser: PhaserOptions;
-  'Bit Crusher': BitCrusherOptions;
-  'Ping Pong Delay': PingPongDelayOptions;
-  Chorus: ChorusOptions;
-  Tremolo: TremoloOptions;
+  // Wah: WahOptions;
+  // Reverb: ReverbOptions;
+  // Phaser: PhaserOptions;
+  // 'Bit Crusher': BitCrusherOptions;
+  // 'Ping Pong Delay': PingPongDelayOptions;
+  // Chorus: ChorusOptions;
+  // Tremolo: TremoloOptions;
   Distortion: DistortionOptions;
 }

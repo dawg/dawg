@@ -1,5 +1,5 @@
 import { getContext } from '@/lib/audio/global';
-import { createTickParam, ObeoTickParam } from '@/lib/audio/tick-param';
+import { createTickParam, ObeoTickParam, ObeoTickParamOptions } from '@/lib/audio/tick-param';
 import { extractAudioNode, ObeoNode } from '@/lib/audio/node';
 
 export interface ObeoTickSignal extends ObeoNode<ConstantSourceNode> {
@@ -7,11 +7,7 @@ export interface ObeoTickSignal extends ObeoNode<ConstantSourceNode> {
   dispose(): void;
 }
 
-// TODO look over these options
-export interface ObeoTickSignalOptions {
-  value: number;
-  name: string;
-}
+export type ObeoTickSignalOptions = ObeoTickParamOptions;
 
 export const createTickSignal = (options?: Partial<ObeoTickSignalOptions>): ObeoTickSignal => {
   const context = getContext();

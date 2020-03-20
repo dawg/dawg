@@ -20,7 +20,7 @@ interface Extension {
 
 export type ObeoTickParam = ObeoAbstractParam & Extension;
 
-export type ObeoTickSignalOptions = ObeoParamOptions;
+export type ObeoTickParamOptions = ObeoParamOptions;
 
 type TickAutomationEvent = AutomationEvent<{ ticks: number }>;
 
@@ -37,7 +37,7 @@ type TickAutomationEvent = AutomationEvent<{ ticks: number }>;
  * difficult to do lots of the calculations when the events are exponential. Linear stuff is
  * easy :)
  */
-export const createTickParam = (param: AudioParam, options: Partial<ObeoTickSignalOptions> = {}): ObeoTickParam => {
+export const createTickParam = (param: AudioParam, options: Partial<ObeoTickParamOptions> = {}): ObeoTickParam => {
   const context = getContext();
   const { toUnit = (v) => v, fromUnit = (v) => v } = options;
 

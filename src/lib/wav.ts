@@ -2,7 +2,7 @@ import wav from 'node-wav';
 import fs from '@/lib/fs';
 import * as Audio from '@/lib/audio';
 
-function createBuffer(sampleRate: number, buffer: number[][]) {
+function createBuffer(sampleRate: number, buffer: number[][]): AudioBuffer {
   const numberOfChannels = buffer.length;
   const audioBuffer = Audio.context.createBuffer(numberOfChannels, buffer[0].length, sampleRate);
 
@@ -19,7 +19,7 @@ function createBuffer(sampleRate: number, buffer: number[][]) {
   return audioBuffer;
 }
 
-export async function loadBuffer(path: string) {
+export async function loadBuffer(path: string): Promise<AudioBuffer> {
   const buffer = await fs.readFile(path);
   const result = wav.decode(buffer);
 

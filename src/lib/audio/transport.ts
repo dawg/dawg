@@ -6,6 +6,7 @@ import { Disposer } from '@/lib/std';
 import { getContext } from '@/lib/audio/global';
 import { setter, getter, Setter, Getter } from '@/lib/reactor';
 import { PlaybackState } from '@/lib/audio/state-timeline';
+import { ObeoTickSignal } from '@/lib/audio/tick-signal';
 
 interface EventContext {
   seconds: ContextTime;
@@ -23,10 +24,10 @@ type Filter = (event: TransportEvent) => boolean;
 // FIXME Ok so this type definition is not 100% correct as the duration does not NEED to be defined iff onEnd AND onTick
 // are undefined.
 export interface TransportEvent {
-  time: Ticks;
+  time: Beat;
   // Must be defined if `onMidStart` OR `onEnd` OR `onTick` are defined
-  duration: Ticks;
-  offset: Ticks;
+  duration: Beat;
+  offset: Beat;
   // This is kinda irrelevant and should maybe be removed
   // But it was definitely the easiest solution to implementing row muting
   // The reason this isn't the best is that the transport shouldn't really care about rows but if you can find a
@@ -58,12 +59,28 @@ export interface ObeoTransport extends Disposer {
   readonly loopEnd: Setter<Beat>;
   readonly ticks: Setter<Ticks>;
   readonly beat: Setter<Beat>;
-  readonly bpm: Setter<BPM>;
+  readonly bpm: ObeoTickSignal;
   readonly seconds: Getter<Seconds>;
   readonly state: Getter<PlaybackState>;
-  start(): void;
-  stop(): void;
-  pause(): void;
+  /**
+   * Get the clock's ticks at the given time.
+   * @param  time  When to get the tick value
+   * @return The tick value at the given time.
+   */
+  getTicksAtTime(time?: Seconds): Ticks;
+  /**
+   * Start playback from current position.
+   */
+  start(when?: number): ObeoTransport;
+  /**
+   * Stop playback and return to the beginning.
+   */
+  stop(when?: number): ObeoTransport;
+  /**
+   * Pause playback.
+   */
+  pause(when?: number): ObeoTransport;
+  setLoopPoints(loopStart: Beat, loopEnd: Beat): ObeoTransport;
   addFilter(filter: Filter): void;
   /**
    * Schedule an event.
@@ -72,7 +89,14 @@ export interface ObeoTransport extends Disposer {
   embedIn(parent: ObeoTransport, context: SchedulingContext): TransportEventController;
 }
 
-export const createTransport = (): ObeoTransport => {
+export interface ObeoTransportOptions {
+  /**
+   * Default BPP value. Defaults to 120.
+   */
+  bpm: BPM;
+}
+
+export const createTransport = (options?: Partial<ObeoTransportOptions>): ObeoTransport => {
   let startPosition: Ticks = 0;
   const timeline = createTimeline<TransportEvent>();
   let active: TransportEvent[] = [];
@@ -83,7 +107,7 @@ export const createTransport = (): ObeoTransport => {
   // tslint:disable-next-line:variable-name
   let _loopStart: Ticks = 0;
   // tslint:disable-next-line:variable-name
-  let _loopEnd: Ticks = 0;
+  let _loopEnd: Ticks = Infinity;
 
   const processTick = (seconds: ContextTime, currentTick: Ticks, isChild = false) => {
     if (!isChild && currentTick >= _loopEnd) {
@@ -169,22 +193,28 @@ export const createTransport = (): ObeoTransport => {
     });
   };
 
+  const context = getContext();
+
+  // Equations for the BPM conversions
+  // BPM = Frequency * (Seconds / Minute) / PPQ
+  // BPM = Hertz * (Seconds / Minute) / (Pulse / Beat)
+  // BPM = Pulses / Minute / (Pulses / Beat)
+  // BPM = Beat / Minute
+
+  // Frequency = BPM * PPQ / (Seconds / Minute)
+
   const clock = createClock(processTick, {
     frequency: 0,
+    // Hertz -> BPM
+    toUnit: (value) => value * 60 / context.PPQ.value,
+    // BPM -> Hertz
+    fromUnit: (value) => value * context.PPQ.value / 60,
   });
 
   const disposers: Disposer[] = [];
-  const context = getContext();
 
-  // TODO TODO
-  // const setBpm = () => {
-  //   clock.frequency.offset.value = 1 / (60 / context.BPM.value / context.PPQ.value);
-  // };
-
-  const bpm = setter(
-    () => clock.frequency.offset.value * 60 / context.PPQ.value,
-    (value) => clock.frequency.offset.value = 1 / (60 / value / context.PPQ.value),
-  );
+  const bpm = clock.frequency;
+  bpm.offset.value = options?.bpm ?? 120;
 
   // TODO this should be handled by the project, not ..
   // disposers.push(context.BPM.onDidChange(setBpm));
@@ -364,27 +394,25 @@ export const createTransport = (): ObeoTransport => {
     };
   };
 
-  /**
-   * Start playback from current position.
-   */
-  const start = () => {
+  const start = (when?: ContextTime) => {
     isFirstTick = true;
-    clock.start();
+    clock.start(when);
+    return transport;
   };
 
-  /**
-   * Pause playback.
-   */
-  const pause = () => {
-    clock.pause();
+  const pause = (when?: ContextTime) => {
+    clock.pause(when);
+    return transport;
   };
 
-  /**
-   * Stop playback and return to the beginning.
-   */
-  const stop = () => {
-    clock.stop();
+  const stop = (when?: ContextTime) => {
+    clock.stop(when);
     ticks.value = startPosition;
+    return transport;
+  };
+
+  const getTicksAtTime: ObeoTransport['getTicksAtTime'] = (time) => {
+    return Math.round(clock.getTicksAtTime(time));
   };
 
   const dispose = () => {
@@ -451,7 +479,7 @@ export const createTransport = (): ObeoTransport => {
     return filters.some((filter) => !filter(event));
   };
 
-  return {
+  const transport: ObeoTransport = {
     seconds: getter(() => clock.getSeconds()),
     loopStart,
     loopEnd,
@@ -465,6 +493,14 @@ export const createTransport = (): ObeoTransport => {
     addFilter,
     schedule,
     embedIn,
+    getTicksAtTime,
+    setLoopPoints(s, e) {
+      loopStart.value = s;
+      loopEnd.value = e;
+      return transport;
+    },
     dispose,
   };
+
+  return transport;
 };

@@ -1,6 +1,7 @@
 import { createClock } from '@/lib/audio/clock';
 import { expect, whenBetween } from '@/lib/testing';
-import { runOffline, atTime } from '@/lib/audio/offline';
+import { runOffline } from '@/lib/audio/offline';
+import { atTime } from '@/lib/audio/test-utils';
 
 describe('ObeoClock', () => {
   it('constructs correctly', () => {

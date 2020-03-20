@@ -28,7 +28,6 @@ export const extractBaseAudioContext = (
     createStereoPanner: context.createStereoPanner.bind(context),
     createWaveShaper: context.createWaveShaper.bind(context),
     decodeAudioData: context.decodeAudioData.bind(context),
-
     resume: context.resume.bind(context),
   };
 };
@@ -81,6 +80,7 @@ export interface ObeoBaseContext extends ObeoExtractedBaseContext {
   round(beats: Beat): Beat;
   beatsToTicks(beat: Beat): Ticks;
   beatsToSeconds(beat: Beat): Seconds;
+  secondsToBeats(seconds: Seconds): Beat;
   now(): ContextTime;
   ticksToSeconds(ticks: Ticks): Seconds;
   onDidTick(cb: () => void): Disposer;
@@ -117,6 +117,9 @@ export const enhanceBaseContext = (
     },
     ticksToSeconds(ticks: Ticks): Seconds {
       return (ticks / PPQ.value) / BPM.value * 60;
+    },
+    secondsToBeats(seconds: Seconds): Beat {
+      return seconds / 60 * BPM.value;
     },
     beatsToSeconds: (beat: Beat): Seconds => {
       return beat / BPM.value * 60;

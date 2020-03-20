@@ -55,7 +55,7 @@ export const createOscillator = (options?: Partial<OscillatorOptions>): ObeoOsci
     const internal = saved = context.createOscillator();
     internal.type = oscillator.type;
     internal.onended = oscillator.onended;
-    internal.connect(volume.node);
+    internal.connect(volume.input);
 
     // this isn't generalized atm
     for (const [listener, opts] of events.ended) {
