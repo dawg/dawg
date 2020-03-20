@@ -61,7 +61,10 @@ export interface ObeoTransport extends Disposer {
   readonly beat: Setter<Beat>;
   readonly bpm: ObeoTickSignal;
   readonly seconds: Getter<Seconds>;
+  readonly progress: Setter<Beat>;
   readonly state: Getter<PlaybackState>;
+  onDidBeforeStart(cb: () => void): Disposer;
+  onDidBeforeEnd(cb: () => void): Disposer;
   /**
    * Get the clock's ticks at the given time.
    * @param  time  When to get the tick value
@@ -217,7 +220,9 @@ export const createTransport = (options?: Partial<ObeoTransportOptions>): ObeoTr
   bpm.offset.value = options?.bpm ?? 120;
 
   // TODO this should be handled by the project, not ..
-  // disposers.push(context.BPM.onDidChange(setBpm));
+  disposers.push(context.BPM.onDidChange(() => {
+    bpm.offset.value = context.BPM.value;
+  }));
 
   disposers.push(clock.onDidStop((o) => {
     checkOnEndEventsAndResetActive(o);
@@ -479,11 +484,24 @@ export const createTransport = (options?: Partial<ObeoTransportOptions>): ObeoTr
     return filters.some((filter) => !filter(event));
   };
 
+  const onDidBeforeEnd: ObeoTransport['onDidBeforeEnd'] = (cb) => {
+    return events.on('beforeEnd', cb);
+  };
+
+  const onDidBeforeStart: ObeoTransport['onDidBeforeStart'] = (cb) => {
+    return events.on('beforeStart', cb);
+  };
+
+  const progress = getter(() => {
+    return (ticks.value - _loopStart) / (_loopEnd - _loopStart);
+  });
+
   const transport: ObeoTransport = {
     seconds: getter(() => clock.getSeconds()),
     loopStart,
     loopEnd,
     ticks,
+    progress,
     bpm,
     beat,
     state,
@@ -494,6 +512,8 @@ export const createTransport = (options?: Partial<ObeoTransportOptions>): ObeoTr
     schedule,
     embedIn,
     getTicksAtTime,
+    onDidBeforeEnd,
+    onDidBeforeStart,
     setLoopPoints(s, e) {
       loopStart.value = s;
       loopEnd.value = e;

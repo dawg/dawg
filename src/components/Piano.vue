@@ -25,6 +25,7 @@ import Key from '@/components/Key.vue';
 import { Instrument } from '@/models';
 import { createComponent } from '@vue/composition-api';
 import { Disposer } from '@/lib/std';
+import * as Audio from '@/lib/audio';
 
 export default createComponent({
   name: 'Piano',
@@ -35,14 +36,14 @@ export default createComponent({
   },
   setup(props) {
 
-    const disposers: { [k: string]: Disposer } = {};
+    const disposers: { [k: string]: Audio.ObeoReleaser } = {};
     return {
       allKeys,
-      start(value: string) {
+      start(value: Audio.Note) {
         disposers[value] = props.synth.triggerAttack(value);
       },
-      stop(value: string) {
-        disposers[value].dispose();
+      stop(value: Audio.Note) {
+        disposers[value].triggerRelease();
         delete disposers[value];
       },
     };

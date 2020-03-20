@@ -2,10 +2,11 @@ import { createGain } from '@/lib/audio/gain';
 import { dbToGain, gainToDb } from '@/lib/audio/conversions';
 import { ObeoParam } from '@/lib/audio/param';
 import { ObeoNode } from '@/lib/audio/node';
+import { Setter } from '@/lib/reactor';
 
 export interface ObeoVolumeNode extends ObeoNode<GainNode> {
   readonly volume: ObeoParam;
-  mute: (value: boolean) => void;
+  readonly muted: Setter<boolean>;
 }
 
 export const createVolume = (): ObeoVolumeNode => {

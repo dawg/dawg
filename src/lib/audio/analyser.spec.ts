@@ -5,9 +5,9 @@ import { createConstantSource } from '@/lib/audio/constant-source';
 describe('Analyser', () => {
   it('can correctly set the size', () => {
     const anl = createAnalyser({ type: 'fft', size: 512 });
-    expect(anl.fftSize).to.equal(1024);
-    anl.fftSize = 2048;
-    expect(anl.fftSize).to.equal(2048);
+    expect(anl.fftSize.value).to.equal(1024);
+    anl.fftSize.value = 2048;
+    expect(anl.fftSize.value).to.equal(2048);
     anl.dispose();
   });
 

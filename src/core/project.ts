@@ -28,6 +28,8 @@ import {
   Automatable,
   ClipContext,
   PlaylistElements,
+  GraphNode,
+  destination,
 } from '@/models';
 import * as Audio from '@/lib/audio';
 import { makeLookup, reverse, range } from '@/lib/std';
@@ -36,7 +38,6 @@ import { loadBufferSync } from '@/lib/wav';
 import { notify } from '@/core/notify';
 import { getLogger } from '@/lib/log';
 import tmp from 'tmp';
-import { GraphNode, masterNode } from '@/lib/audio/node';
 import * as framework from '@/lib/framework';
 import { remote } from 'electron';
 import { emitter, addEventListener } from '@/lib/events';
@@ -114,7 +115,7 @@ const load = (iProject: IProject): InitializationSuccess | InitializationError =
   const instruments = oly.olyArr(iProject.instruments.map((iInstrument) => {
     switch (iInstrument.instrument) {
       case 'soundfont':
-        return new Soundfont(new Audio.Soundfont(iInstrument.soundfont), iInstrument);
+        return new Soundfont(Audio.createSoundfont(iInstrument.soundfont), iInstrument);
       case 'synth':
         return new Synth(iInstrument);
     }
@@ -167,7 +168,7 @@ const load = (iProject: IProject): InitializationSuccess | InitializationError =
   }
 
   const automationClips = oly.olyArr(iProject.automationClips.map((iAutomationClip) => {
-    let signal: Audio.Signal;
+    let signal: Audio.ObeoParam;
     if (iAutomationClip.context === 'channel') {
       // FIXME remove this
       signal = (channelLookup[iAutomationClip.contextId] as any)[iAutomationClip.attr];
@@ -349,19 +350,19 @@ export const defineAPI = (i: LoadedProject) => {
   // FIXME move to instrument?? This is kinda tough though as the instruments would need references
   // to the channels.
   const setChannel = (instrument: Soundfont | Synth, channel: number | undefined) => {
-    let destination: GraphNode;
+    let target: GraphNode;
     const destinationName = channel !== undefined ? `Channel ${channel}` : 'Master';
     if (channel === undefined) {
-      destination = masterNode;
+      target = destination;
     } else {
       const c = channels[channel];
-      destination = c.effects[0]?.effect ?? c.input;
+      target = c.effects[0]?.effect ?? c.input;
     }
 
     return {
       execute: () => {
         logger.debug(`Connecting "${instrument.name.value}" to ${destinationName}`);
-        const dispose = instrument.output.connect(destination);
+        const dispose = instrument.output.connect(target);
         return {
           undo: () => {
             logger.debug(`Undoing connecting of "${instrument.name.value}" to ${destinationName}`);
@@ -442,7 +443,7 @@ export const defineAPI = (i: LoadedProject) => {
     payload: { automatable: T, key: keyof T & string, end: number, start: number },
   ) {
     const { start, end, key, automatable } = payload;
-    const signal = automatable[key] as any as Audio.Signal;
+    const signal = automatable[key] as any as Audio.ObeoParam;
 
     const available: boolean[] = Array(tracks.length).fill(true);
     master.elements.forEach((element) => {
@@ -552,22 +553,29 @@ export const defineAPI = (i: LoadedProject) => {
     return framework.manager.getOpenedFile();
   }
 
-  Audio.Context.BPM = i.bpm;
+  const setBpmOnTransports = (newValue: Audio.BPM) => {
+    master.transport.bpm.offset.value = newValue;
+    patterns.forEach((pattern) => {
+      pattern.transport.bpm.offset.value = newValue;
+    });
+  };
+
+  setBpmOnTransports(i.bpm);
   const bpm = oly.olyRef(i.bpm, 'BPM');
   bpm.onDidChange(({ newValue, oldValue, subscriptions }) => {
     subscriptions.push({
       execute: () => {
-        Audio.Context.BPM = newValue;
+        setBpmOnTransports(newValue);
         return {
           undo: () => {
-            Audio.Context.BPM = oldValue;
+            setBpmOnTransports(oldValue);
           },
         };
       },
     });
   });
 
-  logger.info('Master node -> ', masterNode);
+  logger.info('Destination node -> ', destination);
 
   return {
     id: i.id,

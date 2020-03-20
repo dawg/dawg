@@ -117,7 +117,7 @@ export const controls = framework.manager.activate({
         return;
       }
 
-      if (transport.value.state === 'started') {
+      if (transport.value.state.value === 'started') {
         if (action === 'pause') {
           pause();
         } else {
@@ -151,7 +151,7 @@ export const controls = framework.manager.activate({
         return 0;
       }
 
-      return transport.value.seconds;
+      return transport.value.seconds.value;
     }
 
     function startTransport() {
@@ -164,7 +164,7 @@ export const controls = framework.manager.activate({
     }
 
     function stopIfStarted() {
-      if (transport.value && transport.value.state === 'started') {
+      if (transport.value && transport.value.state.value === 'started') {
         stopTransport();
       }
     }

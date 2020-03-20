@@ -20,9 +20,9 @@ export default createComponent({
   setup(props, context) {
     const width = 100;
     let ctx: CanvasRenderingContext2D | null = null;
-    const analyserNode = Audio.Context.context.createAnalyser();
+    const analyserNode = Audio.createAnalyser();
     const analyserData = new Uint8Array(512);
-    const output = Audio.Master;
+    const output = Audio.destination;
 
     const tiny = computed(() => {
       return tinycolor(props.color);
@@ -43,7 +43,7 @@ export default createComponent({
     const canvas = ref<HTMLCanvasElement>(null);
     onMounted(() => {
       ctx = canvas.value!.getContext('2d');
-      analyserNode.fftSize = 1024;
+      analyserNode.fftSize.value = 1024;
       output.connect(analyserNode);
       requestAnimationFrame(doRender);
     });

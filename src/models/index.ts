@@ -1,5 +1,7 @@
 export * from '@/models/channel';
 export * from '@/models/filters/bounds';
+export * from '@/models/filters/defaults';
+export * from '@/models/filters/effect';
 export * from '@/models/filters/effects';
 export * from '@/models/track';
 export * from '@/models/playlist';
@@ -9,7 +11,6 @@ export * from '@/models/automation';
 export * from '@/models/score';
 export * from '@/models/instrument';
 export * from '@/models/pattern';
-export * from '@/models/filters/effect';
 export * from '@/models/soundfont';
 export * from '@/models/synth';
 export * from '@/models/node';

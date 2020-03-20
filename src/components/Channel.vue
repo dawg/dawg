@@ -69,11 +69,9 @@
 
 <script lang="ts">
 import { range, scale, clamp } from '@/lib/std';
-import { AnyEffect } from '@/models/filters/effect';
-import { Channel as C } from '@/models/channel';
-import { EffectName } from '@/models';
 import * as framework from '@/lib/framework';
 import { ref, computed, watch, createComponent } from '@vue/composition-api';
+import { EffectDefaults, Channel as C, AnyEffect, EffectName } from '@/models';
 
 function sentenceCase(text: string) {
   // const result = text.replace( /([A-Z])/g, ' $1' );
@@ -109,8 +107,7 @@ export default createComponent({
     });
 
     const options = computed(() => {
-      // TODO
-      return Object.keys(EffectMap) as EffectName[];
+      return Object.keys(EffectDefaults) as EffectName[];
     });
 
     function showEffects(event: MouseEvent, i: number) {

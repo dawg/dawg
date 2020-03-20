@@ -54,7 +54,7 @@ export const extension = createExtension({
     const startRecording = async (trackId: number) => {
       controls.stopIfStarted();
       controls.context.value = 'playlist';
-      const time = project.master.transport.beat;
+      const time = project.master.transport.beat.value;
 
       if (microphoneIn === undefined) {
         notify.info('Please select a microphone from the settings.');
@@ -93,11 +93,11 @@ export const extension = createExtension({
         }
 
         audioBlobs.push(event.data);
-        ghost.buffer = await blobsToAudioBuffer(Audio.Context.context, audioBlobs);
+        ghost.buffer = await blobsToAudioBuffer(Audio.context.raw, audioBlobs);
       };
 
       mediaRecorder.onstop = async () => {
-        const buffer = await blobsToAudioBuffer(Audio.Context.context, audioBlobs);
+        const buffer = await blobsToAudioBuffer(Audio.context.raw, audioBlobs);
         const wavData: ArrayBuffer = audioBufferToWav(buffer, {
           float32: true,
         });

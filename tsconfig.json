@@ -33,11 +33,8 @@
     ]
   },
   "include": [
-    "src/lib/**/*.ts",
-    "src/grid.ts",
-    "src/grid.spec.ts",
-    "src/lib/framework/**/*.vue",
-    "src/types/**/*.ts"
+    "src/**/*.ts",
+    "src/**/*.vue",
   ],
   "exclude": [
     "node_modules"

@@ -1,4 +1,6 @@
 declare module 'fft-windowing' {
+  // This includes most but not all functions
+  // I currently only use one of them so idc
   function hann<T extends number[] | Float32Array>(values: T): T;
   function hamming<T extends number[] | Float32Array>(values: T): T;
   function cosine<T extends number[] | Float32Array>(values: T): T;

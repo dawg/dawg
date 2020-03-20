@@ -1,14 +1,18 @@
-import { runOffline } from '@/lib/audio/offline';
+import { runOffline, ObeoOfflineContext } from '@/lib/audio/offline';
 import { expect } from '@/lib/testing';
 import { createTransport, ObeoTransport, TransportEvent } from '@/lib/audio/transport';
 import { whenBetween, atTime } from '@/lib/audio/test-utils';
 import { createSignal } from '@/lib/audio/signal';
 import { Seconds } from '@/lib/audio/types';
-import { ObeoContext } from '@/lib/audio/online';
 
 // TODO add tests for your own functionality
 
-const schedule = (context: ObeoContext, transport: ObeoTransport, f: TransportEvent['onStart'], time: Seconds) => {
+const schedule = (
+  context: ObeoOfflineContext,
+  transport: ObeoTransport,
+  f: TransportEvent['onStart'],
+  time: Seconds,
+) => {
   return transport.schedule({
     onStart: f,
     time: context.secondsToBeats(time),

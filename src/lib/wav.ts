@@ -142,7 +142,7 @@ function writeString(view: DataView, offset: 0 | 8 | 12 | 36, str: string) {
   }
 }
 
-export function blobsToAudioBuffer(context: AudioContext, blobs: Blob[]): Promise<AudioBuffer> {
+export function blobsToAudioBuffer(context: BaseAudioContext, blobs: Blob[]): Promise<AudioBuffer> {
   const reader = new FileReader();
   return new Promise<AudioBuffer>((resolve) => {
     reader.onload = () => {

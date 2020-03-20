@@ -284,7 +284,7 @@ export const createAbstractParam = <T, V>(
 
   const extended: ObeoAbstractParam = defineProperties({
     // AudioParam
-    // TODO properties ??
+    // TODO property for automationRate??? Others are readonly
     automationRate: param.automationRate,
     defaultValue: param.defaultValue,
     maxValue: param.maxValue,

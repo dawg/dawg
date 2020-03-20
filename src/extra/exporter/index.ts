@@ -7,6 +7,7 @@ import { remote } from 'electron';
 import { blobsToAudioBuffer, audioBufferToWav } from '@/lib/wav';
 import fs from '@/lib/fs';
 import * as Audio from '@/lib/audio';
+import { Disposer } from '@/lib/std';
 
 export const extension = createExtension({
   id: 'dawg.spectrogram',
@@ -28,8 +29,8 @@ export const extension = createExtension({
       }),
     }));
 
-    const dest = Audio.Context.context.createMediaStreamDestination();
-    Audio.Master.connect(dest);
+    const dest = Audio.context.raw.createMediaStreamDestination();
+    Audio.destination.output.connect(dest);
 
     const a = document.createElement('a');
     document.body.appendChild(a);
@@ -47,12 +48,12 @@ export const extension = createExtension({
           const chunks: Blob[] = [];
           recorder.ondataavailable = (e) => {
             chunks.push(e.data);
-            progress.value = dawg.project.master.transport.getProgress() * 100;
+            progress.value = dawg.project.master.transport.progress.value * 100;
           };
 
           recorder.onstop = async () => {
             // const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
-            const buffer = await blobsToAudioBuffer(Audio.Context.context, chunks);
+            const buffer = await blobsToAudioBuffer(Audio.context.raw, chunks);
             const arrayBuffer = await audioBufferToWav(buffer);
             try {
               await fs.writeFile(filePath, Buffer.from(arrayBuffer));
@@ -62,38 +63,39 @@ export const extension = createExtension({
             }
           };
 
-          const beat = dawg.project.master.transport.beat;
-          const loopStart = dawg.project.master.transport.loopStart;
-          const loopEnd = dawg.project.master.transport.loopEnd;
+          const beat = dawg.project.master.transport.beat.value;
+          const loopStart = dawg.project.master.transport.loopStart.value;
+          const loopEnd = dawg.project.master.transport.loopEnd.value;
 
           let started = false;
-          const disposer = dawg.project.master.transport.addListeners({
-            beforeStart: () => {
-              if (!started) {
-                started = true;
-                // Beware, this may add some empty sound at the start of the recording as we start this a bit
-                // prematurely.
-                // Ideally, we start this RIGHT before the start of the playlist.
-                // This is not easy to do though.
-                recorder.start(100);
-              }
-            },
-            beforeEnd: () => {
-              // This is probably not where we want to stop the recording.
-              // FIXME We will have to figure this out.
-              dawg.project.master.transport.stop();
-              dawg.project.master.transport.beat = beat;
-              dawg.project.master.transport.loopStart = loopStart;
-              dawg.project.master.transport.loopEnd = loopEnd;
-              open.value = false;
-              Audio.masterNode.mute = false;
-              recorder.stop();
-              disposer.dispose();
-            },
-          });
+          let disposers: Disposer[] = [];
+          disposers.push(dawg.project.master.transport.onDidBeforeStart(() => {
+            if (!started) {
+              started = true;
+              // Beware, this may add some empty sound at the start of the recording as we start this a bit
+              // prematurely.
+              // Ideally, we start this RIGHT before the start of the playlist.
+              // This is not easy to do though.
+              recorder.start(100);
+            }
+          }));
+
+          disposers.push(dawg.project.master.transport.onDidBeforeEnd(() => {
+            // This is probably not where we want to stop the recording.
+            // FIXME We will have to figure this out.
+            dawg.project.master.transport.stop();
+            dawg.project.master.transport.beat.value = beat;
+            dawg.project.master.transport.loopStart.value = loopStart;
+            dawg.project.master.transport.loopEnd.value = loopEnd;
+            open.value = false;
+            Audio.destination.volume.muted.value = false;
+            recorder.stop();
+            disposers.forEach((disposer) => disposer.dispose());
+            disposers = [];
+          }));
 
           dawg.controls.stopIfStarted();
-          Audio.masterNode.mute = true;
+          Audio.destination.volume.muted.value = true;
           dawg.project.master.transport.start();
         };
 

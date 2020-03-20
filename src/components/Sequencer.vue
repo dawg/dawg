@@ -175,7 +175,7 @@ export default createComponent({
     const scrollY = ref<Element>(null);
 
     // Make sure we initialize the cursor position
-    props.transport.beat = props.cursorPosition;
+    props.transport.beat.value = props.cursorPosition;
 
     // Make sure we initialize the scroll positions
     watch(scrollXVue, () => {
@@ -249,13 +249,13 @@ export default createComponent({
     }
 
     function seek(beat: number) {
-      props.transport.beat = beat;
+      props.transport.beat.value = beat;
       update(props, context, 'cursorPosition', beat);
     }
 
     function doUpdate() {
-      if (props.transport.state === 'started') { requestAnimationFrame(doUpdate); }
-      update(props, context, 'cursorPosition', props.transport.beat);
+      if (props.transport.state.value === 'started') { requestAnimationFrame(doUpdate); }
+      update(props, context, 'cursorPosition', props.transport.beat.value);
     }
 
     function onScrollX() {
@@ -294,12 +294,12 @@ export default createComponent({
     }
 
     watch(loopEnd, () => {
-      props.transport.loopEnd = loopEnd.value;
+      props.transport.loopEnd.value = loopEnd.value;
       update(props, context, 'end', loopEnd.value);
     });
 
     watch(loopStart, () => {
-      props.transport.loopStart = loopStart.value;
+      props.transport.loopStart.value = loopStart.value;
       update(props, context, 'start', loopStart.value);
     });
 

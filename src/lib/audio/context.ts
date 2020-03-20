@@ -62,11 +62,12 @@ export interface ObeoExtractedBaseContext {
   resume(): Promise<void>;
 }
 
-export interface ObeoBaseContext extends ObeoExtractedBaseContext {
+export interface ObeoBaseContext<T extends BaseAudioContext = BaseAudioContext> extends ObeoExtractedBaseContext {
   readonly PPQ: Prim<number>;
   readonly lookAhead: Prim<number>;
   readonly BPM: Prim<number>;
   readonly sampleTime: number;
+  readonly raw: T;
 
   /**
    * The number of seconds of 1 processing block (128 samples)
@@ -90,10 +91,10 @@ export interface BaseAudioContextCommon {
   resume(): Promise<void>;
 }
 
-export const enhanceBaseContext = (
-  context: BaseAudioContext & BaseAudioContextCommon,
+export const enhanceBaseContext = <T extends BaseAudioContext & BaseAudioContextCommon>(
+  context: T,
   onDidTick: (cb: () => void) => Disposer,
-): ObeoBaseContext => {
+): ObeoBaseContext<T> => {
   const baseContext = extractBaseAudioContext(context);
 
   const PPQ = prim(192);
@@ -102,6 +103,7 @@ export const enhanceBaseContext = (
 
   return {
     ...baseContext,
+    raw: context,
 
     PPQ,
     lookAhead,

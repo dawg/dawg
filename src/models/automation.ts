@@ -163,13 +163,13 @@ export class AutomationClip implements Serializable<IAutomation>, BuildingBlock 
   }
 
   // TODO needed?
-  // get minValue() {
-  //   return this.signal.minValue;
-  // }
+  get minValue() {
+    return this.param.minValue;
+  }
 
-  // get maxValue() {
-  //   return this.signal.maxValue;
-  // }
+  get maxValue() {
+    return this.param.maxValue;
+  }
 
   public add(p: { time: number, value: number }) {
     this.points.push({

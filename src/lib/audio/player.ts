@@ -33,7 +33,7 @@ export const createPlayer = (buffer: AudioBuffer, options?: Partial<PlayerOption
 
   const volume = createVolume();
   volume.volume.value = options?.volume ?? 0;
-  volume.mute(options?.mute ?? false);
+  volume.muted.value = options?.mute ?? false;
 
 
   const create = (opts?: Partial<PreviewOptions>) => {

@@ -1,13 +1,15 @@
 import { PowerOfTwo, NormalRange } from '@/lib/audio/types';
 import { ObeoNode, extractAudioNode } from '@/lib/audio/node';
 import { getContext } from '@/lib/audio/global';
+import { Setter, setter } from '@/lib/reactor';
 
 export interface ObeoAnalyser extends ObeoNode<AnalyserNode> {
-  fftSize: number;
+  fftSize: Setter<number>;
   readonly frequencyBinCount: number;
-  maxDecibels: number;
-  minDecibels: number;
-  smoothingTimeConstant: number;
+  maxDecibels: Setter<number>;
+  minDecibels: Setter<number>;
+  smoothingTimeConstant: Setter<number>;
+  getByteFrequencyData(array: Uint8Array): void;
   getValue(): Float32Array;
   dispose(): void;
 }
@@ -49,11 +51,15 @@ export const createAnalyser = (opts?: Partial<AnalyserOptions>): ObeoAnalyser =>
     ...extractAudioNode(analyser),
 
     // TODO properties
-    fftSize: analyser.fftSize,
+    fftSize: setter(() => analyser.fftSize, (value) => analyser.fftSize = value),
     frequencyBinCount: analyser.frequencyBinCount, // this is read only so idc
-    maxDecibels: analyser.maxDecibels,
-    minDecibels: analyser.minDecibels,
-    smoothingTimeConstant: analyser.smoothingTimeConstant,
+    maxDecibels: setter(() => analyser.maxDecibels, (value) => analyser.maxDecibels = value),
+    minDecibels: setter(() => analyser.minDecibels, (value) => analyser.minDecibels = value),
+    smoothingTimeConstant: setter(
+      () => analyser.smoothingTimeConstant,
+      (value) => analyser.smoothingTimeConstant = value,
+    ),
+    getByteFrequencyData: analyser.getByteFrequencyData.bind(analyser),
     // until here
 
     getValue,

@@ -11,7 +11,6 @@ import { pianoRoll } from '@/core/piano-roll';
 import { ref, computed, watch } from '@vue/composition-api';
 import { project } from '@/core/project';
 import { controls } from '@/core/controls';
-import { Disposer } from '@/lib/std';
 
 export const extension: Extension = {
   id: 'dawg.midi',
@@ -23,7 +22,7 @@ export const extension: Extension = {
 
     const recording = ref(false);
 
-    const disposers: { [k: string]: Disposer } = {};
+    const disposers: { [k: string]: Audio.ObeoReleaser } = {};
     const onDidNoteOn = (e: InputEventNoteon) => {
       if (!transport) {
         return;
@@ -31,12 +30,11 @@ export const extension: Extension = {
 
       if (recording.value) {
         recordedNotes[e.note.name + e.note.octave] = e;
-        const transportLocation = transport.getProgress() * (transport.loopEnd - transport.loopStart);
-        notesStartTimes[e.note.name + e.note.octave] = transportLocation;
+        notesStartTimes[e.note.name + e.note.octave] = transport.beat.value;
       }
 
       if (selectedScore.value) {
-        const key = e.note.name + e.note.octave;
+        const key = e.note.name + e.note.octave as Audio.Note;
         disposers[key] = selectedScore.value.instrument.triggerAttack(key, e.rawVelocity);
       }
     };
@@ -48,7 +46,7 @@ export const extension: Extension = {
 
       if (selectedScore.value) {
         const key = e.note.name + e.note.octave;
-        disposers[key].dispose();
+        disposers[key].triggerRelease();
         delete disposers[key];
       }
 

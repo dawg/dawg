@@ -13,6 +13,7 @@ export * from '@/lib/audio/node';
 export * from '@/lib/audio/volume';
 export * from '@/lib/audio/synth';
 export * from '@/lib/audio/effect';
+export * from '@/lib/audio/analyser';
 export * from '@/lib/audio/wave-shaper';
 export * from '@/lib/audio/crossfade';
 export * from '@/lib/audio/distortion';

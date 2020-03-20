@@ -57,12 +57,12 @@ export default createComponent({
     const duration = computed(() => {
       return props.duration === undefined ?
         props.buffer.duration :
-        Math.min(props.buffer.duration, Audio.Context.beatsToSeconds(props.duration));
+        Math.min(props.buffer.duration, Audio.context.beatsToSeconds(props.duration));
     });
 
     // The offset in seconds
     const offset = computed(() => {
-      return props.offset === undefined ? 0 : Audio.Context.beatsToSeconds(props.offset);
+      return props.offset === undefined ? 0 : Audio.context.beatsToSeconds(props.offset);
     });
 
     const actualDuration = computed(() => {

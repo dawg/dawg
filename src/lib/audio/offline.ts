@@ -6,7 +6,7 @@ import { emitter } from '@/lib/events';
 import { Disposer } from '@/lib/std';
 import { getter } from '@/lib/reactor';
 
-export interface ObeoOfflineContext extends ObeoBaseContext {
+export interface ObeoOfflineContext extends ObeoBaseContext<OfflineAudioContext> {
   readonly length: number;
   render(asynchronous?: boolean): Promise<AudioBuffer>;
   resume(): Promise<void>;
