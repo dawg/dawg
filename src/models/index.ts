@@ -12,3 +12,4 @@ export * from '@/models/pattern';
 export * from '@/models/filters/effect';
 export * from '@/models/soundfont';
 export * from '@/models/synth';
+export * from '@/models/node';

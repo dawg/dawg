@@ -132,7 +132,7 @@ export default createComponent({
     sideWidth: { type: Number, default: 80 },
     sideBorder: { type: Boolean, default: false },
     play: { type: Boolean, default: false },
-    transport: { type: Object as () => Audio.createTransport, required: true },
+    transport: { type: Object as () => Audio.ObeoTransport, required: true },
     isRecording: { type: Boolean, default: false },
 
     /**

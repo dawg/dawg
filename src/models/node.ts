@@ -1,6 +1,5 @@
 import * as Audio from '@/lib/audio';
 import { Disposer } from '@/lib/std';
-import { destination } from '@/models/destination';
 
 interface Input {
   input?: number;
@@ -192,3 +191,5 @@ export class GraphNode<T extends Audio.ObeoNode | null = Audio.ObeoNode | null> 
     return this;
   }
 }
+
+export const destination = new GraphNode(Audio.destination);

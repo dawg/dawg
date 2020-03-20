@@ -1,3 +1,4 @@
+// TODO upgrade
 import Midi from '@tonejs/midi';
 
 export function midiToFreq(midi: number, tuning?: number) {

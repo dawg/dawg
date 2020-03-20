@@ -154,7 +154,7 @@ export default createComponent({
     // The loop end determined by the items.
     sequencerLoopEnd: { type: Number, required: true },
 
-    transport: { type: Object as () => Audio.createTransport, required: true },
+    transport: { type: Object as () => Audio.ObeoTransport, required: true },
     cursorPosition: { type: Number, required: true },
     displayLoopEnd: { type: Number, required: true },
 

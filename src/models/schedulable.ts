@@ -11,7 +11,6 @@ import { BuildingBlock } from '@/models/block';
 import { Disposer } from '@/lib/std';
 import * as oly from '@/lib/olyger';
 import { getLogger } from '@/lib/log';
-import { getContext } from '@/lib/audio/global';
 
 const logger = getLogger('schedulable');
 
@@ -310,7 +309,6 @@ export const { create: createAutomationPrototype, type: ScheduledAutomationType 
   add: (transport, params, clip: AutomationClip) => {
   // const sync = (transport: ObeoTransport, time: Ticks, duration: Ticks) => {
     let lastValue: number | undefined;
-    const context = getContext();
 
     const onEndAndStart = ({ seconds }: { seconds: number }) => {
       const val = clip.param.getValueAtTime(transport.seconds.value);
@@ -320,7 +318,7 @@ export const { create: createAutomationPrototype, type: ScheduledAutomationType 
     };
 
     const onTick = ({ seconds, ticks }: { seconds: number, ticks: number }) => {
-      const val = clip.param.getValueAtTime(context.ticksToSeconds(ticks));
+      const val = clip.param.getValueAtTime(Audio.context.ticksToSeconds(ticks));
       if (lastValue !== val) {
         lastValue = val;
         // approximate curves with linear ramps

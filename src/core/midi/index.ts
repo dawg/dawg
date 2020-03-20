@@ -19,7 +19,7 @@ export const extension: Extension = {
     const selectedScore = instruments.selectedScore;
     const recordedNotes: {[key: string]: InputEventNoteon} = {};
     const notesStartTimes: {[key: string]: number} = {};
-    let transport: Audio.createTransport | null = null;
+    let transport: Audio.ObeoTransport | null = null;
 
     const recording = ref(false);
 

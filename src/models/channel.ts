@@ -11,7 +11,7 @@ import { useSignal } from '@/utils';
 import { context } from '@/lib/audio/online';
 import { createGain } from '@/lib/audio/gain';
 import { createMeter } from '@/lib/audio/meter';
-import { destination } from '@/models/destination';
+import { destination } from '@/models/node';
 
 const logger = getLogger('channel', { level: 'debug' });
 

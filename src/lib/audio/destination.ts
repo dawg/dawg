@@ -10,6 +10,7 @@ export interface ObeoDestinationOptions {
   context: ObeoBaseContext;
 }
 
+// TODO move to node file and add better API
 export const createDestination = (options?: Partial<ObeoDestinationOptions>): ObeoDestination => {
   const context = options?.context ?? getContext();
   const internal = context.destination;
