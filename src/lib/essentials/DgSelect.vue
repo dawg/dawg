@@ -1,10 +1,10 @@
 <template>
-  <div class="inline-block relative w-full">
+  <div class="inline-block relative">
     <select
       class="
         block
-        appearance-none
         w-full
+        appearance-none
         bg-default-lighten-1
         text-default
         border

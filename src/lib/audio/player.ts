@@ -28,7 +28,7 @@ export interface ObeoPlayer extends ObeoVolumeNode {
 }
 
 // TODO are options even used? ie. are they every given?
-export const createPlayer = (buffer: AudioBuffer, options?: Partial<PlayerOptions>): ObeoPlayer => {
+export const createPlayer = (buffer: AudioBuffer | null, options?: Partial<PlayerOptions>): ObeoPlayer => {
   const context = getContext();
 
   const volume = createVolume();

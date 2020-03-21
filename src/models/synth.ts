@@ -72,7 +72,7 @@ export class Synth extends Instrument<
       name: this.name.value,
       id: this.id,
       channel: this.channel.value,
-      mute: this.input.mute,
+      mute: this.mute.value,
     };
   }
 }

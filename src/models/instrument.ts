@@ -49,6 +49,7 @@ export abstract class Instrument<
   public readonly input = new GraphNode(Audio.createGain(), 'Gain');
   public readonly pan: oly.OlyRef<number>;
   public readonly volume: oly.OlyRef<number>;
+  public readonly mute: oly.OlyRef<boolean>;
 
   protected source: GraphNode<S>;
 
@@ -63,7 +64,8 @@ export abstract class Instrument<
     this.name = oly.olyRef(i.name, 'Instrument Name');
     this.id = i.id ?? uuid.v4();
     this.channel = oly.olyRef(i.channel, 'Instrument Channel');
-    this.input.mute = !!i.mute;
+    // TODO hook this up
+    this.mute = oly.olyRef(!!i.mute, 'Instrument Mute');
 
     const {
       ref: pan,

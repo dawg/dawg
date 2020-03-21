@@ -23,8 +23,8 @@ export const createGain = (options?: Partial<GainInterface>): ObeoGainNode => {
   return {
     ...extractAudioNode(gain),
     gain: createParam(gain.gain, {
-      ...options,
       name: 'Gain',
+      ...options,
     }),
     muted: setter(
       () => unmutedValue !== undefined,

@@ -1,142 +1,125 @@
 import * as Audio from '@/lib/audio';
 import { Disposer } from '@/lib/std';
 
-interface Input {
-  input?: number;
-  output?: number;
-  node: GraphNode;
+interface Connection {
+  inputNumber?: number;
+  outputNumber?: number;
+  input: GraphNode;
+  output: GraphNode;
 }
 
-interface Output {
-  input?: number;
-  output?: number;
-  node: GraphNode;
-}
-
-const connect = (a: GraphNode, b: GraphNode, output?: number, input?: number) => {
-  if (a.node && b.node) {
-    a.node.connect(b.node, output, input);
-    return true;
-  }
-  return false;
-};
-
-const disconnect = (a: GraphNode, b: GraphNode, output?: number, input?: number) => {
-  if (a.node && b.node) {
-    if (input !== undefined && output !== undefined) {
-      a.node.disconnect(b.node, output, input);
-    } else if (output !== undefined) {
-      a.node.disconnect(b.node, output);
-    } else {
-      a.node.disconnect(b.node);
-    }
-    return true;
-  }
-  return false;
-};
-
-// TODO refactor ??
-export class GraphNode<T extends Audio.ObeoNode | null = Audio.ObeoNode | null> {
-  private static doConnect(
-    me: GraphNode, o: { oldDest?: Output, newDest?: Output },
-  ) {
-    if (o.oldDest) {
-      const i = o.oldDest.node.inputs.map((input) => input.node).indexOf(me);
-      o.oldDest.node.inputs.splice(i, 1);
-      if (disconnect(me, o.oldDest.node, o.oldDest.output, o.oldDest.input)) {
-        me.connected = false;
-      }
-    }
-
-    me.output = o.newDest;
-
-    if (o.newDest) {
-      o.newDest.node.inputs.push({
-        node: me,
-        input: o.newDest.input,
-        output: o.newDest.output,
-      });
-
-      if (connect(me, o.newDest.node, o.newDest.input, o.newDest.output)) {
-        me.connected = true;
-      }
-    }
+export class GraphNode<T extends Audio.ObeoNode = Audio.ObeoNode> {
+  private static disconnect(connection: Connection) {
+    const { output, input, inputNumber, outputNumber } = connection;
+    const i = output.inputs.findIndex((maybe) => maybe === connection);
+    output.inputs.splice(i, 1);
+    input.output = undefined;
+    input.node.disconnect(output.node, outputNumber, inputNumber);
   }
 
-  private inputs: Input[] = [];
-  private output: Output | undefined = undefined;
-  private isMuted = false;
-  private connected = false;
+  private static connect(connection: Connection) {
+    const { output, input, inputNumber, outputNumber } = connection;
+    output.inputs.push(connection);
+    input.output = connection;
+    input.node.connect(output.node, outputNumber, inputNumber);
+  }
 
+  private inputs: Connection[] = [];
+  private output: Connection | undefined = undefined;
   constructor(public node: T, private name?: string) {}
 
-  get mute() {
-    return this.isMuted;
-  }
+  public connect(node: GraphNode, output?: number, input?: number): Disposer {
+    const newDest: Connection = {
+      input: this,
+      output: node,
+      inputNumber: input,
+      outputNumber: output,
+    };
 
-  set mute(value: boolean) {
-    this.isMuted = value;
-
-    if (!this.output || !this.output.node.node || !this.node) {
-      return;
-    }
-
-    if (this.mute && this.connected) {
-      this.node.disconnect(this.output.node.node);
-      this.connected = false;
-    } else if (!this.mute && !this.connected) {
-      this.node.connect(this.output.node.node);
-      this.connected = true;
-    }
-  }
-
-  public connect(node?: GraphNode, input?: number, output?: number): Disposer {
-    const newDest = node ? { node, input, output } : undefined;
     const oldDest = this.output;
-    GraphNode.doConnect(this, { oldDest, newDest });
+    this.doConnect({ oldDest, newDest });
 
     return {
       dispose: () => {
-        GraphNode.doConnect(this, { oldDest: newDest, newDest: oldDest });
+        this.doConnect({ oldDest: newDest, newDest: oldDest });
       },
     };
   }
 
-  public redirect(node: GraphNode<any>) {
-    this.inputs.forEach((input) => {
-      input.node.connect(node);
+  public disconnect() {
+    const newDest = undefined;
+    const oldDest = this.output;
+    this.doConnect({ oldDest, newDest });
+    return {
+      dispose: () => {
+        this.doConnect({ oldDest: newDest, newDest: oldDest });
+      },
+    };
+  }
+
+  public redirect(node: GraphNode) {
+    this.inputs.slice().forEach(({ input, inputNumber, outputNumber }) => {
+      input.connect(node, outputNumber, inputNumber);
     });
   }
 
-  public replace(node: T) {
-    this.node = node;
+  public outputOf(node: GraphNode) {
+    return node.output?.output === this;
+  }
 
-    this.inputs.forEach((input) => {
-      input.node.connect(this);
+  public inputOf(node: GraphNode) {
+    return node.inputs.some((input) => input.input === this);
+  }
+
+  public replace(node: T) {
+    this.inputs.slice().forEach((input) => {
+      input.input.node.disconnect(this.node);
+      input.input.node.connect(node);
     });
 
-    this.connect(this.output?.node, this.output?.output, this.output?.input);
+    if (this.output) {
+      this.node.disconnect(this.output.output.node);
+      node.connect(this.output.output.node);
+    }
+
+    this.node = node;
   }
 
   public dispose() {
     const inputs = this.inputs.slice();
-    inputs.forEach((input) => {
-      input.node.connect(this.output?.node, this.output?.input, this.output?.input);
-    });
+    const outputConnection = this.output;
 
-    this.connect();
+    if (outputConnection) {
+      const { output, inputNumber, outputNumber } = outputConnection;
+      inputs.forEach(({ input }) => {
+        input.connect(output, outputNumber, inputNumber);
+      });
+    } else {
+      inputs.forEach(({ input }) => {
+        input.disconnect();
+      });
+    }
+
+
+    this.disconnect();
 
     return {
       dispose: () => {
-        this.connect(this.output?.node, this.output?.output, this.output?.input);
-        inputs.forEach((input) => input.node.connect(this));
+        if (outputConnection) {
+          const { output, inputNumber, outputNumber } = outputConnection;
+          this.connect(output, outputNumber, inputNumber);
+        }
+
+        inputs.forEach(({ input, outputNumber, inputNumber }) => {
+          input.connect(this, outputNumber, inputNumber);
+        });
       },
     };
   }
 
   public toString() {
     const getRoot = (node: GraphNode): GraphNode => {
-      return node.output ? getRoot(node.output.node) : node;
+      return node.output ? getRoot(node.output.output) : node;
     };
 
     interface Level {
@@ -155,7 +138,7 @@ export class GraphNode<T extends Audio.ObeoNode | null = Audio.ObeoNode | null> 
       const level: Level = {
         name,
         children: node.inputs.map((input) => {
-          return generateLevel(input.node);
+          return generateLevel(input.input);
         }),
       };
 
@@ -187,8 +170,21 @@ export class GraphNode<T extends Audio.ObeoNode | null = Audio.ObeoNode | null> 
   }
 
   public toMaster() {
+    // TODO remove or rename?
     this.connect(destination);
     return this;
+  }
+
+  private doConnect(o: { oldDest?: Connection, newDest?: Connection }) {
+    if (o.oldDest) {
+      GraphNode.disconnect(o.oldDest);
+    }
+
+    this.output = o.newDest;
+
+    if (o.newDest) {
+      GraphNode.connect(o.newDest);
+    }
   }
 }
 

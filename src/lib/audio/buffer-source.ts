@@ -24,12 +24,13 @@ export interface ObeoBufferSource extends ObeoNode<AudioBufferSourceNode> {
 }
 
 export const createBufferSource = (
-  buffer: AudioBuffer,
+  buffer: AudioBuffer | null,
   options?: Partial<ToneBufferSourceOptions>,
 ): ObeoBufferSource => {
   const context = getContext();
   const source = context.createBufferSource();
   source.buffer = buffer;
+  const bufferDuration = buffer?.duration ?? 0;
 
   let sourceStarted = false;
   let sourceStopped = false;
@@ -45,7 +46,7 @@ export const createBufferSource = (
     // make sure the offset is not less than 0
     const computedOffset = Math.max(offset ?? 0, 0);
 
-    if (computedOffset < buffer.duration) {
+    if (computedOffset < bufferDuration) {
       sourceStarted = true;
       source.start(computedTime, computedOffset);
     }

@@ -13,7 +13,8 @@
     >
       <dot-button
         class="m-3 flex-shrink-0"
-        v-model="active"
+        :value="!muted.value"
+        @input="muted.value = !muted.value"
       ></dot-button>
       <knob
         class="m-3 flex-shrink-0"
@@ -80,7 +81,6 @@ export default createComponent({
     channel: Number as () => number | undefined,
   },
   setup(props, context) {
-    const active = ref(!props.instrument.input.mute);
     const expand = ref(false);
     const strokeWidth = 2.5;
     const contenteditable = ref(false);
@@ -96,10 +96,6 @@ export default createComponent({
     function automatePan() {
       // context.root.$automate(props.instrument, 'pan');
     }
-
-    watch(active, () => {
-      props.instrument.input.mute = !active.value;
-    });
 
     function contextmenu(event: MouseEvent) {
       framework.context({
@@ -122,7 +118,7 @@ export default createComponent({
     }
 
     return {
-      active,
+      muted: props.instrument.mute,
       contextmenu,
       automatePan,
       automateVolume,

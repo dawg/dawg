@@ -11,6 +11,7 @@ import { useSignal } from '@/utils';
 import { createGain } from '@/lib/audio/gain';
 import { createMeter } from '@/lib/audio/meter';
 import { destination } from '@/models/node';
+import { range } from '@/lib/std';
 
 const logger = getLogger('channel');
 
@@ -94,8 +95,11 @@ export class Channel implements Serializable<IChannel> {
     // this.volumeSignal = volumeSignal;
 
     const connect = (isMuted: boolean) => {
-      const newDestination = isMuted ? undefined : destination;
-      this.output.connect(newDestination);
+      if (isMuted) {
+        this.output.connect(destination);
+      } else {
+        this.output.disconnect();
+      }
     };
 
     this.mute = oly.olyRef(i.mute, 'Channel Mute');
@@ -185,8 +189,8 @@ export class Channel implements Serializable<IChannel> {
       return;
     }
 
-    items.slice(0, items.length - 1).forEach((_, ind) => {
-      items[ind].effect.connect(items[ind + 1].effect);
+    range(items.length - 1).forEach((i) => {
+      items[i].effect.connect(items[i + 1].effect);
     });
 
     const nodeReplaced = this.effects[index + items.length]?.effect ?? this.input;

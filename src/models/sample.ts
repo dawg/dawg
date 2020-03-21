@@ -26,7 +26,7 @@ export class Sample implements BuildingBlock, Serializable<ISample> {
 
   public readonly id: string;
   public readonly path: string;
-  public readonly player: GraphNode<Audio.ObeoPlayer | null>;
+  public readonly player: GraphNode<Audio.ObeoPlayer>;
   public readonly name: oly.OlyRef<string>;
 
   constructor(public buffer: AudioBuffer | null, i: ISample) {
@@ -34,7 +34,7 @@ export class Sample implements BuildingBlock, Serializable<ISample> {
     this.path = i.path;
     this.name = oly.olyRef(i.name, 'Sample Name');
     this.player = new GraphNode(
-      buffer ? Audio.createPlayer(buffer) : null,
+      Audio.createPlayer(buffer),
       'Sample',
     ).toMaster();
   }
