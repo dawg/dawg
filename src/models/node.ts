@@ -169,8 +169,7 @@ export class GraphNode<T extends Audio.ObeoNode = Audio.ObeoNode> {
     return generateString(rootLevel);
   }
 
-  public toMaster() {
-    // TODO remove or rename?
+  public toDestination() {
     this.connect(destination);
     return this;
   }

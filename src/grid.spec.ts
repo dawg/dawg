@@ -9,7 +9,6 @@ import * as Audio from '@/lib/audio';
 
 type Element = ScheduledElement<Instrument, 'note', any>;
 
-// TODO
 type Grid = ReturnType<typeof createGrid>;
 
 const transport = Audio.createTransport();
@@ -93,7 +92,6 @@ const events = (grid: Grid) => {
   };
 };
 
-// TODO
 describe('grid', () => {
   it('creates correctly', () => {
     create(({ grid, sequence }) => {

@@ -36,7 +36,7 @@ export class Sample implements BuildingBlock, Serializable<ISample> {
     this.player = new GraphNode(
       Audio.createPlayer(buffer),
       'Sample',
-    ).toMaster();
+    ).toDestination();
   }
 
   get beats() {

@@ -1,5 +1,4 @@
-// TODO upgrade
-import Midi from '@tonejs/midi';
+import { Midi } from '@tonejs/midi';
 
 export function midiToFreq(midi: number, tuning?: number) {
   return Math.pow(2, (midi - 69) / 12) * (tuning ?? 440);

@@ -20,7 +20,7 @@
   },
   "main": "background.js",
   "dependencies": {
-    "@tonejs/midi": "^1.2.2",
+    "@tonejs/midi": "^2.0.17",
     "@types/tmp": "^0.1.0",
     "@types/webmidi": "^2.0.4",
     "@vue/composition-api": "^0.3.4",

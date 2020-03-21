@@ -126,8 +126,6 @@ export default createComponent({
 
     function checkEnterEsc(e: KeyboardEvent) {
       if (e.which === 27) { // ESC
-        // TODOLATER
-        // e.preventDefault();
         paletteEvents.emit('cancel');
         state.show = false;
       }
