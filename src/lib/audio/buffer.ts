@@ -1,7 +1,12 @@
 import { range } from '@/lib/std';
 import { ContextTime } from '@/lib/audio/types';
 
-export interface ObeoBuffer extends AudioBuffer {
+export interface ObeoBuffer {
+  readonly duration: number;
+  readonly length: number;
+  readonly numberOfChannels: number;
+  readonly sampleRate: number;
+  getChannelData(channel: number): Float32Array;
   toArray(): Float32Array[];
   forEachBetween(
     callback: (sample: number, time: number) => void,
@@ -30,7 +35,6 @@ export interface ObeoBuffer extends AudioBuffer {
   getTimeOfLastSound(threshold?: number): number;
 }
 
-// TODO change the file name?
 export const createAudioBuffer = (buffer: AudioBuffer): ObeoBuffer => {
   const getIndex = (time: ContextTime) => {
     return Math.ceil(time * buffer.sampleRate);
@@ -155,7 +159,6 @@ export const createAudioBuffer = (buffer: AudioBuffer): ObeoBuffer => {
     }
   };
 
-  // TODO is this what we want?? To use Object.assign ??
   const obeoBuffer: ObeoBuffer = Object.assign(buffer, {
     toArray,
     getValueAtTime,

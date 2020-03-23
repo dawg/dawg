@@ -5,7 +5,7 @@ import { expect } from '@/lib/testing';
 import { runOffline } from '@/lib/audio/offline';
 import { createSignal } from '@/lib/audio/signal';
 
-describe('AmplitudeEnvelope', () => {
+describe('ObeoAmplitudeEnvelope', () => {
 
   context('Comparisons', () => {
     // TODO come back to these later

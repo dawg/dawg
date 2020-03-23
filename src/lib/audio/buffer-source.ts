@@ -2,7 +2,7 @@ import { ContextTime, Seconds, Positive } from '@/lib/audio/types';
 import { getContext } from '@/lib/audio/global';
 import { ObeoNode, extractAudioNode } from '@/lib/audio/node';
 
-export interface ToneBufferSourceOptions {
+export interface ObeoBufferSourceOptions {
   playbackRate: Positive;
   onended: () => void;
 }
@@ -25,7 +25,7 @@ export interface ObeoBufferSource extends ObeoNode<AudioBufferSourceNode> {
 
 export const createBufferSource = (
   buffer: AudioBuffer | null,
-  options?: Partial<ToneBufferSourceOptions>,
+  options?: Partial<ObeoBufferSourceOptions>,
 ): ObeoBufferSource => {
   const context = getContext();
   const source = context.createBufferSource();
@@ -66,7 +66,6 @@ export const createBufferSource = (
   const stopSource = (time?: Seconds) => {
     if (!sourceStopped && sourceStarted) {
       sourceStopped = true;
-      // TODO refactor all + context.currentTime!!
       source.stop(time ?? context.now());
       onended();
     }

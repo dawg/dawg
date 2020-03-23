@@ -83,52 +83,6 @@ export function* chain<T>(...arrays: T[][]) {
   }
 }
 
-interface PropertyDescriptor<T> {
-  configurable?: boolean;
-  enumerable?: boolean;
-  writable?: boolean;
-  get(): T;
-  set?(v: T): void;
-}
-
-type ReadWriteKeys<V extends PropertyDescriptorMap> = {
-  [K in keyof V]: undefined extends V[K]['set'] ? never : K
-}[keyof V];
-
-type ReadonlyKeys<V extends PropertyDescriptorMap> = {
-  [K in keyof V]: undefined extends V[K]['set'] ? K : never
-}[keyof V];
-
-type Properties<V extends PropertyDescriptorMap, T extends keyof V> = { [K in T]: ReturnType<V[K]['get']> };
-
-interface PropertyDescriptorMap {
-  [s: string]: PropertyDescriptor<any>;
-}
-
-interface ReadonlyProperties {
-  [s: string]: () => any;
-}
-
-// TODO remove this??
-export const defineProperties = <T, V extends PropertyDescriptorMap>(
-  o: T,
-  properties: V,
-): T & Properties<V, ReadWriteKeys<V>> & Readonly<Properties<V, ReadonlyKeys<V>>> => {
-  return Object.defineProperties(o, properties);
-};
-
-export const defineReadonlyProperties = <T, V extends ReadonlyProperties>(
-  o: T,
-  properties: V,
-): T & Readonly<{ [K in keyof V]: ReturnType<V[K]> }> => {
-  return Object.defineProperties(
-    o,
-    Object.fromEntries(Object.keys(properties).map((key): [string, PropertyDescriptor<any>] => {
-      return [key, { get: properties[key] }];
-    })),
-  );
-};
-
 export interface XYPosition {
   x: number;
   y: number;

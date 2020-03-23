@@ -9,12 +9,12 @@ export interface ObeoWaveShaper extends ObeoNode<WaveShaperNode> {
   setMap(mapper: Mapper): void;
 }
 
-export interface WaveShaperOptions {
+export interface ObeoWaveShaperOptions {
   length: number;
   mapping: Mapper;
 }
 
-export const createWaveShaper = (options?: Partial<WaveShaperOptions>): ObeoWaveShaper => {
+export const createWaveShaper = (options?: Partial<ObeoWaveShaperOptions>): ObeoWaveShaper => {
   const length = options?.length ?? 1024;
   const context = getContext();
   const shaper = context.createWaveShaper();

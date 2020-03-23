@@ -3,7 +3,7 @@ import { createVolume, ObeoVolumeNode } from '@/lib/audio/volume';
 import { createBufferSource, ObeoBufferSource } from '@/lib/audio/buffer-source';
 import { getContext } from '@/lib/audio/global';
 
-export interface PlayerOptions {
+export interface ObeoPlayerOptions {
   volume: number;
   mute: boolean;
 }
@@ -28,7 +28,7 @@ export interface ObeoPlayer extends ObeoVolumeNode {
 }
 
 // TODO are options even used? ie. are they every given?
-export const createPlayer = (buffer: AudioBuffer | null, options?: Partial<PlayerOptions>): ObeoPlayer => {
+export const createPlayer = (buffer: AudioBuffer | null, options?: Partial<ObeoPlayerOptions>): ObeoPlayer => {
   const context = getContext();
 
   const volume = createVolume();

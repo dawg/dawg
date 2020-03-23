@@ -1,10 +1,10 @@
 import { ObeoNode, mimicAudioNode } from '@/lib/audio/node';
-import { ObeoSignalNode } from '@/lib/audio/signal';
+import { ObeoSignal } from '@/lib/audio/signal';
 import { createCrossfade } from '@/lib/audio/crossfade';
 import { createGain } from '@/lib/audio/gain';
 
 export interface ObeoEffect extends ObeoNode {
-  wet: ObeoSignalNode;
+  wet: ObeoSignal;
 }
 
 export const createEffect = (node: ObeoNode): ObeoEffect => {

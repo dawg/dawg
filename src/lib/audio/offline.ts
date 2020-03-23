@@ -1,9 +1,8 @@
 import { Seconds, ContextTime } from '@/lib/audio/types';
 import { enhanceBaseContext, ObeoBaseContext } from '@/lib/audio/context';
 import { getContext, setContext } from '@/lib/audio/global';
-import { createAudioBuffer, ObeoBuffer } from '@/lib/audio/audio-buffer';
+import { createAudioBuffer, ObeoBuffer } from '@/lib/audio/buffer';
 import { emitter } from '@/lib/events';
-import { Disposer } from '@/lib/std';
 import { getter } from '@/lib/reactor';
 
 export interface ObeoOfflineContext extends ObeoBaseContext<OfflineAudioContext> {

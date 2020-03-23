@@ -1,5 +1,5 @@
 import { ContextTime, Ticks, Seconds } from '@/lib/audio/types';
-import { createTickSource, ObeoTickSource, TickSourceOptions } from '@/lib/audio/tick-source';
+import { createTickSource, ObeoTickSource, ObeoTickSourceOptions } from '@/lib/audio/tick-source';
 import { emitter } from '@/lib/events';
 import { ObeoTickSignal } from '@/lib/audio/tick-signal';
 import { PlaybackState, createStateTimeline } from '@/lib/audio/state-timeline';
@@ -16,7 +16,6 @@ export interface ObeoClock extends Disposer {
   getState(): PlaybackState;
   getTicks(): Ticks;
   setTicks(ticks: Ticks): void;
-  // TODO should I be using ContextTime???
   start(when?: ContextTime): ObeoClock;
   stop(when?: ContextTime): ObeoClock;
   pause(when?: ContextTime): ObeoClock;
@@ -27,9 +26,9 @@ export interface ObeoClock extends Disposer {
   onDidPaused(cb: (o: TimeTicks) => void): Disposer;
 }
 
-export type ClockCallback = (seconds: ContextTime, ticks: Ticks) => void;
+export type ObeoClockCallback = (seconds: ContextTime, ticks: Ticks) => void;
 
-export type ObeoClockOptions = TickSourceOptions;
+export type ObeoClockOptions = ObeoTickSourceOptions;
 
 interface TimeTicks {
   seconds: ContextTime;
@@ -37,7 +36,7 @@ interface TimeTicks {
 }
 
 export const createClock = (
-  callback?: ClockCallback,
+  callback?: ObeoClockCallback,
   options?: Partial<ObeoClockOptions> | number,
 ): ObeoClock => {
   if (typeof options === 'number') {

@@ -94,7 +94,7 @@ export interface ObeoTransport extends Disposer {
 
 export interface ObeoTransportOptions {
   /**
-   * Default BPP value. Defaults to 120.
+   * Default BPM value. Defaults to 120.
    */
   bpm: BPM;
 }

@@ -1,11 +1,11 @@
 import { Cents, Hertz, ContextTime } from '@/lib/audio/types';
 import { createParam, ObeoParam } from '@/lib/audio/param';
 import { createVolume } from '@/lib/audio/volume';
-import { ObeoScheduledSourceNode, Stopper } from '@/lib/audio/scheduled-source-node';
-import { createSignal, ObeoSignalNode } from '@/lib/audio/signal';
+import { ObeoScheduledSourceNode, ObeoScheduledSourceStopper } from '@/lib/audio/scheduled-source-node';
+import { createSignal, ObeoSignal } from '@/lib/audio/signal';
 import { getContext } from '@/lib/audio/global';
 
-export interface OscillatorOptions {
+export interface ObeoOscillatorOptions {
   type: OscillatorType;
   frequency: Hertz;
   detune: Cents;
@@ -14,14 +14,14 @@ export interface OscillatorOptions {
 
 export interface ObeoOscillator extends ObeoScheduledSourceNode<AudioNode> {
   // OscillatorNode
-  readonly detune: ObeoSignalNode;
-  readonly frequency: ObeoSignalNode;
+  readonly detune: ObeoSignal;
+  readonly frequency: ObeoSignal;
   type: OscillatorType;
   volume: ObeoParam;
   setPeriodicWave(periodicWave: PeriodicWave): void;
 }
 
-export const createOscillator = (options?: Partial<OscillatorOptions>): ObeoOscillator => {
+export const createOscillator = (options?: Partial<ObeoOscillatorOptions>): ObeoOscillator => {
   const context = getContext();
   const volume = createVolume();
 
@@ -30,7 +30,7 @@ export const createOscillator = (options?: Partial<OscillatorOptions>): ObeoOsci
 
   let wave: PeriodicWave | undefined;
 
-  const start = (when?: ContextTime): Stopper => {
+  const start = (when?: ContextTime): ObeoScheduledSourceStopper => {
     const internal = context.createOscillator();
     internal.type = oscillator.type;
     internal.connect(volume.input);

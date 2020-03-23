@@ -1,9 +1,7 @@
 import { NormalRange } from '@/lib/audio/types';
 import { createAnalyser } from '@/lib/audio/analyser';
-import { gainToDb } from '@/lib/audio/conversions';
+import { gainToDb } from '@/lib/audio/util';
 import { ObeoNode } from '@/lib/audio/node';
-
-// TODO check all names conform to format
 
 export interface ObeoMeter extends ObeoNode<AnalyserNode> {
   /**

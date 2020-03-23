@@ -1,7 +1,7 @@
 import { createParam, ObeoParam } from '@/lib/audio/param';
 import { expect } from '@/lib/testing';
 import { runOffline } from '@/lib/audio/offline';
-import { ObeoBuffer } from '@/lib/audio/audio-buffer';
+import { ObeoBuffer } from '@/lib/audio/buffer';
 
 describe('ObeoParam', () => {
   it('can initialize', async () => {

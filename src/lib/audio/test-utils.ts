@@ -1,7 +1,7 @@
 import { getContext, setContext } from '@/lib/audio/global';
 import { ObeoOfflineContext, createOfflineContext, RunOfflineOptions } from '@/lib/audio/offline';
 import { Seconds } from '@/lib/audio/types';
-import { ObeoBuffer, createAudioBuffer } from '@/lib/audio/audio-buffer';
+import { ObeoBuffer, createAudioBuffer } from '@/lib/audio/buffer';
 import dsp from 'dsp.js';
 import windowing from 'fft-windowing';
 import { expect } from '@/lib/testing';

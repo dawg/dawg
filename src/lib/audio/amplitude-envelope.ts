@@ -1,9 +1,9 @@
-import { createEnvelope, ObeoEnvelope, EnvelopeOptions } from '@/lib/audio/envelope';
+import { createEnvelope, ObeoEnvelope, ObeoEnvelopeOptions } from '@/lib/audio/envelope';
 import { createGain } from '@/lib/audio/gain';
 
 export type ObeoAmplitudeEnvelope = ObeoEnvelope;
 
-export type ObeoAmplitudeEnvelopeOptions = EnvelopeOptions;
+export type ObeoAmplitudeEnvelopeOptions = ObeoEnvelopeOptions;
 
 export const createAmplitudeEnvelope = (options?: Partial<ObeoAmplitudeEnvelopeOptions>) => {
   const envelope = createEnvelope(options);

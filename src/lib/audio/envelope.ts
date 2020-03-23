@@ -1,6 +1,5 @@
 import { Seconds, NormalRange, ContextTime } from '@/lib/audio/types';
 import { createOfflineContext } from '@/lib/audio/offline';
-import { destination } from '@/lib/audio/destination';
 import { getLogger } from '@/lib/log';
 import { createSignal } from '@/lib/audio/signal';
 import { getContext, withContext } from '@/lib/audio/global';
@@ -54,7 +53,7 @@ export interface ObeoEnvelope extends ObeoNode {
   dispose(): void;
 }
 
-export interface EnvelopeOptions {
+export interface ObeoEnvelopeOptions {
   /**
    * When triggerAttack is called, the attack time is the amount of
    * time it takes for the envelope to reach it's maximum value.
@@ -169,7 +168,7 @@ const timeRange = (minValue: number, maxValue?: number) => (value: number) => {
  *   /                           \
  * ```
  */
-export const createEnvelope = (options?: Partial<EnvelopeOptions>): ObeoEnvelope => {
+export const createEnvelope = (options?: Partial<ObeoEnvelopeOptions>): ObeoEnvelope => {
   const attack = prim(options?.attack ?? 0.005, timeRange(0));
   const decay = prim(options?.decay ?? 0.1, timeRange(0));
   const sustain = prim(options?.sustain ?? 1, timeRange(0, 1));
@@ -279,7 +278,7 @@ export const createEnvelope = (options?: Partial<EnvelopeOptions>): ObeoEnvelope
       const sustainTime = envelopeDuration * 0.1;
       const totalDuration = envelopeDuration + sustainTime;
 
-      const cloneOptions: EnvelopeOptions = {
+      const cloneOptions: ObeoEnvelopeOptions = {
         attack: duration * attack.value / totalDuration,
         decay: duration * decay.value / totalDuration,
         release: duration * release.value / totalDuration,

@@ -2,7 +2,7 @@ import { createPolySynth, ObeoPolySynth } from '@/lib/audio/poly-synth';
 import { compareToFile, atTime, warns } from '@/lib/audio/test-utils';
 import { createSynth } from '@/lib/audio/synth';
 import { runOffline } from '@/lib/audio/offline';
-import { EnvelopeOptions } from '@/lib/audio/envelope';
+import { ObeoEnvelopeOptions } from '@/lib/audio/envelope';
 import { expect } from '@/lib/testing';
 import { Note, Seconds, ContextTime } from '@/lib/audio/types';
 
@@ -18,7 +18,7 @@ const triggerAttack = (poly: ObeoPolySynth, notes: Note[], duration: Seconds, ti
   return notes.map((note) => poly.triggerAttack(note, duration, time));
 };
 
-const createWithOptions = (options: Partial<EnvelopeOptions>) => (opts: { onended: () => void }) => {
+const createWithOptions = (options: Partial<ObeoEnvelopeOptions>) => (opts: { onended: () => void }) => {
   return createSynth({
     oscillator: { onended: opts.onended, type: 'triangle' },
     envelope: options,

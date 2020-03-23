@@ -1,7 +1,7 @@
 import { expect } from '@/lib/testing';
 import { runOffline } from '@/lib/audio/offline';
 import { createTickSignal } from '@/lib/audio/tick-signal';
-import { createDestination } from '@/lib/audio/destination';
+import { getDestination } from '@/lib/audio/destination';
 
 describe('ObeoTickSignal', () => {
   it('can initialize', async () => {
@@ -264,7 +264,7 @@ describe('ObeoTickSignal', () => {
   context('BPM / PPQ', () => {
     it('outputs a signal', async () => {
       const buffer = await runOffline((context) => {
-        const destination = createDestination({ context });
+        const destination = getDestination({ context });
         const tickSignal = createTickSignal({ value: 1 });
         tickSignal.connect(destination);
         tickSignal.offset.linearRampTo(3, 1, 0);

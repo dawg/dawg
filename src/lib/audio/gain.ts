@@ -4,17 +4,14 @@ import { getContext } from '@/lib/audio/global';
 import { Setter, setter } from '@/lib/reactor';
 
 
-export interface ObeoGainNode extends ObeoNode<GainNode> {
+export interface ObeoGain extends ObeoNode<GainNode> {
   readonly gain: ObeoParam;
   muted: Setter<boolean>;
 }
 
-// tslint:disable-next-line:no-empty-interface
-export interface GainInterface extends ObeoParamOptions {
-  //
-}
+export type ObeoGainOptions = ObeoParamOptions;
 
-export const createGain = (options?: Partial<GainInterface>): ObeoGainNode => {
+export const createGain = (options?: Partial<ObeoGainOptions>): ObeoGain => {
   const context = getContext();
   const gain = context.createGain();
 

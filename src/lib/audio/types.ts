@@ -1,15 +1,29 @@
-export type ContextTime = number;
-
+/**
+ * Seconds.
+ */
 export type Seconds = number;
 
+/**
+ * Seconds since the creation of the audio context.
+ */
+export type ContextTime = Seconds;
+
+/**
+ * A tick unit based off the quarter note that indicates how often we check for for events to trigger.
+ */
 export type Ticks = number;
 
+/**
+ * A quarter note.
+ */
 export type Beat = number;
 
-export type TransportTime = number | string;
-
-export type Time = TransportTime;
-
+/**
+ * From Wikipedia, the decibel (symbol: dB) is a relative unit of measurement corresponding to one
+ * tenth of bel. It is used to express the ratio of one value of a power or field quantity to
+ * another, on a logarithmic scale, the logarithmic quantity being called the power level or field
+ * level, respectively.
+ */
 export type Decibels = number;
 
 /**
@@ -20,25 +34,21 @@ export type AudioRange = number;
 
 /**
  * A number that is between [0, 1]
- * @category Unit
  */
 export type NormalRange = number;
 
 /**
  * A value which is a power of 2
- * @category Unit
  */
 export type PowerOfTwo = number;
 
 /**
  * A number representing the multiplication factor applied to a signal
- * @category Unit
  */
 export type GainFactor = number;
 
 /**
  * A number greater than or equal to 0.
- * @category Unit
  */
 export type Positive = number;
 
@@ -46,7 +56,6 @@ export type Positive = number;
  * A note in Scientific pitch notation.
  * The pitch class + octave number
  * e.g. "C4", "D#3", "G-1"
- * @category Unit
  */
 export type Note = 'Cbb-4' | 'Cb-4' | 'C-4' | 'C#-4' | 'Cx-4' | 'Dbb-4' | 'Db-4' | 'D-4' | 'D#-4' | 'Dx-4' | 'Ebb-4' | 'Eb-4' | 'E-4' | 'E#-4' | 'Ex-4' | 'Fbb-4' | 'Fb-4' | 'F-4' | 'F#-4' | 'Fx-4' | 'Gbb-4' | 'Gb-4' | 'G-4' | 'G#-4' | 'Gx-4' | 'Abb-4' | 'Ab-4' | 'A-4' | 'A#-4' | 'Ax-4' | 'Bbb-4' | 'Bb-4' | 'B-4' | 'B#-4' | 'Bx-4' |
 'Cbb-3' | 'Cb-3' | 'C-3' | 'C#-3' | 'Cx-3' | 'Dbb-3' | 'Db-3' | 'D-3' | 'D#-3' | 'Dx-3' | 'Ebb-3' | 'Eb-3' | 'E-3' | 'E#-3' | 'Ex-3' | 'Fbb-3' | 'Fb-3' | 'F-3' | 'F#-3' | 'Fx-3' | 'Gbb-3' | 'Gb-3' | 'G-3' | 'G#-3' | 'Gx-3' | 'Abb-3' | 'Ab-3' | 'A-3' | 'A#-3' | 'Ax-3' | 'Bbb-3' | 'Bb-3' | 'B-3' | 'B#-3' | 'Bx-3' |
@@ -67,13 +76,11 @@ export type Note = 'Cbb-4' | 'Cb-4' | 'C-4' | 'C#-4' | 'Cx-4' | 'Dbb-4' | 'Db-4'
 
 /**
  * Hertz are a frequency representation defined as one cycle per second.
- * @category Unit
  */
 export type Hertz = number;
 
 /**
  * A number representing a midi note. Integers between 0-127
- * @category Unit
  */
 export type MidiNote =
   0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 |
@@ -93,12 +100,10 @@ export type MidiNote =
 /**
  * A Cent is 1/100th of a semitone.
  * e.g. a value of 50 cents would be halfway between two intervals.
- * @category Unit
  */
 export type Cents = number;
 
 /**
  * The beats per minutes.
- * @category Unit
  */
 export type  BPM = number;

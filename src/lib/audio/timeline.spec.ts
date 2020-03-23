@@ -11,11 +11,6 @@ interface TimelineNameEvent {
   time: number;
 }
 
-interface TimelineValueEvent {
-  time: number;
-  value: any;
-}
-
 describe('ObeoTimeline', () => {
   it('search works correctly', async () => {
     const timeline = createTimeline();

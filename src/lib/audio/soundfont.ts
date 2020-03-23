@@ -1,6 +1,7 @@
-import { ContextTime, Seconds } from '@/lib/audio/types';
+import { Seconds } from '@/lib/audio/types';
 import { sendRequest, parseNote, base64Decode } from '@/lib/mutils';
 import decode from 'audio-decode';
+// TODO remove
 import ADSR from 'envelope-generator';
 import { getContext } from '@/lib/audio/global';
 import { ObeoInstrument } from '@/lib/audio/instrument';
@@ -200,7 +201,7 @@ export async function loadSoundfont(
 }
 
 // tslint:disable-next-line:no-empty-interface
-export interface SoundfontOptions {
+export interface ObeoSoundfontOptions {
   gain: number;
   attack: number;
   decay: number;
@@ -213,12 +214,12 @@ export interface ObeoSoundfont extends ObeoInstrument {
   attemptReloadIfNecessary(): void;
 }
 
-export const createSoundfont = (name: SoundfontName, options?: Partial<SoundfontOptions>): ObeoSoundfont => {
+export const createSoundfont = (name: SoundfontName, options?: Partial<ObeoSoundfontOptions>): ObeoSoundfont => {
   const context = getContext();
   // TODO options
   const out = createVolume();
   let buffers: { [k: string]: AudioBuffer } | null = null;
-  const defaults: SoundfontOptions = {
+  const defaults: ObeoSoundfontOptions = {
     attack: 0.01,
     decay: 0.1,
     sustain: 0.9,
@@ -249,7 +250,7 @@ export const createSoundfont = (name: SoundfontName, options?: Partial<Soundfont
     return start(note, time, { gain: velocity });
   };
 
-  const start = (note: string, when?: number, o: Partial<{ duration: number } & SoundfontOptions> = {}) => {
+  const start = (note: string, when?: number, o: Partial<{ duration: number } & ObeoSoundfontOptions> = {}) => {
     const midi = parseNote(note);
     if (midi === undefined || !buffers) {
       return;
@@ -269,7 +270,7 @@ export const createSoundfont = (name: SoundfontName, options?: Partial<Soundfont
     return node;
   };
 
-  const createNode = (buffer: AudioBuffer, o: Partial<SoundfontOptions>) => {
+  const createNode = (buffer: AudioBuffer, o: Partial<ObeoSoundfontOptions>) => {
     const node = context.createGain();
     node.gain.value = 0; // the envelope will control the gain
     node.connect(out.input);

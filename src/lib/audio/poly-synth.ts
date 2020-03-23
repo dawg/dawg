@@ -1,6 +1,5 @@
-import { createSynth, ObeoSynth, SynthParameters } from '@/lib/audio/synth';
-import { ObeoMonophonic } from '@/lib/audio/monophonic';
-import { ObeoInstrument, ObeoInstrumentParameters } from '@/lib/audio/instrument';
+import { ObeoSynth, SynthParameters } from '@/lib/audio/synth';
+import { ObeoInstrument } from '@/lib/audio/instrument';
 import { createTrigger } from '@/lib/audio/util';
 import { createVolume } from '@/lib/audio/volume';
 import { Getter, getter, setter } from '@/lib/reactor';
@@ -10,6 +9,7 @@ export interface ObeoPolySynthOptions {
   maxPolyphony: number;
 }
 
+// TODO remove and just use synth for now
 type VoiceCreator = (options: { onended: () => void }) => ObeoSynth;
 
 export interface ObeoPolySynth extends ObeoInstrument, SynthParameters {

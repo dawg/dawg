@@ -1,15 +1,27 @@
 import { Seconds, ContextTime } from '@/lib/audio/types';
 import { assert } from '@/lib/audio/util';
-import { defineProperties } from '@/lib/std';
 import { getLogger } from '@/lib/log';
 import { getContext } from '@/lib/audio/global';
 import { createTimeline, ObeoTimeline } from '@/lib/audio/timeline';
 
 const logger = getLogger('envelope', { level: 'info', style: false });
 
-export interface ObeoAbstractParam extends AudioParam {
-  name: 'param';
-  param: AudioParam;
+export interface ObeoAbstractParam {
+  readonly name: 'param';
+  readonly param: AudioParam;
+  readonly defaultValue: number;
+  readonly maxValue: number;
+  readonly minValue: number;
+  /**
+   * Set and get the value at `context.currentTime`.
+   */
+  value: number;
+  cancelAndHoldAtTime(cancelTime: number): ObeoAbstractParam;
+  cancelScheduledValues(cancelTime: number): ObeoAbstractParam;
+  exponentialRampToValueAtTime(value: number, endTime: number): ObeoAbstractParam;
+  linearRampToValueAtTime(value: number, endTime: number): ObeoAbstractParam;
+  setTargetAtTime(target: number, startTime: number, timeConstant: number): ObeoAbstractParam;
+  setValueAtTime(value: number, startTime: number): ObeoAbstractParam;
   exponentialRampTo(value: number, rampTime: Seconds, startTime?: ContextTime): void;
   linearRampTo(value: number, rampTime: Seconds, startTime?: ContextTime): void;
   targetRampTo(value: number, rampTime: Seconds, startTime?: ContextTime): void;
@@ -84,7 +96,6 @@ export const exponentialInterpolate = (t0: number, v0: number, t1: number, v1: n
   return v0 * Math.pow(v1 / v0, (t - t0) / (t1 - t0));
 };
 
-// TODO min/max values??
 export const createAbstractParam = <T, V>(
   param: AudioParam,
   extend: ObeoParamExtension<T, V>,
@@ -282,15 +293,10 @@ export const createAbstractParam = <T, V>(
     events.dispose();
   };
 
-  // TODO remove this??
-  const extended: ObeoAbstractParam = defineProperties({
-    // AudioParam
-    // TODO property for automationRate??? Others are readonly
-    automationRate: param.automationRate,
+  const withoutValue = {
     defaultValue: param.defaultValue,
     maxValue: param.maxValue,
     minValue: param.minValue,
-    // until here
     cancelAndHoldAtTime,
     cancelScheduledValues,
     exponentialRampToValueAtTime,
@@ -309,18 +315,19 @@ export const createAbstractParam = <T, V>(
     getValueAtTime,
     exponentialApproachValueAtTime,
     dispose,
-  }, {
-    value: {
-      get() {
-        logger.debug(`${opts.name ?? ''}:value:get`);
-        const now = context.now();
-        return api.getValueAtTime(now);
-      },
-      set(value: number) {
-        logger.debug(`${opts.name ?? ''}:value:set`, value);
-        cancelScheduledValues(context.now());
-        setValueAtTime(value, context.now());
-      },
+  };
+
+  // Note that Object.defineProperty is *not* type checked
+  const extended: ObeoAbstractParam = Object.defineProperty(withoutValue, 'value', {
+    get: () => {
+      logger.debug(`${opts.name ?? ''}:value:get`);
+      const now = context.now();
+      return api.getValueAtTime(now);
+    },
+    set: (value: number) => {
+      logger.debug(`${opts.name ?? ''}:value:set`, value);
+      cancelScheduledValues(context.now());
+      setValueAtTime(value, context.now());
     },
   });
 
@@ -346,6 +353,5 @@ export const createAbstractParam = <T, V>(
   // We also use `assign` so that the properties defined above are not removed
   const api = Object.assign(extended, extension);
 
-  // TODO names of all these things
   return api;
 };

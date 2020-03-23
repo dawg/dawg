@@ -1,5 +1,5 @@
 import { createGain } from '@/lib/audio/gain';
-import { dbToGain, gainToDb } from '@/lib/audio/conversions';
+import { dbToGain, gainToDb } from '@/lib/audio/util';
 import { ObeoParam } from '@/lib/audio/param';
 import { ObeoNode } from '@/lib/audio/node';
 import { Setter } from '@/lib/reactor';

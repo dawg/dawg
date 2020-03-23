@@ -122,9 +122,6 @@ import { remote } from 'electron';
 import * as oly from '@/lib/olyger';
 import path from 'path';
 import * as Audio from '@/lib/audio';
-import { Disposer } from '../std';
-import { Stopper } from '../audio/scheduled-source-node';
-import { getContext } from '../audio/global';
 
 declare var __static: string;
 

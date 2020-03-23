@@ -1,16 +1,16 @@
 import {
-  ObeoConstantSourceNode,
+  ObeoConstantSource,
   ObeoConstantSourceOptions,
   createConstantSource,
 } from '@/lib/audio/constant-source';
 import { ObeoNode } from '@/lib/audio/node';
 import { ObeoParam } from '@/lib/audio/param';
 
-export type ObeoSignalNode = ObeoConstantSourceNode;
+export type ObeoSignal = ObeoConstantSource;
 
 export type ObeoSignalOptions = ObeoConstantSourceOptions;
 
-export const createSignal = (options?: Partial<ObeoSignalOptions>): ObeoSignalNode => {
+export const createSignal = (options?: Partial<ObeoSignalOptions>): ObeoSignal => {
   const source = createConstantSource(options);
   source.start(0);
   return {

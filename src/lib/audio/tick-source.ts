@@ -37,9 +37,9 @@ export interface ObeoTickSource extends Disposer {
   getStateAtTime(time: ContextTime): PlaybackState;
 }
 
-export type TickSourceOptions = Omit<ObeoTickSignalOptions, 'value'> & { frequency: Hertz };
+export type ObeoTickSourceOptions = Omit<ObeoTickSignalOptions, 'value'> & { frequency: Hertz };
 
-export const createTickSource = (options?: Partial<TickSourceOptions>): ObeoTickSource => {
+export const createTickSource = (options?: Partial<ObeoTickSourceOptions>): ObeoTickSource => {
   const context = getContext();
 
   const frequency = createTickSignal({

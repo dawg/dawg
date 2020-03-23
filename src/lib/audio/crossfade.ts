@@ -1,28 +1,28 @@
-import { createSignal, ObeoSignalNode } from '@/lib/audio/signal';
+import { createSignal, ObeoSignal } from '@/lib/audio/signal';
 import { createWaveShaper } from '@/lib/audio/wave-shaper';
 import { createStereoPanner } from '@/lib/audio/stereo-panner';
-import { ObeoNode, extractAudioNode } from '@/lib/audio/node';
-import { createGain, ObeoGainNode } from '@/lib/audio/gain';
+import { ObeoNode } from '@/lib/audio/node';
+import { createGain, ObeoGain } from '@/lib/audio/gain';
 import { createChannelSplitter } from '@/lib/audio/channel-splitter';
+import { Disposer } from '@/lib/std';
 
-export interface ObeoCrossfade extends ObeoNode {
+export interface ObeoCrossfade extends ObeoNode, Disposer {
   /**
    * The input which is at full level when fade = 0
    */
-  readonly a: ObeoGainNode;
+  readonly a: ObeoGain;
 
   /**
    * The input which is at full level when fade = 1
    */
-  readonly b: ObeoGainNode;
+  readonly b: ObeoGain;
 
   /**
    * The fade signal.
    */
-  readonly fade: ObeoSignalNode;
+  readonly fade: ObeoSignal;
 }
 
-// TODO make sure everything is properly disposed of
 // TODO test
 
 export const createCrossfade = (): ObeoCrossfade => {
@@ -50,5 +50,14 @@ export const createCrossfade = (): ObeoCrossfade => {
     a,
     b,
     fade,
+    dispose() {
+      output.dispose();
+      splitter.dispose();
+      panner.dispose();
+      g2a.dispose();
+      fade.dispose();
+      a.dispose();
+      b.dispose();
+    },
   };
 };

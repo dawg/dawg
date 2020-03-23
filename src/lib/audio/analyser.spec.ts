@@ -2,7 +2,7 @@ import { createAnalyser } from '@/lib/audio/analyser';
 import { expect } from '@/lib/testing';
 import { createConstantSource } from '@/lib/audio/constant-source';
 
-describe('Analyser', () => {
+describe('ObeoAnalyser', () => {
   it('can correctly set the size', () => {
     const anl = createAnalyser({ type: 'fft', size: 512 });
     expect(anl.fftSize.value).to.equal(1024);

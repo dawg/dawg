@@ -14,20 +14,20 @@ export interface ObeoAnalyser extends ObeoNode<AnalyserNode> {
   dispose(): void;
 }
 
-export type AnalyserType = 'fft' | 'waveform';
+export type ObeoAnalyserType = 'fft' | 'waveform';
 
-export interface AnalyserOptions {
+export interface OeboAnalyserOptions {
   size: PowerOfTwo;
-  type: AnalyserType;
+  type: ObeoAnalyserType;
   smoothing: NormalRange;
 }
 
-export const createAnalyser = (opts?: Partial<AnalyserOptions>): ObeoAnalyser => {
+export const createAnalyser = (opts?: Partial<OeboAnalyserOptions>): ObeoAnalyser => {
   const context = getContext();
   const analyser = context.createAnalyser();
   const size = opts?.size ?? 1024;
   const smoothing = opts?.smoothing ?? 0.8;
-  const type: AnalyserType = opts?.type ?? 'fft';
+  const type: ObeoAnalyserType = opts?.type ?? 'fft';
   const buffer = new Float32Array(size);
 
   analyser.smoothingTimeConstant = smoothing;
@@ -50,7 +50,6 @@ export const createAnalyser = (opts?: Partial<AnalyserOptions>): ObeoAnalyser =>
   return {
     ...extractAudioNode(analyser),
 
-    // TODO properties
     fftSize: setter(() => analyser.fftSize, (value) => analyser.fftSize = value),
     frequencyBinCount: analyser.frequencyBinCount, // this is read only so idc
     maxDecibels: setter(() => analyser.maxDecibels, (value) => analyser.maxDecibels = value),

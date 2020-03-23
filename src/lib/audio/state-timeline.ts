@@ -7,7 +7,7 @@ export interface StateTimelineEvent extends TimelineEvent {
   state: PlaybackState;
 }
 
-export interface StateTimelineOption {
+export interface StateTimelineOptions {
   initial: PlaybackState;
 }
 
@@ -18,7 +18,7 @@ export interface ObeoStateTimeline extends ObeoTimeline<StateTimelineEvent> {
   setStateAtTime(state: PlaybackState, time: Seconds): void;
 }
 
-export const createStateTimeline = (options?: Partial<StateTimelineOption>): ObeoStateTimeline => {
+export const createStateTimeline = (options?: Partial<StateTimelineOptions>): ObeoStateTimeline => {
   const timeline = createTimeline<{ time: Seconds, state: PlaybackState }>();
   const initial: PlaybackState = options?.initial ?? 'stopped';
 

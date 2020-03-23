@@ -1,7 +1,7 @@
 import { Seconds, Cents, NormalRange, ContextTime, Note } from '@/lib/audio/types';
 import { createTrigger, ObeoTrigger } from '@/lib/audio/util';
 import { parseNote } from '@/lib/audio/util';
-import { ObeoSignalNode } from '@/lib/audio/signal';
+import { ObeoSignal } from '@/lib/audio/signal';
 import { getContext } from '@/lib/audio/global';
 
 export interface EnvelopeReleaser {
@@ -12,8 +12,8 @@ export interface EnvelopeReleaser {
 }
 
 export interface ObeoMonophonic extends ObeoTrigger {
-  frequency: ObeoSignalNode;
-  detune: ObeoSignalNode;
+  frequency: ObeoSignal;
+  detune: ObeoSignal;
   portamento: number;
 }
 
@@ -21,12 +21,12 @@ export interface MonophonicParams {
   /**
    * The instrument's frequency signal.
    */
-  frequency: ObeoSignalNode;
+  frequency: ObeoSignal;
 
   /**
    * The instrument's frequency signal.
    */
-  detune: ObeoSignalNode;
+  detune: ObeoSignal;
 
   /**
    * Internal method which starts the envelope attack.

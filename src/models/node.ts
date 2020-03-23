@@ -170,6 +170,7 @@ export class GraphNode<T extends Audio.ObeoNode = Audio.ObeoNode> {
   }
 
   public toDestination() {
+    // Doing this instead of `this.node.toDestination()` so that we track the graph
     this.connect(destination);
     return this;
   }
@@ -187,4 +188,4 @@ export class GraphNode<T extends Audio.ObeoNode = Audio.ObeoNode> {
   }
 }
 
-export const destination = new GraphNode(Audio.destination);
+export const destination = new GraphNode(Audio.getDestination());
