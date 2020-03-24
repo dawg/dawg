@@ -26,7 +26,7 @@ describe('ObeoTickSource', () => {
     it('can set ticks', () => {
       const source = createTickSource();
       expect(source.getTicksAtTime()).to.equal(0);
-      source.setTicksAtTime(10);
+      source.setTicksAtTime(10, 0);
       expect(source.getTicksAtTime()).to.equal(10);
       source.dispose();
     });

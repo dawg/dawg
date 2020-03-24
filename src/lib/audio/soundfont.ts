@@ -1,7 +1,7 @@
 import { Seconds, Note, Hertz } from '@/lib/audio/types';
-import { sendRequest, parseNote, base64Decode } from '@/lib/mutils';
+import { sendRequest, parseNote, base64Decode } from '@/lib/audio/util';
 import decode from 'audio-decode';
-// TODO remove
+// TODO remove once I have tests
 import ADSR from 'envelope-generator';
 import { getContext } from '@/lib/audio/global';
 import { ObeoInstrument } from '@/lib/audio/instrument';
@@ -214,6 +214,8 @@ export interface ObeoSoundfont extends ObeoInstrument {
   attemptReloadIfNecessary(): void;
 }
 
+// TODO test
+
 export const createSoundfont = (
   name: SoundfontName,
   options?: Partial<ObeoSoundfontOptions>,
@@ -258,7 +260,7 @@ export const createSoundfont = (
     when?: number,
     o: Partial<{ duration: number } & ObeoSoundfontOptions> = {},
   ) => {
-    const midi = parseNote(note);
+    const midi = typeof note === 'number' ? note : parseNote(note);
     if (midi === undefined || !buffers) {
       return;
     }

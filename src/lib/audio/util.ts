@@ -100,3 +100,82 @@ export const createTrigger = ({ triggerAttack }: InstrumentOptions) => {
     triggerAttack,
   };
 };
+
+import { Midi } from '@tonejs/midi';
+
+export function base64Decode(base64: string) {
+  const binaryString = window.atob(base64);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+
+  return bytes;
+}
+
+export interface INote {
+  start: number;
+  duration: number;
+  velocity: number;
+  name: string;
+}
+
+export type INotes = INote[];
+
+export const parseMidi = (buffer: ArrayBuffer, bpm: number): INotes => {
+  const json = new Midi(buffer);
+  const bps = bpm / 60;
+
+  const notes: INote[] = [];
+  json.tracks.forEach((track) => {
+    track.notes.forEach((note) => {
+      notes.push({
+        name: note.name,
+        start: note.time * bps,
+        duration: note.duration * bps,
+        velocity: note.velocity,
+      });
+    });
+  });
+
+  return notes;
+};
+
+
+interface RequestError {
+  type: 'error';
+  message: string;
+}
+
+interface RequestSuccess {
+  type: 'success';
+  body: string;
+}
+
+
+export async function sendRequest(url: string): Promise<RequestError | RequestSuccess> {
+  let response;
+  try {
+    response = await fetch(url);
+  } catch (e) {
+    return {
+      type: 'error',
+      message: e.message,
+    };
+  }
+
+  return {
+    type: 'success',
+    body: await response.text(),
+  };
+}
+
+/*
+* Get playback rate for a given pitch change (in cents)
+* Basic [math](http://www.birdsoft.demon.co.uk/music/samplert.htm):
+* f2 = f1 * 2^( C / 1200 )
+*/
+export function centsToRate(cents?: number) {
+  return cents ? Math.pow(2, cents / 1200) : 1;
+}

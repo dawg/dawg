@@ -19,7 +19,7 @@ describe('ObeoDistortion', () => {
     expect(bufferArray.length).to.eq(1);
     const channel = Array.from(bufferArray[0]);
     expect(channel.length).to.eq(442);
-    // TODO why doesn't this work??
+    // FIXME why doesn't this work??
     // expect(channel.some((value) => value !== 0)).to.eq(true);
   });
 

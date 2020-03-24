@@ -4,7 +4,6 @@ import * as t from '@/lib/io';
 import { remote } from 'electron';
 import { Extensions } from '@/extra/explorer/types';
 import { loadBuffer } from '@/lib/wav';
-import { parseMidi } from '@/lib/mutils';
 import fs from '@/lib/fs';
 import { Sample, createSamplePrototype } from '@/models';
 import { commands } from '@/core/commands';
@@ -12,6 +11,7 @@ import { createExtension } from '@/lib/framework/extensions';
 import { createComponent } from '@vue/composition-api';
 import { createFileExplorer, FileExplorerAPI } from '@/extra/explorer/common';
 import Vue from 'vue';
+import * as Audio from '@/lib/audio';
 
 const loadMidi = async (path: string) => {
   const buffer = await fs.readFile(path);
@@ -21,7 +21,7 @@ const loadMidi = async (path: string) => {
     view[i] = value;
   });
 
-  return parseMidi(ab, dawg.project.bpm.value);
+  return Audio.parseMidi(ab, dawg.project.bpm.value);
 };
 
 const extensions: Extensions = {

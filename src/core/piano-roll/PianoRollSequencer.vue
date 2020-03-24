@@ -29,7 +29,6 @@
 
 <script lang="ts">
 import { allKeys, keyLookup } from '@/utils';
-import { INotes } from '@/lib/mutils';
 import {
   ScheduledNote,
   Instrument,
@@ -41,6 +40,7 @@ import {
 } from '@/models';
 import { SchedulablePrototype } from '@/models';
 import { createComponent, computed, watch, ref, reactive } from '@vue/composition-api';
+import * as Audio from '@/lib/audio';
 
 export default createComponent({
   name: 'PianoRollSequencer',
@@ -60,7 +60,7 @@ export default createComponent({
       return key.includes('#') ? 'bg-default-darken-1' : 'bg-default';
     }
 
-    function addNotes(notes: INotes) {
+    function addNotes(notes: Audio.INotes) {
       notes.forEach((iNote) => {
         // Transform the interfaces into actual note classes
         const row = keyLookup[iNote.name].id;

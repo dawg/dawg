@@ -22,8 +22,21 @@ const schedule = (
   });
 };
 
+const s = (
+  context: ObeoOfflineContext,
+  transport: ObeoTransport,
+  options: Partial<TransportEvent>,
+) => {
+  return transport.schedule({
+    ...options,
+    time: context.secondsToBeats(options.time ?? 0),
+    offset: context.secondsToBeats(options.offset ?? 0),
+    duration: context.secondsToBeats(options.duration ?? 0),
+    row: 0,
+  });
+};
 
-// TODO more tests
+
 describe('ObeoTransport', () => {
   it('can get and set bpm', () => {
     return runOffline(() => {
@@ -368,5 +381,69 @@ describe('ObeoTransport', () => {
         expect(wasCalled).to.equal(true);
       });
     });
+
+    it('calls onMidStart if the transport is started during an event', () => {
+      let calledAt = -1;
+      return runOffline((offline) => {
+        const transport = createTransport();
+        s(offline, transport, {
+          onMidStart: ({ seconds }) => {
+            calledAt = seconds;
+          },
+          time: 0.15,
+          duration: 0.1,
+        });
+
+        transport.ticks.value = offline.secondsToTicks(0.2);
+        transport.start(0.1);
+      }, 0.3).then(() => {
+        expect(calledAt).to.closeTo(0.1, 0.000001);
+      });
+    });
+
+    it('triggers onMidStart if an event was added such that the current tick is within the event', () => {
+      let calledAt = -1;
+      let wasScheduled = false;
+      return runOffline((offline) => {
+        const transport = createTransport();
+        transport.start(0);
+        return (time) => {
+          if (time > 0.1 && !wasScheduled) {
+            wasScheduled = true;
+            s(offline, transport, {
+              onMidStart: ({ seconds }) => {
+                calledAt = seconds;
+              },
+              time: 0.05,
+              duration: 0.1,
+            });
+          }
+        };
+      }, 0.3).then(() => {
+        expect(wasScheduled).to.eq(true);
+        expect(calledAt).to.be.closeTo(0.1, 0.01);
+      });
+    });
+
+    it.only('triggers onMidStart when time is changed', () => {
+      let calledAt = -1;
+      return runOffline((offline) => {
+        const transport = createTransport();
+        const controller = s(offline, transport, {
+          onMidStart: ({ seconds }) => {
+            calledAt = seconds;
+          },
+          duration: 0.1,
+        });
+        transport.seconds.value = 0.14;
+        transport.start(0);
+        return atTime(0.01, (when) => {
+          controller.setStartTime(offline.secondsToBeats(0.1));
+        });
+      }, 0.3).then(() => {
+        expect(calledAt).to.be.closeTo(0.01, 0.01);
+      });
+    });
   });
+
 });

@@ -12,10 +12,6 @@ export interface ObeoClock extends Disposer {
   readonly state: Getter<PlaybackState>;
   readonly ticks: Setter<Ticks>;
   readonly source: ObeoTickSource;
-  getSeconds(): Seconds;
-  getState(): PlaybackState;
-  getTicks(): Ticks;
-  setTicks(ticks: Ticks): void;
   start(when?: ContextTime): ObeoClock;
   stop(when?: ContextTime): ObeoClock;
   pause(when?: ContextTime): ObeoClock;
@@ -50,23 +46,6 @@ export const createClock = (
   const _state = createStateTimeline({ initial: 'stopped' });
   let lastUpdate = 0;
   const events = emitter<{ started: [TimeTicks], stopped: [TimeTicks], paused: [TimeTicks] }>();
-
-  const getSeconds = () => {
-    return tickSource.getSecondsAtTime();
-  };
-
-  const getState = (): PlaybackState => {
-    return _state.getValueAtTime(context.now());
-  };
-
-  // TODO Not sure this is really necessary
-  const getTicks = () => {
-    return Math.ceil(tickSource.getTicksAtTime(context.now()));
-  };
-
-  const setTicks = (value: number) => {
-    tickSource.setTicksAtTime(value);
-  };
 
   const checkAlready = (when: ContextTime, newState: PlaybackState) => {
     if (when < lastUpdate) {
@@ -151,13 +130,13 @@ export const createClock = (
   };
 
   const state = getter(() => {
-    return tickSource.getStateAtTime(context.now());
+    return _state.getValueAtTime(context.now());
   });
 
   const ticks = setter(() => {
-    return getTicks();
+    return Math.ceil(tickSource.getTicksAtTime(context.now()));
   }, (value) => {
-    setTicks(value);
+    tickSource.ticks.value = value;
   });
 
   const disposer = context.onDidTick(loop);
@@ -165,10 +144,6 @@ export const createClock = (
   const clock: ObeoClock =  {
     frequency: tickSource.frequency,
     source: tickSource,
-    getSeconds,
-    getState,
-    getTicks,
-    setTicks,
     start,
     stop,
     pause,

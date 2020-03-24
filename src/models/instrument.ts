@@ -28,7 +28,6 @@ export abstract class Instrument<
   public readonly name: oly.OlyRef<string>;
   public readonly id: string;
 
-  // TODO what happens when set?
   /**
    * A type variable. For example, oscillator or soundfont.
    */
@@ -45,7 +44,6 @@ export abstract class Instrument<
    */
   public readonly channel: oly.OlyRef<number | undefined>;
 
-  // TODO Same thing with these
   public readonly output = new GraphNode(Audio.createStereoPanner(), 'Panner');
   public readonly input = new GraphNode(Audio.createVolume(), 'Gain');
   public readonly pan: oly.OlyRef<number>;
@@ -65,8 +63,15 @@ export abstract class Instrument<
     this.name = oly.olyRef(i.name, 'Instrument Name');
     this.id = i.id ?? uuid.v4();
     this.channel = oly.olyRef(i.channel, 'Instrument Channel');
-    // TODO hook this up
+
     this.mute = oly.olyRef(!!i.mute, 'Instrument Mute');
+    this.input.node.muted.value = this.mute.value; // initialize
+    this.mute.onDidChange(({ onExecute, newValue, oldValue }) => {
+      onExecute(() => {
+        this.input.node.muted.value = newValue;
+        return () => this.input.node.muted.value = oldValue;
+      });
+    });
 
     const {
       ref: pan,

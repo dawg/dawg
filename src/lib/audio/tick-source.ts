@@ -1,16 +1,16 @@
 import { ContextTime, Ticks, Seconds, Hertz } from '@/lib/audio/types';
-import { literal, Disposer } from '@/lib/std';
+import { Disposer } from '@/lib/std';
 import { createTickSignal, ObeoTickSignal, ObeoTickSignalOptions } from '@/lib/audio/tick-signal';
 import { createTimeline } from '@/lib/audio/timeline';
 import { createStateTimeline, PlaybackState } from '@/lib/audio/state-timeline';
 import { getContext } from '@/lib/audio/global';
-import { Getter, getter } from '@/lib/reactor';
+import { setter, Setter } from '@/lib/reactor';
 
 export interface ObeoTickSource extends Disposer {
   frequency: ObeoTickSignal;
-  ticks: Getter<Ticks>;
+  ticks: Setter<Ticks>;
   getSecondsAtTime(time?: ContextTime): Seconds;
-  setTicksAtTime(ticks: Ticks, time?: ContextTime): void;
+  setTicksAtTime(ticks: Ticks, time: ContextTime): void;
   getTicksAtTime(time?: ContextTime): Ticks;
   /**
    * Get the time of the given tick. The second argument
@@ -106,7 +106,7 @@ export const createTickSource = (options?: Partial<ObeoTickSourceOptions>): Obeo
     return getAtTime('seconds', time);
   };
 
-  const setTicksAtTime = (ticks: Ticks, time?: ContextTime) => {
+  const setTicksAtTime = (ticks: Ticks, time: ContextTime) => {
     time = time ?? context.now();
     tickOffset.cancel(time);
     tickOffset.add({
@@ -241,7 +241,11 @@ export const createTickSource = (options?: Partial<ObeoTickSourceOptions>): Obeo
     getTimeOfTick,
     getStateAtTime,
     dispose,
-    ticks: getter(() => getTicksAtTime(context.now())),
+    ticks: setter(() => {
+      return getTicksAtTime(context.now());
+    }, (value) => {
+      setTicksAtTime(value, context.now());
+    }),
   };
 
   return tickSource;

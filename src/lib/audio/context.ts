@@ -84,6 +84,7 @@ export interface ObeoBaseContext<T extends BaseAudioContext = BaseAudioContext> 
   secondsToBeats(seconds: Seconds): Beat;
   now(): ContextTime;
   ticksToSeconds(ticks: Ticks): Seconds;
+  secondsToTicks(ticks: Seconds): Ticks;
   onDidTick(cb: () => void): Disposer;
 }
 
@@ -101,6 +102,26 @@ export const enhanceBaseContext = <T extends BaseAudioContext & BaseAudioContext
   const BPM = prim(120);
   const lookAhead = prim(0.1);
 
+  const beatsToTicks = (beat: Beat): Ticks => {
+    return Math.round(beat * PPQ.value);
+  };
+
+  const ticksToSeconds = (ticks: Ticks): Seconds => {
+    return (ticks / PPQ.value) / BPM.value * 60;
+  };
+
+  const secondsToBeats = (seconds: Seconds): Beat => {
+    return seconds / 60 * BPM.value;
+  };
+
+  const secondsToTicks = (seconds: Seconds): Ticks => {
+    return beatsToTicks(secondsToBeats(seconds));
+  };
+
+  const beatsToSeconds = (beat: Beat): Seconds => {
+    return beat / BPM.value * 60;
+  };
+
   return {
     ...baseContext,
     raw: context,
@@ -114,18 +135,11 @@ export const enhanceBaseContext = <T extends BaseAudioContext & BaseAudioContext
     round: (beats: Beat) => {
       return Math.round(beats * PPQ.value) / PPQ.value;
     },
-    beatsToTicks: (beat: Beat): Ticks => {
-      return Math.round(beat * PPQ.value);
-    },
-    ticksToSeconds(ticks: Ticks): Seconds {
-      return (ticks / PPQ.value) / BPM.value * 60;
-    },
-    secondsToBeats(seconds: Seconds): Beat {
-      return seconds / 60 * BPM.value;
-    },
-    beatsToSeconds: (beat: Beat): Seconds => {
-      return beat / BPM.value * 60;
-    },
+    beatsToTicks,
+    ticksToSeconds,
+    secondsToBeats,
+    secondsToTicks,
+    beatsToSeconds,
     now: (): ContextTime => {
       return baseContext.currentTime.value + lookAhead.value;
     },

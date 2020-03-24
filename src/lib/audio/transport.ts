@@ -60,7 +60,7 @@ export interface ObeoTransport extends Disposer {
   readonly ticks: Setter<Ticks>;
   readonly beat: Setter<Beat>;
   readonly bpm: ObeoTickSignal;
-  readonly seconds: Getter<Seconds>;
+  readonly seconds: Setter<Seconds>;
   readonly progress: Setter<Beat>;
   readonly state: Getter<PlaybackState>;
   onDidBeforeStart(cb: () => void): Disposer;
@@ -92,18 +92,14 @@ export interface ObeoTransport extends Disposer {
   embedIn(parent: ObeoTransport, context: SchedulingContext): TransportEventController;
 }
 
-export interface ObeoTransportOptions {
-  /**
-   * Default BPM value. Defaults to 120.
-   */
-  bpm: BPM;
-}
+// tslint:disable-next-line:no-empty-interface
+export interface ObeoTransportOptions {}
 
 export const createTransport = (options?: Partial<ObeoTransportOptions>): ObeoTransport => {
   let startPosition: Ticks = 0;
   const timeline = createTimeline<TransportEvent>();
   let active: TransportEvent[] = [];
-  let isFirstTick = true;
+  let isFirstTick = false;
   const filters: Array<(event: TransportEvent) => boolean> = [];
   const events = emitter<{ beforeStart: [EventContext], beforeEnd: [EventContext] }>();
 
@@ -217,8 +213,9 @@ export const createTransport = (options?: Partial<ObeoTransportOptions>): ObeoTr
   const disposers: Disposer[] = [];
 
   const bpm = clock.frequency;
-  // TODO should we be able to set the BPM here?? probs not
-  bpm.offset.value = options?.bpm ?? context.BPM.value;
+  // FIXME eventually will we only need a single clock?? Probably
+  // For now, we can just do this.
+  bpm.offset.value = context.BPM.value;
 
   disposers.push(context.BPM.onDidChange(() => {
     bpm.offset.value = context.BPM.value;
@@ -250,9 +247,10 @@ export const createTransport = (options?: Partial<ObeoTransportOptions>): ObeoTr
       }
 
       // If the event hasn't started yet or if it has already ended, we don't care
-      const current = clock.getTicks();
+      const current = clock.ticks.value;
       const startTime = event.time + event.offset;
       const endTime = startTime + event.duration;
+      console.log(startTime, endTime, current);
       if (
         startTime > current ||
         endTime < current
@@ -276,16 +274,19 @@ export const createTransport = (options?: Partial<ObeoTransportOptions>): ObeoTr
         if (event.onStart) {
           event.onStart({
             seconds: context.now(),
-            ticks: clock.getTicks(),
+            ticks: clock.ticks.value,
           });
         }
       } else {
         checkMidStart(event, {
           seconds: context.now(),
-          ticks: clock.getTicks(),
+          ticks: clock.ticks.value,
         });
       }
     };
+
+    // Do initial check to see if the event is now active
+    checkNowActive();
 
     let added = true;
     return {
@@ -344,7 +345,7 @@ export const createTransport = (options?: Partial<ObeoTransportOptions>): ObeoTr
         if (i >= 0) {
           if (event.onEnd) {
             event.onEnd({
-              ticks: clock.getTicks(),
+              ticks: clock.ticks.value,
               seconds: context.now(),
             });
           }
@@ -435,9 +436,9 @@ export const createTransport = (options?: Partial<ObeoTransportOptions>): ObeoTr
   );
 
   const ticks = setter(
-    () => clock.getTicks(),
+    () => clock.ticks.value,
     (t: number) => {
-    if (clock.getTicks() !== t) {
+    if (clock.ticks.value !== t) {
       const now = context.now();
       // stop everything synced to the transport
       if (state.value === 'started') {
@@ -457,7 +458,7 @@ export const createTransport = (options?: Partial<ObeoTransportOptions>): ObeoTr
     ticks.value = value * context.PPQ.value;
   });
 
-  const state = getter(() => clock.getState());
+  const state = getter(() => clock.state.value);
 
   const checkMidStart = (event: TransportEvent, c: EventContext) => {
     if (event.onMidStart) {
@@ -497,7 +498,11 @@ export const createTransport = (options?: Partial<ObeoTransportOptions>): ObeoTr
   });
 
   const transport: ObeoTransport = {
-    seconds: getter(() => clock.getSeconds()),
+    seconds: setter(() => {
+      return context.ticksToSeconds(ticks.value);
+    }, (value) => {
+      ticks.value = context.secondsToTicks(value);
+    }),
     loopStart,
     loopEnd,
     ticks,

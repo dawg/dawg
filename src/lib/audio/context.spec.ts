@@ -39,4 +39,9 @@ describe('context', () => {
     const value = 2 / 200 + 0.000023243543643;
     expect(c.round(value)).to.eq(2 / 200);
   });
+
+  it('correctly converts secondsToTicks', () => {
+    const c = create();
+    expect(c.secondsToTicks(0.5)).to.eq(Math.round(c.PPQ.value / 1.2));
+  });
 });
