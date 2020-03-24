@@ -10,7 +10,9 @@ export interface ObeoStereoPannerOptions extends ObeoParamOptions {
   channelCount: number;
 }
 
-export const createStereoPanner = (options?: Partial<ObeoStereoPannerOptions>): ObeoStereoPanner => {
+export const createStereoPanner = (
+  options?: Partial<ObeoStereoPannerOptions>,
+): ObeoStereoPanner => {
   const context = getContext();
   const panner = context.createStereoPanner();
 

@@ -5,7 +5,9 @@ interface Constraints {
   max: number;
 }
 
-export type EffectConstrainsType = { [K in keyof EffectOptions]: { [E in keyof EffectOptions[K]]: Constraints } };
+export type EffectConstrainsType = {
+  [K in keyof EffectOptions]: { [E in keyof EffectOptions[K]]: Constraints }
+};
 
 export const EffectConstrains: EffectConstrainsType = {
   // 'Wah': {

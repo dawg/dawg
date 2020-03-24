@@ -17,6 +17,6 @@
     "object-literal-sort-keys": false,
     "no-consecutive-blank-lines": false,
     "max-classes-per-file": false,
-    "max-line-length": [true, 100]
+    "max-line-length": [true, 120]
   }
 }

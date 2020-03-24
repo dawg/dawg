@@ -114,7 +114,14 @@ import PanelHeaders from '@/lib/framework/PanelHeaders.vue';
 import ActivityBar from '@/lib/framework/ActivityBar.vue';
 import * as framework from '@/lib/framework';
 import { sortOrdered, Keys } from '@/lib/std';
-import { createComponent, computed, ref, onMounted, onUnmounted, watch } from '@vue/composition-api';
+import {
+  createComponent,
+  computed,
+  ref,
+  onMounted,
+  onUnmounted,
+  watch,
+} from '@vue/composition-api';
 import { getLogger } from '@/lib/log';
 import { ipcSender } from '@/lib/framework/ipc';
 import { useSubscriptions } from '@/lib/vutils';
@@ -157,7 +164,9 @@ export default createComponent({
     });
 
     const toolbarRight = computed(() => {
-      return framework.ui.toolbar.filter((item) => item.position === 'right').sort(sortOrdered).reverse();
+      return framework.ui.toolbar.filter((item) => {
+        return item.position === 'right';
+      }).sort(sortOrdered).reverse();
     });
 
     const lineStyle = computed(() => {
@@ -165,7 +174,9 @@ export default createComponent({
     });
 
     const statusBarRight = computed(() => {
-      return framework.ui.statusBar.filter((item) => item.position === 'right').sort(sortOrdered).reverse();
+      return framework.ui.statusBar.filter((item) => {
+        return item.position === 'right';
+      }).sort(sortOrdered).reverse();
     });
 
     const statusBarLeft = computed(() => {
@@ -254,7 +265,9 @@ export default createComponent({
 
     // window.onbeforeunload = () => '';
 
-    // public async addAutomationClip<T extends Automatable>(automatable: T, key: keyof T & string) {
+    // public async addAutomationClip<T extends Automatable>(
+    //   automatable: T, key: keyof T & string
+    // ) {
     // FIXME Fix automation clips
     // const added = await ddd.project.createAutomationClip({
     //   automatable,

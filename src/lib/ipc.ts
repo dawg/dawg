@@ -37,14 +37,20 @@ type MainFunction<
   V extends EventInformation,
 > = (event: IpcMainEvent<V>, ...args: T[K]) => void;
 
-interface IpcMainGeneric<T extends EventInformation, V extends EventInformation> extends ElectronIpcMain {
+interface IpcMainGeneric<
+  T extends EventInformation,
+  V extends EventInformation,
+> extends ElectronIpcMain {
   on<K extends keyof T & string>(channel: K, listener: MainFunction<T, K, V>): this;
   once<K extends keyof T & string>(channel: K, listener: MainFunction<T, K, V>): this;
   removeAllListeners<K extends keyof T & string>(channel: K): this;
   removeListener<K extends keyof T & string>(channel: K, listener: MainFunction<T, K, V>): this;
 }
 
-interface IpcRendererGeneric<T extends EventInformation, V extends EventInformation> extends ElectronIpcRenderer {
+interface IpcRendererGeneric<
+  T extends EventInformation,
+  V extends EventInformation,
+> extends ElectronIpcRenderer {
   on<K extends keyof T & string>(channel: K, listener: RendererFunction<T, K, V>): this;
   removeListener<K extends keyof T & string>(channel: K, listener: RendererFunction<T, K, V>): this;
   send<K extends keyof V & string>(channel: K, ...args: V[K]): void;

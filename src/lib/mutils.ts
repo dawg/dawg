@@ -1,4 +1,5 @@
 import { Midi } from '@tonejs/midi';
+import { Note } from '@/lib/audio';
 
 export function midiToFreq(midi: number, tuning?: number) {
   return Math.pow(2, (midi - 69) / 12) * (tuning ?? 440);
@@ -84,7 +85,8 @@ const SEMITONES = [0, 2, 4, 5, 7, 9, 11];
  * parse('fx')
  * // => { letter: 'F', acc: '##', pc: 'F##', step: 3, alt: 2, chroma: 7 })
  */
-export function parseNote(str: string | number, isTonic?: boolean, tuning?: number) {
+// TODO refactor this to use other function
+export function parseNote(str: Note | number, isTonic?: boolean, tuning?: number) {
   if (
     (typeof str === 'number' || typeof str === 'string') &&
     str >= 0 && str < 128

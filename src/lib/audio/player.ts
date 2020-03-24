@@ -1,5 +1,5 @@
 import { ContextTime, Seconds } from '@/lib/audio/types';
-import { createVolume, ObeoVolumeNode } from '@/lib/audio/volume';
+import { createVolume, ObeoVolume } from '@/lib/audio/volume';
 import { createBufferSource, ObeoBufferSource } from '@/lib/audio/buffer-source';
 import { getContext } from '@/lib/audio/global';
 
@@ -22,13 +22,16 @@ export interface ObeoPlayerStartContext {
   duration: Seconds;
 }
 
-export interface ObeoPlayer extends ObeoVolumeNode {
+export interface ObeoPlayer extends ObeoVolume {
   preview: (opts?: Partial<PreviewOptions>) => { stop: (when?: ContextTime) => void };
   createInstance(): ObeoPlayerInstance;
 }
 
 // TODO are options even used? ie. are they every given?
-export const createPlayer = (buffer: AudioBuffer | null, options?: Partial<ObeoPlayerOptions>): ObeoPlayer => {
+export const createPlayer = (
+  buffer: AudioBuffer | null,
+  options?: Partial<ObeoPlayerOptions>,
+): ObeoPlayer => {
   const context = getContext();
 
   const volume = createVolume();

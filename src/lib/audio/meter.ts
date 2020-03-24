@@ -25,8 +25,8 @@ export interface ObeoMeterOptions {
   smoothing: NormalRange;
   /**
    * If the output should be in decibels or normal range between 0-1. If `normalRange` is false,
-   * the output range will be the measured decibel value, otherwise the decibel value will be converted to
-   * the range of 0-1
+   * the output range will be the measured decibel value, otherwise the decibel value will be
+   * converted to the range of 0-1
    */
   normalRange: boolean;
 }
@@ -58,7 +58,6 @@ export const createMeter = (opts?: Partial<ObeoMeterOptions>): ObeoMeter => {
   };
 
   return {
-    // TODO what if there are properties??
     ...analyser,
     getValue,
     smoothing,

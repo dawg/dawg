@@ -77,7 +77,8 @@ export class Channel implements Serializable<IChannel> {
 
     // Note this is a bit hacky
     // Right now, each graph node can only have one output
-    // If we were to do this.output.connect(this.split) it would override the connection that happens below!
+    // If we were to do this.output.connect(this.split) it would override the connection that
+    // happens below!
     this.output.node.connect(this.split.node);
 
     const {

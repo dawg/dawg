@@ -1,4 +1,4 @@
-import { Seconds, Cents, NormalRange, ContextTime, Note } from '@/lib/audio/types';
+import { Seconds, Cents, NormalRange, ContextTime, Note, Hertz } from '@/lib/audio/types';
 import { createTrigger, ObeoTrigger } from '@/lib/audio/util';
 import { parseNote } from '@/lib/audio/util';
 import { ObeoSignal } from '@/lib/audio/signal';
@@ -60,8 +60,8 @@ export const createMonophonic = (
 ): ObeoMonophonic => {
   const context = getContext();
 
-  const setNote = (note: Note, time: ContextTime) => {
-    const hertz = parseNote(note);
+  const setNote = (note: Note | Hertz, time: ContextTime) => {
+    const hertz = typeof note === 'number' ? note : parseNote(note);
     if (monophonic.portamento > 0 && params.getLevelAtTime(time) > 0.05) {
       params.frequency.offset.exponentialRampTo(hertz, monophonic.portamento, time);
     } else {

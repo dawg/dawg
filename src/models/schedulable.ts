@@ -228,7 +228,11 @@ const createSchedulable = <
   };
 
   return {
-    create: (opts: Basics, element: T, options: t.TypeOf<Options>) => (transport: Audio.ObeoTransport) => ({
+    create: (
+      opts: Basics,
+      element: T,
+      options: t.TypeOf<Options>,
+    ) => (transport: Audio.ObeoTransport) => ({
       copy: () => create(opts, element, transport, options),
     }),
     type: createType(o.type, o.options),
@@ -282,7 +286,8 @@ export const { create: createSamplePrototype, type: ScheduledSampleType } = crea
   },
 });
 
-export type ScheduledSample = ReturnType<ReturnType<ReturnType<typeof createSamplePrototype>>['copy']>;
+export type ScheduledSample =
+  ReturnType<ReturnType<ReturnType<typeof createSamplePrototype>>['copy']>;
 
 export const { create: createPatternPrototype, type: ScheduledPatternType } = createSchedulable({
   component: 'pattern-element',
@@ -300,7 +305,10 @@ export const { create: createPatternPrototype, type: ScheduledPatternType } = cr
 
 export type ScheduledPattern = ReturnType<ReturnType<ReturnType<typeof createPatternPrototype>>['copy']>;
 
-export const { create: createAutomationPrototype, type: ScheduledAutomationType } = createSchedulable({
+export const {
+  create: createAutomationPrototype,
+  type: ScheduledAutomationType,
+} = createSchedulable({
   component: 'automation-clip-element',
   type: 'automation',
   offsettable: true,
@@ -341,7 +349,8 @@ export const { create: createAutomationPrototype, type: ScheduledAutomationType 
   },
 });
 
-export type ScheduledAutomation = ReturnType<ReturnType<ReturnType<typeof createAutomationPrototype>>['copy']>;
+export type ScheduledAutomation =
+  ReturnType<ReturnType<ReturnType<typeof createAutomationPrototype>>['copy']>;
 
 export const { create: createNotePrototype, type: ScheduledNoteType } = createSchedulable({
   component: 'note',
@@ -358,7 +367,8 @@ export const { create: createNotePrototype, type: ScheduledNoteType } = createSc
         instrument.triggerAttackRelease(value, duration, seconds, params.options.velocity);
       },
       time: params.time.value,
-      duration: 0, // We shouldn't have to set a duration. This is explained more in the Transport class file.
+      // We shouldn't have to set a duration. This is explained more in the Transport class file.
+      duration: 0,
       offset: 0,
       row: params.row.value,
     });

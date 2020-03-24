@@ -3,16 +3,28 @@ import Vue from 'vue';
 import VueCompositionApi from '@vue/composition-api';
 Vue.use(VueCompositionApi);
 
-import { calculateSnap, ScrollerOpts, calculateScroll, getIntersection, slice, Line } from '@/utils';
+import {
+  calculateSnap,
+  ScrollerOpts,
+  calculateScroll,
+  getIntersection,
+  slice,
+  Line,
+} from '@/utils';
 
-const calculate = (p: { snap?: number, current?: number, new?: number, elOffset?: number, scrollOffset?: number }) => {
+const calculate = (
+  p: { snap?: number, current?: number, new?: number, elOffset?: number, scrollOffset?: number },
+) => {
   return expect(calculateSnap({
     event: { clientX: p.new ?? 0 },
     minSnap: 0.25,
     snap: p.snap || 0.5,
     pxPerBeat: 10,
     pxFromLeft: p.current ?? 0,
-    reference: { scrollLeft: p.scrollOffset, getBoundingClientRect: () => ({ left: p.elOffset ?? 0 }) },
+    reference: {
+      scrollLeft: p.scrollOffset,
+      getBoundingClientRect: () => ({ left: p.elOffset ?? 0 }),
+    },
   }));
 };
 
@@ -69,21 +81,23 @@ describe('computeScroll', () => {
   });
 });
 
+const g = getIntersection;
+
 describe('getIntersection', () => {
   it('correctly gets easy intersection', () => {
-    expect(getIntersection({ x1: 0, y1: 0, x2: 1, y2: 1 }, { x1: 0, y1: 1, x2: 1, y2: 0 })).to.deep.eq({
+    expect(g({ x1: 0, y1: 0, x2: 1, y2: 1 }, { x1: 0, y1: 1, x2: 1, y2: 0 })).to.deep.eq({
       x: 0.5,
       y: 0.5,
     });
   });
 
   it('correctly gets intersection where one line is horizontal or vertical', () => {
-    expect(getIntersection({ x1: 1, y1: 0, x2: 1, y2: 1 }, { x1: 0, y1: 1, x2: 1, y2: 0 })).to.deep.eq({
+    expect(g({ x1: 1, y1: 0, x2: 1, y2: 1 }, { x1: 0, y1: 1, x2: 1, y2: 0 })).to.deep.eq({
       x: 1,
       y: 0,
     });
 
-    expect(getIntersection({ x1: 0, y1: 1, x2: 1, y2: 1 }, { x1: 0, y1: 1, x2: 1, y2: 0 })).to.deep.eq({
+    expect(g({ x1: 0, y1: 1, x2: 1, y2: 1 }, { x1: 0, y1: 1, x2: 1, y2: 0 })).to.deep.eq({
       x: -0,
       y: 1,
     });

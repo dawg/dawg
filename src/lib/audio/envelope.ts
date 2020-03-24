@@ -8,7 +8,7 @@ import { prim, Prim, Getter, getter } from '@/lib/reactor';
 
 const logger = getLogger('envelope');
 
-export interface ObeoEnvelope extends ObeoNode<AudioNode, undefined> {
+export interface Envelope {
   readonly value: Getter<number>;
   readonly sustain: Prim<number>;
   readonly release: Prim<number>;
@@ -52,6 +52,8 @@ export interface ObeoEnvelope extends ObeoNode<AudioNode, undefined> {
   asArray(length?: number): Promise<Float32Array>;
   dispose(): void;
 }
+
+export interface ObeoEnvelope extends Envelope, ObeoNode<AudioNode, undefined> {}
 
 export interface ObeoEnvelopeOptions {
   /**
@@ -249,7 +251,11 @@ export const createEnvelope = (options?: Partial<ObeoEnvelopeOptions>): ObeoEnve
     }
   };
 
-  const triggerAttackRelease = (duration: Seconds, time?: ContextTime, velocity: NormalRange = 1) => {
+  const triggerAttackRelease = (
+    duration: Seconds,
+    time?: ContextTime,
+    velocity: NormalRange = 1,
+  ) => {
     time = time ?? context.now();
     triggerAttack(time, velocity);
     triggerRelease(time + duration);

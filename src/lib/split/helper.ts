@@ -174,19 +174,24 @@ export class Section {
       };
     }
 
+    const f = (str: number | string, pad: number) => str.toString().padEnd(pad);
+
     // tslint:disable-next-line:no-unused-expression
     Section.DEBUG && logger.debug(
-      `[INIT${this.direction ? ', ' + this.direction.padEnd(10) : ''}] ${this.name ? this.name.padEnd(5) : 'None '}| ` +
-      `height -> ${sizes.height.toString().padEnd(4)}, width -> ${sizes.width.toString().padEnd(4)}`,
+      `[INIT${this.direction ? ', ' + f(this.direction, 10) : ''}] ${this.name ? f(this.name, 5) : 'None '}| ` +
+      `height -> ${f(sizes.height, 4)}, width -> ${f(sizes.width, 4)}`,
     );
 
     this.set('height', sizes.height, false);
     this.set('width', sizes.width, false);
 
     // There will never be a gutter for the first element
-    // This logic may not be right but we are putting a gutter on any divider that doesn't touch a "fixed" split
+    // This logic may not be right but we are putting a gutter on any divider that doesn't touch a
+    // "fixed" split.
     this.children.slice(1).forEach((_, i) => {
-      this.children[i + 1].gutter.value = this.children[i].mode !== 'fixed' && this.children[i + 1].mode !== 'fixed';
+      this.children[i + 1].gutter.value =
+        this.children[i].mode !== 'fixed' &&
+        this.children[i + 1].mode !== 'fixed';
     });
 
     const initialSum = this.children.reduce((sum, curr) => {
@@ -195,7 +200,9 @@ export class Section {
 
     const total = this.direction === 'horizontal' ? this.width : this.height;
     const remaining = total - initialSum;
-    const notFixed = this.children.filter((child) => child.initial === undefined && child.collapsed === false);
+    const notFixed = this.children.filter((child) => {
+      return child.initial === undefined && child.collapsed === false;
+    });
     const size = remaining / notFixed.length;
 
     this.children.forEach((split) => {
@@ -314,7 +321,12 @@ export class Section {
     const hasBeforeMultiple = mode === 'un-collapse' ? -1 : 1;
 
     this.withDisabled(() => {
-      const amount = Math.max(this[attr], this.minSize, opts.mode === 'un-collapse' ? opts.size : 0);
+      const amount = Math.max(
+        this[attr],
+        this.minSize,
+        opts.mode === 'un-collapse' ? opts.size : 0,
+      );
+
       // after.length will never be 0
       if (after.length === 1) {
         this.move(amount * hasBeforeMultiple);

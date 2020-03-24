@@ -101,7 +101,10 @@ export interface EncodeSuccess {
   type: 'success';
 }
 
-export const write = <T>(type: t.Type<T>, opts: { data: T, path: string }): Error | EncodeSuccess => {
+export const write = <T>(
+  type: t.Type<T>,
+  opts: { data: T, path: string },
+): Error | EncodeSuccess => {
   const encoded = type.encode(opts.data);
 
   let serialized: string;
@@ -128,7 +131,10 @@ export const write = <T>(type: t.Type<T>, opts: { data: T, path: string }): Erro
   };
 };
 
-export const read = <T>(type: t.Type<T>, opts: { path: string }): DecodeSuccess<T> | NotFound | Error => {
+export const read = <T>(
+  type: t.Type<T>,
+  opts: { path: string },
+): DecodeSuccess<T> | NotFound | Error => {
   if (!fs.existsSync(opts.path)) {
     return {
       type: 'not-found',

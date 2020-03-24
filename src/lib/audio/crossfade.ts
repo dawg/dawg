@@ -22,11 +22,9 @@ export interface ObeoCrossfade extends ObeoNode<AudioNode, undefined> {
   readonly fade: ObeoSignal;
 }
 
-// TODO test
-
 export const createCrossfade = (): ObeoCrossfade => {
-  const a = createGain({ value: 0 });
-  const b = createGain({ value: 0 });
+  const a = createGain({ gain: 0 });
+  const b = createGain({ gain: 0 });
 
   // Fade (Signal) -> G2A ([0, 1] to [-1, 1]) -> Panner (Param)
   // Signal (1) -> Panner [2] -> Splitter -> A (Gain)

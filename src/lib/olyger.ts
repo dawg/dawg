@@ -235,7 +235,8 @@ interface Ref<T> {
 interface Subscription {
   execute: () => { undo: () => void };
   /**
-   * This is called for cleaning up purposes. At this point, we will never call the subscription again.
+   * This is called for cleaning up purposes. At this point, we will never call the subscription
+   * again.
    */
   dispose?: () => void;
 }

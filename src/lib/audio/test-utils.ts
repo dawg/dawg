@@ -5,6 +5,8 @@ import { ObeoBuffer, createAudioBuffer } from '@/lib/audio/buffer';
 import dsp from 'dsp.js';
 import windowing from 'fft-windowing';
 import { expect } from '@/lib/testing';
+import { ObeoNode } from '@/lib/audio/node';
+import { createSignal } from '@/lib/audio/signal';
 
 export function whenBetween(value: Seconds, start: Seconds, stop: Seconds, callback: () => void): void {
   if (value >= start && value < stop) {
@@ -25,8 +27,12 @@ export function atTime(when: Seconds, callback: (time: Seconds) => void): (time:
 export const compareToFile = async (
   cb: (offline: ObeoOfflineContext) => void,
   file: string,
-  options: Partial<RunOfflineOptions & { threshold: number }> = {},
+  options: Partial<RunOfflineOptions & { threshold: number }> | number = {},
 ) => {
+  if (typeof options === 'number') {
+    options = { threshold: options };
+  }
+
   const { duration = 0.1, threshold = 0.1 } = options;
   const url = '/base/src/assets/' + file;
   const response = await fetch(url);
@@ -149,4 +155,30 @@ export async function testConstantOutput(
 ): Promise<void> {
   const buffer = await runOffline(callback, { duration: 0.01, channels: 1 });
   expect(buffer.value()).to.be.closeTo(value, threshold);
+}
+
+/**
+ * Make sure that the audio passes from input node
+ * to the destination node
+ */
+export function passAudio(
+  callback: (input: ObeoNode<AudioNode, undefined>) => void,
+  passes = true,
+): Promise<void> {
+  const duration = 0.2;
+  return runOffline(() => {
+    const sig = createSignal({ value: 0 });
+    callback(sig);
+    sig.offset.setValueAtTime(1, duration / 2);
+  }, { duration: 0.2, channels: 1 }).then((buffer) => {
+    expect(buffer.getValueAtTime(0)).to.be.closeTo(0, 0.001);
+    expect(buffer.getValueAtTime(duration / 2 - 0.01)).to.be.closeTo(0, 0.001);
+    if (passes) {
+      expect(buffer.getValueAtTime(duration / 2 + 0.01)).to.not.equal(0);
+      expect(buffer.getValueAtTime(duration - 0.01)).to.not.equal(0);
+    } else {
+      expect(buffer.getValueAtTime(duration / 2 + 0.01)).to.be.closeTo(0, 0.001);
+      expect(buffer.getValueAtTime(duration - 0.01)).to.be.closeTo(0, 0.001);
+    }
+  });
 }

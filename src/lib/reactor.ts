@@ -77,14 +77,16 @@ function reactive<T extends Observable>(o: T) {
   return new Proxy(o, {
     get(target, key: string, receiver) {
       const result = Reflect.get(target, key, receiver);
-      track(target, key); // If this reactive property (target) is GET inside then track the effect to rerun on SET
+      // If this reactive property (target) is GET inside then track the effect to rerun on SET
+      track(target, key);
       return result;
     },
     set(target, key: string, newValue, receiver) {
       const oldValue = target[key];
       const result = Reflect.set(target, key, newValue, receiver);
       if (oldValue !== newValue) {
-        trigger(target, key); // If this reactive property (target) has effects to rerun on SET, trigger them.
+        // If this reactive property (target) has effects to rerun on SET, trigger them.
+        trigger(target, key);
       }
       return result;
     },

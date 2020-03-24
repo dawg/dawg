@@ -50,7 +50,10 @@ export const transformMenuOptionsAndSaveCallback = (opts: MenuOptions): Electron
 };
 
 const callbacks: {
-  [k: string]: { callback: (position: ElectronMenuPosition) => void | undefined, position: ElectronMenuPosition },
+  [k: string]: {
+    callback: (position: ElectronMenuPosition) => void | undefined,
+    position: ElectronMenuPosition,
+  },
 } = {};
 
 export const menuBarCallbacks: { [k: string]: () => void | undefined } = {};

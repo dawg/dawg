@@ -59,7 +59,8 @@ export interface SnapOpts {
   snap: number;
   pxPerBeat: number;
   /**
-   * Px from left of REFERENCE. ie. the amount of pixels that the element is from the edge of the element.
+   * Px from left of REFERENCE. ie. the amount of pixels that the element is from the edge of the
+   * element.
    */
   pxFromLeft: number;
   /**

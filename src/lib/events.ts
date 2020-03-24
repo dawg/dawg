@@ -120,7 +120,8 @@ export const addEventListeners = (
 };
 
 /**
- * Add an event listener (like normal) but return an object with a dispose method to remove the same listener.
+ * Add an event listener (like normal) but return an object with a dispose method to remove the
+ * same listener.
  *
  * @param type The event.
  * @param ev The listener.

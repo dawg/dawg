@@ -98,7 +98,9 @@ const getPartialFromDefinition = (props: ExtensionProps) => {
   return t.partial(partial);
 };
 
-const getDataFromExtensions = (key: 'workspace' | 'global'): { [k: string]: ExtensionData<ExtensionProps> } => {
+const getDataFromExtensions = (
+  key: 'workspace' | 'global',
+): { [k: string]: ExtensionData<ExtensionProps> } => {
   const data: { [k: string]: ExtensionData<ExtensionProps> } = {};
   for (const { extension, context } of reverse(extensionsStack)) {
     try {
@@ -273,8 +275,9 @@ export const manager = {
     };
   },
   /**
-   * Sets the path of the opened file and writes this information to the file system so that the next time the DAW is
-   * opened, the correct file will open. Note that is NOT possible to change the ID of the currently opened project.
+   * Sets the path of the opened file and writes this information to the file system so that the
+   * next time the DAW is opened, the correct file will open. Note that is NOT possible to change
+   * the ID of the currently opened project.
    *
    * @param projectPath The project path.
    * @param opts The options.
@@ -398,7 +401,10 @@ export const manager = {
     extensions[extension.id] = api;
     manager.activating.pop();
     resolved[extension.id] = true;
-    extensionsStack.push({ extension: extension as Extension, context: context as IExtensionContext });
+    extensionsStack.push({
+      extension: extension as Extension,
+      context: context as IExtensionContext,
+    });
 
     return api;
   },

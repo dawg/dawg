@@ -1,4 +1,4 @@
-import { Seconds } from '@/lib/audio/types';
+import { Seconds, Note, Hertz } from '@/lib/audio/types';
 import { sendRequest, parseNote, base64Decode } from '@/lib/mutils';
 import decode from 'audio-decode';
 // TODO remove
@@ -177,7 +177,7 @@ export async function loadSoundfont(
   try {
     Promise.all(Object.keys(source).map(async (key) => {
       const i = source[key].indexOf(',');
-      const note = parseNote(key);
+      const note = parseNote(key as Note);
       if (note === undefined) {
         throw Error('Unable to parse note: ' + key);
       }
@@ -249,12 +249,12 @@ export const createSoundfont = (
   // Make sure to call it once at the start to attempt to load
   attemptReloadIfNecessary();
 
-  const triggerAttack = (note: string, time?: Seconds, velocity?: number) => {
+  const triggerAttack = (note: Note | Hertz, time?: Seconds, velocity?: number) => {
     return start(note, time, { gain: velocity });
   };
 
   const start = (
-    note: string,
+    note: Note | Hertz,
     when?: number,
     o: Partial<{ duration: number } & ObeoSoundfontOptions> = {},
   ) => {

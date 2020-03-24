@@ -65,8 +65,13 @@ export const parseNote = (str: Note): Hertz => {
 };
 
 export interface ObeoTrigger {
-  triggerAttackRelease(note: Note, duration: Seconds, time?: ContextTime, velocity?: NormalRange): void;
-  triggerAttack(note: Note, time?: ContextTime, velocity?: NormalRange): ObeoReleaser;
+  triggerAttackRelease(
+    note: Note | Hertz,
+    duration: Seconds,
+    time?: ContextTime,
+    velocity?: NormalRange,
+  ): void;
+  triggerAttack(note: Note | Hertz, time?: ContextTime, velocity?: NormalRange): ObeoReleaser;
 }
 
 export interface ObeoReleaser {
@@ -74,12 +79,17 @@ export interface ObeoReleaser {
 }
 
 export interface InstrumentOptions {
-  triggerAttack(note: Note, time?: ContextTime, velocity?: NormalRange): ObeoReleaser;
+  triggerAttack(note: Note | Hertz, time?: ContextTime, velocity?: NormalRange): ObeoReleaser;
 }
 
 export const createTrigger = ({ triggerAttack }: InstrumentOptions) => {
   const context = getContext();
-  const triggerAttackRelease = (note: Note, duration: Seconds, time?: ContextTime, velocity?: NormalRange) => {
+  const triggerAttackRelease = (
+    note: Note,
+    duration: Seconds,
+    time?: ContextTime,
+    velocity?: NormalRange,
+  ) => {
     time = time ?? context.now();
     const releaser = triggerAttack(note, time, velocity);
     releaser.triggerRelease(time + duration);

@@ -27,9 +27,10 @@ export const context: ContextFunction = (opts) => {
     items = [...opts.items, null, ...defaultItems];
   }
 
-  // OK so this is important because in the main process we show a default context menu when we don't prevent it here
-  // This is especially important because, on Windows, no menu will show if this function and does not prevent the other
-  // event handler from running!!
+  // OK so this is important because in the main process we show a default context menu when we
+  // don't prevent it here.
+  // This is especially important because, on Windows, no menu will show if this function and
+  // does not prevent the other event handler from running!!
   opts.position.preventDefault();
   opts.position.stopImmediatePropagation();
 

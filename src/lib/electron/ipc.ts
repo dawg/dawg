@@ -75,7 +75,9 @@ defaultIpcMain<MainEvents, RendererEvents>({
   },
 });
 
-type MenuOptions<K extends keyof MenuBarSections> = { [S in MenuBarSections[K]]: ElectronMenuItem[]; };
+type MenuOptions<K extends keyof MenuBarSections> = {
+  [S in MenuBarSections[K]]: ElectronMenuItem[];
+};
 
 type MenuLookup = {
   [K in keyof MenuBarSections]: MenuOptions<K>;
@@ -158,8 +160,10 @@ const renderMenu = () => {
     });
 
     return {
-      // On MacOS, this is done automatically. For consistency across operating systems we do this explicitly
+      // On MacOS, this is done automatically. For consistency across operating systems we do this
+      // explicitly.
       // MacOS explicitly shows the application name as the first menu
+      // tslint:disable-next-line:max-line-length
       // https://stackoverflow.com/questions/41551110/unable-to-override-app-name-on-mac-os-electron-menu
       // provides a bit more info although it is not really related to this
       label: menuLabel === 'Application' ? electron.app.getName() : menuLabel,

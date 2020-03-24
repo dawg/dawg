@@ -1,11 +1,11 @@
 import { ObeoNode } from '@/lib/audio/node';
 import { getContext } from '@/lib/audio/global';
 import { ObeoBaseContext } from '@/lib/audio/context';
-import { createVolume, ObeoVolumeNode } from '@/lib/audio/volume';
+import { createVolume, ObeoVolume } from '@/lib/audio/volume';
 
 export interface ObeoDestination extends ObeoNode {
   readonly maxChannelCount: number;
-  readonly volume: ObeoVolumeNode;
+  readonly volume: ObeoVolume;
 }
 
 export interface ObeoDestinationOptions {

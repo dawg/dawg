@@ -66,7 +66,13 @@ export function audioBufferToWav(buffer: AudioBuffer, opt?: Options) {
   return encodeWAV(result, format, sampleRate, numChannels, bitDepth);
 }
 
-function encodeWAV(samples: Float32Array, format: 3 | 1, sampleRate: number, numChannels: number, bitDepth: 32 | 16) {
+function encodeWAV(
+  samples: Float32Array,
+  format: 3 | 1,
+  sampleRate: number,
+  numChannels: number,
+  bitDepth: 32 | 16,
+) {
   const bytesPerSample = bitDepth / 8;
   const blockAlign = numChannels * bytesPerSample;
 

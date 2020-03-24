@@ -1,31 +1,33 @@
 import { MonophonicOptions, createMonophonic, ObeoMonophonic } from '@/lib/audio/monophonic';
-import { ObeoEnvelopeOptions } from '@/lib/audio/envelope';
-import { createOscillator, ObeoOscillatorOptions } from '@/lib/audio/oscillator';
+import { createOscillator, ObeoOscillator, ObeoOscillatorOptions } from '@/lib/audio/oscillator';
 import { createVolume } from '@/lib/audio/volume';
 import { getLogger } from '@/lib/log';
 import { Setter, setter } from '@/lib/reactor';
 import { ObeoInstrument } from '@/lib/audio/instrument';
-import { createAmplitudeEnvelope } from '@/lib/audio/amplitude-envelope';
+import { createAmplitudeEnvelope, ObeoAmplitudeEnvelope, ObeoAmplitudeEnvelopeOptions } from '@/lib/audio/amplitude-envelope';
 
 const logger = getLogger('synth');
 
 export interface ObeoSynthOptions extends MonophonicOptions {
   oscillator: Partial<ObeoOscillatorOptions>;
-  envelope: Partial<ObeoEnvelopeOptions>;
+  envelope: Partial<ObeoAmplitudeEnvelopeOptions>;
+  volume: number;
 }
 
 export interface SynthParameters {
   type: Setter<OscillatorType>;
 }
 
-export type ObeoSynth = ObeoInstrument & ObeoMonophonic & SynthParameters;
+export type ObeoSynth = ObeoInstrument & ObeoMonophonic & SynthParameters & {
+  oscillator: ObeoOscillator;
+  envelope: ObeoAmplitudeEnvelope;
+};
 
 export const createSynth = (options?: Partial<ObeoSynthOptions>): ObeoSynth => {
   const oscillator = createOscillator(options?.oscillator);
 
-  // TODO test ??
   const envelope = createAmplitudeEnvelope(options?.envelope);
-  const volume = createVolume();
+  const volume = createVolume({ volume: options?.volume });
 
   oscillator.connect(envelope);
   envelope.connect(volume);
@@ -62,6 +64,8 @@ export const createSynth = (options?: Partial<ObeoSynthOptions>): ObeoSynth => {
   return {
     ...volume,
     ...monophonic,
+    oscillator,
+    envelope,
     type: setter(() => {
       return oscillator.type;
     }, (value) => {

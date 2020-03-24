@@ -20,7 +20,9 @@ const removeUnusedMenuItems = (menuTemplate: any[]) => {
   let notDeletedPreviousElement: any;
 
   return menuTemplate
-    .filter((menuItem) => menuItem !== undefined && menuItem !== false && menuItem.visible !== false)
+    .filter((menuItem) => {
+      return menuItem !== undefined && menuItem !== false && menuItem.visible !== false;
+    })
     .filter((menuItem, index, array) => {
       const toDelete =
         menuItem.type === 'separator' &&
@@ -56,7 +58,9 @@ const create = (win: electron.BrowserWindow, options: Options) => {
         enabled: can('Cut'),
         visible: props.isEditable,
         click(menuItem: any) {
-          props.selectionText = menuItem.transform ? menuItem.transform(props.selectionText) : props.selectionText;
+          props.selectionText = menuItem.transform ?
+            menuItem.transform(props.selectionText) :
+            props.selectionText;
           electron.clipboard.writeText(props.selectionText);
           webContents(win).delete();
         },
@@ -67,7 +71,9 @@ const create = (win: electron.BrowserWindow, options: Options) => {
         enabled: can('Copy'),
         visible: props.isEditable || hasText,
         click(menuItem: any) {
-          props.selectionText = menuItem.transform ? menuItem.transform(props.selectionText) : props.selectionText;
+          props.selectionText = menuItem.transform ?
+            menuItem.transform(props.selectionText) :
+            props.selectionText;
           electron.clipboard.writeText(props.selectionText);
         },
       }),
@@ -78,7 +84,10 @@ const create = (win: electron.BrowserWindow, options: Options) => {
         visible: props.isEditable,
         click(menuItem: any) {
           let clipboardContent = electron.clipboard.readText(props.selectionText);
-          clipboardContent = menuItem.transform ? menuItem.transform(clipboardContent) : clipboardContent;
+          clipboardContent = menuItem.transform ?
+            menuItem.transform(clipboardContent) :
+            clipboardContent;
+
           webContents(win).insertText(clipboardContent);
         },
       }),
@@ -133,7 +142,9 @@ const create = (win: electron.BrowserWindow, options: Options) => {
     menuTemplate = removeUnusedMenuItems(menuTemplate);
 
     if (menuTemplate.length > 0) {
-      const menu = (electron.remote ? electron.remote.Menu : electron.Menu).buildFromTemplate(menuTemplate);
+      const menu = (
+        electron.remote ? electron.remote.Menu : electron.Menu
+      ).buildFromTemplate(menuTemplate);
 
       /*
 			When `electron.remote`` is not available this runs in the browser process.

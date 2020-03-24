@@ -45,7 +45,13 @@ export type ClipContext = IAutomation['context'];
 export type Automatable = Channel | Instrument;
 
 export class AutomationClip implements Serializable<IAutomation>, BuildingBlock {
-  public static create(length: number, signal: Audio.ObeoParam, context: ClipContext, id: string, attr: string) {
+  public static create(
+    length: number,
+    signal: Audio.ObeoParam,
+    context: ClipContext,
+    id: string,
+    attr: string,
+  ) {
     const ac = new AutomationClip(signal, {
       id: uuid.v4(),
       context,

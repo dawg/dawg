@@ -71,7 +71,9 @@ const styles: { [K in Level]: CSS.Properties } = {
   },
 };
 
-const camelToKebab = (str: string) => str.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
+const camelToKebab = (str: string) => {
+  return str.replace(/([a-z0-9]|(?=[A-Z]))([A-Z])/g, '$1-$2').toLowerCase();
+};
 
 const camelToKebabObject = (o: CSS.Properties) => {
   const result: { [k: string]: string | number | undefined } = {};
@@ -79,7 +81,9 @@ const camelToKebabObject = (o: CSS.Properties) => {
   return result;
 };
 
-export const getLogger = (name: string, { level, style }: { level?: Level, style?: boolean } = {}): Logger => {
+export const getLogger = (
+  name: string, { level, style }: { level?: Level, style?: boolean } = {},
+): Logger => {
   const local = style ?? true;
   return {
     level: level ?? 'info',

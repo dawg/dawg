@@ -58,12 +58,9 @@ export const createOscillator = (options?: Partial<ObeoOscillatorOptions>): Obeo
   };
 
 
-  // TODO how to make sure that you can't connect to oscillator ??
   const oscillator: ObeoOscillator = {
     ...mimicAudioNode(undefined, volume.output),
     volume: volume.volume,
-
-    // OscillatorNode
     detune,
     frequency,
     type: options?.type ?? 'sine',

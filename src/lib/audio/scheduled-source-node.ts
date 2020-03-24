@@ -12,7 +12,9 @@ export interface ObeoScheduledSourceNode<
   start(when?: number): ObeoScheduledSourceStopper;
 }
 
-export const extractAudioScheduledSourceNode = (node: AudioScheduledSourceNode): ObeoScheduledSourceNode => {
+export const extractAudioScheduledSourceNode = (
+  node: AudioScheduledSourceNode,
+): ObeoScheduledSourceNode => {
   return {
     ...mimicAudioNode(undefined, node),
     start: (when) => {

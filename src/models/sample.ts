@@ -48,7 +48,9 @@ export class Sample implements BuildingBlock, Serializable<ISample> {
     }
   }
 
-  public preview(opts?: { onended: () => void }): { started: true, dispose: () => void } | { started: false } {
+  public preview(
+    opts?: { onended: () => void },
+  ): { started: true, dispose: () => void } | { started: false } {
     if (this.player.node) {
       const source = this.player.node.preview(opts);
       return {

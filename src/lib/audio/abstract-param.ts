@@ -71,7 +71,10 @@ export interface ObeoAbstractParamOptions {
   fromUnit: ObeoConversion;
 }
 
-export type ObeoParamExtension<T, V> = (events: ObeoTimeline<AutomationEvent<T>>, param: ObeoAbstractParam) => {
+export type ObeoParamExtension<T, V> = (
+  events: ObeoTimeline<AutomationEvent<T>>,
+  param: ObeoAbstractParam,
+) => {
   addEventInformation: (event: AutomationEvent<T>) => T;
   extension: V;
 };
@@ -82,17 +85,35 @@ export type ObeoParamExtension<T, V> = (events: ObeoTimeline<AutomationEvent<T>>
 // -------------------------------------
 
 // Calculates the the value along the curve produced by setTargetAtTime
-export const exponentialApproach = (t0: number, v0: number, v1: number, timeConstant: number, t: number) => {
+export const exponentialApproach = (
+  t0: number,
+  v0: number,
+  v1: number,
+  timeConstant: number,
+  t: number,
+) => {
   return v1 + (v0 - v1) * Math.exp(-(t - t0) / timeConstant);
 };
 
 // Calculates the the value along the curve produced by linearRampToValueAtTime
-export const linearInterpolate = (t0: number, v0: number, t1: number, v1: number, t: number) => {
+export const linearInterpolate = (
+  t0: number,
+  v0: number,
+  t1: number,
+  v1: number,
+  t: number,
+) => {
   return v0 + (v1 - v0) * ((t - t0) / (t1 - t0));
 };
 
 // Calculates the the value along the curve produced by exponentialRampToValueAtTime
-export const exponentialInterpolate = (t0: number, v0: number, t1: number, v1: number, t: number) => {
+export const exponentialInterpolate = (
+  t0: number,
+  v0: number,
+  t1: number,
+  v1: number,
+  t: number,
+) => {
   return v0 * Math.pow(v1 / v0, (t - t0) / (t1 - t0));
 };
 
@@ -176,7 +197,13 @@ export const createAbstractParam = <T, V>(
         previousVal = previous.value;
       }
       if (before.type === 'setTargetAtTime') {
-        value = exponentialApproach(before.time, previousVal, before.value, before.constant, computedTime);
+        value = exponentialApproach(
+          before.time,
+          previousVal,
+          before.value,
+          before.constant,
+          computedTime,
+        );
       }
     } else if (!after) {
       value = before.value;
@@ -194,7 +221,13 @@ export const createAbstractParam = <T, V>(
       if (after.type === 'linearRampToValueAtTime') {
         value = linearInterpolate(before.time, beforeValue, after.time, after.value, computedTime);
       } else {
-        value = exponentialInterpolate(before.time, beforeValue, after.time, after.value, computedTime);
+        value = exponentialInterpolate(
+          before.time,
+          beforeValue,
+          after.time,
+          after.value,
+          computedTime,
+        );
       }
     } else {
       value = before.value;

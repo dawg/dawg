@@ -44,9 +44,10 @@ export const mimicAudioNode = <
 
     name: 'node',
 
-    // Having an input AND output allows us to treat complex audio node combinations as being a single node
-    // The, the connect and disconnect logic handles all of the connection logic allowing the user to forget
-    // about the internals of any particular node
+    // Having an input AND output allows us to treat complex audio node combinations as being a
+    // single node.
+    // The, the connect and disconnect logic handles all of the connection logic allowing the user
+    // to forget about the internals of any particular node
     input: i,
     output: o,
     connect: (target: ObeoNode | ObeoParam, output?: number, input?: number) => {
@@ -57,7 +58,11 @@ export const mimicAudioNode = <
       }
       return node;
     },
-    disconnect: (nodeParamOrOutput?: number | ObeoNode | ObeoParam, output?: number, input?: number) => {
+    disconnect: (
+      nodeParamOrOutput?: number | ObeoNode | ObeoParam,
+      output?: number,
+      input?: number,
+    ) => {
       // Handling all 7 cases explicitly to satisfy ts
       if (!nodeParamOrOutput) {
         o.disconnect();

@@ -40,7 +40,8 @@ export abstract class Instrument<
   public types: V[];
 
   /**
-   * The channel of the instrument, starting from 0. Undefined means it is connected directly to master.
+   * The channel of the instrument, starting from 0. Undefined means it is connected directly to
+   * master.
    */
   public readonly channel: oly.OlyRef<number | undefined>;
 
@@ -84,7 +85,12 @@ export abstract class Instrument<
     this.input.connect(this.output);
   }
 
-  public triggerAttackRelease(note: Audio.Note, duration: Audio.Seconds, time: number, velocity?: number) {
+  public triggerAttackRelease(
+    note: Audio.Note,
+    duration: Audio.Seconds,
+    time: number,
+    velocity?: number,
+  ) {
     this.source.node.triggerAttackRelease(note, duration, time, velocity);
   }
 
