@@ -16,6 +16,11 @@ export interface ObeoBuffer {
   forEach(callback: (sample: number, time: number) => void): void;
   getValueAtTime(time: ContextTime, channel?: number): number;
   /**
+   * The value (only if it is consistent throughout the entire buffer).
+   * Throws an error if there are multiple values found.
+   */
+  value(): number;
+  /**
    * Returns a new ObeoBuffer which has all of the channels summed to a single channel
    */
   toMono(): ObeoBuffer;
@@ -168,6 +173,7 @@ export const createAudioBuffer = (buffer: AudioBuffer): ObeoBuffer => {
     getTimeOfFirstSound,
     getTimeOfLastSound,
     forEachBetween,
+    value,
   });
 
   return obeoBuffer;

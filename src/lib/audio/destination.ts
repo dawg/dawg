@@ -25,3 +25,5 @@ export const getDestination = (options?: Partial<ObeoDestinationOptions>): ObeoD
     maxChannelCount: internal.maxChannelCount,
   };
 };
+
+export const destination = getDestination();

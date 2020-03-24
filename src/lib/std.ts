@@ -83,6 +83,20 @@ export function* chain<T>(...arrays: T[][]) {
   }
 }
 
+export type JsonArray = Json[];
+
+export interface JsonObject {
+  [key: string]: Json;
+}
+
+export type Json =
+  | null
+  | boolean
+  | string
+  | number
+  | JsonArray
+  | JsonObject;
+
 export interface XYPosition {
   x: number;
   y: number;

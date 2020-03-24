@@ -14,7 +14,7 @@ import {
 import fs from '@/lib/fs';
 import path from 'path';
 import { GLOBAL_PATH, WORKSPACE_PATH, PROJECT_PATH } from '@/lib/framework/constants';
-import { reverse, keys } from '@/lib/std';
+import { reverse, keys, Json, JsonObject } from '@/lib/std';
 import uuid from 'uuid';
 import { ref } from '@vue/composition-api';
 import { emitter } from '@/lib/events';
@@ -46,10 +46,6 @@ type PastProject = t.TypeOf<typeof PastProjectsType>;
 
 let pastProject: PastProject = {};
 
-interface JSON {
-  [k: string]: any;
-}
-
 const settings: Array<{ title: string, settings: Setting[] }> = [];
 const extensions: { [id: string]: any } = {};
 const resolved: { [id: string]: boolean } = {};
@@ -58,7 +54,7 @@ const extensionsStack: Array<
   { extension: Extension, context: IExtensionContext }
 > = [];
 
-const makeAndRead = (file: string): JSON => {
+const makeAndRead = (file: string): JsonObject => {
   if (!fs.existsSync(file)) {
     logger.debug(`${file} does not exist and is being created`);
     const dir = path.dirname(file);
@@ -67,7 +63,14 @@ const makeAndRead = (file: string): JSON => {
   }
 
   const contents = fs.readFileSync(file).toString();
-  return JSON.parse(contents);
+  const result = JSON.parse(contents);
+
+  if (!result || Array.isArray(result) || typeof result !== 'object') {
+    logger.error(`${file} is not an object. Returning empty object instead.`);
+    return {};
+  }
+
+  return result;
 };
 
 const write = async (file: string, contents: any) => {
@@ -123,14 +126,31 @@ const getDataFromExtensions = (key: 'workspace' | 'global'): { [k: string]: Exte
   return data;
 };
 
-const loadWorkspace = (projectId: string, file: string) => {
+const loadWorkspace = (projectId: string, file: string): JsonObject => {
   const json = makeAndRead(file);
+
+  if (!json) {
+    logger.error(`The workspace json is null`);
+    return {};
+  }
+
+  if (Array.isArray(json) || typeof json !== 'object') {
+    logger.error(`The workspace json is not an object: ` + json);
+    return {};
+  }
+
   if (!json[projectId]) {
     logger.debug(`${projectId} does not exist in the project cache`);
     return {};
   }
 
-  return json[projectId];
+  const workspace = json[projectId];
+  if (!workspace || Array.isArray(workspace) || typeof workspace !== 'object') {
+    logger.error(`Invalid workspace for ${projectId}: ` + workspace);
+    return {};
+  }
+
+  return workspace;
 };
 
 class Manager {
@@ -171,7 +191,7 @@ class Manager {
       t.write(PastProjectsType, { path: PROJECT_PATH, data: pastProject });
     }
 
-    let parsedProject: JSON | null = null;
+    let parsedProject: Json | null = null;
     try {
       if (projectContents) {
         parsedProject = JSON.parse(projectContents);
@@ -205,8 +225,8 @@ class Manager {
       info.path = null;
     }
 
-    let global: JSON = {};
-    let workspace: JSON = {};
+    let global: Json = {};
+    let workspace: JsonObject = {};
 
     try {
       global = makeAndRead(GLOBAL_PATH);
@@ -225,9 +245,9 @@ class Manager {
 
   constructor(
     public projectInfo: ProjectInfo,
-    public readonly parsedProject: JSON | null,
-    public readonly global: JSON,
-    public readonly workspace: JSON,
+    public readonly parsedProject: Json | null,
+    public readonly global: JsonObject,
+    public readonly workspace: JsonObject,
   ) {}
 }
 
@@ -323,7 +343,7 @@ export const manager = {
     resolved[extension.id] = false;
     manager.activating.push(extension);
 
-    const getOrEmptyObject = (o: JSON, key: string) => {
+    const getOrEmptyObject = (o: JsonObject, key: string) => {
       return o[key] === undefined ? {} : o[key];
     };
 

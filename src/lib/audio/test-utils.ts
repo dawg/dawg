@@ -1,5 +1,5 @@
 import { getContext, setContext } from '@/lib/audio/global';
-import { ObeoOfflineContext, createOfflineContext, RunOfflineOptions } from '@/lib/audio/offline';
+import { ObeoOfflineContext, createOfflineContext, RunOfflineOptions, runOffline } from '@/lib/audio/offline';
 import { Seconds } from '@/lib/audio/types';
 import { ObeoBuffer, createAudioBuffer } from '@/lib/audio/buffer';
 import dsp from 'dsp.js';
@@ -138,3 +138,15 @@ export const warns = (cb: () => void) => {
 
   expect(warned).to.eq(true, 'Warning did not occur!');
 };
+
+/**
+ * Test that the output of the callback is a constant value
+ */
+export async function testConstantOutput(
+  callback: (context: ObeoOfflineContext) => Promise<void> | void,
+  value: number,
+  threshold = 0.01,
+): Promise<void> {
+  const buffer = await runOffline(callback, { duration: 0.01, channels: 1 });
+  expect(buffer.value()).to.be.closeTo(value, threshold);
+}

@@ -20,6 +20,9 @@
     "paths": {
       "@/*": [
         "src/*"
+      ],
+      "midi-file": [
+        "node_modules/@tonejs/midi/src/midi-file.d.ts"
       ]
     },
     "lib": [

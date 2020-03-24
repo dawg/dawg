@@ -2,10 +2,10 @@ dev:
 	npm run serve
 
 test:
-	npm run test:unit
+	npm run test
 
 watch:
-	npm run test:unit:watch
+	npm run test:watch
 
 build:
 	npm run build
