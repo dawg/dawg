@@ -1,15 +1,18 @@
-import { ObeoSynth, SynthParameters } from '@/lib/audio/synth';
+import { ObeoSynth, SynthParameters, ObeoSynthOptions, createSynth } from '@/lib/audio/synth';
 import { ObeoInstrument } from '@/lib/audio/instrument';
 import { createTrigger } from '@/lib/audio/util';
 import { createVolume } from '@/lib/audio/volume';
 import { Getter, getter, setter } from '@/lib/reactor';
 import { keys } from '@/lib/std';
 
-export interface ObeoPolySynthOptions {
+/**
+ * Extends the synth options. These will be the default options given when a new synth is created.
+ * Beware that, if set, the `onended` function in the `oscillator` option will be ignored.
+ */
+export interface ObeoPolySynthOptions extends ObeoSynthOptions {
   maxPolyphony: number;
 }
 
-// TODO remove and just use synth for now
 type VoiceCreator = (options: { onended: () => void }) => ObeoSynth;
 
 export interface ObeoPolySynth extends ObeoInstrument, SynthParameters {
@@ -19,9 +22,20 @@ export interface ObeoPolySynth extends ObeoInstrument, SynthParameters {
 type Unwrapped = { [K in keyof SynthParameters]: SynthParameters[K]['value'] };
 
 export const createPolySynth = (
-  creator: VoiceCreator,
   options?: Partial<ObeoPolySynthOptions>,
 ): ObeoPolySynth => {
+
+  const oscillatorOptions = options?.oscillator ?? {};
+  const creator: VoiceCreator = ({ onended }) => {
+    return createSynth({
+      oscillator: {
+        ...oscillatorOptions,
+        onended,
+      },
+      envelope: options?.envelope,
+    });
+  };
+
   const maxPolyphony = options?.maxPolyphony ?? 32;
   const voices: ObeoSynth[] = [];
   const availableVoices: ObeoSynth[] = [];

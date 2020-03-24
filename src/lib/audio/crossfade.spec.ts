@@ -3,10 +3,9 @@ import { createGain } from '@/lib/audio/gain';
 import { testConstantOutput } from '@/lib/audio/test-utils';
 import { createSignal } from '@/lib/audio/signal';
 
-describe.only('ObeoCrossFade', () => {
+describe('ObeoCrossFade', () => {
 
   context('fading', () => {
-
     it('handles input and output connections', () => {
       const comp = createCrossfade();
       createGain().connect(comp.a);
@@ -51,4 +50,5 @@ describe.only('ObeoCrossFade', () => {
       }, 2.12, 0.01);
     });
   });
+
 });

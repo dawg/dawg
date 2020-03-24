@@ -16,13 +16,13 @@ export interface ObeoAnalyser extends ObeoNode<AnalyserNode> {
 
 export type ObeoAnalyserType = 'fft' | 'waveform';
 
-export interface OeboAnalyserOptions {
+export interface ObeoAnalyserOptions {
   size: PowerOfTwo;
   type: ObeoAnalyserType;
   smoothing: NormalRange;
 }
 
-export const createAnalyser = (opts?: Partial<OeboAnalyserOptions>): ObeoAnalyser => {
+export const createAnalyser = (opts?: Partial<ObeoAnalyserOptions>): ObeoAnalyser => {
   const context = getContext();
   const analyser = context.createAnalyser();
   const size = opts?.size ?? 1024;

@@ -153,9 +153,8 @@ describe('ObeoTransport', () => {
         const transport = createTransport();
         transport.start(0).pause(0.2).start(0.4);
 
-        // TODO better API... toDestination ??
         const pulse = createSignal({ value: 0 });
-        pulse.output.connect(context.destination);
+        pulse.toDestination();
 
         transport.schedule({
           onStart: ({ seconds }) => {

@@ -8,7 +8,7 @@ describe('ObeoDistortion', () => {
   it('does a sanity check', async () => {
     const buffer = await runOffline((offline) => {
       const dist = createDistortion({ distortion: 0.8 });
-      dist.output.connect(offline.destination);
+      dist.toDestination();
       const osc = createOscillator();
       osc.connect(dist);
       osc.type = 'sine';

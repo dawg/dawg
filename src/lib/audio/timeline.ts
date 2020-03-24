@@ -3,35 +3,111 @@ import { Disposer } from '@/lib/std';
 import { Getter, getter } from '@/lib/reactor';
 
 export interface ObeoTimeline<T extends TimelineEvent> extends Disposer {
-  length: Getter<number>;
-  add(event: T): void; // TODO
   /**
-   *  Remove an event from the timeline.
-   *  @param  event The event object to remove from the list.
-   *  @returns this
+   * Add an event.
+   *
+   * @param event The event to add.
+   */
+  add(event: T): void;
+
+  /**
+   * Remove an event from the timeline.
+   * @param  event The event object to remove from the list.
+   * @returns Whether the remove was successful.
    */
   remove(event: T): boolean;
+
   /**
-   *  Iterate over everything in the array between the startTime and endTime.
-   *  The range is inclusive of the startTime, but exclusive of the endTime.
-   *  range = [startTime, endTime).
-   *  @param startTime The time to check if items are before
-   *  @param endTime The end of the test interval.
-   *  @param  callback The callback to invoke with every item
+   * Iterate over everything in the array between the startTime and endTime.
+   * The range is inclusive of the startTime, but exclusive of the endTime.
+   * range = [startTime, endTime).
+   * @param startTime The time to check if items are before
+   * @param endTime The end of the test interval.
+   * @param  callback The callback to invoke with every item
    */
   forEachBetween(startTime: Ticks, endTime: Ticks, callback: (event: T) => void): void;
+
+  /**
+   * Iterate over all of the events at the given tick value.
+   *
+   * @param ticks The tick to search for events.
+   * @param callback The callback to to invoke for all of the events.
+   */
   forEachAtTime(ticks: Ticks, callback: (event: T) => void): void;
+
+  /**
+   * Iterate over everything in the array at or before the given time.
+   * @param  time The time to check if items are before
+   * @param  callback The callback to invoke with every item
+   */
   forEachBefore(time: number, callback: (event: T) => void): void;
+
+  /**
+   * Iterate over everything in the array after the given time.
+   * @param  time The time to check if items are before
+   * @param  callback The callback to invoke with every item
+   */
   forEachAfter(time: number, callback: (event: T) => void): void;
+
+  /**
+   * Iterate over every event in the timeline.
+   *
+   * @param cb The callback to invoke at every event.
+   */
   forEach(cb: (event: T, i: number) => void): void;
-  get(value: number, cmp?: (event: T) => number): T | undefined;
-  getBefore(value: number, cmp?: (event: T) => number): T | undefined;
-  getAfter(value: number, cmp?: (event: T) => number): T | undefined;
-  getAfter(value: number, cmp?: (event: T) => number): T | undefined;
+
+  /**
+   * Get the nearest event whose time is less than or equal to the given time.
+   * @param  value  The time to query.
+   */
+  get(value: number, key?: (event: T) => number): T | undefined;
+
+  /**
+   * Get the event before the event at the given time.
+   * @param  value  The time to query.
+   */
+  getBefore(value: number, key?: (event: T) => number): T | undefined;
+
+  /**
+   * Get the event which is scheduled after the given time.
+   * @param  value  The time to query.
+   */
+  getAfter(value: number, key?: (event: T) => number): T | undefined;
+
+  /**
+   * Returns the previous event if there is one. null otherwise
+   * @param  event The event to find the previous one of
+   * @return The event right before the given event
+   */
   previousEvent(event: T): T | undefined;
+
+  /**
+   * Cancel events at and after the given time
+   * @param  after  The time to query.
+   */
   cancel(after: number): void;
-  search(tick: Ticks, cmp?: (event: T) => number): TimelineSearchResult;
+
+  /**
+   * Does a binary search on the timeline array and returns information describing where the tick
+   * value occurs.
+   *
+   * @param tick The tick.
+   * @return The result. Either the time was was a hit, it was between two of the events, it was
+   * before all of the
+   * events or it was after all of the events.
+   */
+  search(tick: Ticks, key?: (event: T) => number): TimelineSearchResult;
+
+  /**
+   * Get the event at the given index.
+   *
+   * @param i The index.
+   */
   getAtIndex(i: number): T;
+
+  /**
+   * Get the number of events in the timeline.
+   */
   size(): number;
 }
 
@@ -112,11 +188,6 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
     timeline.slice().forEach(cb);
   };
 
-  /**
-   * Iterate over everything in the array at or before the given time.
-   * @param  time The time to check if items are before
-   * @param  callback The callback to invoke with every item
-   */
   const forEachBefore = (time: number, callback: (event: T) => void) => {
     // iterate over the items in reverse so that removing an item doesn't break things
     const result = search(time);
@@ -137,11 +208,6 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
     timeline.slice(0, getIndex()).forEach((callback));
   };
 
-  /**
-   * Iterate over everything in the array after the given time.
-   * @param  time The time to check if items are before
-   * @param  callback The callback to invoke with every item
-   */
   const forEachAfter = (time: number, callback: (event: T) => void) => {
     // iterate over the items in reverse so that removing an item doesn't break things
     const result = search(time);
@@ -162,15 +228,8 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
     timeline.slice(lowerBound).forEach(callback);
   };
 
-  /**
-   *  Does a binary search on the timeline array and returns information describing where the tick value occurs.
-   *
-   *  @param tick The tick.
-   *  @return The result. Either the time was was a hit, it was between two of the events, it was before all of the
-   *  events or it was after all of the events.
-   */
-  const search = (tick: Ticks, cmp?: (event: T) => number): TimelineSearchResult => {
-    cmp = cmp ?? getStart;
+  const search = (tick: Ticks, key?: (event: T) => number): TimelineSearchResult => {
+    key = key ?? getStart;
 
     if (timeline.length === 0) {
       return { type: 'before' };
@@ -179,7 +238,7 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
     let beginning = 0;
     const len = timeline.length;
     let end = len;
-    if (len > 0 && cmp(timeline[len - 1]) < tick) {
+    if (len > 0 && key(timeline[len - 1]) < tick) {
       return { type: 'after' };
     }
 
@@ -188,10 +247,10 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
       const midPoint = Math.floor(beginning + (end - beginning) / 2);
       const event = timeline[midPoint];
       const nextEvent = timeline[midPoint + 1];
-      if (cmp(event) === tick) {
+      if (key(event) === tick) {
         let firstOccurrenceIndex = midPoint;
         for (let i = midPoint; i >= 0; i--) {
-          if (cmp(timeline[i]) !== tick) {
+          if (key(timeline[i]) !== tick) {
             break;
           }
           firstOccurrenceIndex = i;
@@ -199,16 +258,16 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
 
         let lastOccurrenceIndex = midPoint;
         for (let i = midPoint; i < timeline.length; i++) {
-          if (cmp(timeline[i]) !== tick) {
+          if (key(timeline[i]) !== tick) {
             break;
           }
           lastOccurrenceIndex = i;
         }
 
         return { type: 'hit', firstOccurrenceIndex, lastOccurrenceIndex };
-      } else if (cmp(event) < tick && cmp(nextEvent) > tick) {
+      } else if (key(event) < tick && key(nextEvent) > tick) {
         return { type: 'between', indexA: midPoint, indexB: midPoint + 1 };
-      } else if (cmp(event) > tick) {
+      } else if (key(event) > tick) {
         // search lower
         end = midPoint;
       } else {
@@ -224,12 +283,9 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
     return event.time + (event.offset ?? 0);
   };
 
-  /**
-   * Get the nearest event whose time is less than or equal to the given time.
-   * @param  value  The time to query.
-   */
-  const get = (value: number, cmp?: (event: T) => number): T | undefined => {
-    const result = search(value, cmp);
+
+  const get = (value: number, key?: (event: T) => number): T | undefined => {
+    const result = search(value, key);
     switch (result.type) {
       case 'before':
         return;
@@ -243,12 +299,8 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
     }
   };
 
-  /**
-   * Get the event which is scheduled after the given time.
-   * @param  value  The time to query.
-   */
-  const getAfter = (value: number, cmp?: (event: T) => number): T | undefined => {
-    const result = search(value, cmp);
+  const getAfter = (value: number, key?: (event: T) => number): T | undefined => {
+    const result = search(value, key);
     switch (result.type) {
       case 'before':
         // This could return undefined
@@ -263,14 +315,8 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
     }
   };
 
-  // TODO rename cmp, maybe key??
-
-  /**
-   * Get the event before the event at the given time.
-   * @param  value  The time to query.
-   */
-  const getBefore = (value: number, cmp?: (event: T) => number): T | undefined => {
-    const result = search(value, cmp);
+  const getBefore = (value: number, key?: (event: T) => number): T | undefined => {
+    const result = search(value, key);
     switch (result.type) {
       case 'before':
         return;
@@ -285,10 +331,6 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
     }
   };
 
-  /**
-   * Cancel events at and after the given time
-   * @param  after  The time to query.
-   */
   const cancel = (after: number) => {
     const getIndex = (): number | undefined => {
       const result = search(after);
@@ -312,11 +354,6 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
     timeline.splice(index, timeline.length - index);
   };
 
-  /**
-   * Returns the previous event if there is one. null otherwise
-   * @param  event The event to find the previous one of
-   * @return The event right before the given event
-   */
   const previousEvent = (event: T): T | undefined => {
     const index = timeline.indexOf(event);
     // This could be undefined
@@ -352,6 +389,5 @@ export const createTimeline = <T extends TimelineEvent>(): ObeoTimeline<T> => {
     forEach,
     forEachBefore,
     forEachAfter,
-    length: getter(() => timeline.length),
   };
 };

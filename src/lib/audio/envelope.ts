@@ -8,7 +8,7 @@ import { prim, Prim, Getter, getter } from '@/lib/reactor';
 
 const logger = getLogger('envelope');
 
-export interface ObeoEnvelope extends ObeoNode {
+export interface ObeoEnvelope extends ObeoNode<AudioNode, undefined> {
   readonly value: Getter<number>;
   readonly sustain: Prim<number>;
   readonly release: Prim<number>;

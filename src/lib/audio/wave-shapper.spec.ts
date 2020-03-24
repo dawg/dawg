@@ -12,7 +12,7 @@ describe('ObeoWaveShaper', () => {
 
       const source = offline.createConstantSource();
       source.connect(shaper.input);
-      shaper.output.connect(offline.destination);
+      shaper.toDestination();
 
       source.start(0);
     }, { duration: 0.1  });

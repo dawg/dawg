@@ -38,19 +38,14 @@ export class Synth extends Instrument<
     super(
       i.type,
       ['custom', 'sine', 'square', 'sawtooth', 'triangle'],
-      Audio.createPolySynth(
-        ({ onended }) => Audio.createSynth({
+      Audio.createPolySynth({
           envelope: {
             attack: 0.005,
             decay: 0.1,
             sustain: 0.3,
             release: 1,
           },
-          oscillator: {
-            onended,
-          },
         }),
-      ),
       i,
     );
 

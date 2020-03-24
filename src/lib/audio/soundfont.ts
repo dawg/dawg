@@ -214,7 +214,10 @@ export interface ObeoSoundfont extends ObeoInstrument {
   attemptReloadIfNecessary(): void;
 }
 
-export const createSoundfont = (name: SoundfontName, options?: Partial<ObeoSoundfontOptions>): ObeoSoundfont => {
+export const createSoundfont = (
+  name: SoundfontName,
+  options?: Partial<ObeoSoundfontOptions>,
+): ObeoSoundfont => {
   const context = getContext();
   // TODO options
   const out = createVolume();
@@ -250,7 +253,11 @@ export const createSoundfont = (name: SoundfontName, options?: Partial<ObeoSound
     return start(note, time, { gain: velocity });
   };
 
-  const start = (note: string, when?: number, o: Partial<{ duration: number } & ObeoSoundfontOptions> = {}) => {
+  const start = (
+    note: string,
+    when?: number,
+    o: Partial<{ duration: number } & ObeoSoundfontOptions> = {},
+  ) => {
     const midi = parseNote(note);
     if (midi === undefined || !buffers) {
       return;

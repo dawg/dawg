@@ -5,7 +5,7 @@ import { ObeoNode, mimicAudioNode } from '@/lib/audio/node';
 import { createGain, ObeoGain } from '@/lib/audio/gain';
 import { createChannelSplitter } from '@/lib/audio/channel-splitter';
 
-export interface ObeoCrossfade extends ObeoNode {
+export interface ObeoCrossfade extends ObeoNode<AudioNode, undefined> {
   /**
    * The input which is at full level when fade = 0
    */
@@ -29,8 +29,8 @@ export const createCrossfade = (): ObeoCrossfade => {
   const b = createGain({ value: 0 });
 
   // Fade (Signal) -> G2A ([0, 1] to [-1, 1]) -> Panner (Param)
-  // Panner [2] -> Splitter -> A (Gain)
-  //                        -> B (Gain)
+  // Signal (1) -> Panner [2] -> Splitter -> A (Gain)
+  //                                      -> B (Gain)
 
   const fade = createSignal();
 
@@ -56,9 +56,8 @@ export const createCrossfade = (): ObeoCrossfade => {
   a.connect(output);
   b.connect(output);
 
-  // TODO you shouldn't be able to connect to this
   return {
-    ...mimicAudioNode(output.input, output.output),
+    ...mimicAudioNode(undefined, output.output),
     a,
     b,
     fade,

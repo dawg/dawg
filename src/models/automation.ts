@@ -162,7 +162,6 @@ export class AutomationClip implements Serializable<IAutomation>, BuildingBlock 
     return this.points[this.points.length - 1].time.value;
   }
 
-  // TODO needed?
   get minValue() {
     return this.param.minValue;
   }
@@ -190,12 +189,12 @@ export class AutomationClip implements Serializable<IAutomation>, BuildingBlock 
   }
 
   public dispose() {
-    // TODO
+    // FIXME
     // this.control.dispose();
   }
 
   private schedule(iPoint: Point): PointController {
-    // TODO This all makes no sense
+    // FIXME This all makes no sense
     // const add = (time: Beat, value: number): PointController => {
     // const event = {
     //   time: context.beatsToTicks(time),

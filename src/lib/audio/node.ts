@@ -1,7 +1,7 @@
 import { ObeoParam } from '@/lib/audio/param';
 import { getContext } from '@/lib/audio/global';
 
-export interface ObeoNode<I extends AudioNode = AudioNode, O extends AudioNode = I> {
+export interface ObeoNode<O extends AudioNode = AudioNode, I extends AudioNode | undefined = O> {
   name: 'node';
   input: I;
   output: O;
@@ -9,11 +9,19 @@ export interface ObeoNode<I extends AudioNode = AudioNode, O extends AudioNode =
   readonly numberOfInputs: number;
   readonly numberOfOutputs: number;
   // tslint:disable:unified-signatures
-  connect(destinationNode: ObeoNode, output?: number, input?: number): void;
+  connect<Out extends AudioNode, In extends AudioNode>(
+    destinationNode: ObeoNode<Out, In>,
+    output?: number,
+    input?: number,
+  ): void;
   connect(destinationParam: ObeoParam, output?: number): void;
   disconnect(): void;
   disconnect(output: number): void;
-  disconnect(destinationNode: ObeoNode, output?: number, input?: number): void;
+  disconnect<Out extends AudioNode, In extends AudioNode>(
+    destinationNode: ObeoNode<Out, In>,
+    output?: number,
+    input?: number,
+  ): void;
   disconnect(destinationParam: ObeoParam, output?: number): void;
   // tslint:enable:unified-signatures
   dispose(): void;
@@ -25,13 +33,13 @@ export const extractAudioNode = <T extends AudioNode>(node: T): ObeoNode<T, T> =
 };
 
 export const mimicAudioNode = <
-  I extends AudioNode,
-  O extends AudioNode
->(i: I, o: O): ObeoNode<I, O> => {
-  const node: ObeoNode<I, O> = {
-    // Using the input node but they should be the same
-    channelCount: i.channelCount,
-    numberOfInputs: i.numberOfInputs,
+  O extends AudioNode,
+  I extends AudioNode | undefined
+>(i: I, o: O): ObeoNode<O, I> => {
+  const node: ObeoNode<O, I> = {
+    // Using the output node but they should be the same
+    channelCount: o.channelCount,
+    numberOfInputs: i ? i.numberOfInputs : 0,
     numberOfOutputs: o.numberOfOutputs,
 
     name: 'node',

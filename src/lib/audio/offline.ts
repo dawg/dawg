@@ -18,7 +18,9 @@ export interface ObeoOfflineContext extends ObeoBaseContext<OfflineAudioContext>
   advance(seconds: Seconds): void;
 }
 
-export const createOfflineContext = (options: Partial<OfflineAudioContextOptions> = {}): ObeoOfflineContext => {
+export const createOfflineContext = (
+  options: Partial<OfflineAudioContextOptions> = {},
+): ObeoOfflineContext => {
   const events = emitter<{ tick: [] }>();
 
   const sampleRate = options.sampleRate ?? 44100;
@@ -43,7 +45,6 @@ export const createOfflineContext = (options: Partial<OfflineAudioContextOptions
       events.emit('tick');
 
       // increment the clock in block-sized chunks
-      // TODO use PPQ ??
       currentTime += 128 / offline.sampleRate;
       samples += 128;
 

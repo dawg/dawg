@@ -4,6 +4,7 @@ import { createVolume } from '@/lib/audio/volume';
 import { ObeoScheduledSourceNode, ObeoScheduledSourceStopper } from '@/lib/audio/scheduled-source-node';
 import { createSignal, ObeoSignal } from '@/lib/audio/signal';
 import { getContext } from '@/lib/audio/global';
+import { mimicAudioNode } from '@/lib/audio/node';
 
 export interface ObeoOscillatorOptions {
   type: OscillatorType;
@@ -59,7 +60,8 @@ export const createOscillator = (options?: Partial<ObeoOscillatorOptions>): Obeo
 
   // TODO how to make sure that you can't connect to oscillator ??
   const oscillator: ObeoOscillator = {
-    ...volume,
+    ...mimicAudioNode(undefined, volume.output),
+    volume: volume.volume,
 
     // OscillatorNode
     detune,

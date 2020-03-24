@@ -76,11 +76,11 @@ describe('ObeoTimeline', () => {
 
   it('can get the length of the timeline', () => {
     const sched = createTimeline();
-    expect(sched.length.value).to.equal(0);
+    expect(sched.size()).to.equal(0);
     sched.add({
       time: 0,
     });
-    expect(sched.length.value).to.equal(1);
+    expect(sched.size()).to.equal(1);
     sched.dispose();
   });
 
@@ -91,9 +91,9 @@ describe('ObeoTimeline', () => {
     sched.add({
       time: 2,
     });
-    expect(sched.length.value).to.equal(2);
+    expect(sched.size()).to.equal(2);
     sched.remove(obj);
-    expect(sched.length.value).to.equal(1);
+    expect(sched.size()).to.equal(1);
     sched.dispose();
   });
 
@@ -103,11 +103,11 @@ describe('ObeoTimeline', () => {
       time: 2,
     });
     sched.remove({ time: 1 });
-    expect(sched.length.value).to.equal(1);
+    expect(sched.size()).to.equal(1);
     sched.forEach((event) => {
       sched.remove({ time: 4 });
     });
-    expect(sched.length.value).to.equal(1);
+    expect(sched.size()).to.equal(1);
     sched.dispose();
   });
 
@@ -265,13 +265,13 @@ describe('ObeoTimeline', () => {
     sched.add({ time: 4 });
     sched.add({ time: 8 });
     sched.add({ time: 5 });
-    expect(sched.length.value).to.equal(5);
+    expect(sched.size()).to.equal(5);
     sched.cancel(10);
-    expect(sched.length.value).to.equal(5);
+    expect(sched.size()).to.equal(5);
     sched.cancel(5);
-    expect(sched.length.value).to.equal(2);
+    expect(sched.size()).to.equal(2);
     sched.cancel(3);
-    expect(sched.length.value).to.equal(0);
+    expect(sched.size()).to.equal(0);
     sched.dispose();
   });
 
@@ -281,11 +281,11 @@ describe('ObeoTimeline', () => {
       sched.add({ time: 100 - i });
     }
     sched.cancel(10);
-    expect(sched.length.value).to.equal(9);
+    expect(sched.size()).to.equal(9);
     sched.cancel(5);
-    expect(sched.length.value).to.equal(4);
+    expect(sched.size()).to.equal(4);
     sched.cancel(0);
-    expect(sched.length.value).to.equal(0);
+    expect(sched.size()).to.equal(0);
     sched.dispose();
   });
 
@@ -295,11 +295,11 @@ describe('ObeoTimeline', () => {
   //     sched.add({ time: i });
   //   }
   //   sched.cancelBefore(9);
-  //   expect(sched.length.value).to.equal(90);
+  //   expect(sched.size()).to.equal(90);
   //   sched.cancelBefore(10.1);
-  //   expect(sched.length.value).to.equal(89);
+  //   expect(sched.size()).to.equal(89);
   //   sched.cancelBefore(100);
-  //   expect(sched.length.value).to.equal(0);
+  //   expect(sched.size()).to.equal(0);
   //   sched.dispose();
   // });
 
@@ -347,7 +347,7 @@ describe('ObeoTimeline', () => {
   //       time: i,
   //     });
   //   }
-  //   expect(sched.length.value).to.equal(4);
+  //   expect(sched.size()).to.equal(4);
   //   sched.dispose();
   // });
 
@@ -365,14 +365,14 @@ describe('ObeoTimeline', () => {
   //     time: 2,
   //     value: 'c',
   //   });
-  //   expect(timeline.length.value).to.equal(3);
+  //   expect(timeline.size()).to.equal(3);
   //   const peekValue = timeline.peek();
   //   if (peekValue) {
   //     expect(peekValue.value).to.equal('a');
   //   } else {
   //     throw new Error('should have value');
   //   }
-  //   expect(timeline.length.value).to.equal(3);
+  //   expect(timeline.size()).to.equal(3);
 
   //   const shiftValue = timeline.shift();
   //   if (shiftValue) {
@@ -380,7 +380,7 @@ describe('ObeoTimeline', () => {
   //   } else {
   //     throw new Error('should have value');
   //   }
-  //   expect(timeline.length.value).to.equal(2);
+  //   expect(timeline.size()).to.equal(2);
   //   const peekValue2 = timeline.peek();
   //   if (peekValue2) {
   //     expect(peekValue2.value).to.equal('b');
@@ -393,7 +393,7 @@ describe('ObeoTimeline', () => {
   //   } else {
   //     throw new Error('should have value');
   //   }
-  //   expect(timeline.length.value).to.equal(1);
+  //   expect(timeline.size()).to.equal(1);
   //   timeline.dispose();
   // });
 
@@ -545,7 +545,7 @@ describe('ObeoTimeline', () => {
       sched.forEach((event) => {
         sched.remove(event);
       });
-      expect(sched.length.value).to.equal(0);
+      expect(sched.size()).to.equal(0);
       sched.dispose();
     });
 
@@ -568,7 +568,7 @@ describe('ObeoTimeline', () => {
           });
         }
       });
-      expect(sched.length.value).to.equal(1001);
+      expect(sched.size()).to.equal(1001);
       sched.dispose();
     });
 

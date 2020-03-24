@@ -2,7 +2,6 @@ import { createPolySynth, ObeoPolySynth } from '@/lib/audio/poly-synth';
 import { compareToFile, atTime, warns } from '@/lib/audio/test-utils';
 import { createSynth } from '@/lib/audio/synth';
 import { runOffline } from '@/lib/audio/offline';
-import { ObeoEnvelopeOptions } from '@/lib/audio/envelope';
 import { expect } from '@/lib/testing';
 import { Note, Seconds, ContextTime } from '@/lib/audio/types';
 
@@ -10,25 +9,28 @@ const create = (opts: { onended: () => void }) => {
   return createSynth({ oscillator: { onended: opts.onended, type: 'triangle' } });
 };
 
-const triggerAttackRelease = (poly: ObeoPolySynth, notes: Note[], duration: Seconds, time?: ContextTime) => {
+const triggerAttackRelease = (
+  poly: ObeoPolySynth,
+  notes: Note[],
+  duration: Seconds,
+  time?: ContextTime,
+) => {
   notes.forEach((note) => poly.triggerAttackRelease(note, duration, time));
 };
 
-const triggerAttack = (poly: ObeoPolySynth, notes: Note[], duration: Seconds, time?: ContextTime) => {
+const triggerAttack = (
+  poly: ObeoPolySynth,
+  notes: Note[],
+  duration: Seconds,
+  time?: ContextTime,
+) => {
   return notes.map((note) => poly.triggerAttack(note, duration, time));
-};
-
-const createWithOptions = (options: Partial<ObeoEnvelopeOptions>) => (opts: { onended: () => void }) => {
-  return createSynth({
-    oscillator: { onended: opts.onended, type: 'triangle' },
-    envelope: options,
-  });
 };
 
 describe('ObeoPolySynth', () => {
   it('matches a file', () => {
     return compareToFile(() => {
-      const synth = createPolySynth(create);
+      const synth = createPolySynth({ oscillator: { type: 'triangle' } });
       synth.toDestination();
       synth.triggerAttackRelease('C4', 0.2, 0);
       synth.triggerAttackRelease('C4', 0.1, 0.1);
@@ -42,7 +44,7 @@ describe('ObeoPolySynth', () => {
 
   it('matches another file', () => {
     return compareToFile(() => {
-      const synth = createPolySynth(create);
+      const synth = createPolySynth({ oscillator: { type: 'triangle' } });
       synth.toDestination();
       (['C4', 'E4', 'G4', 'B4'] as const).forEach((note) => {
         synth.triggerAttackRelease(note, 0.2, 0);
@@ -55,7 +57,7 @@ describe('ObeoPolySynth', () => {
 
   it('matches a file and chooses the right voice', () => {
     return compareToFile(() => {
-      const synth = createPolySynth(create);
+      const synth = createPolySynth({ oscillator: { type: 'triangle' } });
       synth.toDestination();
       triggerAttackRelease(synth, ['C4', 'E4'], 1, 0);
       synth.triggerAttackRelease('G4', 0.1, 0.2);
@@ -68,7 +70,7 @@ describe('ObeoPolySynth', () => {
   context('Playing Notes', () => {
     it('is silent before being triggered', () => {
       return runOffline(() => {
-        const polySynth = createPolySynth(create);
+        const polySynth = createPolySynth({ oscillator: { type: 'triangle' } });
         polySynth.toDestination();
       }).then((buffer) => {
         expect(buffer.isSilent()).to.eq(true);
@@ -77,7 +79,7 @@ describe('ObeoPolySynth', () => {
 
     it('can be scheduled to start in the future', () => {
       return runOffline(() => {
-        const polySynth = createPolySynth(create);
+        const polySynth = createPolySynth({ oscillator: { type: 'triangle' } });
         polySynth.toDestination();
         polySynth.triggerAttack('C4', 0.1);
       }, 0.3).then((buffer) => {
@@ -87,7 +89,7 @@ describe('ObeoPolySynth', () => {
 
     it('disposes voices when they are no longer used', () => {
       return runOffline(() => {
-        const polySynth = createPolySynth(createWithOptions({ release: 0.1 }));
+        const polySynth = createPolySynth({ envelope: { release: 0.1 } });
         polySynth.toDestination();
         triggerAttackRelease(polySynth, ['C4', 'E4', 'G4', 'B4', 'D5'], 0.1, 0);
         return () => [
@@ -104,7 +106,7 @@ describe('ObeoPolySynth', () => {
     it('warns when too much polyphony is attempted and notes are dropped', () => {
       warns(() => {
         return runOffline(() => {
-          const polySynth = createPolySynth(create, {
+          const polySynth = createPolySynth({
             maxPolyphony: 2,
           });
           polySynth.toDestination();
@@ -115,7 +117,7 @@ describe('ObeoPolySynth', () => {
 
     it.skip('reports the active notes', () => {
       return runOffline((context) => {
-        const polySynth = createPolySynth(createWithOptions({ release: 0.1 }));
+        const polySynth = createPolySynth({ envelope: { release: 0.1 } });
         polySynth.toDestination();
         polySynth.triggerAttackRelease('C4', 0.1, 0.1);
         polySynth.triggerAttackRelease('D4', 0.1, 0.2);
@@ -159,7 +161,7 @@ describe('ObeoPolySynth', () => {
     it('can trigger another attack before the release has ended', () => {
       // compute the end time
       return runOffline(() => {
-        const synth = createPolySynth(createWithOptions({ release: 0.1 }));
+        const synth = createPolySynth({ envelope: { release: 0.1 } });
         synth.toDestination();
         let releaser = synth.triggerAttack('C4', 0.05);
         releaser.triggerRelease(0.1);
@@ -173,7 +175,7 @@ describe('ObeoPolySynth', () => {
     it('can trigger another attack right after the release has ended', () => {
       // compute the end time
       return runOffline(() => {
-        const synth = createPolySynth(createWithOptions({ release: 0.1 }));
+        const synth = createPolySynth({ envelope: { release: 0.1 } });
         synth.toDestination();
         let releaser = synth.triggerAttack('C4', 0.05);
         releaser.triggerRelease(0.1);

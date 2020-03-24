@@ -1,13 +1,14 @@
 import { ContextTime, Seconds, Positive } from '@/lib/audio/types';
 import { getContext } from '@/lib/audio/global';
-import { ObeoNode, extractAudioNode } from '@/lib/audio/node';
+import { ObeoNode, extractAudioNode, mimicAudioNode } from '@/lib/audio/node';
+import { createGain } from '@/lib/audio/gain';
 
 export interface ObeoBufferSourceOptions {
   playbackRate: Positive;
   onended: () => void;
 }
 
-export interface ObeoBufferSource extends ObeoNode<AudioBufferSourceNode> {
+export interface ObeoBufferSource extends ObeoNode<AudioBufferSourceNode, undefined> {
   /**
    * Start the buffer
    * @param  time When the player should start.
@@ -99,7 +100,7 @@ export const createBufferSource = (
   // });
 
   return {
-    ...extractAudioNode(source),
+    ...mimicAudioNode(undefined, source),
     start,
     stop,
   };
