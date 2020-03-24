@@ -47,6 +47,9 @@ import * as framework from '@/lib/framework';
 import { computed, createComponent, ref } from '@vue/composition-api';
 import * as dawg from '@/dawg';
 
+type Conversion = (x: number) => number;
+const identity: Conversion = (x) => x;
+
 export default createComponent({
   name: 'Slider',
   props: {
@@ -55,6 +58,8 @@ export default createComponent({
     right: { type: Number, required: true },
     left: { type: Number, required: true },
     value: { type: Number, required: true },
+    toUnit: { type: Function as any as () => Conversion, default: () => identity },
+    fromUnit: { type: Function as any as () => Conversion, default: () => identity },
     max: { type: Number, default: 1 },
     min: { type: Number, default: 0 },
   },
@@ -74,7 +79,7 @@ export default createComponent({
     });
 
     const scaled = computed(() => {
-      return scale(props.value, [props.min, props.max], [0, 1]);
+      return scale(percentage.value, [props.min, props.max], [0, 1]);
     });
 
     const position = computed(() => {
@@ -89,6 +94,10 @@ export default createComponent({
       return props.left * props.height;
     });
 
+    const percentage = computed(() => {
+      return props.fromUnit(props.value);
+    });
+
     const svg = ref<SVGElement>(null);
     function move(e: MouseEvent) {
       if (!svg.value) {
@@ -98,12 +107,13 @@ export default createComponent({
       volume /= props.height;
       volume = Math.max(Math.min(volume, 1), 0);
       volume = scale(volume, [0, 1], [props.min, props.max]);
-      context.emit('input', volume);
+
+      context.emit('input', props.toUnit(volume));
       update();
     }
 
     function getFormatted() {
-      return Math.round(props.value * 100) + '%';
+      return Math.round(scaled.value * 100) + '%';
     }
 
     function update() {

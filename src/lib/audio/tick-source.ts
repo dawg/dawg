@@ -61,19 +61,17 @@ export const createTickSource = (options?: Partial<ObeoTickSourceOptions>): Obeo
    */
   const tickOffset = createTimeline<{ time: number, ticks: number, seconds: number, offset: 0 }>();
 
-  const getSecondsAtTime = (time?: ContextTime) => {
+  const getAtTime = (target: 'ticks' | 'seconds', time?: ContextTime) => {
     time = time ?? context.now();
     const stopEvent = state.getLastState('stopped', time) ?? { time: 0, state: 'stopped' };
 
     // this event allows forEachBetween to iterate until the current time
-    const tmpEvent = { state: literal('paused'), time };
+    const tmpEvent = { state: 'paused', time } as const;
     state.add(tmpEvent);
 
     // keep track of the previous offset event
     let lastState = stopEvent;
-    let elapsedSeconds = 0;
-
-    // TODO duplicate code
+    let elapsed = 0;
 
     // iterate through all the events since the last stop
     state.forEachBetween(stopEvent.time, time + context.sampleTime, (e) => {
@@ -81,21 +79,31 @@ export const createTickSource = (options?: Partial<ObeoTickSourceOptions>): Obeo
       // if there is an offset event in this period use that
       const offsetEvent = tickOffset.get(e.time);
       if (offsetEvent && offsetEvent.time >= lastState.time) {
-        elapsedSeconds = offsetEvent.seconds;
+        elapsed = offsetEvent[target];
         periodStartTime = offsetEvent.time;
       }
 
       if (lastState.state === 'started' && e.state !== 'started') {
-        elapsedSeconds += e.time - periodStartTime;
+        if (target === 'seconds') {
+          elapsed += e.time - periodStartTime;
+        } else {
+          elapsed +=
+            frequency.offset.getTicksAtTime(e.time) -
+            frequency.offset.getTicksAtTime(periodStartTime);
+        }
       }
+
       lastState = e;
     });
 
     // remove the temporary event
     state.remove(tmpEvent);
 
-    // return the ticks
-    return elapsedSeconds;
+    return elapsed;
+  };
+
+  const getSecondsAtTime = (time?: ContextTime) => {
+    return getAtTime('seconds', time);
   };
 
   const setTicksAtTime = (ticks: Ticks, time?: ContextTime) => {
@@ -110,43 +118,7 @@ export const createTickSource = (options?: Partial<ObeoTickSourceOptions>): Obeo
   };
 
   const getTicksAtTime = (time?: ContextTime) => {
-    time = time ?? context.now();
-
-    const stopEvent = state.getLastState('stopped', time) ?? { time: 0, state: 'stopped' };
-
-    // this event allows forEachBetween to iterate until the current time
-    const tmpEvent = { state: 'paused', time } as const;
-    state.add(tmpEvent);
-
-    // keep track of the previous offset event
-    let lastState = stopEvent;
-    let elapsedTicks = 0;
-
-    // iterate through all the events since the last stop
-    state.forEachBetween(stopEvent.time, time + context.sampleTime, (e) => {
-      let periodStartTime = lastState.time;
-      // if there is an offset event in this period use that
-      const offsetEvent = tickOffset.get(e.time);
-
-      if (offsetEvent && offsetEvent.time >= lastState.time) {
-        elapsedTicks = offsetEvent.ticks;
-        periodStartTime = offsetEvent.time;
-      }
-
-      if (lastState.state === 'started' && e.state !== 'started') {
-        elapsedTicks +=
-          frequency.offset.getTicksAtTime(e.time) -
-          frequency.offset.getTicksAtTime(periodStartTime);
-      }
-
-      lastState = e;
-    });
-
-    // remove the temporary event
-    state.remove(tmpEvent);
-
-    // return the ticks
-    return elapsedTicks;
+    return getAtTime('ticks', time);
   };
 
   const start = (time: ContextTime) => {

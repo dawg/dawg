@@ -5,7 +5,7 @@ import { getContext } from '@/lib/audio/global';
  * Convert gain to decibels.
  */
 export function gainToDb(gain: GainFactor): Decibels {
-  return 20 * (Math.log(gain) / Math.LN10);
+  return 20 * Math.log10(gain);
 }
 
 /**

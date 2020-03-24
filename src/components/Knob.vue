@@ -70,6 +70,9 @@ import { createComponent, computed } from '@vue/composition-api';
 // 1. Most things here use angles from the +x axis; however, svg rotation starts from the +y axis
 // 2. The rotation of the knob is clockwise so the minimum variables are actually the larger values
 
+type Conversion = (x: number) => number;
+const identity: Conversion = (x) => x;
+
 export default createComponent({
   name: 'Knob',
   props: {
@@ -79,6 +82,8 @@ export default createComponent({
     range: { type: Number, default: 264 },
     max: { type: Number, default: 100 },
     min: { type: Number, default: 0 },
+    toUnit: { type: Function as any as () => Conversion, default: () => identity },
+    fromUnit: { type: Function as any as () => Conversion, default: () => identity },
     size: { type: Number, default: 30 },
     strokeWidth: { type: Number, default: 2.5 },
     label: { type: String },
@@ -90,8 +95,10 @@ export default createComponent({
     const rectWidth = 3;
     const rectHeight = props.size / 4;
 
+    const converted = computed(() => props.fromUnit(props.value));
+
     const rotation = computed(() => {
-      return mapRange(props.value, props.min, props.max, -angle.value, angle.value);
+      return mapRange(converted.value, props.min, props.max, -angle.value, angle.value);
     });
 
     const midDegrees = computed(() => {
@@ -253,14 +260,14 @@ export default createComponent({
     });
 
     function defaultFormat() {
-      return '' + Math.round(props.value);
+      return '' + Math.round(converted.value);
     }
 
     function enter() {
       if (props.name) {
         dawg.status.set({
           text: props.name,
-          value: props.format ? props.format(props.value) : defaultFormat(),
+          value: props.format ? props.format(converted.value) : defaultFormat(),
         });
       }
     }
@@ -276,7 +283,7 @@ export default createComponent({
       let rot = rotation.value - e.movementY * 1.5;
       rot = Math.max(-132, Math.min(angle.value, rot));
       const value = mapRange(rot, -angle.value, angle.value, props.min, props.max);
-      context.emit('input', value);
+      context.emit('input', props.toUnit(value));
       enter();
     }
 
@@ -322,6 +329,7 @@ export default createComponent({
       rectHeight,
       transform,
       labelStyle,
+      converted,
     };
   },
 });

@@ -5,6 +5,7 @@ import { EffectDefaults } from '@/models/filters/defaults';
 import { Serializable } from '@/models/serializable';
 import { GraphNode } from '@/models/node';
 import * as Audio from '@/lib/audio';
+import { keys } from '@/lib/std';
 
 export const EffectType = t.type({
   slot: t.number,
@@ -50,14 +51,17 @@ export class Effect<T extends EffectName> implements Serializable<IEffect> {
   public effect: GraphNode<Audio.ObeoEffect>;
 
   constructor(i: IEffect) {
-    // TODO make this undoable
+    // FIXME make this undoable
     this.slot = i.slot;
     this.id = i.id;
     this.type = i.type as T;
     // FIXME Remove any cast
     this.options = i.options as any;
     this.effect = new GraphNode(createEffect(this.type), this.type);
-    // TODO actually set options
+
+    keys(this.options).forEach((key) => {
+      (this.effect.node as any)[key] = this.options[key];
+    });
   }
 
   get wet() {

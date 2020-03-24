@@ -47,7 +47,7 @@ export abstract class Instrument<
 
   // TODO Same thing with these
   public readonly output = new GraphNode(Audio.createStereoPanner(), 'Panner');
-  public readonly input = new GraphNode(Audio.createGain(), 'Gain');
+  public readonly input = new GraphNode(Audio.createVolume(), 'Gain');
   public readonly pan: oly.OlyRef<number>;
   public readonly volume: oly.OlyRef<number>;
   public readonly mute: oly.OlyRef<boolean>;
@@ -76,7 +76,7 @@ export abstract class Instrument<
 
     const {
       ref: volume,
-    } = useSignal(this.input.node.gain, i.volume ?? 0.8, 'Volume');
+    } = useSignal(this.input.node.volume, i.volume ?? -5, 'Volume');
     this.volume = volume;
     // this.volumeSignal = volumeSignal;
 

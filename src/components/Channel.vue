@@ -55,10 +55,10 @@
         <div class="ml-4 flex">
           <slider 
             v-model="channel.volume.value"
-            :min="0"
-            :max="1"
             :left="left"
             :right="right"
+            :to-gain="percentageToGain"
+            :from-gain="gainToPercentage"
             @automate="automateVolume"
           ></slider>
         </div>
@@ -72,6 +72,7 @@ import { range, scale, clamp } from '@/lib/std';
 import * as framework from '@/lib/framework';
 import { ref, computed, watch, createComponent } from '@vue/composition-api';
 import { EffectDefaults, Channel as C, AnyEffect, EffectName } from '@/models';
+import { percentageToGain, gainToPercentage } from '@/models/volume';
 
 function sentenceCase(text: string) {
   // const result = text.replace( /([A-Z])/g, ' $1' );
@@ -184,6 +185,8 @@ export default createComponent({
       left,
       right,
       select,
+      percentageToGain,
+      gainToPercentage,
     };
   },
 });

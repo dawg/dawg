@@ -8,8 +8,6 @@ import { GraphNode } from '@/models/node';
 import { EffectName } from '@/models/filters/effects';
 import { getLogger } from '@/lib/log';
 import { useSignal } from '@/utils';
-import { createGain } from '@/lib/audio/gain';
-import { createMeter } from '@/lib/audio/meter';
 import { destination } from '@/models/node';
 import { range } from '@/lib/std';
 
@@ -54,11 +52,11 @@ export class Channel implements Serializable<IChannel> {
   public readonly volume: oly.OlyRef<number>;
   public readonly mute: oly.OlyRef<boolean>;
 
-  public readonly input = new GraphNode(createGain(), 'Gain');
+  public readonly input = new GraphNode(Audio.createVolume(), 'Volume');
   public readonly output = new GraphNode(Audio.createStereoPanner(), 'Panner');
 
-  public readonly left = new GraphNode(createMeter());
-  public readonly right = new GraphNode(createMeter());
+  public readonly left = new GraphNode(Audio.createMeter());
+  public readonly right = new GraphNode(Audio.createMeter());
   private readonly split = new GraphNode(Audio.createChannelSplitter(2));
 
   // tslint:disable-next-line:variable-name
@@ -91,7 +89,7 @@ export class Channel implements Serializable<IChannel> {
     const {
       signal: volumeSignal,
       ref: volume,
-    } = useSignal(this.input.node.gain, i.volume ?? 0.8, 'Volume');
+    } = useSignal(this.input.node.volume, i.volume ?? -5, 'Volume');
     this.volume = volume;
     // this.volumeSignal = volumeSignal;
 

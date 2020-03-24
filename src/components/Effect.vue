@@ -75,6 +75,7 @@ export default createComponent({
       options,
       keys,
       constraints,
+      size,
     };
   },
 });

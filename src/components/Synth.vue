@@ -25,6 +25,8 @@
         name="Volume"
         :min="0"
         :max="1"
+        :to-gain="percentageToGain"
+        :from-gain="gainToPercentage"
       ></knob>
       <pan
         class="flex-shrink-0"
@@ -70,6 +72,7 @@ import { ScheduledNote, Instrument } from '@/models';
 import { update } from '@/lib/vutils';
 import { createComponent, computed, watch, ref } from '@vue/composition-api';
 import * as framework from '@/lib/framework';
+import { percentageToGain, gainToPercentage } from '@/models/volume';
 
 export default createComponent({
   name: 'Synth',
@@ -126,6 +129,8 @@ export default createComponent({
       expand,
       strokeWidth,
       contenteditable,
+      percentageToGain,
+      gainToPercentage,
     };
   },
 });
