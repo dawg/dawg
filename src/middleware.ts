@@ -1,4 +1,5 @@
 import Vue from 'vue';
+// Here we import @/dawg which will import all of the "core" extensions (which will automatically activate)
 import * as dawg from '@/dawg';
 import path from 'path';
 import '@/styles/material.css';
@@ -11,6 +12,9 @@ import { getLogger } from '@/lib/log';
 
 const logger = getLogger('middleware');
 
+// middleware probably isn't the right word but this is where we import everything
+// and start the initialization process. You'll notice that we dynamically import
+// and activate these "extra" extensions which simply add functionality.
 const middleware = () => {
   // This imports all .vue files in the components folder
   const components = require.context(
