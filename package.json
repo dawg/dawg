@@ -20,6 +20,8 @@
   },
   "main": "background.js",
   "dependencies": {
+    "@sentry/browser": "^5.15.4",
+    "@sentry/integrations": "^5.15.4",
     "@tonejs/midi": "^1.2.2",
     "@types/tmp": "^0.1.0",
     "@types/webmidi": "^2.0.4",
