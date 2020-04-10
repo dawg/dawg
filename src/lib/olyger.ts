@@ -7,6 +7,9 @@ import { getLogger } from '@/lib/log';
 
 const logger = getLogger('olyger');
 
+// You can read more about this file in the following issue:
+// https://github.com/dawg/dawg/issues/156
+
 // This is from the composition API
 // We should probably remove this but idk
 const RefKey = 'vfa.key.refKey';
