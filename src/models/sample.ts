@@ -6,6 +6,7 @@ import { Serializable } from '@/models/serializable';
 import { BuildingBlock } from '@/models/block';
 import * as oly from '@/lib/olyger';
 import { GraphNode } from '@/models/node';
+import { Disposer } from '@/lib/std';
 
 export const SampleType = t.type({
   id: t.string,
@@ -50,24 +51,17 @@ export class Sample implements BuildingBlock, Serializable<ISample> {
 
   public preview(
     opts?: { onended: () => void },
-  ): { started: true, dispose: () => void } | { started: false } {
-    if (this.player.node) {
-      const source = this.player.node.preview(opts);
-      return {
-        started: true,
-        dispose: () => {
-          try {
-            source.stop();
-          } catch (e) {
-            // Already stopped
-          }
-        },
-      };
-    } else {
-      return {
-        started: false,
-      };
-    }
+  ): Disposer {
+    const source = this.player.node.start(opts);
+    return {
+      dispose: () => {
+        try {
+          source.stop();
+        } catch (e) {
+          // Already stopped
+        }
+      },
+    };
   }
 
   public serialize() {

@@ -1,83 +1,41 @@
 import { ContextTime, Seconds } from '@/lib/audio/types';
-import { createVolume, ObeoVolume } from '@/lib/audio/volume';
-import { createBufferSource, ObeoBufferSource } from '@/lib/audio/buffer-source';
-import { getContext } from '@/lib/audio/global';
+import { createVolume, ObeoVolumeOptions } from '@/lib/audio/volume';
+import { createBufferSource } from '@/lib/audio/buffer-source';
+import { ObeoScheduledSourceStopper } from '@/lib/audio/scheduled-source-node';
+import { mimicAudioNode, ObeoNode } from '@/lib/audio/node';
 
-export interface ObeoPlayerOptions {
-  volume: number;
-  mute: boolean;
-}
-
-export interface PreviewOptions {
-  onended: () => void;
-}
+export type ObeoPlayerOptions = ObeoVolumeOptions;
 
 export interface ObeoPlayerInstance {
   start: (context: ObeoPlayerStartContext) => { stop: (when?: ContextTime) => void };
 }
 
 export interface ObeoPlayerStartContext {
-  startTime: Seconds;
-  offset: Seconds;
-  duration: Seconds;
+  time?: Seconds;
+  offset?: Seconds;
+  duration?: Seconds;
+  onended?: () => void;
 }
 
-export interface ObeoPlayer extends ObeoVolume {
-  preview: (opts?: Partial<PreviewOptions>) => { stop: (when?: ContextTime) => void };
-  createInstance(): ObeoPlayerInstance;
+export interface ObeoPlayer extends ObeoNode<GainNode, undefined> {
+  start: (context?: ObeoPlayerStartContext) => ObeoScheduledSourceStopper;
 }
 
-// TODO are options even used? ie. are they every given?
 export const createPlayer = (
   buffer: AudioBuffer | null,
   options?: Partial<ObeoPlayerOptions>,
 ): ObeoPlayer => {
-  const context = getContext();
+  const volume = createVolume(options);
 
-  const volume = createVolume();
-  volume.volume.value = options?.volume ?? 0;
-  volume.muted.value = options?.mute ?? false;
-
-
-  const create = (opts?: Partial<PreviewOptions>) => {
+  const start = (opts: ObeoPlayerStartContext = {}) => {
+    const { offset, duration, time } = opts;
     const source = createBufferSource(buffer, opts);
     source.connect(volume);
-    return source;
-  };
-
-  const createStop = (source: ObeoBufferSource) => (when?: ContextTime) => {
-    try {
-      source.stop(when);
-    } catch (e) {
-      // already stopped
-    }
-  };
-
-  const preview = (opts?: Partial<PreviewOptions>) => {
-    const source = create(opts);
-    source.start(context.now(), 0);
-    return {
-      stop: createStop(source),
-    };
-  };
-
-  const createInstance = () => {
-    return {
-      start: (o: ObeoPlayerStartContext) => {
-        const { offset, duration, startTime } = o;
-        const source = create();
-
-        source.start(startTime, offset, duration);
-        return {
-          stop: createStop(source),
-        };
-      },
-    };
+    return source.start(time, offset, duration);
   };
 
   return {
-    ...volume,
-    createInstance,
-    preview,
+    ...mimicAudioNode(undefined, volume.output),
+    start,
   };
 };

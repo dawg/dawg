@@ -101,13 +101,6 @@ export const createTickParam = (param: AudioParam, options: Partial<ObeoTickPara
           };
         }
 
-        // tslint:disable-next-line:no-console
-        // TODO I don't this this is needed in my implementation
-        // else if (isUndef(event.ticks)) {
-        //   const previousEvent = events.previousEvent(event);
-        //   event.ticks = getTicksUntilEvent(previousEvent, event.time);
-        // }
-
         const val0 = fromUnit(api.getValueAtTime(event.time));
         let val1 = fromUnit(api.getValueAtTime(time));
         // if it's right on the line, take the previous value

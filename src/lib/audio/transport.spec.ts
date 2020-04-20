@@ -425,7 +425,7 @@ describe('ObeoTransport', () => {
       });
     });
 
-    it.only('triggers onMidStart when time is changed', () => {
+    it('triggers onMidStart when time is changed', () => {
       let calledAt = -1;
       return runOffline((offline) => {
         const transport = createTransport();
@@ -442,6 +442,79 @@ describe('ObeoTransport', () => {
         });
       }, 0.3).then(() => {
         expect(calledAt).to.be.closeTo(0.01, 0.01);
+      });
+    });
+
+    it('triggers onEnd when the event finishes', () => {
+      let calledAt = -1;
+      return runOffline((offline) => {
+        const transport = createTransport();
+        s(offline, transport, {
+          onEnd: ({ seconds }) => {
+            calledAt = seconds;
+          },
+          duration: 0.1,
+        });
+        transport.start(0);
+      }, 0.3).then(() => {
+        expect(calledAt).to.be.closeTo(0.1, 0.01);
+      });
+    });
+
+    it('triggers onEnd when the event is deleted', () => {
+      let calledAt = -1;
+      return runOffline((offline) => {
+        const transport = createTransport();
+        const controller = s(offline, transport, {
+          onEnd: ({ seconds }) => {
+            calledAt = seconds;
+          },
+          duration: 0.1,
+        });
+        transport.start(0);
+        return atTime(0.05, () => {
+          controller.remove();
+        });
+      }, 0.3).then(() => {
+        expect(calledAt).to.be.closeTo(0.05, 0.01);
+      });
+    });
+
+    it('triggers onEnd when the event duration changes', () => {
+      let calledAt = -1;
+      return runOffline((offline) => {
+        const transport = createTransport();
+        const controller = s(offline, transport, {
+          onEnd: ({ seconds }) => {
+            calledAt = seconds;
+          },
+          duration: 0.1,
+        });
+        transport.start(0);
+        return atTime(0.03, () => {
+          controller.setDuration(0.02);
+        });
+      }, 0.3).then(() => {
+        expect(calledAt).to.be.closeTo(0.03, 0.01);
+      });
+    });
+
+    it.only('triggers onTick for every tick', () => {
+      let expected = -1;
+      let count = 0;
+      return runOffline((offline) => {
+        expected = offline.secondsToTicks(0.3) - offline.PPQ.value;
+        const transport = createTransport();
+        transport.ticks.value = offline.PPQ.value;
+        s(offline, transport, {
+          onTick: () => {
+            count++;
+          },
+          duration: 0.1,
+        });
+        transport.start(0);
+      }, 0.3).then(() => {
+        expect(expected).to.eq(count);
       });
     });
   });

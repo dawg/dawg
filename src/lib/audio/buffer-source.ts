@@ -2,6 +2,7 @@ import { ContextTime, Seconds, Positive } from '@/lib/audio/types';
 import { getContext } from '@/lib/audio/global';
 import { ObeoNode, extractAudioNode, mimicAudioNode } from '@/lib/audio/node';
 import { createGain } from '@/lib/audio/gain';
+import { ObeoScheduledSourceStopper } from '@/lib/audio/scheduled-source-node';
 
 export interface ObeoBufferSourceOptions {
   playbackRate: Positive;
@@ -16,12 +17,7 @@ export interface ObeoBufferSource extends ObeoNode<AudioBufferSourceNode, undefi
    * @param  duration How long the sample should play. If no duration is given, it will default to
    * the full length of the sample (minus any offset).
    */
-  start(time?: ContextTime, offset?: Seconds, duration?: Seconds): void;
-  /**
-   * Stop the source node at the given time.
-   * @param time When to stop the source
-   */
-  stop(time?: ContextTime): void;
+  start(time?: ContextTime, offset?: Seconds, duration?: Seconds): ObeoScheduledSourceStopper;
 }
 
 export const createBufferSource = (
@@ -57,6 +53,10 @@ export const createBufferSource = (
       // make sure it's never negative
       stop(computedTime + Math.max(duration, 0));
     }
+
+    return {
+      stop,
+    };
   };
 
   const stop = (time?: ContextTime) => {
@@ -102,6 +102,5 @@ export const createBufferSource = (
   return {
     ...mimicAudioNode(undefined, source),
     start,
-    stop,
   };
 };

@@ -3,6 +3,10 @@ import { ContextTime } from '@/lib/audio/types';
 
 // TODO make the soundfont use this too!!
 export interface ObeoScheduledSourceStopper {
+  /**
+   * Stop the source node at the given time.
+   * @param time When to stop the source
+   */
   stop: (when?: ContextTime) => void;
 }
 

@@ -254,7 +254,7 @@ export const { create: createSamplePrototype, type: ScheduledSampleType } = crea
       return;
     }
 
-    const instance = sample.player.node.createInstance();
+    const local = sample.player.node;
     let controller: { stop: (seconds: Audio.ContextTime) => void } | null = null;
     return transport.schedule({
       time: params.time.value,
@@ -262,15 +262,15 @@ export const { create: createSamplePrototype, type: ScheduledSampleType } = crea
       offset: 0,
       row: params.row.value,
       onStart: ({ seconds }) => {
-        controller = instance.start({
-          startTime: seconds,
+        controller = local.start({
+          time: seconds,
           offset: Audio.context.beatsToSeconds(params.offset.value),
           duration: Audio.context.beatsToSeconds(params.duration.value),
         });
       },
       onMidStart: ({ seconds, secondsOffset }) => {
-        controller = instance.start({
-          startTime: seconds,
+        controller = local.start({
+          time: seconds,
           offset: secondsOffset,
           duration: Audio.context.beatsToSeconds(params.duration.value),
         });

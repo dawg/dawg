@@ -8,7 +8,8 @@ interface Connection {
   output: GraphNode;
 }
 
-export class GraphNode<T extends Audio.ObeoNode = Audio.ObeoNode> {
+// FIXME This Audio.ObeoNode<any, any> is a little type unsafe
+export class GraphNode<T extends Audio.ObeoNode<any, any> = Audio.ObeoNode> {
   private static disconnect(connection: Connection) {
     const { output, input, inputNumber, outputNumber } = connection;
     const i = output.inputs.findIndex((maybe) => maybe === connection);
