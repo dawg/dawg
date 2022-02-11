@@ -67,7 +67,7 @@
     "electron-rebuild": "^1.10.0",
     "karma-chrome-launcher": "^2.2.0",
     "mocha": "^5.0.5",
-    "node-sass": "^4.13.1",
+    "node-sass": "^7.0.0",
     "puppeteer": "^2.1.1",
     "sass-loader": "^8.0.2",
     "typescript": "^3.7.5",
